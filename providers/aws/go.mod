@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v11/providers/aws
+module go.mondoo.com/cnquery/v12/providers/aws
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
 go 1.24.0
 
@@ -67,7 +67,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/afero v1.14.0
 	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.61.0
+	go.mondoo.com/cnquery/v12 v12.0.0
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
 	k8s.io/client-go v0.33.2
 )

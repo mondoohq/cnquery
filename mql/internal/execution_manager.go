@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
 )
 
 type executionManager struct {
@@ -155,9 +155,8 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 
 	var executor iExecutor
 	var err error
-	var codeID string
 
-	codeID = codeBundle.CodeV2.GetId()
+	codeID := codeBundle.CodeV2.GetId()
 	log.Debug().Str("qrid", codeID).Msg("starting query execution")
 	defer func() {
 		log.Debug().Str("qrid", codeID).Msg("finished query execution")
@@ -167,7 +166,7 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 	// checksum
 	x, err := llx.NewExecutorV2(codeBundle.CodeV2, em.runtime, props, sendResult)
 	if err == nil {
-		x.Run()
+		err = x.Run()
 	}
 	executor = x
 

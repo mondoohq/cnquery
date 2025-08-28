@@ -5,7 +5,7 @@ package connection
 
 import (
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
 const (
@@ -13,8 +13,6 @@ const (
 	DiscoveryAuto         = "auto"
 	DiscoveryRepos        = "repos"
 	DiscoveryUsers        = "users"
-	DiscoveryRepository   = "repository" // deprecated: use repos
-	DiscoveryUser         = "user"       // deprecated: use users
 	DiscoveryOrganization = "organization"
 	DiscoveryTerraform    = "terraform"
 	DiscoveryK8sManifests = "k8s-manifests"

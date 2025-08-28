@@ -10,19 +10,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 func (a *mqlAwsSecurityhub) id() (string, error) {
 	return "aws.securityhub", nil
 }
 
-func (a *mqlAwsSecurityhub) hubs() ([]interface{}, error) {
+func (a *mqlAwsSecurityhub) hubs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getHubs(conn), 5)
 	poolOfJobs.Run()
 
@@ -33,7 +33,7 @@ func (a *mqlAwsSecurityhub) hubs() ([]interface{}, error) {
 	// get all the results
 	for i := range poolOfJobs.Jobs {
 		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 		}
 	}
 	return res, nil
@@ -50,7 +50,7 @@ func (a *mqlAwsSecurityhub) getHubs(conn *connection.AwsConnection) []*jobpool.J
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Securityhub(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 			secHub, err := svc.DescribeHub(ctx, &securityhub.DescribeHubInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {

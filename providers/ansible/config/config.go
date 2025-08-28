@@ -4,14 +4,14 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/ansible/provider"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/ansible/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "ansible",
-	ID:              "go.mondoo.com/cnquery/v11/providers/ansible",
+	ID:              "go.mondoo.com/cnquery/v12/providers/ansible",
 	Version:         "11.0.89",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{

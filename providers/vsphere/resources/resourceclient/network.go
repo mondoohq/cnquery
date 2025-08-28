@@ -65,7 +65,7 @@ func (c *Client) GetDistributedVirtualSwitchConfig(ctx context.Context, obj *obj
 	return &moDvSwitch, nil
 }
 
-func DistributedVirtualSwitchConfig(dvSwitch *mo.DistributedVirtualSwitch) (map[string]interface{}, error) {
+func DistributedVirtualSwitchConfig(dvSwitch *mo.DistributedVirtualSwitch) (map[string]any, error) {
 	return PropertiesToDict(dvSwitch)
 }
 
@@ -132,6 +132,6 @@ func (c *Client) GetDistributedVirtualPortgroupConfig(ctx context.Context, obj *
 	return &moDvpg, nil
 }
 
-func DistributedVirtualPortgroupConfig(dvpg *mo.DistributedVirtualPortgroup) (map[string]interface{}, error) {
+func DistributedVirtualPortgroupConfig(dvpg *mo.DistributedVirtualPortgroup) (map[string]any, error) {
 	return PropertiesToDict(dvpg)
 }

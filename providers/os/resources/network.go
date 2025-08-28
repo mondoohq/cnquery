@@ -5,12 +5,12 @@ package resources
 
 import (
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/id/networki"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/id/networki"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (c *mqlNetwork) interfaces() ([]any, error) {
@@ -31,7 +31,7 @@ func (c *mqlNetwork) interfaces() ([]any, error) {
 		for _, neti := range interfaces {
 			log.Debug().Interface("interface", neti).Msg("os.network> adding interface")
 
-			ipaddresses := []interface{}{}
+			ipaddresses := []any{}
 			for _, ipaddress := range neti.IPAddresses {
 				resource, err = NewResource(c.MqlRuntime, "ipAddress", map[string]*llx.RawData{
 					"__id":      llx.StringData(ipaddress.IP.String()),

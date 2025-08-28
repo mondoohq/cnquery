@@ -5,7 +5,7 @@ import "../../os/resources/os.lr"
 import "../../network/resources/network.lr"
 
 option provider = "go.mondoo.com/cnquery/v9/providers/k8s"
-option go_package = "go.mondoo.com/cnquery/v11/providers/k8s/resources"
+option go_package = "go.mondoo.com/cnquery/v12/providers/k8s/resources"
 
 // Kubernetes cluster
 k8s {
@@ -49,9 +49,6 @@ k8s {
   roles() []k8s.rbac.role
   // Kubernetes RBAC RoleBindings
   rolebindings() []k8s.rbac.rolebinding
-  // Kubernetes PodSecurityPolicies
-  // Deprecated: This was removed in Kubernetes v1.25
-  podSecurityPolicies() []k8s.podsecuritypolicy
   // Kubernetes network policies
   networkPolicies() []k8s.networkpolicy
   // Kubernetes custom resources
@@ -350,8 +347,6 @@ private k8s.container @defaults("name") {
   name string
   // Container image name
   imageName string
-  // Deprecated; use `imageName` instead
-  image string
   // Container image
   containerImage() os.container.image
   // Entry point array
@@ -390,8 +385,6 @@ private k8s.initContainer @defaults("name") {
   name string
   // Container image name
   imageName string
-  // Deprecated. Use `imageName` instead.
-  image string
   // Container image
   containerImage() os.container.image
   // Entrypoint array
@@ -426,8 +419,6 @@ private k8s.ephemeralContainer @defaults("name") {
   name string
   // Container image name
   imageName string
-  // Deprecated; use `imageName` instead
-  image string
   // Container image
   containerImage() os.container.image
   // Entry point array
@@ -760,31 +751,6 @@ private k8s.rbac.rolebinding @defaults("name namespace created") {
   subjects []dict
   // RoleRef can only reference a ClusterRole in the global namespace
   roleRef dict
-}
-
-// Kubernetes PodSecurityPolicy (deprecated as of Kubernetes v1.21)
-// Deprecated: This was removed in Kubernetes v1.25
-private k8s.podsecuritypolicy {
-  // Mondoo ID for the Kubernetes object
-  id string
-  // Kubernetes object UID
-  uid string
-  // Kubernetes resource version
-  resourceVersion string
-  // Kubernetes labels
-  labels() map[string]string
-  // Kubernetes annotations
-  annotations() map[string]string
-  // Kubernetes object name
-  name string
-  // Kubernetes object type
-  kind string
-  // Kubernetes object creation timestamp
-  created time
-  // Full resource manifest
-  manifest() dict
-  // Policy Spec
-  spec() dict
 }
 
 // Kubernetes Network Policy

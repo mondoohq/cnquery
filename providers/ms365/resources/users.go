@@ -16,11 +16,11 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var userSelectFields = []string{
@@ -55,7 +55,7 @@ func initMicrosoftUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 //
 // Permissions: User.Read.All, Directory.Read.All
 // see https://learn.microsoft.com/en-us/graph/api/user-list?view=graph-rest-1.0&tabs=http
-func (a *mqlMicrosoftUsers) list() ([]interface{}, error) {
+func (a *mqlMicrosoftUsers) list() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -155,7 +155,7 @@ func (a *mqlMicrosoftUsers) list() ([]interface{}, error) {
 	}
 
 	// construct the result
-	res := []interface{}{}
+	res := []any{}
 	for _, u := range users {
 		graphUser, err := newMqlMicrosoftUser(a.MqlRuntime, u)
 		if err != nil {
@@ -238,7 +238,7 @@ func initMicrosoftUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicrosoftUser, error) {
-	identities := []interface{}{}
+	identities := []any{}
 	for idx, userId := range u.GetIdentities() {
 		id := fmt.Sprintf("%s-%d", *u.GetId(), idx)
 		identity, err := CreateResource(runtime, "microsoft.user.identity", map[string]*llx.RawData{
@@ -253,7 +253,7 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 		identities = append(identities, identity)
 	}
 
-	mqlAssignedLicensesList := []interface{}{}
+	mqlAssignedLicensesList := []any{}
 
 	if u.GetAssignedLicenses() != nil {
 		for _, license := range u.GetAssignedLicenses() {
@@ -369,7 +369,7 @@ func (a *mqlMicrosoftUser) populateJobContactData() error {
 		// EmployeeHireDate: userData.GetEmployeeHireDate(),
 		OfficeLocation: userData.GetOfficeLocation(),
 	})
-	a.Job = plugin.TValue[interface{}]{Data: jobDesc, State: plugin.StateIsSet}
+	a.Job = plugin.TValue[any]{Data: jobDesc, State: plugin.StateIsSet}
 
 	userContact, _ := convert.JsonToDict(userContact{
 		StreetAddress:  userData.GetStreetAddress(),
@@ -384,7 +384,7 @@ func (a *mqlMicrosoftUser) populateJobContactData() error {
 		FaxNumber:      userData.GetFaxNumber(),
 		MailNickname:   userData.GetMailNickname(),
 	})
-	a.Contact = plugin.TValue[interface{}]{Data: userContact, State: plugin.StateIsSet}
+	a.Contact = plugin.TValue[any]{Data: userContact, State: plugin.StateIsSet}
 
 	return nil
 }
@@ -400,7 +400,7 @@ func (a *mqlMicrosoftUser) auditlog() (*mqlMicrosoftUserAuditlog, error) {
 	return res.(*mqlMicrosoftUserAuditlog), nil
 }
 
-func (a *mqlMicrosoftUserAuditlog) signins() ([]interface{}, error) {
+func (a *mqlMicrosoftUserAuditlog) signins() ([]any, error) {
 	ctx := context.Background()
 	now := time.Now()
 	dayAgo := now.AddDate(0, 0, -1)
@@ -411,7 +411,7 @@ func (a *mqlMicrosoftUserAuditlog) signins() ([]interface{}, error) {
 		a.UserId.Data,
 		a.UserId.Data)
 	top := int32(50)
-	res := []interface{}{}
+	res := []any{}
 	signIns, err := fetchUserSignins(ctx, a.MqlRuntime, filter, top)
 	if err != nil {
 		return nil, err
@@ -534,15 +534,15 @@ type userContact struct {
 	MailNickname   *string  `json:"mailNickname"`
 }
 
-func (a *mqlMicrosoftUser) job() (interface{}, error) {
+func (a *mqlMicrosoftUser) job() (any, error) {
 	return nil, a.populateJobContactData()
 }
 
-func (a *mqlMicrosoftUser) contact() (interface{}, error) {
+func (a *mqlMicrosoftUser) contact() (any, error) {
 	return nil, a.populateJobContactData()
 }
 
-func (a *mqlMicrosoftUser) settings() (interface{}, error) {
+func (a *mqlMicrosoftUser) settings() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -905,7 +905,7 @@ func newMqlUserRegistrationDetails(runtime *plugin.Runtime, details models.UserR
 	return resource.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails), nil
 }
 
-func (a *mqlMicrosoftUser) licenseDetails() ([]interface{}, error) {
+func (a *mqlMicrosoftUser) licenseDetails() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -921,7 +921,7 @@ func (a *mqlMicrosoftUser) licenseDetails() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	results := []interface{}{}
+	results := []any{}
 	for _, d := range details.GetValue() {
 		mqlDetail, err := newMqlMicrosoftUserLicenseDetail(a.MqlRuntime, d)
 		if err != nil {
@@ -946,7 +946,7 @@ func newMqlMicrosoftUserLicenseDetail(runtime *plugin.Runtime, d models.LicenseD
 		skuPartNumber = *d.GetSkuPartNumber()
 	}
 
-	servicePlans := []interface{}{}
+	servicePlans := []any{}
 	for i, sp := range d.GetServicePlans() {
 		planId := fmt.Sprintf("%s-service-plans-%d", *d.GetId(), +i)
 

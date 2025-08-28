@@ -9,11 +9,11 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"google.golang.org/api/dns/v1"
 	"google.golang.org/api/option"
@@ -134,7 +134,7 @@ func (g *mqlGcpProjectDnsServiceManagedzone) id() (string, error) {
 	return "gcp.project.dnsService.managedzone/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpProjectDnsService) managedZones() ([]interface{}, error) {
+func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.serviceEnabled {
 		return nil, nil
@@ -159,23 +159,23 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	req := dnsSvc.ManagedZones.List(projectId)
 	if err := req.Pages(ctx, func(page *dns.ManagedZonesListResponse) error {
 		for i := range page.ManagedZones {
 			managedZone := page.ManagedZones[i]
 
-			var mqlDnssecCfg map[string]interface{}
+			var mqlDnssecCfg map[string]any
 			if managedZone.DnssecConfig != nil {
-				keySpecs := make([]interface{}, 0, len(managedZone.DnssecConfig.DefaultKeySpecs))
+				keySpecs := make([]any, 0, len(managedZone.DnssecConfig.DefaultKeySpecs))
 				for _, keySpec := range managedZone.DnssecConfig.DefaultKeySpecs {
-					keySpecs = append(keySpecs, map[string]interface{}{
+					keySpecs = append(keySpecs, map[string]any{
 						"algorithm": keySpec.Algorithm,
 						"keyLength": keySpec.KeyLength,
 						"keyType":   keySpec.KeyType,
 					})
 				}
-				mqlDnssecCfg = map[string]interface{}{
+				mqlDnssecCfg = map[string]any{
 					"defaultKeySpecs": keySpecs,
 					"nonExistence":    managedZone.DnssecConfig.NonExistence,
 					"state":           managedZone.DnssecConfig.State,
@@ -220,7 +220,7 @@ func (g *mqlGcpProjectDnsServicePolicy) id() (string, error) {
 	return "gcp.project.dnsService.policy/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpProjectDnsService) policies() ([]interface{}, error) {
+func (g *mqlGcpProjectDnsService) policies() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.serviceEnabled {
 		return nil, nil
@@ -245,13 +245,13 @@ func (g *mqlGcpProjectDnsService) policies() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	req := dnsSvc.Policies.List(projectId)
 	if err := req.Pages(ctx, func(page *dns.PoliciesListResponse) error {
 		for i := range page.Policies {
 			policy := page.Policies[i]
 
-			networkNames := make([]interface{}, 0, len(policy.Networks))
+			networkNames := make([]any, 0, len(policy.Networks))
 			for _, network := range policy.Networks {
 				segments := strings.Split(network.NetworkUrl, "/")
 				networkNames = append(networkNames, segments[len(segments)-1])
@@ -279,7 +279,7 @@ func (g *mqlGcpProjectDnsService) policies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpProjectDnsServicePolicy) networks() ([]interface{}, error) {
+func (g *mqlGcpProjectDnsServicePolicy) networks() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -302,7 +302,7 @@ func (g *mqlGcpProjectDnsServicePolicy) networks() ([]interface{}, error) {
 		return nil, networks.Error
 	}
 
-	res := make([]interface{}, 0, len(networkNames.Data))
+	res := make([]any, 0, len(networkNames.Data))
 	for _, network := range networks.Data {
 		networkName := network.(*mqlGcpProjectComputeServiceNetwork).Name.Data
 		for _, name := range networkNames.Data {
@@ -328,7 +328,7 @@ func (g *mqlGcpProjectDnsServiceRecordset) id() (string, error) {
 	return "gcp.project.dnsService.recordset/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpProjectDnsServiceManagedzone) recordSets() ([]interface{}, error) {
+func (g *mqlGcpProjectDnsServiceManagedzone) recordSets() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -353,7 +353,7 @@ func (g *mqlGcpProjectDnsServiceManagedzone) recordSets() ([]interface{}, error)
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	req := dnsSvc.ResourceRecordSets.List(projectId, managedZone)
 	if err := req.Pages(ctx, func(page *dns.ResourceRecordSetsListResponse) error {
 		for i := range page.Rrsets {

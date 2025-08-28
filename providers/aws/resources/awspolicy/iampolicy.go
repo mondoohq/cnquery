@@ -31,7 +31,7 @@ type statementSection []string
 
 // can be string or []string
 func (v *statementSection) UnmarshalJSON(b []byte) error {
-	var raw interface{}
+	var raw any
 	err := json.Unmarshal(b, &raw)
 	if err != nil {
 		return err
@@ -41,11 +41,11 @@ func (v *statementSection) UnmarshalJSON(b []byte) error {
 	switch v := raw.(type) {
 	case string:
 		section = []string{v}
-	case []interface{}:
+	case []any:
 		for _, item := range v {
 			section = append(section, item.(string))
 		}
-	case map[string]interface{}:
+	case map[string]any:
 		for _, item := range v {
 			m, err := json.Marshal(item)
 			if err == nil {
@@ -61,7 +61,7 @@ func (v *statementSection) UnmarshalJSON(b []byte) error {
 
 // can be single object or array
 func (v *policyStatements) UnmarshalJSON(b []byte) error {
-	var raw interface{}
+	var raw any
 	err := json.Unmarshal(b, &raw)
 	if err != nil {
 		return err
@@ -70,12 +70,12 @@ func (v *policyStatements) UnmarshalJSON(b []byte) error {
 	statements := []IamPolicyStatement{}
 
 	switch raw.(type) {
-	case []interface{}:
+	case []any:
 		err = json.Unmarshal(b, &statements)
 		if err != nil {
 			return err
 		}
-	case interface{}:
+	case any:
 		statement := IamPolicyStatement{}
 		err = json.Unmarshal(b, &statement)
 		if err != nil {

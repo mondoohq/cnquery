@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
 )
 
 func TestHashiVault(t *testing.T) {
@@ -68,13 +68,13 @@ func set(c *api.Client, key string, fields map[string]string) (*vault.SecretID, 
 	// convert creds fields to vault struct
 	// TODO: we could store labels as part of the content fields, may not look as nice
 	// see https://github.com/hashicorp/vault/issues/7905
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	for k, v := range fields {
 		data[k] = v
 	}
 
 	// encapsulate data into v2 secrets api
-	secretData := map[string]interface{}{
+	secretData := map[string]any{
 		"data": data,
 	}
 

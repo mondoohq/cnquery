@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/terraform/resources"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/terraform/resources"
 )
 
 const (
@@ -107,7 +107,7 @@ func TestResource_Terraform(t *testing.T) {
 	// 	res := testTerraformHclQuery(t, terraformHclPath, "terraform.resources.where( nameLabel  == 'google_compute_instance')[0].arguments['metadata']")
 	// 	require.NotEmpty(t, res)
 	// 	assert.Empty(t, res[0].Result().Error)
-	// 	assert.Equal(t, map[string]interface{}{"enable-oslogin": true}, res[0].Data.Value)
+	// 	assert.Equal(t, map[string]any{"enable-oslogin": true}, res[0].Data.Value)
 	// })
 
 	// t.Run("terraform settings", func(t *testing.T) {
@@ -166,5 +166,5 @@ func TestModuleWithoutResources_Terraform(t *testing.T) {
 func TestKeyString(t *testing.T) {
 	require.Equal(t, "keytest", resources.GetKeyString("keytest"))
 	require.Equal(t, "key,thing", resources.GetKeyString([]string{"key", "thing"}))
-	require.Equal(t, "keything", resources.GetKeyString([]interface{}{"key", "thing"}))
+	require.Equal(t, "keything", resources.GetKeyString([]any{"key", "thing"}))
 }

@@ -152,7 +152,10 @@ func RunSftpServer() {
 		// with a payload string of "<length=4>sftp"
 		fmt.Fprintf(debugStream, "Incoming channel: %s\n", newChannel.ChannelType())
 		if newChannel.ChannelType() != "session" {
-			newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
+			err = newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
+			if err != nil {
+				fmt.Fprintf(debugStream, "failed to reject unknown channel type: %s\n", err.Error())
+			}
 			fmt.Fprintf(debugStream, "Unknown channel type: %s\n", newChannel.ChannelType())
 			continue
 		}
@@ -177,7 +180,9 @@ func RunSftpServer() {
 					}
 				}
 				fmt.Fprintf(debugStream, " - accepted: %v\n", ok)
-				req.Reply(ok, nil)
+				if err = req.Reply(ok, nil); err != nil {
+					fmt.Fprintf(debugStream, "Failed to send reply: %s\n", err.Error())
+				}
 			}
 		}(requests)
 

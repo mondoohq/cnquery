@@ -11,16 +11,16 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/oci/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/oci/connection"
 )
 
 func (e *mqlOciCompute) id() (string, error) {
 	return "oci.compute", nil
 }
 
-func (o *mqlOciCompute) instances() ([]interface{}, error) {
+func (o *mqlOciCompute) instances() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	// fetch regions
@@ -35,7 +35,7 @@ func (o *mqlOciCompute) instances() ([]interface{}, error) {
 	}
 
 	// fetch instances
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(o.getComputeInstances(conn, list.Data), 5)
 	poolOfJobs.Run()
 
@@ -45,7 +45,7 @@ func (o *mqlOciCompute) instances() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -77,7 +77,7 @@ func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, comput
 	return instances, nil
 }
 
-func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regions []interface{}) []*jobpool.Job {
+func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regions []any) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
 	for _, region := range regions {
@@ -94,7 +94,7 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 				return nil, err
 			}
 
-			var res []interface{}
+			var res []any
 			instances, err := o.getComputeInstancesForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err
@@ -132,7 +132,7 @@ func (o *mqlOciComputeInstance) id() (string, error) {
 	return "oci.compute.instance/" + o.Id.Data, nil
 }
 
-func (o *mqlOciCompute) images() ([]interface{}, error) {
+func (o *mqlOciCompute) images() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	// fetch regions
@@ -147,7 +147,7 @@ func (o *mqlOciCompute) images() ([]interface{}, error) {
 	}
 
 	// fetch images
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(o.getComputeImage(conn, list.Data), 5)
 	poolOfJobs.Run()
 
@@ -157,7 +157,7 @@ func (o *mqlOciCompute) images() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -189,7 +189,7 @@ func (o *mqlOciCompute) getComputeImagesForRegion(ctx context.Context, computeCl
 	return images, nil
 }
 
-func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions []interface{}) []*jobpool.Job {
+func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions []any) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
 	for _, region := range regions {
@@ -205,7 +205,7 @@ func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions 
 				return nil, err
 			}
 
-			var res []interface{}
+			var res []any
 			images, err := o.getComputeImagesForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err

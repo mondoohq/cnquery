@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/shadowscatcher/shodan/search"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/shodan/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/shodan/connection"
 )
 
 func initShodanHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -49,10 +49,10 @@ func (r *mqlShodanHost) fetchBaseInformation() error {
 	r.Asn = plugin.TValue[string]{Data: "", Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Country = plugin.TValue[string]{Data: "", Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	r.City = plugin.TValue[string]{Data: "", Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Tags = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Hostnames = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Ports = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Vulnerabilities = plugin.TValue[[]interface{}]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Tags = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Hostnames = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Ports = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Vulnerabilities = plugin.TValue[[]any]{Data: nil, Error: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 
 	ctx := context.Background()
 	host, err := client.Host(ctx, search.HostParams{
@@ -91,24 +91,24 @@ func (r *mqlShodanHost) fetchBaseInformation() error {
 	}
 
 	if host.Tags != nil {
-		r.Tags = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(host.Tags), Error: nil, State: plugin.StateIsSet}
+		r.Tags = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(host.Tags), Error: nil, State: plugin.StateIsSet}
 	}
 
 	if host.Hostnames != nil {
-		r.Hostnames = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(host.Hostnames), Error: nil, State: plugin.StateIsSet}
+		r.Hostnames = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(host.Hostnames), Error: nil, State: plugin.StateIsSet}
 	}
 
 	if host.Ports != nil {
 		// we cannot use convert.SliceIntToInterface since the ports need to be int64
-		ports := make([]interface{}, len(host.Ports))
+		ports := make([]any, len(host.Ports))
 		for i := range host.Ports {
 			ports[i] = int64(host.Ports[i])
 		}
-		r.Ports = plugin.TValue[[]interface{}]{Data: ports, Error: nil, State: plugin.StateIsSet}
+		r.Ports = plugin.TValue[[]any]{Data: ports, Error: nil, State: plugin.StateIsSet}
 	}
 
 	if host.Vulns != nil {
-		r.Vulnerabilities = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(host.Vulns), Error: nil, State: plugin.StateIsSet}
+		r.Vulnerabilities = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(host.Vulns), Error: nil, State: plugin.StateIsSet}
 	}
 
 	return nil
@@ -130,19 +130,19 @@ func (r *mqlShodanHost) asn() (string, error) {
 	return "", r.fetchBaseInformation()
 }
 
-func (r *mqlShodanHost) tags() ([]interface{}, error) {
+func (r *mqlShodanHost) tags() ([]any, error) {
 	return nil, r.fetchBaseInformation()
 }
 
-func (r *mqlShodanHost) hostnames() ([]interface{}, error) {
+func (r *mqlShodanHost) hostnames() ([]any, error) {
 	return nil, r.fetchBaseInformation()
 }
 
-func (r *mqlShodanHost) ports() ([]interface{}, error) {
+func (r *mqlShodanHost) ports() ([]any, error) {
 	return nil, r.fetchBaseInformation()
 }
 
-func (r *mqlShodanHost) vulnerabilities() ([]interface{}, error) {
+func (r *mqlShodanHost) vulnerabilities() ([]any, error) {
 	return nil, r.fetchBaseInformation()
 }
 

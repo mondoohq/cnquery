@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v11/providers/vsphere
+module go.mondoo.com/cnquery/v12/providers/vsphere
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
 go 1.24.0
 
@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	// pin v0.46.3
 	github.com/vmware/govmomi v0.46.3
-	go.mondoo.com/cnquery/v11 v11.61.0
+	go.mondoo.com/cnquery/v12 v12.0.0
 	go.mondoo.com/mondoo-go v0.0.0-20250702005123-23558fe8001c
 )
 

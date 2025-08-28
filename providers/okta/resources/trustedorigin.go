@@ -8,14 +8,14 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/okta/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/okta/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
-func (o *mqlOkta) trustedOrigins() ([]interface{}, error) {
+func (o *mqlOkta) trustedOrigins() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
@@ -34,7 +34,7 @@ func (o *mqlOkta) trustedOrigins() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	appendEntry := func(datalist []*okta.TrustedOrigin) error {
 		for i := range datalist {
 			entry := datalist[i]
@@ -66,7 +66,7 @@ func (o *mqlOkta) trustedOrigins() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlOktaTrustedOrigin(runtime *plugin.Runtime, entry *okta.TrustedOrigin) (interface{}, error) {
+func newMqlOktaTrustedOrigin(runtime *plugin.Runtime, entry *okta.TrustedOrigin) (any, error) {
 	scopes, err := convert.JsonToDictSlice(entry.Scopes)
 	if err != nil {
 		return nil, err

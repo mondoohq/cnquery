@@ -14,12 +14,13 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/checksums"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/mrn"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/checksums"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/mrn"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 	"sigs.k8s.io/yaml"
 )
 
@@ -244,8 +245,8 @@ func (bundle *Bundle) CompileExt(ctx context.Context, conf BundleCompileConf) (*
 		bundle:        bundle,
 		uid2mrn:       map[string]string{},
 		removeQueries: map[string]struct{}{},
-		lookupProp:    map[string]PropertyRef{},
 		lookupQuery:   map[string]*Mquery{},
+		lookupProps:   map[string]PropertyRef{},
 		conf:          conf,
 	}
 
@@ -256,6 +257,7 @@ func (bundle *Bundle) CompileExt(ctx context.Context, conf BundleCompileConf) (*
 	// index packs + update MRNs and checksums, link properties via MRNs
 	for i := range bundle.Packs {
 		pack := bundle.Packs[i]
+		packCache := cache.clone()
 
 		// !this is very important to prevent user overrides! vv
 		pack.InvalidateAllChecksums()
@@ -269,7 +271,7 @@ func (bundle *Bundle) CompileExt(ctx context.Context, conf BundleCompileConf) (*
 		}
 
 		for _, prop := range pack.Props {
-			if err := cache.compileProp(pack.Mrn, prop); err != nil {
+			if err := packCache.compileProp(pack.Mrn, prop, packCache.lookupProps); err != nil {
 				return nil, err
 			}
 		}
@@ -279,7 +281,7 @@ func (bundle *Bundle) CompileExt(ctx context.Context, conf BundleCompileConf) (*
 		}
 		pack.ComputedFilters.AddFilters(pack.Filters)
 
-		if err := cache.compileQueries(pack.Queries, pack); err != nil {
+		if err := packCache.compileQueries(pack.Queries, pack); err != nil {
 			return nil, err
 		}
 
@@ -292,14 +294,16 @@ func (bundle *Bundle) CompileExt(ctx context.Context, conf BundleCompileConf) (*
 			}
 			pack.ComputedFilters.AddFilters(group.Filters)
 
-			if err := cache.compileQueries(group.Queries, pack); err != nil {
+			if err := packCache.compileQueries(group.Queries, pack); err != nil {
 				return nil, err
 			}
 		}
 
-		if err := LiftPropertiesToPack(pack, cache.lookupQuery); err != nil {
+		if err := LiftPropertiesToPack(pack, packCache.lookupQuery); err != nil {
 			return nil, err
 		}
+
+		packCache.finalize(cache)
 	}
 
 	// Removing any failing queries happens at the very end, when everything is
@@ -313,7 +317,7 @@ func (bundle *Bundle) CompileExt(ctx context.Context, conf BundleCompileConf) (*
 type bundleCache struct {
 	ownerMrn      string
 	lookupQuery   map[string]*Mquery
-	lookupProp    map[string]PropertyRef
+	lookupProps   map[string]PropertyRef
 	uid2mrn       map[string]string
 	removeQueries map[string]struct{}
 	bundle        *Bundle
@@ -324,6 +328,34 @@ type bundleCache struct {
 type PropertyRef struct {
 	*Property
 	Name string
+	Mrn  string
+}
+
+func (c *bundleCache) clone() *bundleCache {
+	res := &bundleCache{
+		ownerMrn:      c.ownerMrn,
+		lookupQuery:   make(map[string]*Mquery, len(c.lookupQuery)),
+		lookupProps:   make(map[string]PropertyRef, len(c.lookupProps)),
+		uid2mrn:       make(map[string]string, len(c.uid2mrn)),
+		removeQueries: c.removeQueries,
+		bundle:        c.bundle,
+		errors:        c.errors,
+		conf:          c.conf,
+	}
+	for k, v := range c.lookupQuery {
+		res.lookupQuery[k] = v
+	}
+	for k, v := range c.lookupProps {
+		res.lookupProps[k] = v
+	}
+	for k, v := range c.uid2mrn {
+		res.uid2mrn[k] = v
+	}
+	return res
+}
+
+func (c *bundleCache) finalize(parent *bundleCache) {
+	parent.errors = append(parent.errors, c.errors...)
 }
 
 func (c *bundleCache) removeFailing(res *Bundle) {
@@ -370,8 +402,9 @@ func (c *bundleCache) error() error {
 }
 
 func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
+	propsCache := map[string]PropertyRef{}
 	for i := range queries {
-		c.precompileQuery(queries[i], pack)
+		c.precompileQuery(queries[i], pack, propsCache)
 	}
 
 	// After the first pass we may have errors. We try to collect as many errors
@@ -383,7 +416,7 @@ func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
 	}
 
 	for i := range queries {
-		c.compileQuery(queries[i])
+		c.compileQuery(queries[i], propsCache)
 	}
 
 	// The second pass on errors is done after we have compiled as much as possible.
@@ -394,7 +427,7 @@ func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
 
 // precompileQuery indexes the query, turns UIDs into MRNs, compiles properties
 // and filters, and pre-processes variants. Also makes sure the query isn't nil.
-func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
+func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack, propsCache map[string]PropertyRef) {
 	if query == nil {
 		c.errors = append(c.errors, errors.New("received null query"))
 		return
@@ -427,7 +460,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 
 	// ensure MRNs for properties
 	for i := range query.Props {
-		if err := c.compileProp(query.Mrn, query.Props[i]); err != nil {
+		if err := c.compileProp(query.Mrn, query.Props[i], propsCache); err != nil {
 			c.errors = append(c.errors, errors.New("failed to compile properties for query "+query.Mrn))
 			return
 		}
@@ -461,11 +494,61 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 	}
 }
 
+type propsHandler struct {
+	queryCache map[string]PropertyRef
+	packCache  map[string]PropertyRef
+	query      *Mquery
+}
+
+func (p *propsHandler) Available() map[string]*llx.Primitive {
+	res := make(map[string]*llx.Primitive, len(p.queryCache))
+	for k, v := range p.queryCache {
+		res[k] = &llx.Primitive{Type: v.Property.Type}
+	}
+	return res
+}
+
+func (p *propsHandler) All() map[string]*llx.Primitive {
+	// note: this allocates possibly too much space, because we don't need as much
+	// but the call is in errors and auto-complete, so it's rarer
+	res := make(map[string]*llx.Primitive, len(p.queryCache)+len(p.packCache))
+	for k, v := range p.packCache {
+		res[k] = &llx.Primitive{Type: v.Property.Type}
+	}
+	for k, v := range p.queryCache {
+		res[k] = &llx.Primitive{Type: v.Property.Type}
+	}
+	return res
+}
+
+func (p *propsHandler) Get(name string) *llx.Primitive {
+	// Property lookup happens on 2 layers:
+	// 1. the property is part of the query definition, we are ll set
+	// 2. the property is part of the pack definition, then we have to add it to the query
+	ref, ok := p.queryCache[name]
+	if ok {
+		return &llx.Primitive{Type: ref.Property.Type}
+	}
+
+	ref, ok = p.packCache[name]
+	if !ok {
+		return nil
+	}
+	p.query.Props = append(p.query.Props, ref.Property)
+	return &llx.Primitive{Type: ref.Property.Type}
+}
+
 // Note: you only want to run this, after you are sure that all connected
 // dependencies have been processed. Properties must be compiled. Connected
 // queries may not be ready yet, but we have to have precompiled them.
-func (c *bundleCache) compileQuery(query *Mquery) {
-	_, err := query.RefreshChecksumAndType(c.lookupQuery, c.lookupProp, c.conf.CompilerConfig)
+func (c *bundleCache) compileQuery(query *Mquery, propsCache map[string]PropertyRef) {
+	props := &propsHandler{
+		queryCache: propsCache,
+		packCache:  c.lookupProps,
+		query:      query,
+	}
+
+	_, err := query.RefreshChecksumAndType(c.lookupQuery, props, c.conf.CompilerConfig)
 	if err != nil {
 		if c.conf.RemoveFailing {
 			c.removeQueries[query.Mrn] = struct{}{}
@@ -475,7 +558,7 @@ func (c *bundleCache) compileQuery(query *Mquery) {
 	}
 }
 
-func (c *bundleCache) compileProp(ownerMrn string, prop *Property) error {
+func (c *bundleCache) compileProp(ownerMrn string, prop *Property, cache map[string]PropertyRef) error {
 	var name string
 
 	if prop.Mrn == "" {
@@ -504,9 +587,10 @@ func (c *bundleCache) compileProp(ownerMrn string, prop *Property) error {
 		}
 	}
 
-	c.lookupProp[prop.Mrn] = PropertyRef{
+	cache[name] = PropertyRef{
 		Property: prop,
 		Name:     name,
+		Mrn:      prop.Mrn,
 	}
 
 	return nil
@@ -604,7 +688,6 @@ func LiftPropertiesToPack(pack *QueryPack, lookupQuery map[string]*Mquery) error
 					propsByUid[propUid] = append(propsByUid[propUid], prop.Mrn)
 				}
 			}
-
 		}
 		for _, prop := range pack.Props {
 			if len(prop.For) == 0 {

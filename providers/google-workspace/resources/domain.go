@@ -7,9 +7,9 @@ import (
 	"errors"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/google-workspace/connection"
 	directory "google.golang.org/api/admin/directory/v1"
 )
 
@@ -33,7 +33,7 @@ func GetPrimaryDomain(conn *connection.GoogleWorkspaceConnection) (string, error
 	return "", errors.New("no primary domain found")
 }
 
-func (g *mqlGoogleworkspace) domains() ([]interface{}, error) {
+func (g *mqlGoogleworkspace) domains() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	directoryService, err := directoryService(conn, directory.AdminDirectoryDomainReadonlyScope)
 	if err != nil {
@@ -45,7 +45,7 @@ func (g *mqlGoogleworkspace) domains() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range domains.Domains {
 		r, err := newMqlGoogleWorkspaceDomain(g.MqlRuntime, domains.Domains[i])
 		if err != nil {
@@ -56,7 +56,7 @@ func (g *mqlGoogleworkspace) domains() ([]interface{}, error) {
 	return res, nil
 }
 
-func newMqlGoogleWorkspaceDomain(runtime *plugin.Runtime, entry *directory.Domains) (interface{}, error) {
+func newMqlGoogleWorkspaceDomain(runtime *plugin.Runtime, entry *directory.Domains) (any, error) {
 	unixTimeUTC := time.UnixMilli(entry.CreationTime)
 	return CreateResource(runtime, "googleworkspace.domain", map[string]*llx.RawData{
 		"domainName":   llx.StringData(entry.DomainName),

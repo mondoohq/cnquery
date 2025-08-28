@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
@@ -53,7 +53,7 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) id() (string, 
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -108,7 +108,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (interfa
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForAppServices() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForAppServices() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -137,7 +137,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForAppServices() (int
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlServersOnMachines() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlServersOnMachines() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -166,7 +166,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlServersOnMachin
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlDatabases() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlDatabases() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -195,7 +195,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlDatabases() (in
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForOpenSourceDatabases() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForOpenSourceDatabases() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -224,7 +224,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForOpenSourceDatabase
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForCosmosDb() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForCosmosDb() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -253,7 +253,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForCosmosDb() (interf
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForStorageAccounts() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForStorageAccounts() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -282,7 +282,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForStorageAccounts() 
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForKeyVaults() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForKeyVaults() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -311,7 +311,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForKeyVaults() (inter
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForResourceManager() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForResourceManager() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -361,7 +361,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) monitoringAgentAutoProvision(
 	return autoProvision == security.AutoProvisionOn, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	subId := a.SubscriptionId.Data
@@ -537,7 +537,7 @@ func (s *mqlAzureSubscriptionCloudDefenderServiceSettings) id() (string, error) 
 	return s.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -547,7 +547,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]interfa
 		return nil, err
 	}
 	pager := clientFactory.NewContactsClient().NewListPager(nil)
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -578,7 +578,7 @@ func argsFromContactProperties(props *armsecurity.ContactProperties) map[string]
 		return args
 	}
 
-	sources := map[string]interface{}{}
+	sources := map[string]any{}
 	for _, source := range props.NotificationsSources {
 		notificationSource := source.GetNotificationsSource()
 		if notificationSource == nil || notificationSource.SourceType == nil {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
+	"go.mondoo.com/cnquery/v12/providers/os/id/hostname"
 )
 
 func (m *ebsMetadata) unixMetadata() (any, error) {

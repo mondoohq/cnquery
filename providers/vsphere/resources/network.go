@@ -7,8 +7,8 @@ import (
 	"errors"
 	"reflect"
 
-	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/resources/resourceclient"
 )
 
 type mqlVsphereVswitchStandardInternal struct {
@@ -25,7 +25,7 @@ func (v *mqlVsphereVswitchStandard) esxiClient() (*resourceclient.Esxi, error) {
 	return esxiClient(conn, v.hostInventoryPath)
 }
 
-func (v *mqlVsphereVswitchStandard) failoverPolicy() (map[string]interface{}, error) {
+func (v *mqlVsphereVswitchStandard) failoverPolicy() (map[string]any, error) {
 	if v.Name.Error != nil {
 		return nil, v.Name.Error
 	}
@@ -39,7 +39,7 @@ func (v *mqlVsphereVswitchStandard) failoverPolicy() (map[string]interface{}, er
 	return esxiClient.VswitchStandardFailoverPolicy(name)
 }
 
-func (v *mqlVsphereVswitchStandard) securityPolicy() (map[string]interface{}, error) {
+func (v *mqlVsphereVswitchStandard) securityPolicy() (map[string]any, error) {
 	if v.Name.Error != nil {
 		return nil, v.Name.Error
 	}
@@ -53,7 +53,7 @@ func (v *mqlVsphereVswitchStandard) securityPolicy() (map[string]interface{}, er
 	return esxiClient.VswitchStandardSecurityPolicy(name)
 }
 
-func (v *mqlVsphereVswitchStandard) shapingPolicy() (map[string]interface{}, error) {
+func (v *mqlVsphereVswitchStandard) shapingPolicy() (map[string]any, error) {
 	if v.Name.Error != nil {
 		return nil, v.Name.Error
 	}
@@ -67,13 +67,13 @@ func (v *mqlVsphereVswitchStandard) shapingPolicy() (map[string]interface{}, err
 	return esxiClient.VswitchStandardShapingPolicy(name)
 }
 
-func (v *mqlVsphereVswitchStandard) uplinks() ([]interface{}, error) {
+func (v *mqlVsphereVswitchStandard) uplinks() ([]any, error) {
 	props := v.GetProperties()
 	if props.Error != nil {
 		return nil, props.Error
 	}
 
-	properties, ok := props.Data.(map[string]interface{})
+	properties, ok := props.Data.(map[string]any)
 	if !ok {
 		return nil, errors.New("unexpected properties structure for vsphere switch")
 	}
@@ -90,7 +90,7 @@ func (v *mqlVsphereVswitchStandard) uplinks() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	uplinkNames, ok := uplinksRaw.([]interface{})
+	uplinkNames, ok := uplinksRaw.([]any)
 	if !ok {
 		return nil, errors.New("unexpected type for vsphere switch uplinks " + reflect.ValueOf(uplinksRaw).Type().Name())
 	}
@@ -104,14 +104,14 @@ func (v *mqlVsphereVswitchStandard) uplinks() ([]interface{}, error) {
 	return findHostAdapter(v.parentResource, uplinkNames)
 }
 
-func findHostAdapter(host *mqlVsphereHost, uplinkNames []interface{}) ([]interface{}, error) {
+func findHostAdapter(host *mqlVsphereHost, uplinkNames []any) ([]any, error) {
 	adapters := host.GetAdapters()
 	if adapters.Error != nil {
 		return nil, errors.New("cannot retrieve esxi host adapters")
 	}
 
 	// gather all adapters on that host so that we can find the adapter by name
-	mqlUplinks := []interface{}{}
+	mqlUplinks := []any{}
 	for i := range adapters.Data {
 		adapter := adapters.Data[i].(*mqlVsphereVmnic)
 
@@ -141,13 +141,13 @@ func (v *mqlVsphereVswitchDvs) id() (string, error) {
 	return v.Name.Data, v.Name.Error
 }
 
-func (v *mqlVsphereVswitchDvs) uplinks() ([]interface{}, error) {
+func (v *mqlVsphereVswitchDvs) uplinks() ([]any, error) {
 	props := v.GetProperties()
 	if props.Error != nil {
 		return nil, props.Error
 	}
 
-	properties, ok := props.Data.(map[string]interface{})
+	properties, ok := props.Data.(map[string]any)
 	if !ok {
 		return nil, errors.New("unexpected properties structure for vsphere switch")
 	}
@@ -168,7 +168,7 @@ func (v *mqlVsphereVswitchDvs) uplinks() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	uplinkNames, ok := uplinksRaw.([]interface{})
+	uplinkNames, ok := uplinksRaw.([]any)
 	if !ok {
 		return nil, errors.New("unexpected type for vsphere switch uplinks " + reflect.ValueOf(uplinksRaw).Type().Name())
 	}

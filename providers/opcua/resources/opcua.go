@@ -8,7 +8,7 @@ import (
 
 	"github.com/gopcua/opcua/id"
 	"github.com/gopcua/opcua/ua"
-	"go.mondoo.com/cnquery/v11/providers/opcua/connection"
+	"go.mondoo.com/cnquery/v12/providers/opcua/connection"
 )
 
 func (o *mqlOpcua) id() (string, error) {
@@ -76,7 +76,7 @@ func resolve(ctx context.Context, meta *nodeMeta) ([]*nodeMeta, error) {
 	return nodeList, nil
 }
 
-func (o *mqlOpcua) nodes() ([]interface{}, error) {
+func (o *mqlOpcua) nodes() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OpcuaConnection)
 	client := conn.Client()
 
@@ -96,7 +96,7 @@ func (o *mqlOpcua) nodes() ([]interface{}, error) {
 	nodeList = append(nodeList, resolved...)
 
 	// convert list to interface
-	res := []interface{}{}
+	res := []any{}
 	for i := range nodeList {
 		entry, err := newMqlOpcuaNodeResource(o.MqlRuntime, nodeList[i])
 		if err != nil {

@@ -8,10 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 	"golang.org/x/exp/slices"
 )
 
@@ -34,9 +34,9 @@ func (a *mqlAwsTimestreamLiveanalytics) id() (string, error) {
 	return "aws.timestream.liveanalytics", nil
 }
 
-func (a *mqlAwsTimestreamLiveanalytics) databases() ([]interface{}, error) {
+func (a *mqlAwsTimestreamLiveanalytics) databases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getDatabases(conn), 5)
 	poolOfJobs.Run()
 
@@ -47,7 +47,7 @@ func (a *mqlAwsTimestreamLiveanalytics) databases() ([]interface{}, error) {
 	// get all the results
 	for i := range poolOfJobs.Jobs {
 		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 		}
 	}
 
@@ -71,7 +71,7 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 
 			svc := conn.TimestreamLiveAnalytics(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &timestreamwrite.ListDatabasesInput{}
 			paginator := timestreamwrite.NewListDatabasesPaginator(svc, params)
@@ -112,9 +112,9 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 	return tasks
 }
 
-func (a *mqlAwsTimestreamLiveanalytics) tables() ([]interface{}, error) {
+func (a *mqlAwsTimestreamLiveanalytics) tables() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getTables(conn), 5)
 	poolOfJobs.Run()
 
@@ -125,7 +125,7 @@ func (a *mqlAwsTimestreamLiveanalytics) tables() ([]interface{}, error) {
 	// get all the results
 	for _, job := range poolOfJobs.Jobs {
 		if job.Result != nil {
-			res = append(res, job.Result.([]interface{})...)
+			res = append(res, job.Result.([]any)...)
 		}
 	}
 
@@ -149,7 +149,7 @@ func (a *mqlAwsTimestreamLiveanalytics) getTables(conn *connection.AwsConnection
 
 			svc := conn.TimestreamLiveAnalytics(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &timestreamwrite.ListTablesInput{}
 			paginator := timestreamwrite.NewListTablesPaginator(svc, params)

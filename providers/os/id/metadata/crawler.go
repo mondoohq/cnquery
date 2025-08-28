@@ -31,7 +31,7 @@ func getMetadataRecursively(r recursive, path string) (any, error) {
 	// If the response is JSON, parse it
 	if isJSON(data) {
 		log.Trace().Str("path", path).Msg("os.id.metadata> json format")
-		var jsonData interface{}
+		var jsonData any
 		if err := json.Unmarshal([]byte(data), &jsonData); err != nil {
 			return nil, err
 		}

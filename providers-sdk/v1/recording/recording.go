@@ -9,10 +9,10 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 type recording struct {
@@ -249,11 +249,11 @@ func (r *recording) reconnectResource(resource *Resource) error {
 	return nil
 }
 
-func tryReconnect(typ types.Type, v interface{}, resource *Resource) (interface{}, error) {
+func tryReconnect(typ types.Type, v any, resource *Resource) (any, error) {
 	var err error
 
 	if typ.IsArray() {
-		arr, ok := v.([]interface{})
+		arr, ok := v.([]any)
 		if !ok {
 			return nil, errors.New("failed to reconnect array type")
 		}
@@ -268,7 +268,7 @@ func tryReconnect(typ types.Type, v interface{}, resource *Resource) (interface{
 	}
 
 	if typ.IsMap() {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 		if !ok {
 			return nil, errors.New("failed to reconnect map type")
 		}
@@ -289,8 +289,8 @@ func tryReconnect(typ types.Type, v interface{}, resource *Resource) (interface{
 	return reconnectResource(v, resource)
 }
 
-func reconnectResource(v interface{}, resource *Resource) (interface{}, error) {
-	vals, ok := v.(map[string]interface{})
+func reconnectResource(v any, resource *Resource) (any, error) {
+	vals, ok := v.(map[string]any)
 	if !ok {
 		return nil, errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect reference")
 	}

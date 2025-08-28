@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -408,7 +408,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gitlab.group.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabGroup).Projects, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGitlabGroup).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -512,7 +512,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gitlab.project.approvalRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).ApprovalRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGitlabProject).ApprovalRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.mergeMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -524,19 +524,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gitlab.project.protectedBranches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).ProtectedBranches, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGitlabProject).ProtectedBranches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.projectMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).ProjectMembers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGitlabProject).ProjectMembers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.projectFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).ProjectFiles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGitlabProject).ProjectFiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.webhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).Webhooks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGitlabProject).Webhooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.jobsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -719,7 +719,7 @@ type mqlGitlabGroup struct {
 	PreventForkingOutsideGroup plugin.TValue[bool]
 	EmailsDisabled plugin.TValue[bool]
 	MentionsDisabled plugin.TValue[bool]
-	Projects plugin.TValue[[]interface{}]
+	Projects plugin.TValue[[]any]
 }
 
 // createGitlabGroup creates a new instance of this resource
@@ -803,15 +803,15 @@ func (c *mqlGitlabGroup) GetMentionsDisabled() *plugin.TValue[bool] {
 	return &c.MentionsDisabled
 }
 
-func (c *mqlGitlabGroup) GetProjects() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Projects, func() ([]interface{}, error) {
+func (c *mqlGitlabGroup) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.group", c.__id, "projects")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -848,13 +848,13 @@ type mqlGitlabProject struct {
 	PackagesEnabled plugin.TValue[bool]
 	AutoDevopsEnabled plugin.TValue[bool]
 	RequirementsEnabled plugin.TValue[bool]
-	ApprovalRules plugin.TValue[[]interface{}]
+	ApprovalRules plugin.TValue[[]any]
 	MergeMethod plugin.TValue[string]
 	ApprovalSettings plugin.TValue[*mqlGitlabProjectApprovalSetting]
-	ProtectedBranches plugin.TValue[[]interface{}]
-	ProjectMembers plugin.TValue[[]interface{}]
-	ProjectFiles plugin.TValue[[]interface{}]
-	Webhooks plugin.TValue[[]interface{}]
+	ProtectedBranches plugin.TValue[[]any]
+	ProjectMembers plugin.TValue[[]any]
+	ProjectFiles plugin.TValue[[]any]
+	Webhooks plugin.TValue[[]any]
 	JobsEnabled plugin.TValue[bool]
 	EmptyRepo plugin.TValue[bool]
 	SharedRunnersEnabled plugin.TValue[bool]
@@ -994,15 +994,15 @@ func (c *mqlGitlabProject) GetRequirementsEnabled() *plugin.TValue[bool] {
 	return &c.RequirementsEnabled
 }
 
-func (c *mqlGitlabProject) GetApprovalRules() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ApprovalRules, func() ([]interface{}, error) {
+func (c *mqlGitlabProject) GetApprovalRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApprovalRules, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "approvalRules")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1032,15 +1032,15 @@ func (c *mqlGitlabProject) GetApprovalSettings() *plugin.TValue[*mqlGitlabProjec
 	})
 }
 
-func (c *mqlGitlabProject) GetProtectedBranches() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ProtectedBranches, func() ([]interface{}, error) {
+func (c *mqlGitlabProject) GetProtectedBranches() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProtectedBranches, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "protectedBranches")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1048,15 +1048,15 @@ func (c *mqlGitlabProject) GetProtectedBranches() *plugin.TValue[[]interface{}] 
 	})
 }
 
-func (c *mqlGitlabProject) GetProjectMembers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ProjectMembers, func() ([]interface{}, error) {
+func (c *mqlGitlabProject) GetProjectMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProjectMembers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "projectMembers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1064,15 +1064,15 @@ func (c *mqlGitlabProject) GetProjectMembers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGitlabProject) GetProjectFiles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ProjectFiles, func() ([]interface{}, error) {
+func (c *mqlGitlabProject) GetProjectFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProjectFiles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "projectFiles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1080,15 +1080,15 @@ func (c *mqlGitlabProject) GetProjectFiles() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGitlabProject) GetWebhooks() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Webhooks, func() ([]interface{}, error) {
+func (c *mqlGitlabProject) GetWebhooks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Webhooks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "webhooks")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 

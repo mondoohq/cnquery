@@ -12,7 +12,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/miekg/dns"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 type DnsClient struct {

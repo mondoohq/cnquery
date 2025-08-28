@@ -13,13 +13,13 @@ func TestIni(t *testing.T) {
 	tests := []struct {
 		title   string
 		content string
-		res     map[string]interface{}
+		res     map[string]any
 	}{
 		{
 			"simple assignment",
 			"key = value",
-			map[string]interface{}{
-				"": map[string]interface{}{
+			map[string]any{
+				"": map[string]any{
 					"key": "value",
 				},
 			},
@@ -27,8 +27,8 @@ func TestIni(t *testing.T) {
 		{
 			"no assignment",
 			"key and value",
-			map[string]interface{}{
-				"": map[string]interface{}{
+			map[string]any{
+				"": map[string]any{
 					"key and value": "",
 				},
 			},
@@ -36,8 +36,8 @@ func TestIni(t *testing.T) {
 		{
 			"newline comment",
 			"key\n# comment\n  # more comment\n\t# and one more\nvalue",
-			map[string]interface{}{
-				"": map[string]interface{}{
+			map[string]any{
+				"": map[string]any{
 					"key":   "",
 					"value": "",
 				},
@@ -46,11 +46,11 @@ func TestIni(t *testing.T) {
 		{
 			"groups",
 			"key\n[some group]\nkey2=value",
-			map[string]interface{}{
-				"": map[string]interface{}{
+			map[string]any{
+				"": map[string]any{
 					"key": "",
 				},
-				"some group": map[string]interface{}{
+				"some group": map[string]any{
 					"key2": "value",
 				},
 			},
@@ -70,13 +70,13 @@ func TestIni_SpaceDelim(t *testing.T) {
 	tests := []struct {
 		title   string
 		content string
-		res     map[string]interface{}
+		res     map[string]any
 	}{
 		{
 			"simple assignment",
 			"key value",
-			map[string]interface{}{
-				"": map[string]interface{}{
+			map[string]any{
+				"": map[string]any{
 					"key": "value",
 				},
 			},
@@ -84,8 +84,8 @@ func TestIni_SpaceDelim(t *testing.T) {
 		{
 			"no assignment",
 			"keykey",
-			map[string]interface{}{
-				"": map[string]interface{}{
+			map[string]any{
+				"": map[string]any{
 					"keykey": "",
 				},
 			},
@@ -93,8 +93,8 @@ func TestIni_SpaceDelim(t *testing.T) {
 		{
 			"newline comment",
 			"key\n# comment\n  # more comment\n\t# and one more\nvalue",
-			map[string]interface{}{
-				"": map[string]interface{}{
+			map[string]any{
+				"": map[string]any{
 					"key":   "",
 					"value": "",
 				},
@@ -103,11 +103,11 @@ func TestIni_SpaceDelim(t *testing.T) {
 		{
 			"groups",
 			"key\n[some group]\nkey2 value",
-			map[string]interface{}{
-				"": map[string]interface{}{
+			map[string]any{
+				"": map[string]any{
 					"key": "",
 				},
-				"some group": map[string]interface{}{
+				"some group": map[string]any{
 					"key2": "value",
 				},
 			},
@@ -115,8 +115,8 @@ func TestIni_SpaceDelim(t *testing.T) {
 		{
 			"tabs",
 			"key\tvalue",
-			map[string]interface{}{
-				"": map[string]interface{}{
+			map[string]any{
+				"": map[string]any{
 					"key": "value",
 				},
 			},
@@ -140,8 +140,8 @@ Compress=yes
 #Seal=yes
 `
 	res := ParseIni(data, "=")
-	assert.Equal(t, map[string]interface{}{
-		"Journal": map[string]interface{}{
+	assert.Equal(t, map[string]any{
+		"Journal": map[string]any{
 			"Storage":  "auto",
 			"Compress": "yes",
 		},

@@ -12,13 +12,13 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/internal/workerpool"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/github/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/internal/workerpool"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/github/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 type mqlGithubOrganizationInternal struct {
@@ -106,7 +106,7 @@ func (g *mqlGithubOrganizationCustomProperty) id() (string, error) {
 	return "github.organization.customProperty/" + g.Name.Data, nil
 }
 
-func (g *mqlGithubOrganization) customProperties() ([]interface{}, error) {
+func (g *mqlGithubOrganization) customProperties() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
@@ -121,7 +121,7 @@ func (g *mqlGithubOrganization) customProperties() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resources := []interface{}{}
+	resources := []any{}
 	for _, property := range customProperties {
 		r, err := CreateResource(g.MqlRuntime, "github.organization.customProperty", map[string]*llx.RawData{
 			"name":             llx.StringDataPtr(property.PropertyName),
@@ -142,7 +142,7 @@ func (g *mqlGithubOrganization) customProperties() ([]interface{}, error) {
 	return resources, nil
 }
 
-func (g *mqlGithubOrganization) members() ([]interface{}, error) {
+func (g *mqlGithubOrganization) members() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
@@ -168,7 +168,7 @@ func (g *mqlGithubOrganization) members() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allMembers {
 		member := allMembers[i]
 
@@ -185,7 +185,7 @@ func (g *mqlGithubOrganization) members() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubOrganization) owners() ([]interface{}, error) {
+func (g *mqlGithubOrganization) owners() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
@@ -214,7 +214,7 @@ func (g *mqlGithubOrganization) owners() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allMembers {
 		member := allMembers[i]
 
@@ -249,7 +249,7 @@ func (g *mqlGithubOrganization) owners() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubOrganization) teams() ([]interface{}, error) {
+func (g *mqlGithubOrganization) teams() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
@@ -276,7 +276,7 @@ func (g *mqlGithubOrganization) teams() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allTeams {
 		team := allTeams[i]
 		r, err := CreateResource(g.MqlRuntime, "github.team", map[string]*llx.RawData{
@@ -297,7 +297,7 @@ func (g *mqlGithubOrganization) teams() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
+func (g *mqlGithubOrganization) repositories() ([]any, error) {
 	defer logger.FuncDur(time.Now(), "provider.github.repositories")
 
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
@@ -357,7 +357,7 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 		g.repoCacheMap = make(map[string]*mqlGithubRepository)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, repos := range workerPool.GetValues() {
 		for i := range repos {
 			repo := repos[i]
@@ -374,7 +374,7 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubOrganization) webhooks() ([]interface{}, error) {
+func (g *mqlGithubOrganization) webhooks() ([]any, error) {
 	defer logger.FuncDur(time.Now(), "provider.github.webhooks")
 
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
@@ -403,7 +403,7 @@ func (g *mqlGithubOrganization) webhooks() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allHooks {
 		h := allHooks[i]
 		config, err := convert.JsonToDict(h.Config)
@@ -433,7 +433,7 @@ type mqlGithubPackageInternal struct {
 	parentResource    *mqlGithubOrganization
 }
 
-func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
+func (g *mqlGithubOrganization) packages() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
@@ -442,7 +442,7 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 	ownerLogin := g.Login.Data
 
 	pkgTypes := []string{"npm", "maven", "rubygems", "docker", "nuget", "container"}
-	res := []interface{}{}
+	res := []any{}
 	for i := range pkgTypes {
 		listOpts := &github.PackageListOptions{
 			ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -529,7 +529,7 @@ func (g *mqlGithubPackage) repository() (*mqlGithubRepository, error) {
 	return newMqlGithubRepository(g.MqlRuntime, repo)
 }
 
-func (g *mqlGithubOrganization) installations() ([]interface{}, error) {
+func (g *mqlGithubOrganization) installations() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
@@ -556,7 +556,7 @@ func (g *mqlGithubOrganization) installations() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allOrgInstallations {
 		app := allOrgInstallations[i]
 

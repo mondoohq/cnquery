@@ -15,11 +15,11 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
-	"go.mondoo.com/cnquery/v11/providers/os/id/machineid"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/id/awsec2"
+	"go.mondoo.com/cnquery/v12/providers/os/id/machineid"
 )
 
 type Identity struct {

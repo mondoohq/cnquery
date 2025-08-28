@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"

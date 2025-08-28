@@ -8,11 +8,11 @@ import (
 
 	"github.com/microsoftgraph/msgraph-sdk-go/devicemanagement"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (m *mqlMicrosoftDevicemanagementDeviceconfiguration) id() (string, error) {
@@ -25,7 +25,7 @@ func (m *mqlMicrosoftDevicemanagementDevicecompliancepolicy) id() (string, error
 
 // requires DeviceManagementManagedDevices.Read.All permission
 // see https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-list?view=graph-rest-1.0
-func (a *mqlMicrosoftDevicemanagement) managedDevices() ([]interface{}, error) {
+func (a *mqlMicrosoftDevicemanagement) managedDevices() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -67,7 +67,7 @@ func (a *mqlMicrosoftDevicemanagement) managedDevices() ([]interface{}, error) {
 		resp = nextResp
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, device := range allDevices {
 		device, err := newMqlMicrosoftManagedDevice(a.MqlRuntime, device)
 		if err != nil {
@@ -123,7 +123,7 @@ func newMqlMicrosoftManagedDevice(runtime *plugin.Runtime, u models.ManagedDevic
 	return graphDevice.(*mqlMicrosoftDevicemanagementManageddevice), nil
 }
 
-func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, error) {
+func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -136,10 +136,9 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, er
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	configurations := resp.GetValue()
 	for _, configuration := range configurations {
-		properties := getConfigurationProperties(configuration)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.deviceconfiguration",
 			map[string]*llx.RawData{
 				"id":                   llx.StringDataPtr(configuration.GetId()),
@@ -148,7 +147,6 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, er
 				"description":          llx.StringDataPtr(configuration.GetDescription()),
 				"displayName":          llx.StringDataPtr(configuration.GetDisplayName()),
 				"version":              llx.IntDataDefault(configuration.GetVersion(), 0),
-				"properties":           llx.DictData(properties),
 			})
 		if err != nil {
 			return nil, err
@@ -158,7 +156,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, er
 	return res, nil
 }
 
-func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]interface{}, error) {
+func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -172,7 +170,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]inter
 	}
 
 	configs := deviceEnrollmentConfigurations.GetValue()
-	res := []interface{}{}
+	res := []any{}
 	for _, config := range configs {
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.deviceEnrollmentConfiguration",
 			map[string]*llx.RawData{
@@ -194,7 +192,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]inter
 	return res, nil
 }
 
-func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]interface{}, error) {
+func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -213,13 +211,12 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]interface{}
 	}
 
 	compliancePolicies := resp.GetValue()
-	res := []interface{}{}
+	res := []any{}
 	for _, compliancePolicy := range compliancePolicies {
 		assignments, err := convert.JsonToDictSlice(newDeviceCompliancePolicyAssignments(compliancePolicy.GetAssignments()))
 		if err != nil {
 			return nil, err
 		}
-		properties := getComplianceProperties(compliancePolicy)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.devicecompliancepolicy",
 			map[string]*llx.RawData{
 				"id":                   llx.StringDataPtr(compliancePolicy.GetId()),
@@ -229,7 +226,6 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]interface{}
 				"lastModifiedDateTime": llx.TimeDataPtr(compliancePolicy.GetLastModifiedDateTime()),
 				"version":              llx.IntDataDefault(compliancePolicy.GetVersion(), 0),
 				"assignments":          llx.ArrayData(assignments, types.Any),
-				"properties":           llx.DictData(properties),
 			})
 		if err != nil {
 			return nil, err
@@ -240,8 +236,8 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]interface{}
 }
 
 // TODO: androidDeviceOwnerGeneralDeviceConfiguration missing
-func getConfigurationProperties(config models.DeviceConfigurationable) map[string]interface{} {
-	props := map[string]interface{}{}
+func getConfigurationProperties(config models.DeviceConfigurationable) map[string]any {
+	props := map[string]any{}
 	if config.GetOdataType() != nil {
 		props["@odata.type"] = *config.GetOdataType()
 	}
@@ -377,8 +373,8 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 }
 
 // TODO: windows 10 props missing.
-func getComplianceProperties(compliance models.DeviceCompliancePolicyable) map[string]interface{} {
-	props := map[string]interface{}{}
+func getComplianceProperties(compliance models.DeviceCompliancePolicyable) map[string]any {
+	props := map[string]any{}
 	if compliance.GetOdataType() != nil {
 		props["@odata.type"] = *compliance.GetOdataType()
 	}

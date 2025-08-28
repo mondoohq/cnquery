@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"go.mondoo.com/cnquery/v11/cli/reporter"
+	"go.mondoo.com/cnquery/v12/cli/reporter"
 	"sigs.k8s.io/yaml"
 )
 

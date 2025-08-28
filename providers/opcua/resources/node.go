@@ -10,8 +10,8 @@ import (
 	"github.com/gopcua/opcua/errors"
 	"github.com/gopcua/opcua/id"
 	"github.com/gopcua/opcua/ua"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 )
 
 type nodeMeta struct {
@@ -195,14 +195,14 @@ func (o *mqlOpcuaNode) namespace() (*mqlOpcuaNamespace, error) {
 	return entry.(*mqlOpcuaNamespace), nil
 }
 
-func (o *mqlOpcuaNode) properties() ([]interface{}, error) {
+func (o *mqlOpcuaNode) properties() ([]any, error) {
 	nodeDef := o.object
 	if nodeDef == nil {
 		return nil, errors.New("could not fetch properties")
 	}
 
 	ctx := context.Background()
-	results := []interface{}{}
+	results := []any{}
 	for i := range nodeDef.Properties {
 		def := nodeDef.Properties[i]
 		n, err := fetchNodeInfo(ctx, def)
@@ -219,14 +219,14 @@ func (o *mqlOpcuaNode) properties() ([]interface{}, error) {
 	return results, nil
 }
 
-func (o *mqlOpcuaNode) components() ([]interface{}, error) {
+func (o *mqlOpcuaNode) components() ([]any, error) {
 	nodeDef := o.object
 	if nodeDef == nil {
 		return nil, errors.New("could not fetch properties")
 	}
 
 	ctx := context.Background()
-	results := []interface{}{}
+	results := []any{}
 	for i := range nodeDef.Components {
 		def := nodeDef.Components[i]
 		n, err := fetchNodeInfo(ctx, def)
@@ -243,14 +243,14 @@ func (o *mqlOpcuaNode) components() ([]interface{}, error) {
 	return results, nil
 }
 
-func (o *mqlOpcuaNode) organizes() ([]interface{}, error) {
+func (o *mqlOpcuaNode) organizes() ([]any, error) {
 	nodeDef := o.object
 	if nodeDef == nil {
 		return nil, errors.New("could not fetch properties")
 	}
 
 	ctx := context.Background()
-	results := []interface{}{}
+	results := []any{}
 	for i := range nodeDef.Organizes {
 		def := nodeDef.Organizes[i]
 		n, err := fetchNodeInfo(ctx, def)

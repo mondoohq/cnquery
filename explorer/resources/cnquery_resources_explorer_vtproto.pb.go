@@ -7,7 +7,7 @@ package resources
 import (
 	fmt "fmt"
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
-	llx "go.mondoo.com/cnquery/v11/llx"
+	llx "go.mondoo.com/cnquery/v12/llx"
 	proto "google.golang.org/protobuf/proto"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"

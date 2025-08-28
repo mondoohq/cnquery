@@ -9,47 +9,47 @@ import (
 	"strings"
 
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v11/cli/theme/colors"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/cli/theme/colors"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
 )
 
 // Printer turns code into human-readable strings
 type Printer struct {
-	Primary   func(...interface{}) string
-	Secondary func(...interface{}) string
-	Yellow    func(...interface{}) string
-	Error     func(...interface{}) string
-	Warn      func(...interface{}) string
-	Disabled  func(...interface{}) string
-	Failed    func(...interface{}) string
-	Success   func(...interface{}) string
+	Primary   func(...any) string
+	Secondary func(...any) string
+	Yellow    func(...any) string
+	Error     func(...any) string
+	Warn      func(...any) string
+	Disabled  func(...any) string
+	Failed    func(...any) string
+	Success   func(...any) string
 	schema    resources.ResourcesSchema
 }
 
 // DefaultPrinter that can be used without additional configuration
 var DefaultPrinter = Printer{
-	Primary: func(args ...interface{}) string {
+	Primary: func(args ...any) string {
 		return termenv.String(fmt.Sprint(args...)).Foreground(colors.DefaultColorTheme.Primary).String()
 	},
-	Secondary: func(args ...interface{}) string {
+	Secondary: func(args ...any) string {
 		return termenv.String(fmt.Sprint(args...)).Foreground(colors.DefaultColorTheme.Secondary).String()
 	},
-	Error: func(args ...interface{}) string {
+	Error: func(args ...any) string {
 		return termenv.String("error: " + fmt.Sprint(args...)).Foreground(colors.DefaultColorTheme.Error).String()
 	},
-	Warn: func(args ...interface{}) string {
+	Warn: func(args ...any) string {
 		return termenv.String("warning: " + fmt.Sprint(args...)).Foreground(colors.DefaultColorTheme.Low).String()
 	},
-	Yellow: func(args ...interface{}) string {
+	Yellow: func(args ...any) string {
 		return termenv.String(fmt.Sprint(args...)).Foreground(colors.DefaultColorTheme.Low).String()
 	},
-	Disabled: func(args ...interface{}) string {
+	Disabled: func(args ...any) string {
 		return termenv.String(fmt.Sprint(args...)).Foreground(colors.DefaultColorTheme.Disabled).String()
 	},
-	Failed: func(args ...interface{}) string {
+	Failed: func(args ...any) string {
 		return termenv.String(fmt.Sprint(args...)).Foreground(colors.DefaultColorTheme.Critical).String()
 	},
-	Success: func(args ...interface{}) string {
+	Success: func(args ...any) string {
 		return termenv.String(fmt.Sprint(args...)).Foreground(colors.DefaultColorTheme.Success).String()
 	},
 }

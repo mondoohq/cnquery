@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 )
 
 type AssignedPlan struct {
@@ -617,7 +617,7 @@ func newPermissionGrantPolicies(policies []models.PermissionGrantPolicyable) []*
 
 type AccessReviewScope struct {
 	// Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.
-	AdditionalData map[string]interface{} `json:"additionalData"`
+	AdditionalData map[string]any `json:"additionalData"`
 }
 
 type AccessReviewReviewerScope struct {

@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
 func NewAwsSsmSessionManager(cfg aws.Config, profile string) (*AwsSsmSessionManager, error) {
@@ -130,8 +130,9 @@ type AwsSsmSessionConnection struct {
 
 func (a *AwsSsmSessionConnection) Close() error {
 	// kill proxy command if it is still running
+	var processerr error
 	if a.process != nil {
-		a.process.Kill()
+		processerr = a.process.Kill()
 	}
 
 	// close ssm websocket session
@@ -140,6 +141,9 @@ func (a *AwsSsmSessionConnection) Close() error {
 			SessionId: a.session.SessionId,
 		})
 		if err != nil {
+			return err
+		}
+		if processerr != nil {
 			return err
 		}
 	}

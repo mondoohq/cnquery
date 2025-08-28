@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v11/providers/equinix
+module go.mondoo.com/cnquery/v12/providers/equinix
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
 go 1.24.0
 
@@ -9,7 +9,7 @@ toolchain go1.24.3
 require (
 	github.com/packethost/packngo v0.31.0
 	github.com/rs/zerolog v1.34.0
-	go.mondoo.com/cnquery/v11 v11.61.0
+	go.mondoo.com/cnquery/v12 v12.0.0
 	go.mondoo.com/ranger-rpc v0.7.0
 )
 

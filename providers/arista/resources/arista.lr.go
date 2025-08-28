@@ -9,9 +9,9 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -370,19 +370,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"arista.eos.systemConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEos).SystemConfig, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlAristaEos).SystemConfig, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.ipInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEos).IpInterfaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAristaEos).IpInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEos).Interfaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAristaEos).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEos).Version, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEos).Version, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -394,11 +394,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEos).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAristaEos).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEos).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAristaEos).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.snmp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -474,7 +474,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.role.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosRole).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosRole).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.snmpSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -486,7 +486,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.snmpSetting.notifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosSnmpSetting).Notifications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosSnmpSetting).Notifications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.ntpSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -526,11 +526,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.interface.interfaceAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosInterface).InterfaceAddress, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosInterface).InterfaceAddress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.interface.interfaceCounters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosInterface).InterfaceCounters, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosInterface).InterfaceCounters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.interface.interfaceMembership": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -538,7 +538,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.interface.interfaceStatistics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosInterface).InterfaceStatistics, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosInterface).InterfaceStatistics, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.interface.interfaceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -566,7 +566,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.interface.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosInterface).Status, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosInterface).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.ipInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -590,7 +590,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"arista.eos.stp.mstInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosStp).MstInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosStp).MstInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.stp.mst.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -610,19 +610,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.stp.mst.bridge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosStpMst).Bridge, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosStpMst).Bridge, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.stp.mst.rootBridge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosStpMst).RootBridge, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosStpMst).RootBridge, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.stp.mst.regionalRootBridge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosStpMst).RegionalRootBridge, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosStpMst).RegionalRootBridge, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.stp.mst.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosStpMst).Interfaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosStpMst).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.spt.mstInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -662,7 +662,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.spt.mstInterface.inconsistentFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosSptMstInterface).InconsistentFeatures, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosSptMstInterface).InconsistentFeatures, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.spt.mstInterface.portNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -674,7 +674,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.spt.mstInterface.detail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosSptMstInterface).Detail, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosSptMstInterface).Detail, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.spt.mstInterface.boundaryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -682,11 +682,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.spt.mstInterface.counters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosSptMstInterface).Counters, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosSptMstInterface).Counters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.spt.mstInterface.features": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosSptMstInterface).Features, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAristaEosSptMstInterface).Features, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 }
@@ -718,14 +718,14 @@ type mqlAristaEos struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAristaEosInternal it will be used here
-	SystemConfig plugin.TValue[map[string]interface{}]
-	IpInterfaces plugin.TValue[[]interface{}]
-	Interfaces plugin.TValue[[]interface{}]
-	Version plugin.TValue[interface{}]
+	SystemConfig plugin.TValue[map[string]any]
+	IpInterfaces plugin.TValue[[]any]
+	Interfaces plugin.TValue[[]any]
+	Version plugin.TValue[any]
 	Hostname plugin.TValue[string]
 	Fqdn plugin.TValue[string]
-	Users plugin.TValue[[]interface{}]
-	Roles plugin.TValue[[]interface{}]
+	Users plugin.TValue[[]any]
+	Roles plugin.TValue[[]any]
 	Snmp plugin.TValue[*mqlAristaEosSnmpSetting]
 	Ntp plugin.TValue[*mqlAristaEosNtpSetting]
 }
@@ -767,21 +767,21 @@ func (c *mqlAristaEos) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAristaEos) GetSystemConfig() *plugin.TValue[map[string]interface{}] {
-	return plugin.GetOrCompute[map[string]interface{}](&c.SystemConfig, func() (map[string]interface{}, error) {
+func (c *mqlAristaEos) GetSystemConfig() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.SystemConfig, func() (map[string]any, error) {
 		return c.systemConfig()
 	})
 }
 
-func (c *mqlAristaEos) GetIpInterfaces() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.IpInterfaces, func() ([]interface{}, error) {
+func (c *mqlAristaEos) GetIpInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpInterfaces, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "ipInterfaces")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -789,15 +789,15 @@ func (c *mqlAristaEos) GetIpInterfaces() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAristaEos) GetInterfaces() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Interfaces, func() ([]interface{}, error) {
+func (c *mqlAristaEos) GetInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Interfaces, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "interfaces")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -805,8 +805,8 @@ func (c *mqlAristaEos) GetInterfaces() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAristaEos) GetVersion() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Version, func() (interface{}, error) {
+func (c *mqlAristaEos) GetVersion() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Version, func() (any, error) {
 		return c.version()
 	})
 }
@@ -823,15 +823,15 @@ func (c *mqlAristaEos) GetFqdn() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAristaEos) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlAristaEos) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -839,15 +839,15 @@ func (c *mqlAristaEos) GetUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAristaEos) GetRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+func (c *mqlAristaEos) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "roles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1080,7 +1080,7 @@ type mqlAristaEosRole struct {
 	// optional: if you define mqlAristaEosRoleInternal it will be used here
 	Name plugin.TValue[string]
 	Default plugin.TValue[bool]
-	Rules plugin.TValue[[]interface{}]
+	Rules plugin.TValue[[]any]
 }
 
 // createAristaEosRole creates a new instance of this resource
@@ -1128,7 +1128,7 @@ func (c *mqlAristaEosRole) GetDefault() *plugin.TValue[bool] {
 	return &c.Default
 }
 
-func (c *mqlAristaEosRole) GetRules() *plugin.TValue[[]interface{}] {
+func (c *mqlAristaEosRole) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
 }
 
@@ -1138,7 +1138,7 @@ type mqlAristaEosSnmpSetting struct {
 	__id string
 	// optional: if you define mqlAristaEosSnmpSettingInternal it will be used here
 	Enabled plugin.TValue[bool]
-	Notifications plugin.TValue[[]interface{}]
+	Notifications plugin.TValue[[]any]
 }
 
 // createAristaEosSnmpSetting creates a new instance of this resource
@@ -1182,8 +1182,8 @@ func (c *mqlAristaEosSnmpSetting) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
 }
 
-func (c *mqlAristaEosSnmpSetting) GetNotifications() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Notifications, func() ([]interface{}, error) {
+func (c *mqlAristaEosSnmpSetting) GetNotifications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Notifications, func() ([]any, error) {
 		return c.notifications()
 	})
 }
@@ -1248,17 +1248,17 @@ type mqlAristaEosInterface struct {
 	Description plugin.TValue[string]
 	ForwardingModel plugin.TValue[string]
 	Hardware plugin.TValue[string]
-	InterfaceAddress plugin.TValue[[]interface{}]
-	InterfaceCounters plugin.TValue[interface{}]
+	InterfaceAddress plugin.TValue[[]any]
+	InterfaceCounters plugin.TValue[any]
 	InterfaceMembership plugin.TValue[string]
-	InterfaceStatistics plugin.TValue[interface{}]
+	InterfaceStatistics plugin.TValue[any]
 	InterfaceStatus plugin.TValue[string]
 	L2Mtu plugin.TValue[int64]
 	LastStatusChangeTimestamp plugin.TValue[int64]
 	LineProtocolStatus plugin.TValue[string]
 	Mtu plugin.TValue[int64]
 	PhysicalAddress plugin.TValue[string]
-	Status plugin.TValue[interface{}]
+	Status plugin.TValue[any]
 }
 
 // createAristaEosInterface creates a new instance of this resource
@@ -1322,11 +1322,11 @@ func (c *mqlAristaEosInterface) GetHardware() *plugin.TValue[string] {
 	return &c.Hardware
 }
 
-func (c *mqlAristaEosInterface) GetInterfaceAddress() *plugin.TValue[[]interface{}] {
+func (c *mqlAristaEosInterface) GetInterfaceAddress() *plugin.TValue[[]any] {
 	return &c.InterfaceAddress
 }
 
-func (c *mqlAristaEosInterface) GetInterfaceCounters() *plugin.TValue[interface{}] {
+func (c *mqlAristaEosInterface) GetInterfaceCounters() *plugin.TValue[any] {
 	return &c.InterfaceCounters
 }
 
@@ -1334,7 +1334,7 @@ func (c *mqlAristaEosInterface) GetInterfaceMembership() *plugin.TValue[string] 
 	return &c.InterfaceMembership
 }
 
-func (c *mqlAristaEosInterface) GetInterfaceStatistics() *plugin.TValue[interface{}] {
+func (c *mqlAristaEosInterface) GetInterfaceStatistics() *plugin.TValue[any] {
 	return &c.InterfaceStatistics
 }
 
@@ -1362,8 +1362,8 @@ func (c *mqlAristaEosInterface) GetPhysicalAddress() *plugin.TValue[string] {
 	return &c.PhysicalAddress
 }
 
-func (c *mqlAristaEosInterface) GetStatus() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Status, func() (interface{}, error) {
+func (c *mqlAristaEosInterface) GetStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
 		return c.status()
 	})
 }
@@ -1432,7 +1432,7 @@ type mqlAristaEosStp struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAristaEosStpInternal it will be used here
-	MstInstances plugin.TValue[[]interface{}]
+	MstInstances plugin.TValue[[]any]
 }
 
 // createAristaEosStp creates a new instance of this resource
@@ -1472,15 +1472,15 @@ func (c *mqlAristaEosStp) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAristaEosStp) GetMstInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.MstInstances, func() ([]interface{}, error) {
+func (c *mqlAristaEosStp) GetMstInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MstInstances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.stp", c.__id, "mstInstances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1496,10 +1496,10 @@ type mqlAristaEosStpMst struct {
 	InstanceId plugin.TValue[string]
 	Name plugin.TValue[string]
 	Protocol plugin.TValue[string]
-	Bridge plugin.TValue[interface{}]
-	RootBridge plugin.TValue[interface{}]
-	RegionalRootBridge plugin.TValue[interface{}]
-	Interfaces plugin.TValue[[]interface{}]
+	Bridge plugin.TValue[any]
+	RootBridge plugin.TValue[any]
+	RegionalRootBridge plugin.TValue[any]
+	Interfaces plugin.TValue[[]any]
 }
 
 // createAristaEosStpMst creates a new instance of this resource
@@ -1551,19 +1551,19 @@ func (c *mqlAristaEosStpMst) GetProtocol() *plugin.TValue[string] {
 	return &c.Protocol
 }
 
-func (c *mqlAristaEosStpMst) GetBridge() *plugin.TValue[interface{}] {
+func (c *mqlAristaEosStpMst) GetBridge() *plugin.TValue[any] {
 	return &c.Bridge
 }
 
-func (c *mqlAristaEosStpMst) GetRootBridge() *plugin.TValue[interface{}] {
+func (c *mqlAristaEosStpMst) GetRootBridge() *plugin.TValue[any] {
 	return &c.RootBridge
 }
 
-func (c *mqlAristaEosStpMst) GetRegionalRootBridge() *plugin.TValue[interface{}] {
+func (c *mqlAristaEosStpMst) GetRegionalRootBridge() *plugin.TValue[any] {
 	return &c.RegionalRootBridge
 }
 
-func (c *mqlAristaEosStpMst) GetInterfaces() *plugin.TValue[[]interface{}] {
+func (c *mqlAristaEosStpMst) GetInterfaces() *plugin.TValue[[]any] {
 	return &c.Interfaces
 }
 
@@ -1580,13 +1580,13 @@ type mqlAristaEosSptMstInterface struct {
 	State plugin.TValue[string]
 	Cost plugin.TValue[int64]
 	Role plugin.TValue[string]
-	InconsistentFeatures plugin.TValue[interface{}]
+	InconsistentFeatures plugin.TValue[any]
 	PortNumber plugin.TValue[int64]
 	IsEdgePort plugin.TValue[bool]
-	Detail plugin.TValue[interface{}]
+	Detail plugin.TValue[any]
 	BoundaryType plugin.TValue[string]
-	Counters plugin.TValue[interface{}]
-	Features plugin.TValue[interface{}]
+	Counters plugin.TValue[any]
+	Features plugin.TValue[any]
 }
 
 // createAristaEosSptMstInterface creates a new instance of this resource
@@ -1658,7 +1658,7 @@ func (c *mqlAristaEosSptMstInterface) GetRole() *plugin.TValue[string] {
 	return &c.Role
 }
 
-func (c *mqlAristaEosSptMstInterface) GetInconsistentFeatures() *plugin.TValue[interface{}] {
+func (c *mqlAristaEosSptMstInterface) GetInconsistentFeatures() *plugin.TValue[any] {
 	return &c.InconsistentFeatures
 }
 
@@ -1670,7 +1670,7 @@ func (c *mqlAristaEosSptMstInterface) GetIsEdgePort() *plugin.TValue[bool] {
 	return &c.IsEdgePort
 }
 
-func (c *mqlAristaEosSptMstInterface) GetDetail() *plugin.TValue[interface{}] {
+func (c *mqlAristaEosSptMstInterface) GetDetail() *plugin.TValue[any] {
 	return &c.Detail
 }
 
@@ -1678,14 +1678,14 @@ func (c *mqlAristaEosSptMstInterface) GetBoundaryType() *plugin.TValue[string] {
 	return &c.BoundaryType
 }
 
-func (c *mqlAristaEosSptMstInterface) GetCounters() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Counters, func() (interface{}, error) {
+func (c *mqlAristaEosSptMstInterface) GetCounters() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Counters, func() (any, error) {
 		return c.counters()
 	})
 }
 
-func (c *mqlAristaEosSptMstInterface) GetFeatures() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Features, func() (interface{}, error) {
+func (c *mqlAristaEosSptMstInterface) GetFeatures() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Features, func() (any, error) {
 		return c.features()
 	})
 }

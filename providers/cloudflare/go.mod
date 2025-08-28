@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v11/providers/cloudflare
+module go.mondoo.com/cnquery/v12/providers/cloudflare
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
 go 1.24.0
 
@@ -8,7 +8,7 @@ toolchain go1.24.3
 
 require (
 	github.com/cloudflare/cloudflare-go v0.115.0
-	go.mondoo.com/cnquery/v11 v11.61.0
+	go.mondoo.com/cnquery/v12 v12.0.0
 )
 
 require (

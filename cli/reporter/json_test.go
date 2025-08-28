@@ -11,10 +11,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/explorer"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
-	"go.mondoo.com/cnquery/v11/utils/iox"
+	"go.mondoo.com/cnquery/v12/explorer"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/utils/iox"
 	"sigs.k8s.io/yaml"
 )
 

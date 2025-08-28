@@ -10,11 +10,11 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/directory"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/organization"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (m *mqlMicrosoftTenant) id() (string, error) {
@@ -22,7 +22,7 @@ func (m *mqlMicrosoftTenant) id() (string, error) {
 }
 
 // Deprecated: use `microsoft.tenant` instead
-func (a *mqlMicrosoft) organizations() ([]interface{}, error) {
+func (a *mqlMicrosoft) organizations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -35,7 +35,7 @@ func (a *mqlMicrosoft) organizations() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	orgs := resp.GetValue()
 	for i := range orgs {
 		org := orgs[i]
@@ -102,7 +102,7 @@ func newMicrosoftTenant(runtime *plugin.Runtime, org models.Organizationable) (*
 		return nil, err
 	}
 
-	privacyProfileDict := map[string]interface{}{}
+	privacyProfileDict := map[string]any{}
 	if org.GetPrivacyProfile() != nil {
 		privacyProfileDict, err = convert.JsonToDict(newPrivacyProfile(org.GetPrivacyProfile()))
 		if err != nil {
@@ -116,7 +116,6 @@ func newMicrosoftTenant(runtime *plugin.Runtime, org models.Organizationable) (*
 			"assignedPlans":              llx.DictData(assignedPlans),
 			"createdDateTime":            llx.TimeDataPtr(org.GetCreatedDateTime()), // deprecated
 			"name":                       llx.StringDataPtr(org.GetDisplayName()),
-			"displayName":                llx.StringDataPtr(org.GetDisplayName()), // deprecated
 			"verifiedDomains":            llx.DictData(verifiedDomains),
 			"onPremisesSyncEnabled":      llx.BoolDataPtr(org.GetOnPremisesSyncEnabled()),
 			"createdAt":                  llx.TimeDataPtr(org.GetCreatedDateTime()),
@@ -133,7 +132,7 @@ func newMicrosoftTenant(runtime *plugin.Runtime, org models.Organizationable) (*
 }
 
 // https://learn.microsoft.com/en-us/entra/identity/users/licensing-service-plan-reference
-func (a *mqlMicrosoftTenant) subscriptions() ([]interface{}, error) {
+func (a *mqlMicrosoftTenant) subscriptions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -144,7 +143,7 @@ func (a *mqlMicrosoftTenant) subscriptions() ([]interface{}, error) {
 		return nil, transformError(err)
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for _, sub := range resp.GetValue() {
 		res = append(res, newCompanySubscription(sub))
 	}

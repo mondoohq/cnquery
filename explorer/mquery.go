@@ -11,18 +11,18 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/checksums"
-	llx "go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/mrn"
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
-	"go.mondoo.com/cnquery/v11/utils/sortx"
+	"go.mondoo.com/cnquery/v12/checksums"
+	llx "go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/mrn"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/cnquery/v12/utils/sortx"
 )
 
 // Compile a given query and return the bundle. Both v1 and v2 versions are compiled.
 // Both versions will be given the same code id.
-func (m *Mquery) Compile(props map[string]*llx.Primitive, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+func (m *Mquery) Compile(props mqlc.PropsHandler, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
 	if m.Mql == "" {
 		if m.Query == "" {
 			return nil, errors.New("query is not implemented '" + m.Mrn + "'")
@@ -184,7 +184,7 @@ func (m *Mquery) RefreshChecksum(
 }
 
 // RefreshChecksumAndType by compiling the query and updating the Checksum field
-func (m *Mquery) RefreshChecksumAndType(queries map[string]*Mquery, props map[string]PropertyRef, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+func (m *Mquery) RefreshChecksumAndType(queries map[string]*Mquery, props mqlc.PropsHandler, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
 	return m.refreshChecksumAndType(queries, props, conf)
 }
 
@@ -202,29 +202,7 @@ func (m QueryMap) GetQuery(ctx context.Context, mrn string) (*Mquery, error) {
 	return res, nil
 }
 
-func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[string]PropertyRef, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
-	localProps := map[string]*llx.Primitive{}
-	for i := range m.Props {
-		prop := m.Props[i]
-
-		if prop.Mrn == "" {
-			return nil, errors.New("missing MRN (or UID) for property in query " + m.Mrn)
-		}
-
-		v, ok := props[prop.Mrn]
-		if !ok {
-			return nil, errors.New("cannot find property " + prop.Mrn + " in query " + m.Mrn)
-		}
-
-		localProps[v.Name] = &llx.Primitive{
-			Type: v.Property.Type,
-		}
-
-		prop.Checksum = v.Checksum
-		prop.CodeId = v.CodeId
-		prop.Type = v.Type
-	}
-
+func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props mqlc.PropsHandler, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
 	// If this is a variant, we won't compile anything, since there is no MQL snippets
 	if len(m.Variants) != 0 {
 		if m.Mql != "" {
@@ -233,7 +211,7 @@ func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[st
 		return nil, m.RefreshChecksum(context.Background(), conf, QueryMap(queries).GetQuery)
 	}
 
-	bundle, err := m.Compile(localProps, conf)
+	bundle, err := m.Compile(props, conf)
 	if err != nil {
 		return bundle, multierr.Wrap(err, "failed to compile query '"+m.Mql+"'")
 	}

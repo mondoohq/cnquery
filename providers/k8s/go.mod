@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v11/providers/k8s
+module go.mondoo.com/cnquery/v12/providers/k8s
 
-replace go.mondoo.com/cnquery/v11 => ../..
+replace go.mondoo.com/cnquery/v12 => ../..
 
 // We need the k8s packages to be pinned to 0.28.4 because we use PodSecurityPolicies
 replace k8s.io/api => k8s.io/api v0.28.9
@@ -22,7 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
-	go.mondoo.com/cnquery/v11 v11.61.0
+	go.mondoo.com/cnquery/v12 v12.0.0
 	// pin v0.28.9
 	k8s.io/api v0.28.9
 	// pin v0.28.9

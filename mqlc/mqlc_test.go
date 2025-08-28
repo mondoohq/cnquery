@@ -11,13 +11,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/types"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 var (
@@ -34,7 +34,7 @@ func init() {
 	logger.InitTestEnv()
 }
 
-func compileProps(t *testing.T, s string, props map[string]*llx.Primitive, f func(res *llx.CodeBundle)) {
+func compileProps(t *testing.T, s string, props mqlc.PropsHandler, f func(res *llx.CodeBundle)) {
 	res, err := mqlc.Compile(s, props, conf)
 	require.Nil(t, err)
 	require.NotNil(t, res)
@@ -316,7 +316,7 @@ func TestCompiler_DeterministicChecksum(t *testing.T) {
 
 	for i := 0; i < 10_000; i++ {
 		azureConf := mqlc.NewConfig(azure_schema, features)
-		res, err := mqlc.Compile(mql, map[string]*llx.Primitive{}, azureConf)
+		res, err := mqlc.Compile(mql, mqlc.EmptyPropsHandler, azureConf)
 		require.Nil(t, err)
 		require.Equal(t, res.CodeV2.Id, "h81H/YfoIRI=")
 	}
@@ -528,7 +528,7 @@ func TestCompiler_Assignment(t *testing.T) {
 }
 
 func TestCompiler_Props(t *testing.T) {
-	compileProps(t, "props.name", map[string]*llx.Primitive{
+	compileProps(t, "props.name", mqlc.SimpleProps{
 		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[0])
@@ -537,7 +537,7 @@ func TestCompiler_Props(t *testing.T) {
 	})
 
 	// prop <op> value
-	compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
+	compileProps(t, "props.name == 'bob'", mqlc.SimpleProps{
 		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[0])
@@ -551,17 +551,17 @@ func TestCompiler_Props(t *testing.T) {
 	})
 
 	// different compile stages yielding the same checksums
-	compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
+	compileProps(t, "props.name == 'bob'", mqlc.SimpleProps{
 		"name": {Type: string(types.String)},
 	}, func(res1 *llx.CodeBundle) {
-		compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
+		compileProps(t, "props.name == 'bob'", mqlc.SimpleProps{
 			"name": {Type: string(types.String), Value: []byte("yoman")},
 		}, func(res2 *llx.CodeBundle) {
 			assert.Equal(t, res2.CodeV2.Id, res1.CodeV2.Id)
 		})
 	})
 
-	compileProps(t, "props.name == props.name", map[string]*llx.Primitive{
+	compileProps(t, "props.name == props.name", mqlc.SimpleProps{
 		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[0])
@@ -577,7 +577,7 @@ func TestCompiler_Props(t *testing.T) {
 }
 
 func TestCompiler_Dict(t *testing.T) {
-	compileProps(t, "props.d.A.B", map[string]*llx.Primitive{
+	compileProps(t, "props.d.A.B", mqlc.SimpleProps{
 		"d": {Type: string(types.Dict)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "d", types.Dict, res.CodeV2.Blocks[0].Chunks[0])
@@ -595,7 +595,7 @@ func TestCompiler_Dict(t *testing.T) {
 		assert.Equal(t, map[string]string{"d": string(types.Dict)}, res.Props)
 	})
 
-	compileProps(t, "props.d.A-1", map[string]*llx.Primitive{
+	compileProps(t, "props.d.A-1", mqlc.SimpleProps{
 		"d": {Type: string(types.Dict)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "d", types.Dict, res.CodeV2.Blocks[0].Chunks[0])

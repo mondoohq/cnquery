@@ -6,9 +6,9 @@ package resources
 import (
 	"strconv"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/opcua/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/opcua/connection"
 )
 
 func (o *mqlOpcuaNamespace) id() (string, error) {
@@ -20,12 +20,12 @@ func (o *mqlOpcuaNamespace) id() (string, error) {
 }
 
 // https://reference.opcfoundation.org/DI/v102/docs/11.2
-func (o *mqlOpcua) namespaces() ([]interface{}, error) {
+func (o *mqlOpcua) namespaces() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OpcuaConnection)
 	client := conn.Client()
 
 	namespaces := client.Namespaces()
-	resList := []interface{}{}
+	resList := []any{}
 	for i := range namespaces {
 		res, err := newMqlOpcuaNamespaceResource(o.MqlRuntime, int64(i), namespaces[i])
 		if err != nil {
@@ -36,7 +36,7 @@ func (o *mqlOpcua) namespaces() ([]interface{}, error) {
 	return resList, nil
 }
 
-func newMqlOpcuaNamespaceResource(runtime *plugin.Runtime, id int64, name string) (interface{}, error) {
+func newMqlOpcuaNamespaceResource(runtime *plugin.Runtime, id int64, name string) (any, error) {
 	return CreateResource(runtime, "opcua.namespace", map[string]*llx.RawData{
 		"id":   llx.IntData(id),
 		"name": llx.StringData(name),

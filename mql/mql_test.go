@@ -11,11 +11,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mql"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mql"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/types"
 	"go.uber.org/goleak"
 )
 
@@ -68,18 +69,18 @@ func TestMqlHundreds(t *testing.T) {
 func TestMqlSimple(t *testing.T) {
 	tests := []struct {
 		query     string
-		assertion interface{}
+		assertion any
 	}{
 		{"asset.platform", "arch"},
-		{"asset { platform version }", map[string]interface{}{
+		{"asset { platform version }", map[string]any{
 			"platform": "arch",
 			"version":  "rolling",
 		}},
-		{"users { name uid }", []interface{}{
-			map[string]interface{}{"name": "root", "uid": int64(0)},
-			map[string]interface{}{"name": "bin", "uid": int64(1)},
-			map[string]interface{}{"name": "chris", "uid": int64(1000)},
-			map[string]interface{}{"name": "christopher", "uid": int64(1001)},
+		{"users { name uid }", []any{
+			map[string]any{"name": "root", "uid": int64(0)},
+			map[string]any{"name": "bin", "uid": int64(1)},
+			map[string]any{"name": "chris", "uid": int64(1000)},
+			map[string]any{"name": "christopher", "uid": int64(1001)},
 		}},
 	}
 
@@ -99,7 +100,7 @@ func TestCustomData(t *testing.T) {
 
 	value, err := mql.Exec(query, runtime(), features, nil)
 	require.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"a": "valuea", "b": "valueb"}, value.Value)
+	assert.Equal(t, map[string]any{"a": "valuea", "b": "valueb"}, value.Value)
 }
 
 func TestJsonArrayBounds(t *testing.T) {
@@ -138,7 +139,7 @@ x['arr'][-4]`
 
 func TestMqlProps(t *testing.T) {
 	query := "props.a + props.b"
-	props := map[string]*llx.Primitive{
+	props := mqlc.SimpleProps{
 		"a": llx.IntPrimitive(2),
 		"b": llx.IntPrimitive(2),
 	}
@@ -152,33 +153,33 @@ func TestMqlIfElseProps(t *testing.T) {
 	me := mql.New(runtime(), cnquery.DefaultFeatures)
 	query := "if (props.a > 2) { return {\"a\": \"valuea\"} } return {\"a\": \"valueb\"}"
 
-	props := map[string]*llx.Primitive{
+	props := mqlc.SimpleProps{
 		"a": llx.IntPrimitive(3),
 	}
 	value, err := me.Exec(query, props)
 	require.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"a": "valuea"}, value.Value)
+	assert.Equal(t, map[string]any{"a": "valuea"}, value.Value)
 
-	props = map[string]*llx.Primitive{
+	props = mqlc.SimpleProps{
 		"a": llx.IntPrimitive(2),
 	}
 	value, err = me.Exec(query, props)
 	require.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"a": "valueb"}, value.Value)
+	assert.Equal(t, map[string]any{"a": "valueb"}, value.Value)
 }
 
 func TestMqlIfAndProps(t *testing.T) {
 	me := mql.New(runtime(), cnquery.DefaultFeatures)
 	query := "if (props.a > 2) { return {\"a\": \"valuea\"} }"
 
-	props := map[string]*llx.Primitive{
+	props := mqlc.SimpleProps{
 		"a": llx.IntPrimitive(3),
 	}
 	value, err := me.Exec(query, props)
 	require.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"a": "valuea"}, value.Value)
+	assert.Equal(t, map[string]any{"a": "valuea"}, value.Value)
 
-	props = map[string]*llx.Primitive{
+	props = mqlc.SimpleProps{
 		"a": llx.IntPrimitive(2),
 	}
 	value, err = me.Exec(query, props)
@@ -197,7 +198,7 @@ func TestResourceAliases(t *testing.T) {
 		{
 			Code:        "os.unix.sshd { config.file.path }",
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"_":   llx.ResourceData(&llx.MockResource{Name: "sshd"}, "os.unix.sshd"),
 				"__s": llx.NilData,
 				"__t": llx.BoolData(true),
@@ -325,7 +326,7 @@ func TestNullResources(t *testing.T) {
 		{
 			Code:        "muser.groups.where(name == '').map(name) + ['one']",
 			ResultIndex: 0,
-			Expectation: []interface{}{"one"},
+			Expectation: []any{"one"},
 		},
 		{
 			Code:        "muser.groups.where(name == '') == empty",
@@ -335,7 +336,7 @@ func TestNullResources(t *testing.T) {
 		{
 			Code:        "muser.groups",
 			ResultIndex: 0,
-			Expectation: []interface{}{
+			Expectation: []any{
 				&llx.MockResource{Name: "mgroup", ID: "group one"},
 				nil,
 			},
@@ -343,7 +344,7 @@ func TestNullResources(t *testing.T) {
 		{
 			Code:        "muser { nullgroup }",
 			ResultIndex: 0,
-			Expectation: map[string]interface{}{
+			Expectation: map[string]any{
 				"_":   &llx.RawData{Type: types.Resource("muser"), Value: &llx.MockResource{Name: "muser"}},
 				"__s": llx.NilData,
 				"__t": llx.BoolTrue,
@@ -451,37 +452,37 @@ func TestArrayConcat(t *testing.T) {
 		{
 			Code:        "[] + []",
 			ResultIndex: 0,
-			Expectation: []interface{}{},
+			Expectation: []any{},
 		},
 		{
 			Code:        "[] + ['a']",
 			ResultIndex: 0,
-			Expectation: []interface{}{"a"},
+			Expectation: []any{"a"},
 		},
 		{
 			Code:        "['a'] + []",
 			ResultIndex: 0,
-			Expectation: []interface{}{"a"},
+			Expectation: []any{"a"},
 		},
 		{
 			Code:        "['a'] + ['b']",
 			ResultIndex: 0,
-			Expectation: []interface{}{"a", "b"},
+			Expectation: []any{"a", "b"},
 		},
 		{
 			Code:        "['a'] + ['b', 'c']",
 			ResultIndex: 0,
-			Expectation: []interface{}{"a", "b", "c"},
+			Expectation: []any{"a", "b", "c"},
 		},
 		{
 			Code:        "['a', 'b'] + ['c']",
 			ResultIndex: 0,
-			Expectation: []interface{}{"a", "b", "c"},
+			Expectation: []any{"a", "b", "c"},
 		},
 		{
 			Code:        "['a', 'b'] + [] + ['c']",
 			ResultIndex: 0,
-			Expectation: []interface{}{"a", "b", "c"},
+			Expectation: []any{"a", "b", "c"},
 		},
 	})
 }

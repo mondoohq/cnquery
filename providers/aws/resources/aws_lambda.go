@@ -12,23 +12,23 @@ import (
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/providers/aws/resources/awspolicy"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/providers/aws/resources/awspolicy"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsLambda) id() (string, error) {
 	return "aws.lambda", nil
 }
 
-func (a *mqlAwsLambda) functions() ([]interface{}, error) {
+func (a *mqlAwsLambda) functions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getFunctions(conn), 5)
 	poolOfJobs.Run()
 
@@ -38,7 +38,7 @@ func (a *mqlAwsLambda) functions() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -57,7 +57,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 
 			svc := conn.Lambda(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 			params := &lambda.ListFunctionsInput{}
 			paginator := lambda.NewListFunctionsPaginator(svc, params)
 			for paginator.HasMorePages() {
@@ -78,7 +78,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					if function.DeadLetterConfig != nil {
 						dlqTarget = convert.ToValue(function.DeadLetterConfig.TargetArn)
 					}
-					tags := make(map[string]interface{})
+					tags := make(map[string]any)
 					tagsResp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: function.FunctionArn})
 					if err == nil {
 						for k, v := range tagsResp.Tags {
@@ -189,7 +189,7 @@ func (a *mqlAwsLambdaFunction) concurrency() (int64, error) {
 	return int64(*functionConcurrency.ReservedConcurrentExecutions), nil
 }
 
-func (a *mqlAwsLambdaFunction) policy() (interface{}, error) {
+func (a *mqlAwsLambdaFunction) policy() (any, error) {
 	funcArn := a.Arn.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)

@@ -6,9 +6,9 @@ package shared
 
 import (
 	"github.com/hashicorp/go-plugin"
-	"go.mondoo.com/cnquery/v11/providers"
-	"go.mondoo.com/cnquery/v11/shared/proto"
-	"go.mondoo.com/cnquery/v11/utils/iox"
+	"go.mondoo.com/cnquery/v12/providers"
+	"go.mondoo.com/cnquery/v12/shared/proto"
+	"go.mondoo.com/cnquery/v12/utils/iox"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -48,7 +48,7 @@ func (p *CNQueryPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) er
 	return nil
 }
 
-func (p *CNQueryPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+func (p *CNQueryPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (any, error) {
 	return &GRPCClient{
 		client: proto.NewCNQueryClient(c),
 		broker: broker,

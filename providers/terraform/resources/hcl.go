@@ -18,10 +18,10 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/terraform/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/terraform/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 type mqlTerraformInternal struct {
@@ -30,12 +30,13 @@ type mqlTerraformInternal struct {
 	// these are blocks with the type set to "terraform", used for settings
 	terraformBlocks []*mqlTerraformBlock
 	lock            sync.Mutex
+	resources       []*mqlTerraformBlock
 }
 
-func (t *mqlTerraform) files() ([]interface{}, error) {
+func (t *mqlTerraform) files() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 
-	var mqlTerraformFiles []interface{}
+	var mqlTerraformFiles []any
 	files := conn.Parser().Files()
 	for path := range files {
 		mqlTerraformFile, err := CreateResource(t.MqlRuntime, "terraform.file", map[string]*llx.RawData{
@@ -50,12 +51,12 @@ func (t *mqlTerraform) files() ([]interface{}, error) {
 	return mqlTerraformFiles, nil
 }
 
-func (t *mqlTerraform) tfvars() (interface{}, error) {
+func (t *mqlTerraform) tfvars() (any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	return hclAttributesToDict(conn.TfVars())
 }
 
-func (t *mqlTerraform) modules() ([]interface{}, error) {
+func (t *mqlTerraform) modules() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 
 	manifest := conn.ModulesManifest()
@@ -63,7 +64,7 @@ func (t *mqlTerraform) modules() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	var mqlModules []interface{}
+	var mqlModules []any
 	for i := range manifest.Records {
 		record := manifest.Records[i]
 
@@ -82,15 +83,15 @@ func (t *mqlTerraform) modules() ([]interface{}, error) {
 	return mqlModules, nil
 }
 
-func (t *mqlTerraform) blocks() ([]interface{}, error) {
+func (t *mqlTerraform) blocks() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	parser := conn.Parser()
 	if parser == nil {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	files := parser.Files()
-	var mqlHclBlocks []interface{}
+	var mqlHclBlocks []any
 	for k := range files {
 		f := files[k]
 		blocks, err := listHclBlocks(t.MqlRuntime, f.Body, f)
@@ -103,7 +104,7 @@ func (t *mqlTerraform) blocks() ([]interface{}, error) {
 	return mqlHclBlocks, t.refreshCache(mqlHclBlocks)
 }
 
-func (t *mqlTerraform) refreshCache(blocks []interface{}) error {
+func (t *mqlTerraform) refreshCache(blocks []any) error {
 	if blocks == nil {
 		raw := t.GetBlocks()
 		return raw.Error
@@ -119,15 +120,14 @@ func (t *mqlTerraform) refreshCache(blocks []interface{}) error {
 	t.relatedBlocks = map[string][]*mqlTerraformBlock{}
 
 	t.Providers.State = plugin.StateIsSet
-	t.Providers.Data = []interface{}{}
+	t.Providers.Data = []any{}
 	t.Datasources.State = plugin.StateIsSet
-	t.Datasources.Data = []interface{}{}
-	t.Resources.State = plugin.StateIsSet
-	t.Resources.Data = []interface{}{}
+	t.Datasources.Data = []any{}
+	t.mqlTerraformInternal.resources = []*mqlTerraformBlock{}
 	t.Variables.State = plugin.StateIsSet
-	t.Variables.Data = []interface{}{}
+	t.Variables.Data = []any{}
 	t.Outputs.State = plugin.StateIsSet
-	t.Outputs.Data = []interface{}{}
+	t.Outputs.Data = []any{}
 	t.terraformBlocks = []*mqlTerraformBlock{}
 
 	for i := range blocks {
@@ -142,7 +142,7 @@ func (t *mqlTerraform) refreshCache(blocks []interface{}) error {
 		case "data":
 			t.Datasources.Data = append(t.Providers.Data, block)
 		case "resource":
-			t.Resources.Data = append(t.Resources.Data, block)
+			t.mqlTerraformInternal.resources = append(t.mqlTerraformInternal.resources, block)
 		case "variable":
 			t.Variables.Data = append(t.Variables.Data, block)
 		case "output":
@@ -187,12 +187,12 @@ func (t *mqlTerraform) refreshCache(blocks []interface{}) error {
 			return errors.New("cannot find terraform block by name: " + k)
 		}
 
-		vi := make([]interface{}, len(v))
+		vi := make([]any, len(v))
 		for i := range v {
 			vi[i] = v[i]
 		}
 
-		block.Related = plugin.TValue[[]interface{}]{
+		block.Related = plugin.TValue[[]any]{
 			State: plugin.StateIsSet,
 			Data:  vi,
 		}
@@ -212,7 +212,7 @@ func (g *mqlTerraformBlock) terraformID() string {
 	return strings.Join(namearr, "\x00")
 }
 
-func listRelatedBlocks(t *mqlTerraform, rawBody interface{}) ([]*mqlTerraformBlock, error) {
+func listRelatedBlocks(t *mqlTerraform, rawBody any) ([]*mqlTerraformBlock, error) {
 	var res []*mqlTerraformBlock
 	switch body := rawBody.(type) {
 	case *hclsyntax.Body:
@@ -237,23 +237,23 @@ func listRelatedBlocks(t *mqlTerraform, rawBody interface{}) ([]*mqlTerraformBlo
 	return res, nil
 }
 
-func (t *mqlTerraform) providers() ([]interface{}, error) {
+func (t *mqlTerraform) providers() ([]any, error) {
 	return nil, t.refreshCache(nil)
 }
 
-func (t *mqlTerraform) datasources() ([]interface{}, error) {
+func (t *mqlTerraform) datasources() ([]any, error) {
 	return nil, t.refreshCache(nil)
 }
 
-func (t *mqlTerraform) resources() ([]interface{}, error) {
+func (t *mqlTerraform) resources() ([]any, error) {
 	return nil, t.refreshCache(nil)
 }
 
-func (t *mqlTerraform) variables() ([]interface{}, error) {
+func (t *mqlTerraform) variables() ([]any, error) {
 	return nil, t.refreshCache(nil)
 }
 
-func (t *mqlTerraform) outputs() ([]interface{}, error) {
+func (t *mqlTerraform) outputs() ([]any, error) {
 	return nil, t.refreshCache(nil)
 }
 
@@ -340,7 +340,52 @@ func (t *mqlTerraformBlock) nameLabel() (string, error) {
 	return labels[0].(string), nil
 }
 
-func (t *mqlTerraformBlock) attributes() (map[string]interface{}, error) {
+func initTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	tfraw, err := CreateResource(runtime, "terraform", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tf := tfraw.(*mqlTerraform)
+	if err := tf.refreshCache(nil); err != nil {
+		return nil, nil, err
+	}
+	resources := tf.mqlTerraformInternal.resources
+
+	var resource string
+	rn := args["resource"]
+	if rn != nil {
+		resource = rn.Value.(string)
+	}
+
+	var name string
+	rn = args["name"]
+	if rn != nil {
+		name = rn.Value.(string)
+	}
+
+	var res []any
+	for i := range resources {
+		r := resources[i]
+		if resource != "" && r.Labels.Data[0].(string) != resource {
+			continue
+		}
+		if name != "" && r.Labels.Data[1].(string) != name {
+			continue
+		}
+		res = append(res, r)
+	}
+
+	return map[string]*llx.RawData{
+		"list": llx.ArrayData(res, types.Resource("terraform.block")),
+	}, nil, nil
+}
+
+func (t *mqlTerraformResources) list() ([]any, error) {
+	return nil, errors.New("resource was not initializeed")
+}
+
+func (t *mqlTerraformBlock) attributes() (map[string]any, error) {
 	var hclBlock *hcl.Block
 	if t.block.State == plugin.StateIsSet {
 		hclBlock = t.block.Data
@@ -356,7 +401,7 @@ func (t *mqlTerraformBlock) attributes() (map[string]interface{}, error) {
 	return hclAttributesToDict(attributes)
 }
 
-func (t *mqlTerraformBlock) arguments() (map[string]interface{}, error) {
+func (t *mqlTerraformBlock) arguments() (map[string]any, error) {
 	var hclBlock *hcl.Block
 	if t.block.State == plugin.StateIsSet {
 		hclBlock = t.block.Data
@@ -372,8 +417,8 @@ func (t *mqlTerraformBlock) arguments() (map[string]interface{}, error) {
 	return hclResolvedAttributesToDict(attributes)
 }
 
-func hclResolvedAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]interface{}, error) {
-	dict := map[string]interface{}{}
+func hclResolvedAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]any, error) {
+	dict := map[string]any{}
 	for k := range attributes {
 		dict[k] = getCtyValue(attributes[k].Expr, &hcl.EvalContext{
 			Functions: hclFunctions(),
@@ -382,11 +427,11 @@ func hclResolvedAttributesToDict(attributes map[string]*hcl.Attribute) (map[stri
 	return dict, nil
 }
 
-func hclAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]interface{}, error) {
-	dict := map[string]interface{}{}
+func hclAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]any, error) {
+	dict := map[string]any{}
 	for k := range attributes {
 		val, _ := attributes[k].Expr.Value(nil)
-		dict[k] = map[string]interface{}{
+		dict[k] = map[string]any{
 			"value": getCtyValue(attributes[k].Expr, &hcl.EvalContext{
 				Functions: hclFunctions(),
 			}),
@@ -404,14 +449,14 @@ func hclFunctions() map[string]function.Function {
 	}
 }
 
-func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
+func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 	switch t := expr.(type) {
 	case *hclsyntax.TupleConsExpr:
-		results := []interface{}{}
+		results := []any{}
 		for _, expr := range t.Exprs {
 			res := getCtyValue(expr, ctx)
 			switch v := res.(type) {
-			case []interface{}:
+			case []any:
 				results = append(results, v...)
 			default:
 				results = append(results, v)
@@ -435,11 +480,11 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 		// TODO: are we sure we want to do this?
 		return strings.Join(res, ".")
 	case *hclsyntax.FunctionCallExpr:
-		results := []interface{}{}
+		results := []any{}
 		subVal, err := t.Value(ctx)
 		if err == nil && subVal.Type() == cty.String {
 			if t.Name == "jsonencode" {
-				res := map[string]interface{}{}
+				res := map[string]any{}
 				err := json.Unmarshal([]byte(subVal.AsString()), &res)
 				if err == nil {
 					results = append(results, res)
@@ -450,7 +495,7 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 		}
 		return results
 	case *hclsyntax.ConditionalExpr:
-		results := []interface{}{}
+		results := []any{}
 		subVal, err := t.Value(ctx)
 		if err == nil && subVal.Type() == cty.String {
 			results = append(results, subVal.AsString())
@@ -476,11 +521,11 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 			return getCtyValue(t.Parts[0], ctx)
 		}
 
-		results := []interface{}{}
+		results := []any{}
 		for _, p := range t.Parts {
 			res := getCtyValue(p, ctx)
 			switch v := res.(type) {
-			case []interface{}:
+			case []any:
 				results = append(results, v...)
 			default:
 				results = append(results, v)
@@ -488,17 +533,17 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 		}
 		return results
 	case *hclsyntax.TemplateWrapExpr:
-		results := []interface{}{}
+		results := []any{}
 		res := getCtyValue(t.Wrapped, ctx)
 		switch v := res.(type) {
-		case []interface{}:
+		case []any:
 			results = append(results, v...)
 		default:
 			results = append(results, v)
 		}
 		return results
 	case *hclsyntax.ObjectConsExpr:
-		result := map[string]interface{}{}
+		result := map[string]any{}
 		for _, o := range t.Items {
 			key := getCtyValue(o.KeyExpr, ctx)
 			value := getCtyValue(o.ValueExpr, ctx)
@@ -540,11 +585,11 @@ func getReferences(expr hcl.Expression, ctx *hcl.EvalContext) []string {
 	}
 }
 
-func GetKeyString(key interface{}) string {
+func GetKeyString(key any) string {
 	switch v := key.(type) {
 	case []string:
 		return strings.Join(v, ",")
-	case []interface{}:
+	case []any:
 		s := ""
 		for i := range v {
 			s = s + v[i].(string)
@@ -555,7 +600,7 @@ func GetKeyString(key interface{}) string {
 	}
 }
 
-func (g *mqlTerraformBlock) blocks() ([]interface{}, error) {
+func (g *mqlTerraformBlock) blocks() ([]any, error) {
 	var hclBlock *hcl.Block
 	if g.block.State == plugin.StateIsSet {
 		hclBlock = g.block.Data
@@ -578,8 +623,8 @@ func (g *mqlTerraformBlock) blocks() ([]interface{}, error) {
 	return listHclBlocks(g.MqlRuntime, hclBlock.Body, hclFile)
 }
 
-func listHclBlocks(runtime *plugin.Runtime, rawBody interface{}, file *hcl.File) ([]interface{}, error) {
-	var mqlHclBlocks []interface{}
+func listHclBlocks(runtime *plugin.Runtime, rawBody any, file *hcl.File) ([]any, error) {
+	var mqlHclBlocks []any
 
 	switch body := rawBody.(type) {
 	case *hclsyntax.Body:
@@ -606,7 +651,7 @@ func listHclBlocks(runtime *plugin.Runtime, rawBody interface{}, file *hcl.File)
 	return mqlHclBlocks, nil
 }
 
-func (g *mqlTerraformBlock) related() ([]interface{}, error) {
+func (g *mqlTerraformBlock) related() ([]any, error) {
 	// This field should be default be set by the Terraform routine that
 	// initializes all blocks. If we land here from a recording or other
 	// path, re-run it.
@@ -655,7 +700,7 @@ func (t *mqlTerraformFile) id() (string, error) {
 	return "terraform.file/" + p, nil
 }
 
-func (t *mqlTerraformFile) blocks() ([]interface{}, error) {
+func (t *mqlTerraformFile) blocks() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	p := t.Path.Data
 
@@ -720,8 +765,8 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 		// TODO: return modified arguments to load from recording
 		return nil, &mqlTerraformSettings{
 			Block:             plugin.TValue[*mqlTerraformBlock]{State: plugin.StateIsSet | plugin.StateIsNull},
-			RequiredProviders: plugin.TValue[interface{}]{State: plugin.StateIsSet | plugin.StateIsNull, Data: []interface{}{}},
-			Backend:           plugin.TValue[interface{}]{State: plugin.StateIsSet, Data: []interface{}{}},
+			RequiredProviders: plugin.TValue[any]{State: plugin.StateIsSet | plugin.StateIsNull, Data: []any{}},
+			Backend:           plugin.TValue[any]{State: plugin.StateIsSet, Data: []any{}},
 		}, nil
 	}
 

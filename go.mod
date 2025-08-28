@@ -1,4 +1,4 @@
-module go.mondoo.com/cnquery/v11
+module go.mondoo.com/cnquery/v12
 
 go 1.24.0
 

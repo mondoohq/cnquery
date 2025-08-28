@@ -16,7 +16,7 @@ import (
 var DumpLocal string
 
 // DebugJSON prints a prettified JSON of the data to CLI on debug mode
-func DebugJSON(obj interface{}) {
+func DebugJSON(obj any) {
 	if !log.Debug().Enabled() {
 		return
 	}
@@ -24,7 +24,7 @@ func DebugJSON(obj interface{}) {
 	fmt.Fprintln(LogOutputWriter, PrettyJSON(obj))
 }
 
-func TraceJSON(obj interface{}) {
+func TraceJSON(obj any) {
 	if !log.Trace().Enabled() {
 		return
 	}
@@ -33,14 +33,14 @@ func TraceJSON(obj interface{}) {
 }
 
 // PrettyJSON turns any object into its prettified json representation
-func PrettyJSON(obj interface{}) string {
+func PrettyJSON(obj any) string {
 	s, _ := prettyjson.Marshal(obj)
 	return string(s)
 }
 
 // DebugDumpJSON will write a JSON dump if the Debug or Trace mode is active and
 // the DumpLocal prefix is defined.
-func DebugDumpJSON(name string, obj interface{}) {
+func DebugDumpJSON(name string, obj any) {
 	if !log.Debug().Enabled() {
 		return
 	}
@@ -68,7 +68,7 @@ func DebugDumpJSON(name string, obj interface{}) {
 
 // DebugDumpYAML will write a YAML dump if the Debug or Trace mode is active and
 // the DumpLocal prefix is defined.
-func DebugDumpYAML(name string, obj interface{}) {
+func DebugDumpYAML(name string, obj any) {
 	if !log.Debug().Enabled() {
 		return
 	}

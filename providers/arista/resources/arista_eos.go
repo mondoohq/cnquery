@@ -7,12 +7,12 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/arista/connection"
-	"go.mondoo.com/cnquery/v11/providers/arista/resources/eos"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/arista/connection"
+	"go.mondoo.com/cnquery/v12/providers/arista/resources/eos"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func aristaClient(runtime *plugin.Runtime) *eos.Eos {
@@ -66,11 +66,11 @@ func (a *mqlAristaEosRunningConfigSection) content() (string, error) {
 	return eos.GetSection(strings.NewReader(content), name), nil
 }
 
-func (a *mqlAristaEos) systemConfig() (map[string]interface{}, error) {
+func (a *mqlAristaEos) systemConfig() (map[string]any, error) {
 	eos := aristaClient(a.MqlRuntime)
 	config := eos.SystemConfig()
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	for k := range config {
 		res[k] = config[k]
 	}
@@ -78,11 +78,11 @@ func (a *mqlAristaEos) systemConfig() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAristaEos) users() ([]interface{}, error) {
+func (a *mqlAristaEos) users() ([]any, error) {
 	eos := aristaClient(a.MqlRuntime)
 	users := eos.Users()
 
-	mqlUsers := make([]interface{}, len(users))
+	mqlUsers := make([]any, len(users))
 	for i, user := range users {
 		mqlUser, err := CreateResource(a.MqlRuntime, "arista.eos.user", map[string]*llx.RawData{
 			"name":       llx.StringData(user.UserName()),
@@ -102,14 +102,14 @@ func (a *mqlAristaEos) users() ([]interface{}, error) {
 	return mqlUsers, nil
 }
 
-func (a *mqlAristaEos) roles() ([]interface{}, error) {
+func (a *mqlAristaEos) roles() ([]any, error) {
 	eos := aristaClient(a.MqlRuntime)
 	roles, err := eos.Roles()
 	if err != nil {
 		return nil, err
 	}
 
-	lumRoles := make([]interface{}, len(roles))
+	lumRoles := make([]any, len(roles))
 	for i, role := range roles {
 
 		rules, err := convert.JsonToDictSlice(role.Rules)
@@ -174,7 +174,7 @@ func (v *mqlAristaEosSnmpSetting) id() (string, error) {
 	return "arista.eos.snmpSetting", nil
 }
 
-func (a *mqlAristaEosSnmpSetting) notifications() ([]interface{}, error) {
+func (a *mqlAristaEosSnmpSetting) notifications() ([]any, error) {
 	eos := aristaClient(a.MqlRuntime)
 	notifications, err := eos.SnmpNotifications()
 	if err != nil {
@@ -184,11 +184,11 @@ func (a *mqlAristaEosSnmpSetting) notifications() ([]interface{}, error) {
 	return convert.JsonToDictSlice(notifications)
 }
 
-func (a *mqlAristaEos) ipInterfaces() ([]interface{}, error) {
+func (a *mqlAristaEos) ipInterfaces() ([]any, error) {
 	eos := aristaClient(a.MqlRuntime)
 	ifaces := eos.IPInterfaces()
 
-	mqlIfaces := make([]interface{}, len(ifaces))
+	mqlIfaces := make([]any, len(ifaces))
 	for i, iface := range ifaces {
 		mqlService, err := CreateResource(a.MqlRuntime, "arista.eos.ipInterface", map[string]*llx.RawData{
 			"name":    llx.StringData(iface.Name()),
@@ -204,7 +204,7 @@ func (a *mqlAristaEos) ipInterfaces() ([]interface{}, error) {
 	return mqlIfaces, nil
 }
 
-func (a *mqlAristaEos) version() (map[string]interface{}, error) {
+func (a *mqlAristaEos) version() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AristaConnection)
 	version, err := conn.GetVersion()
 	if err != nil {
@@ -235,15 +235,15 @@ func (a *mqlAristaEos) fqdn() (string, error) {
 	return hostname.Fqdn, nil
 }
 
-func (a *mqlAristaEos) interfaces() ([]interface{}, error) {
+func (a *mqlAristaEos) interfaces() ([]any, error) {
 	eos := aristaClient(a.MqlRuntime)
 	ifaces := eos.ShowInterface()
 
-	mqlIfaces := []interface{}{}
+	mqlIfaces := []any{}
 	for k := range ifaces.Interfaces {
 		iface := ifaces.Interfaces[k]
 
-		address := []interface{}{}
+		address := []any{}
 		for i := range iface.InterfaceAddress {
 			ifaceAddress, err := convert.JsonToDict(iface.InterfaceAddress[i])
 			if err != nil {
@@ -293,7 +293,7 @@ func (a *mqlAristaEosInterface) id() (string, error) {
 	return a.Name.Data, a.Name.Error
 }
 
-func (a *mqlAristaEosInterface) status() (map[string]interface{}, error) {
+func (a *mqlAristaEosInterface) status() (map[string]any, error) {
 	eos := aristaClient(a.MqlRuntime)
 
 	if a.Name.Error != nil {
@@ -320,7 +320,7 @@ func (a *mqlAristaEosStp) id() (string, error) {
 
 var aristaMstInstanceID = regexp.MustCompile(`(\d+)$`)
 
-func (a *mqlAristaEosStp) mstInstances() ([]interface{}, error) {
+func (a *mqlAristaEosStp) mstInstances() ([]any, error) {
 	eos := aristaClient(a.MqlRuntime)
 
 	mstInstances, err := eos.Stp()
@@ -328,7 +328,7 @@ func (a *mqlAristaEosStp) mstInstances() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 
 	for mstk := range mstInstances {
 		mstInstance := mstInstances[mstk]
@@ -350,7 +350,7 @@ func (a *mqlAristaEosStp) mstInstances() ([]interface{}, error) {
 			return nil, err
 		}
 
-		sptmstInterfaces := []interface{}{}
+		sptmstInterfaces := []any{}
 		for ifacek := range mstInstance.Interfaces {
 			iface := mstInstance.Interfaces[ifacek]
 
@@ -410,7 +410,7 @@ func (a *mqlAristaEosSptMstInterface) id() (string, error) {
 	return a.Id.Data, a.Id.Error
 }
 
-func (a *mqlAristaEosSptMstInterface) counters() (map[string]interface{}, error) {
+func (a *mqlAristaEosSptMstInterface) counters() (map[string]any, error) {
 	eos := aristaClient(a.MqlRuntime)
 
 	if a.MstInstanceId.Error != nil {
@@ -431,7 +431,7 @@ func (a *mqlAristaEosSptMstInterface) counters() (map[string]interface{}, error)
 	return convert.JsonToDict(mstInstanceDetails.Counters)
 }
 
-func (a *mqlAristaEosSptMstInterface) features() (map[string]interface{}, error) {
+func (a *mqlAristaEosSptMstInterface) features() (map[string]any, error) {
 	eos := aristaClient(a.MqlRuntime)
 
 	if a.MstInstanceId.Error != nil {

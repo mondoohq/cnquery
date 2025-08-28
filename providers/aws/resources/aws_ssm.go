@@ -14,21 +14,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
 
 func (e *mqlAwsSsm) id() (string, error) {
 	return "aws.ssm", nil
 }
 
-func (a *mqlAwsSsm) parameters() ([]interface{}, error) {
+func (a *mqlAwsSsm) parameters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getParameters(conn), 5)
 	poolOfJobs.Run()
 
@@ -38,7 +38,7 @@ func (a *mqlAwsSsm) parameters() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -55,7 +55,7 @@ func (a *mqlAwsSsm) getParameters(conn *connection.AwsConnection) []*jobpool.Job
 	for ri := range regions {
 		region := regions[ri]
 		f := func() (jobpool.JobResult, error) {
-			res := []interface{}{}
+			res := []any{}
 			ssmsvc := conn.Ssm(region)
 			ctx := context.Background()
 
@@ -122,10 +122,10 @@ func (a *mqlAwsSsmParameter) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
-func (a *mqlAwsSsm) instances() ([]interface{}, error) {
+func (a *mqlAwsSsm) instances() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getInstances(conn), 5)
 	poolOfJobs.Run()
 
@@ -135,7 +135,7 @@ func (a *mqlAwsSsm) instances() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -152,7 +152,7 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	for ri := range regions {
 		region := regions[ri]
 		f := func() (jobpool.JobResult, error) {
-			res := []interface{}{}
+			res := []any{}
 			ssmsvc := conn.Ssm(region)
 			ctx := context.Background()
 
@@ -248,7 +248,7 @@ func initAwsSsmInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	return nil, nil, errors.New("ssm instance does not exist")
 }
 
-func (a *mqlAwsSsmInstance) tags() (map[string]interface{}, error) {
+func (a *mqlAwsSsmInstance) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	id := a.InstanceId.Data
@@ -267,11 +267,11 @@ func (a *mqlAwsSsmInstance) tags() (map[string]interface{}, error) {
 	} else if tagresp != nil {
 		return Ec2SSMTagsToMap(tagresp.Tags), nil
 	}
-	return map[string]interface{}{}, nil
+	return map[string]any{}, nil
 }
 
-func Ec2SSMTagsToMap(tags []ec2types.TagDescription) map[string]interface{} {
-	tagsMap := make(map[string]interface{})
+func Ec2SSMTagsToMap(tags []ec2types.TagDescription) map[string]any {
+	tagsMap := make(map[string]any)
 
 	if len(tags) > 0 {
 		for i := range tags {

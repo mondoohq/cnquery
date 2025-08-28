@@ -17,11 +17,11 @@ import (
 	computev1 "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
@@ -107,7 +107,7 @@ func initGcpProjectComputeServiceRegion(runtime *plugin.Runtime, args map[string
 	return args, nil, nil
 }
 
-func (g *mqlGcpProjectComputeService) regions() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) regions() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -136,7 +136,7 @@ func (g *mqlGcpProjectComputeService) regions() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := make([]interface{}, 0, len(req.Items))
+	res := make([]any, 0, len(req.Items))
 	for _, r := range req.Items {
 		mqlRegion, err := newMqlRegion(g.MqlRuntime, r)
 		if err != nil {
@@ -156,12 +156,12 @@ func (g *mqlGcpProjectComputeServiceZone) id() (string, error) {
 	return "gcp.project.computeService.zone/" + id, nil
 }
 
-func (g *mqlGcpProjectComputeServiceZone) region() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceZone) region() (any, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpProjectComputeService) zones() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) zones() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -186,7 +186,7 @@ func (g *mqlGcpProjectComputeService) zones() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	req := computeSvc.Zones.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.ZoneList) error {
 		for _, zone := range page.Items {
@@ -224,7 +224,7 @@ func (g *mqlGcpProjectComputeServiceMachineType) id() (string, error) {
 	return "gcp.project.computeService.machineType/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpProjectComputeServiceMachineType) zone() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceMachineType) zone() (any, error) {
 	// NOTE: this should never be called since we add the zone during construction of the resource
 	return nil, errors.New("not implemented")
 }
@@ -249,7 +249,7 @@ func newMqlMachineType(runtime *plugin.Runtime, entry *compute.MachineType, proj
 	return res.(*mqlGcpProjectComputeServiceMachineType), nil
 }
 
-func (g *mqlGcpProjectComputeService) machineTypes() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) machineTypes() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -281,7 +281,7 @@ func (g *mqlGcpProjectComputeService) machineTypes() ([]interface{}, error) {
 	}
 
 	var wg sync.WaitGroup
-	res := []interface{}{}
+	res := []any{}
 	wg.Add(len(zones.Data))
 	mux := &sync.Mutex{}
 
@@ -422,7 +422,7 @@ func (g *mqlGcpProjectComputeServiceInstance) machineType() (*mqlGcpProjectCompu
 	return newMqlMachineType(g.MqlRuntime, machineType, projectId, zone.Data)
 }
 
-func newMqlServiceAccount(runtime *plugin.Runtime, sa *compute.ServiceAccount) (interface{}, error) {
+func newMqlServiceAccount(runtime *plugin.Runtime, sa *compute.ServiceAccount) (any, error) {
 	return CreateResource(runtime, "gcp.project.computeService.serviceaccount", map[string]*llx.RawData{
 		"email":  llx.StringData(sa.Email),
 		"scopes": llx.ArrayData(convert.SliceAnyToInterface(sa.Scopes), types.String),
@@ -522,7 +522,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		metadata[item.Key] = value
 	}
 
-	mqlServiceAccounts := []interface{}{}
+	mqlServiceAccounts := []any{}
 	for i := range instance.ServiceAccounts {
 		sa := instance.ServiceAccounts[i]
 
@@ -579,7 +579,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 	}
 
 	instanceId := strconv.FormatUint(instance.Id, 10)
-	attachedDisks := []interface{}{}
+	attachedDisks := []any{}
 	for i := range instance.Disks {
 		disk := instance.Disks[i]
 		attachedDiskID := instanceId + "/" + strconv.FormatInt(disk.Index, 10)
@@ -591,7 +591,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		attachedDisks = append(attachedDisks, attachedDisk)
 	}
 
-	var mqlConfCompute map[string]interface{}
+	var mqlConfCompute map[string]any
 	if instance.ConfidentialInstanceConfig != nil {
 		type mqlConfidentialInstanceConfig struct {
 			Enabled bool `json:"serviceEnabled,omitempty"`
@@ -651,7 +651,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 	return mqlR, nil
 }
 
-func (g *mqlGcpProjectComputeService) instances() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) instances() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -684,7 +684,7 @@ func (g *mqlGcpProjectComputeService) instances() ([]interface{}, error) {
 	}
 
 	var wg sync.WaitGroup
-	res := []interface{}{}
+	res := []any{}
 	wg.Add(len(zones.Data))
 	mux := &sync.Mutex{}
 
@@ -736,12 +736,12 @@ func (g *mqlGcpProjectComputeServiceDisk) id() (string, error) {
 	return "gcloud.compute.disk/" + id, nil
 }
 
-func (g *mqlGcpProjectComputeServiceDisk) zone() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceDisk) zone() (any, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpProjectComputeService) disks() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -772,7 +772,7 @@ func (g *mqlGcpProjectComputeService) disks() ([]interface{}, error) {
 	}
 
 	var wg sync.WaitGroup
-	res := []interface{}{}
+	res := []any{}
 	wg.Add(len(zones.Data))
 	mux := &sync.Mutex{}
 
@@ -794,9 +794,9 @@ func (g *mqlGcpProjectComputeService) disks() ([]interface{}, error) {
 						guestOsFeatures = append(guestOsFeatures, entry.Type)
 					}
 
-					var mqlDiskEnc map[string]interface{}
+					var mqlDiskEnc map[string]any
 					if disk.DiskEncryptionKey != nil {
-						mqlDiskEnc = map[string]interface{}{
+						mqlDiskEnc = map[string]any{
 							"kmsKeyName":           disk.DiskEncryptionKey.KmsKeyName,
 							"kmsKeyServiceAccount": disk.DiskEncryptionKey.KmsKeyServiceAccount,
 							"rawKey":               disk.DiskEncryptionKey.RawKey,
@@ -860,7 +860,7 @@ func (g *mqlGcpProjectComputeServiceFirewall) id() (string, error) {
 	return "gcloud.compute.firewall/" + id, nil
 }
 
-func (g *mqlGcpProjectComputeServiceFirewall) network() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceFirewall) network() (any, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
@@ -910,7 +910,7 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 	return nil, nil, errors.New("firewall not found")
 }
 
-func (g *mqlGcpProjectComputeService) firewalls() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) firewalls() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -940,7 +940,7 @@ func (g *mqlGcpProjectComputeService) firewalls() ([]interface{}, error) {
 		Ports      []string `json:"ports"`
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	req := computeSvc.Firewalls.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.FirewallList) error {
 		for _, firewall := range page.Items {
@@ -1001,12 +1001,12 @@ func (g *mqlGcpProjectComputeServiceSnapshot) id() (string, error) {
 	return "gcloud.compute.snapshot/" + id, nil
 }
 
-func (g *mqlGcpProjectComputeServiceSnapshot) sourceDisk() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceSnapshot) sourceDisk() (any, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpProjectComputeService) snapshots() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -1031,7 +1031,7 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	req := computeSvc.Snapshots.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.SnapshotList) error {
 		for _, snapshot := range page.Items {
@@ -1120,12 +1120,12 @@ func initGcpProjectComputeServiceImage(runtime *plugin.Runtime, args map[string]
 	return nil, nil, errors.New("image not found")
 }
 
-func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (any, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpProjectComputeService) images() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) images() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -1150,7 +1150,7 @@ func (g *mqlGcpProjectComputeService) images() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	req := computeSvc.Images.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.ImageList) error {
 		for _, image := range page.Items {
@@ -1189,7 +1189,7 @@ func (g *mqlGcpProjectComputeServiceNetwork) id() (string, error) {
 	return "gcloud.compute.network/" + id, nil
 }
 
-func (g *mqlGcpProjectComputeServiceNetwork) subnetworks() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeServiceNetwork) subnetworks() ([]any, error) {
 	if g.SubnetworkUrls.Error != nil {
 		return nil, g.SubnetworkUrls.Error
 	}
@@ -1199,7 +1199,7 @@ func (g *mqlGcpProjectComputeServiceNetwork) subnetworks() ([]interface{}, error
 		Region  string
 		Name    string
 	}
-	subnets := make([]interface{}, 0, len(subnetUrls))
+	subnets := make([]any, 0, len(subnetUrls))
 	for _, subnetUrl := range subnetUrls {
 		// Format is https://www.googleapis.com/compute/v1/projects/project1regions/us-central1/subnetworks/subnet-1
 		params := strings.TrimPrefix(subnetUrl.(string), "https://www.googleapis.com/compute/v1/")
@@ -1265,7 +1265,7 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 	return nil, nil, errors.New("network not found")
 }
 
-func (g *mqlGcpProjectComputeService) networks() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) networks() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -1290,7 +1290,7 @@ func (g *mqlGcpProjectComputeService) networks() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	req := computeSvc.Networks.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.NetworkList) error {
 		for _, network := range page.Items {
@@ -1446,18 +1446,18 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) region() (*mqlGcpProjectComputeS
 	return nil, errors.New(fmt.Sprintf("region %s not found", regionName))
 }
 
-func (g *mqlGcpProjectComputeServiceSubnetwork) network() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeServiceSubnetwork) network() ([]any, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func newMqlRegion(runtime *plugin.Runtime, r *compute.Region) (interface{}, error) {
+func newMqlRegion(runtime *plugin.Runtime, r *compute.Region) (any, error) {
 	deprecated, err := convert.JsonToDict(r.Deprecated)
 	if err != nil {
 		return nil, err
 	}
 
-	quotas := map[string]interface{}{}
+	quotas := map[string]any{}
 	for i := range r.Quotas {
 		q := r.Quotas[i]
 		quotas[q.Metric] = q.Limit
@@ -1474,7 +1474,7 @@ func newMqlRegion(runtime *plugin.Runtime, r *compute.Region) (interface{}, erro
 	})
 }
 
-func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *computepb.Subnetwork, region *mqlGcpProjectComputeServiceRegion) (interface{}, error) {
+func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *computepb.Subnetwork, region *mqlGcpProjectComputeServiceRegion) (any, error) {
 	subnetId := strconv.FormatUint(subnetwork.GetId(), 10)
 	var mqlLogConfig plugin.Resource
 	var err error
@@ -1522,7 +1522,7 @@ func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *com
 	return CreateResource(runtime, "gcp.project.computeService.subnetwork", args)
 }
 
-func (g *mqlGcpProjectComputeService) subnetworks() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) subnetworks() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -1547,7 +1547,7 @@ func (g *mqlGcpProjectComputeService) subnetworks() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	it := subnetSvc.AggregatedList(ctx, &computepb.AggregatedListSubnetworksRequest{Project: projectId})
 	for {
 		resp, err := it.Next()
@@ -1577,17 +1577,17 @@ func (g *mqlGcpProjectComputeServiceRouter) id() (string, error) {
 	return "gcloud.compute.router/" + id, nil
 }
 
-func (g *mqlGcpProjectComputeServiceRouter) network() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeServiceRouter) network() ([]any, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpProjectComputeServiceRouter) region() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeServiceRouter) region() ([]any, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func newMqlRouter(projectId string, region *mqlGcpProjectComputeServiceRegion, runtime *plugin.Runtime, router *compute.Router) (interface{}, error) {
+func newMqlRouter(projectId string, region *mqlGcpProjectComputeServiceRegion, runtime *plugin.Runtime, router *compute.Router) (any, error) {
 	bgp, err := convert.JsonToDict(router.Bgp)
 	if err != nil {
 		return nil, err
@@ -1615,7 +1615,7 @@ func newMqlRouter(projectId string, region *mqlGcpProjectComputeServiceRegion, r
 	})
 }
 
-func (g *mqlGcpProjectComputeService) routers() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) routers() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -1646,7 +1646,7 @@ func (g *mqlGcpProjectComputeService) routers() ([]interface{}, error) {
 	}
 
 	var wg sync.WaitGroup
-	res := []interface{}{}
+	res := []any{}
 	wg.Add(len(regions.Data))
 	mux := &sync.Mutex{}
 
@@ -1682,7 +1682,7 @@ func (g *mqlGcpProjectComputeService) routers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -1711,11 +1711,11 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := make([]interface{}, 0, len(list.Items))
+	res := make([]any, 0, len(list.Items))
 	for _, sb := range list.Items {
 		for _, b := range sb.BackendServices {
 			backendServiceId := strconv.FormatUint(b.Id, 10)
-			mqlBackends := make([]interface{}, 0, len(b.Backends))
+			mqlBackends := make([]any, 0, len(b.Backends))
 			for i, backend := range b.Backends {
 				mqlBackend, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService.backend", map[string]*llx.RawData{
 					"id":                        llx.StringData(fmt.Sprintf("gcp.project.computeService.backendService.backend/%s/%d", backendServiceId, i)),
@@ -1740,15 +1740,15 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 
 			var cdnPolicy plugin.Resource
 			if b.CdnPolicy != nil {
-				bypassCacheOnRequestHeaders := make([]interface{}, 0, len(b.CdnPolicy.BypassCacheOnRequestHeaders))
+				bypassCacheOnRequestHeaders := make([]any, 0, len(b.CdnPolicy.BypassCacheOnRequestHeaders))
 				for _, h := range b.CdnPolicy.BypassCacheOnRequestHeaders {
-					mqlH := map[string]interface{}{"headerName": h.HeaderName}
+					mqlH := map[string]any{"headerName": h.HeaderName}
 					bypassCacheOnRequestHeaders = append(bypassCacheOnRequestHeaders, mqlH)
 				}
 
-				var mqlCacheKeyPolicy interface{}
+				var mqlCacheKeyPolicy any
 				if b.CdnPolicy.CacheKeyPolicy != nil {
-					mqlCacheKeyPolicy = map[string]interface{}{
+					mqlCacheKeyPolicy = map[string]any{
 						"includeHost":          b.CdnPolicy.CacheKeyPolicy.IncludeHost,
 						"includeHttpHeaders":   convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeHttpHeaders),
 						"includeNamedCookies":  convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeNamedCookies),
@@ -1759,9 +1759,9 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 					}
 				}
 
-				mqlNegativeCachingPolicy := make([]interface{}, 0, len(b.CdnPolicy.NegativeCachingPolicy))
+				mqlNegativeCachingPolicy := make([]any, 0, len(b.CdnPolicy.NegativeCachingPolicy))
 				for _, p := range b.CdnPolicy.NegativeCachingPolicy {
-					mqlP := map[string]interface{}{
+					mqlP := map[string]any{
 						"code": p.Code,
 						"ttl":  p.Ttl,
 					}
@@ -1788,9 +1788,9 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 				}
 			}
 
-			var mqlCircuitBreakers interface{}
+			var mqlCircuitBreakers any
 			if b.CircuitBreakers != nil {
-				mqlCircuitBreakers = map[string]interface{}{
+				mqlCircuitBreakers = map[string]any{
 					"maxConnections":           b.CircuitBreakers.MaxConnections,
 					"maxPendingRequests":       b.CircuitBreakers.MaxPendingRequests,
 					"maxRequests":              b.CircuitBreakers.MaxRequests,
@@ -1799,16 +1799,16 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 				}
 			}
 
-			var mqlConnectionDraining interface{}
+			var mqlConnectionDraining any
 			if b.ConnectionDraining != nil {
-				mqlConnectionDraining = map[string]interface{}{
+				mqlConnectionDraining = map[string]any{
 					"drainingTimeoutSec": b.ConnectionDraining.DrainingTimeoutSec,
 				}
 			}
 
-			var mqlConnectionTrackingPolicy interface{}
+			var mqlConnectionTrackingPolicy any
 			if b.ConnectionTrackingPolicy != nil {
-				mqlConnectionTrackingPolicy = map[string]interface{}{
+				mqlConnectionTrackingPolicy = map[string]any{
 					"connectionPersistenceOnUnhealthyBackends": b.ConnectionTrackingPolicy.ConnectionPersistenceOnUnhealthyBackends,
 					"enableStrongAffinity":                     b.ConnectionTrackingPolicy.EnableStrongAffinity,
 					"idleTimeoutSec":                           b.ConnectionTrackingPolicy.IdleTimeoutSec,
@@ -1816,10 +1816,10 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 				}
 			}
 
-			var mqlConsistentHash interface{}
+			var mqlConsistentHash any
 			if b.ConsistentHash != nil {
-				mqlConsistentHash = map[string]interface{}{
-					"httpCookie": map[string]interface{}{
+				mqlConsistentHash = map[string]any{
+					"httpCookie": map[string]any{
 						"name": b.ConsistentHash.HttpCookie.Name,
 						"path": b.ConsistentHash.HttpCookie.Path,
 						"ttl":  llx.TimeData(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds)),
@@ -1829,18 +1829,18 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 				}
 			}
 
-			var mqlFailoverPolicy interface{}
+			var mqlFailoverPolicy any
 			if b.FailoverPolicy != nil {
-				mqlFailoverPolicy = map[string]interface{}{
+				mqlFailoverPolicy = map[string]any{
 					"disableConnectionDrainOnFailover": b.FailoverPolicy.DisableConnectionDrainOnFailover,
 					"dropTrafficIfUnhealthy":           b.FailoverPolicy.DropTrafficIfUnhealthy,
 					"failoverRatio":                    b.FailoverPolicy.FailoverRatio,
 				}
 			}
 
-			var mqlIap interface{}
+			var mqlIap any
 			if b.Iap != nil {
-				mqlIap = map[string]interface{}{
+				mqlIap = map[string]any{
 					"serviceEnabled":           b.Iap.Enabled,
 					"oauth2ClientId":           b.Iap.Oauth2ClientId,
 					"oauth2ClientSecret":       b.Iap.Oauth2ClientSecret,
@@ -1848,39 +1848,39 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 				}
 			}
 
-			mqlLocalityLbPolicy := make([]interface{}, 0, len(b.LocalityLbPolicies))
+			mqlLocalityLbPolicy := make([]any, 0, len(b.LocalityLbPolicies))
 			for _, p := range b.LocalityLbPolicies {
-				var mqlCustomPolicy interface{}
+				var mqlCustomPolicy any
 				if p.CustomPolicy != nil {
-					mqlCustomPolicy = map[string]interface{}{
+					mqlCustomPolicy = map[string]any{
 						"data": p.CustomPolicy.Data,
 						"name": p.CustomPolicy.Name,
 					}
 				}
 
-				var mqlPolicy interface{}
+				var mqlPolicy any
 				if p.Policy != nil {
-					mqlPolicy = map[string]interface{}{
+					mqlPolicy = map[string]any{
 						"name": p.Policy.Name,
 					}
 				}
-				mqlLocalityLbPolicy = append(mqlLocalityLbPolicy, map[string]interface{}{
+				mqlLocalityLbPolicy = append(mqlLocalityLbPolicy, map[string]any{
 					"customPolicy": mqlCustomPolicy,
 					"policy":       mqlPolicy,
 				})
 			}
 
-			var mqlLogConfig interface{}
+			var mqlLogConfig any
 			if b.LogConfig != nil {
-				mqlLogConfig = map[string]interface{}{
+				mqlLogConfig = map[string]any{
 					"enable":     b.LogConfig.Enable,
 					"sampleRate": b.LogConfig.SampleRate,
 				}
 			}
 
-			var mqlSecuritySettings interface{}
+			var mqlSecuritySettings any
 			if b.SecuritySettings != nil {
-				mqlSecuritySettings = map[string]interface{}{
+				mqlSecuritySettings = map[string]any{
 					"clientTlsPolicy": b.SecuritySettings.ClientTlsPolicy,
 					"subjectAltNames": convert.SliceAnyToInterface(b.SecuritySettings.SubjectAltNames),
 				}
@@ -1962,7 +1962,7 @@ func networkMode(n *compute.Network) string {
 	}
 }
 
-func (g *mqlGcpProjectComputeService) addresses() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) addresses() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
 		return nil, nil
@@ -1990,7 +1990,7 @@ func (g *mqlGcpProjectComputeService) addresses() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var mqlAddresses []interface{}
+	var mqlAddresses []any
 	for _, as := range list.Items {
 		for _, a := range as.Addresses {
 			mqlA, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.address", map[string]*llx.RawData{
@@ -2040,7 +2040,7 @@ func (g *mqlGcpProjectComputeServiceAddress) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
-func (g *mqlGcpProjectComputeService) forwardingRules() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -2059,7 +2059,7 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var fwRules []interface{}
+	var fwRules []any
 	it := fwrSvc.AggregatedList(ctx, &computepb.AggregatedListForwardingRulesRequest{Project: projectId, IncludeAllScopes: ptr.Bool(true)})
 	for {
 		resp, err := it.Next()
@@ -2070,24 +2070,24 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, fwr := range resp.Value.ForwardingRules {
-			metadataFilters := make([]interface{}, 0, len(fwr.GetMetadataFilters()))
+			metadataFilters := make([]any, 0, len(fwr.GetMetadataFilters()))
 			for _, m := range fwr.GetMetadataFilters() {
-				filterLabels := make([]interface{}, 0, len(m.GetFilterLabels()))
+				filterLabels := make([]any, 0, len(m.GetFilterLabels()))
 				for _, l := range m.GetFilterLabels() {
-					filterLabels = append(filterLabels, map[string]interface{}{
+					filterLabels = append(filterLabels, map[string]any{
 						"name":  l.GetName(),
 						"value": l.GetValue(),
 					})
 				}
-				metadataFilters = append(metadataFilters, map[string]interface{}{
+				metadataFilters = append(metadataFilters, map[string]any{
 					"filterLabels":        filterLabels,
 					"filterMatchCriteria": m.GetFilterMatchCriteria(),
 				})
 			}
 
-			serviceDirRegs := make([]interface{}, 0, len(fwr.GetServiceDirectoryRegistrations()))
+			serviceDirRegs := make([]any, 0, len(fwr.GetServiceDirectoryRegistrations()))
 			for _, s := range fwr.GetServiceDirectoryRegistrations() {
-				serviceDirRegs = append(serviceDirRegs, map[string]interface{}{
+				serviceDirRegs = append(serviceDirRegs, map[string]any{
 					"namespace":              s.GetNamespace(),
 					"service":                s.GetService(),
 					"serviceDirectoryRegion": s.GetServiceDirectoryRegion(),

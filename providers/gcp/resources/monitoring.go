@@ -8,15 +8,15 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	kms "cloud.google.com/go/kms/apiv1"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
-	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v12/llx"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
@@ -63,7 +63,7 @@ func (g *mqlGcpProjectMonitoringServiceAlertPolicy) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
-func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]interface{}, error) {
+func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -84,7 +84,7 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]interface{}, error) 
 	}
 	defer c.Close()
 
-	var res []interface{}
+	var res []any
 	it := c.ListAlertPolicies(ctx, &monitoringpb.ListAlertPoliciesRequest{Name: fmt.Sprintf("projects/%s", projectId)})
 	for {
 		p, err := it.Next()
@@ -95,19 +95,19 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]interface{}, error) 
 			return nil, err
 		}
 
-		var mqlDoc interface{}
+		var mqlDoc any
 		if p.Documentation != nil {
-			mqlDoc = map[string]interface{}{
+			mqlDoc = map[string]any{
 				"content":  p.Documentation.Content,
 				"mimeType": p.Documentation.MimeType,
 			}
 		}
 
-		mqlConditions := make([]interface{}, 0, len(p.Conditions))
+		mqlConditions := make([]any, 0, len(p.Conditions))
 		for _, c := range p.Conditions {
-			var mqlThreshold interface{}
+			var mqlThreshold any
 			if thresh := c.GetConditionThreshold(); thresh != nil {
-				mqlThreshold = map[string]interface{}{
+				mqlThreshold = map[string]any{
 					"filter":                thresh.Filter,
 					"denominatorFilter":     thresh.DenominatorFilter,
 					"comparison":            thresh.Comparison.String(),
@@ -117,32 +117,32 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]interface{}, error) 
 				}
 			}
 
-			var mqlAbsent interface{}
+			var mqlAbsent any
 			if absent := c.GetConditionAbsent(); absent != nil {
-				mqlAbsent = map[string]interface{}{
+				mqlAbsent = map[string]any{
 					"filter":   absent.Filter,
 					"duration": llx.DurationToTime(absent.Duration.Seconds),
 				}
 			}
 
-			var mqlMatchedLog interface{}
+			var mqlMatchedLog any
 			if matchedLog := c.GetConditionMatchedLog(); matchedLog != nil {
-				mqlMatchedLog = map[string]interface{}{
+				mqlMatchedLog = map[string]any{
 					"filter":          matchedLog.Filter,
 					"labelExtractors": matchedLog.LabelExtractors,
 				}
 			}
 
-			var mqlMonitoringQueryLanguage interface{}
+			var mqlMonitoringQueryLanguage any
 			if monitoringQLanguage := c.GetConditionMonitoringQueryLanguage(); monitoringQLanguage != nil {
-				mqlMonitoringQueryLanguage = map[string]interface{}{
+				mqlMonitoringQueryLanguage = map[string]any{
 					"query":                 monitoringQLanguage.Query,
 					"duration":              int64(monitoringQLanguage.Duration.Seconds),
 					"evaluationMissingData": monitoringQLanguage.EvaluationMissingData.String(),
 				}
 			}
 
-			mqlConditions = append(mqlConditions, map[string]interface{}{
+			mqlConditions = append(mqlConditions, map[string]any{
 				"name":                    c.Name,
 				"displayName":             c.DisplayName,
 				"threshold":               mqlThreshold,
@@ -152,23 +152,23 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]interface{}, error) 
 			})
 		}
 
-		var mqlValidity interface{}
+		var mqlValidity any
 		if p.Validity != nil {
-			mqlValidity = map[string]interface{}{
+			mqlValidity = map[string]any{
 				"code":    p.Validity.Code,
 				"message": p.Validity.Message,
 			}
 		}
 
-		var mqlAlertStrategy interface{}
+		var mqlAlertStrategy any
 		if p.AlertStrategy != nil {
-			var mqlNotifRateLimit interface{}
+			var mqlNotifRateLimit any
 			if p.AlertStrategy.NotificationRateLimit != nil {
-				mqlNotifRateLimit = map[string]interface{}{
+				mqlNotifRateLimit = map[string]any{
 					"period": llx.TimeData(llx.DurationToTime(p.AlertStrategy.NotificationRateLimit.Period.Seconds)),
 				}
 			}
-			mqlAlertStrategy = map[string]interface{}{
+			mqlAlertStrategy = map[string]any{
 				"notificationRateLimit": mqlNotifRateLimit,
 				"autoClose":             llx.TimeData(llx.DurationToTime(p.AlertStrategy.AutoClose.Seconds)),
 			}

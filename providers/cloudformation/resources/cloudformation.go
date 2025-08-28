@@ -6,7 +6,7 @@ package resources
 import (
 	"fmt"
 
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"gopkg.in/yaml.v3"
@@ -40,13 +40,13 @@ func gatherMapValue(n *yaml.Node, key string) (*yaml.Node, *yaml.Node, error) {
 	return nil, nil, status.Error(codes.NotFound, fmt.Sprintf("key %s not found", key))
 }
 
-func convertYamlToDict(valueNode *yaml.Node) (map[string]interface{}, error) {
+func convertYamlToDict(valueNode *yaml.Node) (map[string]any, error) {
 	data, err := yaml.Marshal(valueNode)
 	if err != nil {
 		return nil, err
 	}
 
-	dict := make(map[string](interface{}))
+	dict := make(map[string](any))
 	err = yaml.Unmarshal(data, &dict)
 	if err != nil {
 		return nil, err

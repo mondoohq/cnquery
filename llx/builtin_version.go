@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 type VersionType byte
@@ -99,38 +99,38 @@ func (v Version) Compare(o Version) int {
 	return v.Version.Compare(o.Version)
 }
 
-func versionLT(left interface{}, right interface{}) *RawData {
+func versionLT(left any, right any) *RawData {
 	l := NewVersion(left.(string))
 	r := NewVersion(right.(string))
 	return BoolData(l.Compare(r) < 0)
 }
 
-func versionGT(left interface{}, right interface{}) *RawData {
+func versionGT(left any, right any) *RawData {
 	l := NewVersion(left.(string))
 	r := NewVersion(right.(string))
 	return BoolData(l.Compare(r) > 0)
 }
 
-func versionLTE(left interface{}, right interface{}) *RawData {
+func versionLTE(left any, right any) *RawData {
 	l := NewVersion(left.(string))
 	r := NewVersion(right.(string))
 	return BoolData(l.Compare(r) <= 0)
 }
 
-func versionGTE(left interface{}, right interface{}) *RawData {
+func versionGTE(left any, right any) *RawData {
 	l := NewVersion(left.(string))
 	r := NewVersion(right.(string))
 	return BoolData(l.Compare(r) >= 0)
 }
 
 func versionCmpVersion(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left, right any) *RawData {
 		return BoolData(left.(string) == right.(string))
 	})
 }
 
 func versionNotVersion(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left, right interface{}) *RawData {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left, right any) *RawData {
 		return BoolData(left.(string) != right.(string))
 	})
 }

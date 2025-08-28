@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/providers"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/providers"
 )
 
 func TestLocalServicesInterface(t *testing.T) {

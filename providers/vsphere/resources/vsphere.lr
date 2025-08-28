@@ -4,7 +4,7 @@
 import "../../core/resources/core.lr"
 
 option provider = "go.mondoo.com/cnquery/v9/providers/vsphere"
-option go_package = "go.mondoo.com/cnquery/v11/providers/vsphere/resources"
+option go_package = "go.mondoo.com/cnquery/v12/providers/vsphere/resources"
 
 // vSphere asset resource
 extend asset {
@@ -13,12 +13,6 @@ extend asset {
   // Advisory & vulnerability report
   // Will be deprecated in version 12.0; Full advisory & vulnerability report
   // use vulnmgmt instead
-  vulnerabilityReport() dict
-}
-
-// vSphere platform resource (deprecated)
-platform {
-  // deprecated: use asset.vulnerabilityReport instead
   vulnerabilityReport() dict
 }
 
@@ -57,7 +51,7 @@ private vuln.cve @defaults("id") {
 // Advisory information
 private vuln.advisory @defaults("id") {
   // Advisory ID
-  id string  
+  id string
   // Title of the advisory
   title string
   // Description of the advisory
@@ -333,8 +327,6 @@ private esxi.service @defaults("key label") {
   label string
   // Flag indicating whether the service is required and cannot be disabled
   required bool
-  // Deprecated; always set to false
-  uninstallable bool
   // Flag indicating whether the service is currently running
   running bool
   // Firewall rulesets used by this service

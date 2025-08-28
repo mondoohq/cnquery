@@ -10,23 +10,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsApigateway) id() (string, error) {
 	return "aws.apigateway", nil
 }
 
-func (a *mqlAwsApigateway) restApis() ([]interface{}, error) {
+func (a *mqlAwsApigateway) restApis() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getRestApis(conn), 5)
 	poolOfJobs.Run()
 
@@ -36,7 +36,7 @@ func (a *mqlAwsApigateway) restApis() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -56,7 +56,7 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 			svc := conn.Apigateway(region)
 			ctx := context.Background()
 
-			res := []interface{}{}
+			res := []any{}
 			var position *string
 			for {
 				restApisResp, err := svc.GetRestApis(ctx, &apigateway.GetRestApisInput{Position: position})
@@ -133,7 +133,7 @@ func initAwsApigatewayRestapi(runtime *plugin.Runtime, args map[string]*llx.RawD
 	return nil, nil, errors.New("gateway restapi does not exist")
 }
 
-func (a *mqlAwsApigatewayRestapi) stages() ([]interface{}, error) {
+func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 	restApiId := a.Id.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -146,7 +146,7 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather AWS API Gateway stages")
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, stage := range stagesResp.Item {
 		dictMethodSettings, err := convert.JsonToDict(stage.MethodSettings)
 		if err != nil {

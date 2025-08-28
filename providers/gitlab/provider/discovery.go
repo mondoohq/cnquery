@@ -9,9 +9,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	gitlab "gitlab.com/gitlab-org/api/client-go"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v11/providers/gitlab/connection"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers/gitlab/connection"
 	"golang.org/x/exp/slices"
 )
 
@@ -215,7 +215,7 @@ func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLa
 	return assets, projectsArr, nil
 }
 
-func discoverGroupProjects(conn *connection.GitLabConnection, gid interface{}) ([]*gitlab.Project, error) {
+func discoverGroupProjects(conn *connection.GitLabConnection, gid any) ([]*gitlab.Project, error) {
 	log.Debug().Msgf("discover group projects for %v", gid)
 	perPage := 50
 	page := 1
@@ -339,7 +339,7 @@ type discoveredTypes struct {
 }
 
 // discoverRepoTypes will check if the repository contains terraform files and yaml files
-func discoverRepoTypes(client *gitlab.Client, pid interface{}) (*discoveredTypes, error) {
+func discoverRepoTypes(client *gitlab.Client, pid any) (*discoveredTypes, error) {
 	opts := &gitlab.ListTreeOptions{
 		ListOptions: gitlab.ListOptions{
 			PerPage: 100,

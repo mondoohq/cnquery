@@ -6,9 +6,9 @@ package mqlc
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mqlc/parser"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mqlc/parser"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var typeConversions map[string]fieldCompiler

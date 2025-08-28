@@ -10,10 +10,10 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/processes"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/processes"
 )
 
 type mqlProcessInternal struct {
@@ -69,7 +69,7 @@ func (p *mqlProcess) command() (string, error) {
 	return "", p.gatherProcessInfo()
 }
 
-func (p *mqlProcess) flags() (map[string]interface{}, error) {
+func (p *mqlProcess) flags() (map[string]any, error) {
 	cmd := p.GetCommand()
 	if cmd.Error != nil {
 		return nil, cmd.Error
@@ -82,7 +82,7 @@ func (p *mqlProcess) flags() (map[string]interface{}, error) {
 	}
 	flags := fs.Map()
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	for k := range flags {
 		res[k] = flags[k]
 	}
@@ -125,7 +125,7 @@ type mqlProcessesInternal struct {
 	BySocketID map[int64]*mqlProcess
 }
 
-func (p *mqlProcesses) list() ([]interface{}, error) {
+func (p *mqlProcesses) list() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	opm, err := processes.ResolveManager(conn)
 	if opm == nil || err != nil {
@@ -147,7 +147,7 @@ func (p *mqlProcesses) list() ([]interface{}, error) {
 		return nil, fmt.Errorf("could not retrieve processes socket inodes")
 	}
 
-	procs := make([]interface{}, len(processes))
+	procs := make([]any, len(processes))
 
 	for i := range processes {
 		proc := processes[i]
@@ -186,7 +186,7 @@ func (p *mqlProcesses) list() ([]interface{}, error) {
 	return procs, p.refreshCache(procs)
 }
 
-func (p *mqlProcesses) refreshCache(all []interface{}) error {
+func (p *mqlProcesses) refreshCache(all []any) error {
 	if all == nil {
 		raw := p.GetList()
 		if raw.Error != nil {

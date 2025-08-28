@@ -81,7 +81,6 @@ resources:
       required: {}
       ruleset: {}
       running: {}
-      uninstallable: {}
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -116,10 +115,6 @@ resources:
       name:
       - vmware-esxi
       - vmware-vsphere
-  platform:
-    fields:
-      vulnerabilityReport: {}
-    min_mondoo_version: latest
   vsphere:
     fields:
       about: {}

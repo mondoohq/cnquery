@@ -9,82 +9,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticache_types "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (a *mqlAwsElasticache) id() (string, error) {
 	return "aws.elasticache", nil
 }
 
-func (a *mqlAwsElasticache) clusters() ([]interface{}, error) {
+func (a *mqlAwsElasticache) cacheClusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getClusters(conn), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.(interface{}))
-		}
-	}
-
-	return res, nil
-}
-
-func (a *mqlAwsElasticache) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("elasticache>getClusters>calling aws with region %s", region)
-
-			svc := conn.Elasticache(region)
-			ctx := context.Background()
-			var res interface{}
-
-			params := &elasticache.DescribeCacheClustersInput{}
-			paginator := elasticache.NewDescribeCacheClustersPaginator(svc, params)
-			for paginator.HasMorePages() {
-				clusters, err := paginator.NextPage(ctx)
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					return nil, err
-				}
-				if len(clusters.CacheClusters) == 0 {
-					return nil, nil
-				}
-			}
-			jsonRes, err := convert.JsonToDictSlice(res)
-			if err != nil {
-				return nil, err
-			}
-			return jobpool.JobResult(jsonRes), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
-}
-
-func (a *mqlAwsElasticache) cacheClusters() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getCacheClusters(conn), 5)
 	poolOfJobs.Run()
 
@@ -95,7 +34,7 @@ func (a *mqlAwsElasticache) cacheClusters() ([]interface{}, error) {
 	// get all the results
 	for _, job := range poolOfJobs.Jobs {
 		if job.Result != nil {
-			res = append(res, job.Result.([]interface{})...)
+			res = append(res, job.Result.([]any)...)
 		}
 	}
 
@@ -115,7 +54,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 
 			svc := conn.Elasticache(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &elasticache.DescribeCacheClustersInput{}
 			paginator := elasticache.NewDescribeCacheClustersPaginator(svc, params)
@@ -151,11 +90,11 @@ type mqlAwsElasticacheClusterInternal struct {
 }
 
 func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, accountID string, cluster elasticache_types.CacheCluster) (*mqlAwsElasticacheCluster, error) {
-	cacheNodes := []interface{}{}
+	cacheNodes := []any{}
 	for i := range cluster.CacheNodes {
 		cacheNodes = append(cacheNodes, convert.ToValue(cluster.CacheNodes[i].CacheNodeId))
 	}
-	cacheSecurityGroups := []interface{}{}
+	cacheSecurityGroups := []any{}
 	for _, sg := range cluster.CacheSecurityGroups {
 		cacheSecurityGroups = append(cacheSecurityGroups, convert.ToValue(sg.CacheSecurityGroupName))
 	}
@@ -216,13 +155,13 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 	return mqlCluster, nil
 }
 
-func (a *mqlAwsElasticacheCluster) securityGroups() ([]interface{}, error) {
+func (a *mqlAwsElasticacheCluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
-func (a *mqlAwsElasticache) serverlessCaches() ([]interface{}, error) {
+func (a *mqlAwsElasticache) serverlessCaches() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getServerlessCaches(conn), 5)
 	poolOfJobs.Run()
 
@@ -233,7 +172,7 @@ func (a *mqlAwsElasticache) serverlessCaches() ([]interface{}, error) {
 	// get all the results
 	for i := range poolOfJobs.Jobs {
 		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 		}
 	}
 
@@ -253,7 +192,7 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 
 			svc := conn.Elasticache(region)
 			ctx := context.Background()
-			res := []interface{}{}
+			res := []any{}
 
 			params := &elasticache.DescribeServerlessCachesInput{}
 			paginator := elasticache.NewDescribeServerlessCachesPaginator(svc, params)
@@ -320,6 +259,6 @@ func newMqlAwsElasticacheServerlessCache(runtime *plugin.Runtime, region string,
 	return mqlCache, nil
 }
 
-func (a *mqlAwsElasticacheServerlessCache) securityGroups() ([]interface{}, error) {
+func (a *mqlAwsElasticacheServerlessCache) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }

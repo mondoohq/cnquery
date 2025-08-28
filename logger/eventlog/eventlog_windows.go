@@ -67,7 +67,7 @@ func (w eventlogWriter) Close() error {
 }
 
 func (w eventlogWriter) Write(p []byte) (n int, err error) {
-	var event map[string]interface{}
+	var event map[string]any
 	p = cbor.DecodeIfBinaryToBytes(p)
 	d := json.NewDecoder(bytes.NewReader(p))
 	d.UseNumber()

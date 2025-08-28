@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
 func TestParse_Date(t *testing.T) {
@@ -73,7 +74,7 @@ func TestParse_DateError(t *testing.T) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.Code, func(t *testing.T) {
-			res, err := x.TestQueryPWithError(t, cur.Code, nil)
+			res, err := x.TestQueryPWithError(t, cur.Code, mqlc.EmptyPropsHandler)
 			var errMsg string
 			if err != nil {
 				errMsg = err.Error()

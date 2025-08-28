@@ -111,7 +111,7 @@ func NewSPDXPackageID(pkg *Package) spdx.ElementID {
 	return spdx.ElementID(id)
 }
 
-func (s *Spdx) Convert(bom *Sbom) (interface{}, error) {
+func (s *Spdx) Convert(bom *Sbom) (any, error) {
 	spdxLatestBom := s.convertToSpdx(bom)
 
 	var spdxBom any

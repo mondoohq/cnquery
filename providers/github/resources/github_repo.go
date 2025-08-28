@@ -14,12 +14,12 @@ import (
 
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/github/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/github/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*mqlGithubRepository, error) {
@@ -269,7 +269,7 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 	return res.(*mqlGithubLicense), nil
 }
 
-func (g *mqlGithubRepository) getMergeRequests(state string) ([]interface{}, error) {
+func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
@@ -304,7 +304,7 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]interface{}, err
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allPulls {
 		pr := allPulls[i]
 
@@ -320,7 +320,7 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]interface{}, err
 			return nil, err
 		}
 
-		assigneesRes := []interface{}{}
+		assigneesRes := []any{}
 		for i := range pr.Assignees {
 			assignee, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntDataPtr(pr.Assignees[i].ID),
@@ -352,7 +352,7 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]interface{}, err
 	return res, nil
 }
 
-func (g *mqlGithubRepository) allMergeRequests() ([]interface{}, error) {
+func (g *mqlGithubRepository) allMergeRequests() ([]any, error) {
 	res, err := g.getMergeRequests("all")
 	if err != nil {
 		return nil, err
@@ -360,7 +360,7 @@ func (g *mqlGithubRepository) allMergeRequests() ([]interface{}, error) {
 	return res, err
 }
 
-func (g *mqlGithubRepository) closedMergeRequests() ([]interface{}, error) {
+func (g *mqlGithubRepository) closedMergeRequests() ([]any, error) {
 	res, err := g.getMergeRequests("closed")
 	if err != nil {
 		return nil, err
@@ -368,7 +368,7 @@ func (g *mqlGithubRepository) closedMergeRequests() ([]interface{}, error) {
 	return res, err
 }
 
-func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
+func (g *mqlGithubRepository) openMergeRequests() ([]any, error) {
 	res, err := g.getMergeRequests("open")
 	if err != nil {
 		return nil, err
@@ -384,7 +384,7 @@ func (g *mqlGithubMergeRequest) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
-func (g *mqlGithubRepository) branches() ([]interface{}, error) {
+func (g *mqlGithubRepository) branches() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
@@ -423,7 +423,7 @@ func (g *mqlGithubRepository) branches() ([]interface{}, error) {
 		}
 		listOpts.Page = resp.NextPage
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range allBranches {
 		branch := allBranches[i]
 
@@ -554,7 +554,7 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 
 	var ghDismissalRestrictions *githubDismissalRestrictions
 
-	var rprr map[string]interface{}
+	var rprr map[string]any
 	if branchProtection.RequiredPullRequestReviews != nil {
 
 		if branchProtection.RequiredPullRequestReviews.DismissalRestrictions != nil {
@@ -648,8 +648,8 @@ func (g *mqlGithubBranch) headCommit() (*mqlGithubCommit, error) {
 	return commit.(*mqlGithubCommit), nil
 }
 
-func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, owner string, repo string) (interface{}, error) {
-	var githubAuthor interface{}
+func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, owner string, repo string) (any, error) {
+	var githubAuthor any
 	var err error
 	conn := runtime.Connection.(*connection.GithubConnection)
 
@@ -670,7 +670,7 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 			return nil, err
 		}
 	}
-	var githubCommitter interface{}
+	var githubCommitter any
 	if rc.Committer != nil && rc.Committer.ID != nil && rc.Committer.Login != nil {
 		githubCommitter, err = NewResource(runtime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(rc.Committer.ID),
@@ -707,7 +707,7 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 	})
 }
 
-func (g *mqlGithubRepository) commits() ([]interface{}, error) {
+func (g *mqlGithubRepository) commits() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Name.Error != nil {
@@ -742,7 +742,7 @@ func (g *mqlGithubRepository) commits() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range allCommits {
 		rc := allCommits[i]
 		mqlCommit, err := newMqlGithubCommit(g.MqlRuntime, rc, ownerLogin, repoName)
@@ -754,7 +754,7 @@ func (g *mqlGithubRepository) commits() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubMergeRequest) reviews() ([]interface{}, error) {
+func (g *mqlGithubMergeRequest) reviews() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	var err error
 	if g.RepoName.Error != nil {
@@ -792,10 +792,10 @@ func (g *mqlGithubMergeRequest) reviews() ([]interface{}, error) {
 		}
 		listOpts.Page = resp.NextPage
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range allReviews {
 		r := allReviews[i]
-		var user interface{}
+		var user any
 		if r.User != nil {
 			user, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntDataPtr(r.User.ID),
@@ -820,7 +820,7 @@ func (g *mqlGithubMergeRequest) reviews() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubMergeRequest) commits() ([]interface{}, error) {
+func (g *mqlGithubMergeRequest) commits() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.RepoName.Error != nil {
 		return nil, g.RepoName.Error
@@ -857,7 +857,7 @@ func (g *mqlGithubMergeRequest) commits() ([]interface{}, error) {
 		}
 		listOpts.Page = resp.NextPage
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range allCommits {
 		rc := allCommits[i]
 
@@ -870,7 +870,7 @@ func (g *mqlGithubMergeRequest) commits() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubRepository) contributors() ([]interface{}, error) {
+func (g *mqlGithubRepository) contributors() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Name.Error != nil {
@@ -904,7 +904,7 @@ func (g *mqlGithubRepository) contributors() ([]interface{}, error) {
 		}
 		listOpts.Page = resp.NextPage
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range allContributors {
 		mqlUser, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(allContributors[i].ID),
@@ -918,7 +918,7 @@ func (g *mqlGithubRepository) contributors() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubRepository) collaborators() ([]interface{}, error) {
+func (g *mqlGithubRepository) collaborators() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Name.Error != nil {
@@ -952,7 +952,7 @@ func (g *mqlGithubRepository) collaborators() ([]interface{}, error) {
 		}
 		listOpts.Page = resp.NextPage
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range allContributors {
 		contributor := allContributors[i]
 		mqlUser, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
@@ -981,7 +981,7 @@ func (g *mqlGithubRepository) collaborators() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubRepository) adminCollaborators() ([]interface{}, error) {
+func (g *mqlGithubRepository) adminCollaborators() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Name.Error != nil {
@@ -1016,7 +1016,7 @@ func (g *mqlGithubRepository) adminCollaborators() ([]interface{}, error) {
 		}
 		listOpts.Page = resp.NextPage
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range adminCollaborators {
 		contributor := adminCollaborators[i]
 		mqlUser, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
@@ -1045,7 +1045,7 @@ func (g *mqlGithubRepository) adminCollaborators() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubRepository) releases() ([]interface{}, error) {
+func (g *mqlGithubRepository) releases() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Name.Error != nil {
@@ -1080,7 +1080,7 @@ func (g *mqlGithubRepository) releases() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allReleases {
 		r := allReleases[i]
 		mqlUser, err := CreateResource(g.MqlRuntime, "github.release", map[string]*llx.RawData{
@@ -1106,7 +1106,7 @@ func (g *mqlGithubWebhook) id() (string, error) {
 	return "github.webhook/" + strconv.FormatInt(id, 10), nil
 }
 
-func (g *mqlGithubRepository) webhooks() ([]interface{}, error) {
+func (g *mqlGithubRepository) webhooks() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Name.Error != nil {
@@ -1140,7 +1140,7 @@ func (g *mqlGithubRepository) webhooks() ([]interface{}, error) {
 		}
 		listOpts.Page = resp.NextPage
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range allWebhooks {
 		h := allWebhooks[i]
 		config, err := convert.JsonToDict(h.Config)
@@ -1170,7 +1170,7 @@ type mqlGithubWorkflowInternal struct {
 	parentResource     *mqlGithubRepository
 }
 
-func (g *mqlGithubRepository) workflows() ([]interface{}, error) {
+func (g *mqlGithubRepository) workflows() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Name.Error != nil {
@@ -1210,7 +1210,7 @@ func (g *mqlGithubRepository) workflows() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allWorkflows {
 		w := allWorkflows[i]
 
@@ -1278,7 +1278,7 @@ func newMqlGithubFileDoesNotExist(runtime *plugin.Runtime, ownerName string, rep
 	return res.(*mqlGithubFile), nil
 }
 
-func (g *mqlGithubRepository) files() ([]interface{}, error) {
+func (g *mqlGithubRepository) files() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Name.Error != nil {
@@ -1302,7 +1302,7 @@ func (g *mqlGithubRepository) files() ([]interface{}, error) {
 		log.Error().Err(err).Msg("unable to get contents list")
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range dirContent {
 		mqlFile, err := newMqlGithubFile(g.MqlRuntime, ownerLogin, repoName, dirContent[i])
 		if err != nil {
@@ -1357,7 +1357,7 @@ func (g *mqlGithubFile) id() (string, error) {
 	return r + "/" + p + "/" + s, nil
 }
 
-func (g *mqlGithubFile) files() ([]interface{}, error) {
+func (g *mqlGithubFile) files() ([]any, error) {
 	if g.Type.Error != nil {
 		return nil, g.Type.Error
 	}
@@ -1386,7 +1386,7 @@ func (g *mqlGithubFile) files() ([]interface{}, error) {
 		log.Error().Err(err).Msg("unable to get contents list")
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for i := range dirContent {
 		isBinary := false
 		if convert.ToValue(dirContent[i].Type) == "file" {
@@ -1457,7 +1457,7 @@ func (g *mqlGithubFile) content() (string, error) {
 	return content, nil
 }
 
-func (g *mqlGithubRepository) forks() ([]interface{}, error) {
+func (g *mqlGithubRepository) forks() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
@@ -1495,7 +1495,7 @@ func (g *mqlGithubRepository) forks() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allForks {
 		repo := allForks[i]
 		r, err := newMqlGithubRepository(g.MqlRuntime, repo)
@@ -1507,7 +1507,7 @@ func (g *mqlGithubRepository) forks() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubRepository) stargazers() ([]interface{}, error) {
+func (g *mqlGithubRepository) stargazers() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
@@ -1543,7 +1543,7 @@ func (g *mqlGithubRepository) stargazers() ([]interface{}, error) {
 		listOpts.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allStargazers {
 		stargazer := allStargazers[i]
 		r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
@@ -1567,15 +1567,15 @@ func (g *mqlGithubIssue) id() (string, error) {
 	return "github.issue/" + strconv.FormatInt(id, 10), nil
 }
 
-func (g *mqlGithubRepository) openIssues() ([]interface{}, error) {
+func (g *mqlGithubRepository) openIssues() ([]any, error) {
 	return g.getIssues("open")
 }
 
-func (g *mqlGithubRepository) closedIssues() ([]interface{}, error) {
+func (g *mqlGithubRepository) closedIssues() ([]any, error) {
 	return g.getIssues("closed")
 }
 
-func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
+func (g *mqlGithubRepository) getIssues(state string) ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
@@ -1614,11 +1614,11 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 		listOpts.ListOptions.Page = resp.NextPage
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range allIssues {
 		issue := allIssues[i]
 
-		var assignees []interface{}
+		var assignees []any
 		for _, assignee := range issue.Assignees {
 			r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntDataPtr(assignee.ID),
@@ -1630,7 +1630,7 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 			assignees = append(assignees, r)
 		}
 
-		var closedBy interface{}
+		var closedBy any
 		if issue.GetClosedBy() != nil {
 			r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntDataPtr(issue.GetClosedBy().ID),

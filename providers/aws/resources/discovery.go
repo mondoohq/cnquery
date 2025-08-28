@@ -6,11 +6,11 @@ package resources
 import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/aws/connection"
-	"go.mondoo.com/cnquery/v11/utils/stringx"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
 var ENABLE_FINE_GRAINED_ASSETS = false
@@ -98,7 +98,7 @@ var AllAPIResources = []string{
 	DiscoverySagemakerNotebookInstances,
 }
 
-func containsInterfaceSlice(sl []interface{}, s string) bool {
+func containsInterfaceSlice(sl []any, s string) bool {
 	for i := range sl {
 		if sl[i].(string) == s {
 			return true
@@ -486,7 +486,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		r := res.(*mqlAwsRds)
 
-		dbs := r.GetDbInstances()
+		dbs := r.GetInstances()
 		if dbs == nil {
 			return assetList, nil
 		}
@@ -512,7 +512,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		r := res.(*mqlAwsRds)
 
-		clusters := r.GetDbClusters()
+		clusters := r.GetClusters()
 		if clusters == nil {
 			return assetList, nil
 		}

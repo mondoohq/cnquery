@@ -27,7 +27,7 @@ func TestConfigParser(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Printf("%v\n", string(data))
 
-	entry := dict["management telnet"].(map[string]interface{})
+	entry := dict["management telnet"].(map[string]any)
 	assert.NotNil(t, entry)
 
 	_, ok := entry["shutdown"]

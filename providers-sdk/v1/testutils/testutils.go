@@ -16,22 +16,22 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/logger"
-	"go.mondoo.com/cnquery/v11/mql"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/providers"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/lr"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/lr/docs"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/recording"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils/mockprovider"
-	networkconf "go.mondoo.com/cnquery/v11/providers/network/config"
-	networkprovider "go.mondoo.com/cnquery/v11/providers/network/provider"
-	osconf "go.mondoo.com/cnquery/v11/providers/os/config"
-	osprovider "go.mondoo.com/cnquery/v11/providers/os/provider"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/mql"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/providers"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr/docs"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils/mockprovider"
+	networkconf "go.mondoo.com/cnquery/v12/providers/network/config"
+	networkprovider "go.mondoo.com/cnquery/v12/providers/network/provider"
+	osconf "go.mondoo.com/cnquery/v12/providers/os/config"
+	osprovider "go.mondoo.com/cnquery/v12/providers/os/provider"
 	"sigs.k8s.io/yaml"
 )
 
@@ -94,7 +94,7 @@ func (ctx *tester) ExecuteCode(bundle *llx.CodeBundle, props map[string]*llx.Pri
 	return mql.ExecuteCode(ctx.Runtime, bundle, props, Features)
 }
 
-func (ctx *tester) TestQueryPWithError(t *testing.T, query string, props map[string]*llx.Primitive) ([]*llx.RawResult, error) {
+func (ctx *tester) TestQueryPWithError(t *testing.T, query string, props mqlc.PropsHandler) ([]*llx.RawResult, error) {
 	t.Helper()
 	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.Runtime.Schema(), Features))
 	if err != nil {
@@ -104,10 +104,10 @@ func (ctx *tester) TestQueryPWithError(t *testing.T, query string, props map[str
 	if err != nil {
 		return nil, fmt.Errorf("failed to check invariants: %w", err)
 	}
-	return ctx.TestMqlc(t, bundle, props), nil
+	return ctx.TestMqlc(t, bundle, props.Available()), nil
 }
 
-func (ctx *tester) TestQueryP(t *testing.T, query string, props map[string]*llx.Primitive) []*llx.RawResult {
+func (ctx *tester) TestQueryP(t *testing.T, query string, props mqlc.PropsHandler) []*llx.RawResult {
 	t.Helper()
 	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.Runtime.Schema(), Features))
 	if err != nil {
@@ -115,11 +115,11 @@ func (ctx *tester) TestQueryP(t *testing.T, query string, props map[string]*llx.
 	}
 	err = mqlc.Invariants.Check(bundle)
 	require.NoError(t, err)
-	return ctx.TestMqlc(t, bundle, props)
+	return ctx.TestMqlc(t, bundle, props.Available())
 }
 
 func (ctx *tester) TestQuery(t *testing.T, query string) []*llx.RawResult {
-	return ctx.TestQueryP(t, query, nil)
+	return ctx.TestQueryP(t, query, mqlc.EmptyPropsHandler)
 }
 
 func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[string]*llx.Primitive) []*llx.RawResult {
@@ -337,7 +337,7 @@ func RecordingMock(absTestdataPath string) llx.Runtime {
 type SimpleTest struct {
 	Code        string
 	ResultIndex int
-	Expectation interface{}
+	Expectation any
 	Error       string
 }
 
@@ -362,7 +362,6 @@ func (ctx *tester) TestSimple(t *testing.T, tests []SimpleTest) {
 				require.NoError(t, data.Error)
 				assert.Equal(t, cur.Expectation, data.Value)
 			}
-
 		})
 	}
 }

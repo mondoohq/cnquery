@@ -7,10 +7,10 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,8 +29,8 @@ func (k *mqlK8sStatefulset) getStatefulSet() (*appsv1.StatefulSet, error) {
 	return nil, errors.New("invalid k8s statefulset")
 }
 
-func (k *mqlK8s) statefulsets() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(appsv1.SchemeGroupVersion.WithKind("statefulsets")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) statefulsets() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(appsv1.SchemeGroupVersion.WithKind("statefulsets")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.statefulset", map[string]*llx.RawData{
@@ -51,7 +51,7 @@ func (k *mqlK8s) statefulsets() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sStatefulset) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sStatefulset) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (k *mqlK8sStatefulset) manifest() (map[string]interface{}, error) {
 	return manifest, nil
 }
 
-func (k *mqlK8sStatefulset) podSpec() (map[string]interface{}, error) {
+func (k *mqlK8sStatefulset) podSpec() (map[string]any, error) {
 	podSpec, err := resources.GetPodSpec(k.obj)
 	if err != nil {
 		return nil, err
@@ -76,10 +76,10 @@ func (k *mqlK8sStatefulset) id() (string, error) {
 }
 
 func initK8sStatefulset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initNamespacedResource[*mqlK8sStatefulset](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetStatefulsets() })
+	return initNamespacedResource[*mqlK8sStatefulset](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetStatefulsets() })
 }
 
-func (k *mqlK8sStatefulset) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sStatefulset) annotations() (map[string]any, error) {
 	s, err := k.getStatefulSet()
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (k *mqlK8sStatefulset) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(s.GetAnnotations()), nil
 }
 
-func (k *mqlK8sStatefulset) labels() (map[string]interface{}, error) {
+func (k *mqlK8sStatefulset) labels() (map[string]any, error) {
 	s, err := k.getStatefulSet()
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (k *mqlK8sStatefulset) labels() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(s.GetLabels()), nil
 }
 
-func (k *mqlK8sStatefulset) initContainers() ([]interface{}, error) {
+func (k *mqlK8sStatefulset) initContainers() ([]any, error) {
 	s, err := k.getStatefulSet()
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (k *mqlK8sStatefulset) initContainers() ([]interface{}, error) {
 	return getContainers(s, &s.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
-func (k *mqlK8sStatefulset) containers() ([]interface{}, error) {
+func (k *mqlK8sStatefulset) containers() ([]any, error) {
 	s, err := k.getStatefulSet()
 	if err != nil {
 		return nil, err

@@ -7,11 +7,11 @@ import (
 	"errors"
 	"io"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/windows"
 )
 
 func (w *mqlWindowsFirewallProfile) id() (string, error) {
@@ -22,7 +22,7 @@ func (w *mqlWindowsFirewallRule) id() (string, error) {
 	return w.InstanceID.Data, nil
 }
 
-func (w *mqlWindowsFirewall) settings() (map[string]interface{}, error) {
+func (w *mqlWindowsFirewall) settings() (map[string]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
 	// query firewall profiles
@@ -47,7 +47,7 @@ func (w *mqlWindowsFirewall) settings() (map[string]interface{}, error) {
 	return convert.JsonToDict(fwSettings)
 }
 
-func (w *mqlWindowsFirewall) profiles() ([]interface{}, error) {
+func (w *mqlWindowsFirewall) profiles() ([]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
 	// query firewall profiles
@@ -71,7 +71,7 @@ func (w *mqlWindowsFirewall) profiles() ([]interface{}, error) {
 	}
 
 	// convert firewall profiles to MQL resource
-	mqlFwProfiles := make([]interface{}, len(fwProfiles))
+	mqlFwProfiles := make([]any, len(fwProfiles))
 	for i, p := range fwProfiles {
 
 		mqlFwProfile, err := CreateResource(w.MqlRuntime, "windows.firewall.profile", map[string]*llx.RawData{
@@ -104,7 +104,7 @@ func (w *mqlWindowsFirewall) profiles() ([]interface{}, error) {
 	return mqlFwProfiles, nil
 }
 
-func (w *mqlWindowsFirewall) rules() ([]interface{}, error) {
+func (w *mqlWindowsFirewall) rules() ([]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
 	// query firewall rules
@@ -128,7 +128,7 @@ func (w *mqlWindowsFirewall) rules() ([]interface{}, error) {
 	}
 
 	// convert firewall rules to MQL resource
-	mqlFwRules := make([]interface{}, len(fwRules))
+	mqlFwRules := make([]any, len(fwRules))
 	for i, r := range fwRules {
 
 		mqlFwRule, err := CreateResource(w.MqlRuntime, "windows.firewall.rule", map[string]*llx.RawData{

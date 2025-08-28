@@ -7,10 +7,10 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mql/internal"
-	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mql/internal"
+	"go.mondoo.com/cnquery/v12/mqlc"
 )
 
 // New creates a new MQL executor instance. It allows you to easily run multiple queries against the
@@ -28,11 +28,15 @@ type Executor struct {
 }
 
 // Exec runs a query with properties against the runtime
-func (e *Executor) Exec(query string, props map[string]*llx.Primitive) (*llx.RawData, error) {
+func (e *Executor) Exec(query string, props mqlc.PropsHandler) (*llx.RawData, error) {
 	return Exec(query, e.runtime, e.features, props)
 }
 
-func Exec(query string, runtime llx.Runtime, features cnquery.Features, props map[string]*llx.Primitive) (*llx.RawData, error) {
+func Exec(query string, runtime llx.Runtime, features cnquery.Features, props mqlc.PropsHandler) (*llx.RawData, error) {
+	if props == nil {
+		props = mqlc.EmptyPropsHandler
+	}
+
 	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(runtime.Schema(), features))
 	if err != nil {
 		return nil, errors.New("failed to compile: " + err.Error())
@@ -48,7 +52,7 @@ func Exec(query string, runtime llx.Runtime, features cnquery.Features, props ma
 		log.Warn().Str("query", query).Msg("mql> Code must only return one value, but it has many configured. Only returning last result.")
 	}
 
-	raw, err := ExecuteCode(runtime, bundle, props, features)
+	raw, err := ExecuteCode(runtime, bundle, props.Available(), features)
 	if err != nil {
 		return nil, err
 	}

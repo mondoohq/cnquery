@@ -13,11 +13,11 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/sortx"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/sortx"
 )
 
-func intKeys(m map[int]interface{}) []int {
+func intKeys(m map[int]any) []int {
 	keys := make([]int, len(m))
 	var i int
 	for k := range m {
@@ -88,7 +88,7 @@ func removeUnderscoreKeys(keys []string) []string {
 	return results
 }
 
-func refMapJSON(typ types.Type, data map[string]interface{}, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
+func refMapJSON(typ types.Type, data map[string]any, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
 	buf.WriteByte('{')
 
 	keys := sortx.Keys(data)
@@ -111,7 +111,10 @@ func refMapJSON(typ types.Type, data map[string]interface{}, codeID string, bund
 		if val.Error != nil {
 			buf.WriteString(PrettyPrintString("Error: " + val.Error.Error()))
 		} else {
-			rawDataJSON(val.Type, val.Value, k, bundle, buf)
+			err = rawDataJSON(val.Type, val.Value, k, bundle, buf)
+			if err != nil {
+				return err
+			}
 		}
 
 		if i != last {
@@ -123,7 +126,7 @@ func refMapJSON(typ types.Type, data map[string]interface{}, codeID string, bund
 	return nil
 }
 
-func rawDictJSON(typ types.Type, raw interface{}, buf *bytes.Buffer) error {
+func rawDictJSON(typ types.Type, raw any, buf *bytes.Buffer) error {
 	switch data := raw.(type) {
 	case bool:
 		if data {
@@ -154,7 +157,7 @@ func rawDictJSON(typ types.Type, raw interface{}, buf *bytes.Buffer) error {
 		buf.Write(b)
 		return err
 
-	case []interface{}:
+	case []any:
 		buf.WriteByte('[')
 
 		last := len(data) - 1
@@ -171,7 +174,7 @@ func rawDictJSON(typ types.Type, raw interface{}, buf *bytes.Buffer) error {
 		buf.WriteByte(']')
 		return nil
 
-	case map[string]interface{}:
+	case map[string]any:
 		buf.WriteByte('{')
 
 		keys := sortx.Keys(data)
@@ -209,7 +212,7 @@ func rawDictJSON(typ types.Type, raw interface{}, buf *bytes.Buffer) error {
 	}
 }
 
-func rawArrayJSON(typ types.Type, data []interface{}, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
+func rawArrayJSON(typ types.Type, data []any, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
 	buf.WriteByte('[')
 
 	last := len(data) - 1
@@ -231,7 +234,7 @@ func rawArrayJSON(typ types.Type, data []interface{}, codeID string, bundle *Cod
 	return nil
 }
 
-func rawStringMapJSON(typ types.Type, data map[string]interface{}, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
+func rawStringMapJSON(typ types.Type, data map[string]any, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
 	buf.WriteByte('{')
 
 	last := len(data) - 1
@@ -260,7 +263,7 @@ func rawStringMapJSON(typ types.Type, data map[string]interface{}, codeID string
 	return nil
 }
 
-func rawIntMapJSON(typ types.Type, data map[int]interface{}, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
+func rawIntMapJSON(typ types.Type, data map[int]any, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
 	buf.WriteByte('{')
 
 	last := len(data) - 1
@@ -294,7 +297,7 @@ func rawIntMapJSON(typ types.Type, data map[int]interface{}, codeID string, bund
 // The heart of the JSON marshaller. We try to avoid the default marshaller whenever
 // possible for now, because our type system provides most of the information we need,
 // allowing us to avoid more costly reflection calls.
-func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
+func rawDataJSON(typ types.Type, data any, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
 	if typ.NotSet() {
 		return errors.New("type information is missing")
 	}
@@ -401,17 +404,17 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 		return nil
 
 	case types.Block:
-		return refMapJSON(typ, data.(map[string]interface{}), codeID, bundle, buf)
+		return refMapJSON(typ, data.(map[string]any), codeID, bundle, buf)
 
 	case types.ArrayLike:
-		return rawArrayJSON(typ, data.([]interface{}), codeID, bundle, buf)
+		return rawArrayJSON(typ, data.([]any), codeID, bundle, buf)
 
 	case types.MapLike:
 		if typ.Key() == types.String {
-			return rawStringMapJSON(typ, data.(map[string]interface{}), codeID, bundle, buf)
+			return rawStringMapJSON(typ, data.(map[string]any), codeID, bundle, buf)
 		}
 		if typ.Key() == types.Int {
-			return rawIntMapJSON(typ, data.(map[int]interface{}), codeID, bundle, buf)
+			return rawIntMapJSON(typ, data.(map[int]any), codeID, bundle, buf)
 		}
 		return errors.New("unable to marshal map, its type is not supported: " + typ.Label() + ", raw: " + fmt.Sprintf("%#v", data))
 

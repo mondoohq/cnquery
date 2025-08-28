@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/types"
 
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -33,8 +33,8 @@ func (k *mqlK8sIngress) getIngress() (*networkingv1.Ingress, error) {
 	return nil, errors.New("invalid k8s ingress")
 }
 
-func (k *mqlK8s) ingresses() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(networkingv1.SchemeGroupVersion.WithKind("ingresses")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) ingresses() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(networkingv1.SchemeGroupVersion.WithKind("ingresses")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		ingress, ok := resource.(*networkingv1.Ingress)
@@ -68,7 +68,7 @@ func (k *mqlK8s) ingresses() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sIngress) tls() ([]interface{}, error) {
+func (k *mqlK8sIngress) tls() ([]any, error) {
 	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (k *mqlK8sIngress) tls() ([]interface{}, error) {
 	return tls, nil
 }
 
-func (k *mqlK8sIngress) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sIngress) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -100,10 +100,10 @@ func (k *mqlK8sIngress) id() (string, error) {
 }
 
 func initK8sIngress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initNamespacedResource[*mqlK8sIngress](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetIngresses() })
+	return initNamespacedResource[*mqlK8sIngress](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetIngresses() })
 }
 
-func (k *mqlK8sIngress) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sIngress) annotations() (map[string]any, error) {
 	ing, err := k.getIngress()
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (k *mqlK8sIngress) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(ing.GetAnnotations()), nil
 }
 
-func (k *mqlK8sIngress) labels() (map[string]interface{}, error) {
+func (k *mqlK8sIngress) labels() (map[string]any, error) {
 	ing, err := k.getIngress()
 	if err != nil {
 		return nil, err
@@ -119,11 +119,11 @@ func (k *mqlK8sIngress) labels() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(ing.GetLabels()), nil
 }
 
-func buildRules(ingress *networkingv1.Ingress, objId string, runtime *plugin.Runtime) ([]interface{}, error) {
-	k8sIngressRules := []interface{}{}
+func buildRules(ingress *networkingv1.Ingress, objId string, runtime *plugin.Runtime) ([]any, error) {
+	k8sIngressRules := []any{}
 
 	for i, rule := range ingress.Spec.Rules {
-		paths := []interface{}{}
+		paths := []any{}
 		ruleId := fmt.Sprintf("%s/rule%d", objId, i)
 
 		if rule.HTTP != nil {
@@ -280,8 +280,8 @@ func (k *mqlK8sIngresstls) id() (string, error) {
 	return k.Id.Data, nil
 }
 
-func getTLS(ingress *networkingv1.Ingress, objId string, runtime *plugin.Runtime, getSecrets func() *plugin.TValue[[]interface{}]) ([]interface{}, error) {
-	tlsData := []interface{}{}
+func getTLS(ingress *networkingv1.Ingress, objId string, runtime *plugin.Runtime, getSecrets func() *plugin.TValue[[]any]) ([]any, error) {
+	tlsData := []any{}
 	if len(ingress.Spec.TLS) > 0 {
 		// This returns ALL Secrets found in the cluster!
 		secretsInterface := getSecrets()

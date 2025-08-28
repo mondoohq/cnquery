@@ -10,21 +10,21 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v11/providers/oci/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v12/providers/oci/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (o *mqlOciIdentity) id() (string, error) {
 	return "oci.identity", nil
 }
 
-func (o *mqlOciIdentity) users() ([]interface{}, error) {
+func (o *mqlOciIdentity) users() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(o.getUsers(conn), 5)
 	poolOfJobs.Run()
 
@@ -34,7 +34,7 @@ func (o *mqlOciIdentity) users() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -82,7 +82,7 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 				return nil, err
 			}
 
-			var res []interface{}
+			var res []any
 			users, err := o.getUsersForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err
@@ -106,7 +106,7 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 					previousLogin = &user.PreviousSuccessfulLoginTime.Time
 				}
 
-				capabilities := map[string]interface{}{}
+				capabilities := map[string]any{}
 				if user.Capabilities != nil {
 					capabilities["canUseConsolePassword"] = boolValue(user.Capabilities.CanUseConsolePassword)
 					capabilities["canUseApiKeys"] = boolValue(user.Capabilities.CanUseApiKeys)
@@ -147,7 +147,7 @@ func (o *mqlOciIdentityUser) id() (string, error) {
 	return "oci.identity.user/" + o.Id.Data, nil
 }
 
-func (o *mqlOciIdentityUser) apiKeys() ([]interface{}, error) {
+func (o *mqlOciIdentityUser) apiKeys() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	userId := o.Id.Data
@@ -165,7 +165,7 @@ func (o *mqlOciIdentityUser) apiKeys() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range resp.Items {
 		apikey := resp.Items[i]
 
@@ -194,7 +194,7 @@ func (o *mqlOciIdentityApiKey) id() (string, error) {
 	return "oci.identity.apiKey/" + o.Id.Data, nil
 }
 
-func (o *mqlOciIdentityUser) customerSecretKeys() ([]interface{}, error) {
+func (o *mqlOciIdentityUser) customerSecretKeys() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	userId := o.Id.Data
@@ -212,7 +212,7 @@ func (o *mqlOciIdentityUser) customerSecretKeys() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range resp.Items {
 		secretKey := resp.Items[i]
 
@@ -240,7 +240,7 @@ func (o *mqlOciIdentityCustomerSecretKey) id() (string, error) {
 	return "oci.identity.customerSecretKey/" + o.Id.Data, nil
 }
 
-func (o *mqlOciIdentityUser) authTokens() ([]interface{}, error) {
+func (o *mqlOciIdentityUser) authTokens() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	userId := o.Id.Data
@@ -258,7 +258,7 @@ func (o *mqlOciIdentityUser) authTokens() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range resp.Items {
 		authToken := resp.Items[i]
 
@@ -291,7 +291,7 @@ func (o *mqlOciIdentityAuthToken) id() (string, error) {
 	return "oci.identity.authToken/" + o.Id.Data, nil
 }
 
-func (o *mqlOciIdentityUser) groups() ([]interface{}, error) {
+func (o *mqlOciIdentityUser) groups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	userId := o.Id.Data
@@ -330,7 +330,7 @@ func (o *mqlOciIdentityUser) groups() ([]interface{}, error) {
 		return nil, list.Error
 	}
 
-	res := []interface{}{}
+	res := []any{}
 	for i := range list.Data {
 		grp := list.Data[i].(*mqlOciIdentityGroup)
 		id := grp.Id.Data
@@ -343,10 +343,10 @@ func (o *mqlOciIdentityUser) groups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (o *mqlOciIdentity) groups() ([]interface{}, error) {
+func (o *mqlOciIdentity) groups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(o.getGroups(conn), 5)
 	poolOfJobs.Run()
 
@@ -356,7 +356,7 @@ func (o *mqlOciIdentity) groups() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -404,7 +404,7 @@ func (o *mqlOciIdentity) getGroups(conn *connection.OciConnection) []*jobpool.Jo
 				return nil, err
 			}
 
-			var res []interface{}
+			var res []any
 			groups, err := o.getGroupsForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err
@@ -443,10 +443,10 @@ func (o *mqlOciIdentityGroup) id() (string, error) {
 	return "oci.identity.group/" + o.Id.Data, nil
 }
 
-func (o *mqlOciIdentity) policies() ([]interface{}, error) {
+func (o *mqlOciIdentity) policies() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	res := []interface{}{}
+	res := []any{}
 	poolOfJobs := jobpool.CreatePool(o.getPolicies(conn), 5)
 	poolOfJobs.Run()
 
@@ -456,7 +456,7 @@ func (o *mqlOciIdentity) policies() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
 	return res, nil
@@ -504,7 +504,7 @@ func (o *mqlOciIdentity) getPolicies(conn *connection.OciConnection) []*jobpool.
 				return nil, err
 			}
 
-			var res []interface{}
+			var res []any
 			policies, err := o.getPoliciesForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err

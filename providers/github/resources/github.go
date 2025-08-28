@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/go-github/v72/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/memoize"
-	"go.mondoo.com/cnquery/v11/providers/github/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/memoize"
+	"go.mondoo.com/cnquery/v12/providers/github/connection"
 )
 
 // We use a global MQL resource for the connection to store the memoizer.
@@ -37,7 +37,7 @@ func getUser(ctx context.Context, runtime *plugin.Runtime, conn *connection.Gith
 		g.memoize = memoize.New(cacheExpirationTime, cacheCleanupTime)
 	}
 
-	res, _, err := g.memoize.Memoize("user-"+user, func() (interface{}, error) {
+	res, _, err := g.memoize.Memoize("user-"+user, func() (any, error) {
 		log.Debug().Msgf("fetching user %s", user)
 		user, _, err := conn.Client().Users.Get(ctx, user)
 		return user, err
@@ -57,7 +57,7 @@ func getOrg(ctx context.Context, runtime *plugin.Runtime, conn *connection.Githu
 	if g.memoize == nil {
 		g.memoize = memoize.New(cacheExpirationTime, cacheCleanupTime)
 	}
-	res, _, err := g.memoize.Memoize("org-"+name, func() (interface{}, error) {
+	res, _, err := g.memoize.Memoize("org-"+name, func() (any, error) {
 		log.Debug().Msgf("fetching organization %s", name)
 		org, _, err := conn.Client().Organizations.Get(ctx, name)
 		return org, err

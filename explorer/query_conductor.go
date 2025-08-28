@@ -10,12 +10,12 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11"
-	llx "go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/mqlc"
-	"go.mondoo.com/cnquery/v11/mrn"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12"
+	llx "go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/cnquery/v12/mrn"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -200,10 +200,10 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 
 	compilerConfig := mqlc.NewConfig(s.runtime.Schema(), cnquery.DefaultFeatures)
 
-	var props map[string]*llx.Primitive
+	var props mqlc.SimpleProps
 	var propRefs map[string]string
 	if len(query.Props) != 0 {
-		props = map[string]*llx.Primitive{}
+		props = mqlc.SimpleProps{}
 		propRefs = map[string]string{}
 
 		for i := range query.Props {

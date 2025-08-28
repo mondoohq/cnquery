@@ -7,10 +7,10 @@ import (
 	"errors"
 	"sync"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,8 +29,8 @@ func (k *mqlK8sDeployment) getDeployment() (*appsv1.Deployment, error) {
 	return nil, errors.New("invalid k8s deployment")
 }
 
-func (k *mqlK8s) deployments() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(appsv1.SchemeGroupVersion.WithKind("deployments")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) deployments() ([]any, error) {
+	return k8sResourceToMql(k.MqlRuntime, gvkString(appsv1.SchemeGroupVersion.WithKind("deployments")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.deployment", map[string]*llx.RawData{
@@ -51,7 +51,7 @@ func (k *mqlK8s) deployments() ([]interface{}, error) {
 	})
 }
 
-func (k *mqlK8sDeployment) manifest() (map[string]interface{}, error) {
+func (k *mqlK8sDeployment) manifest() (map[string]any, error) {
 	manifest, err := convert.JsonToDict(k.obj)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (k *mqlK8sDeployment) manifest() (map[string]interface{}, error) {
 	return manifest, nil
 }
 
-func (k *mqlK8sDeployment) podSpec() (map[string]interface{}, error) {
+func (k *mqlK8sDeployment) podSpec() (map[string]any, error) {
 	podSpec, err := resources.GetPodSpec(k.obj)
 	if err != nil {
 		return nil, err
@@ -76,10 +76,10 @@ func (k *mqlK8sDeployment) id() (string, error) {
 }
 
 func initK8sDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initNamespacedResource[*mqlK8sDeployment](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetDeployments() })
+	return initNamespacedResource[*mqlK8sDeployment](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetDeployments() })
 }
 
-func (k *mqlK8sDeployment) annotations() (map[string]interface{}, error) {
+func (k *mqlK8sDeployment) annotations() (map[string]any, error) {
 	d, err := k.getDeployment()
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (k *mqlK8sDeployment) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(d.GetAnnotations()), nil
 }
 
-func (k *mqlK8sDeployment) labels() (map[string]interface{}, error) {
+func (k *mqlK8sDeployment) labels() (map[string]any, error) {
 	d, err := k.getDeployment()
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (k *mqlK8sDeployment) labels() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(d.GetLabels()), nil
 }
 
-func (k *mqlK8sDeployment) initContainers() ([]interface{}, error) {
+func (k *mqlK8sDeployment) initContainers() ([]any, error) {
 	d, err := k.getDeployment()
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (k *mqlK8sDeployment) initContainers() ([]interface{}, error) {
 	return getContainers(d, &d.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
-func (k *mqlK8sDeployment) containers() ([]interface{}, error) {
+func (k *mqlK8sDeployment) containers() ([]any, error) {
 	d, err := k.getDeployment()
 	if err != nil {
 		return nil, err

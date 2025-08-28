@@ -7,15 +7,15 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/scim"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers/atlassian/connection/scim"
 )
 
 func (a *mqlAtlassianScim) id() (string, error) {
 	return "scim", nil
 }
 
-func (a *mqlAtlassianScim) users() ([]interface{}, error) {
+func (a *mqlAtlassianScim) users() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*scim.ScimConnection)
 	if !ok {
 		return nil, errors.New("Current connection does not allow scim access")
@@ -26,7 +26,7 @@ func (a *mqlAtlassianScim) users() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, scimUser := range scimUsers.Resources {
 		mqlAtlassianAdminSCIMuser, err := CreateResource(a.MqlRuntime, "atlassian.scim.user",
 			map[string]*llx.RawData{
@@ -44,7 +44,7 @@ func (a *mqlAtlassianScim) users() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAtlassianScim) groups() ([]interface{}, error) {
+func (a *mqlAtlassianScim) groups() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*scim.ScimConnection)
 	if !ok {
 		return nil, errors.New("Current connection does not allow scim access")
@@ -55,7 +55,7 @@ func (a *mqlAtlassianScim) groups() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := []interface{}{}
+	res := []any{}
 	for _, scimGroup := range scimGroup.Resources {
 		mqlAtlassianAdminSCIMgroup, err := CreateResource(a.MqlRuntime, "atlassian.scim.group",
 			map[string]*llx.RawData{

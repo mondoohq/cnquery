@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1193,7 +1193,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.organization.plan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubOrganization).Plan, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubOrganization).Plan, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.organization.twoFactorRequirementEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1241,31 +1241,31 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.organization.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubOrganization).Owners, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubOrganization).Owners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubOrganization).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubOrganization).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.teams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubOrganization).Teams, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubOrganization).Teams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubOrganization).Repositories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubOrganization).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.installations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubOrganization).Installations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubOrganization).Installations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.webhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubOrganization).Webhooks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubOrganization).Webhooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.packages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubOrganization).Packages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubOrganization).Packages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.hasOrganizationProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1277,7 +1277,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.organization.customProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubOrganization).CustomProperties, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubOrganization).CustomProperties, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.customProperty.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1309,7 +1309,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.organization.customProperty.allowedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubOrganizationCustomProperty).AllowedValues, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubOrganizationCustomProperty).AllowedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.customProperty.valuesEditableBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1381,11 +1381,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.user.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubUser).Repositories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubUser).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.user.gists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubUser).Gists, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubUser).Gists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.team.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1417,11 +1417,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.team.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubTeam).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubTeam).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.team.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubTeam).Repositories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubTeam).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.team.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1441,7 +1441,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.collaborator.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubCollaborator).Permissions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubCollaborator).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1489,19 +1489,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"github.packages.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubPackages).Public, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubPackages).Public, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.packages.private": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubPackages).Private, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubPackages).Private, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.packages.internal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubPackages).Internal, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubPackages).Internal, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubPackages).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1537,7 +1537,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.repository.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Topics, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.language": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1641,23 +1641,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.repository.customProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).CustomProperties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).CustomProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.repository.openMergeRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).OpenMergeRequests, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).OpenMergeRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.closedMergeRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).ClosedMergeRequests, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).ClosedMergeRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.allMergeRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).AllMergeRequests, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).AllMergeRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.branches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Branches, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Branches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.defaultBranchName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1669,27 +1669,27 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.repository.commits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Commits, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Commits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.contributors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Contributors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Contributors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.collaborators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Collaborators, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Collaborators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.adminCollaborators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).AdminCollaborators, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).AdminCollaborators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.releases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Releases, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Releases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1697,27 +1697,27 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.repository.webhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Webhooks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Webhooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.workflows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Workflows, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Workflows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.forks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Forks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Forks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.stargazers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Stargazers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).Stargazers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.openIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).OpenIssues, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).OpenIssues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.closedIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).ClosedIssues, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubRepository).ClosedIssues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1781,7 +1781,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.file.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubFile).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubFile).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.file.ownerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1841,11 +1841,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.webhook.events": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubWebhook).Events, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubWebhook).Events, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.webhook.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubWebhook).Config, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubWebhook).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.webhook.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1885,7 +1885,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.workflow.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubWorkflow).Configuration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubWorkflow).Configuration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.branch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1933,15 +1933,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.branchprotection.requiredStatusChecks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubBranchprotection).RequiredStatusChecks, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubBranchprotection).RequiredStatusChecks, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.branchprotection.requiredPullRequestReviews": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubBranchprotection).RequiredPullRequestReviews, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubBranchprotection).RequiredPullRequestReviews, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.branchprotection.requiredConversationResolution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubBranchprotection).RequiredConversationResolution, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubBranchprotection).RequiredConversationResolution, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.branchprotection.requiredSignatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1949,23 +1949,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.branchprotection.requireLinearHistory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubBranchprotection).RequireLinearHistory, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubBranchprotection).RequireLinearHistory, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.branchprotection.enforceAdmins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubBranchprotection).EnforceAdmins, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubBranchprotection).EnforceAdmins, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.branchprotection.restrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubBranchprotection).Restrictions, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubBranchprotection).Restrictions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.branchprotection.allowForcePushes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubBranchprotection).AllowForcePushes, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubBranchprotection).AllowForcePushes, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.branchprotection.allowDeletions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubBranchprotection).AllowDeletions, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubBranchprotection).AllowDeletions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.commit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2001,7 +2001,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.commit.stats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubCommit).Stats, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlGithubCommit).Stats, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.commit.authoredDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2033,7 +2033,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.mergeRequest.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubMergeRequest).Labels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubMergeRequest).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.mergeRequest.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2045,15 +2045,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.mergeRequest.assignees": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubMergeRequest).Assignees, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubMergeRequest).Assignees, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.mergeRequest.commits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubMergeRequest).Commits, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubMergeRequest).Commits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.mergeRequest.reviews": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubMergeRequest).Reviews, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubMergeRequest).Reviews, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.mergeRequest.repoName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2133,7 +2133,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.gist.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubGist).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubGist).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.gistfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2209,7 +2209,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.issue.assignees": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubIssue).Assignees, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlGithubIssue).Assignees, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.issue.closedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2508,7 +2508,7 @@ type mqlGithubOrganization struct {
 	DiskUsage plugin.TValue[int64]
 	Collaborators plugin.TValue[int64]
 	BillingEmail plugin.TValue[string]
-	Plan plugin.TValue[interface{}]
+	Plan plugin.TValue[any]
 	TwoFactorRequirementEnabled plugin.TValue[bool]
 	IsVerified plugin.TValue[bool]
 	DefaultRepositoryPermission plugin.TValue[string]
@@ -2520,16 +2520,16 @@ type mqlGithubOrganization struct {
 	MembersCanCreatePublicPages plugin.TValue[bool]
 	MembersCanCreatePrivatePages plugin.TValue[bool]
 	MembersCanForkPrivateRepos plugin.TValue[bool]
-	Owners plugin.TValue[[]interface{}]
-	Members plugin.TValue[[]interface{}]
-	Teams plugin.TValue[[]interface{}]
-	Repositories plugin.TValue[[]interface{}]
-	Installations plugin.TValue[[]interface{}]
-	Webhooks plugin.TValue[[]interface{}]
-	Packages plugin.TValue[[]interface{}]
+	Owners plugin.TValue[[]any]
+	Members plugin.TValue[[]any]
+	Teams plugin.TValue[[]any]
+	Repositories plugin.TValue[[]any]
+	Installations plugin.TValue[[]any]
+	Webhooks plugin.TValue[[]any]
+	Packages plugin.TValue[[]any]
 	HasOrganizationProjects plugin.TValue[bool]
 	HasRepositoryProjects plugin.TValue[bool]
-	CustomProperties plugin.TValue[[]interface{}]
+	CustomProperties plugin.TValue[[]any]
 }
 
 // createGithubOrganization creates a new instance of this resource
@@ -2657,7 +2657,7 @@ func (c *mqlGithubOrganization) GetBillingEmail() *plugin.TValue[string] {
 	return &c.BillingEmail
 }
 
-func (c *mqlGithubOrganization) GetPlan() *plugin.TValue[interface{}] {
+func (c *mqlGithubOrganization) GetPlan() *plugin.TValue[any] {
 	return &c.Plan
 }
 
@@ -2705,15 +2705,15 @@ func (c *mqlGithubOrganization) GetMembersCanForkPrivateRepos() *plugin.TValue[b
 	return &c.MembersCanForkPrivateRepos
 }
 
-func (c *mqlGithubOrganization) GetOwners() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Owners, func() ([]interface{}, error) {
+func (c *mqlGithubOrganization) GetOwners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Owners, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "owners")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2721,15 +2721,15 @@ func (c *mqlGithubOrganization) GetOwners() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubOrganization) GetMembers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Members, func() ([]interface{}, error) {
+func (c *mqlGithubOrganization) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "members")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2737,15 +2737,15 @@ func (c *mqlGithubOrganization) GetMembers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubOrganization) GetTeams() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Teams, func() ([]interface{}, error) {
+func (c *mqlGithubOrganization) GetTeams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Teams, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "teams")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2753,15 +2753,15 @@ func (c *mqlGithubOrganization) GetTeams() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubOrganization) GetRepositories() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Repositories, func() ([]interface{}, error) {
+func (c *mqlGithubOrganization) GetRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repositories, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "repositories")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2769,15 +2769,15 @@ func (c *mqlGithubOrganization) GetRepositories() *plugin.TValue[[]interface{}] 
 	})
 }
 
-func (c *mqlGithubOrganization) GetInstallations() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Installations, func() ([]interface{}, error) {
+func (c *mqlGithubOrganization) GetInstallations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Installations, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "installations")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2785,15 +2785,15 @@ func (c *mqlGithubOrganization) GetInstallations() *plugin.TValue[[]interface{}]
 	})
 }
 
-func (c *mqlGithubOrganization) GetWebhooks() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Webhooks, func() ([]interface{}, error) {
+func (c *mqlGithubOrganization) GetWebhooks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Webhooks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "webhooks")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2801,15 +2801,15 @@ func (c *mqlGithubOrganization) GetWebhooks() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubOrganization) GetPackages() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Packages, func() ([]interface{}, error) {
+func (c *mqlGithubOrganization) GetPackages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Packages, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "packages")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2825,15 +2825,15 @@ func (c *mqlGithubOrganization) GetHasRepositoryProjects() *plugin.TValue[bool] 
 	return &c.HasRepositoryProjects
 }
 
-func (c *mqlGithubOrganization) GetCustomProperties() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.CustomProperties, func() ([]interface{}, error) {
+func (c *mqlGithubOrganization) GetCustomProperties() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomProperties, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "customProperties")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2852,7 +2852,7 @@ type mqlGithubOrganizationCustomProperty struct {
 	ValueType plugin.TValue[string]
 	Required plugin.TValue[bool]
 	DefaultValue plugin.TValue[string]
-	AllowedValues plugin.TValue[[]interface{}]
+	AllowedValues plugin.TValue[[]any]
 	ValuesEditableBy plugin.TValue[string]
 }
 
@@ -2917,7 +2917,7 @@ func (c *mqlGithubOrganizationCustomProperty) GetDefaultValue() *plugin.TValue[s
 	return &c.DefaultValue
 }
 
-func (c *mqlGithubOrganizationCustomProperty) GetAllowedValues() *plugin.TValue[[]interface{}] {
+func (c *mqlGithubOrganizationCustomProperty) GetAllowedValues() *plugin.TValue[[]any] {
 	return &c.AllowedValues
 }
 
@@ -2945,8 +2945,8 @@ type mqlGithubUser struct {
 	UpdatedAt plugin.TValue[*time.Time]
 	SuspendedAt plugin.TValue[*time.Time]
 	Company plugin.TValue[string]
-	Repositories plugin.TValue[[]interface{}]
-	Gists plugin.TValue[[]interface{}]
+	Repositories plugin.TValue[[]any]
+	Gists plugin.TValue[[]any]
 }
 
 // createGithubUser creates a new instance of this resource
@@ -3046,15 +3046,15 @@ func (c *mqlGithubUser) GetCompany() *plugin.TValue[string] {
 	return &c.Company
 }
 
-func (c *mqlGithubUser) GetRepositories() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Repositories, func() ([]interface{}, error) {
+func (c *mqlGithubUser) GetRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repositories, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.user", c.__id, "repositories")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3062,15 +3062,15 @@ func (c *mqlGithubUser) GetRepositories() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubUser) GetGists() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Gists, func() ([]interface{}, error) {
+func (c *mqlGithubUser) GetGists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Gists, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.user", c.__id, "gists")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3089,8 +3089,8 @@ type mqlGithubTeam struct {
 	Slug plugin.TValue[string]
 	Privacy plugin.TValue[string]
 	DefaultPermission plugin.TValue[string]
-	Members plugin.TValue[[]interface{}]
-	Repositories plugin.TValue[[]interface{}]
+	Members plugin.TValue[[]any]
+	Repositories plugin.TValue[[]any]
 	Organization plugin.TValue[*mqlGithubOrganization]
 }
 
@@ -3155,15 +3155,15 @@ func (c *mqlGithubTeam) GetDefaultPermission() *plugin.TValue[string] {
 	return &c.DefaultPermission
 }
 
-func (c *mqlGithubTeam) GetMembers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Members, func() ([]interface{}, error) {
+func (c *mqlGithubTeam) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.team", c.__id, "members")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3171,15 +3171,15 @@ func (c *mqlGithubTeam) GetMembers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubTeam) GetRepositories() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Repositories, func() ([]interface{}, error) {
+func (c *mqlGithubTeam) GetRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repositories, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.team", c.__id, "repositories")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3198,7 +3198,7 @@ type mqlGithubCollaborator struct {
 	// optional: if you define mqlGithubCollaboratorInternal it will be used here
 	Id plugin.TValue[int64]
 	User plugin.TValue[*mqlGithubUser]
-	Permissions plugin.TValue[[]interface{}]
+	Permissions plugin.TValue[[]any]
 }
 
 // createGithubCollaborator creates a new instance of this resource
@@ -3246,7 +3246,7 @@ func (c *mqlGithubCollaborator) GetUser() *plugin.TValue[*mqlGithubUser] {
 	return &c.User
 }
 
-func (c *mqlGithubCollaborator) GetPermissions() *plugin.TValue[[]interface{}] {
+func (c *mqlGithubCollaborator) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
 }
 
@@ -3356,10 +3356,10 @@ type mqlGithubPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlGithubPackagesInternal it will be used here
-	Public plugin.TValue[[]interface{}]
-	Private plugin.TValue[[]interface{}]
-	Internal plugin.TValue[[]interface{}]
-	List plugin.TValue[[]interface{}]
+	Public plugin.TValue[[]any]
+	Private plugin.TValue[[]any]
+	Internal plugin.TValue[[]any]
+	List plugin.TValue[[]any]
 }
 
 // createGithubPackages creates a new instance of this resource
@@ -3399,15 +3399,15 @@ func (c *mqlGithubPackages) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlGithubPackages) GetPublic() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Public, func() ([]interface{}, error) {
+func (c *mqlGithubPackages) GetPublic() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Public, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.packages", c.__id, "public")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3415,15 +3415,15 @@ func (c *mqlGithubPackages) GetPublic() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubPackages) GetPrivate() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Private, func() ([]interface{}, error) {
+func (c *mqlGithubPackages) GetPrivate() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Private, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.packages", c.__id, "private")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3431,15 +3431,15 @@ func (c *mqlGithubPackages) GetPrivate() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubPackages) GetInternal() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Internal, func() ([]interface{}, error) {
+func (c *mqlGithubPackages) GetInternal() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Internal, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.packages", c.__id, "internal")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3447,15 +3447,15 @@ func (c *mqlGithubPackages) GetInternal() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubPackages) GetList() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+func (c *mqlGithubPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.packages", c.__id, "list")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3475,7 +3475,7 @@ type mqlGithubRepository struct {
 	CloneUrl plugin.TValue[string]
 	SshUrl plugin.TValue[string]
 	Homepage plugin.TValue[string]
-	Topics plugin.TValue[[]interface{}]
+	Topics plugin.TValue[[]any]
 	Language plugin.TValue[string]
 	WatchersCount plugin.TValue[int64]
 	ForksCount plugin.TValue[int64]
@@ -3501,26 +3501,26 @@ type mqlGithubRepository struct {
 	HasDownloads plugin.TValue[bool]
 	HasDiscussions plugin.TValue[bool]
 	IsTemplate plugin.TValue[bool]
-	CustomProperties plugin.TValue[interface{}]
-	OpenMergeRequests plugin.TValue[[]interface{}]
-	ClosedMergeRequests plugin.TValue[[]interface{}]
-	AllMergeRequests plugin.TValue[[]interface{}]
-	Branches plugin.TValue[[]interface{}]
+	CustomProperties plugin.TValue[any]
+	OpenMergeRequests plugin.TValue[[]any]
+	ClosedMergeRequests plugin.TValue[[]any]
+	AllMergeRequests plugin.TValue[[]any]
+	Branches plugin.TValue[[]any]
 	DefaultBranchName plugin.TValue[string]
 	DefaultBranch plugin.TValue[*mqlGithubBranch]
-	Commits plugin.TValue[[]interface{}]
-	Contributors plugin.TValue[[]interface{}]
-	Collaborators plugin.TValue[[]interface{}]
-	AdminCollaborators plugin.TValue[[]interface{}]
-	Files plugin.TValue[[]interface{}]
-	Releases plugin.TValue[[]interface{}]
+	Commits plugin.TValue[[]any]
+	Contributors plugin.TValue[[]any]
+	Collaborators plugin.TValue[[]any]
+	AdminCollaborators plugin.TValue[[]any]
+	Files plugin.TValue[[]any]
+	Releases plugin.TValue[[]any]
 	Owner plugin.TValue[*mqlGithubUser]
-	Webhooks plugin.TValue[[]interface{}]
-	Workflows plugin.TValue[[]interface{}]
-	Forks plugin.TValue[[]interface{}]
-	Stargazers plugin.TValue[[]interface{}]
-	OpenIssues plugin.TValue[[]interface{}]
-	ClosedIssues plugin.TValue[[]interface{}]
+	Webhooks plugin.TValue[[]any]
+	Workflows plugin.TValue[[]any]
+	Forks plugin.TValue[[]any]
+	Stargazers plugin.TValue[[]any]
+	OpenIssues plugin.TValue[[]any]
+	ClosedIssues plugin.TValue[[]any]
 	License plugin.TValue[*mqlGithubLicense]
 	CodeOfConductFile plugin.TValue[*mqlGithubFile]
 	SupportFile plugin.TValue[*mqlGithubFile]
@@ -3592,7 +3592,7 @@ func (c *mqlGithubRepository) GetHomepage() *plugin.TValue[string] {
 	return &c.Homepage
 }
 
-func (c *mqlGithubRepository) GetTopics() *plugin.TValue[[]interface{}] {
+func (c *mqlGithubRepository) GetTopics() *plugin.TValue[[]any] {
 	return &c.Topics
 }
 
@@ -3696,19 +3696,19 @@ func (c *mqlGithubRepository) GetIsTemplate() *plugin.TValue[bool] {
 	return &c.IsTemplate
 }
 
-func (c *mqlGithubRepository) GetCustomProperties() *plugin.TValue[interface{}] {
+func (c *mqlGithubRepository) GetCustomProperties() *plugin.TValue[any] {
 	return &c.CustomProperties
 }
 
-func (c *mqlGithubRepository) GetOpenMergeRequests() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.OpenMergeRequests, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetOpenMergeRequests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OpenMergeRequests, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "openMergeRequests")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3716,15 +3716,15 @@ func (c *mqlGithubRepository) GetOpenMergeRequests() *plugin.TValue[[]interface{
 	})
 }
 
-func (c *mqlGithubRepository) GetClosedMergeRequests() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ClosedMergeRequests, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetClosedMergeRequests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClosedMergeRequests, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "closedMergeRequests")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3732,15 +3732,15 @@ func (c *mqlGithubRepository) GetClosedMergeRequests() *plugin.TValue[[]interfac
 	})
 }
 
-func (c *mqlGithubRepository) GetAllMergeRequests() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AllMergeRequests, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetAllMergeRequests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllMergeRequests, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "allMergeRequests")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3748,15 +3748,15 @@ func (c *mqlGithubRepository) GetAllMergeRequests() *plugin.TValue[[]interface{}
 	})
 }
 
-func (c *mqlGithubRepository) GetBranches() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Branches, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetBranches() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Branches, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "branches")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3784,15 +3784,15 @@ func (c *mqlGithubRepository) GetDefaultBranch() *plugin.TValue[*mqlGithubBranch
 	})
 }
 
-func (c *mqlGithubRepository) GetCommits() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Commits, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetCommits() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Commits, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "commits")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3800,15 +3800,15 @@ func (c *mqlGithubRepository) GetCommits() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubRepository) GetContributors() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Contributors, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetContributors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Contributors, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "contributors")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3816,15 +3816,15 @@ func (c *mqlGithubRepository) GetContributors() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubRepository) GetCollaborators() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Collaborators, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetCollaborators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Collaborators, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "collaborators")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3832,15 +3832,15 @@ func (c *mqlGithubRepository) GetCollaborators() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubRepository) GetAdminCollaborators() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AdminCollaborators, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetAdminCollaborators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AdminCollaborators, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "adminCollaborators")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3848,15 +3848,15 @@ func (c *mqlGithubRepository) GetAdminCollaborators() *plugin.TValue[[]interface
 	})
 }
 
-func (c *mqlGithubRepository) GetFiles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Files, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3864,15 +3864,15 @@ func (c *mqlGithubRepository) GetFiles() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubRepository) GetReleases() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Releases, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetReleases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Releases, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "releases")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3884,15 +3884,15 @@ func (c *mqlGithubRepository) GetOwner() *plugin.TValue[*mqlGithubUser] {
 	return &c.Owner
 }
 
-func (c *mqlGithubRepository) GetWebhooks() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Webhooks, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetWebhooks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Webhooks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "webhooks")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3900,15 +3900,15 @@ func (c *mqlGithubRepository) GetWebhooks() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubRepository) GetWorkflows() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Workflows, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetWorkflows() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workflows, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "workflows")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3916,15 +3916,15 @@ func (c *mqlGithubRepository) GetWorkflows() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubRepository) GetForks() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Forks, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetForks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Forks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "forks")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3932,15 +3932,15 @@ func (c *mqlGithubRepository) GetForks() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubRepository) GetStargazers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Stargazers, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetStargazers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Stargazers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "stargazers")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3948,15 +3948,15 @@ func (c *mqlGithubRepository) GetStargazers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubRepository) GetOpenIssues() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.OpenIssues, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetOpenIssues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OpenIssues, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "openIssues")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -3964,15 +3964,15 @@ func (c *mqlGithubRepository) GetOpenIssues() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubRepository) GetClosedIssues() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ClosedIssues, func() ([]interface{}, error) {
+func (c *mqlGithubRepository) GetClosedIssues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClosedIssues, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "closedIssues")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4118,7 +4118,7 @@ type mqlGithubFile struct {
 	Type plugin.TValue[string]
 	Sha plugin.TValue[string]
 	IsBinary plugin.TValue[bool]
-	Files plugin.TValue[[]interface{}]
+	Files plugin.TValue[[]any]
 	OwnerName plugin.TValue[string]
 	RepoName plugin.TValue[string]
 	Content plugin.TValue[string]
@@ -4183,15 +4183,15 @@ func (c *mqlGithubFile) GetIsBinary() *plugin.TValue[bool] {
 	return &c.IsBinary
 }
 
-func (c *mqlGithubFile) GetFiles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Files, func() ([]interface{}, error) {
+func (c *mqlGithubFile) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.file", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4293,8 +4293,8 @@ type mqlGithubWebhook struct {
 	Id plugin.TValue[int64]
 	Name plugin.TValue[string]
 	Url plugin.TValue[string]
-	Events plugin.TValue[[]interface{}]
-	Config plugin.TValue[interface{}]
+	Events plugin.TValue[[]any]
+	Config plugin.TValue[any]
 	Active plugin.TValue[bool]
 }
 
@@ -4347,11 +4347,11 @@ func (c *mqlGithubWebhook) GetUrl() *plugin.TValue[string] {
 	return &c.Url
 }
 
-func (c *mqlGithubWebhook) GetEvents() *plugin.TValue[[]interface{}] {
+func (c *mqlGithubWebhook) GetEvents() *plugin.TValue[[]any] {
 	return &c.Events
 }
 
-func (c *mqlGithubWebhook) GetConfig() *plugin.TValue[interface{}] {
+func (c *mqlGithubWebhook) GetConfig() *plugin.TValue[any] {
 	return &c.Config
 }
 
@@ -4371,7 +4371,7 @@ type mqlGithubWorkflow struct {
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
 	File plugin.TValue[*mqlGithubFile]
-	Configuration plugin.TValue[interface{}]
+	Configuration plugin.TValue[any]
 }
 
 // createGithubWorkflow creates a new instance of this resource
@@ -4451,8 +4451,8 @@ func (c *mqlGithubWorkflow) GetFile() *plugin.TValue[*mqlGithubFile] {
 	})
 }
 
-func (c *mqlGithubWorkflow) GetConfiguration() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.Configuration, func() (interface{}, error) {
+func (c *mqlGithubWorkflow) GetConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Configuration, func() (any, error) {
 		return c.configuration()
 	})
 }
@@ -4571,15 +4571,15 @@ type mqlGithubBranchprotection struct {
 	__id string
 	// optional: if you define mqlGithubBranchprotectionInternal it will be used here
 	Id plugin.TValue[string]
-	RequiredStatusChecks plugin.TValue[interface{}]
-	RequiredPullRequestReviews plugin.TValue[interface{}]
-	RequiredConversationResolution plugin.TValue[interface{}]
+	RequiredStatusChecks plugin.TValue[any]
+	RequiredPullRequestReviews plugin.TValue[any]
+	RequiredConversationResolution plugin.TValue[any]
 	RequiredSignatures plugin.TValue[bool]
-	RequireLinearHistory plugin.TValue[interface{}]
-	EnforceAdmins plugin.TValue[interface{}]
-	Restrictions plugin.TValue[interface{}]
-	AllowForcePushes plugin.TValue[interface{}]
-	AllowDeletions plugin.TValue[interface{}]
+	RequireLinearHistory plugin.TValue[any]
+	EnforceAdmins plugin.TValue[any]
+	Restrictions plugin.TValue[any]
+	AllowForcePushes plugin.TValue[any]
+	AllowDeletions plugin.TValue[any]
 }
 
 // createGithubBranchprotection creates a new instance of this resource
@@ -4623,15 +4623,15 @@ func (c *mqlGithubBranchprotection) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlGithubBranchprotection) GetRequiredStatusChecks() *plugin.TValue[interface{}] {
+func (c *mqlGithubBranchprotection) GetRequiredStatusChecks() *plugin.TValue[any] {
 	return &c.RequiredStatusChecks
 }
 
-func (c *mqlGithubBranchprotection) GetRequiredPullRequestReviews() *plugin.TValue[interface{}] {
+func (c *mqlGithubBranchprotection) GetRequiredPullRequestReviews() *plugin.TValue[any] {
 	return &c.RequiredPullRequestReviews
 }
 
-func (c *mqlGithubBranchprotection) GetRequiredConversationResolution() *plugin.TValue[interface{}] {
+func (c *mqlGithubBranchprotection) GetRequiredConversationResolution() *plugin.TValue[any] {
 	return &c.RequiredConversationResolution
 }
 
@@ -4639,23 +4639,23 @@ func (c *mqlGithubBranchprotection) GetRequiredSignatures() *plugin.TValue[bool]
 	return &c.RequiredSignatures
 }
 
-func (c *mqlGithubBranchprotection) GetRequireLinearHistory() *plugin.TValue[interface{}] {
+func (c *mqlGithubBranchprotection) GetRequireLinearHistory() *plugin.TValue[any] {
 	return &c.RequireLinearHistory
 }
 
-func (c *mqlGithubBranchprotection) GetEnforceAdmins() *plugin.TValue[interface{}] {
+func (c *mqlGithubBranchprotection) GetEnforceAdmins() *plugin.TValue[any] {
 	return &c.EnforceAdmins
 }
 
-func (c *mqlGithubBranchprotection) GetRestrictions() *plugin.TValue[interface{}] {
+func (c *mqlGithubBranchprotection) GetRestrictions() *plugin.TValue[any] {
 	return &c.Restrictions
 }
 
-func (c *mqlGithubBranchprotection) GetAllowForcePushes() *plugin.TValue[interface{}] {
+func (c *mqlGithubBranchprotection) GetAllowForcePushes() *plugin.TValue[any] {
 	return &c.AllowForcePushes
 }
 
-func (c *mqlGithubBranchprotection) GetAllowDeletions() *plugin.TValue[interface{}] {
+func (c *mqlGithubBranchprotection) GetAllowDeletions() *plugin.TValue[any] {
 	return &c.AllowDeletions
 }
 
@@ -4671,7 +4671,7 @@ type mqlGithubCommit struct {
 	Author plugin.TValue[*mqlGithubUser]
 	Committer plugin.TValue[*mqlGithubUser]
 	Commit plugin.TValue[*mqlGitCommit]
-	Stats plugin.TValue[interface{}]
+	Stats plugin.TValue[any]
 	AuthoredDate plugin.TValue[*time.Time]
 	CommittedDate plugin.TValue[*time.Time]
 }
@@ -4741,7 +4741,7 @@ func (c *mqlGithubCommit) GetCommit() *plugin.TValue[*mqlGitCommit] {
 	return &c.Commit
 }
 
-func (c *mqlGithubCommit) GetStats() *plugin.TValue[interface{}] {
+func (c *mqlGithubCommit) GetStats() *plugin.TValue[any] {
 	return &c.Stats
 }
 
@@ -4762,12 +4762,12 @@ type mqlGithubMergeRequest struct {
 	Number plugin.TValue[int64]
 	State plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
-	Labels plugin.TValue[[]interface{}]
+	Labels plugin.TValue[[]any]
 	Title plugin.TValue[string]
 	Owner plugin.TValue[*mqlGithubUser]
-	Assignees plugin.TValue[[]interface{}]
-	Commits plugin.TValue[[]interface{}]
-	Reviews plugin.TValue[[]interface{}]
+	Assignees plugin.TValue[[]any]
+	Commits plugin.TValue[[]any]
+	Reviews plugin.TValue[[]any]
 	RepoName plugin.TValue[string]
 }
 
@@ -4824,7 +4824,7 @@ func (c *mqlGithubMergeRequest) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
-func (c *mqlGithubMergeRequest) GetLabels() *plugin.TValue[[]interface{}] {
+func (c *mqlGithubMergeRequest) GetLabels() *plugin.TValue[[]any] {
 	return &c.Labels
 }
 
@@ -4836,19 +4836,19 @@ func (c *mqlGithubMergeRequest) GetOwner() *plugin.TValue[*mqlGithubUser] {
 	return &c.Owner
 }
 
-func (c *mqlGithubMergeRequest) GetAssignees() *plugin.TValue[[]interface{}] {
+func (c *mqlGithubMergeRequest) GetAssignees() *plugin.TValue[[]any] {
 	return &c.Assignees
 }
 
-func (c *mqlGithubMergeRequest) GetCommits() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Commits, func() ([]interface{}, error) {
+func (c *mqlGithubMergeRequest) GetCommits() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Commits, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.mergeRequest", c.__id, "commits")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -4856,15 +4856,15 @@ func (c *mqlGithubMergeRequest) GetCommits() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlGithubMergeRequest) GetReviews() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Reviews, func() ([]interface{}, error) {
+func (c *mqlGithubMergeRequest) GetReviews() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Reviews, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.mergeRequest", c.__id, "reviews")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -5020,7 +5020,7 @@ type mqlGithubGist struct {
 	UpdatedAt plugin.TValue[*time.Time]
 	Owner plugin.TValue[*mqlGithubUser]
 	Public plugin.TValue[bool]
-	Files plugin.TValue[[]interface{}]
+	Files plugin.TValue[[]any]
 }
 
 // createGithubGist creates a new instance of this resource
@@ -5084,7 +5084,7 @@ func (c *mqlGithubGist) GetPublic() *plugin.TValue[bool] {
 	return &c.Public
 }
 
-func (c *mqlGithubGist) GetFiles() *plugin.TValue[[]interface{}] {
+func (c *mqlGithubGist) GetFiles() *plugin.TValue[[]any] {
 	return &c.Files
 }
 
@@ -5183,7 +5183,7 @@ type mqlGithubIssue struct {
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
 	ClosedAt plugin.TValue[*time.Time]
-	Assignees plugin.TValue[[]interface{}]
+	Assignees plugin.TValue[[]any]
 	ClosedBy plugin.TValue[*mqlGithubUser]
 }
 
@@ -5260,7 +5260,7 @@ func (c *mqlGithubIssue) GetClosedAt() *plugin.TValue[*time.Time] {
 	return &c.ClosedAt
 }
 
-func (c *mqlGithubIssue) GetAssignees() *plugin.TValue[[]interface{}] {
+func (c *mqlGithubIssue) GetAssignees() *plugin.TValue[[]any] {
 	return &c.Assignees
 }
 

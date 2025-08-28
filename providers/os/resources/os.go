@@ -11,20 +11,20 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/docker"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/tar"
-	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
-	"go.mondoo.com/cnquery/v11/providers/os/id/hypervisor"
-	"go.mondoo.com/cnquery/v11/providers/os/id/platformid"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/reboot"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/systemd"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/updates"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/uptime"
-	"go.mondoo.com/cnquery/v11/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/docker"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/tar"
+	"go.mondoo.com/cnquery/v12/providers/os/id/hostname"
+	"go.mondoo.com/cnquery/v12/providers/os/id/hypervisor"
+	"go.mondoo.com/cnquery/v12/providers/os/id/platformid"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/reboot"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/systemd"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/updates"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/uptime"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/windows"
 )
 
 func (p *mqlOs) rebootpending() (bool, error) {
@@ -79,7 +79,7 @@ func (p *mqlOs) rebootpending() (bool, error) {
 	return rb.RebootPending()
 }
 
-func (p *mqlOs) getUnixEnv() (map[string]interface{}, error) {
+func (p *mqlOs) getUnixEnv() (map[string]any, error) {
 	rawCmd, err := CreateResource(p.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("env"),
 	})
@@ -93,7 +93,7 @@ func (p *mqlOs) getUnixEnv() (map[string]interface{}, error) {
 		return nil, out.Error
 	}
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	lines := strings.Split(out.Data, "\n")
 	for i := range lines {
 		parts := strings.SplitN(lines[i], "=", 2)
@@ -106,7 +106,7 @@ func (p *mqlOs) getUnixEnv() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (p *mqlOs) getWindowsEnv() (map[string]interface{}, error) {
+func (p *mqlOs) getWindowsEnv() (map[string]any, error) {
 	rawCmd, err := CreateResource(p.MqlRuntime, "powershell", map[string]*llx.RawData{
 		"script": llx.StringData("Get-ChildItem Env:* | ConvertTo-Json"),
 	})
@@ -123,7 +123,7 @@ func (p *mqlOs) getWindowsEnv() (map[string]interface{}, error) {
 	return windows.ParseEnv(strings.NewReader(out.Data))
 }
 
-func (p *mqlOs) env() (map[string]interface{}, error) {
+func (p *mqlOs) env() (map[string]any, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
@@ -133,15 +133,15 @@ func (p *mqlOs) env() (map[string]interface{}, error) {
 	return p.getUnixEnv()
 }
 
-func (p *mqlOs) path(env map[string]interface{}) ([]interface{}, error) {
+func (p *mqlOs) path(env map[string]any) ([]any, error) {
 	rawPath, ok := env["PATH"]
 	if !ok {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	path := rawPath.(string)
 	parts := strings.Split(path, ":")
-	res := make([]interface{}, len(parts))
+	res := make([]any, len(parts))
 	for i := range parts {
 		res[i] = parts[i]
 	}
@@ -175,7 +175,7 @@ func (p *mqlOsUpdate) id() (string, error) {
 	return p.Name.Data, nil
 }
 
-func (p *mqlOs) updates() ([]interface{}, error) {
+func (p *mqlOs) updates() ([]any, error) {
 	// find suitable system updates
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	um, err := updates.ResolveSystemUpdateManager(conn)
@@ -190,7 +190,7 @@ func (p *mqlOs) updates() ([]interface{}, error) {
 	}
 
 	// create MQL update resources for each update
-	osupdates := make([]interface{}, len(updates))
+	osupdates := make([]any, len(updates))
 	log.Debug().Int("updates", len(updates)).Msg("mql[updates]> found system updates")
 	for i, update := range updates {
 
@@ -387,7 +387,7 @@ func (p *mqlOsBase) rebootpending() (bool, error) {
 	return rb.RebootPending()
 }
 
-func (p *mqlOsBase) getUnixEnv() (map[string]interface{}, error) {
+func (p *mqlOsBase) getUnixEnv() (map[string]any, error) {
 	rawCmd, err := CreateResource(p.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("env"),
 	})
@@ -401,7 +401,7 @@ func (p *mqlOsBase) getUnixEnv() (map[string]interface{}, error) {
 		return nil, out.Error
 	}
 
-	res := map[string]interface{}{}
+	res := map[string]any{}
 	lines := strings.Split(out.Data, "\n")
 	for i := range lines {
 		parts := strings.SplitN(lines[i], "=", 2)
@@ -414,7 +414,7 @@ func (p *mqlOsBase) getUnixEnv() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (p *mqlOsBase) getWindowsEnv() (map[string]interface{}, error) {
+func (p *mqlOsBase) getWindowsEnv() (map[string]any, error) {
 	rawCmd, err := CreateResource(p.MqlRuntime, "powershell", map[string]*llx.RawData{
 		"script": llx.StringData("Get-ChildItem Env:* | ConvertTo-Json"),
 	})
@@ -431,7 +431,7 @@ func (p *mqlOsBase) getWindowsEnv() (map[string]interface{}, error) {
 	return windows.ParseEnv(strings.NewReader(out.Data))
 }
 
-func (p *mqlOsBase) env() (map[string]interface{}, error) {
+func (p *mqlOsBase) env() (map[string]any, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
@@ -441,15 +441,15 @@ func (p *mqlOsBase) env() (map[string]interface{}, error) {
 	return p.getUnixEnv()
 }
 
-func (p *mqlOsBase) path(env map[string]interface{}) ([]interface{}, error) {
+func (p *mqlOsBase) path(env map[string]any) ([]any, error) {
 	rawPath, ok := env["PATH"]
 	if !ok {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	path := rawPath.(string)
 	parts := strings.Split(path, ":")
-	res := make([]interface{}, len(parts))
+	res := make([]any, len(parts))
 	for i := range parts {
 		res[i] = parts[i]
 	}
@@ -476,7 +476,7 @@ func (p *mqlOsBase) uptime() (*time.Time, error) {
 	return MqlTime(llx.DurationToTime(up)), nil
 }
 
-func (p *mqlOsBase) updates() ([]interface{}, error) {
+func (p *mqlOsBase) updates() ([]any, error) {
 	// find suitable system updates
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	um, err := updates.ResolveSystemUpdateManager(conn)
@@ -491,7 +491,7 @@ func (p *mqlOsBase) updates() ([]interface{}, error) {
 	}
 
 	// create MQL update resources for each update
-	osupdates := make([]interface{}, len(updates))
+	osupdates := make([]any, len(updates))
 	log.Debug().Int("updates", len(updates)).Msg("mql[updates]> found system updates")
 	for i, update := range updates {
 

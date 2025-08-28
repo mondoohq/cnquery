@@ -8,11 +8,11 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/azure/connection"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 
 	mysql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
 
@@ -49,7 +49,7 @@ func (a *mqlAzureSubscriptionMySqlServiceDatabase) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlService) servers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlService) servers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -62,7 +62,7 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]interface{}, error) {
 		return nil, err
 	}
 	pager := dbClient.NewListPager(&mysql.ServersClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -92,7 +92,7 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -105,7 +105,7 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]interface{}, err
 		return nil, err
 	}
 	pager := dbClient.NewListPager(&flexible.ServersClientListOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -135,7 +135,7 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]interface{}, err
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -157,7 +157,7 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]interface{}, err
 		return nil, err
 	}
 	pager := dbDatabaseClient.NewListByServerPager(resourceID.ResourceGroup, server, &mysql.DatabasesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -182,7 +182,7 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]interface{}, err
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlServiceServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceServer) firewallRules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -204,7 +204,7 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) firewallRules() ([]interface{},
 		return nil, err
 	}
 	pager := dbFirewallClient.NewListByServerPager(resourceID.ResourceGroup, server, &mysql.FirewallRulesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -229,7 +229,7 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) firewallRules() ([]interface{},
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlServiceServer) configuration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceServer) configuration() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -251,7 +251,7 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) configuration() ([]interface{},
 		return nil, err
 	}
 	pager := dbConfClient.NewListByServerPager(resourceID.ResourceGroup, server, &mysql.ConfigurationsClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -279,7 +279,7 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) configuration() ([]interface{},
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) databases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -301,7 +301,7 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) databases() ([]interfac
 		return nil, err
 	}
 	pager := dbDatabaseClient.NewListByServerPager(resourceID.ResourceGroup, server, &flexible.DatabasesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -326,7 +326,7 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) databases() ([]interfac
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) firewallRules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -347,7 +347,7 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) firewallRules() ([]inte
 		return nil, err
 	}
 	pager := dbFirewallClient.NewListByServerPager(resourceID.ResourceGroup, server, &flexible.FirewallRulesClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -372,7 +372,7 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) firewallRules() ([]inte
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -394,7 +394,7 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]inte
 		return nil, err
 	}
 	pager := dbConfClient.NewListByServerPager(resourceID.ResourceGroup, server, &flexible.ConfigurationsClientListByServerOptions{})
-	res := []interface{}{}
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {

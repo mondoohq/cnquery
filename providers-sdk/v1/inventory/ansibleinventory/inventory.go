@@ -10,8 +10,8 @@ import (
 
 	mapstructure "github.com/go-viper/mapstructure/v2"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
 	"sigs.k8s.io/yaml"
 )
 
@@ -22,7 +22,7 @@ type Group struct {
 type Groups map[string]Group
 
 type Meta struct {
-	HostVars map[string]map[string]interface{}
+	HostVars map[string]map[string]any
 }
 
 type All struct {
@@ -49,8 +49,8 @@ type Inventory struct {
 }
 
 func IsInventory(data []byte) bool {
-	// parse json to map[string]interface{}
-	var raw map[string]interface{}
+	// parse json to map[string]any
+	var raw map[string]any
 	err := yaml.Unmarshal(data, &raw)
 	if err != nil {
 		return false
@@ -72,8 +72,8 @@ func (i *Inventory) Decode(data []byte) error {
 		return errors.New("object cannot be nil")
 	}
 
-	// parse json to map[string]interface{}
-	var raw map[string]interface{}
+	// parse json to map[string]any
+	var raw map[string]any
 	err := yaml.Unmarshal(data, &raw)
 	if err != nil {
 		return err
@@ -178,7 +178,7 @@ func (inventory *Inventory) List(groups ...string) []*Host {
 			}
 
 			if d, ok := meta["tags"]; ok {
-				labels, ok := d.([]interface{})
+				labels, ok := d.([]any)
 				if ok {
 					for i := range labels {
 						key, kok := labels[i].(string)
@@ -240,20 +240,10 @@ func (i *Inventory) ToV1Inventory() *inventory.Inventory {
 	}
 
 	// move credentials out into credentials section
-	out.PreProcess()
+	// TODO: check on this error
+	_ = out.PreProcess()
 
 	return out
-}
-
-var validConnectionTypes = []string{"ssh", "winrm", "local", "docker"}
-
-func isValidConnectionType(conn string) bool {
-	for i := range validConnectionTypes {
-		if conn == validConnectionTypes[i] {
-			return true
-		}
-	}
-	return false
 }
 
 // ansibleBackend maps an ansible connection to mondoo backend

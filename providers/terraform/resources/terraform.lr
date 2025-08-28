@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 option provider = "go.mondoo.com/cnquery/v9/providers/terraform"
-option go_package = "go.mondoo.com/cnquery/v11/providers/terraform/resources"
+option go_package = "go.mondoo.com/cnquery/v12/providers/terraform/resources"
 
 // Terraform configuration files
 terraform {
@@ -18,12 +18,16 @@ terraform {
   providers() []terraform.block
   // Data sources blocks
   datasources() []terraform.block
-  // All blocks with the type resource
-  resources() []terraform.block
   // Variable blocks
   variables() []terraform.block
   // Output blocks
   outputs() []terraform.block
+}
+
+// All blocks with the type resource
+terraform.resources {
+  []terraform.block
+  init(resource? string, name? string)
 }
 
 // Terraform configuration file (.tf or .tf.json file)

@@ -1,8 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/v11/providers/shodan"
-option go_package = "go.mondoo.com/cnquery/v11/providers/shodan/resources"
+option provider = "go.mondoo.com/cnquery/v12/providers/shodan"
+option go_package = "go.mondoo.com/cnquery/v12/providers/shodan/resources"
 
 // Shodan Search Engine
 shodan {}

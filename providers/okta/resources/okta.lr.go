@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -602,35 +602,35 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"okta.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOkta).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOkta).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOkta).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOkta).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.groupRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOkta).GroupRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOkta).GroupRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOkta).Domains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOkta).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOkta).Applications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOkta).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.trustedOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOkta).TrustedOrigins, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOkta).TrustedOrigins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOkta).Networks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOkta).Networks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.customRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOkta).CustomRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOkta).CustomRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -718,7 +718,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.organization.securityNotificationEmails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaOrganization).SecurityNotificationEmails, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaOrganization).SecurityNotificationEmails, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.organization.threatInsightSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -730,31 +730,31 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"okta.policies.password": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicies).Password, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicies).Password, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.policies.mfaEnroll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicies).MfaEnroll, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicies).MfaEnroll, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.policies.signOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicies).SignOn, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicies).SignOn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.policies.oauthAuthorizationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicies).OauthAuthorizationPolicy, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicies).OauthAuthorizationPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.policies.idpDiscovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicies).IdpDiscovery, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicies).IdpDiscovery, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.policies.accessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicies).AccessPolicy, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicies).AccessPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.policies.profileEnrollment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicies).ProfileEnrollment, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicies).ProfileEnrollment, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -770,11 +770,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaUser).Type, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaUser).Type, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.user.credentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaUser).Credentials, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaUser).Credentials, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.user.activated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -798,7 +798,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.user.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaUser).Profile, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaUser).Profile, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.user.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -814,7 +814,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.user.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaUser).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaUser).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -866,7 +866,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.group.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaGroup).Type, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaGroup).Type, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.group.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -882,15 +882,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.group.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaGroup).Profile, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaGroup).Profile, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaGroup).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.group.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaGroup).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaGroup).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.groupRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -938,23 +938,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.application.credentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaApplication).Credentials, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaApplication).Credentials, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.application.features": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaApplication).Features, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaApplication).Features, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.application.licensing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaApplication).Licensing, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaApplication).Licensing, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.application.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaApplication).Profile, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaApplication).Profile, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.application.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaApplication).Settings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaApplication).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.application.signOnMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -966,7 +966,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.application.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaApplication).Visibility, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaApplication).Visibility, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -986,11 +986,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.domain.dnsRecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaDomain).DnsRecords, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaDomain).DnsRecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.domain.publicCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaDomain).PublicCertificate, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaDomain).PublicCertificate, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1026,11 +1026,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.policy.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicy).Conditions, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicy).Conditions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.policy.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicy).Settings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicy).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.policy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1042,7 +1042,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.policy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicy).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.policyRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1074,11 +1074,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.policyRule.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicyRule).Actions, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicyRule).Actions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.policyRule.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaPolicyRule).Conditions, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlOktaPolicyRule).Conditions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.policyRule.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1122,7 +1122,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.trustedOrigin.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaTrustedOrigin).Scopes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaTrustedOrigin).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.trustedOrigin.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1162,7 +1162,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.network.asns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaNetwork).Asns, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaNetwork).Asns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.network.usage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1174,15 +1174,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.network.proxies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaNetwork).Proxies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaNetwork).Proxies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.network.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaNetwork).Locations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaNetwork).Locations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.network.gateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaNetwork).Gateways, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaNetwork).Gateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.threatsConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1194,7 +1194,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.threatsConfiguration.excludeZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaThreatsConfiguration).ExcludeZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaThreatsConfiguration).ExcludeZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.threatsConfiguration.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1222,7 +1222,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.customRole.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaCustomRole).Permissions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOktaCustomRole).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -1254,14 +1254,14 @@ type mqlOkta struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOktaInternal it will be used here
-	Users plugin.TValue[[]interface{}]
-	Groups plugin.TValue[[]interface{}]
-	GroupRules plugin.TValue[[]interface{}]
-	Domains plugin.TValue[[]interface{}]
-	Applications plugin.TValue[[]interface{}]
-	TrustedOrigins plugin.TValue[[]interface{}]
-	Networks plugin.TValue[[]interface{}]
-	CustomRoles plugin.TValue[[]interface{}]
+	Users plugin.TValue[[]any]
+	Groups plugin.TValue[[]any]
+	GroupRules plugin.TValue[[]any]
+	Domains plugin.TValue[[]any]
+	Applications plugin.TValue[[]any]
+	TrustedOrigins plugin.TValue[[]any]
+	Networks plugin.TValue[[]any]
+	CustomRoles plugin.TValue[[]any]
 }
 
 // createOkta creates a new instance of this resource
@@ -1301,15 +1301,15 @@ func (c *mqlOkta) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlOkta) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlOkta) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1317,15 +1317,15 @@ func (c *mqlOkta) GetUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOkta) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlOkta) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1333,15 +1333,15 @@ func (c *mqlOkta) GetGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOkta) GetGroupRules() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.GroupRules, func() ([]interface{}, error) {
+func (c *mqlOkta) GetGroupRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GroupRules, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "groupRules")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1349,15 +1349,15 @@ func (c *mqlOkta) GetGroupRules() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOkta) GetDomains() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Domains, func() ([]interface{}, error) {
+func (c *mqlOkta) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "domains")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1365,15 +1365,15 @@ func (c *mqlOkta) GetDomains() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOkta) GetApplications() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Applications, func() ([]interface{}, error) {
+func (c *mqlOkta) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "applications")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1381,15 +1381,15 @@ func (c *mqlOkta) GetApplications() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOkta) GetTrustedOrigins() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.TrustedOrigins, func() ([]interface{}, error) {
+func (c *mqlOkta) GetTrustedOrigins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustedOrigins, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "trustedOrigins")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1397,15 +1397,15 @@ func (c *mqlOkta) GetTrustedOrigins() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOkta) GetNetworks() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Networks, func() ([]interface{}, error) {
+func (c *mqlOkta) GetNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Networks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "networks")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1413,15 +1413,15 @@ func (c *mqlOkta) GetNetworks() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOkta) GetCustomRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.CustomRoles, func() ([]interface{}, error) {
+func (c *mqlOkta) GetCustomRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomRoles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "customRoles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1454,7 +1454,7 @@ type mqlOktaOrganization struct {
 	OptOutCommunicationEmails plugin.TValue[bool]
 	BillingContact plugin.TValue[*mqlOktaUser]
 	TechnicalContact plugin.TValue[*mqlOktaUser]
-	SecurityNotificationEmails plugin.TValue[interface{}]
+	SecurityNotificationEmails plugin.TValue[any]
 	ThreatInsightSettings plugin.TValue[*mqlOktaThreatsConfiguration]
 }
 
@@ -1601,8 +1601,8 @@ func (c *mqlOktaOrganization) GetTechnicalContact() *plugin.TValue[*mqlOktaUser]
 	})
 }
 
-func (c *mqlOktaOrganization) GetSecurityNotificationEmails() *plugin.TValue[interface{}] {
-	return plugin.GetOrCompute[interface{}](&c.SecurityNotificationEmails, func() (interface{}, error) {
+func (c *mqlOktaOrganization) GetSecurityNotificationEmails() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecurityNotificationEmails, func() (any, error) {
 		return c.securityNotificationEmails()
 	})
 }
@@ -1628,13 +1628,13 @@ type mqlOktaPolicies struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOktaPoliciesInternal it will be used here
-	Password plugin.TValue[[]interface{}]
-	MfaEnroll plugin.TValue[[]interface{}]
-	SignOn plugin.TValue[[]interface{}]
-	OauthAuthorizationPolicy plugin.TValue[[]interface{}]
-	IdpDiscovery plugin.TValue[[]interface{}]
-	AccessPolicy plugin.TValue[[]interface{}]
-	ProfileEnrollment plugin.TValue[[]interface{}]
+	Password plugin.TValue[[]any]
+	MfaEnroll plugin.TValue[[]any]
+	SignOn plugin.TValue[[]any]
+	OauthAuthorizationPolicy plugin.TValue[[]any]
+	IdpDiscovery plugin.TValue[[]any]
+	AccessPolicy plugin.TValue[[]any]
+	ProfileEnrollment plugin.TValue[[]any]
 }
 
 // createOktaPolicies creates a new instance of this resource
@@ -1674,15 +1674,15 @@ func (c *mqlOktaPolicies) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlOktaPolicies) GetPassword() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Password, func() ([]interface{}, error) {
+func (c *mqlOktaPolicies) GetPassword() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Password, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policies", c.__id, "password")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1690,15 +1690,15 @@ func (c *mqlOktaPolicies) GetPassword() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOktaPolicies) GetMfaEnroll() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.MfaEnroll, func() ([]interface{}, error) {
+func (c *mqlOktaPolicies) GetMfaEnroll() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MfaEnroll, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policies", c.__id, "mfaEnroll")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1706,15 +1706,15 @@ func (c *mqlOktaPolicies) GetMfaEnroll() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOktaPolicies) GetSignOn() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SignOn, func() ([]interface{}, error) {
+func (c *mqlOktaPolicies) GetSignOn() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SignOn, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policies", c.__id, "signOn")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1722,15 +1722,15 @@ func (c *mqlOktaPolicies) GetSignOn() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOktaPolicies) GetOauthAuthorizationPolicy() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.OauthAuthorizationPolicy, func() ([]interface{}, error) {
+func (c *mqlOktaPolicies) GetOauthAuthorizationPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OauthAuthorizationPolicy, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policies", c.__id, "oauthAuthorizationPolicy")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1738,15 +1738,15 @@ func (c *mqlOktaPolicies) GetOauthAuthorizationPolicy() *plugin.TValue[[]interfa
 	})
 }
 
-func (c *mqlOktaPolicies) GetIdpDiscovery() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.IdpDiscovery, func() ([]interface{}, error) {
+func (c *mqlOktaPolicies) GetIdpDiscovery() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IdpDiscovery, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policies", c.__id, "idpDiscovery")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1754,15 +1754,15 @@ func (c *mqlOktaPolicies) GetIdpDiscovery() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOktaPolicies) GetAccessPolicy() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AccessPolicy, func() ([]interface{}, error) {
+func (c *mqlOktaPolicies) GetAccessPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessPolicy, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policies", c.__id, "accessPolicy")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1770,15 +1770,15 @@ func (c *mqlOktaPolicies) GetAccessPolicy() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOktaPolicies) GetProfileEnrollment() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ProfileEnrollment, func() ([]interface{}, error) {
+func (c *mqlOktaPolicies) GetProfileEnrollment() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProfileEnrollment, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policies", c.__id, "profileEnrollment")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1793,18 +1793,18 @@ type mqlOktaUser struct {
 	// optional: if you define mqlOktaUserInternal it will be used here
 	Id plugin.TValue[string]
 	TypeId plugin.TValue[string]
-	Type plugin.TValue[interface{}]
-	Credentials plugin.TValue[interface{}]
+	Type plugin.TValue[any]
+	Credentials plugin.TValue[any]
 	Activated plugin.TValue[*time.Time]
 	Created plugin.TValue[*time.Time]
 	LastLogin plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
 	PasswordChanged plugin.TValue[*time.Time]
-	Profile plugin.TValue[interface{}]
+	Profile plugin.TValue[any]
 	Status plugin.TValue[string]
 	StatusChanged plugin.TValue[*time.Time]
 	TransitioningToStatus plugin.TValue[string]
-	Roles plugin.TValue[[]interface{}]
+	Roles plugin.TValue[[]any]
 }
 
 // createOktaUser creates a new instance of this resource
@@ -1852,11 +1852,11 @@ func (c *mqlOktaUser) GetTypeId() *plugin.TValue[string] {
 	return &c.TypeId
 }
 
-func (c *mqlOktaUser) GetType() *plugin.TValue[interface{}] {
+func (c *mqlOktaUser) GetType() *plugin.TValue[any] {
 	return &c.Type
 }
 
-func (c *mqlOktaUser) GetCredentials() *plugin.TValue[interface{}] {
+func (c *mqlOktaUser) GetCredentials() *plugin.TValue[any] {
 	return &c.Credentials
 }
 
@@ -1880,7 +1880,7 @@ func (c *mqlOktaUser) GetPasswordChanged() *plugin.TValue[*time.Time] {
 	return &c.PasswordChanged
 }
 
-func (c *mqlOktaUser) GetProfile() *plugin.TValue[interface{}] {
+func (c *mqlOktaUser) GetProfile() *plugin.TValue[any] {
 	return &c.Profile
 }
 
@@ -1896,15 +1896,15 @@ func (c *mqlOktaUser) GetTransitioningToStatus() *plugin.TValue[string] {
 	return &c.TransitioningToStatus
 }
 
-func (c *mqlOktaUser) GetRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+func (c *mqlOktaUser) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.user", c.__id, "roles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1999,13 +1999,13 @@ type mqlOktaGroup struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
-	Type plugin.TValue[interface{}]
+	Type plugin.TValue[any]
 	Created plugin.TValue[*time.Time]
 	LastMembershipUpdated plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
-	Profile plugin.TValue[interface{}]
-	Members plugin.TValue[[]interface{}]
-	Roles plugin.TValue[[]interface{}]
+	Profile plugin.TValue[any]
+	Members plugin.TValue[[]any]
+	Roles plugin.TValue[[]any]
 }
 
 // createOktaGroup creates a new instance of this resource
@@ -2057,7 +2057,7 @@ func (c *mqlOktaGroup) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlOktaGroup) GetType() *plugin.TValue[interface{}] {
+func (c *mqlOktaGroup) GetType() *plugin.TValue[any] {
 	return &c.Type
 }
 
@@ -2073,19 +2073,19 @@ func (c *mqlOktaGroup) GetLastUpdated() *plugin.TValue[*time.Time] {
 	return &c.LastUpdated
 }
 
-func (c *mqlOktaGroup) GetProfile() *plugin.TValue[interface{}] {
+func (c *mqlOktaGroup) GetProfile() *plugin.TValue[any] {
 	return &c.Profile
 }
 
-func (c *mqlOktaGroup) GetMembers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Members, func() ([]interface{}, error) {
+func (c *mqlOktaGroup) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.group", c.__id, "members")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2093,15 +2093,15 @@ func (c *mqlOktaGroup) GetMembers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOktaGroup) GetRoles() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+func (c *mqlOktaGroup) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.group", c.__id, "roles")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2178,14 +2178,14 @@ type mqlOktaApplication struct {
 	Label plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
-	Credentials plugin.TValue[interface{}]
-	Features plugin.TValue[[]interface{}]
-	Licensing plugin.TValue[interface{}]
-	Profile plugin.TValue[interface{}]
-	Settings plugin.TValue[interface{}]
+	Credentials plugin.TValue[any]
+	Features plugin.TValue[[]any]
+	Licensing plugin.TValue[any]
+	Profile plugin.TValue[any]
+	Settings plugin.TValue[any]
 	SignOnMode plugin.TValue[string]
 	Status plugin.TValue[string]
-	Visibility plugin.TValue[interface{}]
+	Visibility plugin.TValue[any]
 }
 
 // createOktaApplication creates a new instance of this resource
@@ -2245,23 +2245,23 @@ func (c *mqlOktaApplication) GetLastUpdated() *plugin.TValue[*time.Time] {
 	return &c.LastUpdated
 }
 
-func (c *mqlOktaApplication) GetCredentials() *plugin.TValue[interface{}] {
+func (c *mqlOktaApplication) GetCredentials() *plugin.TValue[any] {
 	return &c.Credentials
 }
 
-func (c *mqlOktaApplication) GetFeatures() *plugin.TValue[[]interface{}] {
+func (c *mqlOktaApplication) GetFeatures() *plugin.TValue[[]any] {
 	return &c.Features
 }
 
-func (c *mqlOktaApplication) GetLicensing() *plugin.TValue[interface{}] {
+func (c *mqlOktaApplication) GetLicensing() *plugin.TValue[any] {
 	return &c.Licensing
 }
 
-func (c *mqlOktaApplication) GetProfile() *plugin.TValue[interface{}] {
+func (c *mqlOktaApplication) GetProfile() *plugin.TValue[any] {
 	return &c.Profile
 }
 
-func (c *mqlOktaApplication) GetSettings() *plugin.TValue[interface{}] {
+func (c *mqlOktaApplication) GetSettings() *plugin.TValue[any] {
 	return &c.Settings
 }
 
@@ -2273,7 +2273,7 @@ func (c *mqlOktaApplication) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlOktaApplication) GetVisibility() *plugin.TValue[interface{}] {
+func (c *mqlOktaApplication) GetVisibility() *plugin.TValue[any] {
 	return &c.Visibility
 }
 
@@ -2285,8 +2285,8 @@ type mqlOktaDomain struct {
 	Id plugin.TValue[string]
 	Domain plugin.TValue[string]
 	ValidationStatus plugin.TValue[string]
-	DnsRecords plugin.TValue[[]interface{}]
-	PublicCertificate plugin.TValue[interface{}]
+	DnsRecords plugin.TValue[[]any]
+	PublicCertificate plugin.TValue[any]
 }
 
 // createOktaDomain creates a new instance of this resource
@@ -2338,11 +2338,11 @@ func (c *mqlOktaDomain) GetValidationStatus() *plugin.TValue[string] {
 	return &c.ValidationStatus
 }
 
-func (c *mqlOktaDomain) GetDnsRecords() *plugin.TValue[[]interface{}] {
+func (c *mqlOktaDomain) GetDnsRecords() *plugin.TValue[[]any] {
 	return &c.DnsRecords
 }
 
-func (c *mqlOktaDomain) GetPublicCertificate() *plugin.TValue[interface{}] {
+func (c *mqlOktaDomain) GetPublicCertificate() *plugin.TValue[any] {
 	return &c.PublicCertificate
 }
 
@@ -2358,11 +2358,11 @@ type mqlOktaPolicy struct {
 	Status plugin.TValue[string]
 	System plugin.TValue[bool]
 	Type plugin.TValue[string]
-	Conditions plugin.TValue[interface{}]
-	Settings plugin.TValue[interface{}]
+	Conditions plugin.TValue[any]
+	Settings plugin.TValue[any]
 	Created plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
-	Rules plugin.TValue[[]interface{}]
+	Rules plugin.TValue[[]any]
 }
 
 // createOktaPolicy creates a new instance of this resource
@@ -2430,11 +2430,11 @@ func (c *mqlOktaPolicy) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlOktaPolicy) GetConditions() *plugin.TValue[interface{}] {
+func (c *mqlOktaPolicy) GetConditions() *plugin.TValue[any] {
 	return &c.Conditions
 }
 
-func (c *mqlOktaPolicy) GetSettings() *plugin.TValue[interface{}] {
+func (c *mqlOktaPolicy) GetSettings() *plugin.TValue[any] {
 	return &c.Settings
 }
 
@@ -2446,15 +2446,15 @@ func (c *mqlOktaPolicy) GetLastUpdated() *plugin.TValue[*time.Time] {
 	return &c.LastUpdated
 }
 
-func (c *mqlOktaPolicy) GetRules() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Rules, func() ([]interface{}, error) {
+func (c *mqlOktaPolicy) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policy", c.__id, "rules")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2473,8 +2473,8 @@ type mqlOktaPolicyRule struct {
 	Status plugin.TValue[string]
 	System plugin.TValue[bool]
 	Type plugin.TValue[string]
-	Actions plugin.TValue[interface{}]
-	Conditions plugin.TValue[interface{}]
+	Actions plugin.TValue[any]
+	Conditions plugin.TValue[any]
 	Created plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
 }
@@ -2540,11 +2540,11 @@ func (c *mqlOktaPolicyRule) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlOktaPolicyRule) GetActions() *plugin.TValue[interface{}] {
+func (c *mqlOktaPolicyRule) GetActions() *plugin.TValue[any] {
 	return &c.Actions
 }
 
-func (c *mqlOktaPolicyRule) GetConditions() *plugin.TValue[interface{}] {
+func (c *mqlOktaPolicyRule) GetConditions() *plugin.TValue[any] {
 	return &c.Conditions
 }
 
@@ -2568,7 +2568,7 @@ type mqlOktaTrustedOrigin struct {
 	CreatedBy plugin.TValue[string]
 	LastUpdated plugin.TValue[*time.Time]
 	LastUpdatedBy plugin.TValue[string]
-	Scopes plugin.TValue[[]interface{}]
+	Scopes plugin.TValue[[]any]
 	Status plugin.TValue[string]
 }
 
@@ -2637,7 +2637,7 @@ func (c *mqlOktaTrustedOrigin) GetLastUpdatedBy() *plugin.TValue[string] {
 	return &c.LastUpdatedBy
 }
 
-func (c *mqlOktaTrustedOrigin) GetScopes() *plugin.TValue[[]interface{}] {
+func (c *mqlOktaTrustedOrigin) GetScopes() *plugin.TValue[[]any] {
 	return &c.Scopes
 }
 
@@ -2657,12 +2657,12 @@ type mqlOktaNetwork struct {
 	LastUpdated plugin.TValue[*time.Time]
 	Status plugin.TValue[string]
 	System plugin.TValue[bool]
-	Asns plugin.TValue[[]interface{}]
+	Asns plugin.TValue[[]any]
 	Usage plugin.TValue[string]
 	ProxyType plugin.TValue[string]
-	Proxies plugin.TValue[[]interface{}]
-	Locations plugin.TValue[[]interface{}]
-	Gateways plugin.TValue[[]interface{}]
+	Proxies plugin.TValue[[]any]
+	Locations plugin.TValue[[]any]
+	Gateways plugin.TValue[[]any]
 }
 
 // createOktaNetwork creates a new instance of this resource
@@ -2730,7 +2730,7 @@ func (c *mqlOktaNetwork) GetSystem() *plugin.TValue[bool] {
 	return &c.System
 }
 
-func (c *mqlOktaNetwork) GetAsns() *plugin.TValue[[]interface{}] {
+func (c *mqlOktaNetwork) GetAsns() *plugin.TValue[[]any] {
 	return &c.Asns
 }
 
@@ -2742,15 +2742,15 @@ func (c *mqlOktaNetwork) GetProxyType() *plugin.TValue[string] {
 	return &c.ProxyType
 }
 
-func (c *mqlOktaNetwork) GetProxies() *plugin.TValue[[]interface{}] {
+func (c *mqlOktaNetwork) GetProxies() *plugin.TValue[[]any] {
 	return &c.Proxies
 }
 
-func (c *mqlOktaNetwork) GetLocations() *plugin.TValue[[]interface{}] {
+func (c *mqlOktaNetwork) GetLocations() *plugin.TValue[[]any] {
 	return &c.Locations
 }
 
-func (c *mqlOktaNetwork) GetGateways() *plugin.TValue[[]interface{}] {
+func (c *mqlOktaNetwork) GetGateways() *plugin.TValue[[]any] {
 	return &c.Gateways
 }
 
@@ -2760,7 +2760,7 @@ type mqlOktaThreatsConfiguration struct {
 	__id string
 	// optional: if you define mqlOktaThreatsConfigurationInternal it will be used here
 	Action plugin.TValue[string]
-	ExcludeZones plugin.TValue[[]interface{}]
+	ExcludeZones plugin.TValue[[]any]
 	Created plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
 }
@@ -2806,7 +2806,7 @@ func (c *mqlOktaThreatsConfiguration) GetAction() *plugin.TValue[string] {
 	return &c.Action
 }
 
-func (c *mqlOktaThreatsConfiguration) GetExcludeZones() *plugin.TValue[[]interface{}] {
+func (c *mqlOktaThreatsConfiguration) GetExcludeZones() *plugin.TValue[[]any] {
 	return &c.ExcludeZones
 }
 
@@ -2826,7 +2826,7 @@ type mqlOktaCustomRole struct {
 	Id plugin.TValue[string]
 	Label plugin.TValue[string]
 	Description plugin.TValue[string]
-	Permissions plugin.TValue[[]interface{}]
+	Permissions plugin.TValue[[]any]
 }
 
 // createOktaCustomRole creates a new instance of this resource
@@ -2873,6 +2873,6 @@ func (c *mqlOktaCustomRole) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlOktaCustomRole) GetPermissions() *plugin.TValue[[]interface{}] {
+func (c *mqlOktaCustomRole) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
 }

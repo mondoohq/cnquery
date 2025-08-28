@@ -5,13 +5,13 @@ package resources
 
 import (
 	"github.com/vmware/go-vcloud-director/v2/types/v56"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers/vcd/connection"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/vcd/connection"
 )
 
 // https://developer.vmware.com/apis/1260/vmware-cloud-director/doc/doc/types/QueryResultNetworkPoolRecordType.html
-func (v *mqlVcd) networkPools() ([]interface{}, error) {
+func (v *mqlVcd) networkPools() ([]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VcdConnection)
 	client := conn.Client()
 
@@ -20,7 +20,7 @@ func (v *mqlVcd) networkPools() ([]interface{}, error) {
 		return nil, err
 	}
 
-	list := []interface{}{}
+	list := []any{}
 	for i := range networkPoolList {
 		entry, err := newMqlVcdNetworkPool(v.MqlRuntime, networkPoolList[i])
 		if err != nil {
@@ -32,7 +32,7 @@ func (v *mqlVcd) networkPools() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlVcdNetworkPool(runtime *plugin.Runtime, networkPool *types.QueryResultNetworkPoolRecordType) (interface{}, error) {
+func newMqlVcdNetworkPool(runtime *plugin.Runtime, networkPool *types.QueryResultNetworkPoolRecordType) (any, error) {
 	return CreateResource(runtime, "vcd.networkPool", map[string]*llx.RawData{
 		"name":            llx.StringData(networkPool.Name),
 		"isBusy":          llx.BoolData(networkPool.IsBusy),

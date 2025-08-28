@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v11/types"
-	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 const UNKNOWN_VALUE = "?value?"
@@ -21,9 +21,9 @@ const UNKNOWN_VALUE = "?value?"
 // It cannot be sent over the wire unless serialized (expensive) or
 // converted to a proto data structure
 type RawData struct {
-	Type  types.Type  `json:"type"`
-	Value interface{} `json:"value"`
-	Error error       `json:"-"`
+	Type  types.Type `json:"type"`
+	Value any        `json:"value"`
+	Error error      `json:"-"`
 }
 
 // a helper structure exclusively used for json unmarshalling of errors
@@ -96,7 +96,7 @@ func (r *RawData) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func dictRawDataString(value interface{}) string {
+func dictRawDataString(value any) string {
 	switch x := value.(type) {
 	case bool:
 		if x {
@@ -110,7 +110,7 @@ func dictRawDataString(value interface{}) string {
 		return strconv.FormatFloat(x, 'f', -1, 64)
 	case string:
 		return "\"" + x + "\""
-	case []interface{}:
+	case []any:
 		var res strings.Builder
 		res.WriteString("[")
 		for i := range x {
@@ -121,7 +121,7 @@ func dictRawDataString(value interface{}) string {
 		}
 		res.WriteString("]")
 		return res.String()
-	case map[string]interface{}:
+	case map[string]any:
 		var res strings.Builder
 		var i int
 		res.WriteString("{")
@@ -140,7 +140,7 @@ func dictRawDataString(value interface{}) string {
 	}
 }
 
-func rawDataString(typ types.Type, value interface{}) string {
+func rawDataString(typ types.Type, value any) string {
 	if value == nil {
 		return "<null>"
 	}
@@ -169,7 +169,7 @@ func rawDataString(typ types.Type, value interface{}) string {
 		return ScoreString(value.([]byte))
 	case types.ArrayLike:
 		var res strings.Builder
-		arr := value.([]interface{})
+		arr := value.([]any)
 		res.WriteString("[")
 		for i := range arr {
 			res.WriteString(rawDataString(typ.Child(), arr[i]))
@@ -183,7 +183,7 @@ func rawDataString(typ types.Type, value interface{}) string {
 		switch typ.Key() {
 		case types.String:
 			var res strings.Builder
-			m := value.(map[string]interface{})
+			m := value.(map[string]any)
 			var i int
 			res.WriteString("{")
 			for k, v := range m {
@@ -245,7 +245,7 @@ func (r *RawData) Score() (int, bool) {
 	return v, true
 }
 
-func isTruthy(data interface{}, typ types.Type) (bool, bool) {
+func isTruthy(data any, typ types.Type) (bool, bool) {
 	if data == nil &&
 		(typ.NotSet() || !typ.IsResource()) {
 		return false, true
@@ -292,7 +292,7 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 	case types.Block:
 		res := true
 
-		m := data.(map[string]interface{})
+		m := data.(map[string]any)
 		if m != nil {
 			if bif, ok := m["__t"]; ok {
 				if rd, ok := bif.(*RawData); ok {
@@ -317,7 +317,7 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 		return len(d.IP) != 0, true
 
 	case types.ArrayLike:
-		arr := data.([]interface{})
+		arr := data.([]any)
 
 		// Empty arrays count as false here, this is because users
 		// frequently write statements like:
@@ -346,7 +346,7 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 
 		switch typ.Key() {
 		case types.String:
-			m := data.(map[string]interface{})
+			m := data.(map[string]any)
 			for _, v := range m {
 				t1, f1 := isTruthy(v, typ.Child())
 				if f1 {
@@ -355,7 +355,7 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 			}
 
 		case types.Int:
-			m := data.(map[int64]interface{})
+			m := data.(map[int64]any)
 			for _, v := range m {
 				t1, f1 := isTruthy(v, typ.Child())
 				if f1 {
@@ -384,7 +384,7 @@ func (r *RawData) IsSuccess() (bool, bool) {
 	return isSuccess(r.Value, r.Type)
 }
 
-func isSuccess(data interface{}, typ types.Type) (bool, bool) {
+func isSuccess(data any, typ types.Type) (bool, bool) {
 	if data == nil &&
 		(typ.NotSet() || !typ.IsResource()) {
 		return false, false
@@ -402,7 +402,7 @@ func isSuccess(data interface{}, typ types.Type) (bool, bool) {
 	case types.Bool:
 		return data.(bool), true
 	case types.Block:
-		m := data.(map[string]interface{})
+		m := data.(map[string]any)
 		if m != nil {
 			if bif, ok := m["__s"]; ok {
 				if rd, ok := bif.(*RawData); ok {
@@ -415,7 +415,7 @@ func isSuccess(data interface{}, typ types.Type) (bool, bool) {
 		return false, false
 
 	case types.ArrayLike:
-		arr := data.([]interface{})
+		arr := data.([]any)
 		res := true
 		valid := false
 
@@ -438,7 +438,7 @@ func isSuccess(data interface{}, typ types.Type) (bool, bool) {
 var UnsetData = &RawData{Type: types.Unset}
 
 // AnyData returns any value embedded in a RawData
-func AnyData(v interface{}) *RawData {
+func AnyData(v any) *RawData {
 	return &RawData{
 		Type:  types.Any,
 		Value: v,
@@ -542,7 +542,7 @@ func TimeDataPtr(t *time.Time) *RawData {
 }
 
 // DictData creates a rawdata struct from raw dict data
-func DictData(r interface{}) *RawData {
+func DictData(r any) *RawData {
 	return &RawData{
 		Type:  types.Dict,
 		Value: r,
@@ -550,7 +550,7 @@ func DictData(r interface{}) *RawData {
 }
 
 // ScoreData creates a rawdata struct from raw score data
-func ScoreData(r interface{}) *RawData {
+func ScoreData(r any) *RawData {
 	return &RawData{
 		Type:  types.Score,
 		Value: r,
@@ -574,7 +574,7 @@ func RefDataV2(v uint64) *RawData {
 }
 
 // ArrayData creates a rawdata struct from a go array + child data types
-func ArrayData(v []interface{}, typ types.Type) *RawData {
+func ArrayData(v []any, typ types.Type) *RawData {
 	return &RawData{
 		Type:  types.Array(typ),
 		Value: v,
@@ -582,7 +582,7 @@ func ArrayData(v []interface{}, typ types.Type) *RawData {
 }
 
 // MapData creates a rawdata struct from a go map + child data types
-func MapData(v map[string]interface{}, typ types.Type) *RawData {
+func MapData(v map[string]any, typ types.Type) *RawData {
 	return &RawData{
 		Type:  types.Map(types.String, typ),
 		Value: v,
@@ -590,7 +590,7 @@ func MapData(v map[string]interface{}, typ types.Type) *RawData {
 }
 
 // MapIntData creates a rawdata struct from a go int map + child data type
-func MapIntData(v map[int32]interface{}, typ types.Type) *RawData {
+func MapIntData(v map[int32]any, typ types.Type) *RawData {
 	return &RawData{
 		Type:  types.Map(types.Int, typ),
 		Value: v,

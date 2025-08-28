@@ -8,12 +8,12 @@ import (
 
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
-	"go.mondoo.com/cnquery/v11/providers/vsphere/resources/resourceclient"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v12/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func newMqlVm(runtime *plugin.Runtime, vm *object.VirtualMachine, vmInfo *mo.VirtualMachine) (*mqlVsphereVm, error) {
@@ -67,7 +67,7 @@ func (v *mqlVsphereVm) id() (string, error) {
 	return v.Moid.Data, nil
 }
 
-func (v *mqlVsphereVm) advancedSettings() (map[string]interface{}, error) {
+func (v *mqlVsphereVm) advancedSettings() (map[string]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	vClient := getClientInstance(conn)
 

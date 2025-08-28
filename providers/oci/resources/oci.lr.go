@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/types"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -498,11 +498,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"oci.regions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOci).Regions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOci).Regions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.compartments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOci).Compartments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOci).Compartments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.tenancy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -574,15 +574,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"oci.identity.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentity).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciIdentity).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.identity.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentity).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciIdentity).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.identity.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentity).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciIdentity).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.identity.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -626,7 +626,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.identity.user.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityUser).Capabilities, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		r.(*mqlOciIdentityUser).Capabilities, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"oci.identity.user.lastLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -638,19 +638,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.identity.user.apiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityUser).ApiKeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciIdentityUser).ApiKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.identity.user.customerSecretKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityUser).CustomerSecretKeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciIdentityUser).CustomerSecretKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.identity.user.authTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityUser).AuthTokens, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciIdentityUser).AuthTokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.identity.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityUser).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciIdentityUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.identity.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -778,7 +778,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.identity.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciIdentityPolicy).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciIdentityPolicy).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.compute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -786,11 +786,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"oci.compute.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCompute).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciCompute).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.compute.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCompute).Images, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciCompute).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.compute.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -846,11 +846,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			return
 		},
 	"oci.network.vcns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetwork).Vcns, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciNetwork).Vcns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.network.securityLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetwork).SecurityLists, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciNetwork).SecurityLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.network.vcn.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -882,7 +882,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.network.vcn.cidrBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkVcn).CidrBlocks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciNetworkVcn).CidrBlocks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.network.securityList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -910,11 +910,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.network.securityList.egressSecurityRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkSecurityList).EgressSecurityRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciNetworkSecurityList).EgressSecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.network.securityList.ingressSecurityRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkSecurityList).IngressSecurityRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciNetworkSecurityList).IngressSecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.objectStorage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -926,7 +926,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.objectStorage.buckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciObjectStorage).Buckets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlOciObjectStorage).Buckets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.objectStorage.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1006,8 +1006,8 @@ type mqlOci struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOciInternal it will be used here
-	Regions plugin.TValue[[]interface{}]
-	Compartments plugin.TValue[[]interface{}]
+	Regions plugin.TValue[[]any]
+	Compartments plugin.TValue[[]any]
 }
 
 // createOci creates a new instance of this resource
@@ -1047,15 +1047,15 @@ func (c *mqlOci) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlOci) GetRegions() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Regions, func() ([]interface{}, error) {
+func (c *mqlOci) GetRegions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Regions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci", c.__id, "regions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1063,15 +1063,15 @@ func (c *mqlOci) GetRegions() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOci) GetCompartments() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Compartments, func() ([]interface{}, error) {
+func (c *mqlOci) GetCompartments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Compartments, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci", c.__id, "compartments")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1283,9 +1283,9 @@ type mqlOciIdentity struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOciIdentityInternal it will be used here
-	Users plugin.TValue[[]interface{}]
-	Groups plugin.TValue[[]interface{}]
-	Policies plugin.TValue[[]interface{}]
+	Users plugin.TValue[[]any]
+	Groups plugin.TValue[[]any]
+	Policies plugin.TValue[[]any]
 }
 
 // createOciIdentity creates a new instance of this resource
@@ -1325,15 +1325,15 @@ func (c *mqlOciIdentity) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlOciIdentity) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+func (c *mqlOciIdentity) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity", c.__id, "users")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1341,15 +1341,15 @@ func (c *mqlOciIdentity) GetUsers() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOciIdentity) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlOciIdentity) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1357,15 +1357,15 @@ func (c *mqlOciIdentity) GetGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOciIdentity) GetPolicies() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Policies, func() ([]interface{}, error) {
+func (c *mqlOciIdentity) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity", c.__id, "policies")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1387,13 +1387,13 @@ type mqlOciIdentityUser struct {
 	MfaActivated plugin.TValue[bool]
 	Email plugin.TValue[string]
 	EmailVerified plugin.TValue[bool]
-	Capabilities plugin.TValue[map[string]interface{}]
+	Capabilities plugin.TValue[map[string]any]
 	LastLogin plugin.TValue[*time.Time]
 	PreviousLogin plugin.TValue[*time.Time]
-	ApiKeys plugin.TValue[[]interface{}]
-	CustomerSecretKeys plugin.TValue[[]interface{}]
-	AuthTokens plugin.TValue[[]interface{}]
-	Groups plugin.TValue[[]interface{}]
+	ApiKeys plugin.TValue[[]any]
+	CustomerSecretKeys plugin.TValue[[]any]
+	AuthTokens plugin.TValue[[]any]
+	Groups plugin.TValue[[]any]
 }
 
 // createOciIdentityUser creates a new instance of this resource
@@ -1469,7 +1469,7 @@ func (c *mqlOciIdentityUser) GetEmailVerified() *plugin.TValue[bool] {
 	return &c.EmailVerified
 }
 
-func (c *mqlOciIdentityUser) GetCapabilities() *plugin.TValue[map[string]interface{}] {
+func (c *mqlOciIdentityUser) GetCapabilities() *plugin.TValue[map[string]any] {
 	return &c.Capabilities
 }
 
@@ -1481,15 +1481,15 @@ func (c *mqlOciIdentityUser) GetPreviousLogin() *plugin.TValue[*time.Time] {
 	return &c.PreviousLogin
 }
 
-func (c *mqlOciIdentityUser) GetApiKeys() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.ApiKeys, func() ([]interface{}, error) {
+func (c *mqlOciIdentityUser) GetApiKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiKeys, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.user", c.__id, "apiKeys")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1497,15 +1497,15 @@ func (c *mqlOciIdentityUser) GetApiKeys() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOciIdentityUser) GetCustomerSecretKeys() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.CustomerSecretKeys, func() ([]interface{}, error) {
+func (c *mqlOciIdentityUser) GetCustomerSecretKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomerSecretKeys, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.user", c.__id, "customerSecretKeys")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1513,15 +1513,15 @@ func (c *mqlOciIdentityUser) GetCustomerSecretKeys() *plugin.TValue[[]interface{
 	})
 }
 
-func (c *mqlOciIdentityUser) GetAuthTokens() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AuthTokens, func() ([]interface{}, error) {
+func (c *mqlOciIdentityUser) GetAuthTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthTokens, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.user", c.__id, "authTokens")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1529,15 +1529,15 @@ func (c *mqlOciIdentityUser) GetAuthTokens() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOciIdentityUser) GetGroups() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+func (c *mqlOciIdentityUser) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.identity.user", c.__id, "groups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1832,7 +1832,7 @@ type mqlOciIdentityPolicy struct {
 	Description plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
 	State plugin.TValue[string]
-	Statements plugin.TValue[[]interface{}]
+	Statements plugin.TValue[[]any]
 }
 
 // createOciIdentityPolicy creates a new instance of this resource
@@ -1896,7 +1896,7 @@ func (c *mqlOciIdentityPolicy) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
-func (c *mqlOciIdentityPolicy) GetStatements() *plugin.TValue[[]interface{}] {
+func (c *mqlOciIdentityPolicy) GetStatements() *plugin.TValue[[]any] {
 	return &c.Statements
 }
 
@@ -1905,8 +1905,8 @@ type mqlOciCompute struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOciComputeInternal it will be used here
-	Instances plugin.TValue[[]interface{}]
-	Images plugin.TValue[[]interface{}]
+	Instances plugin.TValue[[]any]
+	Images plugin.TValue[[]any]
 }
 
 // createOciCompute creates a new instance of this resource
@@ -1946,15 +1946,15 @@ func (c *mqlOciCompute) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlOciCompute) GetInstances() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
+func (c *mqlOciCompute) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute", c.__id, "instances")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -1962,15 +1962,15 @@ func (c *mqlOciCompute) GetInstances() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOciCompute) GetImages() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Images, func() ([]interface{}, error) {
+func (c *mqlOciCompute) GetImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Images, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute", c.__id, "images")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2121,8 +2121,8 @@ type mqlOciNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOciNetworkInternal it will be used here
-	Vcns plugin.TValue[[]interface{}]
-	SecurityLists plugin.TValue[[]interface{}]
+	Vcns plugin.TValue[[]any]
+	SecurityLists plugin.TValue[[]any]
 }
 
 // createOciNetwork creates a new instance of this resource
@@ -2162,15 +2162,15 @@ func (c *mqlOciNetwork) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlOciNetwork) GetVcns() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Vcns, func() ([]interface{}, error) {
+func (c *mqlOciNetwork) GetVcns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vcns, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network", c.__id, "vcns")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2178,15 +2178,15 @@ func (c *mqlOciNetwork) GetVcns() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlOciNetwork) GetSecurityLists() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.SecurityLists, func() ([]interface{}, error) {
+func (c *mqlOciNetwork) GetSecurityLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityLists, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network", c.__id, "securityLists")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 
@@ -2205,7 +2205,7 @@ type mqlOciNetworkVcn struct {
 	Created plugin.TValue[*time.Time]
 	State plugin.TValue[string]
 	CidrBlock plugin.TValue[string]
-	CidrBlocks plugin.TValue[[]interface{}]
+	CidrBlocks plugin.TValue[[]any]
 }
 
 // createOciNetworkVcn creates a new instance of this resource
@@ -2269,7 +2269,7 @@ func (c *mqlOciNetworkVcn) GetCidrBlock() *plugin.TValue[string] {
 	return &c.CidrBlock
 }
 
-func (c *mqlOciNetworkVcn) GetCidrBlocks() *plugin.TValue[[]interface{}] {
+func (c *mqlOciNetworkVcn) GetCidrBlocks() *plugin.TValue[[]any] {
 	return &c.CidrBlocks
 }
 
@@ -2283,8 +2283,8 @@ type mqlOciNetworkSecurityList struct {
 	Name plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
 	State plugin.TValue[string]
-	EgressSecurityRules plugin.TValue[[]interface{}]
-	IngressSecurityRules plugin.TValue[[]interface{}]
+	EgressSecurityRules plugin.TValue[[]any]
+	IngressSecurityRules plugin.TValue[[]any]
 }
 
 // createOciNetworkSecurityList creates a new instance of this resource
@@ -2344,11 +2344,11 @@ func (c *mqlOciNetworkSecurityList) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
-func (c *mqlOciNetworkSecurityList) GetEgressSecurityRules() *plugin.TValue[[]interface{}] {
+func (c *mqlOciNetworkSecurityList) GetEgressSecurityRules() *plugin.TValue[[]any] {
 	return &c.EgressSecurityRules
 }
 
-func (c *mqlOciNetworkSecurityList) GetIngressSecurityRules() *plugin.TValue[[]interface{}] {
+func (c *mqlOciNetworkSecurityList) GetIngressSecurityRules() *plugin.TValue[[]any] {
 	return &c.IngressSecurityRules
 }
 
@@ -2358,7 +2358,7 @@ type mqlOciObjectStorage struct {
 	__id string
 	// optional: if you define mqlOciObjectStorageInternal it will be used here
 	Namespace plugin.TValue[string]
-	Buckets plugin.TValue[[]interface{}]
+	Buckets plugin.TValue[[]any]
 }
 
 // createOciObjectStorage creates a new instance of this resource
@@ -2404,15 +2404,15 @@ func (c *mqlOciObjectStorage) GetNamespace() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlOciObjectStorage) GetBuckets() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Buckets, func() ([]interface{}, error) {
+func (c *mqlOciObjectStorage) GetBuckets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Buckets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.objectStorage", c.__id, "buckets")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]interface{}), nil
+				return d.Value.([]any), nil
 			}
 		}
 

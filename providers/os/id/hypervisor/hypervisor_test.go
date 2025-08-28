@@ -6,13 +6,13 @@ package hypervisor_test
 import (
 	"testing"
 
-	subject "go.mondoo.com/cnquery/v11/providers/os/id/hypervisor"
+	subject "go.mondoo.com/cnquery/v12/providers/os/id/hypervisor"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v11/providers/os/detector"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v12/providers/os/detector"
 )
 
 func TestHypervisorDarwinMachdepCpuFeatures(t *testing.T) {
