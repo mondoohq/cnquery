@@ -119,7 +119,7 @@ func (ctx *tester) TestQueryP(t *testing.T, query string, props mqlc.PropsHandle
 }
 
 func (ctx *tester) TestQuery(t *testing.T, query string) []*llx.RawResult {
-	return ctx.TestQueryP(t, query, nil)
+	return ctx.TestQueryP(t, query, mqlc.EmptyPropsHandler)
 }
 
 func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[string]*llx.Primitive) []*llx.RawResult {
@@ -362,7 +362,6 @@ func (ctx *tester) TestSimple(t *testing.T, tests []SimpleTest) {
 				require.NoError(t, data.Error)
 				assert.Equal(t, cur.Expectation, data.Value)
 			}
-
 		})
 	}
 }
