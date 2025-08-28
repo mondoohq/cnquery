@@ -91,7 +91,7 @@ func (p *Connection) EnsureLoaded() {
 				return
 			}
 			if err := p.LoadFile(f); err != nil {
-				log.Error().Err(err).Msg("tar> could not load tar file")
+				log.Error().Err(err).Str("file", f).Msg("tar> could not load tar file")
 				return
 			}
 		})
@@ -120,7 +120,7 @@ func (c *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	mode := stat.Mode()
 
 	return shared.FileInfoDetails{
-		Mode: shared.FileModeDetails{mode},
+		Mode: shared.FileModeDetails{FileMode: mode},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,

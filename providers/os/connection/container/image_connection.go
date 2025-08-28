@@ -23,37 +23,78 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/resources/discovery/container_registry"
 )
 
+const (
+	// used to cache the oci format tar file when the inventory requests to create it alongside the extracted file system tar
+	OPTION_FILE_OCI = "oci-path"
+	// tar the image in the format you get when running `docker save <image> > <image>.tar` containing layers and manifest.json
+	INCLUDE_OCI_TAR_OPT_KEY = "include-oci-tar"
+)
+
 // NewImageConnection uses a container image reference as input and creates a tar connection
-func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image) (*tar.Connection, error) {
+func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image, ref name.Reference) (*tar.Connection, error) {
 	// FIXME: DEPRECATED, remove in v12.0 vv
 	// The DelayDiscovery flag should always be set from v12
 	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
 		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
 	}
 	// ^^
-	f, err := tmp.File()
+	extractedFsTar, err := tmp.File()
 	if err != nil {
 		return nil, err
 	}
+	conf.Options[tar.OPTION_FILE] = extractedFsTar.Name()
 
-	conf.Options[tar.OPTION_FILE] = f.Name()
+	var ociTar *os.File
+	if includeOciTar(conf) {
+		ociTar, err = tmp.File()
+		if err != nil {
+			return nil, err
+		}
+		conf.Options[OPTION_FILE_OCI] = ociTar.Name()
+	}
 
 	return tar.NewConnection(id, conf, asset,
 		tar.WithFetchFn(func() (string, error) {
-			log.Debug().Msg("tar> starting image extract to temporary file")
-			err = tar.StreamToTmpFile(mutate.Extract(img), f)
+			log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> starting image extract to temporary file")
+			err = saveImgTarToTmp(extractedFsTar, ociTar, img, ref, includeOciTar(conf))
 			if err != nil {
-				_ = os.Remove(f.Name())
+				log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> failed to save image tar")
+				_ = os.Remove(extractedFsTar.Name())
+				if ociTar != nil {
+					_ = os.Remove(ociTar.Name())
+				}
 				return "", err
 			}
-			log.Debug().Msg("tar> extracted image to temporary file")
-			return f.Name(), nil
+
+			log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> extracted image to temporary file")
+			return extractedFsTar.Name(), nil
 		}),
 		tar.WithCloseFn(func() {
-			log.Debug().Str("tar", f.Name()).Msg("tar> remove temporary tar file on connection close")
-			_ = os.Remove(f.Name())
+			log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> remove temporary tar file on connection close")
+			_ = os.Remove(extractedFsTar.Name())
+			if ociTar != nil {
+				_ = os.Remove(ociTar.Name())
+			}
 		}),
 	)
+}
+
+func saveImgTarToTmp(extractedTarFile, ociTarFile *os.File, img v1.Image, ref name.Reference, includeOciTar bool) error {
+	err := tar.StreamToTmpFile(mutate.Extract(img), extractedTarFile)
+	if err != nil {
+		return err
+	}
+
+	if includeOciTar {
+		log.Debug().Str("oci_tar", ociTarFile.Name()).Msg("tar> saving image in oci format")
+		return tarball.Write(ref, img, ociTarFile)
+	}
+
+	return nil
+}
+
+func includeOciTar(conf *inventory.Config) bool {
+	return conf.Options[INCLUDE_OCI_TAR_OPT_KEY] == "true"
 }
 
 // NewRegistryImage loads a container image from a remote registry
@@ -77,7 +118,7 @@ func NewRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset)
 		conf.Options = map[string]string{}
 	}
 
-	conn, err := NewImageConnection(id, conf, asset, img)
+	conn, err := NewImageConnection(id, conf, asset, img, ref)
 	if err != nil {
 		return nil, err
 	}

@@ -227,6 +227,27 @@ func TryDetectAssetFromPath(connId uint32, path string, conf *inventory.Config, 
 		return nil, err
 	}
 
+	return tryDetectAsset(fsConn, path, conf, asset)
+}
+
+func TryDetectAssetFromFs(connId uint32, path string, conf *inventory.Config, asset *inventory.Asset, fileSystem afero.Fs) (*fs.FileSystemConnection, error) {
+	// create and initialize fs provider
+	conf.Options["path"] = path
+	fsConn, err := fs.NewFileSystemConnectionWithFs(connId, &inventory.Config{
+		Path:       path,
+		PlatformId: conf.PlatformId,
+		Options:    conf.Options,
+		Type:       "fs",
+		Record:     conf.Record,
+	}, asset, path, nil, fileSystem)
+	if err != nil {
+		return nil, err
+	}
+
+	return tryDetectAsset(fsConn, path, conf, asset)
+}
+
+func tryDetectAsset(fsConn *fs.FileSystemConnection, path string, conf *inventory.Config, asset *inventory.Asset) (*fs.FileSystemConnection, error) {
 	p, ok := detector.DetectOS(fsConn)
 	if !ok {
 		log.Debug().

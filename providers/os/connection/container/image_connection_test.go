@@ -78,7 +78,7 @@ func TestNewImageConnection_DelayDiscovery(t *testing.T) {
 	require.NoError(t, err)
 
 	inv := &inventory.Config{Options: map[string]string{}}
-	_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img)
+	_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img, ref)
 	require.NoError(t, err)
 	assert.True(t, inv.DelayDiscovery)
 }
@@ -91,9 +91,47 @@ func TestNewImageConnection_DisableDelayDiscovery(t *testing.T) {
 	require.NoError(t, err)
 
 	inv := &inventory.Config{Options: map[string]string{plugin.DISABLE_DELAYED_DISCOVERY_OPTION: "true"}}
-	_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img)
+	_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img, ref)
 	require.NoError(t, err)
 	assert.False(t, inv.DelayDiscovery)
+}
+
+func TestNewImageConnectionSetsOciTarFile(t *testing.T) {
+	t.Run("do not include oci does not set oci tar file opt", func(t *testing.T) {
+		err := cacheAlpine()
+		require.NoError(t, err, "should create tar without error")
+
+		ref, err := name.ParseReference(alpineImage, name.WeakValidation)
+		require.NoError(t, err)
+
+		img, err := tarball.ImageFromPath(alpineContainerPath, nil)
+		require.NoError(t, err)
+
+		inv := &inventory.Config{Options: map[string]string{
+			// flag not set
+		}}
+		_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img, ref)
+		require.NoError(t, err)
+		require.Empty(t, inv.Options[container.OPTION_FILE_OCI])
+	})
+
+	t.Run("include oci sets oci tar file opt", func(t *testing.T) {
+		err := cacheAlpine()
+		require.NoError(t, err, "should create tar without error")
+
+		ref, err := name.ParseReference(alpineImage, name.WeakValidation)
+		require.NoError(t, err)
+
+		img, err := tarball.ImageFromPath(alpineContainerPath, nil)
+		require.NoError(t, err)
+
+		inv := &inventory.Config{Options: map[string]string{
+			container.INCLUDE_OCI_TAR_OPT_KEY: "true",
+		}}
+		_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img, ref)
+		require.NoError(t, err)
+		require.NotEmpty(t, inv.Options[container.OPTION_FILE_OCI])
+	})
 }
 
 func TestImageConnections(t *testing.T) {
@@ -115,7 +153,7 @@ func TestImageConnections(t *testing.T) {
 		testfile: "/etc/alpine-release",
 	})
 
-	// create a connection to ta downloaded centos image
+	// create a connection to a downloaded centos image
 	err = cacheCentos()
 	require.NoError(t, err, "should create tar without error")
 	centosConn, err := container.NewFromTar(0, &inventory.Config{
@@ -229,12 +267,12 @@ func TestImageConnections(t *testing.T) {
 			t.Run("Test Files Find", func(t *testing.T) {
 				fs := conn.FileSystem()
 				fSearch := fs.(*tar.FS)
-
-				if test.testfile == "/etc/alpine-release" {
+				switch test.testfile {
+				case "/etc/alpine-release":
 					infos, err := fSearch.Find("/", regexp.MustCompile(`alpine-release`), "file", nil, nil)
 					require.NoError(t, err)
 					assert.Equal(t, 1, len(infos))
-				} else if test.testfile == "/etc/centos-release" {
+				case "/etc/centos-release":
 					infos, err := fSearch.Find("/", regexp.MustCompile(`centos-release`), "file", nil, nil)
 					require.NoError(t, err)
 					assert.Equal(t, 6, len(infos))
