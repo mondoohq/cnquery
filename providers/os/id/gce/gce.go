@@ -142,7 +142,10 @@ func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 			InstanceName string `json:"InstanceName"`
 			ZoneInfo     string `json:"ZoneInfo"`
 		}{}
-		json.Unmarshal([]byte(instanceDocument), &doc)
+		err = json.Unmarshal([]byte(instanceDocument), &doc)
+		if err != nil {
+			return Identity{}, errors.New("failed to parse JSON instance document")
+		}
 		zone := doc.ZoneInfo[strings.LastIndex(doc.ZoneInfo, "/")+1:]
 
 		return Identity{

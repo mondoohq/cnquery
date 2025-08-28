@@ -194,7 +194,12 @@ func (ge *GraphExecutor) Debug() {
 	}
 	defer f.Close()
 
-	f.WriteString("digraph \"resolvedpolicy\" {\n")
+	_, err = f.WriteString("digraph \"resolvedpolicy\" {\n")
+	if err != nil {
+		log.Error().Err(err).Msg("failed to write to debug graph file")
+		return
+	}
+
 	for k, n := range ge.nodes {
 		var shape string
 		label := fmt.Sprintf("priority\n%d\ntype\n%s\n", ge.priorityMap[k], n.nodeType)
@@ -223,12 +228,14 @@ func (ge *GraphExecutor) Debug() {
 			fmt.Fprintf(f, "\t%q -> %q\n", from, to)
 		}
 	}
-	f.WriteString("}")
+	_, err = f.WriteString("}")
+	if err != nil {
+		log.Error().Err(err).Msg("failed to write debug graph")
+		return
+	}
 
 	if err := f.Close(); err != nil {
 		log.Error().Err(err).Msg("failed to write debug graph")
 		return
 	}
-
-	return
 }

@@ -111,7 +111,10 @@ func refMapJSON(typ types.Type, data map[string]any, codeID string, bundle *Code
 		if val.Error != nil {
 			buf.WriteString(PrettyPrintString("Error: " + val.Error.Error()))
 		} else {
-			rawDataJSON(val.Type, val.Value, k, bundle, buf)
+			err = rawDataJSON(val.Type, val.Value, k, bundle, buf)
+			if err != nil {
+				return err
+			}
 		}
 
 		if i != last {
