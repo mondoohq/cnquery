@@ -11,7 +11,7 @@ go install apps/provider-scaffold/provider-scaffold.go
 ## Usage
 
 ```shell
-provider-scaffold --path providers/your-provider --provider-id your-provider --provider-name "Your Provider" --go-package go.mondoo.com/cnquery/v11/providers/your-provider
+provider-scaffold --path providers/your-provider --provider-id your-provider --provider-name "Your Provider" --go-package go.mondoo.com/cnquery/v12/providers/your-provider
 ```
 
 Now you have a full provider skeleton in `providers/your-provider` that you can start to implement.
