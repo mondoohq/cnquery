@@ -93,7 +93,7 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
 		for i, target := range targets {
-			if target == "auto" {
+			if target == DiscoveryAuto {
 				// remove the auto keyword
 				targets = slices.Delete(targets, i, i+1)
 			}

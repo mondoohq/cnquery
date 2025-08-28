@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"slices"
+
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
@@ -12,8 +14,6 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
-
-var ENABLE_FINE_GRAINED_ASSETS = false
 
 // Discovery Flags
 const (
@@ -63,6 +63,10 @@ var All = []string{
 	DiscoverySSMInstances,
 	DiscoveryECR,
 	DiscoveryECS,
+}
+
+func allDiscovery() []string {
+	return append(All, AllAPIResources...)
 }
 
 var Auto = []string{
@@ -138,7 +142,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 
 	awsAccount := res.(*mqlAwsAccount)
 
-	targets := handleTargets(conn.Conf.Discover.Targets)
+	targets := getDiscoveryTargets(conn.Conf)
 	for i := range targets {
 		target := targets[i]
 		list, err := discover(runtime, awsAccount, target, conn.Filters)
@@ -151,22 +155,26 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	return in, nil
 }
 
-func handleTargets(targets []string) []string {
-	if ENABLE_FINE_GRAINED_ASSETS {
-		return append(AllAPIResources, DiscoveryAccounts)
-	}
-	if len(targets) == 0 || stringx.Contains(targets, DiscoveryAuto) {
-		// default to auto if none defined
+func getDiscoveryTargets(config *inventory.Config) []string {
+	targets := config.Discover.Targets
+	if len(targets) == 0 {
 		return Auto
 	}
-
-	if stringx.Contains(targets, DiscoveryAll) {
-		return All
+	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
+		// return the All list + All Api Resources list
+		return allDiscovery()
 	}
-	if stringx.Contains(targets, DiscoveryResources) {
-		targets = remove(targets, DiscoveryResources)
-		targets = append(targets, AllAPIResources...)
+	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
+		for i, target := range targets {
+			if target == DiscoveryAuto {
+				// remove the auto keyword
+				targets = slices.Delete(targets, i, i+1)
+			}
+		}
+		// add in the required discovery targets
+		return append(targets, Auto...)
 	}
+	// random assortment of targets
 	return targets
 }
 
