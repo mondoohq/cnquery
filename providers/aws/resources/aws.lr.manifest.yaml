@@ -396,7 +396,6 @@ resources:
       comment: {}
       createdAt:
         min_mondoo_version: 9.0.0
-      createdTime: {}
       lastModifiedTime: {}
       name: {}
       runtime: {}
@@ -949,8 +948,6 @@ resources:
       backups: {}
       continuousBackups: {}
       createdAt:
-        min_mondoo_version: 9.0.0
-      createdTime:
         min_mondoo_version: 9.0.0
       deletionProtectionEnabled:
         min_mondoo_version: 9.0.0
@@ -1793,8 +1790,6 @@ resources:
         min_mondoo_version: 9.0.0
       createdAt:
         min_mondoo_version: 9.0.0
-      createdTime:
-        min_mondoo_version: 9.0.0
       dnsName: {}
       elbType:
         min_mondoo_version: 9.0.0
@@ -2578,8 +2573,6 @@ resources:
         min_mondoo_version: 9.0.0
       createdAt:
         min_mondoo_version: 9.0.0
-      createdTime:
-        min_mondoo_version: 9.0.0
       databaseInsightsMode:
         min_mondoo_version: 9.0.0
       deletionProtection:
@@ -2663,8 +2656,6 @@ resources:
       certificateExpiresAt:
         min_mondoo_version: latest
       createdAt:
-        min_mondoo_version: 9.0.0
-      createdTime:
         min_mondoo_version: 9.0.0
       customIamInstanceProfile:
         min_mondoo_version: latest
@@ -2939,8 +2930,6 @@ resources:
       arn: {}
       cors: {}
       createdAt:
-        min_mondoo_version: 9.0.0
-      createdTime:
         min_mondoo_version: 9.0.0
       defaultLock: {}
       encryption: {}
