@@ -10,7 +10,7 @@ require (
 	github.com/bradleyfalzon/ghinstallation/v2 v2.16.0
 	github.com/cockroachdb/errors v1.12.0
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-github/v72 v72.0.0
+	github.com/google/go-github/v74 v74.0.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/rs/zerolog v1.34.0
@@ -18,7 +18,6 @@ require (
 	go.mondoo.com/cnquery/v12 v12.0.0
 	go.mondoo.com/ranger-rpc v0.7.0
 	golang.org/x/oauth2 v0.30.0
-	google.golang.org/protobuf v1.36.6
 	sigs.k8s.io/yaml v1.5.0
 )
 
@@ -133,6 +132,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-containerregistry v0.20.6 // indirect
+	github.com/google/go-github/v72 v72.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
@@ -266,6 +266,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
