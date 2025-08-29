@@ -21,8 +21,6 @@ import (
 	"google.golang.org/api/cloudresourcemanager/v3"
 )
 
-var ENABLE_FINE_GRAINED_ASSETS = false
-
 const (
 	// Discovery flags
 	DiscoveryAuto = "auto"
