@@ -1,20 +1,15 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-//
-// In this file we introduce feature flags. They help us activate optional
-// features on requests.
-//
-// Features can only be activated, never deactivated. Features are efficiently encoded.
-// They are introduced at a given version and destined to be removed at a later version.
-// Please mark them accordingly. Feature flags are short term contextual information.
+// In this file we introduce feature flags.
+// - Please configure any new feature-flags in features.yaml
+// - To generate, use go generate. See the call to go:generate below
+// - To learn more about the generator, look at ./utils/featureflags/main.go header
 //
 // Example usage:
 //
 // features := []Feature{ MassResolver, LiveQueries }
-//
 // features.IsActive( MassResolver )   // true
-//
 
 package cnquery
 
