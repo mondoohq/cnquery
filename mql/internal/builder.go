@@ -43,8 +43,6 @@ type GraphBuilder struct {
 	// queryTimeout is the amount of time to wait for the underlying lumi
 	// runtime to send all the expected datapoints.
 	queryTimeout time.Duration
-
-	featureBoolAssertions bool
 }
 
 func NewBuilder() *GraphBuilder {
@@ -97,10 +95,6 @@ func (b *GraphBuilder) WithMondooVersion(mondooVersion string) {
 // WithMondooVersion sets the version of mondoo
 func (b *GraphBuilder) WithQueryTimeout(timeout time.Duration) {
 	b.queryTimeout = timeout
-}
-
-func (b *GraphBuilder) WithFeatureBoolAssertions(featureBoolAssertions bool) {
-	b.featureBoolAssertions = featureBoolAssertions
 }
 
 func (b *GraphBuilder) Build(schema resources.ResourcesSchema, runtime llx.Runtime, assetMrn string) (*GraphExecutor, error) {
