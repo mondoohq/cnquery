@@ -487,3 +487,69 @@ func TestCreatePackage(t *testing.T) {
 		assert.Equal(t, "GDR 2042 für SQL Server 2017 (KB5014354) (64-bit)", pkg.Name)
 	})
 }
+
+func TestFindAndUpdateMsExchangeSU_en(t *testing.T) {
+	// Setup: create a list of packages with Exchange CU and SU
+	packages := []Package{
+		// This is the version of the latest CU installed on the machine
+		{Name: "Microsoft Exchange Server", Version: "15.2.1748.10", PUrl: "pkg:windows/windows/Microsoft%20Exchange%20Server@15.2.1748.10?arch=AMD64"},
+		// This is a SU for the CU and updates only the CU version, not the main Exchange Server version
+		{Name: "Security Update for Exchange Server 2019 Cumulative Update 15 (KB5063221)", Version: "1", PUrl: "pkg:windows/windows/Security%20Update%20for%20Exchange%20Server%202019%20Cumulative%20Update%2015%20%28KB5063221%29@1?arch=AMD64"},
+		// We need this version
+		{Name: "Microsoft Exchange Server 2019 Cumulative Update 15", Version: "15.2.1748.36", PUrl: "pkg:windows/windows/Microsoft%20Exchange%20Server%202019%20Cumulative%20Update%2015@15.2.1748.36?arch=AMD64"},
+		{Name: "Not a hotfix", Version: "1.0.0", PUrl: "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86"},
+	}
+
+	expectedLatestVersion := "15.2.1748.36"
+	// Step 1: Find SQL Server hotfixes
+	cu := findExchangeCU(packages)
+	require.NotNil(t, cu)
+
+	// Step 2: Update SQL Server packages with the latest hotfix version
+	updated := updateExchangePackage(packages, *cu)
+
+	// Step 3: Check that the Exchange Server package has the updated version
+	pkg := findPkgByName(updated, "Microsoft Exchange Server")
+	require.NotNil(t, pkg)
+	require.Equal(t, expectedLatestVersion, pkg.Version)
+	assert.Equal(t, "pkg:windows/windows/Microsoft%20Exchange%20Server@"+expectedLatestVersion+"?arch=AMD64", pkg.PUrl)
+
+	// Step 5: Ensure non-SQL Server packages are unchanged
+	pkg = findPkgByName(updated, "Not a hotfix")
+	require.NotNil(t, pkg)
+	require.Equal(t, "1.0.0", pkg.Version)
+	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
+}
+
+func TestFindAndUpdateMsExchangeSU_de(t *testing.T) {
+	// Setup: create a list of packages with Exchange CU and SU
+	packages := []Package{
+		// This is the version of the latest CU installed on the machine
+		{Name: "Microsoft Exchange Server", Version: "15.2.1748.10", PUrl: "pkg:windows/windows/Microsoft%20Exchange%20Server@15.2.1748.10?arch=AMD64"},
+		// This is a SU for the CU and updates only the CU version, not the main Exchange Server version
+		{Name: "Security Update für Exchange Server 2019 Kumulatives Update 15 (KB5063221)", Version: "1", PUrl: "pkg:windows/windows/Security%20Update%20f%C3%BCr%20Exchange%20Server%202019%20Kumulatives%20Update%2015%20%28KB5063221%29@1?arch=AMD64"},
+		// We need this version
+		{Name: "Microsoft Exchange Server 2019 Kumulatives Update 15", Version: "15.2.1748.36", PUrl: "pkg:windows/windows/Microsoft%20Exchange%20Server%202019%20Kumulatives%20Update%2015@15.2.1748.36?arch=AMD64"},
+		{Name: "Not a hotfix", Version: "1.0.0", PUrl: "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86"},
+	}
+
+	expectedLatestVersion := "15.2.1748.36"
+	// Step 1: Find SQL Server hotfixes
+	cu := findExchangeCU(packages)
+	require.NotNil(t, cu)
+
+	// Step 2: Update SQL Server packages with the latest hotfix version
+	updated := updateExchangePackage(packages, *cu)
+
+	// Step 3: Check that the Exchange Server package has the updated version
+	pkg := findPkgByName(updated, "Microsoft Exchange Server")
+	require.NotNil(t, pkg)
+	require.Equal(t, expectedLatestVersion, pkg.Version)
+	assert.Equal(t, "pkg:windows/windows/Microsoft%20Exchange%20Server@"+expectedLatestVersion+"?arch=AMD64", pkg.PUrl)
+
+	// Step 5: Ensure non-SQL Server packages are unchanged
+	pkg = findPkgByName(updated, "Not a hotfix")
+	require.NotNil(t, pkg)
+	require.Equal(t, "1.0.0", pkg.Version)
+	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
+}

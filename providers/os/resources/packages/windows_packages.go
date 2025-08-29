@@ -73,6 +73,7 @@ var (
 	}
 
 	sqlGDRUpdateRegExp = regexp.MustCompile(`^GDR.\d+.+SQL.Server.\d+.\(KB\d+\)`)
+	exchangeCURegExp   = regexp.MustCompile(`^Microsoft Exchange Server.\d+.+Update.\d+$`)
 	sqlHotfixRegExp    = regexp.MustCompile(`^Hotfix.+SQL.Server`)
 	// Find the database engine package and use version as a reference for the update
 	msSqlServiceRegexp = regexp.MustCompile(`^SQL Server \d+ Database Engine Services$`)
@@ -591,6 +592,11 @@ func (w *WinPkgManager) List() ([]Package, error) {
 		pkgs = updateMsSqlPackages(pkgs, msSqlHotfixes[len(msSqlHotfixes)-1])
 	}
 
+	exchangeCU := findExchangeCU(pkgs)
+	if exchangeCU != nil {
+		pkgs = updateExchangePackage(pkgs, *exchangeCU)
+	}
+
 	pkgs = append(pkgs, hotfixAsPkgs...)
 	return pkgs, nil
 }
@@ -741,4 +747,32 @@ func createPackage(name, version, format, arch, publisher, installLocation strin
 	}
 
 	return pkg
+}
+
+// findExchangeCU returns the installed CU Exchange
+// When a SU is installed, the CU is updated to the SU version
+// But not the actual Exchange Server version
+// We need this package to update the Exchange Server version
+func findExchangeCU(packages []Package) *Package {
+	for _, p := range packages {
+		if exchangeCURegExp.MatchString(p.Name) {
+			return &p
+		}
+	}
+
+	return nil
+}
+
+// updateExchangePackage updates the version of the Exchange Server packages to the latest hotfix/security version
+func updateExchangePackage(pkgs []Package, latestExchangeCU Package) []Package {
+	// Find other SQL Server packages and update them to the latest hotfix version
+	for i, pkg := range pkgs {
+		if pkg.Name == "Microsoft Exchange Server" {
+			currentVersion := pkgs[i].Version
+			pkgs[i].Version = latestExchangeCU.Version
+			log.Debug().Str("package", pkg.Name).Str("version", latestExchangeCU.Version).Msg("Updated Exchange package")
+			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, latestExchangeCU.Version, 1)
+		}
+	}
+	return pkgs
 }
