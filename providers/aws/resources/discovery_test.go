@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"sort"
 	"testing"
 	"time"
 
@@ -71,4 +72,35 @@ func TestAddConnInfoToEc2Instances(t *testing.T) {
 	info.instanceTags = map[string]string{"testing-key": "testing-val"}
 	addMondooLabels(info, a)
 	require.Equal(t, a.Labels["testing-key"], "testing-val")
+}
+
+func TestGetDiscoveryTargets(t *testing.T) {
+	config := &inventory.Config{
+		Discover: &inventory.Discovery{
+			Targets: []string{},
+		},
+	}
+	// test all with other stuff
+	config.Discover.Targets = []string{"all", "projects", "instances"}
+	require.Equal(t, allDiscovery(), getDiscoveryTargets(config))
+
+	// test just all
+	config.Discover.Targets = []string{"all"}
+	require.Equal(t, allDiscovery(), getDiscoveryTargets(config))
+
+	// test auto with other stuff
+	config.Discover.Targets = []string{"auto", "s3-buckets", "iam-users"}
+	res := append(Auto, []string{DiscoveryS3Buckets, DiscoveryIAMUsers}...)
+	sort.Strings(res)
+	targets := getDiscoveryTargets(config)
+	sort.Strings(targets)
+	require.Equal(t, res, targets)
+
+	// test just auto
+	config.Discover.Targets = []string{"auto"}
+	require.Equal(t, Auto, getDiscoveryTargets(config))
+
+	// test random
+	config.Discover.Targets = []string{"s3-buckets", "iam-users", "instances"}
+	require.Equal(t, []string{DiscoveryS3Buckets, DiscoveryIAMUsers, DiscoveryInstances}, getDiscoveryTargets(config))
 }
