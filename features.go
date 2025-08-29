@@ -24,10 +24,10 @@ const (
 	// Enables discovery of Kubernetes cluster nodes as individual assets
 	// start:  v6.12
 	// end: unknown
-	// status: unknown
+	// status: sunset, should be done via discovery code instead
 	K8sNodeDiscovery Feature = 4
 
-	//
+	// Add context to assets for e.g. Terraform
 	// start:  v7.0
 	// end: v12.0
 	// status: new

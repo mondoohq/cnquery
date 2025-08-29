@@ -1,6 +1,24 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
+// Generate a go source file with feature-flags and helper vars.
+//
+// You configure feature-flags in YAML. Here is an example:
+//
+// - desc: Allows MQL to use variable references across blocks. Fully changes the compiled code.
+//   end: v7.0
+//   id: PiperCode
+//   start: v5.x
+//   status: default
+//   idx: 2           # optional, will be generated
+//
+// Status can be:
+// - builtin: features that are completed and have been built into the code, but shouldn't be used (or set) anymore
+// - sunset: features that are completed but have not been built into the code, please don't use them anymore
+// - new: features that are now available to be used and aren't active by default
+// - default: features that are available and turned on by default (you can still turn them off)
+// - unknown: try not to have any unknown features, we don't know what's going on with these but don't use them
+
 package main
 
 import (
@@ -18,17 +36,11 @@ type (
 		Features []*feature
 	}
 	feature struct {
-		Id    string `json:"id"`
-		Idx   int    `json:"idx"`
-		Start string `json:"start"`
-		End   string `json:"end,omitempty"`
-		Desc  string `json:"desc"`
-		// Status can be:
-		// - builtin: features that are completed and have been built into the code, but shouldn't be used (or set) anymore
-		// - sunset: features that are completed but have not been built into the code, please don't use them anymore
-		// - new: features that are now available to be used and aren't active by default
-		// - default: features that are available and turned on by default (you can still turn them off)
-		// - unknown: try not to have any unknown features, we don't know what's going on with these but don't use them
+		Id     string `json:"id"`
+		Idx    int    `json:"idx"`
+		Start  string `json:"start"`
+		End    string `json:"end,omitempty"`
+		Desc   string `json:"desc"`
 		Status string `json:"status,omitempty"`
 	}
 )
@@ -155,7 +167,7 @@ var AvailableFeatures = %ss{
 			out.WriteString("\tbyte(" + cur.Id + "),\n")
 		}
 	}
-	out.WriteString("}\n\n")
+	out.WriteString("}\n")
 
 	if outPath != "" {
 		err := os.WriteFile(outPath, []byte(out.String()), 0o644)

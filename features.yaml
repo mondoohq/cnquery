@@ -1,3 +1,6 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 Features:
 - desc: "Resolve similar queries the same way. If 100 assets have the same dependent
     queries and overrides, \nthey create the same resolved plan. Cannot be used with
@@ -25,8 +28,8 @@ Features:
   id: K8sNodeDiscovery
   idx: 4
   start: v6.12
-  status: unknown
-- desc: ""
+  status: sunset, should be done via discovery code instead
+- desc: Add context to assets for e.g. Terraform
   end: v12.0
   id: MQLAssetContext
   idx: 5
