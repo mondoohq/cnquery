@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v72/github"
+	"github.com/google/go-github/v74/github"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/github/connection"
 	"sigs.k8s.io/yaml"
