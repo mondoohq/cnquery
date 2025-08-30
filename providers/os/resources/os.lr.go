@@ -20,7 +20,6 @@ const (
 	ResourceAsset                      string = "asset"
 	ResourceAssetEol                   string = "asset.eol"
 	ResourceMondooEol                  string = "mondoo.eol"
-	ResourcePlatform                   string = "platform"
 	ResourceVulnmgmt                   string = "vulnmgmt"
 	ResourceVulnCve                    string = "vuln.cve"
 	ResourceVulnAdvisory               string = "vuln.advisory"
