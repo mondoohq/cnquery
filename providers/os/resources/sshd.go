@@ -204,7 +204,6 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 	if err != nil {
 		s.Params = plugin.TValue[map[string]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 		s.Blocks = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
-		s.Content = plugin.TValue[string]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 		s.Files = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 
 	} else {
@@ -215,8 +214,6 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 			return err
 		}
 		s.Blocks = plugin.TValue[[]any]{Data: blocks, State: plugin.StateIsSet}
-
-		s.Content = plugin.TValue[string]{Data: allContents.String(), State: plugin.StateIsSet}
 
 		files := make([]any, len(filesIdx))
 		i := 0
@@ -232,10 +229,6 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 
 func (s *mqlSshdConfig) files(file *mqlFile) ([]any, error) {
 	return nil, s.parse(file)
-}
-
-func (s *mqlSshdConfig) content(file *mqlFile) (string, error) {
-	return "", s.parse(file)
 }
 
 func (s *mqlSshdConfig) params(file *mqlFile) (map[string]any, error) {
