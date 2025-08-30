@@ -1124,7 +1124,6 @@ resources:
   windows:
     fields:
       computerInfo: {}
-      features: {}
       hotfixes: {}
       optionalFeatures:
         min_mondoo_version: 9.0.0
@@ -1149,21 +1148,6 @@ resources:
       protectionStatus: {}
       version: {}
     min_mondoo_version: 5.35.0
-  windows.feature:
-    fields:
-      description: {}
-      displayName: {}
-      installState: {}
-      installed: {}
-      name: {}
-      path: {}
-    is_private: true
-    min_mondoo_version: 5.15.0
-    snippets:
-    - query: windows.feature('SNMP-Service').installed
-      title: Check that a specific Windows Server feature is installed
-    - query: windows.feature('Windows-Defender').installed == false
-      title: Check that a specific Windows Server feature is not installed
   windows.firewall:
     fields:
       profiles: {}

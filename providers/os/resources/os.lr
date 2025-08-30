@@ -1514,9 +1514,6 @@ windows {
   // Hotfixes installed on the computer
   hotfixes() []windows.hotfix
 
-  // Deprecated. Use `windows.serverFeatures` instead
-  features() []windows.feature
-
   // Information about Windows Server roles, role services, and features that are available for installation and installed on a specified server.
   serverFeatures() []windows.serverFeature
 
@@ -1561,24 +1558,6 @@ windows.hotfix {
   installedOn time
   // User that installed the hotfix
   installedBy string
-}
-
-// Deprecated. Use `windows.serverFeature` instead
-// Windows feature resource
-private windows.feature {
-  init(name string)
-  // Feature full path
-  path string
-  // Command IDs of role, role service, or feature
-  name string
-  // Feature name
-  displayName string
-  // Feature description
-  description string
-  // Whether the feature is installed
-  installed bool
-  // Feature installation state
-  installState int
 }
 
 // Windows Server feature resource
