@@ -813,10 +813,6 @@ resources:
       path: {}
     is_private: true
     min_mondoo_version: latest
-  platform:
-    fields:
-      vulnerabilityReport: {}
-    min_mondoo_version: latest
   platform.advisories:
     fields:
       cvss: {}
