@@ -16,7 +16,7 @@ resources:
       state: {}
       updatedAt: {}
       url: {}
-    maturity: experimental
+    maturity: deprecated
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -40,7 +40,7 @@ resources:
       url: {}
       users: {}
       website: {}
-    maturity: experimental
+    maturity: deprecated
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -58,7 +58,7 @@ resources:
       sshKeys: {}
       updatedAt: {}
       url: {}
-    maturity: experimental
+    maturity: deprecated
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -75,7 +75,7 @@ resources:
       label: {}
       updatedAt: {}
       url: {}
-    maturity: experimental
+    maturity: deprecated
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -101,7 +101,7 @@ resources:
       updatedAt: {}
       url: {}
     is_private: true
-    maturity: experimental
+    maturity: deprecated
     min_mondoo_version: 5.15.0
     platform:
       name:
