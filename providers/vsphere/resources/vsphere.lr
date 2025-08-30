@@ -104,14 +104,6 @@ private vsphere.license @defaults("name") {
   used int
 }
 
-// VMware ESXi resource
-esxi {
-  // Current targeted ESXi host
-  host() vsphere.host
-  // Current targeted virtual machine
-  vm() vsphere.vm
-}
-
 // vSphere datacenter inventory
 private vsphere.datacenter @defaults("moid name") {
   // vSphere managed object ID
@@ -263,6 +255,9 @@ private vsphere.vmknic @defaults("name") {
   // Network interface tag
   tags []string
 }
+
+// VMware ESXi resource
+esxi {}
 
 // Run a command on ESXi
 esxi.command {

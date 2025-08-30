@@ -291,12 +291,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.license.used": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereLicense).GetUsed()).ToDataRes(types.Int)
 	},
-	"esxi.host": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlEsxi).GetHost()).ToDataRes(types.Resource("vsphere.host"))
-	},
-	"esxi.vm": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlEsxi).GetVm()).ToDataRes(types.Resource("vsphere.vm"))
-	},
 	"vsphere.datacenter.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatacenter).GetMoid()).ToDataRes(types.String)
 	},
@@ -749,14 +743,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlEsxi).__id, ok = v.Value.(string)
 			return
 		},
-	"esxi.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxi).Host, ok = plugin.RawToTValue[*mqlVsphereHost](v.Value, v.Error)
-		return
-	},
-	"esxi.vm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxi).Vm, ok = plugin.RawToTValue[*mqlVsphereVm](v.Value, v.Error)
-		return
-	},
 	"vsphere.datacenter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlVsphereDatacenter).__id, ok = v.Value.(string)
 			return
@@ -1796,8 +1782,6 @@ type mqlEsxi struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlEsxiInternal it will be used here
-	Host plugin.TValue[*mqlVsphereHost]
-	Vm plugin.TValue[*mqlVsphereVm]
 }
 
 // createEsxi creates a new instance of this resource
@@ -1835,38 +1819,6 @@ func (c *mqlEsxi) MqlName() string {
 
 func (c *mqlEsxi) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlEsxi) GetHost() *plugin.TValue[*mqlVsphereHost] {
-	return plugin.GetOrCompute[*mqlVsphereHost](&c.Host, func() (*mqlVsphereHost, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("esxi", c.__id, "host")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlVsphereHost), nil
-			}
-		}
-
-		return c.host()
-	})
-}
-
-func (c *mqlEsxi) GetVm() *plugin.TValue[*mqlVsphereVm] {
-	return plugin.GetOrCompute[*mqlVsphereVm](&c.Vm, func() (*mqlVsphereVm, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("esxi", c.__id, "vm")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlVsphereVm), nil
-			}
-		}
-
-		return c.vm()
-	})
 }
 
 // mqlVsphereDatacenter for the vsphere.datacenter resource
