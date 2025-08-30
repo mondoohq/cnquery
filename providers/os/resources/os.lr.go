@@ -31,10 +31,6 @@ func init() {
 			// to override args, implement: initMondooEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMondooEol,
 		},
-		"platform.eol": {
-			Init: initPlatformEol,
-			Create: createPlatformEol,
-		},
 		"platform": {
 			// to override args, implement: initPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPlatform,
@@ -653,15 +649,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mondoo.eol.date": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooEol).GetDate()).ToDataRes(types.Time)
-	},
-	"platform.eol.docsUrl": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPlatformEol).GetDocsUrl()).ToDataRes(types.String)
-	},
-	"platform.eol.productUrl": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPlatformEol).GetProductUrl()).ToDataRes(types.String)
-	},
-	"platform.eol.date": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPlatformEol).GetDate()).ToDataRes(types.Time)
 	},
 	"platform.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPlatform).GetVulnerabilityReport()).ToDataRes(types.Dict)
@@ -2644,22 +2631,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"mondoo.eol.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"platform.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPlatformEol).__id, ok = v.Value.(string)
-			return
-		},
-	"platform.eol.docsUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatformEol).DocsUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"platform.eol.productUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatformEol).ProductUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"platform.eol.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatformEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"platform.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5945,60 +5916,6 @@ func (c *mqlMondooEol) GetDate() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.Date, func() (*time.Time, error) {
 		return c.date()
 	})
-}
-
-// mqlPlatformEol for the platform.eol resource
-type mqlPlatformEol struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	// optional: if you define mqlPlatformEolInternal it will be used here
-	DocsUrl plugin.TValue[string]
-	ProductUrl plugin.TValue[string]
-	Date plugin.TValue[*time.Time]
-}
-
-// createPlatformEol creates a new instance of this resource
-func createPlatformEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlPlatformEol{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("platform.eol", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlPlatformEol) MqlName() string {
-	return "platform.eol"
-}
-
-func (c *mqlPlatformEol) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlPlatformEol) GetDocsUrl() *plugin.TValue[string] {
-	return &c.DocsUrl
-}
-
-func (c *mqlPlatformEol) GetProductUrl() *plugin.TValue[string] {
-	return &c.ProductUrl
-}
-
-func (c *mqlPlatformEol) GetDate() *plugin.TValue[*time.Time] {
-	return &c.Date
 }
 
 // mqlPlatform for the platform resource
