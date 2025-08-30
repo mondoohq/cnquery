@@ -287,9 +287,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vcd.networkPool.networkPoolType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVcdNetworkPool).GetNetworkPoolType()).ToDataRes(types.Int)
 	},
-	"vcd.externalNetwork.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVcdExternalNetwork).GetId()).ToDataRes(types.String)
-	},
 	"vcd.externalNetwork.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVcdExternalNetwork).GetName()).ToDataRes(types.String)
 	},
@@ -721,10 +718,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlVcdExternalNetwork).__id, ok = v.Value.(string)
 			return
 		},
-	"vcd.externalNetwork.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcdExternalNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"vcd.externalNetwork.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdExternalNetwork).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1645,7 +1638,6 @@ type mqlVcdExternalNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlVcdExternalNetworkInternal
-	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Urn plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -1663,12 +1655,7 @@ func createVcdExternalNetwork(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("vcd.externalNetwork", res.__id)
@@ -1687,10 +1674,6 @@ func (c *mqlVcdExternalNetwork) MqlName() string {
 
 func (c *mqlVcdExternalNetwork) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlVcdExternalNetwork) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlVcdExternalNetwork) GetName() *plugin.TValue[string] {
