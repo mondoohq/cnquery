@@ -383,8 +383,6 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 		}
 
 		mqlSettings, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings", map[string]*llx.RawData{
-			"projectId":                   llx.StringData(projectId),
-			"instanceName":                llx.StringData(instance.Name),
 			"activationPolicy":            llx.StringData(s.ActivationPolicy),
 			"activeDirectoryConfig":       llx.DictData(mqlADCfg),
 			"availabilityType":            llx.StringData(s.AvailabilityType),
@@ -392,18 +390,20 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			"collation":                   llx.StringData(s.Collation),
 			"connectorEnforcement":        llx.StringData(s.ConnectorEnforcement),
 			"crashSafeReplicationEnabled": llx.BoolData(s.CrashSafeReplicationEnabled),
-			"dataDiskSizeGb":              llx.IntData(s.DataDiskSizeGb),
-			"dataDiskType":                llx.StringData(s.DataDiskType),
 			"databaseFlags":               llx.MapData(convert.MapToInterfaceMap(dbFlags), types.String),
 			"databaseReplicationEnabled":  llx.BoolData(s.DatabaseReplicationEnabled),
+			"dataDiskSizeGb":              llx.IntData(s.DataDiskSizeGb),
+			"dataDiskType":                llx.StringData(s.DataDiskType),
 			"deletionProtectionEnabled":   llx.BoolData(s.DeletionProtectionEnabled),
 			"denyMaintenancePeriods":      llx.ArrayData(mqlDenyMaintenancePeriods, types.Resource("gcp.project.sqlService.instance.settings.denyMaintenancePeriod")),
 			"insightsConfig":              llx.DictData(mqlInsightsConfig),
+			"instanceName":                llx.StringData(instance.Name),
 			"ipConfiguration":             llx.DictData(mqlIpCfg),
 			"locationPreference":          llx.DictData(mqlLocationP),
 			"maintenanceWindow":           llx.ResourceData(mqlMaintenanceWindow, "gcp.project.sqlService.instance.settings.maintenanceWindow"),
 			"passwordValidationPolicy":    llx.ResourceData(mqlPwdValidationPolicy, "gcp.project.sqlService.instance.settings.passwordValidationPolicy"),
 			"pricingPlan":                 llx.StringData(s.PricingPlan),
+			"projectId":                   llx.StringData(projectId),
 			"replicationType":             llx.StringData(s.ReplicationType),
 			"settingsVersion":             llx.IntData(s.SettingsVersion),
 			"sqlServerAuditConfig":        llx.DictData(mqlSqlServerAuditCfg),
@@ -418,12 +418,10 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 		}
 
 		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance", map[string]*llx.RawData{
-			"projectId":                    llx.StringData(projectId),
 			"availableMaintenanceVersions": llx.ArrayData(convert.SliceAnyToInterface(instance.AvailableMaintenanceVersions), types.String),
 			"backendType":                  llx.StringData(instance.BackendType),
 			"connectionName":               llx.StringData(instance.ConnectionName),
 			"created":                      llx.TimeDataPtr(parseTime(instance.CreateTime)),
-			"currentDiskSize":              llx.IntData(instance.CurrentDiskSize),
 			"databaseInstalledVersion":     llx.StringData(instance.DatabaseInstalledVersion),
 			"databaseVersion":              llx.StringData(instance.DatabaseVersion),
 			"diskEncryptionConfiguration":  llx.DictData(mqlEncCfg),
@@ -436,13 +434,12 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			"masterInstanceName":           llx.StringData(instance.MasterInstanceName),
 			"maxDiskSize":                  llx.IntData(instance.MaxDiskSize),
 			"name":                         llx.StringData(instance.Name),
-			// ref project
-			"project":                    llx.StringData(instance.Project),
-			"region":                     llx.StringData(instance.Region),
-			"replicaNames":               llx.ArrayData(convert.SliceAnyToInterface(instance.ReplicaNames), types.String),
-			"settings":                   llx.ResourceData(mqlSettings, "gcp.project.sqlService.instance.settings"),
-			"serviceAccountEmailAddress": llx.StringData(instance.ServiceAccountEmailAddress),
-			"state":                      llx.StringData(instance.State),
+			"projectId":                    llx.StringData(projectId),
+			"region":                       llx.StringData(instance.Region),
+			"replicaNames":                 llx.ArrayData(convert.SliceAnyToInterface(instance.ReplicaNames), types.String),
+			"serviceAccountEmailAddress":   llx.StringData(instance.ServiceAccountEmailAddress),
+			"settings":                     llx.ResourceData(mqlSettings, "gcp.project.sqlService.instance.settings"),
+			"state":                        llx.StringData(instance.State),
 		})
 		if err != nil {
 			return nil, err
