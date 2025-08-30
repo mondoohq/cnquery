@@ -510,8 +510,6 @@ parse.certificates {
 parse.openpgp {
   []network.openpgp.entity(content)
   init(path string)
-  // Deprecated; use file.path instead
-  path string
   // OpenPGP file
   file file
   // OpenPGP file content
