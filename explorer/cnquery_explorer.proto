@@ -161,13 +161,6 @@ message Mquery {
   Action action = 41;
 }
 
-enum ServerFeature {
-  // Default value, should not be used
-  SERVER_FEATURE_UNSPECIFIED = 0;
-  // StoreResourcesData as structure recording data
-  STORE_RESOURCES_DATA = 1;
-}
-
 // protolint:disable ENUM_FIELD_NAMES_PREFIX
 // protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
 enum ScoringSystem {
@@ -378,6 +371,17 @@ message PropsReq {
 message ResolveReq {
   string entity_mrn = 1;
   repeated Mquery asset_filters = 2;
+}
+
+// ServerFeature which tells us if the upstream endpoint can handle certain
+// requests and data. Usually proto handles missing fields etc really well,
+// but we are also trying to avoid work on the client or sending large
+// amounts of data to the server that aren't necessary.
+enum ServerFeature {
+  // Default value, should not be used
+  SERVER_FEATURE_UNSPECIFIED = 0;
+  // StoreResourcesData as structure recording data
+  STORE_RESOURCES_DATA = 1;
 }
 
 // ResolvedPack is returned from a resolve request. It includes the execution

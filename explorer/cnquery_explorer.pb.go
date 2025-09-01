@@ -87,54 +87,6 @@ func (Action) EnumDescriptor() ([]byte, []int) {
 	return file_cnquery_explorer_proto_rawDescGZIP(), []int{0}
 }
 
-type ServerFeature int32
-
-const (
-	// Default value, should not be used
-	ServerFeature_SERVER_FEATURE_UNSPECIFIED ServerFeature = 0
-	// StoreResourcesData as structure recording data
-	ServerFeature_STORE_RESOURCES_DATA ServerFeature = 1
-)
-
-// Enum value maps for ServerFeature.
-var (
-	ServerFeature_name = map[int32]string{
-		0: "SERVER_FEATURE_UNSPECIFIED",
-		1: "STORE_RESOURCES_DATA",
-	}
-	ServerFeature_value = map[string]int32{
-		"SERVER_FEATURE_UNSPECIFIED": 0,
-		"STORE_RESOURCES_DATA":       1,
-	}
-)
-
-func (x ServerFeature) Enum() *ServerFeature {
-	p := new(ServerFeature)
-	*p = x
-	return p
-}
-
-func (x ServerFeature) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (ServerFeature) Descriptor() protoreflect.EnumDescriptor {
-	return file_cnquery_explorer_proto_enumTypes[1].Descriptor()
-}
-
-func (ServerFeature) Type() protoreflect.EnumType {
-	return &file_cnquery_explorer_proto_enumTypes[1]
-}
-
-func (x ServerFeature) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use ServerFeature.Descriptor instead.
-func (ServerFeature) EnumDescriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{1}
-}
-
 // protolint:disable ENUM_FIELD_NAMES_PREFIX
 // protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
 type ScoringSystem int32
@@ -207,11 +159,11 @@ func (x ScoringSystem) String() string {
 }
 
 func (ScoringSystem) Descriptor() protoreflect.EnumDescriptor {
-	return file_cnquery_explorer_proto_enumTypes[2].Descriptor()
+	return file_cnquery_explorer_proto_enumTypes[1].Descriptor()
 }
 
 func (ScoringSystem) Type() protoreflect.EnumType {
-	return &file_cnquery_explorer_proto_enumTypes[2]
+	return &file_cnquery_explorer_proto_enumTypes[1]
 }
 
 func (x ScoringSystem) Number() protoreflect.EnumNumber {
@@ -220,6 +172,58 @@ func (x ScoringSystem) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ScoringSystem.Descriptor instead.
 func (ScoringSystem) EnumDescriptor() ([]byte, []int) {
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{1}
+}
+
+// ServerFeature which tells us if the upstream endpoint can handle certain
+// requests and data. Usually proto handles missing fields etc really well,
+// but we are also trying to avoid work on the client or sending large
+// amounts of data to the server that aren't necessary.
+type ServerFeature int32
+
+const (
+	// Default value, should not be used
+	ServerFeature_SERVER_FEATURE_UNSPECIFIED ServerFeature = 0
+	// StoreResourcesData as structure recording data
+	ServerFeature_STORE_RESOURCES_DATA ServerFeature = 1
+)
+
+// Enum value maps for ServerFeature.
+var (
+	ServerFeature_name = map[int32]string{
+		0: "SERVER_FEATURE_UNSPECIFIED",
+		1: "STORE_RESOURCES_DATA",
+	}
+	ServerFeature_value = map[string]int32{
+		"SERVER_FEATURE_UNSPECIFIED": 0,
+		"STORE_RESOURCES_DATA":       1,
+	}
+)
+
+func (x ServerFeature) Enum() *ServerFeature {
+	p := new(ServerFeature)
+	*p = x
+	return p
+}
+
+func (x ServerFeature) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ServerFeature) Descriptor() protoreflect.EnumDescriptor {
+	return file_cnquery_explorer_proto_enumTypes[2].Descriptor()
+}
+
+func (ServerFeature) Type() protoreflect.EnumType {
+	return &file_cnquery_explorer_proto_enumTypes[2]
+}
+
+func (x ServerFeature) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ServerFeature.Descriptor instead.
+func (ServerFeature) EnumDescriptor() ([]byte, []int) {
 	return file_cnquery_explorer_proto_rawDescGZIP(), []int{2}
 }
 
@@ -3435,10 +3439,7 @@ const file_cnquery_explorer_proto_rawDesc = "" +
 	"\bACTIVATE\x10\x03\x12\n" +
 	"\n" +
 	"\x06IGNORE\x10\x04\x12\x10\n" +
-	"\fOUT_OF_SCOPE\x10\x05*I\n" +
-	"\rServerFeature\x12\x1e\n" +
-	"\x1aSERVER_FEATURE_UNSPECIFIED\x10\x00\x12\x18\n" +
-	"\x14STORE_RESOURCES_DATA\x10\x01*\x96\x01\n" +
+	"\fOUT_OF_SCOPE\x10\x05*\x96\x01\n" +
 	"\rScoringSystem\x12\x17\n" +
 	"\x13SCORING_UNSPECIFIED\x10\x00\x12\f\n" +
 	"\bWEIGHTED\x10\x01\x12\t\n" +
@@ -3449,7 +3450,10 @@ const file_cnquery_explorer_proto_rawDesc = "" +
 	"\n" +
 	"\x06BANDED\x10\x06\x12\v\n" +
 	"\aDECAYED\x10\a\x12\f\n" +
-	"\bDISABLED\x10\b2\xb1\x04\n" +
+	"\bDISABLED\x10\b*I\n" +
+	"\rServerFeature\x12\x1e\n" +
+	"\x1aSERVER_FEATURE_UNSPECIFIED\x10\x00\x12\x18\n" +
+	"\x14STORE_RESOURCES_DATA\x10\x012\xb1\x04\n" +
 	"\bQueryHub\x12@\n" +
 	"\tSetBundle\x12\x18.cnquery.explorer.Bundle\x1a\x17.cnquery.explorer.Empty\"\x00\x12C\n" +
 	"\x0fDeleteQueryPack\x12\x15.cnquery.explorer.Mrn\x1a\x17.cnquery.explorer.Empty\"\x00\x12E\n" +
@@ -3485,8 +3489,8 @@ var file_cnquery_explorer_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_cnquery_explorer_proto_msgTypes = make([]protoimpl.MessageInfo, 61)
 var file_cnquery_explorer_proto_goTypes = []any{
 	(Action)(0),                              // 0: cnquery.explorer.Action
-	(ServerFeature)(0),                       // 1: cnquery.explorer.ServerFeature
-	(ScoringSystem)(0),                       // 2: cnquery.explorer.ScoringSystem
+	(ScoringSystem)(0),                       // 1: cnquery.explorer.ScoringSystem
+	(ServerFeature)(0),                       // 2: cnquery.explorer.ServerFeature
 	(AssignmentDelta_Action)(0),              // 3: cnquery.explorer.AssignmentDelta.Action
 	(*Bundle)(nil),                           // 4: cnquery.explorer.Bundle
 	(*QueryGroup)(nil),                       // 5: cnquery.explorer.QueryGroup
@@ -3583,7 +3587,7 @@ var file_cnquery_explorer_proto_depIdxs = []int32{
 	7,  // 24: cnquery.explorer.Mquery.variants:type_name -> cnquery.explorer.ObjectRef
 	0,  // 25: cnquery.explorer.Mquery.action:type_name -> cnquery.explorer.Action
 	45, // 26: cnquery.explorer.Impact.value:type_name -> cnquery.explorer.ImpactValue
-	2,  // 27: cnquery.explorer.Impact.scoring:type_name -> cnquery.explorer.ScoringSystem
+	1,  // 27: cnquery.explorer.Impact.scoring:type_name -> cnquery.explorer.ScoringSystem
 	0,  // 28: cnquery.explorer.Impact.action:type_name -> cnquery.explorer.Action
 	19, // 29: cnquery.explorer.MqueryDocs.refs:type_name -> cnquery.explorer.MqueryRef
 	16, // 30: cnquery.explorer.MqueryDocs.remediation:type_name -> cnquery.explorer.Remediation
@@ -3598,7 +3602,7 @@ var file_cnquery_explorer_proto_depIdxs = []int32{
 	12, // 39: cnquery.explorer.ResolveReq.asset_filters:type_name -> cnquery.explorer.Mquery
 	20, // 40: cnquery.explorer.ResolvedPack.execution_job:type_name -> cnquery.explorer.ExecutionJob
 	12, // 41: cnquery.explorer.ResolvedPack.filters:type_name -> cnquery.explorer.Mquery
-	1,  // 42: cnquery.explorer.ResolvedPack.features:type_name -> cnquery.explorer.ServerFeature
+	2,  // 42: cnquery.explorer.ResolvedPack.features:type_name -> cnquery.explorer.ServerFeature
 	12, // 43: cnquery.explorer.UpdateAssetJobsReq.asset_filters:type_name -> cnquery.explorer.Mquery
 	55, // 44: cnquery.explorer.StoreResultsReq.data:type_name -> cnquery.explorer.StoreResultsReq.DataEntry
 	56, // 45: cnquery.explorer.StoreResultsReq.resources:type_name -> cnquery.explorer.StoreResultsReq.ResourcesEntry

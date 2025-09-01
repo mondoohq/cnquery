@@ -16,7 +16,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12"
 	"go.mondoo.com/cnquery/v12/checksums"
-	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/mqlc"
 	"go.mondoo.com/cnquery/v12/mrn"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
@@ -402,9 +401,8 @@ func (c *bundleCache) error() error {
 }
 
 func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
-	propsCache := map[string]PropertyRef{}
 	for i := range queries {
-		c.precompileQuery(queries[i], pack, propsCache)
+		c.precompileQuery(queries[i], pack)
 	}
 
 	// After the first pass we may have errors. We try to collect as many errors
@@ -416,7 +414,7 @@ func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
 	}
 
 	for i := range queries {
-		c.compileQuery(queries[i], propsCache)
+		c.compileQuery(queries[i])
 	}
 
 	// The second pass on errors is done after we have compiled as much as possible.
@@ -427,7 +425,7 @@ func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
 
 // precompileQuery indexes the query, turns UIDs into MRNs, compiles properties
 // and filters, and pre-processes variants. Also makes sure the query isn't nil.
-func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack, propsCache map[string]PropertyRef) {
+func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 	if query == nil {
 		c.errors = append(c.errors, errors.New("received null query"))
 		return
@@ -458,14 +456,6 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack, propsCache
 		c.lookupQuery[query.Mrn] = query
 	}
 
-	// ensure MRNs for properties
-	for i := range query.Props {
-		if err := c.compileProp(query.Mrn, query.Props[i], propsCache); err != nil {
-			c.errors = append(c.errors, errors.New("failed to compile properties for query "+query.Mrn))
-			return
-		}
-	}
-
 	// filters have no dependencies, so we can compile them early
 	if err := query.Filters.Compile(c.ownerMrn, c.conf.CompilerConfig); err != nil {
 		c.errors = append(c.errors, errors.New("failed to compile filters for query "+query.Mrn))
@@ -494,60 +484,25 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack, propsCache
 	}
 }
 
-type propsHandler struct {
-	queryCache map[string]PropertyRef
-	packCache  map[string]PropertyRef
-	query      *Mquery
-}
-
-func (p *propsHandler) Available() map[string]*llx.Primitive {
-	res := make(map[string]*llx.Primitive, len(p.queryCache))
-	for k, v := range p.queryCache {
-		res[k] = &llx.Primitive{Type: v.Property.Type}
-	}
-	return res
-}
-
-func (p *propsHandler) All() map[string]*llx.Primitive {
-	// note: this allocates possibly too much space, because we don't need as much
-	// but the call is in errors and auto-complete, so it's rarer
-	res := make(map[string]*llx.Primitive, len(p.queryCache)+len(p.packCache))
-	for k, v := range p.packCache {
-		res[k] = &llx.Primitive{Type: v.Property.Type}
-	}
-	for k, v := range p.queryCache {
-		res[k] = &llx.Primitive{Type: v.Property.Type}
-	}
-	return res
-}
-
-func (p *propsHandler) Get(name string) *llx.Primitive {
-	// Property lookup happens on 2 layers:
-	// 1. the property is part of the query definition, we are ll set
-	// 2. the property is part of the pack definition, then we have to add it to the query
-	ref, ok := p.queryCache[name]
-	if ok {
-		return &llx.Primitive{Type: ref.Property.Type}
-	}
-
-	ref, ok = p.packCache[name]
-	if !ok {
-		return nil
-	}
-	p.query.Props = append(p.query.Props, ref.Property)
-	return &llx.Primitive{Type: ref.Property.Type}
-}
-
 // Note: you only want to run this, after you are sure that all connected
 // dependencies have been processed. Properties must be compiled. Connected
 // queries may not be ready yet, but we have to have precompiled them.
-func (c *bundleCache) compileQuery(query *Mquery, propsCache map[string]PropertyRef) {
-	props := &propsHandler{
-		queryCache: propsCache,
-		packCache:  c.lookupProps,
-		query:      query,
+func (c *bundleCache) compileQuery(query *Mquery) {
+	props := &PropsResolver{
+		QueryCache:  map[string]PropertyRef{},
+		GlobalCache: c.lookupProps,
+		Query:       query,
 	}
 
+	// ensure MRNs for properties
+	for i := range query.Props {
+		if err := c.compileProp(query.Mrn, query.Props[i], props.QueryCache); err != nil {
+			c.errors = append(c.errors, errors.New("failed to compile properties for query "+query.Mrn))
+			return
+		}
+	}
+
+	// now that everything is updated, we can update checksums and compile
 	_, err := query.RefreshChecksumAndType(c.lookupQuery, props, c.conf.CompilerConfig)
 	if err != nil {
 		if c.conf.RemoveFailing {
