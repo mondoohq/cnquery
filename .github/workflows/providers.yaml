@@ -1,18 +1,18 @@
-name: 'Build & Release Providers'
+name: "Build & Release Providers"
 
 on:
   push:
-    branches: ['main']
-    paths: ['providers/**']
+    branches: ["main"]
+    paths: ["providers/**"]
   workflow_dispatch:
     inputs:
       build_all:
-        description: 'Force build all providers'
+        description: "Force build all providers"
         type: boolean
         required: false
         default: false
       skip_publish:
-        description: 'Skip publishing'
+        description: "Skip publishing"
         type: boolean
         required: false
         default: false
@@ -21,7 +21,6 @@ on:
         required: false
         default: false
         type: boolean
-
 
 env:
   BUCKET: releases-us.mondoo.io
@@ -103,9 +102,9 @@ jobs:
     environment: prod
     timeout-minutes: 120
     permissions:
-      contents: 'read'
+      contents: "read"
       # Add "id-token" for OIDC Azure Login
-      id-token: 'write'
+      id-token: "write"
     needs: scoping
     if: ${{ needs.scoping.outputs.build_list != '[]' }}
     strategy:
@@ -134,16 +133,16 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.protoc-version }}
 
-      - name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093' # v3.0.0
+      - name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093" # v3.0.0
         with:
           credentials_json: ${{ secrets.GCP_RELEASE_SERVICE_ACCOUNT}}
 
-      - name: 'Set up gcloud CLI'
-        uses: 'google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db' # v3.0.1
+      - name: "Set up gcloud CLI"
+        uses: "google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db" # v3.0.1
 
-# jsign and azure-cli are both requirements for Azure Trusted Signing and these actions to authenticate
-# These packages have been installed on the self-hosted runner using ansible from the private repo
+      # jsign and azure-cli are both requirements for Azure Trusted Signing and these actions to authenticate
+      # These packages have been installed on the self-hosted runner using ansible from the private repo
 
       - name: Azure login
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
@@ -166,12 +165,12 @@ jobs:
           echo "Access token prefix: ${PREFIX}..."
           echo "TSIGN_ACCESS_TOKEN=$TSIGN_ACCESS_TOKEN" >> $GITHUB_OUTPUT
 
-      - name: 'Build dependencies'
+      - name: "Build dependencies"
         run: |
           make providers/proto
           go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
-      - name: 'Build Provider'
+      - name: "Build Provider"
         id: build-providers
         run: |
           rm -rf ./dist
@@ -182,7 +181,7 @@ jobs:
           TSIGN_CERT_PROFILE_NAME: ${{ github.event.inputs.use-test-cert == 'true' && vars.TSIGN_TEST_CERT_PROFILE_NAME || vars.TSIGN_CERT_PROFILE_NAME }}
           TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.TSIGN_ACCESS_TOKEN }}
 
-      - name: 'Publish Provider'
+      - name: "Publish Provider"
         if: ${{ ! inputs.skip_publish }}
         run: |
           for pkg in $(ls dist | cut -f1,2 -d_ | uniq); do
@@ -195,7 +194,7 @@ jobs:
             gsutil -m cp -c dist/${pkg}_SHA256SUMS gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
           done
 
-      - name: 'Save Artifacts'
+      - name: "Save Artifacts"
         if: ${{ inputs.skip_publish }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -244,3 +243,6 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
           repository: "mondoohq/releasr"
           event-type: reindex
+          client-payload: '{
+            "reindex-path": "providers"
+            }'
