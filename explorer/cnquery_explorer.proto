@@ -161,6 +161,13 @@ message Mquery {
   Action action = 41;
 }
 
+enum ServerFeature {
+  // Default value, should not be used
+  SERVER_FEATURE_UNSPECIFIED = 0;
+  // StoreResourcesData as structure recording data
+  STORE_RESOURCES_DATA = 1;
+}
+
 // protolint:disable ENUM_FIELD_NAMES_PREFIX
 // protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
 enum ScoringSystem {
@@ -380,6 +387,7 @@ message ResolvedPack {
   repeated Mquery filters = 4;
   string graph_execution_checksum = 7;
   string filters_checksum = 20;
+  repeated ServerFeature features = 8;
 }
 
 // Update asset jobs forces all jobs for a given asset to get refreshed.

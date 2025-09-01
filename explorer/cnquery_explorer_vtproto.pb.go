@@ -784,6 +784,11 @@ func (m *ResolvedPack) CloneVT() *ResolvedPack {
 		}
 		r.Filters = tmpContainer
 	}
+	if rhs := m.Features; rhs != nil {
+		tmpContainer := make([]ServerFeature, len(rhs))
+		copy(tmpContainer, rhs)
+		r.Features = tmpContainer
+	}
 	if len(m.unknownFields) > 0 {
 		r.unknownFields = make([]byte, len(m.unknownFields))
 		copy(r.unknownFields, m.unknownFields)
@@ -3182,6 +3187,27 @@ func (m *ResolvedPack) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xa2
 	}
+	if len(m.Features) > 0 {
+		var pksize2 int
+		for _, num := range m.Features {
+			pksize2 += protohelpers.SizeOfVarint(uint64(num))
+		}
+		i -= pksize2
+		j1 := i
+		for _, num1 := range m.Features {
+			num := uint64(num1)
+			for num >= 1<<7 {
+				dAtA[j1] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j1++
+			}
+			dAtA[j1] = uint8(num)
+			j1++
+		}
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(pksize2))
+		i--
+		dAtA[i] = 0x42
+	}
 	if len(m.GraphExecutionChecksum) > 0 {
 		i -= len(m.GraphExecutionChecksum)
 		copy(dAtA[i:], m.GraphExecutionChecksum)
@@ -4986,6 +5012,13 @@ func (m *ResolvedPack) SizeVT() (n int) {
 	l = len(m.GraphExecutionChecksum)
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	if len(m.Features) > 0 {
+		l = 0
+		for _, e := range m.Features {
+			l += protohelpers.SizeOfVarint(uint64(e))
+		}
+		n += 1 + protohelpers.SizeOfVarint(uint64(l)) + l
 	}
 	l = len(m.FiltersChecksum)
 	if l > 0 {
@@ -11196,6 +11229,75 @@ func (m *ResolvedPack) UnmarshalVT(dAtA []byte) error {
 			}
 			m.GraphExecutionChecksum = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 8:
+			if wireType == 0 {
+				var v ServerFeature
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protohelpers.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= ServerFeature(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Features = append(m.Features, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protohelpers.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return protohelpers.ErrInvalidLength
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return protohelpers.ErrInvalidLength
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				if elementCount != 0 && len(m.Features) == 0 {
+					m.Features = make([]ServerFeature, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v ServerFeature
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return protohelpers.ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= ServerFeature(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Features = append(m.Features, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Features", wireType)
+			}
 		case 20:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field FiltersChecksum", wireType)

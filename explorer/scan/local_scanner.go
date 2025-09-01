@@ -720,7 +720,7 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 		return nil, err
 	}
 
-	if cnquery.GetFeatures(s.job.Ctx).IsActive(cnquery.StoreResourcesData) {
+	if cnquery.GetFeatures(s.job.Ctx).IsActive(cnquery.StoreResourcesData) && resolvedPack.HasFeature(explorer.ServerFeature_STORE_RESOURCES_DATA) {
 		recording := s.Runtime.Recording()
 		data, ok := recording.GetAssetData(s.job.Asset.Mrn)
 		if !ok {
