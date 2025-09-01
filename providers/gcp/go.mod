@@ -85,14 +85,13 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
 	github.com/spdx/tools-golang v0.5.5 // indirect
-	github.com/spf13/cobra v1.9.1 // indirect
-	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect
+	github.com/spf13/cobra v1.10.1 // indirect
+	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240710180619-ddb21b71c0b4 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	github.com/zeebo/errs v1.4.0 // indirect
 	go.mondoo.com/mondoo-go v0.0.0-20250827000422-ad7fc0cfc2a9 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/contrib/detectors/gcp v1.37.0 // indirect
+	go.opentelemetry.io/contrib/detectors/gcp v1.38.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.33.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.38.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.38.0 // indirect
@@ -123,7 +122,7 @@ require (
 	cloud.google.com/go/binaryauthorization v1.9.5
 	cloud.google.com/go/compute/metadata v0.8.0 // indirect
 	cloud.google.com/go/secretmanager v1.15.0 // indirect
-	cloud.google.com/go/storage v1.56.0 // indirect
+	cloud.google.com/go/storage v1.56.1 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
