@@ -73,4 +73,4 @@ Features:
   id: FailIfNoEntryPoints
   idx: 12
   start: v11.x
-  status: default
+  status: new, we still need to fix a few more tests

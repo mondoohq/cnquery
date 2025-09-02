@@ -69,7 +69,7 @@ const (
 
 	// Fail if no entrypoints or datapoints are found in the query.
 	// start:  v11.x
-	// status: default
+	// status: new, we still need to fix a few more tests
 	FailIfNoEntryPoints Feature = 12
 
 	// Placeholder to indicate how many feature flags exist. This number
@@ -98,7 +98,6 @@ var DefaultFeatures = Features{
 	byte(SerialNumberAsID),
 	byte(ForceShellCompletion),
 	byte(ResourceContext),
-	byte(FailIfNoEntryPoints),
 }
 
 // AvailableFeatures are a set of flags that can be activated
