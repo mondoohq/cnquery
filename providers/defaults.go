@@ -481,7 +481,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"vsphere": {
 		Provider: &plugin.Provider{
 			Name:            "vsphere",
@@ -492,6 +491,24 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "vsphere",
 					Use:   "vsphere user@host",
 					Short: "a VMware vSphere installation",
+				},
+			},
+		},
+	},
+	"networkdiscovery": {
+		Provider: &plugin.Provider{
+			Name:            "networkdiscovery",
+			ID:              "go.mondoo.com/cnquery/providers/networkdiscovery",
+			ConnectionTypes: []string{"networkdiscovery"},
+			CrossProviderTypes: []string{
+				"go.mondoo.com/cnquery/providers/network",
+				"go.mondoo.com/cnquery/v12/providers/network",
+			},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "networkdiscovery",
+					Use:   "networkdiscovery DOMAIN_NAME",
+					Short: "Discover subdomains for a given domain.",
 				},
 			},
 		},
