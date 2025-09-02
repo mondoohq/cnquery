@@ -29,9 +29,9 @@ func TestMacOsXPackageParser(t *testing.T) {
 		Arch:    "x86_64",
 		Family:  []string{"darwin", "bsd", "unix", "os"},
 	}
-	m, err := packages.ParseMacOSPackages(pf, c.Stdout)
+	m, err := packages.ParseMacOSPackages(mock, pf, c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 2, len(m), "detected the right amount of packages")
+	assert.Equal(t, 3, len(m), "detected the right amount of packages")
 
 	assert.Equal(t, "Preview", m[0].Name, "pkg name detected")
 	assert.Equal(t, "10.0", m[0].Version, "pkg version detected")
@@ -47,4 +47,10 @@ func TestMacOsXPackageParser(t *testing.T) {
 	assert.Equal(t, packages.PkgFilesIncluded, m[1].FilesAvailable)
 	assert.Equal(t, "pkg:macos/macos/Contacts@11.0?arch=x86_64", m[1].PUrl)
 	assert.Equal(t, []packages.FileRecord{{Path: "/Applications/Contacts.app"}}, m[1].Files)
+
+	assert.Equal(t, "Firefox", m[2].Name, "pkg name detected")
+	assert.Equal(t, "128.12.0", m[2].Version, "pkg version detected")
+	assert.Equal(t, packages.MacosPkgFormat, m[2].Format, "pkg format detected")
+	assert.Equal(t, "pkg:macos/macos/Firefox@128.12.0?arch=x86_64&remoting-name=firefox-esr", m[2].PUrl)
+	assert.Equal(t, []packages.FileRecord{{Path: "/Applications/Firefox.app"}}, m[2].Files)
 }
