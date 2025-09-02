@@ -1,0 +1,76 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Features:
+- desc: "Resolve similar queries the same way. If 100 assets have the same dependent
+    queries and overrides, \nthey create the same resolved plan. Cannot be used with
+    old resolver at the same time for asset.\n"
+  end: v6.0 => default now, no need to set it anymore
+  id: MassQueries
+  idx: 1
+  start: v3.x, available at v4.x, default at v5.x
+  status: builtin
+- desc: Allows MQL to use variable references across blocks. Fully changes the compiled
+    code.
+  end: v7.0
+  id: PiperCode
+  idx: 2
+  start: v5.x
+  status: builtin
+- desc: Only boolean results are checked when evaluating a query for success
+  end: v8.0
+  id: BoolAssertions
+  idx: 3
+  start: v6.x
+  status: builtin
+- desc: Enables discovery of Kubernetes cluster nodes as individual assets
+  end: unknown
+  id: K8sNodeDiscovery
+  idx: 4
+  start: v6.12
+  status: sunset, should be done via discovery code instead
+- desc: Add context to assets for e.g. Terraform
+  end: v12.0
+  id: MQLAssetContext
+  idx: 5
+  start: v7.0
+  status: new
+- desc: Errors are treated as failures, see https://www.notion.so/mondoo/Errors-and-Scoring-5dc554348aad4118a1dbf35123368329
+  end: v9.0
+  id: ErrorsAsFailures
+  idx: 6
+  start: v8.x
+  status: sunset, we never really used this
+- desc: Stores recording-like data with upstream, can still be controlled by the server
+  end: v11.0
+  id: StoreResourcesData
+  idx: 7
+  start: v10.x
+  status: default
+- desc: Enables fine-grained assets discovery
+  end: v12.0
+  id: FineGrainedAssets
+  idx: 8
+  start: v11.x
+  status: sunset, this is now managed via --discover
+- desc: Use serial number as the asset ID
+  end: v12.0
+  id: SerialNumberAsID
+  idx: 9
+  start: v11.x
+  status: default
+- desc: Forces shell completion to be enabled (for windows)
+  id: ForceShellCompletion
+  idx: 10
+  start: v11.x
+  status: default
+- desc: Automatically add resource context to results and prints it
+  id: ResourceContext
+  idx: 11
+  start: v11.x
+  status: default
+- desc: Fail if no entrypoints or datapoints are found in the query.
+  id: FailIfNoEntryPoints
+  idx: 12
+  start: v11.x
+  status: new, we still need to fix a few more tests

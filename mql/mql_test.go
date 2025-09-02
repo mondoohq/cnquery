@@ -5,8 +5,6 @@ package mql_test
 
 import (
 	"fmt"
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,34 +18,8 @@ import (
 	"go.uber.org/goleak"
 )
 
-var features cnquery.Features
-
-func init() {
-	features = getEnvFeatures()
-}
-
 func runtime() llx.Runtime {
 	return testutils.LinuxMock()
-}
-
-func getEnvFeatures() cnquery.Features {
-	env := os.Getenv("FEATURES")
-	if env == "" {
-		return cnquery.Features{}
-	}
-
-	arr := strings.Split(env, ",")
-	var fts cnquery.Features
-	for i := range arr {
-		v, ok := cnquery.FeaturesValue[arr[i]]
-		if ok {
-			fmt.Println("--> activate feature: " + arr[i])
-			fts = append(features, byte(v))
-		} else {
-			panic("cannot find requested feature: " + arr[i])
-		}
-	}
-	return fts
 }
 
 func TestMain(m *testing.M) {
@@ -58,7 +30,7 @@ func TestMain(m *testing.M) {
 func TestMqlHundreds(t *testing.T) {
 	for i := range 500 {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			res, err := mql.Exec("asset.platform", runtime(), features, nil)
+			res, err := mql.Exec("asset.platform", runtime(), testutils.Features, nil)
 			assert.NoError(t, err)
 			assert.NoError(t, res.Error)
 			assert.Equal(t, "arch", res.Value)
@@ -87,7 +59,7 @@ func TestMqlSimple(t *testing.T) {
 	for i := range tests {
 		one := tests[i]
 		t.Run(one.query, func(t *testing.T) {
-			res, err := mql.Exec(one.query, runtime(), features, nil)
+			res, err := mql.Exec(one.query, runtime(), testutils.Features, nil)
 			assert.NoError(t, err)
 			assert.NoError(t, res.Error)
 			assert.Equal(t, one.assertion, res.Value)
@@ -98,7 +70,7 @@ func TestMqlSimple(t *testing.T) {
 func TestCustomData(t *testing.T) {
 	query := "{ \"a\": \"valuea\", \"b\": \"valueb\"}"
 
-	value, err := mql.Exec(query, runtime(), features, nil)
+	value, err := mql.Exec(query, runtime(), testutils.Features, nil)
 	require.NoError(t, err)
 	assert.Equal(t, map[string]any{"a": "valuea", "b": "valueb"}, value.Value)
 }
@@ -107,7 +79,7 @@ func TestJsonArrayBounds(t *testing.T) {
 	t.Run("out of bounds", func(t *testing.T) {
 		query := `x = parse.json(content: '{"arr": []}').params
 	x['arr'][0]`
-		value, err := mql.Exec(query, runtime(), features, nil)
+		value, err := mql.Exec(query, runtime(), testutils.Features, nil)
 		require.NoError(t, err)
 		require.Contains(t, value.Error.Error(), "array index out of bound")
 	})
@@ -115,7 +87,7 @@ func TestJsonArrayBounds(t *testing.T) {
 	t.Run("positive index", func(t *testing.T) {
 		query := `x = parse.json(content: '{"arr": [1, 2, 3]}').params
 x['arr'][1]`
-		value, err := mql.Exec(query, runtime(), features, nil)
+		value, err := mql.Exec(query, runtime(), testutils.Features, nil)
 		require.NoError(t, err)
 		require.Equal(t, float64(2), value.Value)
 	})
@@ -123,7 +95,7 @@ x['arr'][1]`
 	t.Run("negative index", func(t *testing.T) {
 		query := `x = parse.json(content: '{"arr": [1, 2, 3]}').params
 x['arr'][-1]`
-		value, err := mql.Exec(query, runtime(), features, nil)
+		value, err := mql.Exec(query, runtime(), testutils.Features, nil)
 		require.NoError(t, err)
 		require.Equal(t, float64(3), value.Value)
 	})
@@ -131,7 +103,7 @@ x['arr'][-1]`
 	t.Run("negative index out of bounds", func(t *testing.T) {
 		query := `x = parse.json(content: '{"arr": [1, 2, 3]}').params
 x['arr'][-4]`
-		value, err := mql.Exec(query, runtime(), features, nil)
+		value, err := mql.Exec(query, runtime(), testutils.Features, nil)
 		require.NoError(t, err)
 		require.Contains(t, value.Error.Error(), "array index out of bound")
 	})
@@ -144,7 +116,7 @@ func TestMqlProps(t *testing.T) {
 		"b": llx.IntPrimitive(2),
 	}
 
-	value, err := mql.Exec(query, runtime(), features, props)
+	value, err := mql.Exec(query, runtime(), testutils.Features, props)
 	require.NoError(t, err)
 	assert.Equal(t, int64(4), value.Value)
 }
