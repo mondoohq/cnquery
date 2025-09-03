@@ -403,14 +403,13 @@ func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]any, error) {
 		mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, "aws.iam.policy",
 			map[string]*llx.RawData{
 				"arn":             llx.StringDataPtr(policy.Arn),
-				"id":              llx.StringDataPtr(policy.PolicyId),
 				"policyId":        llx.StringDataPtr(policy.PolicyId),
 				"name":            llx.StringDataPtr(policy.PolicyName),
 				"description":     llx.StringDataPtr(policy.Description),
 				"isAttachable":    llx.BoolData(policy.IsAttachable),
 				"attachmentCount": llx.IntDataDefault(policy.AttachmentCount, 0),
-				"createDate":      llx.TimeDataPtr(policy.CreateDate),
-				"updateDate":      llx.TimeDataPtr(policy.UpdateDate),
+				"createdAt":       llx.TimeDataPtr(policy.CreateDate),
+				"updatedAt":       llx.TimeDataPtr(policy.UpdateDate),
 			})
 		if err != nil {
 			return nil, err
@@ -893,13 +892,6 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIamPolicy) id() (string, error) {
-	if a == nil {
-		return "", nil
-	}
-	return a.Arn.Data, nil
-}
-
 type mqlAwsIamPolicyInternal struct {
 	cachePolicy *iamtypes.Policy
 }
@@ -984,7 +976,7 @@ func (a *mqlAwsIamPolicy) createdAt() (*time.Time, error) {
 	return policy.CreateDate, nil
 }
 
-func (a *mqlAwsIamPolicy) updateDate() (*time.Time, error) {
+func (a *mqlAwsIamPolicy) updatedAt() (*time.Time, error) {
 	arn := a.Arn.Data
 
 	policy, err := a.loadPolicy(arn)

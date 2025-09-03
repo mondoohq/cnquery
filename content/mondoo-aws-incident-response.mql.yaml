@@ -164,7 +164,7 @@ queries:
         id
         tags
         attachedPolicies
-        createDate
+        createdAt
         accessKeys
         loginProfile
         groups
@@ -183,7 +183,7 @@ queries:
       aws.iam.group {
         arn
         name
-        createDate
+        createdAt
         id
         usernames
       }
@@ -201,8 +201,8 @@ queries:
       aws.iam.policies.
         where( name == /FullAccess/i && attachmentCount != 0) {
           name
-          createDate
-          updateDate
+          createdAt
+          updatedAt
           attachedUsers
           attachedGroups
           attachedRoles

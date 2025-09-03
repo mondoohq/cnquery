@@ -1804,8 +1804,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.policy.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetCreatedAt()).ToDataRes(types.Time)
 	},
-	"aws.iam.policy.updateDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamPolicy).GetUpdateDate()).ToDataRes(types.Time)
+	"aws.iam.policy.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.iam.policy.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetScope()).ToDataRes(types.String)
@@ -6733,8 +6733,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsIamPolicy).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"aws.iam.policy.updateDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamPolicy).UpdateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.iam.policy.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16175,7 +16175,7 @@ type mqlAwsIamPolicy struct {
 	IsAttachable plugin.TValue[bool]
 	AttachmentCount plugin.TValue[int64]
 	CreatedAt plugin.TValue[*time.Time]
-	UpdateDate plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
 	Scope plugin.TValue[string]
 	Versions plugin.TValue[[]any]
 	DefaultVersion plugin.TValue[*mqlAwsIamPolicyversion]
@@ -16195,12 +16195,7 @@ func createAwsIamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.iam.policy", res.__id)
@@ -16261,9 +16256,9 @@ func (c *mqlAwsIamPolicy) GetCreatedAt() *plugin.TValue[*time.Time] {
 	})
 }
 
-func (c *mqlAwsIamPolicy) GetUpdateDate() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.UpdateDate, func() (*time.Time, error) {
-		return c.updateDate()
+func (c *mqlAwsIamPolicy) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.UpdatedAt, func() (*time.Time, error) {
+		return c.updatedAt()
 	})
 }
 
