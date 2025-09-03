@@ -647,6 +647,8 @@ func (t *SimpleType) typeItems(ast *LR) types.Type {
 		return types.IP
 	case "range":
 		return types.Range
+	case "any":
+		return types.Any
 	default:
 		return resourceType(t.Type, ast)
 	}
@@ -723,6 +725,8 @@ func (t *SimpleType) mondooTypeItems(b *goBuilder) string {
 		return "types.Version"
 	case "ip":
 		return "types.IP"
+	case "any":
+		return "types.Any"
 	default:
 		if name, ok := b.importName(t.Type); ok {
 			return "types.Resource(\"" + name + "\")"

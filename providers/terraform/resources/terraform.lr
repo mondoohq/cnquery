@@ -27,7 +27,7 @@ terraform {
 // All blocks with the type resource
 terraform.resources {
   []terraform.block
-  init(resource? string, name? string)
+  init(resource? any, name? any)
 }
 
 // Terraform configuration file (.tf or .tf.json file)
