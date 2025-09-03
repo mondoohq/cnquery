@@ -304,6 +304,7 @@ resources:
       displayName: {}
       id: {}
       lastModifiedDateTime: {}
+      properties: {}
       version: {}
     is_private: true
     min_mondoo_version: 9.0.0
@@ -314,6 +315,7 @@ resources:
       displayName: {}
       id: {}
       lastModifiedDateTime: {}
+      properties: {}
       version: {}
     is_private: true
     min_mondoo_version: 9.0.0
@@ -377,6 +379,7 @@ resources:
       id: {}
       isOptional: {}
       label: {}
+      properties: {}
       recordType: {}
       supportedService: {}
       ttl: {}

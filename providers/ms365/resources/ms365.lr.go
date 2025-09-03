@@ -1439,6 +1439,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.domaindnsrecord.ttl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomaindnsrecord).GetTtl()).ToDataRes(types.Int)
 	},
+	"microsoft.domaindnsrecord.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetProperties()).ToDataRes(types.Dict)
+	},
 	"microsoft.application.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetId()).ToDataRes(types.String)
 	},
@@ -2096,6 +2099,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.devicemanagement.deviceconfiguration.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetVersion()).ToDataRes(types.Int)
 	},
+	"microsoft.devicemanagement.deviceconfiguration.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetProperties()).ToDataRes(types.Dict)
+	},
 	"microsoft.devicemanagement.devicecompliancepolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetId()).ToDataRes(types.String)
 	},
@@ -2116,6 +2122,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.assignments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetAssignments()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.devicemanagement.devicecompliancepolicy.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetProperties()).ToDataRes(types.Dict)
 	},
 	"ms365.exchangeonline.malwareFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMalwareFilterPolicy()).ToDataRes(types.Array(types.Dict))
@@ -3865,6 +3874,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftDomaindnsrecord).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"microsoft.domaindnsrecord.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"microsoft.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftApplication).__id, ok = v.Value.(string)
 			return
@@ -4853,6 +4866,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"microsoft.devicemanagement.deviceconfiguration.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"microsoft.devicemanagement.devicecompliancepolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).__id, ok = v.Value.(string)
 			return
@@ -4883,6 +4900,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.assignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).Assignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.devicecompliancepolicy.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9487,6 +9508,7 @@ type mqlMicrosoftDomaindnsrecord struct {
 	RecordType plugin.TValue[string]
 	SupportedService plugin.TValue[string]
 	Ttl plugin.TValue[int64]
+	Properties plugin.TValue[any]
 }
 
 // createMicrosoftDomaindnsrecord creates a new instance of this resource
@@ -9548,6 +9570,10 @@ func (c *mqlMicrosoftDomaindnsrecord) GetSupportedService() *plugin.TValue[strin
 
 func (c *mqlMicrosoftDomaindnsrecord) GetTtl() *plugin.TValue[int64] {
 	return &c.Ttl
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
 }
 
 // mqlMicrosoftApplication for the microsoft.application resource
@@ -11968,6 +11994,7 @@ type mqlMicrosoftDevicemanagementDeviceconfiguration struct {
 	Description plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Version plugin.TValue[int64]
+	Properties plugin.TValue[any]
 }
 
 // createMicrosoftDevicemanagementDeviceconfiguration creates a new instance of this resource
@@ -12031,6 +12058,10 @@ func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetVersion() *plugin.T
 	return &c.Version
 }
 
+func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
 // mqlMicrosoftDevicemanagementDevicecompliancepolicy for the microsoft.devicemanagement.devicecompliancepolicy resource
 type mqlMicrosoftDevicemanagementDevicecompliancepolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -12043,6 +12074,7 @@ type mqlMicrosoftDevicemanagementDevicecompliancepolicy struct {
 	LastModifiedDateTime plugin.TValue[*time.Time]
 	Version plugin.TValue[int64]
 	Assignments plugin.TValue[[]any]
+	Properties plugin.TValue[any]
 }
 
 // createMicrosoftDevicemanagementDevicecompliancepolicy creates a new instance of this resource
@@ -12108,6 +12140,10 @@ func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetVersion() *plugi
 
 func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetAssignments() *plugin.TValue[[]any] {
 	return &c.Assignments
+}
+
+func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
 }
 
 // mqlMs365Exchangeonline for the ms365.exchangeonline resource

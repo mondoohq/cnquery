@@ -860,6 +860,8 @@ private microsoft.domaindnsrecord @defaults("id label") {
   supportedService string
   // Domain record TTL
   ttl int
+  // Deprecated; kept for backwards compatibility
+  properties dict
 }
 
 // Microsoft Entra ID application registration
@@ -1413,6 +1415,8 @@ private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName
   displayName string
   // Device configuration version
   version int
+  // Deprecated; kept for backwards compatibility
+  properties dict
 }
 
 // Microsoft device compliance policy
@@ -1431,6 +1435,8 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   version int
   // Device compliance policy assignments
   assignments []dict
+  // Deprecated; kept for backwards compatibility
+  properties dict
 }
 
 // Microsoft 365 Exchange Online
