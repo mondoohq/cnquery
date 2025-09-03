@@ -843,7 +843,7 @@ private aws.iam.policy @defaults("arn name") {
   // Time when the policy was created
   createdAt() time
   // Time when the policy was updated
-  updateDate() time
+  updatedAt() time
   // Scope of the policy
   scope() string
   // List of versions for the policy

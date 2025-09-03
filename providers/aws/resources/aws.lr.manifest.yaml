@@ -2042,8 +2042,8 @@ resources:
       title: Return a list of users that do not have MFA configured along with the
         ARN, name, and associated IAM Groups
     - query: "aws.iam.credentialReport.\n  where(\n    passwordEnabled &&\n    accessKey1Active
-        &&\n    userCreationTime < time.today\n  ).\n  all(\n    accessKey1LastUsedDate
-        != null\n  ) \n"
+        &&\n    createdAt < time.today\n  ).\n  all(\n    accessKey1LastUsedDate !=
+        null\n  ) \n"
       title: Do not setup access keys during initial user setup for all IAM users
         that have a console password
   aws.iam.accessAnalyzer:
@@ -2161,7 +2161,8 @@ resources:
       policyId:
         min_mondoo_version: 9.0.0
       scope: {}
-      updateDate: {}
+      updatedAt:
+        min_mondoo_version: 9.0.0
       versions: {}
     is_private: true
     min_mondoo_version: 5.15.0
@@ -2254,7 +2255,6 @@ resources:
       passwordNextRotation: {}
       properties: {}
       user: {}
-      userCreationTime: {}
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
