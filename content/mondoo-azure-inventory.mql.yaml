@@ -59,7 +59,7 @@ queries:
     docs:
       desc: |
         This query retrieves data for all role definitions in the subscription
-    mql: azure.subscription.authorization.roleDefinitions
+    mql: azure.subscription.iam.roles
 
 
   - uid: mondoo-asset-inventory-azure-cloudDefender

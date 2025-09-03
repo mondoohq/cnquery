@@ -63,7 +63,7 @@ packs:
                 name
                 namespace
                 initContainers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -75,7 +75,7 @@ packs:
                   }
                 }
                 containers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -87,7 +87,7 @@ packs:
                   }
                 }
                 ephemeralContainers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -122,7 +122,7 @@ packs:
                 name
                 namespace
                 initContainers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -134,7 +134,7 @@ packs:
                   }
                 }
                 containers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -168,7 +168,7 @@ packs:
                 name
                 namespace
                 initContainers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -180,7 +180,7 @@ packs:
                   }
                 }
                 containers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -214,7 +214,7 @@ packs:
                 name
                 namespace
                 initContainers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -226,7 +226,7 @@ packs:
                   }
                 }
                 containers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -260,7 +260,7 @@ packs:
                 name
                 namespace
                 initContainers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -272,7 +272,7 @@ packs:
                   }
                 }
                 containers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -306,7 +306,7 @@ packs:
                 name
                 namespace
                 initContainers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -318,7 +318,7 @@ packs:
                   }
                 }
                 containers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -352,7 +352,7 @@ packs:
                 name
                 namespace
                 initContainers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
@@ -364,7 +364,7 @@ packs:
                   }
                 }
                 containers {
-                  image
+                  imageName
                   containerImage {
                     name
                     identifier
