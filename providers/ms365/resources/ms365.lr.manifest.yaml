@@ -379,6 +379,7 @@ resources:
       id: {}
       isOptional: {}
       label: {}
+      properties: {}
       recordType: {}
       supportedService: {}
       ttl: {}
