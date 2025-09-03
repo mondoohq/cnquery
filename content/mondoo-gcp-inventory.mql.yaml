@@ -41,7 +41,6 @@ queries:
           gcp.project {
             name
             id
-            number
             state
             labels
           }
