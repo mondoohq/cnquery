@@ -62,7 +62,7 @@ packs:
         mql: windows.hotfixes { hotfixId installedOn }
       - uid: mondoo-windows-features
         title: Installed Windows features
-        mql: windows.features.where(installed == true) { path name displayName }
+        mql: windows.serverFeatures.where(installed == true) { path name displayName }
       - uid: mondoo-windows-running-services
         title: Running services
         filters: mondoo.capabilities.contains("run-command")
