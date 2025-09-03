@@ -12,8 +12,8 @@ require (
 	github.com/stretchr/testify v1.11.1
 	// pin v0.46.3
 	github.com/vmware/govmomi v0.46.3
-	go.mondoo.com/cnquery/v12 v12.0.0-pre1
-	go.mondoo.com/mondoo-go v0.0.0-20250827000422-ad7fc0cfc2a9
+	go.mondoo.com/cnquery/v12 v12.0.0-rc1
+	go.mondoo.com/mondoo-go v0.0.0-20250903000415-5d2e0cc74372
 )
 
 require (
@@ -132,7 +132,7 @@ require (
 	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.mondoo.com/ranger-rpc v0.7.0 // indirect

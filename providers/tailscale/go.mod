@@ -10,7 +10,7 @@ require (
 	github.com/cockroachdb/errors v1.12.0
 	github.com/rs/zerolog v1.34.0
 	github.com/tailscale/tailscale-client-go/v2 v2.0.0-20250129222324-74c8fc3cb4d7
-	go.mondoo.com/cnquery/v12 v12.0.0-pre1
+	go.mondoo.com/cnquery/v12 v12.0.0-rc1
 )
 
 require (
@@ -124,7 +124,7 @@ require (
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/tailscale/hujson v0.0.0-20250605163823-992244df8c5a // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect

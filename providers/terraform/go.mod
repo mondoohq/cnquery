@@ -8,7 +8,7 @@ toolchain go1.24.3
 
 require (
 	github.com/hashicorp/hcl/v2 v2.24.0
-	go.mondoo.com/cnquery/v12 v12.0.0-pre1
+	go.mondoo.com/cnquery/v12 v12.0.0-rc1
 )
 
 require (
@@ -125,7 +125,7 @@ require (
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.mondoo.com/ranger-rpc v0.7.0 // indirect
