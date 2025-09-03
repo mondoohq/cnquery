@@ -68,7 +68,7 @@ queries:
     docs:
       desc: |
         This query retrieves data for Microsoft Defender for Cloud
-    mql: azure.subscription.cloudDefender { defenderForServers defenderForContainers securityContacts { name alertNotifications }  }
+    mql: azure.subscription.cloudDefender { defenderForServers defenderForContainers securityContacts { name notificationSources }  }
 
 
   - uid: mondoo-asset-inventory-azure-storageAccounts
