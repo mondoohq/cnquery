@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.57.2
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.249.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.250.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.63.4
@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.77.2
-	github.com/aws/aws-sdk-go-v2/service/neptune v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/neptune v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.104.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.58.1
@@ -67,7 +67,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/afero v1.14.0
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/cnquery/v12 v12.0.0-pre1
+	go.mondoo.com/cnquery/v12 v12.0.0-rc1
 	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b
 	k8s.io/client-go v0.34.0
 )
@@ -244,25 +244,23 @@ require (
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spdx/tools-golang v0.5.5 // indirect
 	github.com/spf13/cobra v1.10.1 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240710180619-ddb21b71c0b4 // indirect
 	github.com/vbatts/tar-split v0.12.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20250827000422-ad7fc0cfc2a9 // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20250903000415-5d2e0cc74372 // indirect
 	go.mondoo.com/ranger-rpc v0.7.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.38.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.63.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.63.0 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.33.0 // indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.38.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
-	go.opentelemetry.io/proto/otlp v1.4.0 // indirect
 	go.uber.org/mock v0.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
@@ -285,14 +283,13 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v1.0.1 // indirect
 	k8s.io/api v0.34.0 // indirect
 	k8s.io/apimachinery v0.34.0 // indirect
-	k8s.io/component-base v0.29.3 // indirect
+	k8s.io/component-base v0.34.0 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
-	k8s.io/kubelet v0.29.3 // indirect
+	k8s.io/kubelet v0.34.0 // indirect
 	k8s.io/utils v0.0.0-20250820121507-0af2bda4dd1d // indirect
 	modernc.org/libc v1.66.8 // indirect
 	modernc.org/mathutil v1.7.1 // indirect

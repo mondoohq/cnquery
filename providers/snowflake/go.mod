@@ -12,7 +12,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/snowflakedb/gosnowflake v1.16.0
 	github.com/stretchr/testify v1.11.1 // indirect
-	go.mondoo.com/cnquery/v12 v12.0.0-pre1
+	go.mondoo.com/cnquery/v12 v12.0.0-rc1
 	go.mondoo.com/ranger-rpc v0.7.0
 	golang.org/x/crypto v0.41.0
 )
@@ -161,7 +161,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
