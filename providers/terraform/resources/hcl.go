@@ -18,6 +18,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
+	"go.mondoo.com/cnquery/v12/checksums"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/terraform/connection"
@@ -352,25 +353,37 @@ func initTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	resources := tf.mqlTerraformInternal.resources
 
-	var resource string
-	rn := args["resource"]
-	if rn != nil {
-		resource = rn.Value.(string)
+	resourceArg := args["resource"]
+	nameArg := args["name"]
+
+	matchResource, err := llx.StringOrRegexMatcher(resourceArg)
+	if err != nil {
+		return nil, nil, err
+	}
+	matchName, err := llx.StringOrRegexMatcher(nameArg)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	var name string
-	rn = args["name"]
-	if rn != nil {
-		name = rn.Value.(string)
+	var id string
+	if matchResource != nil || matchName != nil {
+		s := checksums.New
+		if matchResource != nil {
+			s = s.Add(resourceArg.String())
+		}
+		if matchName != nil {
+			s = s.Add(nameArg.String())
+		}
+		id = s.String()
 	}
 
 	var res []any
 	for i := range resources {
 		r := resources[i]
-		if resource != "" && r.Labels.Data[0].(string) != resource {
+		if matchResource != nil && !matchResource(r.Labels.Data[0].(string)) {
 			continue
 		}
-		if name != "" && r.Labels.Data[1].(string) != name {
+		if matchName != nil && !matchName(r.Labels.Data[1].(string)) {
 			continue
 		}
 		res = append(res, r)
@@ -378,6 +391,7 @@ func initTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawDat
 
 	return map[string]*llx.RawData{
 		"list": llx.ArrayData(res, types.Resource("terraform.block")),
+		"__id": llx.StringData(id),
 	}, nil, nil
 }
 

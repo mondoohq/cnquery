@@ -774,7 +774,7 @@ func (c *compiler) unnamedArgs(callerLabel string, init *resources.Init, args []
 
 		expected := init.Args[idx]
 		expectedType := types.Type(expected.Type)
-		if vType != expectedType {
+		if vType != expectedType && expectedType != types.Any {
 			// TODO: We are looking for dict types to see if we can type-cast them
 			// This needs massive improvements to dynamically cast them in LLX.
 			// For a full description see: https://gitlab.com/mondoolabs/mondoo/-/issues/241
