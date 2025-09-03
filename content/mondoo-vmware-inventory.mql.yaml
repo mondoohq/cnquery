@@ -31,7 +31,7 @@ packs:
         Our goal is to build policies that are simple to deploy, accurate, and actionable.
 
         If you have any suggestions for improving this policy, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
-    filters: asset.platform == "vmware-esxi" || asset.platform == "vmware-vsphere"
+    filters: asset.platform == "vmware-vsphere"
     queries:
       - uid: mondoo-vmware-asset-inventory-vcenter-datacenters
         title: VMware vSphere Datacenters
@@ -50,52 +50,52 @@ packs:
           vsphere.datacenters { vms { name advancedSettings["guestInfo.detailed.data"] properties["guest"]["guestState"] } }
       - uid: mondoo-vmware-asset-inventory-esxi-kernel-modules
         title: VMware ESXi Kernel modules
-        filters: asset.platform == "vmware-esxi"
+        filters: asset.platform == "vmware-vsphere"
         mql: |
           vsphere.host.kernelModules
       - uid: mondoo-vmware-asset-inventory-esxi-installed-packages
         title: VMware ESXi Installed packages
-        filters: asset.platform == "vmware-esxi"
+        filters: asset.platform == "vmware-vsphere"
         mql: |
           vsphere.host.packages
       - uid: mondoo-vmware-asset-inventory-esxi-services
         title: VMware ESXi Services
-        filters: asset.platform == "vmware-esxi"
+        filters: asset.platform == "vmware-vsphere"
         mql: |
           vsphere.host.services
       - uid: mondoo-vmware-asset-inventory-esxi-acceptance-level
         title: VMware ESXi Acceptance Level
-        filters: asset.platform == "vmware-esxi"
+        filters: asset.platform == "vmware-vsphere"
         mql: |
           vsphere.host.acceptanceLevel
       - uid: mondoo-vmware-asset-inventory-esxi-ntp-server
         title: VMware ESXi NTP servers
-        filters: asset.platform == "vmware-esxi"
+        filters: asset.platform == "vmware-vsphere"
         mql: |
           vsphere.host.ntp.server
       - uid: mondoo-vmware-asset-inventory-esxi-ntp-config
         title: VMware ESXi NTP configuration
-        filters: asset.platform == "vmware-esxi"
+        filters: asset.platform == "vmware-vsphere"
         mql: |
           vsphere.host.ntp.config
       - uid: mondoo-vmware-asset-inventory-esxi-fileSystemVolume
         title: VMware ESXi File System Volume
-        filters: asset.platform == "vmware-esxi"
+        filters: asset.platform == "vmware-vsphere"
         mql: |
           vsphere.host.properties["config"]["fileSystemVolume"]
       - uid: mondoo-vmware-asset-inventory-esxi-firewall
         title: VMware ESXi Firewall
-        filters: asset.platform == "vmware-esxi"
+        filters: asset.platform == "vmware-vsphere"
         mql: |
           vsphere.host.properties["config"]["firewall"]
       - uid: mondoo-vmware-asset-inventory-esxi-adapters
         title: VMware ESXi Physical Adapters
-        filters: asset.platform == "vmware-esxi"
+        filters: asset.platform == "vmware-vsphere"
         mql: |
           vsphere.host.adapters
       - uid: mondoo-vmware-asset-inventory-esxi-standardSwitch
         title: VMware ESXi Standard vSwitch
-        filters: asset.platform == "vmware-esxi"
+        filters: asset.platform == "vmware-vsphere"
         mql: |
           vsphere.host.standardSwitch
 
