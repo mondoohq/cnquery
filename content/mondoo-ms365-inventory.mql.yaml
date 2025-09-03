@@ -88,7 +88,7 @@ packs:
         - uid: mondoo-asset-inventory-ms365-applications-expired-credentials
           title: Applications with expired credentials
           mql: |
-            microsoft.applications.where(hasExpiredCredentials == true) {appId displayName owners createdAt servicePrincipal}
+            microsoft.applications.where(hasExpiredCredentials == true) {appId name owners createdAt servicePrincipal}
         - uid: mondoo-asset-inventory-ms365-enterprise-applications
           title: Enterprise Applications
           mql: |
@@ -142,11 +142,11 @@ packs:
           mql: |
             microsoft.policies.adminConsentRequestPolicy
         - uid: mondoo-asset-inventory-ms365-policies-authorization-policy
-          title: Authorization Policy 
+          title: Authorization Policy
           mql: |
             microsoft.policies.authorizationPolicy
         - uid: mondoo-asset-inventory-ms365-policies-consent-policy-settings
-          title: Consent Policy Settings  
+          title: Consent Policy Settings
           mql: |
             microsoft.policies.consentPolicySettings
         - uid: mondoo-asset-inventory-ms365-policies-identity-security-defaults-enforcement-policy
