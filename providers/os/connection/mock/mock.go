@@ -138,6 +138,9 @@ func hashCmd(message string) string {
 }
 
 func (c *Connection) RunCommand(command string) (*shared.Command, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	found, ok := c.data.Commands[command]
 	if !ok {
 		// try to fetch command by hash (more reliable for whitespace)
