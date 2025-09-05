@@ -100,3 +100,7 @@ func (c *mqlCustomGroups) length() (int64, error) {
 	// make performant API call to count resources
 	return 5, nil
 }
+
+func (c *mqlEmptyGroups) list() ([]any, error) {
+	return []any{}, nil
+}
