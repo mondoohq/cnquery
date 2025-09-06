@@ -224,17 +224,19 @@ func init() {
 			"none":     {compile: compileMapNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 		},
 		types.ResourceLike: {
-			"first":    {compile: compileResourceChildAccess, signature: FunctionSignature{}},
-			"last":     {compile: compileResourceChildAccess, signature: FunctionSignature{}},
-			"length":   {compile: compileResourceLength, signature: FunctionSignature{}},
-			"where":    {compile: compileResourceWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"sample":   {compile: compileResourceSample, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
-			"contains": {compile: compileResourceContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"all":      {compile: compileResourceAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"any":      {compile: compileResourceAny, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"one":      {compile: compileResourceOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"none":     {compile: compileResourceNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"map":      {compile: compileResourceMap, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"first":                    {compile: compileResourceChildAccess, signature: FunctionSignature{}},
+			"last":                     {compile: compileResourceChildAccess, signature: FunctionSignature{}},
+			"length":                   {compile: compileResourceLength, signature: FunctionSignature{}},
+			"where":                    {compile: compileResourceWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"sample":                   {compile: compileResourceSample, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
+			"contains":                 {compile: compileResourceContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"all":                      {compile: compileResourceAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"any":                      {compile: compileResourceAny, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"one":                      {compile: compileResourceOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"none":                     {compile: compileResourceNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"map":                      {compile: compileResourceMap, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"==" + string(types.Empty): {compile: compileResourceCmpEmpty},
+			"!=" + string(types.Empty): {compile: compileResourceCmpEmpty},
 		},
 		// TODO: [#32] unique builtin fields that need a long-term support in LR
 		types.Resource("parse"): {
@@ -387,8 +389,10 @@ func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 		if err == nil {
 			m := builtinFunctions[typ.Underlying()]
 			for k := range m {
-				res[k] = llx.Documentation{
-					Field: k,
+				if !parser.IsOperator(k) {
+					res[k] = llx.Documentation{
+						Field: k,
+					}
 				}
 			}
 		}

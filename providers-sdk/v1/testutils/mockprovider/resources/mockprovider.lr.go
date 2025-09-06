@@ -34,6 +34,10 @@ func init() {
 			// to override args, implement: initCustomGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCustomGroups,
 		},
+		"emptyGroups": {
+			// to override args, implement: initEmptyGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createEmptyGroups,
+		},
 	}
 }
 
@@ -147,6 +151,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"customGroups.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCustomGroups).GetList()).ToDataRes(types.Array(types.Resource("mgroup")))
 	},
+	"emptyGroups.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEmptyGroups).GetList()).ToDataRes(types.Array(types.Resource("mgroup")))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -217,6 +224,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"customGroups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCustomGroups).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"emptyGroups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlEmptyGroups).__id, ok = v.Value.(string)
+			return
+		},
+	"emptyGroups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEmptyGroups).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -520,6 +535,62 @@ func (c *mqlCustomGroups) GetList() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("customGroups", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlEmptyGroups for the emptyGroups resource
+type mqlEmptyGroups struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlEmptyGroupsInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createEmptyGroups creates a new instance of this resource
+func createEmptyGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlEmptyGroups{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("emptyGroups", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlEmptyGroups) MqlName() string {
+	return "emptyGroups"
+}
+
+func (c *mqlEmptyGroups) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlEmptyGroups) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("emptyGroups", c.__id, "list")
 			if err != nil {
 				return nil, err
 			}

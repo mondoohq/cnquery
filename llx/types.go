@@ -36,6 +36,31 @@ func (c *Chunk) Type() types.Type {
 	return types.Any
 }
 
+// DereferencedType of this chunk, resolved if it is a reference to anything.
+func (c *Chunk) DereferencedTypeV2(stack *CodeV2) types.Type {
+	if c.Call == Chunk_PRIMITIVE {
+		return c.Primitive.dereferenceTypeV2(types.Type(c.Primitive.Type), stack)
+	}
+
+	if c.Function != nil {
+		return types.Type(c.Function.Type)
+	}
+
+	if c.Primitive != nil {
+		return c.Primitive.dereferenceTypeV2(types.Type(c.Primitive.Type), stack)
+	}
+
+	// Chunks that don't have a function call but do have an ID are resources.
+	// They are bound globally (because otherwise they'd have a function) and
+	// they are not primitive (we eliminate those above). They could still be
+	// global non-functions, but we need to investigate that case.
+	if c.Id != "" {
+		return types.Resource(c.Id)
+	}
+
+	return types.Any
+}
+
 func (p *Primitive) typeStringV1(typ types.Type, stack *CodeV1) string {
 	switch typ.Underlying() {
 	case types.Ref:
@@ -127,23 +152,6 @@ func (p *Primitive) dereferenceTypeV2(typ types.Type, stack *CodeV2) types.Type 
 	default:
 		return typ
 	}
-}
-
-// DereferencedType of this chunk, resolved if it is a reference to anything.
-func (c *Chunk) DereferencedTypeV2(stack *CodeV2) types.Type {
-	if c.Call == Chunk_PRIMITIVE {
-		return c.Primitive.dereferenceTypeV2(types.Type(c.Primitive.Type), stack)
-	}
-
-	if c.Function != nil {
-		return types.Type(c.Function.Type)
-	}
-
-	if c.Primitive != nil {
-		return c.Primitive.dereferenceTypeV2(types.Type(c.Primitive.Type), stack)
-	}
-
-	return types.Any
 }
 
 // ArrayType for the given list of primitives
