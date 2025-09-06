@@ -388,8 +388,10 @@ func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 		if err == nil {
 			m := builtinFunctions[typ.Underlying()]
 			for k := range m {
-				res[k] = llx.Documentation{
-					Field: k,
+				if !parser.IsOperator(k) {
+					res[k] = llx.Documentation{
+						Field: k,
+					}
 				}
 			}
 		}
