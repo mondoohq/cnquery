@@ -626,7 +626,17 @@ func compileResourceParseDuration(c *compiler, typ types.Type, ref uint64, id st
 	return types.Time, nil
 }
 
-func compileResourceEqEmpty(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceCmpEmpty(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	var label string
+	switch id {
+	case "==" + string(types.Empty):
+		label = "== empty"
+	case "!=" + string(types.Empty):
+		label = "!= empty"
+	default:
+		label = "?= empty"
+	}
+
 	_, err := listResource(c, typ)
 	if err != nil {
 		// not a list resource, we do the simple empty comparison
@@ -640,7 +650,7 @@ func compileResourceEqEmpty(c *compiler, typ types.Type, ref uint64, id string, 
 			},
 		})
 		checksum := c.Result.CodeV2.Checksums[c.tailRef()]
-		c.Result.Labels.Labels[checksum] = "== empty"
+		c.Result.Labels.Labels[checksum] = label
 		return types.Bool, nil
 	}
 
@@ -661,7 +671,7 @@ func compileResourceEqEmpty(c *compiler, typ types.Type, ref uint64, id string, 
 	})
 
 	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
-	c.Result.Labels.Labels[checksum] = "== empty"
+	c.Result.Labels.Labels[checksum] = label
 
 	return types.Bool, nil
 }

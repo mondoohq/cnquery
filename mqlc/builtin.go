@@ -235,7 +235,8 @@ func init() {
 			"one":                      {compile: compileResourceOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"none":                     {compile: compileResourceNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"map":                      {compile: compileResourceMap, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"==" + string(types.Empty): {compile: compileResourceEqEmpty},
+			"==" + string(types.Empty): {compile: compileResourceCmpEmpty},
+			"!=" + string(types.Empty): {compile: compileResourceCmpEmpty},
 		},
 		// TODO: [#32] unique builtin fields that need a long-term support in LR
 		types.Resource("parse"): {

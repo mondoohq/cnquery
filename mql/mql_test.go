@@ -265,9 +265,19 @@ func TestResource_List_Builtins(t *testing.T) {
 			Expectation: false,
 		},
 		{
+			Code:        "customGroups != empty",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
 			Code:        "emptyGroups == empty",
 			ResultIndex: 1,
 			Expectation: true,
+		},
+		{
+			Code:        "emptyGroups != empty",
+			ResultIndex: 1,
+			Expectation: false,
 		},
 	})
 }
