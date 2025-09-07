@@ -127,6 +127,9 @@
 # s.b. LAN
 \bLan\b
 
+# s.b. IP
+\bIp\b
+
 #
 # Product Names
 #
