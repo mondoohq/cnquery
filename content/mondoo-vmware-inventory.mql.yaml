@@ -57,45 +57,45 @@ packs:
         title: VMware ESXi Installed packages
         filters: asset.platform == "vmware-esxi"
         mql: |
-          esxi.host.packages
+          vsphere.host.packages
       - uid: mondoo-vmware-asset-inventory-esxi-services
         title: VMware ESXi Services
         filters: asset.platform == "vmware-esxi"
         mql: |
-          esxi.host.services
+          vsphere.host.services
       - uid: mondoo-vmware-asset-inventory-esxi-acceptance-level
         title: VMware ESXi Acceptance Level
         filters: asset.platform == "vmware-esxi"
         mql: |
-          esxi.host.acceptanceLevel
+          vsphere.host.acceptanceLevel
       - uid: mondoo-vmware-asset-inventory-esxi-ntp-server
         title: VMware ESXi NTP servers
         filters: asset.platform == "vmware-esxi"
         mql: |
-          esxi.host.ntp.server
+          vsphere.host.ntp.server
       - uid: mondoo-vmware-asset-inventory-esxi-ntp-config
         title: VMware ESXi NTP configuration
         filters: asset.platform == "vmware-esxi"
         mql: |
-          esxi.host.ntp.config
+          vsphere.host.ntp.config
       - uid: mondoo-vmware-asset-inventory-esxi-fileSystemVolume
         title: VMware ESXi File System Volume
         filters: asset.platform == "vmware-esxi"
         mql: |
-          esxi.host.properties["config"]["fileSystemVolume"]
+          vsphere.host.properties.config.fileSystemVolume
       - uid: mondoo-vmware-asset-inventory-esxi-firewall
         title: VMware ESXi Firewall
         filters: asset.platform == "vmware-esxi"
         mql: |
-          esxi.host.properties["config"]["firewall"]
+          vsphere.host.properties.config.firewall
       - uid: mondoo-vmware-asset-inventory-esxi-adapters
         title: VMware ESXi Physical Adapters
         filters: asset.platform == "vmware-esxi"
         mql: |
-          esxi.host.adapters
+          vsphere.host.adapters
       - uid: mondoo-vmware-asset-inventory-esxi-standardSwitch
         title: VMware ESXi Standard vSwitch
         filters: asset.platform == "vmware-esxi"
         mql: |
-          esxi.host.standardSwitch
+          vsphere.host.standardSwitch
 
