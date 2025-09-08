@@ -28,13 +28,13 @@ arista.eos {
   ntp() arista.eos.ntpSetting
 }
 
-// Arista EOS system’s operating configuration
+// Arista EOS system's operating configuration
 arista.eos.runningConfig {
   // EOS running-config
   content() string
 }
 
-// Arista EOS system’s operating configuration for a specific section
+// Arista EOS system's operating configuration for a specific section
 arista.eos.runningConfig.section {
   // Section name
   name string
