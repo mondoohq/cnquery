@@ -9,7 +9,7 @@ replace go.mondoo.com/cnquery/v12 => ../..
 require (
 	github.com/oracle/oci-go-sdk/v65 v65.99.2
 	github.com/rs/zerolog v1.34.0
-	go.mondoo.com/cnquery/v12 v12.0.0-rc1
+	go.mondoo.com/cnquery/v12 v12.0.0
 )
 
 require (
@@ -101,6 +101,7 @@ require (
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.4.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
@@ -113,7 +114,7 @@ require (
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/oklog/run v1.2.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
-	github.com/pjbgf/sha1cd v0.4.0 // indirect
+	github.com/pjbgf/sha1cd v0.5.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
@@ -143,14 +144,14 @@ require (
 	go.uber.org/mock v0.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
-	golang.org/x/mod v0.27.0 // indirect
+	golang.org/x/mod v0.28.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/oauth2 v0.30.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/term v0.34.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/oauth2 v0.31.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/term v0.35.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
+	golang.org/x/time v0.13.0 // indirect
 	golang.org/x/tools v0.36.0 // indirect
 	google.golang.org/api v0.248.0 // indirect
 	google.golang.org/genproto v0.0.0-20250826171959-ef028d996bc1 // indirect
