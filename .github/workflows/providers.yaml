@@ -140,7 +140,7 @@ jobs:
           credentials_json: ${{ secrets.GCP_RELEASE_SERVICE_ACCOUNT}}
 
       - name: 'Set up gcloud CLI'
-        uses: 'google-github-actions/setup-gcloud@v2'
+        uses: 'google-github-actions/setup-gcloud@v3'
 
 # jsign and azure-cli are both requirements for Azure Trusted Signing and these actions to authenticate
 # These packages have been installed on the self-hosted runner using ansible from the private repo

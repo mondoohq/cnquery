@@ -76,7 +76,7 @@ jobs:
           cache: false
 
       - name: 'Set up gcloud CLI'
-        uses: 'google-github-actions/setup-gcloud@v2'
+        uses: 'google-github-actions/setup-gcloud@v3'
 
       - name: Set provider env
         run: echo "PROVIDERS_PATH=${PWD}/.providers" >> $GITHUB_ENV
@@ -112,7 +112,7 @@ jobs:
           cache: false
 
       - name: 'Set up gcloud CLI'
-        uses: 'google-github-actions/setup-gcloud@v2'
+        uses: 'google-github-actions/setup-gcloud@v3'
 
       - name: Set provider env
         run: echo "PROVIDERS_PATH=${PWD}/.providers" >> $GITHUB_ENV
