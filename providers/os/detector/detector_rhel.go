@@ -7,14 +7,18 @@ import (
 	"bufio"
 	"bytes"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/parsers"
 )
 
 const (
 	modulesDir = "/etc/dnf/modules.d"
+	// TODO: Is this the same on newer rhel versions? DNF?
+	reposDir = "/etc/yum.repos.d"
 )
 
 type RhelModule struct {
@@ -70,4 +74,63 @@ func getActivatedRhelModules(conn shared.Connection) []string {
 	}
 
 	return modules
+}
+
+// getActivatedRhelSupportLevels returns the support level of the currently activated rhel repositories
+// It currently detects the following support levels:
+//   - eus (Extended Update Support)
+//   - e4s (Enhanced Extendeded Update Support)
+func getActivatedRhelSupportLevels(conn shared.Connection) []string {
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+	ok, err := afs.DirExists(reposDir)
+	if err != nil || !ok {
+		return []string{}
+	}
+
+	files, err := afs.ReadDir(reposDir)
+	if err != nil {
+		return []string{}
+	}
+
+	supportLevels := []string{}
+	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), ".repo") {
+			continue
+		}
+
+		content, err := afs.ReadFile(filepath.Join(reposDir, file.Name()))
+		if err != nil {
+			continue
+		}
+
+		repoIni := parsers.ParseIni(string(content), "=")
+		if repoIni == nil {
+			continue
+		}
+
+		for section, fields := range repoIni.Fields {
+			supportLevel := ""
+			switch {
+			case strings.Contains(section, "baseos-e4s-"):
+				supportLevel = "e4s"
+			case strings.Contains(section, "baseos-eus-"):
+				supportLevel = "eus"
+			}
+			if supportLevel == "" {
+				continue
+			}
+			if subFieldsMap, ok := fields.(map[string]interface{}); ok {
+				if enabled, ok := subFieldsMap["enabled"]; ok {
+					if v, ok := enabled.(string); ok && v == "1" {
+						supportLevels = append(supportLevels, supportLevel)
+					}
+				}
+			}
+		}
+	}
+
+	slices.Sort(supportLevels)
+	supportLevels = slices.Compact(supportLevels)
+
+	return supportLevels
 }
