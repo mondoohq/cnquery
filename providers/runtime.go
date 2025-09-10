@@ -290,7 +290,12 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 }
 
 func (r *Runtime) AssetUpdated(asset *inventory.Asset) {
-	r.Recording().EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
+	rec := r.Recording()
+	rec.EnsureAsset(
+		r.Provider.Connection.Asset,
+		r.Provider.Instance.ID,
+		r.Provider.Connection.Id,
+		asset.Connections[0])
 }
 
 func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {
