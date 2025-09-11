@@ -6,8 +6,13 @@ package resources
 import (
 	"debug/buildinfo"
 	"debug/elf"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/sigstore/cosign/v2/pkg/cosign"
+	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
 	"io"
 	"os"
 	"path/filepath"
@@ -295,11 +300,13 @@ func (x *mqlPackages) list() ([]any, error) {
 				})
 			}
 
+			binaryPkgs = append(binaryPkgs, funcCosign()...)
+
 			/*
 			 "package": {
 			        "ecosystem": "Go",
 			        "name": "net/http",
-			        "purl": "pkg:generic/net%2Fhttp"
+			        "purl": "pkg:golang/net%2Fhttp"
 			      },
 			*/
 
@@ -419,4 +426,108 @@ func (x *mqlPackages) refreshCache(all []any) error {
 	}
 
 	return nil
+}
+
+func firstchunk(s string) string {
+	parts := strings.FieldsFunc(s, func(r rune) bool {
+		return r == '/' || r == ':' || r == '@'
+	})
+	if len(parts) == 0 {
+		return ""
+	}
+	return parts[1]
+}
+
+func funcCosign() []packages.Package {
+	imageRef := "cilium/cilium@sha256:8969bfd9c87cbea91e40665f8ebe327268c99d844ca26d7d12165de07f702866"
+	ref, err := name.ParseReference(imageRef)
+	if err != nil {
+		log.Debug().Err(err).Msg("parsing reference")
+		return nil
+	}
+
+	signedRef, err := ociremote.SignedEntity(ref)
+	if err != nil {
+		log.Debug().Err(err).Msg("getting signed entity")
+		return nil
+	}
+	// Fetch SBOM attestations (predicate type: SPDX or CycloneDX)
+	// Common predicate types:
+	//   https://spdx.dev/Document
+	//   https://cyclonedx.org/schema
+	// We'll use SPDX as an example
+	const spdxPredicateType = "https://spdx.dev/Document"
+
+	attestations, err := cosign.FetchAttestations(signedRef, spdxPredicateType)
+	if err != nil {
+		log.Debug().Err(err).Msg("fetching attestations")
+		return nil
+	}
+
+	if len(attestations) == 0 {
+		fmt.Println("No SBOM attestations found for this image.")
+		return nil
+	}
+
+	var ps []packages.Package
+	for _, att := range attestations {
+		// Decode base64 payload
+		payload, err := base64.StdEncoding.DecodeString(string(att.PayLoad))
+		if err != nil {
+			log.Debug().Err(err).Msg("decoding payload")
+			continue
+		}
+
+		// Parse JSON
+		var jsonData struct {
+			Predicate struct {
+				Packages []struct {
+					ExternalRefs []struct {
+						ReferenceLocator string `json:"referenceLocator"`
+					} `json:"externalRefs"`
+				} `json:"packages"`
+			} `json:"predicate"`
+		}
+
+		// Parse into structured data first
+		if err := json.Unmarshal(payload, &jsonData); err != nil {
+			log.Debug().Err(err).Msg("parsing JSON")
+			continue
+		}
+
+		//fmt.Printf("Searching for CPE string: %s\n", fmt.Sprintf("cpe:2.3:a:%s:", firstchunk(*imageRef)))
+		// Find matching CPE strings
+
+		for _, pkg := range jsonData.Predicate.Packages {
+			for _, ref := range pkg.ExternalRefs {
+				if loc := ref.ReferenceLocator; strings.HasPrefix(loc, fmt.Sprintf("cpe:2.3:a:%s", firstchunk(imageRef))) {
+					// fmt.Printf("Found CPE: %s\n", loc)
+					// Convert CPE to PURL
+					// Format: cpe:2.3:a:vendor:product:version
+					parts := strings.Split(loc, ":")
+					if len(parts) >= 7 {
+						product := parts[4]
+						version := parts[5]
+						purl := fmt.Sprintf("pkg:binary/%s@%s", product, version)
+						fmt.Printf("Converted PURL: %s\n", purl)
+						ps = append(ps, packages.Package{
+							Name:    product,
+							Version: version,
+							Origin:  imageRef,
+							PUrl:    purl,
+						})
+					}
+
+				}
+			}
+		}
+		// Pretty print JSON
+		//prettyJSON, err := json.MarshalIndent(jsonData, "", "  ")
+		//if err != nil {
+		//	log.Debug().Err(err).Msg("formatting JSON: %v")
+		//}
+		//fmt.Println(string(prettyJSON))
+
+	}
+	return ps
 }
