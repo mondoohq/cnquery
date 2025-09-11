@@ -175,52 +175,57 @@ func compileAssignment(c *compiler, id string, call *parser.Call) (types.Type, e
 }
 
 func compileComparable(c *compiler, id string, call *parser.Call) (types.Type, error) {
-	leftRef, left, right, assertionMsg, err := compileABOperation(c, id, call)
+	leftRef, leftOrg, right, assertionMsg, err := compileABOperation(c, id, call)
 	if err != nil {
 		return types.Nil, errors.New("failed to compile: " + err.Error())
 	}
 
-	for left.Type() == types.Ref {
-		ref, ok := left.Primitive.RefV2()
-		if !ok {
-			return types.Nil, errors.New("failed to get reference entry of left operand to " + id + ", this should not happen")
-		}
-		left = c.Result.CodeV2.Chunk(ref)
-	}
-
 	// find specialized or generalized builtin function
-	lt := left.DereferencedTypeV2(c.Result.CodeV2)
+	lt := leftOrg.DereferencedTypeV2(c.Result.CodeV2)
 	rt := (&llx.Chunk{Primitive: right}).DereferencedTypeV2(c.Result.CodeV2)
 
 	name := id + string(rt)
-	h, err := llx.BuiltinFunctionV2(lt, name)
-	if err != nil {
-		h, err = llx.BuiltinFunctionV2(lt, id)
-	}
-	if err != nil {
-		name = id + string(rt.Underlying())
-		h, err = llx.BuiltinFunctionV2(lt, name)
-	}
-	if err != nil {
-		return types.Nil, errors.New("cannot find operator handler: " + lt.Label() + " " + id + " " + types.Type(right.Type).Label())
-	}
 
-	if h.Compiler != nil {
-		name, err = h.Compiler(lt, rt)
+	// First we look for special functions in MQLc for operators
+	var resType types.Type
+	h, _ := builtinFunction(lt, name)
+	if h != nil {
+		resType, err = h.compile(c, lt, leftRef, name, call)
 		if err != nil {
-			return types.Nil, err
+			return resType, err
 		}
-	}
 
-	c.addChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   name,
-		Function: &llx.Function{
-			Type:    string(types.Bool),
-			Binding: leftRef,
-			Args:    []*llx.Primitive{right},
-		},
-	})
+	} else {
+		// If we don't find any special operator functions in MQLc we look at LLX to see if any are defined there
+		h, err := llx.BuiltinFunctionV2(lt, name)
+		if err != nil {
+			h, err = llx.BuiltinFunctionV2(lt, id)
+		}
+		if err != nil {
+			name = id + string(rt.Underlying())
+			h, err = llx.BuiltinFunctionV2(lt, name)
+		}
+		if err != nil {
+			return types.Nil, errors.New("cannot find operator handler: " + lt.Label() + " " + id + " " + types.Type(right.Type).Label())
+		}
+		if h.Compiler != nil {
+			name, err = h.Compiler(lt, rt)
+			if err != nil {
+				return types.Nil, err
+			}
+		}
+
+		c.addChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   name,
+			Function: &llx.Function{
+				Type:    string(types.Bool),
+				Binding: leftRef,
+				Args:    []*llx.Primitive{right},
+			},
+		})
+		resType = types.Bool
+	}
 
 	if assertionMsg != nil {
 		if c.Result.CodeV2.Assertions == nil {
@@ -229,7 +234,7 @@ func compileComparable(c *compiler, id string, call *parser.Call) (types.Type, e
 		c.Result.CodeV2.Assertions[c.tailRef()] = assertionMsg
 	}
 
-	return types.Bool, nil
+	return resType, nil
 }
 
 func compileTransformation(c *compiler, id string, call *parser.Call) (types.Type, error) {

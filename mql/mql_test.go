@@ -241,7 +241,7 @@ func TestTypeCasts(t *testing.T) {
 	})
 }
 
-func TestResource_Builtins(t *testing.T) {
+func TestResource_List_Builtins(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
@@ -258,6 +258,26 @@ func TestResource_Builtins(t *testing.T) {
 			Code:        "customGroups.last",
 			ResultIndex: 0,
 			Expectation: &llx.MockResource{Name: "mgroup", ID: "group7"},
+		},
+		{
+			Code:        "customGroups == empty",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+		{
+			Code:        "customGroups != empty",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "emptyGroups == empty",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "emptyGroups != empty",
+			ResultIndex: 1,
+			Expectation: false,
 		},
 	})
 }
