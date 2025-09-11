@@ -6,8 +6,6 @@ package resources
 import (
 	"debug/buildinfo"
 	"debug/elf"
-	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -15,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
@@ -121,7 +120,8 @@ func (p *mqlPackage) files() ([]any, error) {
 		conn := p.MqlRuntime.Connection.(shared.Connection)
 		pms, err := packages.ResolveSystemPkgManagers(conn)
 		if len(pms) == 0 || err != nil {
-			return nil, errors.New("could not detect suitable package manager for platform")
+			// return nil, errors.New("could not detect suitable package manager for platform")
+			log.Error().Err(err).Msg("could not detect suitable package manager for platform")
 		}
 		filesOnDisk = []packages.FileRecord{}
 		for _, pm := range pms {
@@ -184,6 +184,7 @@ func (x *mqlPackages) list() ([]any, error) {
 		"fluent-bit",
 		"gitlab-runner",
 		"nginx",
+		"alertmanager",
 	}
 	for _, path := range pathsToScan {
 		files, err := tarFs.Find(path, nil, "file", &perm, &depth)
@@ -291,7 +292,7 @@ func (x *mqlPackages) list() ([]any, error) {
 					Name:    dep.Path,
 					Version: dep.Version[1:],
 					Origin:  bf.Path,
-					PUrl:    fmt.Sprintf("pkg:generic/%s", dep.Path),
+					PUrl:    packageurl.NewPackageURL(packageurl.TypeGolang, "", dep.Path, dep.Version[1:], nil, "").String(),
 				})
 			}
 
@@ -318,7 +319,8 @@ func (x *mqlPackages) list() ([]any, error) {
 
 	pms, err := packages.ResolveSystemPkgManagers(conn)
 	if len(pms) == 0 || err != nil {
-		return nil, errors.New("could not detect suitable package manager for platform")
+		// return nil, errors.New("could not detect suitable package manager for platform")
+		log.Error().Err(err).Msg("could not detect suitable package manager for platform")
 	}
 
 	osPkgs := []packages.Package{}
