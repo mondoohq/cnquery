@@ -28,7 +28,7 @@ import (
 var (
 	PKG_IDENTIFIER = regexp.MustCompile(`^(.*):\/\/(.*)\/(.*)\/(.*)$`)
 	// semverRegEx    = regexp.MustCompile(`[^\d\w](v?\d+\.\d+\.\d+)[^\d\w]`)
-	semverRegEx = regexp.MustCompile(`\x{0000}((:?[\w]+/)?v?\d+\.\d+\.\d+)\x{0000}`)
+	semverRegEx = regexp.MustCompile(`\x{0000}(?:[\w]+/)?(v?\d+\.\d+\.\d+)\x{0000}`)
 )
 
 // A system package cannot be installed twice but there are edge cases:
