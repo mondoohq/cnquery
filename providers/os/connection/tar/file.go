@@ -47,6 +47,7 @@ func (f *File) Read(b []byte) (n int, err error) {
 }
 
 func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
+	// FIXME: implement this to get aroudn the creation of a temp file for binaries
 	return 0, errors.New("not implemented yet")
 }
 

@@ -209,9 +209,10 @@ func (fs *FS) Find(from string, r *regexp.Regexp, typ string, perm *uint32, dept
 		log.Trace().Str("path", k).Str("from", from).Str("prefix", from).Bool("prefix", p).Bool("m", m).Msg("check if matches")
 		if p && m {
 			entry := fs.FileMap[k]
+			// FIXME: Add check for permissions
 			if (typ == "directory" && entry.Typeflag == tar.TypeDir) || (typ == "file" && entry.Typeflag == tar.TypeReg) || typ == "" {
 				list = append(list, k)
-				log.Debug().Msg("matches")
+				// log.Debug().Msg("matches")
 				continue
 			}
 		}

@@ -44,9 +44,13 @@
       "cwd": "${workspaceRoot}/",
       "args": [
         "run",
-        // "local",
+        "container",
+        "image",
+        // "fluent/fluent-bit:3.0.0",
+        "prom/alertmanager:v0.27.0",
         "-c",
-        "asset.eol"
+        "packages",
+        "--log-level=debug"
       ],
     },
     {

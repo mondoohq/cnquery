@@ -4,20 +4,30 @@
 package resources
 
 import (
+	"debug/elf"
 	"errors"
+	"io"
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/tar"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/packages"
 	"go.mondoo.com/cnquery/v12/types"
 	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
-var PKG_IDENTIFIER = regexp.MustCompile(`^(.*):\/\/(.*)\/(.*)\/(.*)$`)
+var (
+	PKG_IDENTIFIER = regexp.MustCompile(`^(.*):\/\/(.*)\/(.*)\/(.*)$`)
+	// semverRegEx    = regexp.MustCompile(`[^\d\w](v?\d+\.\d+\.\d+)[^\d\w]`)
+	semverRegEx = regexp.MustCompile(`\x{0000}((:?[\w]+/)?v?\d+\.\d+\.\d+)\x{0000}`)
+)
 
 // A system package cannot be installed twice but there are edge cases:
 // - the same package name could be installed for multiple archs
@@ -139,11 +149,148 @@ type mqlPackagesInternal struct {
 	packagesByName map[string]*mqlPackage
 }
 
+type elfBinaryPackageNotes struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	PURL    string `json:"purl"`
+	CPE     string `json:"cpe"`
+	License string `json:"license"`
+}
+
 func (x *mqlPackages) list() ([]any, error) {
 	x.lock.Lock()
 	defer x.lock.Unlock()
 
 	conn := x.MqlRuntime.Connection.(shared.Connection)
+
+	binaryPkgs := []packages.Package{}
+	tarConn := conn.(*tar.Connection)
+	tarFs := tarConn.FileSystem().(*tar.FS)
+	perm := uint32(0o777)
+	depth := int(1)
+	pathsToScan := []string{
+		"/fluent-bit/bin",
+		"/bin",
+		"/sbin",
+		"/usr/bin",
+		"/usr/sbin",
+		"/usr/local/bin",
+		"/usr/local/sbin",
+		"/",
+	}
+	supportedFiles := []string{
+		"fluent-bit",
+		"gitlab-runner",
+		"nginx",
+	}
+	for _, path := range pathsToScan {
+		files, err := tarFs.Find(path, nil, "file", &perm, &depth)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, file := range files {
+			log.Debug().Str("file", file).Msg("found file")
+			// TODO: we need a reject list here, well known OS binaries are not interesting
+			supported := false
+			for _, supportedFile := range supportedFiles {
+				if strings.HasSuffix(file, supportedFile) {
+					supported = true
+				}
+			}
+			if !supported {
+				continue
+			}
+			f, err := tarFs.Open(file)
+			if err != nil {
+				return nil, err
+			}
+			defer f.Close()
+
+			tmpFile, err := os.CreateTemp("", "mondoo-binary-package-notes-")
+			if err != nil {
+				log.Error().Err(err).Msg("could not copy file to temp file")
+				continue
+			}
+			defer os.Remove(tmpFile.Name())
+
+			_, err = io.Copy(tmpFile, f)
+			if err != nil {
+				log.Error().Err(err).Msg("could not create temp file")
+				continue
+			}
+			tmpFile.Close()
+			f, err = os.Open(tmpFile.Name())
+			if err != nil {
+				log.Error().Err(err).Msg("could not open temp file")
+				continue
+			}
+			defer f.Close()
+
+			// chunk := make([]byte, 1024*1024*3)
+			// start := int64(0)
+			// for {
+			// 	numBytes, err := f.ReadAt(chunk, start)
+			// 	if err != nil {
+			// 		log.Error().Err(err).Msg("could not read first block")
+			// 		break
+			// 	}
+			// 	m := semverRegEx.FindAllStringSubmatch(string(chunk), -1)
+			// 	log.Debug().Interface("versions", m).Msg("found version")
+			// 	if numBytes < 1024*1024*3 {
+			// 		break
+			// 	}
+
+			// 	start += int64(len(chunk) - 100)
+			// }
+
+			elfBinary, err := elf.NewFile(f)
+			if err != nil {
+				log.Error().Err(err).Msg("could not read elf file")
+				continue
+			}
+			for _, section := range elfBinary.Sections {
+				// if section.Name == ".text" || section.Name == ".dynstr" || section.Name == ".tbss" || section.Name == ".bss" {
+				if section.Name != ".rodata" {
+					continue
+				}
+				notes, err := section.Data()
+				if err != nil {
+					log.Error().Err(err).Msg("could not read section data")
+					continue
+				}
+				log.Debug().Interface("section", section.Name).Msg("found section")
+				notesStr := string(notes)
+				m := semverRegEx.FindStringSubmatch(notesStr)
+				if len(m) > 0 {
+					log.Debug().Str("version", m[1]).Msg("found version")
+					pkgName := filepath.Base(file)
+					binPkg := packages.Package{
+						Name:    pkgName,
+						Version: m[1],
+						Arch:    "amd64",
+						Format:  "binary",
+						PUrl:    "pkg:binary/" + pkgName,
+					}
+					binaryPkgs = append(binaryPkgs, binPkg)
+					log.Debug().Str("package", binPkg.Name).Str("version", binPkg.Version).Str("arch", binPkg.Arch).Str("format", binPkg.Format).Str("purl", binPkg.PUrl).Msg("found binary package")
+				}
+
+			}
+
+			// var metadata elfBinaryPackageNotes
+			// if err := json.Unmarshal(notes, &metadata); err == nil {
+			// 	binaryPkgs = append(binaryPkgs, packages.Package{
+			// 		Name:    metadata.Name,
+			// 		Version: metadata.Version,
+			// 		Arch:    "amd64",
+			// 		Format:  "binary",
+			// 		PUrl:    metadata.PURL,
+			// 	})
+			// }
+		}
+	}
+
 	pms, err := packages.ResolveSystemPkgManagers(conn)
 	if len(pms) == 0 || err != nil {
 		return nil, errors.New("could not detect suitable package manager for platform")
@@ -177,6 +324,8 @@ func (x *mqlPackages) list() ([]any, error) {
 	for _, a := range osAvailablePkgs {
 		availableMap[a.Name+"/"+a.Arch] = a
 	}
+
+	osPkgs = append(osPkgs, binaryPkgs...)
 
 	// create MQL package os for each package
 	pkgs := make([]any, len(osPkgs))
