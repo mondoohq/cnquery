@@ -4,8 +4,10 @@
 package resources
 
 import (
+	"debug/buildinfo"
 	"debug/elf"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -277,6 +279,29 @@ func (x *mqlPackages) list() ([]any, error) {
 				}
 
 			}
+
+			bf, err := buildinfo.Read(f)
+			if err != nil {
+				log.Error().Err(err).Msg("could not retrive buildinfo")
+				continue
+			}
+
+			for _, dep := range bf.Deps {
+				binaryPkgs = append(binaryPkgs, packages.Package{
+					Name:    dep.Path,
+					Version: dep.Version[1:],
+					Origin:  bf.Path,
+					PUrl:    fmt.Sprintf("pkg:generic/%s", dep.Path),
+				})
+			}
+
+			/*
+			 "package": {
+			        "ecosystem": "Go",
+			        "name": "net/http",
+			        "purl": "pkg:generic/net%2Fhttp"
+			      },
+			*/
 
 			// var metadata elfBinaryPackageNotes
 			// if err := json.Unmarshal(notes, &metadata); err == nil {
