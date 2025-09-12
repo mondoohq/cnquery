@@ -458,7 +458,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 
 	// filters have no dependencies, so we can compile them early
 	if err := query.Filters.Compile(c.ownerMrn, c.conf.CompilerConfig); err != nil {
-		c.errors = append(c.errors, errors.New("failed to compile filters for query "+query.Mrn))
+		c.errors = append(c.errors, multierr.Wrap(err, "failed to compile filters for query "+query.Mrn))
 		return
 	}
 
@@ -467,7 +467,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 		variant := query.Variants[i]
 		uid := variant.Uid
 		if err := variant.RefreshMRN(c.ownerMrn); err != nil {
-			c.errors = append(c.errors, errors.New("failed to refresh MRN for variant in query "+query.Uid))
+			c.errors = append(c.errors, multierr.Wrap(err, "failed to refresh MRN for variant in query "+query.Uid))
 			return
 		}
 		if uid != "" {
@@ -478,7 +478,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 	// filters will need to be aggregated into the pack's filters
 	if pack != nil {
 		if err := pack.ComputedFilters.AddQueryFilters(query, c.lookupQuery); err != nil {
-			c.errors = append(c.errors, errors.New("failed to register filters for query "+query.Mrn))
+			c.errors = append(c.errors, multierr.Wrap(err, "failed to register filters for query "+query.Mrn))
 			return
 		}
 	}
