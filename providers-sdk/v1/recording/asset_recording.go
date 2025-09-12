@@ -10,7 +10,7 @@ import (
 )
 
 type Asset struct {
-	Asset       assetInfo    `json:"asset"`
+	Asset       *assetInfo   `json:"asset"`
 	Connections []connection `json:"connections"`
 	Resources   []Resource   `json:"resources"`
 
@@ -38,7 +38,7 @@ type connection struct {
 	ProviderID string `json:"provider"`
 	Connector  string `json:"connector"`
 	Version    string `json:"version"`
-	id         uint32 `json:"-"`
+	Id         uint32 `json:"id"`
 }
 
 type Resource struct {
