@@ -308,19 +308,20 @@ func (s *LocalScanner) distributeJob(ctx context.Context, job *Job, upstream *up
 			}
 			log.Debug().Int("assets", len(resp.Details)).Msg("got assets details")
 			platformAssetMapping := make(map[string]*explorer.SynchronizeAssetsRespAssetDetail)
-			for i := range resp.Details {
-				log.Debug().Str("platform-mrn", resp.Details[i].PlatformMrn).Str("asset", resp.Details[i].AssetMrn).Msg("asset mapping")
-				platformAssetMapping[resp.Details[i].PlatformMrn] = resp.Details[i]
+			for _, detail := range resp.Details {
+				log.Debug().Str("platform-mrn", detail.PlatformMrn).Str("asset", detail.AssetMrn).Msg("asset mapping")
+				platformAssetMapping[detail.PlatformMrn] = detail
 			}
 
 			// attach the asset details to the assets list
 			for i := range batch {
 				asset := batch[i].Asset
 				log.Debug().Str("asset", asset.Name).Strs("platform-ids", asset.PlatformIds).Msg("update asset")
-				platformMrn := asset.PlatformIds[0]
-				if details, ok := platformAssetMapping[platformMrn]; ok {
-					asset.Mrn = details.AssetMrn
-					asset.Url = details.Url
+				for _, platformId := range asset.PlatformIds {
+					if details, ok := platformAssetMapping[platformId]; ok {
+						asset.Mrn = details.AssetMrn
+						asset.Url = details.Url
+					}
 				}
 			}
 		} else {
