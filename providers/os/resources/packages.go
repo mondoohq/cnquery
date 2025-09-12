@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 
@@ -353,6 +354,14 @@ func (x *mqlPackages) list() ([]any, error) {
 	}
 
 	osPkgs = append(osPkgs, binaryPkgs...)
+
+	// FIXME: Why do we see duplicates here?
+	slices.SortFunc(osPkgs, func(a, b packages.Package) int {
+		return strings.Compare(a.PUrl, b.PUrl)
+	})
+	osPkgs = slices.CompactFunc(osPkgs, func(a, b packages.Package) bool {
+		return a.PUrl == b.PUrl
+	})
 
 	// create MQL package os for each package
 	pkgs := make([]any, len(osPkgs))
