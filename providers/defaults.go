@@ -513,4 +513,23 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
+	"networkdevices": {
+		Provider: &plugin.Provider{
+			Name:            "networkdevices",
+			ID:              "go.mondoo.com/cnquery/providers/networkdevices",
+			ConnectionTypes: []string{"networkdevices"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "ciscocatalyst",
+					Use:   "ciscocatalyst hostname",
+					Short: "Cisco Catalyst Connection",
+				},
+				{
+					Name:  "nd-ssh",
+					Use:   "nd-ssh user@host",
+					Short: "a remote network device via SSH",
+				},
+			},
+		},
+	},
 }
