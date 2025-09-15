@@ -227,54 +227,42 @@ func TryDetectAssetFromPath(connId uint32, path string, conf *inventory.Config, 
 		return nil, err
 	}
 
-	return tryDetectAsset(fsConn, path, conf, asset)
-}
-
-func TryDetectAssetFromFs(connId uint32, path string, conf *inventory.Config, asset *inventory.Asset, fileSystem afero.Fs) (*fs.FileSystemConnection, error) {
-	// create and initialize fs provider
-	conf.Options["path"] = path
-	fsConn, err := fs.NewFileSystemConnectionWithFs(connId, &inventory.Config{
-		Path:       path,
-		PlatformId: conf.PlatformId,
-		Options:    conf.Options,
-		Type:       "fs",
-		Record:     conf.Record,
-	}, asset, path, nil, fileSystem)
+	err = TryDetectAsset(fsConn, path, conf, asset)
 	if err != nil {
 		return nil, err
 	}
 
-	return tryDetectAsset(fsConn, path, conf, asset)
+	return fsConn, nil
 }
 
-func tryDetectAsset(fsConn *fs.FileSystemConnection, path string, conf *inventory.Config, asset *inventory.Asset) (*fs.FileSystemConnection, error) {
-	p, ok := detector.DetectOS(fsConn)
+func TryDetectAsset(conn shared.Connection, path string, conf *inventory.Config, asset *inventory.Asset) error {
+	p, ok := detector.DetectOS(conn)
 	if !ok {
 		log.Debug().
 			Str("path", path).
 			Msg("device connection> cannot detect os")
-		return nil, errors.New("cannot detect os")
+		return errors.New("cannot detect os")
 	}
 
 	log.Debug().Str("path", path).Msg("device connection> detected os from path")
-	fingerprint, p, err := id.IdentifyPlatform(fsConn, &plugin.ConnectReq{}, p, asset.IdDetector)
+	fingerprint, p, err := id.IdentifyPlatform(conn, &plugin.ConnectReq{}, p, asset.IdDetector)
 	if err != nil {
 		if len(asset.PlatformIds) == 0 {
 			log.Debug().Str("path", path).Err(err).Msg("device connection> failed to identify platform from path")
-			return nil, err
+			return err
 		}
 		log.Warn().Err(err).Msg("device connection> cannot detect platform ids, using existing ones")
 	}
 
 	if p == nil {
 		log.Debug().Str("path", path).Msg("device connection> no platform detected")
-		return nil, errors.New("device connection> no platform detected")
+		return errors.New("device connection> no platform detected")
 	}
 
 	// even if we get a platform, sometimes its an empty one (e.g. name's empty or unknown)
 	if slices.Contains([]string{"", "unknown"}, p.Name) {
 		log.Debug().Str("path", path).Msg("device connection> platform name is empty, discarding it")
-		return nil, errors.New("device connection> platform found, but empty")
+		return errors.New("device connection> platform found, but empty")
 	}
 
 	if asset.Name == "" && fingerprint != nil {
@@ -293,5 +281,5 @@ func tryDetectAsset(fsConn *fs.FileSystemConnection, path string, conf *inventor
 		log.Debug().Str("path", path).Msg("device connection> using platform os from mountpoint")
 	}
 
-	return fsConn, nil
+	return nil
 }
