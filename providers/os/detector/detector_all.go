@@ -829,6 +829,9 @@ var redhatFamily = &PlatformResolver{
 			modules := getActivatedRhelModules(conn)
 			pf.Metadata["redhat/modules"] = strings.Join(modules, ",")
 
+			// RHEL has mutliple support levels, identify them via repository files
+			pf.Metadata["redhat/support-type"] = strings.Join(getActivatedRhelSupportLevels(conn), ",")
+
 			return true, nil
 		}
 
