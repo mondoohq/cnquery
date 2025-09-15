@@ -73,7 +73,6 @@ func initGcpOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	args["id"] = llx.StringData(org.Name)
 	args["name"] = llx.StringData(org.DisplayName)
 	args["state"] = llx.StringData(org.State)
-	args["lifecycleState"] = llx.StringData(org.State)
 
 	return args, nil, nil
 }
@@ -85,12 +84,6 @@ func (g *mqlGcpOrganization) name() (string, error) {
 }
 
 func (g *mqlGcpOrganization) state() (string, error) {
-	// placeholder to convince MQL that this is an optional field
-	// should never be called since the data is initialized in init
-	return "", errors.New("not implemented")
-}
-
-func (g *mqlGcpOrganization) lifecycleState() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
