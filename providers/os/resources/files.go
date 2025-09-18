@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"go.mondoo.com/cnquery/v12/llx"
@@ -18,14 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/os/resources/binaries"
 )
 
-var findTypes = map[string]string{
-	"file":      "f",
-	"directory": "d",
-	"character": "c",
-	"block":     "b",
-	"socket":    "s",
-	"link":      "l",
-}
+// findTypes removed - no longer using traditional find command
 
 func initFilesFind(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if args["permissions"] == nil {
@@ -182,83 +174,49 @@ func (l *mqlFilesFind) list() ([]any, error) {
 			return nil, err
 		}
 	} else if conn.Capabilities().Has(shared.Capability_RunCommand) {
-		// Try fd first if available, fall back to find if it fails
-		if binaries.IsFdAvailable() {
+		// fd-only mode: use fd for file searches (local or remote) - no traditional find fallback
+		var fdSuccess bool
+
+		// For local connections, use embedded fd binary (REQUIRED - no fallback)
+		if conn.Type() == shared.Type_Local {
+			if !binaries.IsFdAvailable() {
+				return nil, errors.New("fd binary not available for local file search - traditional find fallback disabled for testing")
+			}
+
 			var depthVal int64
 			if l.Depth.IsSet() {
 				depthVal = l.Depth.Data
 			}
 
 			foundFiles, err = executeFdCommand(l.From.Data, compiledRegexp, l.Type.Data, l.Permissions.Data, l.Name.Data, depthVal)
-			if err == nil {
-				// fd succeeded, use its results
-			} else {
-				// fd failed, fall back to find
-				err = nil // Reset error for find fallback
+			if err != nil {
+				return nil, fmt.Errorf("local fd command failed: %w", err)
 			}
+			fdSuccess = true
+
+		} else if conn.Type() == shared.Type_SSH {
+			// For remote connections, use remote fd (REQUIRED - no fallback)
+			var depthVal int64
+			if l.Depth.IsSet() {
+				depthVal = l.Depth.Data
+			}
+
+			foundFiles, err = binaries.ExecuteRemoteFdCommand(conn, l.From.Data, compiledRegexp, l.Type.Data, l.Permissions.Data, l.Name.Data, depthVal)
+			if err != nil {
+				return nil, fmt.Errorf("remote fd command failed: %w", err)
+			}
+			fdSuccess = true
+
+		} else {
+			return nil, fmt.Errorf("unsupported connection type for fd-only file search: %v", conn.Type())
 		}
 
-		// Use find if fd is not available or failed
-		if !binaries.IsFdAvailable() || len(foundFiles) == 0 {
-			var call strings.Builder
-			call.WriteString("find -L ")
-			call.WriteString(strconv.Quote(l.From.Data))
-
-			if !l.Xdev.Data {
-				call.WriteString(" -xdev")
-			}
-
-			if l.Type.Data != "" {
-				t, ok := findTypes[l.Type.Data]
-				if ok {
-					call.WriteString(" -type " + t)
-				}
-			}
-
-			if l.Regex.Data != "" {
-				// TODO: we need to escape regex here
-				call.WriteString(" -regex '")
-				call.WriteString(l.Regex.Data)
-				call.WriteString("'")
-			}
-
-			if l.Permissions.Data != 0o777 {
-				call.WriteString(" -perm -")
-				call.WriteString(octal2string(l.Permissions.Data))
-			}
-
-			if l.Name.Data != "" {
-				call.WriteString(" -name ")
-				call.WriteString(l.Name.Data)
-			}
-
-			if l.Depth.IsSet() {
-				call.WriteString(" -maxdepth ")
-				call.WriteString(octal2string(l.Depth.Data))
-			}
-
-			rawCmd, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{
-				"command": llx.StringData(call.String()),
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			cmd := rawCmd.(*mqlCommand)
-			out := cmd.GetStdout()
-			if out.Error != nil {
-				return nil, out.Error
-			}
-
-			lines := strings.TrimSpace(out.Data)
-			if lines == "" {
-				foundFiles = []string{}
-			} else {
-				foundFiles = strings.Split(lines, "\n")
-			}
+		// fd-only mode: if we reach here, fd must have succeeded
+		if !fdSuccess {
+			return nil, errors.New("internal error: fd should have succeeded or returned an error")
 		}
 	} else {
-		return nil, errors.New("find is not supported for your platform")
+		return nil, errors.New("file search requires command execution capability - traditional find fallback disabled for testing")
 	}
 
 	files := make([]any, len(foundFiles))
