@@ -6,9 +6,11 @@ package binaries
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
@@ -28,7 +30,7 @@ func NewRemoteFdChecker(conn shared.Connection) *RemoteFdChecker {
 	}
 }
 
-// IsRemoteFdAvailable checks if fd is available on the remote system
+// IsRemoteFdAvailable checks if we can use fd on the remote system (via embedded binary upload)
 func (r *RemoteFdChecker) IsRemoteFdAvailable() bool {
 	if r.checked {
 		return r.available
@@ -36,32 +38,17 @@ func (r *RemoteFdChecker) IsRemoteFdAvailable() bool {
 
 	r.checked = true
 
-	// First, check if fd is available in PATH
-	if r.checkFdInPath() {
-		r.available = true
-		return true
-	}
-
-	// If not in PATH, we could potentially upload and install it
-	// For now, fall back to traditional find
-	r.available = false
-	return false
-}
-
-// checkFdInPath checks if fd command exists in remote system PATH
-func (r *RemoteFdChecker) checkFdInPath() bool {
-	if !r.conn.Capabilities().Has(shared.Capability_RunCommand) {
-		return false
-	}
-
-	// Try to run 'fd --version' to check availability
-	cmd, err := r.conn.RunCommand("command -v fd >/dev/null 2>&1")
+	// We can use fd if we can detect the platform and have an embedded binary for it
+	platform, arch, err := r.GetRemotePlatform()
 	if err != nil {
+		r.available = false
 		return false
 	}
 
-	// If exit status is 0, fd is available
-	return cmd.ExitStatus == 0
+	// Check if we have an embedded binary for this platform/arch
+	_, err = GetEmbeddedFdBinary(platform, arch)
+	r.available = err == nil
+	return r.available
 }
 
 // GetRemotePlatform detects the remote system's platform and architecture
@@ -113,20 +100,45 @@ func (r *RemoteFdChecker) GetRemotePlatform() (string, string, error) {
 	return r.platform, r.arch, nil
 }
 
-// ExecuteRemoteFdCommand executes fd command on the remote system
+// ExecuteRemoteFdCommand uploads and executes the embedded fd binary on the remote system
 func ExecuteRemoteFdCommand(conn shared.Connection, from string, compiledRegexp *regexp.Regexp, fileType string, permissions int64, name string, depth int64) ([]string, error) {
 	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
 		return nil, fmt.Errorf("remote command execution not supported")
 	}
 
-	checker := NewRemoteFdChecker(conn)
-	if !checker.IsRemoteFdAvailable() {
-		return nil, fmt.Errorf("fd not available on remote system")
+	if !conn.Capabilities().Has(shared.Capability_File) {
+		return nil, fmt.Errorf("remote file operations not supported")
 	}
 
-	// Build fd command similar to local version
+	// Detect remote platform and get appropriate binary
+	checker := NewRemoteFdChecker(conn)
+	platform, arch, err := checker.GetRemotePlatform()
+	if err != nil {
+		return nil, fmt.Errorf("failed to detect remote platform: %w", err)
+	}
+
+	// Get the appropriate embedded binary
+	binaryData, err := GetEmbeddedFdBinary(platform, arch)
+	if err != nil {
+		return nil, fmt.Errorf("no embedded fd binary available for %s/%s: %w", platform, arch, err)
+	}
+
+	// Upload binary to temporary location
+	tmpPath := fmt.Sprintf("/tmp/mondoo-fd-%s-%s", platform, arch)
+	err = uploadBinaryToRemote(conn, binaryData, tmpPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to upload fd binary: %w", err)
+	}
+
+	// Ensure cleanup happens
+	defer func() {
+		cleanupCmd := fmt.Sprintf("rm -f '%s'", tmpPath)
+		conn.RunCommand(cleanupCmd) // Ignore errors in cleanup
+	}()
+
+	// Build fd command arguments
 	var args []string
-	args = append(args, "fd")
+	args = append(args, tmpPath) // Use uploaded binary path
 
 	// Add pattern - fd uses the pattern as the first argument
 	if compiledRegexp != nil {
@@ -188,6 +200,37 @@ func ExecuteRemoteFdCommand(conn shared.Connection, from string, compiledRegexp 
 	}
 
 	return foundFiles, nil
+}
+
+// uploadBinaryToRemote uploads a binary to the remote system and makes it executable
+func uploadBinaryToRemote(conn shared.Connection, binaryData []byte, remotePath string) error {
+	// Get the filesystem interface
+	fs := conn.FileSystem()
+	if fs == nil {
+		return fmt.Errorf("no filesystem available for remote connection")
+	}
+
+	// Create the directory if needed
+	dir := filepath.Dir(remotePath)
+	err := fs.MkdirAll(dir, 0o755)
+	if err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", dir, err)
+	}
+
+	// Write the binary file
+	err = afero.WriteFile(fs, remotePath, binaryData, 0o755)
+	if err != nil {
+		return fmt.Errorf("failed to write binary file %s: %w", remotePath, err)
+	}
+
+	// Make sure it's executable (some filesystems might not preserve permissions)
+	chmodCmd := fmt.Sprintf("chmod +x '%s'", remotePath)
+	_, err = conn.RunCommand(chmodCmd)
+	if err != nil {
+		return fmt.Errorf("failed to make binary executable: %w", err)
+	}
+
+	return nil
 }
 
 // filterFilesByPermissionsRemote filters files by checking their permissions remotely

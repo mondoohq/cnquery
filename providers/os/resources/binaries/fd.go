@@ -105,3 +105,13 @@ func CleanupFdBinary() {
 		fdBinaryPath = ""
 	}
 }
+
+// GetEmbeddedFdBinary returns the embedded fd binary for the specified platform/arch
+func GetEmbeddedFdBinary(platform, arch string) ([]byte, error) {
+	// For now, we only have Linux amd64
+	if platform == "linux" && arch == "amd64" {
+		return fdLinuxAmd64, nil
+	}
+
+	return nil, fmt.Errorf("unsupported platform/architecture: %s/%s", platform, arch)
+}
