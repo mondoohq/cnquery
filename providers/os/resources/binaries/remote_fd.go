@@ -5,12 +5,12 @@ package binaries
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
@@ -106,9 +106,7 @@ func ExecuteRemoteFdCommand(conn shared.Connection, from string, compiledRegexp 
 		return nil, fmt.Errorf("remote command execution not supported")
 	}
 
-	if !conn.Capabilities().Has(shared.Capability_File) {
-		return nil, fmt.Errorf("remote file operations not supported")
-	}
+	// Note: We no longer require Capability_File since we use command-based binary upload
 
 	// Detect remote platform and get appropriate binary
 	checker := NewRemoteFdChecker(conn)
@@ -202,28 +200,27 @@ func ExecuteRemoteFdCommand(conn shared.Connection, from string, compiledRegexp 
 	return foundFiles, nil
 }
 
-// uploadBinaryToRemote uploads a binary to the remote system and makes it executable
+// uploadBinaryToRemote uploads a binary to the remote system using base64 encoding
 func uploadBinaryToRemote(conn shared.Connection, binaryData []byte, remotePath string) error {
-	// Get the filesystem interface
-	fs := conn.FileSystem()
-	if fs == nil {
-		return fmt.Errorf("no filesystem available for remote connection")
-	}
-
-	// Create the directory if needed
+	// Ensure directory exists using command execution
 	dir := filepath.Dir(remotePath)
-	err := fs.MkdirAll(dir, 0o755)
+	mkdirCmd := fmt.Sprintf("mkdir -p '%s'", dir)
+	_, err := conn.RunCommand(mkdirCmd)
 	if err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
-	// Write the binary file
-	err = afero.WriteFile(fs, remotePath, binaryData, 0o755)
+	// Encode binary as base64 to avoid filesystem interface issues
+	encoded := base64.StdEncoding.EncodeToString(binaryData)
+
+	// Write the base64-encoded binary using a here-document (handles large binaries better)
+	writeCmd := fmt.Sprintf("base64 -d > '%s' << 'EOF'\n%s\nEOF", remotePath, encoded)
+	_, err = conn.RunCommand(writeCmd)
 	if err != nil {
 		return fmt.Errorf("failed to write binary file %s: %w", remotePath, err)
 	}
 
-	// Make sure it's executable (some filesystems might not preserve permissions)
+	// Make sure it's executable
 	chmodCmd := fmt.Sprintf("chmod +x '%s'", remotePath)
 	_, err = conn.RunCommand(chmodCmd)
 	if err != nil {
