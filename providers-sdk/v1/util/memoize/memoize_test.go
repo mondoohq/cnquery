@@ -16,8 +16,13 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	// Prevent "goleak: Errors on successful test run: found unexpected goroutines"
+	opts := []goleak.Option{
+		goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),
+		goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"),
+	}
 	// verify that we are not leaking goroutines
-	goleak.VerifyTestMain(m)
+	goleak.VerifyTestMain(m, opts...)
 }
 
 // Test that if a new Memoizer is created but NOT used, it doesn't create
