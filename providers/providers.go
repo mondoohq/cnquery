@@ -6,6 +6,7 @@ package providers
 import (
 	"archive/tar"
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net"
@@ -407,9 +408,10 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 }
 
 func Install(name string, version string) (*Provider, error) {
+	ctx := context.Background()
 	if version == "" {
 		// if no version is specified, we default to installing the latest one
-		latestVersion, err := LatestVersion(name)
+		latestVersion, err := registry.GetLatestVersion(ctx, name)
 		if err != nil {
 			return nil, err
 		}
@@ -419,44 +421,22 @@ func Install(name string, version string) (*Provider, error) {
 	log.Info().
 		Str("version", version).
 		Msg("installing provider '" + name + "'")
-	return installVersion(name, version)
+	return installVersion(ctx, name, version)
 }
 
-// This is the default installation source for core providers.
-const upstreamURL = "https://releases.mondoo.com/providers/{NAME}/{VERSION}/{NAME}_{VERSION}_{OS}_{ARCH}.tar.xz"
+func installVersion(ctx context.Context, name string, version string) (*Provider, error) {
+	logCtx := log.With().Str("provider", name).Str("version", version).Logger()
 
-func installVersion(name string, version string) (*Provider, error) {
-	url := upstreamURL
-	url = strings.ReplaceAll(url, "{NAME}", name)
-	url = strings.ReplaceAll(url, "{VERSION}", version)
-	url = strings.ReplaceAll(url, "{OS}", runtime.GOOS)
-	url = strings.ReplaceAll(url, "{ARCH}", runtime.GOARCH)
-
-	log.Debug().Str("url", url).Msg("installing provider from URL")
-	client, err := httpClientWithRetry()
+	res, err := registry.DownloadProvider(ctx, name, version, runtime.GOOS, runtime.GOARCH)
 	if err != nil {
 		return nil, err
 	}
-
-	res, err := client.Get(url)
-	if err != nil {
-		log.Debug().Str("url", url).Msg("failed to install from URL (get request)")
-		return nil, errors.Wrap(err, "failed to install "+name+"-"+version)
-	}
-
-	if res.StatusCode == http.StatusNotFound {
-		return nil, errors.New("cannot find provider " + name + "-" + version + " under url " + url)
-	} else if res.StatusCode != http.StatusOK {
-		log.Debug().Str("url", url).Int("status", res.StatusCode).Msg("failed to install from URL (status code)")
-		return nil, errors.New("failed to install " + name + "-" + version + ", received status code: " + res.Status)
-	}
-
-	log.Debug().Str("url", url).Msg("request complete, installing provider")
+	defer res.Close()
 
 	// we have to create new Reader to get rid of the timeouts imposed by the http client
 	var tar []byte
-	if tar, err = io.ReadAll(res.Body); err != nil {
-		log.Debug().Str("url", url).Msg("failed to install from URL (read body)")
+	if tar, err = io.ReadAll(res); err != nil {
+		logCtx.Debug().Msg("failed to read body of provider download")
 		return nil, errors.Wrap(err, "failed to install "+name+"-"+version+", failed to read body")
 	}
 
@@ -464,12 +444,11 @@ func installVersion(name string, version string) (*Provider, error) {
 		bytes.NewReader(tar),
 	)
 
-	// else we know we got a 200 response, we can safely install
 	installed, err := InstallIO(reader, InstallConf{
 		Dst: DefaultPath,
 	})
 	if err != nil {
-		log.Debug().Str("url", url).Msg("failed to install from URL (download)")
+		logCtx.Debug().Msg("failed to install provider")
 		return nil, errors.Wrap(err, "failed to install "+name+"-"+version)
 	}
 
@@ -477,7 +456,7 @@ func installVersion(name string, version string) (*Provider, error) {
 		return nil, errors.New("couldn't find installed provider")
 	}
 	if len(installed) > 1 {
-		log.Warn().Msg("too many providers were installed")
+		logCtx.Warn().Msg("too many providers were installed")
 	}
 	if installed[0].Version != version {
 		return nil, errors.New("version for provider didn't match expected install version: expected " + version + ", installed: " + installed[0].Version)
@@ -522,44 +501,6 @@ func installDependencies(provider *Provider, existing Providers) error {
 	}
 
 	return nil
-}
-
-func LatestVersion(name string) (string, error) {
-	client, err := httpClientWithRetry()
-	if err != nil {
-		return "", err
-	}
-
-	res, err := client.Get("https://releases.mondoo.com/providers/latest.json")
-	if err != nil {
-		return "", err
-	}
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Debug().Err(err).Msg("reading latest.json failed")
-		return "", errors.New("failed to read response from upstream provider versions")
-	}
-
-	var upstreamVersions ProviderVersions
-	err = json.Unmarshal(data, &upstreamVersions)
-	if err != nil {
-		log.Debug().Err(err).Msg("parsing latest.json failed")
-		return "", errors.New("failed to parse response from upstream provider versions")
-	}
-
-	var latestVersion string
-	for i := range upstreamVersions.Providers {
-		if upstreamVersions.Providers[i].Name == name {
-			latestVersion = upstreamVersions.Providers[i].Version
-			break
-		}
-	}
-
-	if latestVersion == "" {
-		return "", errors.New("cannot determine latest version of provider '" + name + "'")
-	}
-	return latestVersion, nil
 }
 
 func PrintInstallResults(providers []*Provider) {
@@ -886,6 +827,7 @@ func readProviderDir(pdir string) (*Provider, error) {
 }
 
 func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provider, error) {
+	ctx := context.Background()
 	if provider.Path == "" {
 		return nil, errors.New("cannot determine installation path for provider")
 	}
@@ -909,7 +851,7 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 		}
 	}
 
-	latest, err := LatestVersion(provider.Name)
+	latest, err := registry.GetLatestVersion(ctx, provider.Name)
 	if err != nil {
 		log.Warn().Msg(err.Error())
 		// we can just continue with the existing provider, no need to error up,
@@ -937,7 +879,7 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 		Str("installed", provider.Version).
 		Str("latest", latest).
 		Msg("found a new version for '" + provider.Name + "' provider")
-	provider, err = installVersion(provider.Name, latest)
+	provider, err = installVersion(ctx, provider.Name, latest)
 	if err != nil {
 		return nil, err
 	}

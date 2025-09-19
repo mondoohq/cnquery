@@ -262,7 +262,7 @@ func getProviders() ([]string, []string, error) {
 	}
 	for _, provider := range allProviders {
 		installed = append(installed, provider.Name)
-		latestVersion, err := providers.LatestVersion(provider.Name)
+		latestVersion, err := providers.LatestVersion(context.Background(), provider.Name)
 		if err != nil {
 			continue
 		}

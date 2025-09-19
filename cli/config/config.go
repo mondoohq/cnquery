@@ -49,6 +49,15 @@ func Init(rootCmd *cobra.Command) {
 	})
 	// persistent flags are global for the application
 	rootCmd.PersistentFlags().StringVar(&UserProvidedPath, "config", "", "Set config file path (default $HOME/.config/mondoo/mondoo.yml)")
+
+	// We need to parse the flags really early in the process, so that
+	// the config path is set before we initialize viper. This is because
+	// the providers configuration needs to be available before the rootCmd
+	// is executed as it does things like tries to download a provider if its missing
+	// See AttachCLIs in cli/providers/providers.go
+	if err := rootCmd.ParseFlags(os.Args); err != nil {
+		log.Error().Err(err).Msg("could not parse flags")
+	}
 }
 
 func InitViperConfig() {
@@ -227,6 +236,11 @@ type CommonOpts struct {
 
 	// annotations that will be applied to all assets
 	Annotations map[string]string `json:"annotations,omitempty" mapstructure:"annotations"`
+
+	// ProvidersURL is the URL where providers are downloaded from
+	// if not set, the default Mondoo provider URL is used
+	// This can be a custom URL for an internal provider registry
+	ProvidersURL string `json:"providers_url,omitempty" mapstructure:"providers_url"`
 }
 
 // Workload Identity Federation
