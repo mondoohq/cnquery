@@ -5,6 +5,8 @@ package cmd
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -92,7 +94,9 @@ func init() {
 	rootCmd.AddCommand(lspCmd)
 	lspCmd.Flags().StringP("mode", "m", "test", "Mode to run: 'test' for demo, 'server' for LSP server")
 	lspCmd.Flags().BoolP("debug", "d", false, "Enable debug logging")
-} // runTestMode demonstrates the parsing capabilities
+}
+
+// runTestMode demonstrates the parsing capabilities
 func runTestMode() error {
 	fmt.Println("LR Language Server - Test Mode")
 	fmt.Println("===============================")
@@ -103,8 +107,6 @@ func runTestMode() error {
 	testContent := `
 // Copyright (c) Example Corp
 // SPDX-License-Identifier: MIT
-
-import "../../core/resources/core.lr"
 
 option provider = "example.com/provider"
 option go_package = "example.com/provider/resources"
@@ -230,29 +232,155 @@ func (h *LRHandler) processDocument(uri protocol.DocumentUri, content string, ve
 		Errors:  []protocol.Diagnostic{},
 	}
 
-	// Parse the LR content
-	ast, err := lr.Parse(content)
-	if err != nil {
-		// Convert parse error to LSP diagnostic
-		diagnostic := protocol.Diagnostic{
-			Range: protocol.Range{
-				Start: protocol.Position{Line: 0, Character: 0},
-				End:   protocol.Position{Line: 0, Character: 0},
-			},
-			Severity: &[]protocol.DiagnosticSeverity{protocol.DiagnosticSeverityError}[0],
-			Message:  err.Error(),
-			Source:   &[]string{"lr-parser"}[0],
+	// Parse the LR content with robust error handling
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				// Handle parser panics gracefully
+				logrus.WithField("panic", r).Error("Parser panic recovered")
+				diagnostic := protocol.Diagnostic{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 0},
+					},
+					Severity: &[]protocol.DiagnosticSeverity{protocol.DiagnosticSeverityError}[0],
+					Message:  fmt.Sprintf("Parser panic: %v", r),
+					Source:   &[]string{"lr-parser"}[0],
+				}
+				doc.Errors = append(doc.Errors, diagnostic)
+			}
+		}()
+
+		ast, err := lr.Parse(content)
+		if err != nil {
+			// Parse error with enhanced position extraction
+			diagnostics := h.parseErrorToDiagnostics(err, content)
+			doc.Errors = append(doc.Errors, diagnostics...)
+		} else {
+			doc.AST = ast
 		}
-		doc.Errors = append(doc.Errors, diagnostic)
-	} else {
-		doc.AST = ast
-	}
+	}()
 
 	h.documents[uri] = doc
 	return doc
 }
 
-// getDocument retrieves a cached document
+// parseErrorToDiagnostics converts parser errors to LSP diagnostics with accurate positions
+func (h *LRHandler) parseErrorToDiagnostics(err error, content string) []protocol.Diagnostic {
+	var diagnostics []protocol.Diagnostic
+
+	errorMsg := err.Error()
+	logrus.Debugf("Parsing error: %s", errorMsg)
+
+	var line, character uint32
+	var message string
+	found := false
+
+	// Try multiple error format patterns
+	patterns := []struct {
+		regex   *regexp.Regexp
+		lineIdx int
+		charIdx int
+		msgIdx  int
+	}{
+		// Pattern 1: "6:22: unexpected..."
+		{regexp.MustCompile(`(\d+):(\d+): (.*)`), 1, 2, 3},
+		// Pattern 2: "line 6:22 unexpected..."
+		{regexp.MustCompile(`line (\d+):(\d+) (.*)`), 1, 2, 3},
+		// Pattern 3: "at line 6, column 22: ..."
+		{regexp.MustCompile(`at line (\d+), column (\d+): (.*)`), 1, 2, 3},
+	}
+
+	for _, pattern := range patterns {
+		matches := pattern.regex.FindStringSubmatch(errorMsg)
+		if len(matches) > pattern.msgIdx {
+			if l, err := strconv.Atoi(matches[pattern.lineIdx]); err == nil && l > 0 {
+				line = uint32(l - 1)
+			}
+			if c, err := strconv.Atoi(matches[pattern.charIdx]); err == nil && c > 0 {
+				character = uint32(c - 1)
+			}
+			message = matches[pattern.msgIdx]
+			found = true
+			logrus.Debugf("Extracted error position: line=%d, character=%d, message=%s", line, character, message)
+			break
+		}
+	}
+
+	// If no position found in error message, try to find the problematic token in content
+	if !found {
+		message = errorMsg
+		logrus.Debugf("Could not extract position from error, trying to find token in content")
+
+		// Extract the problematic token from error message
+		tokenPatterns := []string{
+			`unexpected token "([^"]+)"`,
+			`unexpected "([^"]+)"`,
+			`unexpected ([^\s]+)`,
+		}
+
+		var token string
+		for _, pattern := range tokenPatterns {
+			re := regexp.MustCompile(pattern)
+			matches := re.FindStringSubmatch(errorMsg)
+			if len(matches) > 1 {
+				token = matches[1]
+				break
+			}
+		}
+
+		if token != "" {
+			logrus.Debugf("Looking for token '%s' in content", token)
+			// Find the token in the content
+			lines := strings.Split(content, "\n")
+			for lineIdx, lineContent := range lines {
+				// Look for the token, but avoid matches in comments
+				pos := strings.Index(lineContent, token)
+				if pos != -1 {
+					// Check if this token is in a comment
+					commentPos := strings.Index(lineContent, "//")
+					if commentPos == -1 || pos < commentPos {
+						// Token found outside of comment
+						line = uint32(lineIdx)
+						character = uint32(pos)
+						found = true
+						logrus.Debugf("Found token at line=%d, character=%d", line, character)
+						break
+					}
+				}
+			}
+		}
+
+		if !found {
+			logrus.Debug("Could not locate error position, using line 0")
+		}
+	}
+
+	// Ensure position is within document bounds
+	lines := strings.Split(content, "\n")
+	if int(line) >= len(lines) {
+		line = uint32(len(lines) - 1)
+	}
+	if int(line) >= 0 && int(line) < len(lines) {
+		lineContent := lines[line]
+		if int(character) > len(lineContent) {
+			character = uint32(len(lineContent))
+		}
+	}
+
+	diagnostic := protocol.Diagnostic{
+		Range: protocol.Range{
+			Start: protocol.Position{Line: line, Character: character},
+			End:   protocol.Position{Line: line, Character: character + 1}, // Highlight at least 1 character
+		},
+		Severity: &[]protocol.DiagnosticSeverity{protocol.DiagnosticSeverityError}[0],
+		Message:  message,
+		Source:   &[]string{"lr-parser"}[0],
+	}
+
+	diagnostics = append(diagnostics, diagnostic)
+	return diagnostics
+} // getDocument retrieves a cached document
 func (h *LRHandler) getDocument(uri protocol.DocumentUri) *Document {
 	h.mutex.RLock()
 	defer h.mutex.RUnlock()
@@ -312,7 +440,7 @@ func (h *LRHandler) initialize(context *glsp.Context, params *protocol.Initializ
 	capabilities := protocol.ServerCapabilities{
 		TextDocumentSync: &protocol.TextDocumentSyncOptions{
 			OpenClose: &[]bool{true}[0],
-			Change:    &[]protocol.TextDocumentSyncKind{protocol.TextDocumentSyncKindIncremental}[0],
+			Change:    &[]protocol.TextDocumentSyncKind{protocol.TextDocumentSyncKindFull}[0],
 		},
 		HoverProvider:          &[]bool{true}[0],
 		DocumentSymbolProvider: &[]bool{true}[0],
@@ -348,31 +476,94 @@ func (h *LRHandler) setTrace(context *glsp.Context, params *protocol.SetTracePar
 
 // textDocumentDidOpen handles when a document is opened
 func (h *LRHandler) textDocumentDidOpen(context *glsp.Context, params *protocol.DidOpenTextDocumentParams) error {
-	doc := h.processDocument(params.TextDocument.URI, params.TextDocument.Text, params.TextDocument.Version)
+	// Robust error handling to prevent server from getting stuck
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.WithField("panic", r).Error("textDocumentDidOpen panic recovered")
+		}
+	}()
 
-	// Publish diagnostics
-	context.Notify("textDocument/publishDiagnostics", protocol.PublishDiagnosticsParams{
-		URI:         params.TextDocument.URI,
-		Diagnostics: doc.Errors,
-	})
+	var doc *Document
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logrus.WithField("panic", r).Error("processDocument in didOpen panic recovered")
+			}
+		}()
+		doc = h.processDocument(params.TextDocument.URI, params.TextDocument.Text, params.TextDocument.Version)
+	}()
+
+	if doc != nil {
+		// Safely publish diagnostics
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logrus.WithField("panic", r).Error("publishDiagnostics in didOpen panic recovered")
+				}
+			}()
+
+			context.Notify("textDocument/publishDiagnostics", protocol.PublishDiagnosticsParams{
+				URI:         params.TextDocument.URI,
+				Diagnostics: doc.Errors,
+			})
+		}()
+	}
 
 	return nil
 }
 
 // textDocumentDidChange handles when a document is changed
 func (h *LRHandler) textDocumentDidChange(context *glsp.Context, params *protocol.DidChangeTextDocumentParams) error {
+	// Robust error handling to prevent server from getting stuck
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.WithField("panic", r).Error("textDocumentDidChange panic recovered")
+		}
+	}()
+
 	// For simplicity, we'll do full document sync (take the last change which should be the full content)
 	if len(params.ContentChanges) > 0 {
 		change := params.ContentChanges[len(params.ContentChanges)-1]
 		if textChange, ok := change.(protocol.TextDocumentContentChangeEvent); ok {
-			doc := h.processDocument(params.TextDocument.URI, textChange.Text, params.TextDocument.Version)
+			// Process document with timeout protection
+			var doc *Document
+			done := make(chan bool, 1)
 
-			// Publish diagnostics
-			context.Notify("textDocument/publishDiagnostics", protocol.PublishDiagnosticsParams{
-				URI:         params.TextDocument.URI,
-				Diagnostics: doc.Errors,
-			})
+			go func() {
+				defer func() {
+					if r := recover(); r != nil {
+						logrus.WithField("panic", r).Error("processDocument panic recovered")
+					}
+					done <- true
+				}()
+				doc = h.processDocument(params.TextDocument.URI, textChange.Text, params.TextDocument.Version)
+			}()
+
+			// Wait for processing to complete
+			<-done
+
+			if doc != nil {
+				// Safely publish diagnostics
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							logrus.WithField("panic", r).Error("publishDiagnostics panic recovered")
+						}
+					}()
+
+					context.Notify("textDocument/publishDiagnostics", protocol.PublishDiagnosticsParams{
+						URI:         params.TextDocument.URI,
+						Diagnostics: doc.Errors,
+					})
+				}()
+			} else {
+				logrus.Debug("Document processing returned nil, skipping diagnostics")
+			}
+		} else {
+			logrus.Debug("Failed to cast content change to TextDocumentContentChangeEvent")
 		}
+	} else {
+		logrus.Debug("No content changes provided")
 	}
 	return nil
 }
@@ -469,6 +660,13 @@ func (h *LRHandler) textDocumentDocumentSymbol(context *glsp.Context, params *pr
 
 // textDocumentHover handles hover requests
 func (h *LRHandler) textDocumentHover(context *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, error) {
+	// Robust error handling to prevent server from getting stuck
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.WithField("panic", r).Error("textDocumentHover panic recovered")
+		}
+	}()
+
 	doc := h.getDocument(params.TextDocument.URI)
 	if doc == nil || doc.AST == nil {
 		return nil, nil
@@ -477,19 +675,29 @@ func (h *LRHandler) textDocumentHover(context *glsp.Context, params *protocol.Ho
 	line := int(params.Position.Line)
 	character := int(params.Position.Character)
 
-	// Get the word at the cursor position
+	// Get the word at the cursor position with bounds checking
 	lines := strings.Split(doc.Content, "\n")
-	if line >= len(lines) {
+	if line >= len(lines) || line < 0 {
 		return nil, nil
 	}
 
 	currentLine := lines[line]
-	if character >= len(currentLine) {
+	if character >= len(currentLine) || character < 0 {
 		return nil, nil
 	}
 
-	// Extract word at cursor position
-	word := extractWordAtPosition(currentLine, character)
+	// Extract word at cursor position with error protection
+	var word string
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logrus.WithField("panic", r).Error("extractWordAtPosition panic recovered")
+				word = ""
+			}
+		}()
+		word = extractWordAtPosition(currentLine, character)
+	}()
+
 	if word == "" {
 		return nil, nil
 	}
@@ -497,7 +705,17 @@ func (h *LRHandler) textDocumentHover(context *glsp.Context, params *protocol.Ho
 	// First, try to find if this word is a resource name
 	for _, resource := range doc.AST.Resources {
 		if resource.ID == word {
-			return h.createResourceHover(resource, doc.AST), nil
+			var hover *protocol.Hover
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						logrus.WithField("panic", r).Error("createResourceHover panic recovered")
+						hover = nil
+					}
+				}()
+				hover = h.createResourceHover(resource, doc.AST)
+			}()
+			return hover, nil
 		}
 	}
 

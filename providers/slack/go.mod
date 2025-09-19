@@ -2,9 +2,9 @@ module go.mondoo.com/cnquery/v12/providers/slack
 
 replace go.mondoo.com/cnquery/v12 => ../..
 
-go 1.24.0
+go 1.24.4
 
-toolchain go1.24.3
+toolchain go1.24.7
 
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.8
@@ -86,7 +86,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
