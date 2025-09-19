@@ -106,7 +106,7 @@ func (n *Upstream) GetData(connectionID uint32, resource string, id string, fiel
 	return res, ok
 }
 
-func (n *Upstream) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
+func (n *Upstream) GetResource(_ uint32, resource string, id string) (map[string]*llx.RawData, bool) {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 

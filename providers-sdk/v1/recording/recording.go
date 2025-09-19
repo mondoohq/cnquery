@@ -6,7 +6,9 @@ package recording
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
+	"slices"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
@@ -34,7 +36,7 @@ func NewAssetRecording(asset *inventory.Asset) *Asset {
 	if id == "" && asset.Platform != nil {
 		id = asset.Platform.Title
 	}
-	ai := assetInfo{
+	ai := &assetInfo{
 		ID:          id,
 		Name:        asset.Name,
 		PlatformIDs: asset.PlatformIds,
@@ -90,9 +92,9 @@ func (n *readOnly) Save() error {
 func (n *readOnly) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
 	// For read-only recordings we are still loading from file, so that means
 	// we are severely lacking connection IDs.
-	found, _ := n.findAssetConnID(asset)
-	if found != -1 {
-		n.assets[connectionID] = n.Assets[found]
+	existing := n.getExistingAsset(asset)
+	if existing != nil {
+		n.assets[connectionID] = existing
 	}
 }
 
@@ -206,13 +208,12 @@ func (r *recording) refreshCache() {
 		asset := r.Assets[i]
 		asset.RefreshCache()
 
-		for i := range asset.Connections {
-			conn := asset.Connections[i]
+		for _, conn := range asset.Connections {
 			// only connection ID's != 0 are valid IDs. We get lots of 0 when we
 			// initially load this object, so we won't know yet which asset belongs
 			// to which connection.
-			if conn.id != 0 {
-				r.assets[conn.id] = asset
+			if conn.Id != 0 {
+				r.assets[conn.Id] = asset
 			}
 		}
 	}
@@ -318,51 +319,44 @@ func (r *recording) finalize() {
 	}
 }
 
-func (r *recording) findAssetConnID(asset *inventory.Asset) (int, string) {
+func (r *recording) getExistingAsset(asset *inventory.Asset) *Asset {
 	if asset.Mrn != "" || asset.Id != "" {
-		for i := range r.Assets {
-			id := r.Assets[i].Asset.ID
+		for _, existing := range r.Assets {
+			id := existing.Asset.ID
 			if id == "" {
 				continue
 			}
 			if id == asset.Mrn {
-				return i, asset.Mrn
+				return existing
 			}
 			if id == asset.Id {
-				return i, asset.Id
+				return existing
 			}
-			for _, pidExisting := range r.Assets[i].Asset.PlatformIDs {
-				for _, pid := range asset.PlatformIds {
-					if pidExisting == pid {
-						return i, asset.Mrn
-					}
+			for _, pidExisting := range existing.Asset.PlatformIDs {
+				if slices.Contains(asset.PlatformIds, pidExisting) {
+					return existing
 				}
 			}
 		}
 	}
 
-	return -1, ""
+	return nil
 }
 
 func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, connectionID uint32, conf *inventory.Config) {
-	found, _ := r.findAssetConnID(asset)
-
 	if asset.Platform == nil {
 		log.Warn().Msg("cannot store asset in recording, asset has no platform")
 		return
 	}
-	if found == -1 {
-		id := asset.Mrn
-		if id == "" {
-			id = asset.Id
-		}
-		if id == "" {
-			id = asset.Platform.Title
-		}
-
-		r.Assets = append(r.Assets, &Asset{
-			Asset: assetInfo{
-				ID:          id,
+	id := getAssetIdForRecording(asset)
+	if id == "" {
+		log.Debug().Msg("cannot store asset in recording, asset has no id or mrn")
+		return
+	}
+	recordingAsset := r.getExistingAsset(asset)
+	if recordingAsset == nil {
+		recordingAsset = &Asset{
+			Asset: &assetInfo{
 				PlatformIDs: asset.PlatformIds,
 				Name:        asset.Platform.Name,
 				Arch:        asset.Platform.Arch,
@@ -376,30 +370,23 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 			},
 			connections: map[string]*connection{},
 			resources:   map[string]*Resource{},
-		})
-		found = len(r.Assets) - 1
+		}
+		r.Assets = append(r.Assets, recordingAsset)
 	}
-
-	// An asset is sometimes added to the recording, before it has its MRN assigned.
-	// This method may be called again, after the MRN has been assigned. In that
-	// case we make sure that the asset ID matches the MRN.
-	// TODO: figure out a better position to do this, both for the MRN and IDs
-	assetObj := r.Assets[found]
-	if asset.Mrn != "" {
-		assetObj.Asset.ID = asset.Mrn
-	}
+	// always update the id for the asset, sometimes we get assets by id and then
+	// they get updated with an MRN attached
+	recordingAsset.Asset.ID = getAssetIdForRecording(asset)
 	if len(asset.PlatformIds) != 0 {
-		assetObj.Asset.PlatformIDs = asset.PlatformIds
+		recordingAsset.Asset.PlatformIDs = asset.PlatformIds
 	}
 
-	url := conf.ToUrl()
-	assetObj.connections[url] = &connection{
-		Url:        url,
+	recordingAsset.connections[fmt.Sprintf("%d", conf.Id)] = &connection{
+		Url:        conf.ToUrl(),
 		ProviderID: providerID,
 		Connector:  conf.Type,
-		id:         conf.Id,
+		Id:         conf.Id,
 	}
-	r.assets[connectionID] = assetObj
+	r.assets[connectionID] = recordingAsset
 }
 
 func (r *recording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
@@ -501,7 +488,7 @@ func (r *recording) SetAssetRecording(id uint32, reco *Asset) {
 
 // This method makes sure the asset metadata is always included in the data
 // dump of a recording
-func ensureAssetMetadata(resources map[string]*Resource, asset assetInfo) {
+func ensureAssetMetadata(resources map[string]*Resource, asset *assetInfo) {
 	id := "asset\x00"
 	existing, ok := resources[id]
 	if !ok {
@@ -575,4 +562,12 @@ func RawDataArgsToResultArgs(args map[string]*llx.RawData) (map[string]*llx.Resu
 	}
 
 	return all, err.Deduplicate()
+}
+
+func getAssetIdForRecording(asset *inventory.Asset) string {
+	id := asset.Mrn
+	if id == "" {
+		id = asset.Id
+	}
+	return id
 }

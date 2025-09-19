@@ -316,11 +316,15 @@ func (s *LocalScanner) distributeJob(ctx context.Context, job *Job, upstream *up
 			// attach the asset details to the assets list
 			for i := range batch {
 				asset := batch[i].Asset
+				runtime := batch[i].Runtime
 				log.Debug().Str("asset", asset.Name).Strs("platform-ids", asset.PlatformIds).Msg("update asset")
 				for _, platformId := range asset.PlatformIds {
 					if details, ok := platformAssetMapping[platformId]; ok {
 						asset.Mrn = details.AssetMrn
 						asset.Url = details.Url
+					}
+					if runtime != nil {
+						runtime.AssetUpdated(asset)
 					}
 				}
 			}
@@ -328,6 +332,7 @@ func (s *LocalScanner) distributeJob(ctx context.Context, job *Job, upstream *up
 			// ensure we have non-empty asset MRNs
 			for i := range batch {
 				asset := batch[i].Asset
+				runtime := batch[i].Runtime
 				if asset.Mrn == "" {
 					randID := "//" + explorer.SERVICE_NAME + "/" + explorer.MRN_RESOURCE_ASSET + "/" + ksuid.New().String()
 					x, err := mrn.NewMRN(randID)
@@ -335,6 +340,10 @@ func (s *LocalScanner) distributeJob(ctx context.Context, job *Job, upstream *up
 						return nil, multierr.Wrap(err, "failed to generate a random asset MRN")
 					}
 					asset.Mrn = x.String()
+					// update the asset in the runtime as well
+					if runtime != nil {
+						runtime.AssetUpdated(asset)
+					}
 				}
 			}
 		}
