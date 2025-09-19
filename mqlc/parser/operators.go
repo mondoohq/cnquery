@@ -47,13 +47,25 @@ var Operators = map[string]Operator{
 	"%":  OpRemainder,
 }
 
+var operatorCharacter map[rune]struct{}
+
 var operatorsStrings map[Operator]string
 
 func init() {
 	operatorsStrings = make(map[Operator]string)
+	operatorCharacter = make(map[rune]struct{})
 	for k, v := range Operators {
 		operatorsStrings[v] = k
+		operatorCharacter[[]rune(k)[0]] = struct{}{}
 	}
+}
+
+func IsOperator(s string) bool {
+	if s == "" {
+		return false
+	}
+	_, ok := operatorCharacter[[]rune(s)[0]]
+	return ok
 }
 
 // Capture an operator in participle

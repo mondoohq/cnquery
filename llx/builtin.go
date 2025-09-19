@@ -13,10 +13,16 @@ import (
 )
 
 type chunkHandlerV2 struct {
+	// FIXME: DEPRECATED, remove in v13.0 or earlier vv
+	// The compiler should move entirely to MQLc. Adding this here causes us to do
+	// some lookup gymnastics in mqlc and the functionality is very limited because we
+	// can't really access the compiler and its context (LLX can't include MQLc,
+	// since MQLc relies on LLX). Consolidate the compiler in LLX only.
 	Compiler func(types.Type, types.Type) (string, error)
-	f        func(*blockExecutor, *RawData, *Chunk, uint64) (*RawData, uint64, error)
-	Label    string
-	Typ      types.Type
+	// ^^
+	f     func(*blockExecutor, *RawData, *Chunk, uint64) (*RawData, uint64, error)
+	Label string
+	Typ   types.Type
 }
 
 // BuiltinFunctions for all builtin types

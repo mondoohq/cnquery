@@ -30,3 +30,7 @@ customGroups {
   // overrides builtin function
   length() int
 }
+
+emptyGroups {
+  []mgroup
+}
