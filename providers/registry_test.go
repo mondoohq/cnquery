@@ -58,7 +58,9 @@ func TestMondooProviderRegistry_GetLatestVersion(t *testing.T) {
 				},
 			}
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(versions)
+			if err := json.NewEncoder(w).Encode(versions); err != nil {
+				http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			}
 			return
 		}
 		http.NotFound(w, r)
@@ -128,7 +130,7 @@ func TestMondooProviderRegistry_GetLatestVersion_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/latest.json" {
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte("invalid json"))
+			w.Write([]byte("invalid json")) // nolint:errcheck
 			return
 		}
 		http.NotFound(w, r)
@@ -152,7 +154,7 @@ func TestMondooProviderRegistry_DownloadProvider(t *testing.T) {
 		expectedPath := "/aws/1.2.3/aws_1.2.3_linux_amd64.tar.xz"
 		if r.URL.Path == expectedPath {
 			w.Header().Set("Content-Type", "application/octet-stream")
-			w.Write([]byte(expectedContent))
+			w.Write([]byte(expectedContent)) // nolint:errcheck
 			return
 		}
 		http.NotFound(w, r)
