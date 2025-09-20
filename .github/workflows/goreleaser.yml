@@ -43,7 +43,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
 
@@ -62,19 +62,19 @@ jobs:
         run: cat ".github/env" >> $GITHUB_ENV
       
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version: ">=${{ env.golang-version }}"
           cache: false
 
       - name: Install Protoc
-        uses: arduino/setup-protoc@v3
+        uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b # v3.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.protoc-version }}
 
       - name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v3'
+        uses: 'google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093' # v3.0.0
         with:
           workload_identity_provider: ${{ secrets.GCP_WIP }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -91,7 +91,7 @@ jobs:
 # These packages have been installed on the self-hosted runner using ansible from the private repo
 
       - name: Azure login
-        uses: azure/login@v2
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
           client-id: ${{ secrets.TSIGN_AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.TSIGN_AZURE_TENANT_ID}}
@@ -118,7 +118,7 @@ jobs:
             /tmp/quill help
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -135,7 +135,7 @@ jobs:
 
       - name: Run GoReleaser (w/ Docker Release)
         if: ${{ inputs.skip-publish != true }}
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           distribution: goreleaser
           version: v2.5.1
@@ -160,7 +160,7 @@ jobs:
 
       - name: Run GoReleaser (w/o Docker Release)
         if: ${{ inputs.skip-publish == true }}
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           distribution: goreleaser
           version: v2.5.1
@@ -199,7 +199,7 @@ jobs:
 
       - name: Upload artifacts
         if: ${{ inputs.upload-artifacts == true }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: windows-artifacts
           path: dist/*.zip
@@ -210,7 +210,7 @@ jobs:
       # The docker container is a pre-requisite for cnspec release.
       - name: Trigger cnquery bump in cnspec
         if: ${{ inputs.skip-publish != true }}
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54a1bcbee4d9ff4d7c0 # v3.0.0
         with:
           token: ${{ secrets.RELEASR_ACTION_TOKEN }}
           repository: "mondoohq/cnspec"
