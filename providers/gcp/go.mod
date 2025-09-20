@@ -2,9 +2,9 @@ module go.mondoo.com/cnquery/v12/providers/gcp
 
 replace go.mondoo.com/cnquery/v12 => ../..
 
-go 1.24.0
+go 1.24.4
 
-toolchain go1.24.3
+toolchain go1.24.7
 
 require (
 	cloud.google.com/go/accessapproval v1.8.7
