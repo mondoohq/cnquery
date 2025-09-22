@@ -74,3 +74,7 @@ Features:
   idx: 12
   start: v11.x
   status: new, we still need to fix a few more tests
+- id: UploadResultsV2
+  idx: 13
+  start: v12.x
+  status: new

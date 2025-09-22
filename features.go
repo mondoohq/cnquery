@@ -72,9 +72,14 @@ const (
 	// status: new, we still need to fix a few more tests
 	FailIfNoEntryPoints Feature = 12
 
+	// 
+	// start:  v12.x
+	// status: new
+	UploadResultsV2 Feature = 13
+
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 13
+	MAX_FEATURES byte = 14
 )
 
 var FeaturesValue = map[string]Feature{
@@ -90,6 +95,7 @@ var FeaturesValue = map[string]Feature{
 	"ForceShellCompletion": ForceShellCompletion,
 	"ResourceContext": ResourceContext,
 	"FailIfNoEntryPoints": FailIfNoEntryPoints,
+	"UploadResultsV2": UploadResultsV2,
 }
 
 // DefaultFeatures are a set of default flags that are active
@@ -103,4 +109,5 @@ var DefaultFeatures = Features{
 // AvailableFeatures are a set of flags that can be activated
 var AvailableFeatures = Features{
 	byte(MQLAssetContext),
+	byte(UploadResultsV2),
 }
