@@ -142,6 +142,8 @@ func checkStatus() (Status, error) {
 		}
 	}
 
+	s.Client.ProvidersURL = opts.ProvidersURL
+
 	return s, nil
 }
 
@@ -164,6 +166,7 @@ type ClientStatus struct {
 	Hostname       string              `json:"hostname,omitempty"`
 	Registered     bool                `json:"registered,omitempty"`
 	PingPongError  error               `json:"pingPongError,omitempty"`
+	ProvidersURL   string              `json:"providersUrl,omitempty"`
 }
 
 func (s Status) RenderCliStatus() {
@@ -187,6 +190,8 @@ func (s Status) RenderCliStatus() {
 			log.Warn().Msg("A newer version is available")
 		}
 	}
+
+	log.Info().Msg("Providers URL:\t" + s.Client.ProvidersURL)
 
 	installed, outdated, err := getProviders()
 	if err != nil {
