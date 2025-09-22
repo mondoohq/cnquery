@@ -143,7 +143,11 @@ func checkStatus() (Status, error) {
 		}
 	}
 
-	s.Client.ProvidersURL = opts.ProvidersURL
+	if opts.ProvidersURL != "" {
+		s.Client.ProvidersURL = opts.ProvidersURL
+	} else {
+		s.Client.ProvidersURL = providers.DefaultProviderRegistryURL
+	}
 
 	return s, nil
 }

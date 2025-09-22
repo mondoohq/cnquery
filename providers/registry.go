@@ -15,6 +15,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var DefaultProviderRegistryURL = "https://releases.mondoo.com/providers"
+
 var registry ProviderRegistry = NewMondooProviderRegistry()
 
 // SetProviderRegistry allows setting a custom provider registry implementation.
@@ -52,7 +54,7 @@ func WithBaseURL(baseURL string) MondooProviderRegistryOption {
 // By default, it uses "https://releases.mondoo.com/providers" as the base URL.
 func NewMondooProviderRegistry(opts ...MondooProviderRegistryOption) *MondooProviderRegistry {
 	r := &MondooProviderRegistry{
-		BaseURL: "https://releases.mondoo.com/providers",
+		BaseURL: DefaultProviderRegistryURL,
 	}
 
 	for _, opt := range opts {
