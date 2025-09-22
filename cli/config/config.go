@@ -12,6 +12,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v12"
 	"go.mondoo.com/cnquery/v12/logger"
@@ -55,8 +56,12 @@ func Init(rootCmd *cobra.Command) {
 	// the providers configuration needs to be available before the rootCmd
 	// is executed as it does things like tries to download a provider if its missing
 	// See AttachCLIs in cli/providers/providers.go
-	if err := rootCmd.ParseFlags(os.Args); err != nil {
-		log.Error().Err(err).Msg("could not parse flags")
+	flags := pflag.NewFlagSet("set", pflag.ContinueOnError)
+	flags.ParseErrorsAllowlist.UnknownFlags = true
+	flags.StringVar(&UserProvidedPath, "config", "", "")
+	flags.BoolP("help", "h", false, "")
+	if err := flags.Parse(os.Args); err != nil {
+		log.Debug().Err(err).Msg("could not parse flags")
 	}
 }
 
