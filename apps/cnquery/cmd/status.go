@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -265,16 +266,24 @@ func getProviders() ([]string, []string, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	var errCircuitBreaker error
 	for _, provider := range allProviders {
 		installed = append(installed, provider.Name)
-		latestVersion, err := providers.LatestVersion(context.Background(), provider.Name)
-		if err != nil {
-			continue
-		}
-		if latestVersion != provider.Version && provider.Name != "core" {
-			outdated = append(outdated, provider.Name)
+		if errCircuitBreaker == nil {
+			latestVersion, err := providers.LatestVersion(context.Background(), provider.Name)
+			if err != nil {
+				// If we get a connection refused, we assume this will happen for all providers
+				// so we will return early
+				if errors.Is(err, syscall.ECONNREFUSED) {
+					errCircuitBreaker = err
+				}
+				continue
+			}
+			if latestVersion != provider.Version && provider.Name != "core" {
+				outdated = append(outdated, provider.Name)
+			}
 		}
 	}
 
-	return installed, outdated, nil
+	return installed, outdated, errCircuitBreaker
 }
