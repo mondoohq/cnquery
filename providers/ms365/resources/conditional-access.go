@@ -168,22 +168,34 @@ func (a *mqlMicrosoftConditionalAccess) createPolicyResource(policy models.Condi
 		return nil, fmt.Errorf("policy ID cannot be nil")
 	}
 
-	// Create conditions resource
-	conditions, err := a.createConditionsResource(*id, policy.GetConditions())
-	if err != nil {
-		return nil, fmt.Errorf("failed to create conditions resource: %w", err)
+	var conditions plugin.Resource
+	if mConditions := policy.GetConditions(); mConditions != nil {
+		var err error
+		// Create conditions resource
+		conditions, err = a.createConditionsResource(*id, mConditions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create conditions resource: %w", err)
+		}
 	}
 
 	// Create grant controls resource
-	grantControls, err := a.createGrantControlsResource(*id, policy.GetGrantControls())
-	if err != nil {
-		return nil, fmt.Errorf("failed to create grant controls resource: %w", err)
+	var grantControls plugin.Resource
+	if mGrantControls := policy.GetGrantControls(); mGrantControls != nil {
+		var err error
+		grantControls, err = a.createGrantControlsResource(*id, mGrantControls)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create grant controls resource: %w", err)
+		}
 	}
 
-	// Create session controls resource
-	sessionControls, err := a.createSessionControlsResource(*id, policy.GetSessionControls())
-	if err != nil {
-		return nil, fmt.Errorf("failed to create session controls resource: %w", err)
+	var sessionControls plugin.Resource
+	if mSessionControls := policy.GetSessionControls(); mSessionControls != nil {
+		var err error
+		// Create session controls resource
+		sessionControls, err = a.createSessionControlsResource(*id, mSessionControls)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create session controls resource: %w", err)
+		}
 	}
 
 	policyInfo, err := CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy",
