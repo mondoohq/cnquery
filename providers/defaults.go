@@ -11,6 +11,21 @@ import "go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 // to tell users what providers are used for common connections, when there
 // is no other way to find out.
 var DefaultProviders Providers = map[string]*Provider{
+	"ai": {
+		Provider: &plugin.Provider{
+			Name:            "ai",
+			ID:              "go.mondoo.com/cnquery/v12/providers/ai",
+			ConnectionTypes: []string{"mcp"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "mcp",
+					Use:   "mcp http://example.com",
+					Short: "Model Context Protocol Provider",
+				},
+			},
+		},
+	},
+
 	"ansible": {
 		Provider: &plugin.Provider{
 			Name:            "ansible",

@@ -650,6 +650,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		"go.mondoo.com/cnquery/providers/ms365",
 		"go.mondoo.com/cnquery/providers/azure",
 		"go.mondoo.com/cnquery/providers/networkdiscovery",
+		"go.mondoo.com/cnquery/providers/ai",
 		// FIXME: DEPRECATED, remove in v12.0 vv
 		// Providers traditionally had a version indication in their ID. With v10
 		// this is no longer necessary (but still supported due to a bug,
