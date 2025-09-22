@@ -59,7 +59,7 @@ func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Comm
 	config.InitViperConfig()
 
 	if viper.IsSet("providers_url") {
-		if providersURL := viper.GetString("providers_url"); providersURL != "" && !strings.HasPrefix(providersURL, "http") {
+		if providersURL := viper.GetString("providers_url"); providersURL != "" {
 			providers.SetProviderRegistry(providers.NewMondooProviderRegistry(providers.WithBaseURL(providersURL)))
 		}
 	}
