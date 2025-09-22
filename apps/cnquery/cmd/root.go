@@ -96,7 +96,6 @@ func Execute() {
 	}
 }
 
-// nolint:errcheck
 func init() {
 	// NOTE: we need to call this super early, otherwise the CLI color output on Windows is broken for the first lines
 	// since the log instance is already initialized, replace default zerolog color output with our own
@@ -121,8 +120,8 @@ func init() {
 	viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
 	viper.BindPFlag("api_proxy", rootCmd.PersistentFlags().Lookup("api-proxy"))
 	viper.BindPFlag("auto_update", rootCmd.PersistentFlags().Lookup("auto-update"))
-	viper.BindEnv("features")
-	viper.BindEnv("providers_url")
+	_ = viper.BindEnv("features")
+	_ = viper.BindEnv("providers_url")
 
 	config.Init(rootCmd)
 }
