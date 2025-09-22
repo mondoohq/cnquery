@@ -34,7 +34,12 @@ func (c *TestConnection) ParentID() uint32 {
 }
 
 func TestMain(m *testing.M) {
-	goleak.VerifyTestMain(m)
+	// Prevent "goleak: Errors on successful test run: found unexpected goroutines"
+	opts := []goleak.Option{
+		goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),
+		goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"),
+	}
+	goleak.VerifyTestMain(m, opts...)
 }
 
 type TestConnectionWithClose struct {
