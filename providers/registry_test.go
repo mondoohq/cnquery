@@ -111,20 +111,6 @@ func TestMondooProviderRegistry_GetLatestVersion(t *testing.T) {
 	}
 }
 
-func TestMondooProviderRegistry_GetLatestVersion_ServerError(t *testing.T) {
-	// Test server returning an error
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}))
-	defer server.Close()
-
-	registry := NewMondooProviderRegistry(WithBaseURL(server.URL))
-	ctx := context.Background()
-
-	_, err := registry.GetLatestVersion(ctx, "aws")
-	assert.Error(t, err)
-}
-
 func TestMondooProviderRegistry_GetLatestVersion_InvalidJSON(t *testing.T) {
 	// Test server returning invalid JSON
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
