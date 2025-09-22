@@ -392,7 +392,6 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 func (r *recording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
 	asset, ok := r.assets[connectionID]
 	if !ok {
-		log.Error().Uint32("connectionID", connectionID).Msg("cannot store recording, cannot find connection ID")
 		return
 	}
 
