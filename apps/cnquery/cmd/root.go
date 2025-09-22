@@ -96,6 +96,7 @@ func Execute() {
 	}
 }
 
+// nolint:errcheck
 func init() {
 	// NOTE: we need to call this super early, otherwise the CLI color output on Windows is broken for the first lines
 	// since the log instance is already initialized, replace default zerolog color output with our own
