@@ -469,9 +469,9 @@ var DefaultProviders Providers = map[string]*Provider{
 
 	"terraform": {
 		Provider: &plugin.Provider{
-			Name:            "tailscale",
-			ID:              "go.mondoo.com/cnquery/v12/providers/tailscale",
-			ConnectionTypes: []string{"tailscale"},
+			Name:            "terraform",
+			ID:              "go.mondoo.com/cnquery/v9/providers/terraform",
+			ConnectionTypes: []string{},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "terraform",
