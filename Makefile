@@ -767,7 +767,7 @@ test/lint/golangci-lint/run: prep/tools
 	golangci-lint run
 
 test/lint/extended: prep/tools test/generate
-	golangci-lint run --config=.github/.golangci.yml --timeout=30m
+	golangci-lint run --config=.github/.golangci.yaml --timeout=30m
 
 test/lint/proto: prep/tools/protolint
 	protolint lint .
