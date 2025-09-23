@@ -14,7 +14,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"ai": {
 		Provider: &plugin.Provider{
 			Name:            "ai",
-			ID:              "go.mondoo.com/cnquery/v12/providers/ai",
+			ID:              "go.mondoo.com/cnquery/providers/ai",
 			ConnectionTypes: []string{"mcp"},
 			Connectors: []plugin.Connector{
 				{
