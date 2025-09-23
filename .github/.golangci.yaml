@@ -1,0 +1,50 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+# See https://golangci-lint.run/usage/configuration/ for configuration options
+version: "2"
+run:
+  modules-download-mode: readonly
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  settings:
+    govet:
+    # enable or disable analyzers by name
+    # run `go tool vet help` to see all analyzers
+      enable:
+        - structtag
+        - lostcancel
+      disable-all: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - .*\.pb\.go$
+      - .*\.lr\.go$
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: false
+  exclusions:
+    generated: lax
+    paths:
+      - .*\.pb\.go$
+      - .*\.lr\.go$
+      - third_party$
+      - builtin$
+      - examples$
