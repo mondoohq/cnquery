@@ -120,7 +120,8 @@ func init() {
 	viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
 	viper.BindPFlag("api_proxy", rootCmd.PersistentFlags().Lookup("api-proxy"))
 	viper.BindPFlag("auto_update", rootCmd.PersistentFlags().Lookup("auto-update"))
-	viper.BindEnv("features")
+	_ = viper.BindEnv("features")
+	_ = viper.BindEnv("providers_url")
 
 	config.Init(rootCmd)
 }

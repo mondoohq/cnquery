@@ -53,10 +53,17 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 	return nil
 }
 
-func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Command, providers providers.Providers) (string, bool) {
+func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Command, existing providers.Providers) (string, bool) {
 	autoUpdate := true
 
 	config.InitViperConfig()
+
+	if viper.IsSet("providers_url") {
+		if providersURL := viper.GetString("providers_url"); providersURL != "" {
+			providers.SetProviderRegistry(providers.NewMondooProviderRegistry(providers.WithBaseURL(providersURL)))
+		}
+	}
+
 	if viper.IsSet("auto_update") {
 		autoUpdate = viper.GetBool("auto_update")
 	}
@@ -84,8 +91,8 @@ func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Comm
 		attachPFlags(flags, cmd.Command.Flags())
 	}
 
-	for i := range providers {
-		provider := providers[i]
+	for i := range existing {
+		provider := existing[i]
 		for j := range provider.Connectors {
 			conn := provider.Connectors[j]
 			for k := range conn.Flags {

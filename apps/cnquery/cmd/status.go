@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -142,6 +143,12 @@ func checkStatus() (Status, error) {
 		}
 	}
 
+	if opts.ProvidersURL != "" {
+		s.Client.ProvidersURL = opts.ProvidersURL
+	} else {
+		s.Client.ProvidersURL = providers.DefaultProviderRegistryURL
+	}
+
 	return s, nil
 }
 
@@ -164,6 +171,7 @@ type ClientStatus struct {
 	Hostname       string              `json:"hostname,omitempty"`
 	Registered     bool                `json:"registered,omitempty"`
 	PingPongError  error               `json:"pingPongError,omitempty"`
+	ProvidersURL   string              `json:"providersUrl,omitempty"`
 }
 
 func (s Status) RenderCliStatus() {
@@ -187,6 +195,8 @@ func (s Status) RenderCliStatus() {
 			log.Warn().Msg("A newer version is available")
 		}
 	}
+
+	log.Info().Msg("Providers URL:\t" + s.Client.ProvidersURL)
 
 	installed, outdated, err := getProviders()
 	if err != nil {
@@ -260,16 +270,24 @@ func getProviders() ([]string, []string, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	var errCircuitBreaker error
 	for _, provider := range allProviders {
 		installed = append(installed, provider.Name)
-		latestVersion, err := providers.LatestVersion(provider.Name)
-		if err != nil {
-			continue
-		}
-		if latestVersion != provider.Version && provider.Name != "core" {
-			outdated = append(outdated, provider.Name)
+		if errCircuitBreaker == nil {
+			latestVersion, err := providers.LatestVersion(context.Background(), provider.Name)
+			if err != nil {
+				// If we get a connection refused, we assume this will happen for all providers
+				// so we will return early
+				if errors.Is(err, syscall.ECONNREFUSED) {
+					errCircuitBreaker = err
+				}
+				continue
+			}
+			if latestVersion != provider.Version && provider.Name != "core" {
+				outdated = append(outdated, provider.Name)
+			}
 		}
 	}
 
-	return installed, outdated, nil
+	return installed, outdated, errCircuitBreaker
 }
