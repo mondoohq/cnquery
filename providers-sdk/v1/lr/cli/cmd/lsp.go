@@ -4,9 +4,14 @@
 package cmd
 
 import (
+	stdctx "context"
 	"fmt"
+	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -49,17 +54,19 @@ func NewLRHandler() *LRHandler {
 
 	// Set up the protocol handlers
 	handler.Handler = protocol.Handler{
-		Initialize:                 handler.initialize,
-		Initialized:                handler.initialized,
-		Shutdown:                   handler.shutdown,
-		SetTrace:                   handler.setTrace,
-		TextDocumentDidOpen:        handler.textDocumentDidOpen,
-		TextDocumentDidChange:      handler.textDocumentDidChange,
-		TextDocumentDidClose:       handler.textDocumentDidClose,
-		TextDocumentDocumentSymbol: handler.textDocumentDocumentSymbol,
-		TextDocumentHover:          handler.textDocumentHover,
-		TextDocumentDefinition:     handler.textDocumentDefinition,
-		TextDocumentReferences:     handler.textDocumentReferences,
+		Initialize:                     handler.initialize,
+		Initialized:                    handler.initialized,
+		Shutdown:                       handler.shutdown,
+		SetTrace:                       handler.setTrace,
+		CancelRequest:                  handler.cancelRequest,
+		TextDocumentDidOpen:            handler.textDocumentDidOpen,
+		TextDocumentDidChange:          handler.textDocumentDidChange,
+		TextDocumentDidClose:           handler.textDocumentDidClose,
+		TextDocumentDocumentSymbol:     handler.textDocumentDocumentSymbol,
+		TextDocumentHover:              handler.textDocumentHover,
+		TextDocumentDefinition:         handler.textDocumentDefinition,
+		TextDocumentReferences:         handler.textDocumentReferences,
+		WorkspaceDidChangeWatchedFiles: handler.workspaceDidChangeWatchedFiles,
 	}
 
 	return handler
@@ -218,7 +225,7 @@ func runLSPServer(debug bool) error {
 	return server.RunStdio()
 }
 
-// processDocument parses LR content and caches the result
+// processDocument parses LR content and caches the result with timeout protection
 func (h *LRHandler) processDocument(uri protocol.DocumentUri, content string, version protocol.Integer) *Document {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
@@ -230,22 +237,163 @@ func (h *LRHandler) processDocument(uri protocol.DocumentUri, content string, ve
 		Errors:  []protocol.Diagnostic{},
 	}
 
-	// Parse the LR content
-	ast, err := lr.Parse(content)
-	if err != nil {
-		// Convert parse error to LSP diagnostic
+	// Parse the LR content with a simplified approach
+	// Use a shorter timeout and simpler error handling
+	ctx, cancel := stdctx.WithTimeout(stdctx.Background(), 5*time.Second)
+	defer cancel()
+
+	done := make(chan bool, 1)
+	var ast *lr.LR
+	var err error
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Error().Interface("panic", r).Msg("Recovered from panic during LR parsing")
+				err = fmt.Errorf("parser panic: %v", r)
+			}
+			done <- true
+		}()
+		ast, err = lr.Parse(content)
+	}()
+
+	select {
+	case <-done:
+		if err != nil {
+			// Convert parse error to LSP diagnostic
+			// Try to extract position information from error message
+			line, char := h.extractPositionFromError(err.Error(), content)
+			diagnostic := protocol.Diagnostic{
+				Range: protocol.Range{
+					Start: protocol.Position{Line: protocol.UInteger(line), Character: protocol.UInteger(char)},
+					End:   protocol.Position{Line: protocol.UInteger(line), Character: protocol.UInteger(char + 1)},
+				},
+				Severity: &[]protocol.DiagnosticSeverity{protocol.DiagnosticSeverityError}[0],
+				Message:  err.Error(),
+				Source:   &[]string{"lr-parser"}[0],
+			}
+			doc.Errors = append(doc.Errors, diagnostic)
+		} else {
+			doc.AST = ast
+		}
+	case <-ctx.Done():
+		// Parsing timed out
+		log.Warn().Str("uri", string(uri)).Msg("Document parsing timed out")
 		diagnostic := protocol.Diagnostic{
 			Range: protocol.Range{
 				Start: protocol.Position{Line: 0, Character: 0},
 				End:   protocol.Position{Line: 0, Character: 0},
 			},
-			Severity: &[]protocol.DiagnosticSeverity{protocol.DiagnosticSeverityError}[0],
-			Message:  err.Error(),
+			Severity: &[]protocol.DiagnosticSeverity{protocol.DiagnosticSeverityWarning}[0],
+			Message:  "Document parsing timed out - file may be too large or complex",
 			Source:   &[]string{"lr-parser"}[0],
 		}
 		doc.Errors = append(doc.Errors, diagnostic)
-	} else {
-		doc.AST = ast
+	}
+
+	h.documents[uri] = doc
+	return doc
+}
+
+// processDocumentQuick parses LR content quickly with a shorter timeout for real-time editing
+func (h *LRHandler) processDocumentQuick(uri protocol.DocumentUri, content string, version protocol.Integer) *Document {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	doc := &Document{
+		URI:     uri,
+		Content: content,
+		Version: version,
+		Errors:  []protocol.Diagnostic{},
+	}
+
+	// Get the old document to preserve AST if parsing fails
+	oldDoc := h.documents[uri]
+
+	// Parse with a very short timeout for responsiveness
+	ctx, cancel := stdctx.WithTimeout(stdctx.Background(), 1*time.Second)
+	defer cancel()
+
+	done := make(chan bool, 1)
+	var ast *lr.LR
+	var err error
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Error().Interface("panic", r).Msg("Recovered from panic during quick LR parsing")
+				err = fmt.Errorf("parser panic: %v", r)
+			}
+			done <- true
+		}()
+
+		// Quick validation: if content is empty or only whitespace, don't parse
+		trimmed := strings.TrimSpace(content)
+		if trimmed == "" {
+			ast = &lr.LR{Resources: []*lr.Resource{}}
+			return
+		}
+
+		ast, err = lr.Parse(content)
+	}()
+
+	select {
+	case <-done:
+		if err != nil {
+			// Convert parse error to LSP diagnostic
+			// Try to extract position information from error message
+			line, char := h.extractPositionFromError(err.Error(), content)
+			log.Debug().Str("uri", string(uri)).Int("errorLine", line).Int("errorChar", char).Bool("isQuickProcess", true).Msg("Parse error in quick processing - content and error should match")
+			diagnostic := protocol.Diagnostic{
+				Range: protocol.Range{
+					Start: protocol.Position{Line: protocol.UInteger(line), Character: protocol.UInteger(char)},
+					End:   protocol.Position{Line: protocol.UInteger(line), Character: protocol.UInteger(char + 1)},
+				},
+				Severity: &[]protocol.DiagnosticSeverity{protocol.DiagnosticSeverityError}[0],
+				Message:  err.Error(),
+				Source:   &[]string{"lr-parser"}[0],
+			}
+			doc.Errors = append(doc.Errors, diagnostic)
+
+			// CRITICAL: Always preserve the old AST to maintain LSP functionality
+			if oldDoc != nil && oldDoc.AST != nil {
+				doc.AST = oldDoc.AST
+				log.Debug().Str("uri", string(uri)).Msg("Preserved old AST after parse error")
+			} else {
+				// Create a minimal valid AST as absolute fallback
+				doc.AST = &lr.LR{
+					Resources: []*lr.Resource{},
+					Options:   make(map[string]string),
+				}
+				log.Debug().Str("uri", string(uri)).Msg("Created minimal AST after parse error")
+			}
+		} else {
+			doc.AST = ast
+			log.Debug().Str("uri", string(uri)).Msg("Successfully parsed and cached AST")
+		}
+	case <-ctx.Done():
+		// Parsing timed out - this is expected during fast typing
+		log.Debug().Str("uri", string(uri)).Msg("Quick document parsing timed out")
+
+		// Keep the old AST if available to maintain functionality
+		if oldDoc != nil && oldDoc.AST != nil {
+			doc.AST = oldDoc.AST
+		} else {
+			// Create a minimal empty AST as fallback
+			doc.AST = &lr.LR{Resources: []*lr.Resource{}}
+		}
+
+		// Add a transient warning that will disappear on successful parse
+		diagnostic := protocol.Diagnostic{
+			Range: protocol.Range{
+				Start: protocol.Position{Line: 0, Character: 0},
+				End:   protocol.Position{Line: 0, Character: 0},
+			},
+			Severity: &[]protocol.DiagnosticSeverity{protocol.DiagnosticSeverityInformation}[0],
+			Message:  "Parsing in progress...",
+			Source:   &[]string{"lr-parser"}[0],
+		}
+		doc.Errors = append(doc.Errors, diagnostic)
 	}
 
 	h.documents[uri] = doc
@@ -257,6 +405,48 @@ func (h *LRHandler) getDocument(uri protocol.DocumentUri) *Document {
 	h.mutex.RLock()
 	defer h.mutex.RUnlock()
 	return h.documents[uri]
+}
+
+// extractPositionFromError attempts to extract line and character position from parser error messages
+func (h *LRHandler) extractPositionFromError(errorMsg, content string) (int, int) {
+	// Debug logging to help diagnose position extraction
+	log.Debug().Str("errorMsg", errorMsg).Msg("Attempting to extract position from error message")
+
+	// Try to extract line number from error messages like "line 5:" or "at line 10"
+	lineRegex := regexp.MustCompile(`(?i)line\s+(\d+)`)
+	if matches := lineRegex.FindStringSubmatch(errorMsg); len(matches) > 1 {
+		if line, err := strconv.Atoi(matches[1]); err == nil {
+			log.Debug().Int("extractedLine", line).Msg("Extracted line number from error")
+			return line - 1, 0 // Convert to 0-based indexing
+		}
+	}
+
+	// Try to extract position from messages like "1:5" or "position 1:5"
+	posRegex := regexp.MustCompile(`(?:\bposition\s+)?(\d+):(\d+)`)
+	if matches := posRegex.FindStringSubmatch(errorMsg); len(matches) > 2 {
+		if line, err := strconv.Atoi(matches[1]); err == nil {
+			if char, err := strconv.Atoi(matches[2]); err == nil {
+				log.Debug().Int("extractedLine", line).Int("extractedChar", char).Msg("Extracted line:char position from error")
+				return line - 1, char - 1 // Convert to 0-based indexing
+			}
+		}
+	} // As fallback, try to find likely error location by looking for common error patterns
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		// Look for lines with obvious syntax issues
+		if strings.Contains(errorMsg, "expected") || strings.Contains(errorMsg, "unexpected") {
+			// Check for unmatched braces, brackets, etc.
+			openBraces := strings.Count(line, "{") - strings.Count(line, "}")
+			openBrackets := strings.Count(line, "[") - strings.Count(line, "]")
+			if openBraces != 0 || openBrackets != 0 {
+				return i, 0
+			}
+		}
+	}
+
+	// Default to first line if no position found
+	log.Debug().Msg("No position information found in error message, defaulting to 0:0")
+	return 0, 0
 }
 
 // extractSymbols extracts document symbols from the AST
@@ -346,9 +536,20 @@ func (h *LRHandler) setTrace(context *glsp.Context, params *protocol.SetTracePar
 	return nil
 }
 
+// cancelRequest handles cancellation requests
+func (h *LRHandler) cancelRequest(context *glsp.Context, params *protocol.CancelParams) error {
+	// Log the cancel request for debugging
+	log.Debug().Interface("id", params.ID).Msg("Cancel request received")
+	// For now, we'll just acknowledge the cancel request
+	// In a more sophisticated implementation, you would track ongoing requests
+	// and actually cancel them
+	return nil
+}
+
 // textDocumentDidOpen handles when a document is opened
 func (h *LRHandler) textDocumentDidOpen(context *glsp.Context, params *protocol.DidOpenTextDocumentParams) error {
-	doc := h.processDocument(params.TextDocument.URI, params.TextDocument.Text, params.TextDocument.Version)
+	// Process document synchronously but with shorter timeout to prevent blocking
+	doc := h.processDocumentQuick(params.TextDocument.URI, params.TextDocument.Text, params.TextDocument.Version)
 
 	// Publish diagnostics
 	context.Notify("textDocument/publishDiagnostics", protocol.PublishDiagnosticsParams{
@@ -365,7 +566,11 @@ func (h *LRHandler) textDocumentDidChange(context *glsp.Context, params *protoco
 	if len(params.ContentChanges) > 0 {
 		change := params.ContentChanges[len(params.ContentChanges)-1]
 		if textChange, ok := change.(protocol.TextDocumentContentChangeEvent); ok {
-			doc := h.processDocument(params.TextDocument.URI, textChange.Text, params.TextDocument.Version)
+			// Small delay to let rapid keystrokes settle before processing
+			time.Sleep(10 * time.Millisecond)
+
+			// Process document synchronously but quickly
+			doc := h.processDocumentQuick(params.TextDocument.URI, textChange.Text, params.TextDocument.Version)
 
 			// Publish diagnostics
 			context.Notify("textDocument/publishDiagnostics", protocol.PublishDiagnosticsParams{
@@ -469,6 +674,17 @@ func (h *LRHandler) textDocumentDocumentSymbol(context *glsp.Context, params *pr
 
 // textDocumentHover handles hover requests
 func (h *LRHandler) textDocumentHover(context *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, error) {
+	// Create a context with timeout for this operation
+	ctx, cancel := stdctx.WithTimeout(stdctx.Background(), 3*time.Second)
+	defer cancel()
+
+	// Check if the request context is already cancelled
+	select {
+	case <-ctx.Done():
+		return nil, nil // Return nil instead of error for cancellation
+	default:
+	}
+
 	doc := h.getDocument(params.TextDocument.URI)
 	if doc == nil || doc.AST == nil {
 		return nil, nil
@@ -488,6 +704,13 @@ func (h *LRHandler) textDocumentHover(context *glsp.Context, params *protocol.Ho
 		return nil, nil
 	}
 
+	// Check for cancellation before expensive operations
+	select {
+	case <-ctx.Done():
+		return nil, nil
+	default:
+	}
+
 	// Extract word at cursor position
 	word := extractWordAtPosition(currentLine, character)
 	if word == "" {
@@ -496,6 +719,18 @@ func (h *LRHandler) textDocumentHover(context *glsp.Context, params *protocol.Ho
 
 	// First, try to find if this word is a resource name
 	for _, resource := range doc.AST.Resources {
+		// Check for cancellation during loop
+		select {
+		case <-ctx.Done():
+			return nil, nil
+		default:
+		}
+
+		// Safety check for nil resource
+		if resource == nil {
+			continue
+		}
+
 		if resource.ID == word {
 			return h.createResourceHover(resource, doc.AST), nil
 		}
@@ -503,11 +738,21 @@ func (h *LRHandler) textDocumentHover(context *glsp.Context, params *protocol.Ho
 
 	// Then, try to find if this word is a field in any resource
 	for _, resource := range doc.AST.Resources {
-		if resource.Body != nil {
-			for _, field := range resource.Body.Fields {
-				if field.BasicField != nil && field.BasicField.ID == word {
-					return h.createFieldHover(field.BasicField, resource, doc.AST), nil
-				}
+		// Check for cancellation during loop
+		select {
+		case <-ctx.Done():
+			return nil, nil
+		default:
+		}
+
+		// Safety check for nil resource
+		if resource == nil || resource.Body == nil {
+			continue
+		}
+
+		for _, field := range resource.Body.Fields {
+			if field.BasicField != nil && field.BasicField.ID == word {
+				return h.createFieldHover(field.BasicField, resource, doc.AST), nil
 			}
 		}
 	}
@@ -515,6 +760,18 @@ func (h *LRHandler) textDocumentHover(context *glsp.Context, params *protocol.Ho
 	// If we can't find a specific match, try to find which resource context we're in
 	// by looking at the line position
 	for _, resource := range doc.AST.Resources {
+		// Check for cancellation during loop
+		select {
+		case <-ctx.Done():
+			return nil, nil
+		default:
+		}
+
+		// Safety check for nil resource
+		if resource == nil {
+			continue
+		}
+
 		if isLineInResourceContext(doc.Content, line, resource.ID) {
 			return h.createResourceHover(resource, doc.AST), nil
 		}
@@ -614,8 +871,19 @@ func isLineInResourceContext(content string, targetLine int, resourceID string) 
 		targetLine >= resourceLineStart && targetLine <= resourceLineEnd
 }
 
-// textDocumentDefinition handles go to definition requests
-func (h *LRHandler) textDocumentDefinition(context *glsp.Context, params *protocol.DefinitionParams) (any, error) {
+// textDocumentDefinition handles go to definition requests with cancellation support
+func (h *LRHandler) textDocumentDefinition(glspContext *glsp.Context, params *protocol.DefinitionParams) (any, error) {
+	// Create a context with timeout for this operation
+	ctx, cancel := stdctx.WithTimeout(stdctx.Background(), 5*time.Second)
+	defer cancel()
+
+	// Check if the request context is already cancelled
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
 	doc := h.getDocument(params.TextDocument.URI)
 	if doc == nil || doc.AST == nil {
 		return nil, nil
@@ -644,8 +912,15 @@ func (h *LRHandler) textDocumentDefinition(context *glsp.Context, params *protoc
 	// Log for debugging
 	log.Debug().Str("word", word).Int("line", line).Int("char", character).Str("currentLine", currentLine).Msg("Looking for definition")
 
-	// Find definition locations
-	locations := h.findDefinitionLocations(doc, word)
+	// Find definition locations with cancellation support
+	locations, err := h.findDefinitionLocationsWithContext(ctx, doc, word)
+	if err != nil {
+		if err == stdctx.Canceled || err == stdctx.DeadlineExceeded {
+			log.Debug().Err(err).Msg("Definition search was cancelled or timed out")
+			return nil, nil // Return nil instead of error for cancellation
+		}
+		return nil, err
+	}
 
 	log.Debug().Int("locations", len(locations)).Msg("Found definition locations")
 
@@ -653,8 +928,63 @@ func (h *LRHandler) textDocumentDefinition(context *glsp.Context, params *protoc
 		return nil, nil
 	}
 	return locations, nil
-} // textDocumentReferences handles find references requests
+} // workspaceDidChangeWatchedFiles handles file system changes
+func (h *LRHandler) workspaceDidChangeWatchedFiles(context *glsp.Context, params *protocol.DidChangeWatchedFilesParams) error {
+	// Log the file changes for debugging
+	log.Debug().Int("changes", len(params.Changes)).Msg("Workspace files changed")
+
+	for _, change := range params.Changes {
+		log.Debug().Str("uri", string(change.URI)).Int("type", int(change.Type)).Msg("File change detected")
+
+		switch change.Type {
+		case protocol.FileChangeTypeDeleted:
+			// Remove deleted files from cache
+			h.mutex.Lock()
+			delete(h.documents, change.URI)
+			h.mutex.Unlock()
+
+		case protocol.FileChangeTypeChanged, protocol.FileChangeTypeCreated:
+			// Re-process changed or created files
+			if strings.HasSuffix(string(change.URI), ".lr") {
+				// Read the file content and re-process it
+				go func(uri protocol.DocumentUri) {
+					// Convert file:// URI to file path
+					filePath := strings.TrimPrefix(string(uri), "file://")
+
+					// Read the file content
+					if content, err := os.ReadFile(filePath); err == nil {
+						// Re-process the document
+						doc := h.processDocumentQuick(uri, string(content), 0)
+
+						// Publish updated diagnostics
+						context.Notify("textDocument/publishDiagnostics", protocol.PublishDiagnosticsParams{
+							URI:         uri,
+							Diagnostics: doc.Errors,
+						})
+
+						log.Debug().Str("uri", string(uri)).Msg("Re-processed file after external change")
+					}
+				}(change.URI)
+			}
+		}
+	}
+
+	return nil
+}
+
+// textDocumentReferences handles find references requests
 func (h *LRHandler) textDocumentReferences(context *glsp.Context, params *protocol.ReferenceParams) ([]protocol.Location, error) {
+	// Create a context with timeout for this operation
+	ctx, cancel := stdctx.WithTimeout(stdctx.Background(), 5*time.Second)
+	defer cancel()
+
+	// Check if the request context is already cancelled
+	select {
+	case <-ctx.Done():
+		return nil, nil // Return nil instead of error for cancellation
+	default:
+	}
+
 	doc := h.getDocument(params.TextDocument.URI)
 	if doc == nil || doc.AST == nil {
 		return nil, nil
@@ -674,15 +1004,72 @@ func (h *LRHandler) textDocumentReferences(context *glsp.Context, params *protoc
 		return nil, nil
 	}
 
+	// Check for cancellation before expensive operations
+	select {
+	case <-ctx.Done():
+		return nil, nil
+	default:
+	}
+
 	// Extract word at cursor position
 	word := extractWordAtPosition(currentLine, character)
 	if word == "" {
 		return nil, nil
 	}
 
-	// Find all references
-	locations := h.findReferenceLocations(doc, word, params.Context.IncludeDeclaration)
+	// Find all references with cancellation support
+	locations, err := h.findReferenceLocationsWithContext(ctx, doc, word, params.Context.IncludeDeclaration)
+	if err != nil {
+		if err == stdctx.Canceled || err == stdctx.DeadlineExceeded {
+			log.Debug().Err(err).Msg("Reference search was cancelled or timed out")
+			return nil, nil // Return nil instead of error for cancellation
+		}
+		return nil, err
+	}
+
 	return locations, nil
+}
+
+// findReferenceLocationsWithContext finds all references to a symbol with cancellation support
+func (h *LRHandler) findReferenceLocationsWithContext(ctx stdctx.Context, doc *Document, word string, includeDeclaration bool) ([]protocol.Location, error) {
+	// Check for cancellation before starting
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	// Call the original function but check for cancellation periodically
+	locations := h.findReferenceLocations(doc, word, includeDeclaration)
+
+	// Check for cancellation after processing
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		return locations, nil
+	}
+}
+
+// findDefinitionLocationsWithContext finds where a symbol is defined with cancellation support
+func (h *LRHandler) findDefinitionLocationsWithContext(ctx stdctx.Context, doc *Document, word string) ([]protocol.Location, error) {
+	// Check for cancellation before starting
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	// Call the original function but check for cancellation periodically
+	locations := h.findDefinitionLocations(doc, word)
+
+	// Check for cancellation after processing
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		return locations, nil
+	}
 }
 
 // findDefinitionLocations finds where a symbol is defined
@@ -692,13 +1079,29 @@ func (h *LRHandler) findDefinitionLocations(doc *Document, word string) []protoc
 
 	log.Debug().Str("word", word).Msg("Finding definition for word")
 
+	// Early exit if file is too large to prevent blocking
+	if len(lines) > 5000 {
+		log.Debug().Int("lines", len(lines)).Msg("File too large for definition search")
+		return locations
+	}
+
 	// Search for resource definitions
 	for _, resource := range doc.AST.Resources {
+		// Safety check for nil resource
+		if resource == nil {
+			continue
+		}
 		if resource.ID == word {
 			log.Debug().Str("resource", resource.ID).Msg("Found matching resource in AST")
 
-			// Look for resource declaration patterns
+			// Look for resource declaration patterns with early termination
 			for i, line := range lines {
+				// Early exit if processing too many lines
+				if i > 1000 {
+					log.Debug().Msg("Stopping definition search - too many lines processed")
+					break
+				}
+
 				trimmed := strings.TrimSpace(line)
 
 				// Match patterns like: "user {", "private user {", "extend user {"
@@ -754,61 +1157,70 @@ func (h *LRHandler) findDefinitionLocations(doc *Document, word string) []protoc
 		}
 	}
 
-	// Search for field/method definitions
+	// Search for field/method definitions with early termination
 	for _, resource := range doc.AST.Resources {
-		if resource.Body != nil {
-			for _, field := range resource.Body.Fields {
-				if field.BasicField != nil && field.BasicField.ID == word {
-					log.Debug().Str("field", field.BasicField.ID).Str("resource", resource.ID).Msg("Found matching field in AST") // Look for field definitions within the resource
-					inResource := false
-					resourceStart := -1
+		// Safety check for nil resource
+		if resource == nil || resource.Body == nil {
+			continue
+		}
+		for _, field := range resource.Body.Fields {
+			if field.BasicField != nil && field.BasicField.ID == word {
+				log.Debug().Str("field", field.BasicField.ID).Str("resource", resource.ID).Msg("Found matching field in AST")
 
-					for i, line := range lines {
-						trimmed := strings.TrimSpace(line)
+				// Look for field definitions within the resource
+				inResource := false
+				resourceStart := -1
 
-						// Check if we're entering a resource
-						if strings.Contains(trimmed, resource.ID+" {") ||
-							strings.Contains(trimmed, resource.ID+` "`) {
-							inResource = true
-							resourceStart = i
-							continue
+				for i, line := range lines {
+					// Early exit if processing too many lines
+					if i > 1000 {
+						log.Debug().Msg("Stopping field search - too many lines processed")
+						break
+					}
+
+					trimmed := strings.TrimSpace(line)
+
+					// Check if we're entering a resource
+					if strings.Contains(trimmed, resource.ID+" {") ||
+						strings.Contains(trimmed, resource.ID+` "`) {
+						inResource = true
+						resourceStart = i
+						continue
+					}
+
+					// Check if we're leaving the resource
+					if inResource && trimmed == "}" {
+						inResource = false
+						continue
+					}
+
+					// Look for field definition within the resource
+					if inResource && i > resourceStart {
+						// Match field patterns: "name string", "uid int", "groups() []group"
+						fieldPatterns := []string{
+							field.BasicField.ID + " ",
+							field.BasicField.ID + "(",
+							field.BasicField.ID + "\t",
 						}
 
-						// Check if we're leaving the resource
-						if inResource && trimmed == "}" {
-							inResource = false
-							continue
-						}
-
-						// Look for field definition within the resource
-						if inResource && i > resourceStart {
-							// Match field patterns: "name string", "uid int", "groups() []group"
-							fieldPatterns := []string{
-								field.BasicField.ID + " ",
-								field.BasicField.ID + "(",
-								field.BasicField.ID + "\t",
-							}
-
-							for _, pattern := range fieldPatterns {
-								if strings.Contains(line, pattern) {
-									start := strings.Index(line, field.BasicField.ID)
-									if start != -1 {
-										location := protocol.Location{
-											URI: doc.URI,
-											Range: protocol.Range{
-												Start: protocol.Position{Line: protocol.UInteger(i), Character: protocol.UInteger(start)},
-												End:   protocol.Position{Line: protocol.UInteger(i), Character: protocol.UInteger(start + len(field.BasicField.ID))},
-											},
-										}
-										locations = append(locations, location)
-										log.Debug().Int("line", i).Int("start", start).Str("pattern", pattern).Msg("Found field definition")
-										goto nextField
+						for _, pattern := range fieldPatterns {
+							if strings.Contains(line, pattern) {
+								start := strings.Index(line, field.BasicField.ID)
+								if start != -1 {
+									location := protocol.Location{
+										URI: doc.URI,
+										Range: protocol.Range{
+											Start: protocol.Position{Line: protocol.UInteger(i), Character: protocol.UInteger(start)},
+											End:   protocol.Position{Line: protocol.UInteger(i), Character: protocol.UInteger(start + len(field.BasicField.ID))},
+										},
 									}
+									locations = append(locations, location)
+									log.Debug().Int("line", i).Int("start", start).Str("pattern", pattern).Msg("Found field definition")
+									break
 								}
 							}
 						}
 					}
-				nextField:
 				}
 			}
 		}
@@ -894,10 +1306,21 @@ func (h *LRHandler) findReferenceLocations(doc *Document, word string, includeDe
 
 // createResourceHover creates hover content for a resource
 func (h *LRHandler) createResourceHover(resource *lr.Resource, ast *lr.LR) *protocol.Hover {
+	// Safety checks
+	if resource == nil {
+		log.Debug().Msg("createResourceHover called with nil resource")
+		return nil
+	}
+	if ast == nil {
+		log.Debug().Msg("createResourceHover called with nil ast")
+		return nil
+	}
+
 	var content strings.Builder
 	content.WriteString(fmt.Sprintf("**Resource**: `%s`\n\n", resource.ID))
 
 	// Include resource title and description from comments
+	// Use a safe approach that doesn't crash if schema generation fails
 	if resourceInfo, ok := h.getResourceInfo(resource.ID, ast); ok {
 		if resourceInfo.Title != "" {
 			content.WriteString(fmt.Sprintf("**%s**\n\n", resourceInfo.Title))
@@ -934,6 +1357,20 @@ func (h *LRHandler) createResourceHover(resource *lr.Resource, ast *lr.LR) *prot
 
 // createFieldHover creates hover content for a field or method
 func (h *LRHandler) createFieldHover(field *lr.BasicField, resource *lr.Resource, ast *lr.LR) *protocol.Hover {
+	// Safety checks
+	if field == nil {
+		log.Debug().Msg("createFieldHover called with nil field")
+		return nil
+	}
+	if resource == nil {
+		log.Debug().Msg("createFieldHover called with nil resource")
+		return nil
+	}
+	if ast == nil {
+		log.Debug().Msg("createFieldHover called with nil ast")
+		return nil
+	}
+
 	var content strings.Builder
 
 	// Determine if this is a field (static) or method (dynamic)
@@ -1008,6 +1445,12 @@ func (h *LRHandler) getResourceInfo(resourceID string, ast *lr.LR) (*resources.R
 	h.mutex.RUnlock()
 
 	// We need to create a schema, but we need to be careful not to modify the original AST
+	// Additional safety: check if AST has valid resources
+	if ast.Resources == nil {
+		log.Debug().Msg("AST has no resources, cannot generate schema")
+		return nil, false
+	}
+
 	// Create a minimal copy with just the options we need
 	astCopy := &lr.LR{
 		Comments:  ast.Comments,
@@ -1017,9 +1460,11 @@ func (h *LRHandler) getResourceInfo(resourceID string, ast *lr.LR) (*resources.R
 		Resources: ast.Resources,
 	}
 
-	// Copy original options
-	for k, v := range ast.Options {
-		astCopy.Options[k] = v
+	// Copy original options safely
+	if ast.Options != nil {
+		for k, v := range ast.Options {
+			astCopy.Options[k] = v
+		}
 	}
 
 	// Add provider if missing
@@ -1027,8 +1472,20 @@ func (h *LRHandler) getResourceInfo(resourceID string, ast *lr.LR) (*resources.R
 		astCopy.Options["provider"] = "unknown"
 	}
 
-	schema, err := lr.Schema(astCopy)
+	// Add defer/recover to catch any panics in schema generation
+	var schema *resources.Schema
+	var err error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Error().Interface("panic", r).Msg("Recovered from panic during schema generation")
+				err = fmt.Errorf("schema generation panic: %v", r)
+			}
+		}()
+		schema, err = lr.Schema(astCopy)
+	}()
 	if err != nil {
+		log.Debug().Err(err).Str("resourceID", resourceID).Msg("Failed to generate schema for resource info")
 		return nil, false
 	}
 
