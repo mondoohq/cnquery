@@ -20,11 +20,12 @@ func _() {
 	_ = x[ForceShellCompletion-10]
 	_ = x[ResourceContext-11]
 	_ = x[FailIfNoEntryPoints-12]
+	_ = x[UploadResultsV2-13]
 }
 
-const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedAssetsSerialNumberAsIDForceShellCompletionResourceContextFailIfNoEntryPoints"
+const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedAssetsSerialNumberAsIDForceShellCompletionResourceContextFailIfNoEntryPointsUploadResultsV2"
 
-var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 65, 81, 99, 116, 132, 152, 167, 186}
+var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 65, 81, 99, 116, 132, 152, 167, 186, 201}
 
 func (i Feature) String() string {
 	i -= 1
