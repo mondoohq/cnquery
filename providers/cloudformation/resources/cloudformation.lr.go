@@ -16,9 +16,9 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	CloudformationTemplateName string = "cloudformation.template"
-	CloudformationResourceName string = "cloudformation.resource"
-	CloudformationOutputName string = "cloudformation.output"
+	ResourceCloudformationTemplate string = "cloudformation.template"
+	ResourceCloudformationResource string = "cloudformation.resource"
+	ResourceCloudformationOutput string = "cloudformation.output"
 )
 
 

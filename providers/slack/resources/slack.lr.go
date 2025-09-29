@@ -17,15 +17,15 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	SlackName string = "slack"
-	SlackConversationsName string = "slack.conversations"
-	SlackTeamName string = "slack.team"
-	SlackUsersName string = "slack.users"
-	SlackUserName string = "slack.user"
-	SlackEnterpriseUserName string = "slack.enterpriseUser"
-	SlackUserGroupName string = "slack.userGroup"
-	SlackLoginName string = "slack.login"
-	SlackConversationName string = "slack.conversation"
+	ResourceSlack string = "slack"
+	ResourceSlackConversations string = "slack.conversations"
+	ResourceSlackTeam string = "slack.team"
+	ResourceSlackUsers string = "slack.users"
+	ResourceSlackUser string = "slack.user"
+	ResourceSlackEnterpriseUser string = "slack.enterpriseUser"
+	ResourceSlackUserGroup string = "slack.userGroup"
+	ResourceSlackLogin string = "slack.login"
+	ResourceSlackConversation string = "slack.conversation"
 )
 
 

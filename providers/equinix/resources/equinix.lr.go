@@ -17,11 +17,11 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	EquinixMetalProjectName string = "equinix.metal.project"
-	EquinixMetalOrganizationName string = "equinix.metal.organization"
-	EquinixMetalUserName string = "equinix.metal.user"
-	EquinixMetalSshkeyName string = "equinix.metal.sshkey"
-	EquinixMetalDeviceName string = "equinix.metal.device"
+	ResourceEquinixMetalProject string = "equinix.metal.project"
+	ResourceEquinixMetalOrganization string = "equinix.metal.organization"
+	ResourceEquinixMetalUser string = "equinix.metal.user"
+	ResourceEquinixMetalSshkey string = "equinix.metal.sshkey"
+	ResourceEquinixMetalDevice string = "equinix.metal.device"
 )
 
 

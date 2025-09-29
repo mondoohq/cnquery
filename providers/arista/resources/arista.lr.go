@@ -16,18 +16,18 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	AristaEosName string = "arista.eos"
-	AristaEosRunningConfigName string = "arista.eos.runningConfig"
-	AristaEosRunningConfigSectionName string = "arista.eos.runningConfig.section"
-	AristaEosUserName string = "arista.eos.user"
-	AristaEosRoleName string = "arista.eos.role"
-	AristaEosSnmpSettingName string = "arista.eos.snmpSetting"
-	AristaEosNtpSettingName string = "arista.eos.ntpSetting"
-	AristaEosInterfaceName string = "arista.eos.interface"
-	AristaEosIpInterfaceName string = "arista.eos.ipInterface"
-	AristaEosStpName string = "arista.eos.stp"
-	AristaEosStpMstName string = "arista.eos.stp.mst"
-	AristaEosSptMstInterfaceName string = "arista.eos.spt.mstInterface"
+	ResourceAristaEos string = "arista.eos"
+	ResourceAristaEosRunningConfig string = "arista.eos.runningConfig"
+	ResourceAristaEosRunningConfigSection string = "arista.eos.runningConfig.section"
+	ResourceAristaEosUser string = "arista.eos.user"
+	ResourceAristaEosRole string = "arista.eos.role"
+	ResourceAristaEosSnmpSetting string = "arista.eos.snmpSetting"
+	ResourceAristaEosNtpSetting string = "arista.eos.ntpSetting"
+	ResourceAristaEosInterface string = "arista.eos.interface"
+	ResourceAristaEosIpInterface string = "arista.eos.ipInterface"
+	ResourceAristaEosStp string = "arista.eos.stp"
+	ResourceAristaEosStpMst string = "arista.eos.stp.mst"
+	ResourceAristaEosSptMstInterface string = "arista.eos.spt.mstInterface"
 )
 
 

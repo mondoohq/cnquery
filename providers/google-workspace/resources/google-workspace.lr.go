@@ -17,22 +17,22 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	GoogleworkspaceName string = "googleworkspace"
-	GoogleworkspaceCalendarName string = "googleworkspace.calendar"
-	GoogleworkspaceCalendarAclRuleName string = "googleworkspace.calendar.aclRule"
-	GoogleworkspaceCalendarAclRuleScopeName string = "googleworkspace.calendar.aclRule.scope"
-	GoogleworkspaceOrgUnitName string = "googleworkspace.orgUnit"
-	GoogleworkspaceDomainName string = "googleworkspace.domain"
-	GoogleworkspaceUserName string = "googleworkspace.user"
-	GoogleworkspaceTokenName string = "googleworkspace.token"
-	GoogleworkspaceConnectedAppName string = "googleworkspace.connectedApp"
-	GoogleworkspaceGroupName string = "googleworkspace.group"
-	GoogleworkspaceMemberName string = "googleworkspace.member"
-	GoogleworkspaceRoleName string = "googleworkspace.role"
-	GoogleworkspaceReportAppsName string = "googleworkspace.report.apps"
-	GoogleworkspaceReportActivityName string = "googleworkspace.report.activity"
-	GoogleworkspaceReportUsersName string = "googleworkspace.report.users"
-	GoogleworkspaceReportUsageName string = "googleworkspace.report.usage"
+	ResourceGoogleworkspace string = "googleworkspace"
+	ResourceGoogleworkspaceCalendar string = "googleworkspace.calendar"
+	ResourceGoogleworkspaceCalendarAclRule string = "googleworkspace.calendar.aclRule"
+	ResourceGoogleworkspaceCalendarAclRuleScope string = "googleworkspace.calendar.aclRule.scope"
+	ResourceGoogleworkspaceOrgUnit string = "googleworkspace.orgUnit"
+	ResourceGoogleworkspaceDomain string = "googleworkspace.domain"
+	ResourceGoogleworkspaceUser string = "googleworkspace.user"
+	ResourceGoogleworkspaceToken string = "googleworkspace.token"
+	ResourceGoogleworkspaceConnectedApp string = "googleworkspace.connectedApp"
+	ResourceGoogleworkspaceGroup string = "googleworkspace.group"
+	ResourceGoogleworkspaceMember string = "googleworkspace.member"
+	ResourceGoogleworkspaceRole string = "googleworkspace.role"
+	ResourceGoogleworkspaceReportApps string = "googleworkspace.report.apps"
+	ResourceGoogleworkspaceReportActivity string = "googleworkspace.report.activity"
+	ResourceGoogleworkspaceReportUsers string = "googleworkspace.report.users"
+	ResourceGoogleworkspaceReportUsage string = "googleworkspace.report.usage"
 )
 
 

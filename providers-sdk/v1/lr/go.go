@@ -561,7 +561,7 @@ func indent(s string, depth int) string {
 }
 
 func (r *Resource) constTypeName(b *goBuilder) string {
-	return r.interfaceName(b) + "Name"
+	return "Resource" + r.interfaceName(b)
 }
 
 func (r *Resource) structName(b *goBuilder) string {

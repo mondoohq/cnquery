@@ -16,22 +16,22 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	TerraformName string = "terraform"
-	TerraformResourcesName string = "terraform.resources"
-	TerraformFileName string = "terraform.file"
-	TerraformFilepositionName string = "terraform.fileposition"
-	TerraformBlockName string = "terraform.block"
-	TerraformModuleName string = "terraform.module"
-	TerraformSettingsName string = "terraform.settings"
-	TerraformStateName string = "terraform.state"
-	TerraformStateOutputName string = "terraform.state.output"
-	TerraformStateModuleName string = "terraform.state.module"
-	TerraformStateResourceName string = "terraform.state.resource"
-	TerraformPlanName string = "terraform.plan"
-	TerraformPlanConfigurationName string = "terraform.plan.configuration"
-	TerraformPlanVariableName string = "terraform.plan.variable"
-	TerraformPlanResourceChangeName string = "terraform.plan.resourceChange"
-	TerraformPlanProposedChangeName string = "terraform.plan.proposedChange"
+	ResourceTerraform string = "terraform"
+	ResourceTerraformResources string = "terraform.resources"
+	ResourceTerraformFile string = "terraform.file"
+	ResourceTerraformFileposition string = "terraform.fileposition"
+	ResourceTerraformBlock string = "terraform.block"
+	ResourceTerraformModule string = "terraform.module"
+	ResourceTerraformSettings string = "terraform.settings"
+	ResourceTerraformState string = "terraform.state"
+	ResourceTerraformStateOutput string = "terraform.state.output"
+	ResourceTerraformStateModule string = "terraform.state.module"
+	ResourceTerraformStateResource string = "terraform.state.resource"
+	ResourceTerraformPlan string = "terraform.plan"
+	ResourceTerraformPlanConfiguration string = "terraform.plan.configuration"
+	ResourceTerraformPlanVariable string = "terraform.plan.variable"
+	ResourceTerraformPlanResourceChange string = "terraform.plan.resourceChange"
+	ResourceTerraformPlanProposedChange string = "terraform.plan.proposedChange"
 )
 
 

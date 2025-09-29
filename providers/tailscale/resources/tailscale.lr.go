@@ -17,9 +17,9 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	TailscaleName string = "tailscale"
-	TailscaleDeviceName string = "tailscale.device"
-	TailscaleUserName string = "tailscale.user"
+	ResourceTailscale string = "tailscale"
+	ResourceTailscaleDevice string = "tailscale.device"
+	ResourceTailscaleUser string = "tailscale.user"
 )
 
 

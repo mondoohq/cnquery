@@ -16,10 +16,10 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	AnsibleName string = "ansible"
-	AnsiblePlayName string = "ansible.play"
-	AnsibleTaskName string = "ansible.task"
-	AnsibleHandlerName string = "ansible.handler"
+	ResourceAnsible string = "ansible"
+	ResourceAnsiblePlay string = "ansible.play"
+	ResourceAnsibleTask string = "ansible.task"
+	ResourceAnsibleHandler string = "ansible.handler"
 )
 
 

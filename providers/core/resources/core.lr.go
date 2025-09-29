@@ -17,17 +17,17 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	MondooName string = "mondoo"
-	AssetName string = "asset"
-	AssetEolName string = "asset.eol"
-	TimeName string = "time"
-	RegexName string = "regex"
-	ParseName string = "parse"
-	UuidName string = "uuid"
-	CpeName string = "cpe"
-	ProductName string = "product"
-	ProductReleaseCycleInformationName string = "product.releaseCycleInformation"
-	VulnerabilityExchangeName string = "vulnerability.exchange"
+	ResourceMondoo string = "mondoo"
+	ResourceAsset string = "asset"
+	ResourceAssetEol string = "asset.eol"
+	ResourceTime string = "time"
+	ResourceRegex string = "regex"
+	ResourceParse string = "parse"
+	ResourceUuid string = "uuid"
+	ResourceCpe string = "cpe"
+	ResourceProduct string = "product"
+	ResourceProductReleaseCycleInformation string = "product.releaseCycleInformation"
+	ResourceVulnerabilityExchange string = "vulnerability.exchange"
 )
 
 

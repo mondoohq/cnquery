@@ -16,8 +16,8 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	IpmiName string = "ipmi"
-	IpmiChassisName string = "ipmi.chassis"
+	ResourceIpmi string = "ipmi"
+	ResourceIpmiChassis string = "ipmi.chassis"
 )
 
 

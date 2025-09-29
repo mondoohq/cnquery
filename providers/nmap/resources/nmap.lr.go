@@ -17,11 +17,11 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	NmapName string = "nmap"
-	NmapNetworkName string = "nmap.network"
-	NmapHostName string = "nmap.host"
-	NmapPortName string = "nmap.port"
-	NmapVersionInformationName string = "nmap.versionInformation"
+	ResourceNmap string = "nmap"
+	ResourceNmapNetwork string = "nmap.network"
+	ResourceNmapHost string = "nmap.host"
+	ResourceNmapPort string = "nmap.port"
+	ResourceNmapVersionInformation string = "nmap.versionInformation"
 )
 
 

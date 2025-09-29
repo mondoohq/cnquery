@@ -17,14 +17,14 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	GitlabGroupName string = "gitlab.group"
-	GitlabProjectName string = "gitlab.project"
-	GitlabProjectApprovalRuleName string = "gitlab.project.approvalRule"
-	GitlabProjectApprovalSettingName string = "gitlab.project.approvalSetting"
-	GitlabProjectProtectedBranchName string = "gitlab.project.protectedBranch"
-	GitlabProjectMemberName string = "gitlab.project.member"
-	GitlabProjectFileName string = "gitlab.project.file"
-	GitlabProjectWebhookName string = "gitlab.project.webhook"
+	ResourceGitlabGroup string = "gitlab.group"
+	ResourceGitlabProject string = "gitlab.project"
+	ResourceGitlabProjectApprovalRule string = "gitlab.project.approvalRule"
+	ResourceGitlabProjectApprovalSetting string = "gitlab.project.approvalSetting"
+	ResourceGitlabProjectProtectedBranch string = "gitlab.project.protectedBranch"
+	ResourceGitlabProjectMember string = "gitlab.project.member"
+	ResourceGitlabProjectFile string = "gitlab.project.file"
+	ResourceGitlabProjectWebhook string = "gitlab.project.webhook"
 )
 
 

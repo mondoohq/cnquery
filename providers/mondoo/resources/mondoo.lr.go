@@ -17,11 +17,11 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	MondooClientName string = "mondoo.client"
-	MondooOrganizationName string = "mondoo.organization"
-	MondooSpaceName string = "mondoo.space"
-	MondooAssetName string = "mondoo.asset"
-	MondooResourceName string = "mondoo.resource"
+	ResourceMondooClient string = "mondoo.client"
+	ResourceMondooOrganization string = "mondoo.organization"
+	ResourceMondooSpace string = "mondoo.space"
+	ResourceMondooAsset string = "mondoo.asset"
+	ResourceMondooResource string = "mondoo.resource"
 )
 
 

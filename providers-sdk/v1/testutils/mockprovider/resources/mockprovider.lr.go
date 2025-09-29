@@ -16,11 +16,11 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	MuserName string = "muser"
-	MgroupName string = "mgroup"
-	MosName string = "mos"
-	CustomGroupsName string = "customGroups"
-	EmptyGroupsName string = "emptyGroups"
+	ResourceMuser string = "muser"
+	ResourceMgroup string = "mgroup"
+	ResourceMos string = "mos"
+	ResourceCustomGroups string = "customGroups"
+	ResourceEmptyGroups string = "emptyGroups"
 )
 
 

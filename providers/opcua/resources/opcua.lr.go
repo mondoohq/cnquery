@@ -17,10 +17,10 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	OpcuaName string = "opcua"
-	OpcuaServerName string = "opcua.server"
-	OpcuaNamespaceName string = "opcua.namespace"
-	OpcuaNodeName string = "opcua.node"
+	ResourceOpcua string = "opcua"
+	ResourceOpcuaServer string = "opcua.server"
+	ResourceOpcuaNamespace string = "opcua.namespace"
+	ResourceOpcuaNode string = "opcua.node"
 )
 
 

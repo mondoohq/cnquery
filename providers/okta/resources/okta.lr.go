@@ -17,21 +17,21 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	OktaName string = "okta"
-	OktaOrganizationName string = "okta.organization"
-	OktaPoliciesName string = "okta.policies"
-	OktaUserName string = "okta.user"
-	OktaRoleName string = "okta.role"
-	OktaGroupName string = "okta.group"
-	OktaGroupRuleName string = "okta.groupRule"
-	OktaApplicationName string = "okta.application"
-	OktaDomainName string = "okta.domain"
-	OktaPolicyName string = "okta.policy"
-	OktaPolicyRuleName string = "okta.policyRule"
-	OktaTrustedOriginName string = "okta.trustedOrigin"
-	OktaNetworkName string = "okta.network"
-	OktaThreatsConfigurationName string = "okta.threatsConfiguration"
-	OktaCustomRoleName string = "okta.customRole"
+	ResourceOkta string = "okta"
+	ResourceOktaOrganization string = "okta.organization"
+	ResourceOktaPolicies string = "okta.policies"
+	ResourceOktaUser string = "okta.user"
+	ResourceOktaRole string = "okta.role"
+	ResourceOktaGroup string = "okta.group"
+	ResourceOktaGroupRule string = "okta.groupRule"
+	ResourceOktaApplication string = "okta.application"
+	ResourceOktaDomain string = "okta.domain"
+	ResourceOktaPolicy string = "okta.policy"
+	ResourceOktaPolicyRule string = "okta.policyRule"
+	ResourceOktaTrustedOrigin string = "okta.trustedOrigin"
+	ResourceOktaNetwork string = "okta.network"
+	ResourceOktaThreatsConfiguration string = "okta.threatsConfiguration"
+	ResourceOktaCustomRole string = "okta.customRole"
 )
 
 
