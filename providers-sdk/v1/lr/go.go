@@ -127,6 +127,24 @@ import (
 )
 `
 
+func (b *goBuilder) createTypeNameConstsBlock(r []*Resource) string {
+	constBlock := `
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	%s
+)
+
+`
+
+	var consts []string
+	for _, resource := range r {
+		constTypeName := resource.constTypeName(b)
+		consts = append(consts, fmt.Sprintf("%s string = \"%s\"", constTypeName, resource.ID))
+	}
+
+	return fmt.Sprintf(constBlock, strings.Join(consts, "\n\t"))
+}
+
 func (b *goBuilder) goCreateResource(r []*Resource) {
 	newCmds := make([]string, len(r))
 	for i := range r {
@@ -142,6 +160,8 @@ func (b *goBuilder) goCreateResource(r []*Resource) {
 
 		newCmds[i] = fmt.Sprintf("\"%s\": {\n\t\t\t%s\n\t\t\tCreate: create%s,\n\t\t},", resource.ID, parseArgs, iName)
 	}
+
+	b.data += b.createTypeNameConstsBlock(r)
 
 	b.data += `
 var resourceFactories map[string]plugin.ResourceFactory
@@ -538,6 +558,10 @@ func indent(s string, depth int) string {
 		space += "\t"
 	}
 	return space + strings.Replace(s, "\n", "\n"+space, -1)
+}
+
+func (r *Resource) constTypeName(b *goBuilder) string {
+	return r.interfaceName(b) + "Name"
 }
 
 func (r *Resource) structName(b *goBuilder) string {
