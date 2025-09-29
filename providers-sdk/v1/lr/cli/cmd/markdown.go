@@ -15,6 +15,8 @@ import (
 	"text/template"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr"
@@ -181,15 +183,38 @@ func (l *lrSchemaRenderer) renderToc(packName string, description string, resour
 		rows = append(rows, []string{"[" + resource.ID + "](" + mdRef(resource.ID) + ")", strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), " ")})
 	}
 
-	table := tablewriter.NewWriter(builder)
-	table.SetHeader([]string{"ID", "Description"})
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-	table.SetCenterSeparator("|")
-	table.SetAutoWrapText(false)
-	table.AppendBulk(rows)
-	table.Render()
+	table := tablewriter.NewTable(builder,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Borders: tw.Border{Left: tw.On, Top: tw.Off, Right: tw.On, Bottom: tw.Off},
+			Symbols: tw.NewSymbolCustom("cnquery").
+				WithCenter("|").
+				WithMidLeft("|").
+				WithMidRight("|"),
+		})),
+		tablewriter.WithConfig(tablewriter.Config{
+			Header: tw.CellConfig{
+				Alignment: tw.CellAlignment{Global: tw.AlignLeft}, // Left-align rows
+			},
+			Row: tw.CellConfig{
+				Alignment: tw.CellAlignment{Global: tw.AlignLeft}, // Left-align rows
+				Formatting: tw.CellFormatting{
+					AutoWrap: tw.WrapNone,
+				},
+			},
+			Footer: tw.CellConfig{
+				Alignment: tw.CellAlignment{Global: tw.AlignRight},
+			},
+		}),
+	)
+	table.Header([]string{"ID", "Description"})
+	err = table.Bulk(rows)
+	if err != nil {
+		panic(err)
+	}
+	err = table.Render()
+	if err != nil {
+		panic(err)
+	}
 	builder.WriteString("\n")
 
 	return builder.String()
@@ -294,15 +319,38 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *res
 			})
 		}
 
-		table := tablewriter.NewWriter(builder)
-		table.SetHeader([]string{"ID", "Type", "Description"})
-		table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-		table.SetAlignment(tablewriter.ALIGN_LEFT)
-		table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-		table.SetCenterSeparator("|")
-		table.SetAutoWrapText(false)
-		table.AppendBulk(rows)
-		table.Render()
+		table := tablewriter.NewTable(builder,
+			tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+				Borders: tw.Border{Left: tw.On, Top: tw.Off, Right: tw.On, Bottom: tw.Off},
+				Symbols: tw.NewSymbolCustom("cnquery").
+					WithCenter("|").
+					WithMidLeft("|").
+					WithMidRight("|"),
+			})),
+			tablewriter.WithConfig(tablewriter.Config{
+				Header: tw.CellConfig{
+					Alignment: tw.CellAlignment{Global: tw.AlignLeft}, // Left-align rows
+				},
+				Row: tw.CellConfig{
+					Alignment: tw.CellAlignment{Global: tw.AlignLeft}, // Left-align rows
+					Formatting: tw.CellFormatting{
+						AutoWrap: tw.WrapNone,
+					},
+				},
+				Footer: tw.CellConfig{
+					Alignment: tw.CellAlignment{Global: tw.AlignRight},
+				},
+			}),
+		)
+		table.Header([]string{"ID", "Type", "Description"})
+		err := table.Bulk(rows)
+		if err != nil {
+			panic(err)
+		}
+		err = table.Render()
+		if err != nil {
+			panic(err)
+		}
 		builder.WriteString("\n")
 	}
 
