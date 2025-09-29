@@ -15,6 +15,47 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	K8sName string = "k8s"
+	K8sApiresourceName string = "k8s.apiresource"
+	K8sNamespaceName string = "k8s.namespace"
+	K8sNodeName string = "k8s.node"
+	K8sPodName string = "k8s.pod"
+	K8sDeploymentName string = "k8s.deployment"
+	K8sDaemonsetName string = "k8s.daemonset"
+	K8sStatefulsetName string = "k8s.statefulset"
+	K8sReplicasetName string = "k8s.replicaset"
+	K8sJobName string = "k8s.job"
+	K8sCronjobName string = "k8s.cronjob"
+	K8sContainerName string = "k8s.container"
+	K8sInitContainerName string = "k8s.initContainer"
+	K8sEphemeralContainerName string = "k8s.ephemeralContainer"
+	K8sSecretName string = "k8s.secret"
+	K8sConfigmapName string = "k8s.configmap"
+	K8sServiceName string = "k8s.service"
+	K8sIngressresourcerefName string = "k8s.ingressresourceref"
+	K8sIngressservicebackendName string = "k8s.ingressservicebackend"
+	K8sIngressbackendName string = "k8s.ingressbackend"
+	K8sIngresshttprulepathName string = "k8s.ingresshttprulepath"
+	K8sIngressruleName string = "k8s.ingressrule"
+	K8sIngresstlsName string = "k8s.ingresstls"
+	K8sIngressName string = "k8s.ingress"
+	K8sServiceaccountName string = "k8s.serviceaccount"
+	K8sRbacClusterroleName string = "k8s.rbac.clusterrole"
+	K8sRbacClusterrolebindingName string = "k8s.rbac.clusterrolebinding"
+	K8sRbacRoleName string = "k8s.rbac.role"
+	K8sRbacRolebindingName string = "k8s.rbac.rolebinding"
+	K8sNetworkpolicyName string = "k8s.networkpolicy"
+	K8sCustomresourceName string = "k8s.customresource"
+	K8sAdmissionreviewName string = "k8s.admissionreview"
+	K8sAdmissionrequestName string = "k8s.admissionrequest"
+	K8sUserinfoName string = "k8s.userinfo"
+	K8sAdmissionValidatingwebhookconfigurationName string = "k8s.admission.validatingwebhookconfiguration"
+	K8sAppName string = "k8s.app"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

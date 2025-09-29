@@ -15,6 +15,27 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	GoogleworkspaceName string = "googleworkspace"
+	GoogleworkspaceCalendarName string = "googleworkspace.calendar"
+	GoogleworkspaceCalendarAclRuleName string = "googleworkspace.calendar.aclRule"
+	GoogleworkspaceCalendarAclRuleScopeName string = "googleworkspace.calendar.aclRule.scope"
+	GoogleworkspaceOrgUnitName string = "googleworkspace.orgUnit"
+	GoogleworkspaceDomainName string = "googleworkspace.domain"
+	GoogleworkspaceUserName string = "googleworkspace.user"
+	GoogleworkspaceTokenName string = "googleworkspace.token"
+	GoogleworkspaceConnectedAppName string = "googleworkspace.connectedApp"
+	GoogleworkspaceGroupName string = "googleworkspace.group"
+	GoogleworkspaceMemberName string = "googleworkspace.member"
+	GoogleworkspaceRoleName string = "googleworkspace.role"
+	GoogleworkspaceReportAppsName string = "googleworkspace.report.apps"
+	GoogleworkspaceReportActivityName string = "googleworkspace.report.activity"
+	GoogleworkspaceReportUsersName string = "googleworkspace.report.users"
+	GoogleworkspaceReportUsageName string = "googleworkspace.report.usage"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

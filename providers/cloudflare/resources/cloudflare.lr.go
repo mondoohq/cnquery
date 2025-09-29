@@ -15,6 +15,30 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	CloudflareName string = "cloudflare"
+	CloudflareZoneName string = "cloudflare.zone"
+	CloudflareZoneAccountName string = "cloudflare.zone.account"
+	CloudflareDnsName string = "cloudflare.dns"
+	CloudflareDnsRecordName string = "cloudflare.dns.record"
+	CloudflareAccountName string = "cloudflare.account"
+	CloudflareAccountSettingsName string = "cloudflare.account.settings"
+	CloudflareStreamsName string = "cloudflare.streams"
+	CloudflareStreamsLiveInputName string = "cloudflare.streams.liveInput"
+	CloudflareStreamsVideoName string = "cloudflare.streams.video"
+	CloudflareR2Name string = "cloudflare.r2"
+	CloudflareR2BucketName string = "cloudflare.r2.bucket"
+	CloudflareWorkersName string = "cloudflare.workers"
+	CloudflareWorkersWorkerName string = "cloudflare.workers.worker"
+	CloudflareWorkersPageName string = "cloudflare.workers.page"
+	CloudflareOneName string = "cloudflare.one"
+	CloudflareOneAppName string = "cloudflare.one.app"
+	CloudflareCorsHeadersName string = "cloudflare.corsHeaders"
+	CloudflareOneIdpName string = "cloudflare.one.idp"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

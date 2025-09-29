@@ -15,6 +15,22 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	MondooName string = "mondoo"
+	AssetName string = "asset"
+	AssetEolName string = "asset.eol"
+	TimeName string = "time"
+	RegexName string = "regex"
+	ParseName string = "parse"
+	UuidName string = "uuid"
+	CpeName string = "cpe"
+	ProductName string = "product"
+	ProductReleaseCycleInformationName string = "product.releaseCycleInformation"
+	VulnerabilityExchangeName string = "vulnerability.exchange"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

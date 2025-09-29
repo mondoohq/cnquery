@@ -15,6 +15,30 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	OciName string = "oci"
+	OciTenancyName string = "oci.tenancy"
+	OciRegionName string = "oci.region"
+	OciCompartmentName string = "oci.compartment"
+	OciIdentityName string = "oci.identity"
+	OciIdentityUserName string = "oci.identity.user"
+	OciIdentityApiKeyName string = "oci.identity.apiKey"
+	OciIdentityCustomerSecretKeyName string = "oci.identity.customerSecretKey"
+	OciIdentityAuthTokenName string = "oci.identity.authToken"
+	OciIdentityGroupName string = "oci.identity.group"
+	OciIdentityPolicyName string = "oci.identity.policy"
+	OciComputeName string = "oci.compute"
+	OciComputeInstanceName string = "oci.compute.instance"
+	OciComputeImageName string = "oci.compute.image"
+	OciNetworkName string = "oci.network"
+	OciNetworkVcnName string = "oci.network.vcn"
+	OciNetworkSecurityListName string = "oci.network.securityList"
+	OciObjectStorageName string = "oci.objectStorage"
+	OciObjectStorageBucketName string = "oci.objectStorage.bucket"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

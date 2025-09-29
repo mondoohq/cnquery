@@ -15,6 +15,36 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	SocketName string = "socket"
+	HttpName string = "http"
+	HttpGetName string = "http.get"
+	HttpHeaderName string = "http.header"
+	HttpHeaderStsName string = "http.header.sts"
+	HttpHeaderXssProtectionName string = "http.header.xssProtection"
+	HttpHeaderContentTypeName string = "http.header.contentType"
+	HttpHeaderSetCookieName string = "http.header.setCookie"
+	UrlName string = "url"
+	TlsName string = "tls"
+	CertificatesName string = "certificates"
+	CertificateName string = "certificate"
+	PkixNameName string = "pkix.name"
+	PkixExtensionName string = "pkix.extension"
+	PkixSanExtensionName string = "pkix.sanExtension"
+	OpenpgpEntitiesName string = "openpgp.entities"
+	OpenpgpEntityName string = "openpgp.entity"
+	OpenpgpPublicKeyName string = "openpgp.publicKey"
+	OpenpgpIdentityName string = "openpgp.identity"
+	OpenpgpSignatureName string = "openpgp.signature"
+	DomainNameName string = "domainName"
+	DnsName string = "dns"
+	DnsRecordName string = "dns.record"
+	DnsMxRecordName string = "dns.mxRecord"
+	DnsDkimRecordName string = "dns.dkimRecord"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

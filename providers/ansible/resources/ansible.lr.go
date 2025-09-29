@@ -14,6 +14,15 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	AnsibleName string = "ansible"
+	AnsiblePlayName string = "ansible.play"
+	AnsibleTaskName string = "ansible.task"
+	AnsibleHandlerName string = "ansible.handler"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

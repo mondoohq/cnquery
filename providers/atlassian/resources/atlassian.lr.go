@@ -15,6 +15,28 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	AtlassianScimName string = "atlassian.scim"
+	AtlassianScimUserName string = "atlassian.scim.user"
+	AtlassianScimGroupName string = "atlassian.scim.group"
+	AtlassianAdminOrganizationName string = "atlassian.admin.organization"
+	AtlassianAdminOrganizationManagedUserName string = "atlassian.admin.organization.managedUser"
+	AtlassianAdminOrganizationPolicyName string = "atlassian.admin.organization.policy"
+	AtlassianAdminOrganizationDomainName string = "atlassian.admin.organization.domain"
+	AtlassianJiraName string = "atlassian.jira"
+	AtlassianJiraIssueName string = "atlassian.jira.issue"
+	AtlassianJiraServerInfoName string = "atlassian.jira.serverInfo"
+	AtlassianJiraUserName string = "atlassian.jira.user"
+	AtlassianJiraApplicationRoleName string = "atlassian.jira.applicationRole"
+	AtlassianJiraProjectName string = "atlassian.jira.project"
+	AtlassianJiraProjectPropertyName string = "atlassian.jira.project.property"
+	AtlassianJiraGroupName string = "atlassian.jira.group"
+	AtlassianConfluenceName string = "atlassian.confluence"
+	AtlassianConfluenceUserName string = "atlassian.confluence.user"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

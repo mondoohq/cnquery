@@ -15,6 +15,16 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	EquinixMetalProjectName string = "equinix.metal.project"
+	EquinixMetalOrganizationName string = "equinix.metal.organization"
+	EquinixMetalUserName string = "equinix.metal.user"
+	EquinixMetalSshkeyName string = "equinix.metal.sshkey"
+	EquinixMetalDeviceName string = "equinix.metal.device"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

@@ -14,6 +14,27 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	TerraformName string = "terraform"
+	TerraformResourcesName string = "terraform.resources"
+	TerraformFileName string = "terraform.file"
+	TerraformFilepositionName string = "terraform.fileposition"
+	TerraformBlockName string = "terraform.block"
+	TerraformModuleName string = "terraform.module"
+	TerraformSettingsName string = "terraform.settings"
+	TerraformStateName string = "terraform.state"
+	TerraformStateOutputName string = "terraform.state.output"
+	TerraformStateModuleName string = "terraform.state.module"
+	TerraformStateResourceName string = "terraform.state.resource"
+	TerraformPlanName string = "terraform.plan"
+	TerraformPlanConfigurationName string = "terraform.plan.configuration"
+	TerraformPlanVariableName string = "terraform.plan.variable"
+	TerraformPlanResourceChangeName string = "terraform.plan.resourceChange"
+	TerraformPlanProposedChangeName string = "terraform.plan.proposedChange"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

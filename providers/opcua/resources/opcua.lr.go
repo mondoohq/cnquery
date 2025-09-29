@@ -15,6 +15,15 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	OpcuaName string = "opcua"
+	OpcuaServerName string = "opcua.server"
+	OpcuaNamespaceName string = "opcua.namespace"
+	OpcuaNodeName string = "opcua.node"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
