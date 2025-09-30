@@ -62,6 +62,23 @@ func SetFeatures(ctx context.Context, fts Features) context.Context {
 	return context.WithValue(ctx, featureContextID{}, fts)
 }
 
+func WithFeature(ctx context.Context, feature Feature) context.Context {
+	existingFeatures := GetFeatures(ctx)
+	if existingFeatures.IsActive(feature) {
+		return ctx
+	}
+	// clone existing features
+	features := make(Features, len(existingFeatures)+1)
+	copy(features, existingFeatures)
+	features[len(existingFeatures)] = byte(feature)
+	return SetFeatures(ctx, features)
+}
+
+func IsFeatureActive(ctx context.Context, f Feature) bool {
+	features := GetFeatures(ctx)
+	return features.IsActive(f)
+}
+
 // GetFeatures from a given context
 func GetFeatures(ctx context.Context) Features {
 	f, ok := ctx.Value(featureContextID{}).(Features)
