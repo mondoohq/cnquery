@@ -30,6 +30,39 @@ aws.account @defaults("id") {
   // account or by a member account that is a delegated administrator for an
   // Amazon Web Services service.
   tags() map[string]string
+
+  // Primary contact information for the account
+  contactInformation() dict
+
+  // All alternate contacts configured for the account
+  alternateContacts() []aws.account.alternateContact
+
+  // Security alternate contact for the account
+  securityContact() aws.account.alternateContact
+
+  // Billing alternate contact for the account
+  billingContact() aws.account.alternateContact
+
+  // Operations alternate contact for the account
+  operationsContact() aws.account.alternateContact
+}
+
+// AWS Account alternate contact
+private aws.account.alternateContact @defaults("contactType name emailAddress") {
+  // Account ID this contact belongs to
+  accountId string
+  // Type of alternate contact: BILLING, OPERATIONS, or SECURITY
+  contactType string
+  // Email address of the contact
+  emailAddress string
+  // Name of the contact
+  name string
+  // Phone number of the contact
+  phoneNumber string
+  // Title of the contact
+  title string
+  // Whether this contact exists and is configured
+  exists bool
 }
 
 // AWS Organization resource

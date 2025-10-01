@@ -27,6 +27,10 @@ func init() {
 			Init: initAwsAccount,
 			Create: createAwsAccount,
 		},
+		"aws.account.alternateContact": {
+			Init: initAwsAccountAlternateContact,
+			Create: createAwsAccountAlternateContact,
+		},
 		"aws.organization": {
 			// to override args, implement: initAwsOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsOrganization,
@@ -900,6 +904,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.account.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccount).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.account.contactInformation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetContactInformation()).ToDataRes(types.Dict)
+	},
+	"aws.account.alternateContacts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetAlternateContacts()).ToDataRes(types.Array(types.Resource("aws.account.alternateContact")))
+	},
+	"aws.account.securityContact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetSecurityContact()).ToDataRes(types.Resource("aws.account.alternateContact"))
+	},
+	"aws.account.billingContact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetBillingContact()).ToDataRes(types.Resource("aws.account.alternateContact"))
+	},
+	"aws.account.operationsContact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetOperationsContact()).ToDataRes(types.Resource("aws.account.alternateContact"))
+	},
+	"aws.account.alternateContact.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccountAlternateContact).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.account.alternateContact.contactType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccountAlternateContact).GetContactType()).ToDataRes(types.String)
+	},
+	"aws.account.alternateContact.emailAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccountAlternateContact).GetEmailAddress()).ToDataRes(types.String)
+	},
+	"aws.account.alternateContact.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccountAlternateContact).GetName()).ToDataRes(types.String)
+	},
+	"aws.account.alternateContact.phoneNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccountAlternateContact).GetPhoneNumber()).ToDataRes(types.String)
+	},
+	"aws.account.alternateContact.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccountAlternateContact).GetTitle()).ToDataRes(types.String)
+	},
+	"aws.account.alternateContact.exists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccountAlternateContact).GetExists()).ToDataRes(types.Bool)
 	},
 	"aws.organization.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganization).GetArn()).ToDataRes(types.String)
@@ -5323,6 +5363,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.account.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAccount).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.account.contactInformation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).ContactInformation, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.account.alternateContacts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).AlternateContacts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.account.securityContact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).SecurityContact, ok = plugin.RawToTValue[*mqlAwsAccountAlternateContact](v.Value, v.Error)
+		return
+	},
+	"aws.account.billingContact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).BillingContact, ok = plugin.RawToTValue[*mqlAwsAccountAlternateContact](v.Value, v.Error)
+		return
+	},
+	"aws.account.operationsContact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).OperationsContact, ok = plugin.RawToTValue[*mqlAwsAccountAlternateContact](v.Value, v.Error)
+		return
+	},
+	"aws.account.alternateContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsAccountAlternateContact).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.account.alternateContact.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccountAlternateContact).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.alternateContact.contactType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccountAlternateContact).ContactType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.alternateContact.emailAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccountAlternateContact).EmailAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.alternateContact.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccountAlternateContact).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.alternateContact.phoneNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccountAlternateContact).PhoneNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.alternateContact.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccountAlternateContact).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.alternateContact.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccountAlternateContact).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12037,6 +12129,11 @@ type mqlAwsAccount struct {
 	Aliases plugin.TValue[[]any]
 	Organization plugin.TValue[*mqlAwsOrganization]
 	Tags plugin.TValue[map[string]any]
+	ContactInformation plugin.TValue[any]
+	AlternateContacts plugin.TValue[[]any]
+	SecurityContact plugin.TValue[*mqlAwsAccountAlternateContact]
+	BillingContact plugin.TValue[*mqlAwsAccountAlternateContact]
+	OperationsContact plugin.TValue[*mqlAwsAccountAlternateContact]
 }
 
 // createAwsAccount creates a new instance of this resource
@@ -12106,6 +12203,155 @@ func (c *mqlAwsAccount) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+func (c *mqlAwsAccount) GetContactInformation() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ContactInformation, func() (any, error) {
+		return c.contactInformation()
+	})
+}
+
+func (c *mqlAwsAccount) GetAlternateContacts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AlternateContacts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.account", c.__id, "alternateContacts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.alternateContacts()
+	})
+}
+
+func (c *mqlAwsAccount) GetSecurityContact() *plugin.TValue[*mqlAwsAccountAlternateContact] {
+	return plugin.GetOrCompute[*mqlAwsAccountAlternateContact](&c.SecurityContact, func() (*mqlAwsAccountAlternateContact, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.account", c.__id, "securityContact")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAccountAlternateContact), nil
+			}
+		}
+
+		return c.securityContact()
+	})
+}
+
+func (c *mqlAwsAccount) GetBillingContact() *plugin.TValue[*mqlAwsAccountAlternateContact] {
+	return plugin.GetOrCompute[*mqlAwsAccountAlternateContact](&c.BillingContact, func() (*mqlAwsAccountAlternateContact, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.account", c.__id, "billingContact")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAccountAlternateContact), nil
+			}
+		}
+
+		return c.billingContact()
+	})
+}
+
+func (c *mqlAwsAccount) GetOperationsContact() *plugin.TValue[*mqlAwsAccountAlternateContact] {
+	return plugin.GetOrCompute[*mqlAwsAccountAlternateContact](&c.OperationsContact, func() (*mqlAwsAccountAlternateContact, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.account", c.__id, "operationsContact")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAccountAlternateContact), nil
+			}
+		}
+
+		return c.operationsContact()
+	})
+}
+
+// mqlAwsAccountAlternateContact for the aws.account.alternateContact resource
+type mqlAwsAccountAlternateContact struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsAccountAlternateContactInternal it will be used here
+	AccountId plugin.TValue[string]
+	ContactType plugin.TValue[string]
+	EmailAddress plugin.TValue[string]
+	Name plugin.TValue[string]
+	PhoneNumber plugin.TValue[string]
+	Title plugin.TValue[string]
+	Exists plugin.TValue[bool]
+}
+
+// createAwsAccountAlternateContact creates a new instance of this resource
+func createAwsAccountAlternateContact(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAccountAlternateContact{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.account.alternateContact", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAccountAlternateContact) MqlName() string {
+	return "aws.account.alternateContact"
+}
+
+func (c *mqlAwsAccountAlternateContact) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAccountAlternateContact) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsAccountAlternateContact) GetContactType() *plugin.TValue[string] {
+	return &c.ContactType
+}
+
+func (c *mqlAwsAccountAlternateContact) GetEmailAddress() *plugin.TValue[string] {
+	return &c.EmailAddress
+}
+
+func (c *mqlAwsAccountAlternateContact) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAccountAlternateContact) GetPhoneNumber() *plugin.TValue[string] {
+	return &c.PhoneNumber
+}
+
+func (c *mqlAwsAccountAlternateContact) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlAwsAccountAlternateContact) GetExists() *plugin.TValue[bool] {
+	return &c.Exists
 }
 
 // mqlAwsOrganization for the aws.organization resource
