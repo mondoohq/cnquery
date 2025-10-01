@@ -1453,3 +1453,111 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 	return args, nil, nil
 }
+
+func (a *mqlAwsIam) samlProviders() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	res := []any{}
+	// List all SAML providers
+	listResp, err := svc.ListSAMLProviders(ctx, &iam.ListSAMLProvidersInput{})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not gather aws iam saml providers")
+	}
+
+	// For each SAML provider, fetch detailed information
+	for _, provider := range listResp.SAMLProviderList {
+		if provider.Arn == nil {
+			continue
+		}
+
+		getResp, err := svc.GetSAMLProvider(ctx, &iam.GetSAMLProviderInput{
+			SAMLProviderArn: provider.Arn,
+		})
+		if err != nil {
+			log.Warn().Err(err).Str("arn", *provider.Arn).Msg("could not get saml provider details")
+			continue
+		}
+
+		// Extract provider name from ARN
+		arnParsed, err := arn.Parse(*provider.Arn)
+		if err != nil {
+			log.Warn().Err(err).Str("arn", *provider.Arn).Msg("could not parse saml provider arn")
+			continue
+		}
+		name := strings.TrimPrefix(arnParsed.Resource, "saml-provider/")
+
+		mqlSamlProvider, err := CreateResource(a.MqlRuntime, "aws.iam.samlProvider",
+			map[string]*llx.RawData{
+				"arn":              llx.StringDataPtr(provider.Arn),
+				"name":             llx.StringData(name),
+				"createdAt":        llx.TimeDataPtr(provider.CreateDate),
+				"validUntil":       llx.TimeDataPtr(getResp.ValidUntil),
+				"metadataDocument": llx.StringDataPtr(getResp.SAMLMetadataDocument),
+				"tags":             llx.MapData(iamTagsToMap(getResp.Tags), types.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, mqlSamlProvider)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsIam) oidcProviders() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	res := []any{}
+	// List all OIDC providers
+	listResp, err := svc.ListOpenIDConnectProviders(ctx, &iam.ListOpenIDConnectProvidersInput{})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not gather aws iam oidc providers")
+	}
+
+	// For each OIDC provider, fetch detailed information
+	for _, provider := range listResp.OpenIDConnectProviderList {
+		if provider.Arn == nil {
+			continue
+		}
+
+		getResp, err := svc.GetOpenIDConnectProvider(ctx, &iam.GetOpenIDConnectProviderInput{
+			OpenIDConnectProviderArn: provider.Arn,
+		})
+		if err != nil {
+			log.Warn().Err(err).Str("arn", *provider.Arn).Msg("could not get oidc provider details")
+			continue
+		}
+
+		mqlOidcProvider, err := CreateResource(a.MqlRuntime, "aws.iam.oidcProvider",
+			map[string]*llx.RawData{
+				"arn":         llx.StringDataPtr(provider.Arn),
+				"url":         llx.StringDataPtr(getResp.Url),
+				"clientIds":   llx.ArrayData(convert.SliceAnyToInterface(getResp.ClientIDList), types.String),
+				"thumbprints": llx.ArrayData(convert.SliceAnyToInterface(getResp.ThumbprintList), types.String),
+				"createdAt":   llx.TimeDataPtr(getResp.CreateDate),
+				"tags":        llx.MapData(iamTagsToMap(getResp.Tags), types.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, mqlOidcProvider)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsIamSamlProvider) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsIamOidcProvider) id() (string, error) {
+	return a.Arn.Data, nil
+}
