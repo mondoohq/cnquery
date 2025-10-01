@@ -17,24 +17,23 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceMondoo string = "mondoo"
-	ResourceAsset string = "asset"
-	ResourceAssetEol string = "asset.eol"
-	ResourceTime string = "time"
-	ResourceRegex string = "regex"
-	ResourceParse string = "parse"
-	ResourceUuid string = "uuid"
-	ResourceCpe string = "cpe"
-	ResourceProduct string = "product"
+	ResourceMondoo                         string = "mondoo"
+	ResourceAsset                          string = "asset"
+	ResourceAssetEol                       string = "asset.eol"
+	ResourceTime                           string = "time"
+	ResourceRegex                          string = "regex"
+	ResourceParse                          string = "parse"
+	ResourceUuid                           string = "uuid"
+	ResourceCpe                            string = "cpe"
+	ResourceProduct                        string = "product"
 	ResourceProductReleaseCycleInformation string = "product.releaseCycleInformation"
-	ResourceVulnerabilityExchange string = "vulnerability.exchange"
+	ResourceVulnerabilityExchange          string = "vulnerability.exchange"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"mondoo": {
 			// to override args, implement: initMondoo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMondoo,
@@ -44,7 +43,7 @@ func init() {
 			Create: createAsset,
 		},
 		"asset.eol": {
-			Init: initAssetEol,
+			Init:   initAssetEol,
 			Create: createAssetEol,
 		},
 		"time": {
@@ -60,11 +59,11 @@ func init() {
 			Create: createParse,
 		},
 		"uuid": {
-			Init: initUuid,
+			Init:   initUuid,
 			Create: createUuid,
 		},
 		"cpe": {
-			Init: initCpe,
+			Init:   initCpe,
 			Create: createCpe,
 		},
 		"product": {
@@ -100,7 +99,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -374,11 +373,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"mondoo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMondoo).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMondoo).__id, ok = v.Value.(string)
+		return
+	},
 	"mondoo.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondoo).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -400,9 +399,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAsset).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAsset).__id, ok = v.Value.(string)
+		return
+	},
 	"asset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -460,9 +459,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"asset.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAssetEol).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAssetEol).__id, ok = v.Value.(string)
+		return
+	},
 	"asset.eol.docsUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAssetEol).DocsUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -476,9 +475,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"time.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTime).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTime).__id, ok = v.Value.(string)
+		return
+	},
 	"time.now": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTime).Now, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -508,9 +507,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"regex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlRegex).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlRegex).__id, ok = v.Value.(string)
+		return
+	},
 	"regex.ipv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRegex).Ipv4, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -548,13 +547,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"parse.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlParse).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlParse).__id, ok = v.Value.(string)
+		return
+	},
 	"uuid.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlUuid).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlUuid).__id, ok = v.Value.(string)
+		return
+	},
 	"uuid.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUuid).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -572,9 +571,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cpe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCpe).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCpe).__id, ok = v.Value.(string)
+		return
+	},
 	"cpe.uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCpe).Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -624,9 +623,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"product.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlProduct).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlProduct).__id, ok = v.Value.(string)
+		return
+	},
 	"product.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProduct).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -640,9 +639,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"product.releaseCycleInformation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlProductReleaseCycleInformation).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlProductReleaseCycleInformation).__id, ok = v.Value.(string)
+		return
+	},
 	"product.releaseCycleInformation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProductReleaseCycleInformation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -680,9 +679,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vulnerability.exchange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVulnerabilityExchange).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVulnerabilityExchange).__id, ok = v.Value.(string)
+		return
+	},
 	"vulnerability.exchange.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVulnerabilityExchange).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -694,13 +693,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[core] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[core] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[core] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[core] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -718,13 +717,13 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlMondoo for the mondoo resource
 type mqlMondoo struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMondooInternal it will be used here
-	Version plugin.TValue[string]
-	Build plugin.TValue[string]
-	Arch plugin.TValue[string]
+	Version        plugin.TValue[string]
+	Build          plugin.TValue[string]
+	Arch           plugin.TValue[string]
 	JobEnvironment plugin.TValue[any]
-	Capabilities plugin.TValue[[]any]
+	Capabilities   plugin.TValue[[]any]
 }
 
 // createMondoo creates a new instance of this resource
@@ -792,22 +791,22 @@ func (c *mqlMondoo) GetCapabilities() *plugin.TValue[[]any] {
 // mqlAsset for the asset resource
 type mqlAsset struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAssetInternal it will be used here
-	Name plugin.TValue[string]
-	Ids plugin.TValue[[]any]
-	Platform plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Runtime plugin.TValue[string]
-	Version plugin.TValue[string]
-	Arch plugin.TValue[string]
-	Title plugin.TValue[string]
-	Family plugin.TValue[[]any]
-	Fqdn plugin.TValue[string]
-	Build plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Ids              plugin.TValue[[]any]
+	Platform         plugin.TValue[string]
+	Kind             plugin.TValue[string]
+	Runtime          plugin.TValue[string]
+	Version          plugin.TValue[string]
+	Arch             plugin.TValue[string]
+	Title            plugin.TValue[string]
+	Family           plugin.TValue[[]any]
+	Fqdn             plugin.TValue[string]
+	Build            plugin.TValue[string]
 	PlatformMetadata plugin.TValue[map[string]any]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
+	Labels           plugin.TValue[map[string]any]
+	Annotations      plugin.TValue[map[string]any]
 }
 
 // createAsset creates a new instance of this resource
@@ -901,11 +900,11 @@ func (c *mqlAsset) GetAnnotations() *plugin.TValue[map[string]any] {
 // mqlAssetEol for the asset.eol resource
 type mqlAssetEol struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAssetEolInternal it will be used here
-	DocsUrl plugin.TValue[string]
+	DocsUrl    plugin.TValue[string]
 	ProductUrl plugin.TValue[string]
-	Date plugin.TValue[*time.Time]
+	Date       plugin.TValue[*time.Time]
 }
 
 // createAssetEol creates a new instance of this resource
@@ -955,14 +954,14 @@ func (c *mqlAssetEol) GetDate() *plugin.TValue[*time.Time] {
 // mqlTime for the time resource
 type mqlTime struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTimeInternal it will be used here
-	Now plugin.TValue[*time.Time]
-	Second plugin.TValue[*time.Time]
-	Minute plugin.TValue[*time.Time]
-	Hour plugin.TValue[*time.Time]
-	Day plugin.TValue[*time.Time]
-	Today plugin.TValue[*time.Time]
+	Now      plugin.TValue[*time.Time]
+	Second   plugin.TValue[*time.Time]
+	Minute   plugin.TValue[*time.Time]
+	Hour     plugin.TValue[*time.Time]
+	Day      plugin.TValue[*time.Time]
+	Today    plugin.TValue[*time.Time]
 	Tomorrow plugin.TValue[*time.Time]
 }
 
@@ -1043,16 +1042,16 @@ func (c *mqlTime) GetTomorrow() *plugin.TValue[*time.Time] {
 // mqlRegex for the regex resource
 type mqlRegex struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlRegexInternal it will be used here
-	Ipv4 plugin.TValue[string]
-	Ipv6 plugin.TValue[string]
-	Url plugin.TValue[string]
-	Email plugin.TValue[string]
-	Mac plugin.TValue[string]
-	Uuid plugin.TValue[string]
-	Emoji plugin.TValue[string]
-	Semver plugin.TValue[string]
+	Ipv4       plugin.TValue[string]
+	Ipv6       plugin.TValue[string]
+	Url        plugin.TValue[string]
+	Email      plugin.TValue[string]
+	Mac        plugin.TValue[string]
+	Uuid       plugin.TValue[string]
+	Emoji      plugin.TValue[string]
+	Semver     plugin.TValue[string]
 	CreditCard plugin.TValue[string]
 }
 
@@ -1068,7 +1067,7 @@ func createRegex(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1150,7 +1149,7 @@ func (c *mqlRegex) GetCreditCard() *plugin.TValue[string] {
 // mqlParse for the parse resource
 type mqlParse struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlParseInternal it will be used here
 }
 
@@ -1189,10 +1188,10 @@ func (c *mqlParse) MqlID() string {
 // mqlUuid for the uuid resource
 type mqlUuid struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlUuidInternal it will be used here
-	Value plugin.TValue[string]
-	Urn plugin.TValue[string]
+	Value   plugin.TValue[string]
+	Urn     plugin.TValue[string]
 	Version plugin.TValue[int64]
 	Variant plugin.TValue[string]
 }
@@ -1209,7 +1208,7 @@ func createUuid(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1259,20 +1258,20 @@ func (c *mqlUuid) GetVariant() *plugin.TValue[string] {
 // mqlCpe for the cpe resource
 type mqlCpe struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCpeInternal it will be used here
-	Uri plugin.TValue[string]
-	Part plugin.TValue[string]
-	Vendor plugin.TValue[string]
-	Product plugin.TValue[string]
-	Version plugin.TValue[string]
-	Update plugin.TValue[string]
-	Edition plugin.TValue[string]
-	Language plugin.TValue[string]
+	Uri       plugin.TValue[string]
+	Part      plugin.TValue[string]
+	Vendor    plugin.TValue[string]
+	Product   plugin.TValue[string]
+	Version   plugin.TValue[string]
+	Update    plugin.TValue[string]
+	Edition   plugin.TValue[string]
+	Language  plugin.TValue[string]
 	SwEdition plugin.TValue[string]
-	TargetSw plugin.TValue[string]
-	TargetHw plugin.TValue[string]
-	Other plugin.TValue[string]
+	TargetSw  plugin.TValue[string]
+	TargetHw  plugin.TValue[string]
+	Other     plugin.TValue[string]
 }
 
 // createCpe creates a new instance of this resource
@@ -1287,7 +1286,7 @@ func createCpe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1385,10 +1384,10 @@ func (c *mqlCpe) GetOther() *plugin.TValue[string] {
 // mqlProduct for the product resource
 type mqlProduct struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlProductInternal it will be used here
-	Name plugin.TValue[string]
-	Version plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Version      plugin.TValue[string]
 	ReleaseCycle plugin.TValue[*mqlProductReleaseCycleInformation]
 }
 
@@ -1404,7 +1403,7 @@ func createProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1456,17 +1455,17 @@ func (c *mqlProduct) GetReleaseCycle() *plugin.TValue[*mqlProductReleaseCycleInf
 // mqlProductReleaseCycleInformation for the product.releaseCycleInformation resource
 type mqlProductReleaseCycleInformation struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlProductReleaseCycleInformationInternal it will be used here
-	Name plugin.TValue[string]
-	Cycle plugin.TValue[string]
-	LatestVersion plugin.TValue[string]
-	FirstReleaseDate plugin.TValue[*time.Time]
-	LastReleaseDate plugin.TValue[*time.Time]
-	EndOfActiveSupport plugin.TValue[*time.Time]
-	EndOfLife plugin.TValue[*time.Time]
+	Name                 plugin.TValue[string]
+	Cycle                plugin.TValue[string]
+	LatestVersion        plugin.TValue[string]
+	FirstReleaseDate     plugin.TValue[*time.Time]
+	LastReleaseDate      plugin.TValue[*time.Time]
+	EndOfActiveSupport   plugin.TValue[*time.Time]
+	EndOfLife            plugin.TValue[*time.Time]
 	EndOfExtendedSupport plugin.TValue[*time.Time]
-	Link plugin.TValue[string]
+	Link                 plugin.TValue[string]
 }
 
 // createProductReleaseCycleInformation creates a new instance of this resource
@@ -1540,9 +1539,9 @@ func (c *mqlProductReleaseCycleInformation) GetLink() *plugin.TValue[string] {
 // mqlVulnerabilityExchange for the vulnerability.exchange resource
 type mqlVulnerabilityExchange struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVulnerabilityExchangeInternal it will be used here
-	Id plugin.TValue[string]
+	Id     plugin.TValue[string]
 	Source plugin.TValue[string]
 }
 
@@ -1558,7 +1557,7 @@ func createVulnerabilityExchange(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

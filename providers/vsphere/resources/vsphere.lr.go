@@ -17,37 +17,36 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset string = "asset"
-	ResourceVulnmgmt string = "vulnmgmt"
-	ResourceVulnCve string = "vuln.cve"
-	ResourceVulnAdvisory string = "vuln.advisory"
-	ResourceVulnPackage string = "vuln.package"
-	ResourceAuditCvss string = "audit.cvss"
-	ResourceVsphere string = "vsphere"
-	ResourceVsphereLicense string = "vsphere.license"
-	ResourceEsxi string = "esxi"
-	ResourceVsphereDatacenter string = "vsphere.datacenter"
-	ResourceVsphereCluster string = "vsphere.cluster"
-	ResourceVsphereHost string = "vsphere.host"
-	ResourceVsphereVm string = "vsphere.vm"
-	ResourceVsphereVswitchStandard string = "vsphere.vswitch.standard"
-	ResourceVsphereVswitchDvs string = "vsphere.vswitch.dvs"
+	ResourceAsset                   string = "asset"
+	ResourceVulnmgmt                string = "vulnmgmt"
+	ResourceVulnCve                 string = "vuln.cve"
+	ResourceVulnAdvisory            string = "vuln.advisory"
+	ResourceVulnPackage             string = "vuln.package"
+	ResourceAuditCvss               string = "audit.cvss"
+	ResourceVsphere                 string = "vsphere"
+	ResourceVsphereLicense          string = "vsphere.license"
+	ResourceEsxi                    string = "esxi"
+	ResourceVsphereDatacenter       string = "vsphere.datacenter"
+	ResourceVsphereCluster          string = "vsphere.cluster"
+	ResourceVsphereHost             string = "vsphere.host"
+	ResourceVsphereVm               string = "vsphere.vm"
+	ResourceVsphereVswitchStandard  string = "vsphere.vswitch.standard"
+	ResourceVsphereVswitchDvs       string = "vsphere.vswitch.dvs"
 	ResourceVsphereVswitchPortgroup string = "vsphere.vswitch.portgroup"
-	ResourceVsphereVmnic string = "vsphere.vmnic"
-	ResourceVsphereVmknic string = "vsphere.vmknic"
-	ResourceEsxiCommand string = "esxi.command"
-	ResourceEsxiVib string = "esxi.vib"
-	ResourceEsxiKernelmodule string = "esxi.kernelmodule"
-	ResourceEsxiService string = "esxi.service"
-	ResourceEsxiTimezone string = "esxi.timezone"
-	ResourceEsxiNtpconfig string = "esxi.ntpconfig"
+	ResourceVsphereVmnic            string = "vsphere.vmnic"
+	ResourceVsphereVmknic           string = "vsphere.vmknic"
+	ResourceEsxiCommand             string = "esxi.command"
+	ResourceEsxiVib                 string = "esxi.vib"
+	ResourceEsxiKernelmodule        string = "esxi.kernelmodule"
+	ResourceEsxiService             string = "esxi.service"
+	ResourceEsxiTimezone            string = "esxi.timezone"
+	ResourceEsxiNtpconfig           string = "esxi.ntpconfig"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"asset": {
 			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAsset,
@@ -93,7 +92,7 @@ func init() {
 			Create: createVsphereCluster,
 		},
 		"vsphere.host": {
-			Init: initVsphereHost,
+			Init:   initVsphereHost,
 			Create: createVsphereHost,
 		},
 		"vsphere.vm": {
@@ -121,7 +120,7 @@ func init() {
 			Create: createVsphereVmknic,
 		},
 		"esxi.command": {
-			Init: initEsxiCommand,
+			Init:   initEsxiCommand,
 			Create: createEsxiCommand,
 		},
 		"esxi.vib": {
@@ -165,7 +164,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -613,11 +612,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAsset).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAsset).__id, ok = v.Value.(string)
+		return
+	},
 	"asset.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -627,9 +626,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vulnmgmt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVulnmgmt).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVulnmgmt).__id, ok = v.Value.(string)
+		return
+	},
 	"vulnmgmt.cves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVulnmgmt).Cves, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -651,9 +650,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vuln.cve.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVulnCve).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVulnCve).__id, ok = v.Value.(string)
+		return
+	},
 	"vuln.cve.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVulnCve).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -683,9 +682,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vuln.advisory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVulnAdvisory).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVulnAdvisory).__id, ok = v.Value.(string)
+		return
+	},
 	"vuln.advisory.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVulnAdvisory).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -711,9 +710,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vuln.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVulnPackage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVulnPackage).__id, ok = v.Value.(string)
+		return
+	},
 	"vuln.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVulnPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -731,9 +730,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"audit.cvss.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditCvss).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditCvss).__id, ok = v.Value.(string)
+		return
+	},
 	"audit.cvss.score": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditCvss).Score, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
@@ -743,9 +742,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphere).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphere).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.about": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphere).About, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -759,9 +758,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphereLicense).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphereLicense).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.license.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereLicense).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -775,9 +774,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"esxi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEsxi).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEsxi).__id, ok = v.Value.(string)
+		return
+	},
 	"esxi.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEsxi).Host, ok = plugin.RawToTValue[*mqlVsphereHost](v.Value, v.Error)
 		return
@@ -787,9 +786,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.datacenter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphereDatacenter).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphereDatacenter).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.datacenter.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereDatacenter).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -823,9 +822,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphereCluster).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphereCluster).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.cluster.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -847,9 +846,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphereHost).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphereHost).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.host.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -919,9 +918,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphereVm).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphereVm).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.vm.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVm).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -947,9 +946,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vswitch.standard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphereVswitchStandard).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphereVswitchStandard).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.vswitch.standard.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchStandard).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -975,9 +974,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vswitch.dvs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphereVswitchDvs).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphereVswitchDvs).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.vswitch.dvs.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchDvs).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -995,9 +994,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vswitch.portgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphereVswitchPortgroup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphereVswitchPortgroup).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.vswitch.portgroup.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchPortgroup).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1011,9 +1010,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vmnic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphereVmnic).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphereVmnic).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.vmnic.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVmnic).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1031,9 +1030,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vsphere.vmknic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVsphereVmknic).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVsphereVmknic).__id, ok = v.Value.(string)
+		return
+	},
 	"vsphere.vmknic.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVmknic).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1055,9 +1054,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"esxi.command.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEsxiCommand).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEsxiCommand).__id, ok = v.Value.(string)
+		return
+	},
 	"esxi.command.inventoryPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEsxiCommand).InventoryPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1071,9 +1070,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"esxi.vib.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEsxiVib).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEsxiVib).__id, ok = v.Value.(string)
+		return
+	},
 	"esxi.vib.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEsxiVib).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1107,9 +1106,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"esxi.kernelmodule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEsxiKernelmodule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEsxiKernelmodule).__id, ok = v.Value.(string)
+		return
+	},
 	"esxi.kernelmodule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEsxiKernelmodule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1151,9 +1150,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"esxi.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEsxiService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEsxiService).__id, ok = v.Value.(string)
+		return
+	},
 	"esxi.service.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEsxiService).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1179,9 +1178,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"esxi.timezone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEsxiTimezone).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEsxiTimezone).__id, ok = v.Value.(string)
+		return
+	},
 	"esxi.timezone.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEsxiTimezone).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1199,9 +1198,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"esxi.ntpconfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEsxiNtpconfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEsxiNtpconfig).__id, ok = v.Value.(string)
+		return
+	},
 	"esxi.ntpconfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEsxiNtpconfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1217,13 +1216,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[vsphere] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[vsphere] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[vsphere] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[vsphere] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -1241,9 +1240,9 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlAsset for the asset resource
 type mqlAsset struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAssetInternal it will be used here
-	Cpes plugin.TValue[[]any]
+	Cpes                plugin.TValue[[]any]
 	VulnerabilityReport plugin.TValue[any]
 }
 
@@ -1304,13 +1303,13 @@ func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[any] {
 // mqlVulnmgmt for the vulnmgmt resource
 type mqlVulnmgmt struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlVulnmgmtInternal
-	Cves plugin.TValue[[]any]
-	Advisories plugin.TValue[[]any]
-	Packages plugin.TValue[[]any]
+	Cves           plugin.TValue[[]any]
+	Advisories     plugin.TValue[[]any]
+	Packages       plugin.TValue[[]any]
 	LastAssessment plugin.TValue[*time.Time]
-	Stats plugin.TValue[*mqlAuditCvss]
+	Stats          plugin.TValue[*mqlAuditCvss]
 }
 
 // createVulnmgmt creates a new instance of this resource
@@ -1418,14 +1417,14 @@ func (c *mqlVulnmgmt) GetStats() *plugin.TValue[*mqlAuditCvss] {
 // mqlVulnCve for the vuln.cve resource
 type mqlVulnCve struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVulnCveInternal it will be used here
-	Id plugin.TValue[string]
-	State plugin.TValue[string]
-	Summary plugin.TValue[string]
-	Unscored plugin.TValue[bool]
-	Published plugin.TValue[*time.Time]
-	Modified plugin.TValue[*time.Time]
+	Id         plugin.TValue[string]
+	State      plugin.TValue[string]
+	Summary    plugin.TValue[string]
+	Unscored   plugin.TValue[bool]
+	Published  plugin.TValue[*time.Time]
+	Modified   plugin.TValue[*time.Time]
 	WorstScore plugin.TValue[*mqlAuditCvss]
 }
 
@@ -1441,7 +1440,7 @@ func createVulnCve(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1497,14 +1496,14 @@ func (c *mqlVulnCve) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
 // mqlVulnAdvisory for the vuln.advisory resource
 type mqlVulnAdvisory struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVulnAdvisoryInternal it will be used here
-	Id plugin.TValue[string]
-	Title plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Title       plugin.TValue[string]
 	Description plugin.TValue[string]
-	Published plugin.TValue[*time.Time]
-	Modified plugin.TValue[*time.Time]
-	WorstScore plugin.TValue[*mqlAuditCvss]
+	Published   plugin.TValue[*time.Time]
+	Modified    plugin.TValue[*time.Time]
+	WorstScore  plugin.TValue[*mqlAuditCvss]
 }
 
 // createVulnAdvisory creates a new instance of this resource
@@ -1519,7 +1518,7 @@ func createVulnAdvisory(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1571,12 +1570,12 @@ func (c *mqlVulnAdvisory) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
 // mqlVulnPackage for the vuln.package resource
 type mqlVulnPackage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVulnPackageInternal it will be used here
-	Name plugin.TValue[string]
-	Version plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Version   plugin.TValue[string]
 	Available plugin.TValue[string]
-	Arch plugin.TValue[string]
+	Arch      plugin.TValue[string]
 }
 
 // createVulnPackage creates a new instance of this resource
@@ -1630,9 +1629,9 @@ func (c *mqlVulnPackage) GetArch() *plugin.TValue[string] {
 // mqlAuditCvss for the audit.cvss resource
 type mqlAuditCvss struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuditCvssInternal it will be used here
-	Score plugin.TValue[float64]
+	Score  plugin.TValue[float64]
 	Vector plugin.TValue[string]
 }
 
@@ -1679,10 +1678,10 @@ func (c *mqlAuditCvss) GetVector() *plugin.TValue[string] {
 // mqlVsphere for the vsphere resource
 type mqlVsphere struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVsphereInternal it will be used here
-	About plugin.TValue[any]
-	Licenses plugin.TValue[[]any]
+	About       plugin.TValue[any]
+	Licenses    plugin.TValue[[]any]
 	Datacenters plugin.TValue[[]any]
 }
 
@@ -1698,7 +1697,7 @@ func createVsphere(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1764,11 +1763,11 @@ func (c *mqlVsphere) GetDatacenters() *plugin.TValue[[]any] {
 // mqlVsphereLicense for the vsphere.license resource
 type mqlVsphereLicense struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVsphereLicenseInternal it will be used here
-	Name plugin.TValue[string]
+	Name  plugin.TValue[string]
 	Total plugin.TValue[int64]
-	Used plugin.TValue[int64]
+	Used  plugin.TValue[int64]
 }
 
 // createVsphereLicense creates a new instance of this resource
@@ -1783,7 +1782,7 @@ func createVsphereLicense(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1823,10 +1822,10 @@ func (c *mqlVsphereLicense) GetUsed() *plugin.TValue[int64] {
 // mqlEsxi for the esxi resource
 type mqlEsxi struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEsxiInternal it will be used here
 	Host plugin.TValue[*mqlVsphereHost]
-	Vm plugin.TValue[*mqlVsphereVm]
+	Vm   plugin.TValue[*mqlVsphereVm]
 }
 
 // createEsxi creates a new instance of this resource
@@ -1841,7 +1840,7 @@ func createEsxi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1901,15 +1900,15 @@ func (c *mqlEsxi) GetVm() *plugin.TValue[*mqlVsphereVm] {
 // mqlVsphereDatacenter for the vsphere.datacenter resource
 type mqlVsphereDatacenter struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVsphereDatacenterInternal it will be used here
-	Moid plugin.TValue[string]
-	Name plugin.TValue[string]
-	InventoryPath plugin.TValue[string]
-	Hosts plugin.TValue[[]any]
-	Vms plugin.TValue[[]any]
-	Clusters plugin.TValue[[]any]
-	DistributedSwitches plugin.TValue[[]any]
+	Moid                  plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	InventoryPath         plugin.TValue[string]
+	Hosts                 plugin.TValue[[]any]
+	Vms                   plugin.TValue[[]any]
+	Clusters              plugin.TValue[[]any]
+	DistributedSwitches   plugin.TValue[[]any]
 	DistributedPortGroups plugin.TValue[[]any]
 }
 
@@ -1925,7 +1924,7 @@ func createVsphereDatacenter(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2045,13 +2044,13 @@ func (c *mqlVsphereDatacenter) GetDistributedPortGroups() *plugin.TValue[[]any] 
 // mqlVsphereCluster for the vsphere.cluster resource
 type mqlVsphereCluster struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVsphereClusterInternal it will be used here
-	Moid plugin.TValue[string]
-	Name plugin.TValue[string]
+	Moid          plugin.TValue[string]
+	Name          plugin.TValue[string]
 	InventoryPath plugin.TValue[string]
-	Properties plugin.TValue[any]
-	Hosts plugin.TValue[[]any]
+	Properties    plugin.TValue[any]
+	Hosts         plugin.TValue[[]any]
 }
 
 // createVsphereCluster creates a new instance of this resource
@@ -2066,7 +2065,7 @@ func createVsphereCluster(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2126,25 +2125,25 @@ func (c *mqlVsphereCluster) GetHosts() *plugin.TValue[[]any] {
 // mqlVsphereHost for the vsphere.host resource
 type mqlVsphereHost struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlVsphereHostInternal
-	Moid plugin.TValue[string]
-	Name plugin.TValue[string]
-	InventoryPath plugin.TValue[string]
-	Properties plugin.TValue[any]
-	StandardSwitch plugin.TValue[[]any]
+	Moid              plugin.TValue[string]
+	Name              plugin.TValue[string]
+	InventoryPath     plugin.TValue[string]
+	Properties        plugin.TValue[any]
+	StandardSwitch    plugin.TValue[[]any]
 	DistributedSwitch plugin.TValue[[]any]
-	Adapters plugin.TValue[[]any]
-	Vmknics plugin.TValue[[]any]
-	Packages plugin.TValue[[]any]
-	AcceptanceLevel plugin.TValue[string]
-	KernelModules plugin.TValue[[]any]
-	AdvancedSettings plugin.TValue[map[string]any]
-	Services plugin.TValue[[]any]
-	Timezone plugin.TValue[*mqlEsxiTimezone]
-	Ntp plugin.TValue[*mqlEsxiNtpconfig]
-	Snmp plugin.TValue[map[string]any]
-	Tags plugin.TValue[[]any]
+	Adapters          plugin.TValue[[]any]
+	Vmknics           plugin.TValue[[]any]
+	Packages          plugin.TValue[[]any]
+	AcceptanceLevel   plugin.TValue[string]
+	KernelModules     plugin.TValue[[]any]
+	AdvancedSettings  plugin.TValue[map[string]any]
+	Services          plugin.TValue[[]any]
+	Timezone          plugin.TValue[*mqlEsxiTimezone]
+	Ntp               plugin.TValue[*mqlEsxiNtpconfig]
+	Snmp              plugin.TValue[map[string]any]
+	Tags              plugin.TValue[[]any]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -2159,7 +2158,7 @@ func createVsphereHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2369,14 +2368,14 @@ func (c *mqlVsphereHost) GetTags() *plugin.TValue[[]any] {
 // mqlVsphereVm for the vsphere.vm resource
 type mqlVsphereVm struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlVsphereVmInternal
-	Moid plugin.TValue[string]
-	Name plugin.TValue[string]
-	InventoryPath plugin.TValue[string]
-	Properties plugin.TValue[any]
+	Moid             plugin.TValue[string]
+	Name             plugin.TValue[string]
+	InventoryPath    plugin.TValue[string]
+	Properties       plugin.TValue[any]
 	AdvancedSettings plugin.TValue[map[string]any]
-	Tags plugin.TValue[[]any]
+	Tags             plugin.TValue[[]any]
 }
 
 // createVsphereVm creates a new instance of this resource
@@ -2391,7 +2390,7 @@ func createVsphereVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2445,14 +2444,14 @@ func (c *mqlVsphereVm) GetTags() *plugin.TValue[[]any] {
 // mqlVsphereVswitchStandard for the vsphere.vswitch.standard resource
 type mqlVsphereVswitchStandard struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlVsphereVswitchStandardInternal
-	Name plugin.TValue[string]
-	Properties plugin.TValue[any]
+	Name           plugin.TValue[string]
+	Properties     plugin.TValue[any]
 	FailoverPolicy plugin.TValue[any]
 	SecurityPolicy plugin.TValue[any]
-	ShapingPolicy plugin.TValue[any]
-	Uplinks plugin.TValue[[]any]
+	ShapingPolicy  plugin.TValue[any]
+	Uplinks        plugin.TValue[[]any]
 }
 
 // createVsphereVswitchStandard creates a new instance of this resource
@@ -2467,7 +2466,7 @@ func createVsphereVswitchStandard(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2537,12 +2536,12 @@ func (c *mqlVsphereVswitchStandard) GetUplinks() *plugin.TValue[[]any] {
 // mqlVsphereVswitchDvs for the vsphere.vswitch.dvs resource
 type mqlVsphereVswitchDvs struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlVsphereVswitchDvsInternal
-	Moid plugin.TValue[string]
-	Name plugin.TValue[string]
+	Moid       plugin.TValue[string]
+	Name       plugin.TValue[string]
 	Properties plugin.TValue[any]
-	Uplinks plugin.TValue[[]any]
+	Uplinks    plugin.TValue[[]any]
 }
 
 // createVsphereVswitchDvs creates a new instance of this resource
@@ -2557,7 +2556,7 @@ func createVsphereVswitchDvs(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2613,10 +2612,10 @@ func (c *mqlVsphereVswitchDvs) GetUplinks() *plugin.TValue[[]any] {
 // mqlVsphereVswitchPortgroup for the vsphere.vswitch.portgroup resource
 type mqlVsphereVswitchPortgroup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVsphereVswitchPortgroupInternal it will be used here
-	Moid plugin.TValue[string]
-	Name plugin.TValue[string]
+	Moid       plugin.TValue[string]
+	Name       plugin.TValue[string]
 	Properties plugin.TValue[any]
 }
 
@@ -2632,7 +2631,7 @@ func createVsphereVswitchPortgroup(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2672,11 +2671,11 @@ func (c *mqlVsphereVswitchPortgroup) GetProperties() *plugin.TValue[any] {
 // mqlVsphereVmnic for the vsphere.vmnic resource
 type mqlVsphereVmnic struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlVsphereVmnicInternal
-	Name plugin.TValue[string]
-	Properties plugin.TValue[any]
-	Details plugin.TValue[any]
+	Name        plugin.TValue[string]
+	Properties  plugin.TValue[any]
+	Details     plugin.TValue[any]
 	PauseParams plugin.TValue[any]
 }
 
@@ -2692,7 +2691,7 @@ func createVsphereVmnic(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2738,13 +2737,13 @@ func (c *mqlVsphereVmnic) GetPauseParams() *plugin.TValue[any] {
 // mqlVsphereVmknic for the vsphere.vmknic resource
 type mqlVsphereVmknic struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVsphereVmknicInternal it will be used here
-	Name plugin.TValue[string]
+	Name       plugin.TValue[string]
 	Properties plugin.TValue[any]
-	Ipv4 plugin.TValue[[]any]
-	Ipv6 plugin.TValue[[]any]
-	Tags plugin.TValue[[]any]
+	Ipv4       plugin.TValue[[]any]
+	Ipv6       plugin.TValue[[]any]
+	Tags       plugin.TValue[[]any]
 }
 
 // createVsphereVmknic creates a new instance of this resource
@@ -2759,7 +2758,7 @@ func createVsphereVmknic(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2807,11 +2806,11 @@ func (c *mqlVsphereVmknic) GetTags() *plugin.TValue[[]any] {
 // mqlEsxiCommand for the esxi.command resource
 type mqlEsxiCommand struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEsxiCommandInternal it will be used here
 	InventoryPath plugin.TValue[string]
-	Command plugin.TValue[string]
-	Result plugin.TValue[[]any]
+	Command       plugin.TValue[string]
+	Result        plugin.TValue[[]any]
 }
 
 // createEsxiCommand creates a new instance of this resource
@@ -2826,7 +2825,7 @@ func createEsxiCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2868,16 +2867,16 @@ func (c *mqlEsxiCommand) GetResult() *plugin.TValue[[]any] {
 // mqlEsxiVib for the esxi.vib resource
 type mqlEsxiVib struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEsxiVibInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
 	AcceptanceLevel plugin.TValue[string]
-	CreationDate plugin.TValue[*time.Time]
-	InstallDate plugin.TValue[*time.Time]
-	Status plugin.TValue[string]
-	Vendor plugin.TValue[string]
-	Version plugin.TValue[string]
+	CreationDate    plugin.TValue[*time.Time]
+	InstallDate     plugin.TValue[*time.Time]
+	Status          plugin.TValue[string]
+	Vendor          plugin.TValue[string]
+	Version         plugin.TValue[string]
 }
 
 // createEsxiVib creates a new instance of this resource
@@ -2892,7 +2891,7 @@ func createEsxiVib(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2952,18 +2951,18 @@ func (c *mqlEsxiVib) GetVersion() *plugin.TValue[string] {
 // mqlEsxiKernelmodule for the esxi.kernelmodule resource
 type mqlEsxiKernelmodule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEsxiKernelmoduleInternal it will be used here
-	Name plugin.TValue[string]
-	Modulefile plugin.TValue[string]
-	Version plugin.TValue[string]
-	Loaded plugin.TValue[bool]
-	License plugin.TValue[string]
-	Enabled plugin.TValue[bool]
-	SignedStatus plugin.TValue[string]
-	SignatureDigest plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Modulefile           plugin.TValue[string]
+	Version              plugin.TValue[string]
+	Loaded               plugin.TValue[bool]
+	License              plugin.TValue[string]
+	Enabled              plugin.TValue[bool]
+	SignedStatus         plugin.TValue[string]
+	SignatureDigest      plugin.TValue[string]
 	SignatureFingerprint plugin.TValue[string]
-	VibAcceptanceLevel plugin.TValue[string]
+	VibAcceptanceLevel   plugin.TValue[string]
 }
 
 // createEsxiKernelmodule creates a new instance of this resource
@@ -2978,7 +2977,7 @@ func createEsxiKernelmodule(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3046,14 +3045,14 @@ func (c *mqlEsxiKernelmodule) GetVibAcceptanceLevel() *plugin.TValue[string] {
 // mqlEsxiService for the esxi.service resource
 type mqlEsxiService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEsxiServiceInternal it will be used here
-	Key plugin.TValue[string]
-	Label plugin.TValue[string]
+	Key      plugin.TValue[string]
+	Label    plugin.TValue[string]
 	Required plugin.TValue[bool]
-	Running plugin.TValue[bool]
-	Ruleset plugin.TValue[[]any]
-	Policy plugin.TValue[string]
+	Running  plugin.TValue[bool]
+	Ruleset  plugin.TValue[[]any]
+	Policy   plugin.TValue[string]
 }
 
 // createEsxiService creates a new instance of this resource
@@ -3068,7 +3067,7 @@ func createEsxiService(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3120,12 +3119,12 @@ func (c *mqlEsxiService) GetPolicy() *plugin.TValue[string] {
 // mqlEsxiTimezone for the esxi.timezone resource
 type mqlEsxiTimezone struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEsxiTimezoneInternal it will be used here
-	Key plugin.TValue[string]
-	Name plugin.TValue[string]
+	Key         plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Offset plugin.TValue[int64]
+	Offset      plugin.TValue[int64]
 }
 
 // createEsxiTimezone creates a new instance of this resource
@@ -3140,7 +3139,7 @@ func createEsxiTimezone(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3184,9 +3183,9 @@ func (c *mqlEsxiTimezone) GetOffset() *plugin.TValue[int64] {
 // mqlEsxiNtpconfig for the esxi.ntpconfig resource
 type mqlEsxiNtpconfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEsxiNtpconfigInternal it will be used here
-	Id plugin.TValue[string]
+	Id     plugin.TValue[string]
 	Server plugin.TValue[[]any]
 	Config plugin.TValue[[]any]
 }
@@ -3203,7 +3202,7 @@ func createEsxiNtpconfig(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

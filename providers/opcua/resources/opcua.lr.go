@@ -17,23 +17,22 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceOpcua string = "opcua"
-	ResourceOpcuaServer string = "opcua.server"
+	ResourceOpcua          string = "opcua"
+	ResourceOpcuaServer    string = "opcua.server"
 	ResourceOpcuaNamespace string = "opcua.namespace"
-	ResourceOpcuaNode string = "opcua.node"
+	ResourceOpcuaNode      string = "opcua.node"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"opcua": {
 			// to override args, implement: initOpcua(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOpcua,
 		},
 		"opcua.server": {
-			Init: initOpcuaServer,
+			Init:   initOpcuaServer,
 			Create: createOpcuaServer,
 		},
 		"opcua.namespace": {
@@ -65,7 +64,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -207,11 +206,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"opcua.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOpcua).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOpcua).__id, ok = v.Value.(string)
+		return
+	},
 	"opcua.namespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpcua).Namespaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -225,9 +224,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"opcua.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOpcuaServer).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOpcuaServer).__id, ok = v.Value.(string)
+		return
+	},
 	"opcua.server.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpcuaServer).Node, ok = plugin.RawToTValue[*mqlOpcuaNode](v.Value, v.Error)
 		return
@@ -249,9 +248,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"opcua.namespace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOpcuaNamespace).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOpcuaNamespace).__id, ok = v.Value.(string)
+		return
+	},
 	"opcua.namespace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpcuaNamespace).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -261,9 +260,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"opcua.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOpcuaNode).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOpcuaNode).__id, ok = v.Value.(string)
+		return
+	},
 	"opcua.node.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpcuaNode).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -323,13 +322,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[opcua] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[opcua] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[opcua] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[opcua] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -347,11 +346,11 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlOpcua for the opcua resource
 type mqlOpcua struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOpcuaInternal it will be used here
 	Namespaces plugin.TValue[[]any]
-	Root plugin.TValue[*mqlOpcuaNode]
-	Nodes plugin.TValue[[]any]
+	Root       plugin.TValue[*mqlOpcuaNode]
+	Nodes      plugin.TValue[[]any]
 }
 
 // createOpcua creates a new instance of this resource
@@ -366,7 +365,7 @@ func createOpcua(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -442,13 +441,13 @@ func (c *mqlOpcua) GetNodes() *plugin.TValue[[]any] {
 // mqlOpcuaServer for the opcua.server resource
 type mqlOpcuaServer struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOpcuaServerInternal it will be used here
-	Node plugin.TValue[*mqlOpcuaNode]
-	BuildInfo plugin.TValue[any]
+	Node        plugin.TValue[*mqlOpcuaNode]
+	BuildInfo   plugin.TValue[any]
 	CurrentTime plugin.TValue[*time.Time]
-	StartTime plugin.TValue[*time.Time]
-	State plugin.TValue[string]
+	StartTime   plugin.TValue[*time.Time]
+	State       plugin.TValue[string]
 }
 
 // createOpcuaServer creates a new instance of this resource
@@ -463,7 +462,7 @@ func createOpcuaServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -511,9 +510,9 @@ func (c *mqlOpcuaServer) GetState() *plugin.TValue[string] {
 // mqlOpcuaNamespace for the opcua.namespace resource
 type mqlOpcuaNamespace struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOpcuaNamespaceInternal it will be used here
-	Id plugin.TValue[int64]
+	Id   plugin.TValue[int64]
 	Name plugin.TValue[string]
 }
 
@@ -529,7 +528,7 @@ func createOpcuaNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -565,22 +564,22 @@ func (c *mqlOpcuaNamespace) GetName() *plugin.TValue[string] {
 // mqlOpcuaNode for the opcua.node resource
 type mqlOpcuaNode struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlOpcuaNodeInternal
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[*mqlOpcuaNamespace]
-	Class plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Namespace   plugin.TValue[*mqlOpcuaNamespace]
+	Class       plugin.TValue[string]
 	Description plugin.TValue[string]
-	Writeable plugin.TValue[bool]
-	DataType plugin.TValue[string]
-	Min plugin.TValue[string]
-	Max plugin.TValue[string]
-	Unit plugin.TValue[string]
+	Writeable   plugin.TValue[bool]
+	DataType    plugin.TValue[string]
+	Min         plugin.TValue[string]
+	Max         plugin.TValue[string]
+	Unit        plugin.TValue[string]
 	AccessLevel plugin.TValue[string]
-	Properties plugin.TValue[[]any]
-	Components plugin.TValue[[]any]
-	Organizes plugin.TValue[[]any]
+	Properties  plugin.TValue[[]any]
+	Components  plugin.TValue[[]any]
+	Organizes   plugin.TValue[[]any]
 }
 
 // createOpcuaNode creates a new instance of this resource
@@ -595,7 +594,7 @@ func createOpcuaNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

@@ -17,34 +17,33 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceOkta string = "okta"
-	ResourceOktaOrganization string = "okta.organization"
-	ResourceOktaPolicies string = "okta.policies"
-	ResourceOktaUser string = "okta.user"
-	ResourceOktaRole string = "okta.role"
-	ResourceOktaGroup string = "okta.group"
-	ResourceOktaGroupRule string = "okta.groupRule"
-	ResourceOktaApplication string = "okta.application"
-	ResourceOktaDomain string = "okta.domain"
-	ResourceOktaPolicy string = "okta.policy"
-	ResourceOktaPolicyRule string = "okta.policyRule"
-	ResourceOktaTrustedOrigin string = "okta.trustedOrigin"
-	ResourceOktaNetwork string = "okta.network"
+	ResourceOkta                     string = "okta"
+	ResourceOktaOrganization         string = "okta.organization"
+	ResourceOktaPolicies             string = "okta.policies"
+	ResourceOktaUser                 string = "okta.user"
+	ResourceOktaRole                 string = "okta.role"
+	ResourceOktaGroup                string = "okta.group"
+	ResourceOktaGroupRule            string = "okta.groupRule"
+	ResourceOktaApplication          string = "okta.application"
+	ResourceOktaDomain               string = "okta.domain"
+	ResourceOktaPolicy               string = "okta.policy"
+	ResourceOktaPolicyRule           string = "okta.policyRule"
+	ResourceOktaTrustedOrigin        string = "okta.trustedOrigin"
+	ResourceOktaNetwork              string = "okta.network"
 	ResourceOktaThreatsConfiguration string = "okta.threatsConfiguration"
-	ResourceOktaCustomRole string = "okta.customRole"
+	ResourceOktaCustomRole           string = "okta.customRole"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"okta": {
 			// to override args, implement: initOkta(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOkta,
 		},
 		"okta.organization": {
-			Init: initOktaOrganization,
+			Init:   initOktaOrganization,
 			Create: createOktaOrganization,
 		},
 		"okta.policies": {
@@ -120,7 +119,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -616,11 +615,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"okta.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOkta).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOkta).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOkta).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -654,9 +653,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaOrganization).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaOrganization).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.organization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -746,9 +745,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaPolicies).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaPolicies).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.policies.password": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaPolicies).Password, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -778,9 +777,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaUser).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -838,9 +837,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaRole).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaRole).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.role.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -870,9 +869,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaGroup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaGroup).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -914,9 +913,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.groupRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaGroupRule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaGroupRule).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.groupRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaGroupRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -934,9 +933,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaApplication).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaApplication).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.application.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaApplication).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -990,9 +989,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaDomain).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaDomain).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.domain.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaDomain).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1014,9 +1013,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1066,9 +1065,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.policyRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaPolicyRule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaPolicyRule).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.policyRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaPolicyRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1110,9 +1109,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.trustedOrigin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaTrustedOrigin).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaTrustedOrigin).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.trustedOrigin.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaTrustedOrigin).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1150,9 +1149,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaNetwork).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaNetwork).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.network.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1206,9 +1205,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.threatsConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaThreatsConfiguration).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaThreatsConfiguration).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.threatsConfiguration.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaThreatsConfiguration).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1226,9 +1225,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"okta.customRole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOktaCustomRole).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOktaCustomRole).__id, ok = v.Value.(string)
+		return
+	},
 	"okta.customRole.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaCustomRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1248,13 +1247,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[okta] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[okta] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[okta] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[okta] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -1272,16 +1271,16 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlOkta for the okta resource
 type mqlOkta struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaInternal it will be used here
-	Users plugin.TValue[[]any]
-	Groups plugin.TValue[[]any]
-	GroupRules plugin.TValue[[]any]
-	Domains plugin.TValue[[]any]
-	Applications plugin.TValue[[]any]
+	Users          plugin.TValue[[]any]
+	Groups         plugin.TValue[[]any]
+	GroupRules     plugin.TValue[[]any]
+	Domains        plugin.TValue[[]any]
+	Applications   plugin.TValue[[]any]
 	TrustedOrigins plugin.TValue[[]any]
-	Networks plugin.TValue[[]any]
-	CustomRoles plugin.TValue[[]any]
+	Networks       plugin.TValue[[]any]
+	CustomRoles    plugin.TValue[[]any]
 }
 
 // createOkta creates a new instance of this resource
@@ -1296,7 +1295,7 @@ func createOkta(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1452,30 +1451,30 @@ func (c *mqlOkta) GetCustomRoles() *plugin.TValue[[]any] {
 // mqlOktaOrganization for the okta.organization resource
 type mqlOktaOrganization struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaOrganizationInternal it will be used here
-	Id plugin.TValue[string]
-	CompanyName plugin.TValue[string]
-	Status plugin.TValue[string]
-	Subdomain plugin.TValue[string]
-	Address1 plugin.TValue[string]
-	Address2 plugin.TValue[string]
-	City plugin.TValue[string]
-	State plugin.TValue[string]
-	PhoneNumber plugin.TValue[string]
-	PostalCode plugin.TValue[string]
-	Country plugin.TValue[string]
-	SupportPhoneNumber plugin.TValue[string]
-	Website plugin.TValue[string]
-	EndUserSupportHelpURL plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	LastUpdated plugin.TValue[*time.Time]
-	ExpiresAt plugin.TValue[*time.Time]
-	OptOutCommunicationEmails plugin.TValue[bool]
-	BillingContact plugin.TValue[*mqlOktaUser]
-	TechnicalContact plugin.TValue[*mqlOktaUser]
+	Id                         plugin.TValue[string]
+	CompanyName                plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	Subdomain                  plugin.TValue[string]
+	Address1                   plugin.TValue[string]
+	Address2                   plugin.TValue[string]
+	City                       plugin.TValue[string]
+	State                      plugin.TValue[string]
+	PhoneNumber                plugin.TValue[string]
+	PostalCode                 plugin.TValue[string]
+	Country                    plugin.TValue[string]
+	SupportPhoneNumber         plugin.TValue[string]
+	Website                    plugin.TValue[string]
+	EndUserSupportHelpURL      plugin.TValue[string]
+	Created                    plugin.TValue[*time.Time]
+	LastUpdated                plugin.TValue[*time.Time]
+	ExpiresAt                  plugin.TValue[*time.Time]
+	OptOutCommunicationEmails  plugin.TValue[bool]
+	BillingContact             plugin.TValue[*mqlOktaUser]
+	TechnicalContact           plugin.TValue[*mqlOktaUser]
 	SecurityNotificationEmails plugin.TValue[any]
-	ThreatInsightSettings plugin.TValue[*mqlOktaThreatsConfiguration]
+	ThreatInsightSettings      plugin.TValue[*mqlOktaThreatsConfiguration]
 }
 
 // createOktaOrganization creates a new instance of this resource
@@ -1490,7 +1489,7 @@ func createOktaOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1646,15 +1645,15 @@ func (c *mqlOktaOrganization) GetThreatInsightSettings() *plugin.TValue[*mqlOkta
 // mqlOktaPolicies for the okta.policies resource
 type mqlOktaPolicies struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaPoliciesInternal it will be used here
-	Password plugin.TValue[[]any]
-	MfaEnroll plugin.TValue[[]any]
-	SignOn plugin.TValue[[]any]
+	Password                 plugin.TValue[[]any]
+	MfaEnroll                plugin.TValue[[]any]
+	SignOn                   plugin.TValue[[]any]
 	OauthAuthorizationPolicy plugin.TValue[[]any]
-	IdpDiscovery plugin.TValue[[]any]
-	AccessPolicy plugin.TValue[[]any]
-	ProfileEnrollment plugin.TValue[[]any]
+	IdpDiscovery             plugin.TValue[[]any]
+	AccessPolicy             plugin.TValue[[]any]
+	ProfileEnrollment        plugin.TValue[[]any]
 }
 
 // createOktaPolicies creates a new instance of this resource
@@ -1669,7 +1668,7 @@ func createOktaPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1809,22 +1808,22 @@ func (c *mqlOktaPolicies) GetProfileEnrollment() *plugin.TValue[[]any] {
 // mqlOktaUser for the okta.user resource
 type mqlOktaUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaUserInternal it will be used here
-	Id plugin.TValue[string]
-	TypeId plugin.TValue[string]
-	Type plugin.TValue[any]
-	Credentials plugin.TValue[any]
-	Activated plugin.TValue[*time.Time]
-	Created plugin.TValue[*time.Time]
-	LastLogin plugin.TValue[*time.Time]
-	LastUpdated plugin.TValue[*time.Time]
-	PasswordChanged plugin.TValue[*time.Time]
-	Profile plugin.TValue[any]
-	Status plugin.TValue[string]
-	StatusChanged plugin.TValue[*time.Time]
+	Id                    plugin.TValue[string]
+	TypeId                plugin.TValue[string]
+	Type                  plugin.TValue[any]
+	Credentials           plugin.TValue[any]
+	Activated             plugin.TValue[*time.Time]
+	Created               plugin.TValue[*time.Time]
+	LastLogin             plugin.TValue[*time.Time]
+	LastUpdated           plugin.TValue[*time.Time]
+	PasswordChanged       plugin.TValue[*time.Time]
+	Profile               plugin.TValue[any]
+	Status                plugin.TValue[string]
+	StatusChanged         plugin.TValue[*time.Time]
 	TransitioningToStatus plugin.TValue[string]
-	Roles plugin.TValue[[]any]
+	Roles                 plugin.TValue[[]any]
 }
 
 // createOktaUser creates a new instance of this resource
@@ -1839,7 +1838,7 @@ func createOktaUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1935,15 +1934,15 @@ func (c *mqlOktaUser) GetRoles() *plugin.TValue[[]any] {
 // mqlOktaRole for the okta.role resource
 type mqlOktaRole struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaRoleInternal it will be used here
-	Id plugin.TValue[string]
+	Id             plugin.TValue[string]
 	AssignmentType plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Label plugin.TValue[string]
-	LastUpdated plugin.TValue[*time.Time]
-	Status plugin.TValue[string]
-	Type plugin.TValue[string]
+	Created        plugin.TValue[*time.Time]
+	Label          plugin.TValue[string]
+	LastUpdated    plugin.TValue[*time.Time]
+	Status         plugin.TValue[string]
+	Type           plugin.TValue[string]
 }
 
 // createOktaRole creates a new instance of this resource
@@ -1958,7 +1957,7 @@ func createOktaRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2014,18 +2013,18 @@ func (c *mqlOktaRole) GetType() *plugin.TValue[string] {
 // mqlOktaGroup for the okta.group resource
 type mqlOktaGroup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaGroupInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Type plugin.TValue[any]
-	Created plugin.TValue[*time.Time]
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Type                  plugin.TValue[any]
+	Created               plugin.TValue[*time.Time]
 	LastMembershipUpdated plugin.TValue[*time.Time]
-	LastUpdated plugin.TValue[*time.Time]
-	Profile plugin.TValue[any]
-	Members plugin.TValue[[]any]
-	Roles plugin.TValue[[]any]
+	LastUpdated           plugin.TValue[*time.Time]
+	Profile               plugin.TValue[any]
+	Members               plugin.TValue[[]any]
+	Roles                 plugin.TValue[[]any]
 }
 
 // createOktaGroup creates a new instance of this resource
@@ -2040,7 +2039,7 @@ func createOktaGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2132,12 +2131,12 @@ func (c *mqlOktaGroup) GetRoles() *plugin.TValue[[]any] {
 // mqlOktaGroupRule for the okta.groupRule resource
 type mqlOktaGroupRule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaGroupRuleInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id     plugin.TValue[string]
+	Name   plugin.TValue[string]
 	Status plugin.TValue[string]
-	Type plugin.TValue[string]
+	Type   plugin.TValue[string]
 }
 
 // createOktaGroupRule creates a new instance of this resource
@@ -2191,21 +2190,21 @@ func (c *mqlOktaGroupRule) GetType() *plugin.TValue[string] {
 // mqlOktaApplication for the okta.application resource
 type mqlOktaApplication struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaApplicationInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Label plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Label       plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
 	Credentials plugin.TValue[any]
-	Features plugin.TValue[[]any]
-	Licensing plugin.TValue[any]
-	Profile plugin.TValue[any]
-	Settings plugin.TValue[any]
-	SignOnMode plugin.TValue[string]
-	Status plugin.TValue[string]
-	Visibility plugin.TValue[any]
+	Features    plugin.TValue[[]any]
+	Licensing   plugin.TValue[any]
+	Profile     plugin.TValue[any]
+	Settings    plugin.TValue[any]
+	SignOnMode  plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Visibility  plugin.TValue[any]
 }
 
 // createOktaApplication creates a new instance of this resource
@@ -2220,7 +2219,7 @@ func createOktaApplication(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2300,12 +2299,12 @@ func (c *mqlOktaApplication) GetVisibility() *plugin.TValue[any] {
 // mqlOktaDomain for the okta.domain resource
 type mqlOktaDomain struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaDomainInternal it will be used here
-	Id plugin.TValue[string]
-	Domain plugin.TValue[string]
-	ValidationStatus plugin.TValue[string]
-	DnsRecords plugin.TValue[[]any]
+	Id                plugin.TValue[string]
+	Domain            plugin.TValue[string]
+	ValidationStatus  plugin.TValue[string]
+	DnsRecords        plugin.TValue[[]any]
 	PublicCertificate plugin.TValue[any]
 }
 
@@ -2321,7 +2320,7 @@ func createOktaDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2369,20 +2368,20 @@ func (c *mqlOktaDomain) GetPublicCertificate() *plugin.TValue[any] {
 // mqlOktaPolicy for the okta.policy resource
 type mqlOktaPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaPolicyInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Priority plugin.TValue[int64]
-	Status plugin.TValue[string]
-	System plugin.TValue[bool]
-	Type plugin.TValue[string]
-	Conditions plugin.TValue[any]
-	Settings plugin.TValue[any]
-	Created plugin.TValue[*time.Time]
+	Priority    plugin.TValue[int64]
+	Status      plugin.TValue[string]
+	System      plugin.TValue[bool]
+	Type        plugin.TValue[string]
+	Conditions  plugin.TValue[any]
+	Settings    plugin.TValue[any]
+	Created     plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
-	Rules plugin.TValue[[]any]
+	Rules       plugin.TValue[[]any]
 }
 
 // createOktaPolicy creates a new instance of this resource
@@ -2397,7 +2396,7 @@ func createOktaPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2485,17 +2484,17 @@ func (c *mqlOktaPolicy) GetRules() *plugin.TValue[[]any] {
 // mqlOktaPolicyRule for the okta.policyRule resource
 type mqlOktaPolicyRule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaPolicyRuleInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Priority plugin.TValue[int64]
-	Status plugin.TValue[string]
-	System plugin.TValue[bool]
-	Type plugin.TValue[string]
-	Actions plugin.TValue[any]
-	Conditions plugin.TValue[any]
-	Created plugin.TValue[*time.Time]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Priority    plugin.TValue[int64]
+	Status      plugin.TValue[string]
+	System      plugin.TValue[bool]
+	Type        plugin.TValue[string]
+	Actions     plugin.TValue[any]
+	Conditions  plugin.TValue[any]
+	Created     plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
 }
 
@@ -2511,7 +2510,7 @@ func createOktaPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2579,17 +2578,17 @@ func (c *mqlOktaPolicyRule) GetLastUpdated() *plugin.TValue[*time.Time] {
 // mqlOktaTrustedOrigin for the okta.trustedOrigin resource
 type mqlOktaTrustedOrigin struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaTrustedOriginInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Origin plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	CreatedBy plugin.TValue[string]
-	LastUpdated plugin.TValue[*time.Time]
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Origin        plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	CreatedBy     plugin.TValue[string]
+	LastUpdated   plugin.TValue[*time.Time]
 	LastUpdatedBy plugin.TValue[string]
-	Scopes plugin.TValue[[]any]
-	Status plugin.TValue[string]
+	Scopes        plugin.TValue[[]any]
+	Status        plugin.TValue[string]
 }
 
 // createOktaTrustedOrigin creates a new instance of this resource
@@ -2604,7 +2603,7 @@ func createOktaTrustedOrigin(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2668,21 +2667,21 @@ func (c *mqlOktaTrustedOrigin) GetStatus() *plugin.TValue[string] {
 // mqlOktaNetwork for the okta.network resource
 type mqlOktaNetwork struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaNetworkInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Type plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
-	Status plugin.TValue[string]
-	System plugin.TValue[bool]
-	Asns plugin.TValue[[]any]
-	Usage plugin.TValue[string]
-	ProxyType plugin.TValue[string]
-	Proxies plugin.TValue[[]any]
-	Locations plugin.TValue[[]any]
-	Gateways plugin.TValue[[]any]
+	Status      plugin.TValue[string]
+	System      plugin.TValue[bool]
+	Asns        plugin.TValue[[]any]
+	Usage       plugin.TValue[string]
+	ProxyType   plugin.TValue[string]
+	Proxies     plugin.TValue[[]any]
+	Locations   plugin.TValue[[]any]
+	Gateways    plugin.TValue[[]any]
 }
 
 // createOktaNetwork creates a new instance of this resource
@@ -2697,7 +2696,7 @@ func createOktaNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2777,12 +2776,12 @@ func (c *mqlOktaNetwork) GetGateways() *plugin.TValue[[]any] {
 // mqlOktaThreatsConfiguration for the okta.threatsConfiguration resource
 type mqlOktaThreatsConfiguration struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaThreatsConfigurationInternal it will be used here
-	Action plugin.TValue[string]
+	Action       plugin.TValue[string]
 	ExcludeZones plugin.TValue[[]any]
-	Created plugin.TValue[*time.Time]
-	LastUpdated plugin.TValue[*time.Time]
+	Created      plugin.TValue[*time.Time]
+	LastUpdated  plugin.TValue[*time.Time]
 }
 
 // createOktaThreatsConfiguration creates a new instance of this resource
@@ -2797,7 +2796,7 @@ func createOktaThreatsConfiguration(runtime *plugin.Runtime, args map[string]*ll
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2841,10 +2840,10 @@ func (c *mqlOktaThreatsConfiguration) GetLastUpdated() *plugin.TValue[*time.Time
 // mqlOktaCustomRole for the okta.customRole resource
 type mqlOktaCustomRole struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOktaCustomRoleInternal it will be used here
-	Id plugin.TValue[string]
-	Label plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Label       plugin.TValue[string]
 	Description plugin.TValue[string]
 	Permissions plugin.TValue[[]any]
 }

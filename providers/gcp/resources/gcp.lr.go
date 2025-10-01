@@ -17,147 +17,146 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceGcpOrganization string = "gcp.organization"
-	ResourceGcpFolders string = "gcp.folders"
-	ResourceGcpProjectRedisService string = "gcp.project.redisService"
-	ResourceGcpProjectRedisServiceInstance string = "gcp.project.redisService.instance"
-	ResourceGcpProjectRedisServiceInstanceNodeInfo string = "gcp.project.redisService.instance.nodeInfo"
-	ResourceGcpFolder string = "gcp.folder"
-	ResourceGcpProjects string = "gcp.projects"
-	ResourceGcpProject string = "gcp.project"
-	ResourceGcpService string = "gcp.service"
-	ResourceGcpRecommendation string = "gcp.recommendation"
-	ResourceGcpResourcemanagerBinding string = "gcp.resourcemanager.binding"
-	ResourceGcpProjectComputeService string = "gcp.project.computeService"
-	ResourceGcpProjectComputeServiceAddress string = "gcp.project.computeService.address"
-	ResourceGcpProjectComputeServiceForwardingRule string = "gcp.project.computeService.forwardingRule"
-	ResourceGcpProjectComputeServiceRegion string = "gcp.project.computeService.region"
-	ResourceGcpProjectComputeServiceZone string = "gcp.project.computeService.zone"
-	ResourceGcpProjectComputeServiceMachineType string = "gcp.project.computeService.machineType"
-	ResourceGcpProjectComputeServiceInstance string = "gcp.project.computeService.instance"
-	ResourceGcpProjectComputeServiceServiceaccount string = "gcp.project.computeService.serviceaccount"
-	ResourceGcpProjectComputeServiceDisk string = "gcp.project.computeService.disk"
-	ResourceGcpProjectComputeServiceAttachedDisk string = "gcp.project.computeService.attachedDisk"
-	ResourceGcpProjectComputeServiceSnapshot string = "gcp.project.computeService.snapshot"
-	ResourceGcpProjectComputeServiceImage string = "gcp.project.computeService.image"
-	ResourceGcpProjectComputeServiceFirewall string = "gcp.project.computeService.firewall"
-	ResourceGcpProjectComputeServiceNetwork string = "gcp.project.computeService.network"
-	ResourceGcpProjectComputeServiceSubnetwork string = "gcp.project.computeService.subnetwork"
-	ResourceGcpProjectComputeServiceSubnetworkLogConfig string = "gcp.project.computeService.subnetwork.logConfig"
-	ResourceGcpProjectComputeServiceRouter string = "gcp.project.computeService.router"
-	ResourceGcpProjectComputeServiceBackendService string = "gcp.project.computeService.backendService"
-	ResourceGcpProjectComputeServiceBackendServiceBackend string = "gcp.project.computeService.backendService.backend"
-	ResourceGcpProjectComputeServiceBackendServiceCdnPolicy string = "gcp.project.computeService.backendService.cdnPolicy"
-	ResourceGcpProjectStorageService string = "gcp.project.storageService"
-	ResourceGcpProjectStorageServiceBucket string = "gcp.project.storageService.bucket"
-	ResourceGcpProjectStorageServiceBucketLifecycleRule string = "gcp.project.storageService.bucket.lifecycleRule"
-	ResourceGcpProjectStorageServiceBucketLifecycleRuleAction string = "gcp.project.storageService.bucket.lifecycleRuleAction"
-	ResourceGcpProjectStorageServiceBucketLifecycleRuleCondition string = "gcp.project.storageService.bucket.lifecycleRuleCondition"
-	ResourceGcpProjectSqlService string = "gcp.project.sqlService"
-	ResourceGcpProjectSqlServiceInstance string = "gcp.project.sqlService.instance"
-	ResourceGcpProjectSqlServiceInstanceDatabase string = "gcp.project.sqlService.instance.database"
-	ResourceGcpProjectSqlServiceInstanceIpMapping string = "gcp.project.sqlService.instance.ipMapping"
-	ResourceGcpProjectSqlServiceInstanceSettings string = "gcp.project.sqlService.instance.settings"
-	ResourceGcpProjectSqlServiceInstanceSettingsBackupconfiguration string = "gcp.project.sqlService.instance.settings.backupconfiguration"
-	ResourceGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod string = "gcp.project.sqlService.instance.settings.denyMaintenancePeriod"
-	ResourceGcpProjectSqlServiceInstanceSettingsIpConfiguration string = "gcp.project.sqlService.instance.settings.ipConfiguration"
-	ResourceGcpProjectSqlServiceInstanceSettingsMaintenanceWindow string = "gcp.project.sqlService.instance.settings.maintenanceWindow"
-	ResourceGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy string = "gcp.project.sqlService.instance.settings.passwordValidationPolicy"
-	ResourceGcpProjectBigqueryService string = "gcp.project.bigqueryService"
-	ResourceGcpProjectBigqueryServiceDataset string = "gcp.project.bigqueryService.dataset"
-	ResourceGcpProjectBigqueryServiceDatasetAccessEntry string = "gcp.project.bigqueryService.dataset.accessEntry"
-	ResourceGcpProjectBigqueryServiceTable string = "gcp.project.bigqueryService.table"
-	ResourceGcpProjectBigqueryServiceModel string = "gcp.project.bigqueryService.model"
-	ResourceGcpProjectBigqueryServiceRoutine string = "gcp.project.bigqueryService.routine"
-	ResourceGcpProjectDnsService string = "gcp.project.dnsService"
-	ResourceGcpProjectDnsServiceManagedzone string = "gcp.project.dnsService.managedzone"
-	ResourceGcpProjectDnsServiceRecordset string = "gcp.project.dnsService.recordset"
-	ResourceGcpProjectDnsServicePolicy string = "gcp.project.dnsService.policy"
-	ResourceGcpProjectGkeService string = "gcp.project.gkeService"
-	ResourceGcpProjectGkeServiceCluster string = "gcp.project.gkeService.cluster"
-	ResourceGcpProjectGkeServiceClusterAddonsConfig string = "gcp.project.gkeService.cluster.addonsConfig"
-	ResourceGcpProjectGkeServiceClusterIpAllocationPolicy string = "gcp.project.gkeService.cluster.ipAllocationPolicy"
-	ResourceGcpProjectGkeServiceClusterNetworkConfig string = "gcp.project.gkeService.cluster.networkConfig"
-	ResourceGcpProjectGkeServiceClusterNodepool string = "gcp.project.gkeService.cluster.nodepool"
-	ResourceGcpProjectGkeServiceClusterNodepoolAutoscaling string = "gcp.project.gkeService.cluster.nodepool.autoscaling"
-	ResourceGcpProjectGkeServiceClusterNodepoolNetworkConfig string = "gcp.project.gkeService.cluster.nodepool.networkConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig string = "gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfig string = "gcp.project.gkeService.cluster.nodepool.config"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigAccelerator string = "gcp.project.gkeService.cluster.nodepool.config.accelerator"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig string = "gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigNodeTaint string = "gcp.project.gkeService.cluster.nodepool.config.nodeTaint"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig string = "gcp.project.gkeService.cluster.nodepool.config.sandboxConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig string = "gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig string = "gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig string = "gcp.project.gkeService.cluster.nodepool.config.kubeletConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig string = "gcp.project.gkeService.cluster.nodepool.config.gcfsConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures string = "gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig string = "gcp.project.gkeService.cluster.nodepool.config.gvnicConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes string = "gcp.project.gkeService.cluster.nodepool.config.confidentialNodes"
-	ResourceGcpProjectPubsubService string = "gcp.project.pubsubService"
-	ResourceGcpProjectPubsubServiceTopic string = "gcp.project.pubsubService.topic"
-	ResourceGcpProjectPubsubServiceTopicConfig string = "gcp.project.pubsubService.topic.config"
-	ResourceGcpProjectPubsubServiceTopicConfigMessagestoragepolicy string = "gcp.project.pubsubService.topic.config.messagestoragepolicy"
-	ResourceGcpProjectPubsubServiceSubscription string = "gcp.project.pubsubService.subscription"
-	ResourceGcpProjectPubsubServiceSubscriptionConfig string = "gcp.project.pubsubService.subscription.config"
-	ResourceGcpProjectPubsubServiceSubscriptionConfigPushconfig string = "gcp.project.pubsubService.subscription.config.pushconfig"
-	ResourceGcpProjectPubsubServiceSnapshot string = "gcp.project.pubsubService.snapshot"
-	ResourceGcpProjectKmsService string = "gcp.project.kmsService"
-	ResourceGcpProjectKmsServiceKeyring string = "gcp.project.kmsService.keyring"
-	ResourceGcpProjectKmsServiceKeyringCryptokey string = "gcp.project.kmsService.keyring.cryptokey"
-	ResourceGcpProjectKmsServiceKeyringCryptokeyVersion string = "gcp.project.kmsService.keyring.cryptokey.version"
-	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestation string = "gcp.project.kmsService.keyring.cryptokey.version.attestation"
-	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains string = "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains"
+	ResourceGcpOrganization                                                           string = "gcp.organization"
+	ResourceGcpFolders                                                                string = "gcp.folders"
+	ResourceGcpProjectRedisService                                                    string = "gcp.project.redisService"
+	ResourceGcpProjectRedisServiceInstance                                            string = "gcp.project.redisService.instance"
+	ResourceGcpProjectRedisServiceInstanceNodeInfo                                    string = "gcp.project.redisService.instance.nodeInfo"
+	ResourceGcpFolder                                                                 string = "gcp.folder"
+	ResourceGcpProjects                                                               string = "gcp.projects"
+	ResourceGcpProject                                                                string = "gcp.project"
+	ResourceGcpService                                                                string = "gcp.service"
+	ResourceGcpRecommendation                                                         string = "gcp.recommendation"
+	ResourceGcpResourcemanagerBinding                                                 string = "gcp.resourcemanager.binding"
+	ResourceGcpProjectComputeService                                                  string = "gcp.project.computeService"
+	ResourceGcpProjectComputeServiceAddress                                           string = "gcp.project.computeService.address"
+	ResourceGcpProjectComputeServiceForwardingRule                                    string = "gcp.project.computeService.forwardingRule"
+	ResourceGcpProjectComputeServiceRegion                                            string = "gcp.project.computeService.region"
+	ResourceGcpProjectComputeServiceZone                                              string = "gcp.project.computeService.zone"
+	ResourceGcpProjectComputeServiceMachineType                                       string = "gcp.project.computeService.machineType"
+	ResourceGcpProjectComputeServiceInstance                                          string = "gcp.project.computeService.instance"
+	ResourceGcpProjectComputeServiceServiceaccount                                    string = "gcp.project.computeService.serviceaccount"
+	ResourceGcpProjectComputeServiceDisk                                              string = "gcp.project.computeService.disk"
+	ResourceGcpProjectComputeServiceAttachedDisk                                      string = "gcp.project.computeService.attachedDisk"
+	ResourceGcpProjectComputeServiceSnapshot                                          string = "gcp.project.computeService.snapshot"
+	ResourceGcpProjectComputeServiceImage                                             string = "gcp.project.computeService.image"
+	ResourceGcpProjectComputeServiceFirewall                                          string = "gcp.project.computeService.firewall"
+	ResourceGcpProjectComputeServiceNetwork                                           string = "gcp.project.computeService.network"
+	ResourceGcpProjectComputeServiceSubnetwork                                        string = "gcp.project.computeService.subnetwork"
+	ResourceGcpProjectComputeServiceSubnetworkLogConfig                               string = "gcp.project.computeService.subnetwork.logConfig"
+	ResourceGcpProjectComputeServiceRouter                                            string = "gcp.project.computeService.router"
+	ResourceGcpProjectComputeServiceBackendService                                    string = "gcp.project.computeService.backendService"
+	ResourceGcpProjectComputeServiceBackendServiceBackend                             string = "gcp.project.computeService.backendService.backend"
+	ResourceGcpProjectComputeServiceBackendServiceCdnPolicy                           string = "gcp.project.computeService.backendService.cdnPolicy"
+	ResourceGcpProjectStorageService                                                  string = "gcp.project.storageService"
+	ResourceGcpProjectStorageServiceBucket                                            string = "gcp.project.storageService.bucket"
+	ResourceGcpProjectStorageServiceBucketLifecycleRule                               string = "gcp.project.storageService.bucket.lifecycleRule"
+	ResourceGcpProjectStorageServiceBucketLifecycleRuleAction                         string = "gcp.project.storageService.bucket.lifecycleRuleAction"
+	ResourceGcpProjectStorageServiceBucketLifecycleRuleCondition                      string = "gcp.project.storageService.bucket.lifecycleRuleCondition"
+	ResourceGcpProjectSqlService                                                      string = "gcp.project.sqlService"
+	ResourceGcpProjectSqlServiceInstance                                              string = "gcp.project.sqlService.instance"
+	ResourceGcpProjectSqlServiceInstanceDatabase                                      string = "gcp.project.sqlService.instance.database"
+	ResourceGcpProjectSqlServiceInstanceIpMapping                                     string = "gcp.project.sqlService.instance.ipMapping"
+	ResourceGcpProjectSqlServiceInstanceSettings                                      string = "gcp.project.sqlService.instance.settings"
+	ResourceGcpProjectSqlServiceInstanceSettingsBackupconfiguration                   string = "gcp.project.sqlService.instance.settings.backupconfiguration"
+	ResourceGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod                 string = "gcp.project.sqlService.instance.settings.denyMaintenancePeriod"
+	ResourceGcpProjectSqlServiceInstanceSettingsIpConfiguration                       string = "gcp.project.sqlService.instance.settings.ipConfiguration"
+	ResourceGcpProjectSqlServiceInstanceSettingsMaintenanceWindow                     string = "gcp.project.sqlService.instance.settings.maintenanceWindow"
+	ResourceGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy              string = "gcp.project.sqlService.instance.settings.passwordValidationPolicy"
+	ResourceGcpProjectBigqueryService                                                 string = "gcp.project.bigqueryService"
+	ResourceGcpProjectBigqueryServiceDataset                                          string = "gcp.project.bigqueryService.dataset"
+	ResourceGcpProjectBigqueryServiceDatasetAccessEntry                               string = "gcp.project.bigqueryService.dataset.accessEntry"
+	ResourceGcpProjectBigqueryServiceTable                                            string = "gcp.project.bigqueryService.table"
+	ResourceGcpProjectBigqueryServiceModel                                            string = "gcp.project.bigqueryService.model"
+	ResourceGcpProjectBigqueryServiceRoutine                                          string = "gcp.project.bigqueryService.routine"
+	ResourceGcpProjectDnsService                                                      string = "gcp.project.dnsService"
+	ResourceGcpProjectDnsServiceManagedzone                                           string = "gcp.project.dnsService.managedzone"
+	ResourceGcpProjectDnsServiceRecordset                                             string = "gcp.project.dnsService.recordset"
+	ResourceGcpProjectDnsServicePolicy                                                string = "gcp.project.dnsService.policy"
+	ResourceGcpProjectGkeService                                                      string = "gcp.project.gkeService"
+	ResourceGcpProjectGkeServiceCluster                                               string = "gcp.project.gkeService.cluster"
+	ResourceGcpProjectGkeServiceClusterAddonsConfig                                   string = "gcp.project.gkeService.cluster.addonsConfig"
+	ResourceGcpProjectGkeServiceClusterIpAllocationPolicy                             string = "gcp.project.gkeService.cluster.ipAllocationPolicy"
+	ResourceGcpProjectGkeServiceClusterNetworkConfig                                  string = "gcp.project.gkeService.cluster.networkConfig"
+	ResourceGcpProjectGkeServiceClusterNodepool                                       string = "gcp.project.gkeService.cluster.nodepool"
+	ResourceGcpProjectGkeServiceClusterNodepoolAutoscaling                            string = "gcp.project.gkeService.cluster.nodepool.autoscaling"
+	ResourceGcpProjectGkeServiceClusterNodepoolNetworkConfig                          string = "gcp.project.gkeService.cluster.nodepool.networkConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig         string = "gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfig                                 string = "gcp.project.gkeService.cluster.nodepool.config"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigAccelerator                      string = "gcp.project.gkeService.cluster.nodepool.config.accelerator"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig      string = "gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigNodeTaint                        string = "gcp.project.gkeService.cluster.nodepool.config.nodeTaint"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig                    string = "gcp.project.gkeService.cluster.nodepool.config.sandboxConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig           string = "gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig                  string = "gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig                    string = "gcp.project.gkeService.cluster.nodepool.config.kubeletConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig                       string = "gcp.project.gkeService.cluster.nodepool.config.gcfsConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures          string = "gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig                      string = "gcp.project.gkeService.cluster.nodepool.config.gvnicConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes                string = "gcp.project.gkeService.cluster.nodepool.config.confidentialNodes"
+	ResourceGcpProjectPubsubService                                                   string = "gcp.project.pubsubService"
+	ResourceGcpProjectPubsubServiceTopic                                              string = "gcp.project.pubsubService.topic"
+	ResourceGcpProjectPubsubServiceTopicConfig                                        string = "gcp.project.pubsubService.topic.config"
+	ResourceGcpProjectPubsubServiceTopicConfigMessagestoragepolicy                    string = "gcp.project.pubsubService.topic.config.messagestoragepolicy"
+	ResourceGcpProjectPubsubServiceSubscription                                       string = "gcp.project.pubsubService.subscription"
+	ResourceGcpProjectPubsubServiceSubscriptionConfig                                 string = "gcp.project.pubsubService.subscription.config"
+	ResourceGcpProjectPubsubServiceSubscriptionConfigPushconfig                       string = "gcp.project.pubsubService.subscription.config.pushconfig"
+	ResourceGcpProjectPubsubServiceSnapshot                                           string = "gcp.project.pubsubService.snapshot"
+	ResourceGcpProjectKmsService                                                      string = "gcp.project.kmsService"
+	ResourceGcpProjectKmsServiceKeyring                                               string = "gcp.project.kmsService.keyring"
+	ResourceGcpProjectKmsServiceKeyringCryptokey                                      string = "gcp.project.kmsService.keyring.cryptokey"
+	ResourceGcpProjectKmsServiceKeyringCryptokeyVersion                               string = "gcp.project.kmsService.keyring.cryptokey.version"
+	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestation                    string = "gcp.project.kmsService.keyring.cryptokey.version.attestation"
+	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains   string = "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains"
 	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions string = "gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions"
-	ResourceGcpEssentialContact string = "gcp.essentialContact"
-	ResourceGcpProjectApiKey string = "gcp.project.apiKey"
-	ResourceGcpProjectApiKeyRestrictions string = "gcp.project.apiKey.restrictions"
-	ResourceGcpProjectLoggingservice string = "gcp.project.loggingservice"
-	ResourceGcpProjectLoggingserviceBucket string = "gcp.project.loggingservice.bucket"
-	ResourceGcpProjectLoggingserviceBucketIndexConfig string = "gcp.project.loggingservice.bucket.indexConfig"
-	ResourceGcpProjectLoggingserviceMetric string = "gcp.project.loggingservice.metric"
-	ResourceGcpProjectLoggingserviceSink string = "gcp.project.loggingservice.sink"
-	ResourceGcpProjectIamService string = "gcp.project.iamService"
-	ResourceGcpProjectIamServiceServiceAccount string = "gcp.project.iamService.serviceAccount"
-	ResourceGcpProjectIamServiceServiceAccountKey string = "gcp.project.iamService.serviceAccount.key"
-	ResourceGcpProjectCloudFunction string = "gcp.project.cloudFunction"
-	ResourceGcpProjectDataprocService string = "gcp.project.dataprocService"
-	ResourceGcpProjectDataprocServiceCluster string = "gcp.project.dataprocService.cluster"
-	ResourceGcpProjectDataprocServiceClusterConfig string = "gcp.project.dataprocService.cluster.config"
-	ResourceGcpProjectDataprocServiceClusterConfigGceCluster string = "gcp.project.dataprocService.cluster.config.gceCluster"
-	ResourceGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity string = "gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity"
-	ResourceGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig string = "gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig"
-	ResourceGcpProjectDataprocServiceClusterConfigGkeCluster string = "gcp.project.dataprocService.cluster.config.gkeCluster"
-	ResourceGcpProjectDataprocServiceClusterConfigLifecycle string = "gcp.project.dataprocService.cluster.config.lifecycle"
-	ResourceGcpProjectDataprocServiceClusterConfigInstance string = "gcp.project.dataprocService.cluster.config.instance"
-	ResourceGcpProjectDataprocServiceClusterConfigInstanceDiskConfig string = "gcp.project.dataprocService.cluster.config.instance.diskConfig"
-	ResourceGcpProjectDataprocServiceClusterStatus string = "gcp.project.dataprocService.cluster.status"
-	ResourceGcpProjectDataprocServiceClusterVirtualClusterConfig string = "gcp.project.dataprocService.cluster.virtualClusterConfig"
-	ResourceGcpProjectCloudRunService string = "gcp.project.cloudRunService"
-	ResourceGcpProjectCloudRunServiceOperation string = "gcp.project.cloudRunService.operation"
-	ResourceGcpProjectCloudRunServiceService string = "gcp.project.cloudRunService.service"
-	ResourceGcpProjectCloudRunServiceServiceRevisionTemplate string = "gcp.project.cloudRunService.service.revisionTemplate"
-	ResourceGcpProjectCloudRunServiceContainer string = "gcp.project.cloudRunService.container"
-	ResourceGcpProjectCloudRunServiceContainerProbe string = "gcp.project.cloudRunService.container.probe"
-	ResourceGcpProjectCloudRunServiceCondition string = "gcp.project.cloudRunService.condition"
-	ResourceGcpProjectCloudRunServiceJob string = "gcp.project.cloudRunService.job"
-	ResourceGcpProjectCloudRunServiceJobExecutionTemplate string = "gcp.project.cloudRunService.job.executionTemplate"
-	ResourceGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate string = "gcp.project.cloudRunService.job.executionTemplate.taskTemplate"
-	ResourceGcpAccessApprovalSettings string = "gcp.accessApprovalSettings"
-	ResourceGcpProjectMonitoringService string = "gcp.project.monitoringService"
-	ResourceGcpProjectMonitoringServiceAlertPolicy string = "gcp.project.monitoringService.alertPolicy"
-	ResourceGcpProjectBinaryAuthorizationControl string = "gcp.project.binaryAuthorizationControl"
-	ResourceGcpProjectBinaryAuthorizationControlPolicy string = "gcp.project.binaryAuthorizationControl.policy"
-	ResourceGcpProjectBinaryAuthorizationControlAdmissionRule string = "gcp.project.binaryAuthorizationControl.admissionRule"
+	ResourceGcpEssentialContact                                                       string = "gcp.essentialContact"
+	ResourceGcpProjectApiKey                                                          string = "gcp.project.apiKey"
+	ResourceGcpProjectApiKeyRestrictions                                              string = "gcp.project.apiKey.restrictions"
+	ResourceGcpProjectLoggingservice                                                  string = "gcp.project.loggingservice"
+	ResourceGcpProjectLoggingserviceBucket                                            string = "gcp.project.loggingservice.bucket"
+	ResourceGcpProjectLoggingserviceBucketIndexConfig                                 string = "gcp.project.loggingservice.bucket.indexConfig"
+	ResourceGcpProjectLoggingserviceMetric                                            string = "gcp.project.loggingservice.metric"
+	ResourceGcpProjectLoggingserviceSink                                              string = "gcp.project.loggingservice.sink"
+	ResourceGcpProjectIamService                                                      string = "gcp.project.iamService"
+	ResourceGcpProjectIamServiceServiceAccount                                        string = "gcp.project.iamService.serviceAccount"
+	ResourceGcpProjectIamServiceServiceAccountKey                                     string = "gcp.project.iamService.serviceAccount.key"
+	ResourceGcpProjectCloudFunction                                                   string = "gcp.project.cloudFunction"
+	ResourceGcpProjectDataprocService                                                 string = "gcp.project.dataprocService"
+	ResourceGcpProjectDataprocServiceCluster                                          string = "gcp.project.dataprocService.cluster"
+	ResourceGcpProjectDataprocServiceClusterConfig                                    string = "gcp.project.dataprocService.cluster.config"
+	ResourceGcpProjectDataprocServiceClusterConfigGceCluster                          string = "gcp.project.dataprocService.cluster.config.gceCluster"
+	ResourceGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity       string = "gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity"
+	ResourceGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig    string = "gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig"
+	ResourceGcpProjectDataprocServiceClusterConfigGkeCluster                          string = "gcp.project.dataprocService.cluster.config.gkeCluster"
+	ResourceGcpProjectDataprocServiceClusterConfigLifecycle                           string = "gcp.project.dataprocService.cluster.config.lifecycle"
+	ResourceGcpProjectDataprocServiceClusterConfigInstance                            string = "gcp.project.dataprocService.cluster.config.instance"
+	ResourceGcpProjectDataprocServiceClusterConfigInstanceDiskConfig                  string = "gcp.project.dataprocService.cluster.config.instance.diskConfig"
+	ResourceGcpProjectDataprocServiceClusterStatus                                    string = "gcp.project.dataprocService.cluster.status"
+	ResourceGcpProjectDataprocServiceClusterVirtualClusterConfig                      string = "gcp.project.dataprocService.cluster.virtualClusterConfig"
+	ResourceGcpProjectCloudRunService                                                 string = "gcp.project.cloudRunService"
+	ResourceGcpProjectCloudRunServiceOperation                                        string = "gcp.project.cloudRunService.operation"
+	ResourceGcpProjectCloudRunServiceService                                          string = "gcp.project.cloudRunService.service"
+	ResourceGcpProjectCloudRunServiceServiceRevisionTemplate                          string = "gcp.project.cloudRunService.service.revisionTemplate"
+	ResourceGcpProjectCloudRunServiceContainer                                        string = "gcp.project.cloudRunService.container"
+	ResourceGcpProjectCloudRunServiceContainerProbe                                   string = "gcp.project.cloudRunService.container.probe"
+	ResourceGcpProjectCloudRunServiceCondition                                        string = "gcp.project.cloudRunService.condition"
+	ResourceGcpProjectCloudRunServiceJob                                              string = "gcp.project.cloudRunService.job"
+	ResourceGcpProjectCloudRunServiceJobExecutionTemplate                             string = "gcp.project.cloudRunService.job.executionTemplate"
+	ResourceGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate                 string = "gcp.project.cloudRunService.job.executionTemplate.taskTemplate"
+	ResourceGcpAccessApprovalSettings                                                 string = "gcp.accessApprovalSettings"
+	ResourceGcpProjectMonitoringService                                               string = "gcp.project.monitoringService"
+	ResourceGcpProjectMonitoringServiceAlertPolicy                                    string = "gcp.project.monitoringService.alertPolicy"
+	ResourceGcpProjectBinaryAuthorizationControl                                      string = "gcp.project.binaryAuthorizationControl"
+	ResourceGcpProjectBinaryAuthorizationControlPolicy                                string = "gcp.project.binaryAuthorizationControl.policy"
+	ResourceGcpProjectBinaryAuthorizationControlAdmissionRule                         string = "gcp.project.binaryAuthorizationControl.admissionRule"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"gcp.organization": {
-			Init: initGcpOrganization,
+			Init:   initGcpOrganization,
 			Create: createGcpOrganization,
 		},
 		"gcp.folders": {
@@ -177,7 +176,7 @@ func init() {
 			Create: createGcpProjectRedisServiceInstanceNodeInfo,
 		},
 		"gcp.folder": {
-			Init: initGcpFolder,
+			Init:   initGcpFolder,
 			Create: createGcpFolder,
 		},
 		"gcp.projects": {
@@ -185,11 +184,11 @@ func init() {
 			Create: createGcpProjects,
 		},
 		"gcp.project": {
-			Init: initGcpProject,
+			Init:   initGcpProject,
 			Create: createGcpProject,
 		},
 		"gcp.service": {
-			Init: initGcpService,
+			Init:   initGcpService,
 			Create: createGcpService,
 		},
 		"gcp.recommendation": {
@@ -201,7 +200,7 @@ func init() {
 			Create: createGcpResourcemanagerBinding,
 		},
 		"gcp.project.computeService": {
-			Init: initGcpProjectComputeService,
+			Init:   initGcpProjectComputeService,
 			Create: createGcpProjectComputeService,
 		},
 		"gcp.project.computeService.address": {
@@ -213,7 +212,7 @@ func init() {
 			Create: createGcpProjectComputeServiceForwardingRule,
 		},
 		"gcp.project.computeService.region": {
-			Init: initGcpProjectComputeServiceRegion,
+			Init:   initGcpProjectComputeServiceRegion,
 			Create: createGcpProjectComputeServiceRegion,
 		},
 		"gcp.project.computeService.zone": {
@@ -225,7 +224,7 @@ func init() {
 			Create: createGcpProjectComputeServiceMachineType,
 		},
 		"gcp.project.computeService.instance": {
-			Init: initGcpProjectComputeServiceInstance,
+			Init:   initGcpProjectComputeServiceInstance,
 			Create: createGcpProjectComputeServiceInstance,
 		},
 		"gcp.project.computeService.serviceaccount": {
@@ -245,19 +244,19 @@ func init() {
 			Create: createGcpProjectComputeServiceSnapshot,
 		},
 		"gcp.project.computeService.image": {
-			Init: initGcpProjectComputeServiceImage,
+			Init:   initGcpProjectComputeServiceImage,
 			Create: createGcpProjectComputeServiceImage,
 		},
 		"gcp.project.computeService.firewall": {
-			Init: initGcpProjectComputeServiceFirewall,
+			Init:   initGcpProjectComputeServiceFirewall,
 			Create: createGcpProjectComputeServiceFirewall,
 		},
 		"gcp.project.computeService.network": {
-			Init: initGcpProjectComputeServiceNetwork,
+			Init:   initGcpProjectComputeServiceNetwork,
 			Create: createGcpProjectComputeServiceNetwork,
 		},
 		"gcp.project.computeService.subnetwork": {
-			Init: initGcpProjectComputeServiceSubnetwork,
+			Init:   initGcpProjectComputeServiceSubnetwork,
 			Create: createGcpProjectComputeServiceSubnetwork,
 		},
 		"gcp.project.computeService.subnetwork.logConfig": {
@@ -281,11 +280,11 @@ func init() {
 			Create: createGcpProjectComputeServiceBackendServiceCdnPolicy,
 		},
 		"gcp.project.storageService": {
-			Init: initGcpProjectStorageService,
+			Init:   initGcpProjectStorageService,
 			Create: createGcpProjectStorageService,
 		},
 		"gcp.project.storageService.bucket": {
-			Init: initGcpProjectStorageServiceBucket,
+			Init:   initGcpProjectStorageServiceBucket,
 			Create: createGcpProjectStorageServiceBucket,
 		},
 		"gcp.project.storageService.bucket.lifecycleRule": {
@@ -301,11 +300,11 @@ func init() {
 			Create: createGcpProjectStorageServiceBucketLifecycleRuleCondition,
 		},
 		"gcp.project.sqlService": {
-			Init: initGcpProjectSqlService,
+			Init:   initGcpProjectSqlService,
 			Create: createGcpProjectSqlService,
 		},
 		"gcp.project.sqlService.instance": {
-			Init: initGcpProjectSqlServiceInstance,
+			Init:   initGcpProjectSqlServiceInstance,
 			Create: createGcpProjectSqlServiceInstance,
 		},
 		"gcp.project.sqlService.instance.database": {
@@ -341,11 +340,11 @@ func init() {
 			Create: createGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy,
 		},
 		"gcp.project.bigqueryService": {
-			Init: initGcpProjectBigqueryService,
+			Init:   initGcpProjectBigqueryService,
 			Create: createGcpProjectBigqueryService,
 		},
 		"gcp.project.bigqueryService.dataset": {
-			Init: initGcpProjectBigqueryServiceDataset,
+			Init:   initGcpProjectBigqueryServiceDataset,
 			Create: createGcpProjectBigqueryServiceDataset,
 		},
 		"gcp.project.bigqueryService.dataset.accessEntry": {
@@ -365,11 +364,11 @@ func init() {
 			Create: createGcpProjectBigqueryServiceRoutine,
 		},
 		"gcp.project.dnsService": {
-			Init: initGcpProjectDnsService,
+			Init:   initGcpProjectDnsService,
 			Create: createGcpProjectDnsService,
 		},
 		"gcp.project.dnsService.managedzone": {
-			Init: initGcpProjectDnsServiceManagedzone,
+			Init:   initGcpProjectDnsServiceManagedzone,
 			Create: createGcpProjectDnsServiceManagedzone,
 		},
 		"gcp.project.dnsService.recordset": {
@@ -385,7 +384,7 @@ func init() {
 			Create: createGcpProjectGkeService,
 		},
 		"gcp.project.gkeService.cluster": {
-			Init: initGcpProjectGkeServiceCluster,
+			Init:   initGcpProjectGkeServiceCluster,
 			Create: createGcpProjectGkeServiceCluster,
 		},
 		"gcp.project.gkeService.cluster.addonsConfig": {
@@ -465,7 +464,7 @@ func init() {
 			Create: createGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes,
 		},
 		"gcp.project.pubsubService": {
-			Init: initGcpProjectPubsubService,
+			Init:   initGcpProjectPubsubService,
 			Create: createGcpProjectPubsubService,
 		},
 		"gcp.project.pubsubService.topic": {
@@ -497,11 +496,11 @@ func init() {
 			Create: createGcpProjectPubsubServiceSnapshot,
 		},
 		"gcp.project.kmsService": {
-			Init: initGcpProjectKmsService,
+			Init:   initGcpProjectKmsService,
 			Create: createGcpProjectKmsService,
 		},
 		"gcp.project.kmsService.keyring": {
-			Init: initGcpProjectKmsServiceKeyring,
+			Init:   initGcpProjectKmsServiceKeyring,
 			Create: createGcpProjectKmsServiceKeyring,
 		},
 		"gcp.project.kmsService.keyring.cryptokey": {
@@ -561,7 +560,7 @@ func init() {
 			Create: createGcpProjectIamService,
 		},
 		"gcp.project.iamService.serviceAccount": {
-			Init: initGcpProjectIamServiceServiceAccount,
+			Init:   initGcpProjectIamServiceServiceAccount,
 			Create: createGcpProjectIamServiceServiceAccount,
 		},
 		"gcp.project.iamService.serviceAccount.key": {
@@ -621,7 +620,7 @@ func init() {
 			Create: createGcpProjectDataprocServiceClusterVirtualClusterConfig,
 		},
 		"gcp.project.cloudRunService": {
-			Init: initGcpProjectCloudRunService,
+			Init:   initGcpProjectCloudRunService,
 			Create: createGcpProjectCloudRunService,
 		},
 		"gcp.project.cloudRunService.operation": {
@@ -665,7 +664,7 @@ func init() {
 			Create: createGcpAccessApprovalSettings,
 		},
 		"gcp.project.monitoringService": {
-			Init: initGcpProjectMonitoringService,
+			Init:   initGcpProjectMonitoringService,
 			Create: createGcpProjectMonitoringService,
 		},
 		"gcp.project.monitoringService.alertPolicy": {
@@ -705,7 +704,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -4465,11 +4464,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"gcp.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpOrganization).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpOrganization).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.organization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4503,9 +4502,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.folders.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpFolders).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpFolders).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.folders.parentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpFolders).ParentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4519,9 +4518,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.redisService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectRedisService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectRedisService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.redisService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4531,9 +4530,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.redisService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectRedisServiceInstance).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectRedisServiceInstance).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.redisService.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4643,9 +4642,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.redisService.instance.nodeInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.redisService.instance.nodeInfo.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4659,9 +4658,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.folder.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpFolder).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpFolder).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.folder.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpFolder).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4695,9 +4694,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.projects.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjects).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjects).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.projects.parentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjects).ParentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4711,9 +4710,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProject).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProject).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4839,9 +4838,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.service.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4867,9 +4866,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.recommendation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpRecommendation).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpRecommendation).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.recommendation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpRecommendation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4919,9 +4918,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.resourcemanager.binding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpResourcemanagerBinding).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpResourcemanagerBinding).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.resourcemanager.binding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpResourcemanagerBinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4935,9 +4934,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5003,9 +5002,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.address.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceAddress).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceAddress).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.address.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceAddress).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5079,9 +5078,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.forwardingRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceForwardingRule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceForwardingRule).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.forwardingRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceForwardingRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5191,9 +5190,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.region.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceRegion).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceRegion).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.region.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceRegion).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5223,9 +5222,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceZone).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceZone).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.zone.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceZone).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5247,9 +5246,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.machineType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceMachineType).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceMachineType).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.machineType.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceMachineType).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5295,9 +5294,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceInstance).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceInstance).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5455,9 +5454,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.serviceaccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceServiceaccount).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceServiceaccount).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.serviceaccount.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceServiceaccount).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5467,9 +5466,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.disk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceDisk).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceDisk).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.disk.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceDisk).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5539,9 +5538,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.attachedDisk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceAttachedDisk).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.attachedDisk.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceAttachedDisk).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5603,9 +5602,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceSnapshot).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceSnapshot).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.snapshot.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSnapshot).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5671,9 +5670,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceImage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceImage).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.image.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceImage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5723,9 +5722,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceFirewall).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceFirewall).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.firewall.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceFirewall).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5787,9 +5786,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceNetwork).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceNetwork).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.network.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5851,9 +5850,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.subnetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceSubnetwork).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceSubnetwork).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.subnetwork.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSubnetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5943,9 +5942,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.subnetwork.logConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceSubnetworkLogConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceSubnetworkLogConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.subnetwork.logConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSubnetworkLogConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5975,9 +5974,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.router.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceRouter).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceRouter).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.router.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceRouter).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6011,9 +6010,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.backendService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceBackendService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceBackendService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.backendService.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceBackendService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6147,9 +6146,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.backendService.backend.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceBackendServiceBackend).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceBackendServiceBackend).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.backendService.backend.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceBackendServiceBackend).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6203,9 +6202,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.computeService.backendService.cdnPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectComputeServiceBackendServiceCdnPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectComputeServiceBackendServiceCdnPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.computeService.backendService.cdnPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceBackendServiceCdnPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6259,9 +6258,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.storageService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectStorageService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectStorageService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.storageService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6271,9 +6270,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.storageService.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectStorageServiceBucket).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectStorageServiceBucket).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.storageService.bucket.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6335,9 +6334,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.storageService.bucket.lifecycleRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.storageService.bucket.lifecycleRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).Action, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleAction](v.Value, v.Error)
 		return
@@ -6347,9 +6346,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.storageService.bucket.lifecycleRuleAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.storageService.bucket.lifecycleRuleAction.storageClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleAction).StorageClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6359,9 +6358,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.storageService.bucket.lifecycleRuleCondition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.storageService.bucket.lifecycleRuleCondition.age": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition).Age, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -6411,9 +6410,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.sqlService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectSqlService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectSqlService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.sqlService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6423,9 +6422,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.sqlService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectSqlServiceInstance).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectSqlServiceInstance).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.sqlService.instance.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6527,9 +6526,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.sqlService.instance.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectSqlServiceInstanceDatabase).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectSqlServiceInstanceDatabase).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.sqlService.instance.database.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceDatabase).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6555,9 +6554,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.sqlService.instance.ipMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectSqlServiceInstanceIpMapping).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectSqlServiceInstanceIpMapping).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.sqlService.instance.ipMapping.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceIpMapping).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6575,9 +6574,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.sqlService.instance.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectSqlServiceInstanceSettings).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectSqlServiceInstanceSettings).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.sqlService.instance.settings.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettings).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6695,9 +6694,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.sqlService.instance.settings.backupconfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.sqlService.instance.settings.backupconfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6731,9 +6730,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.sqlService.instance.settings.denyMaintenancePeriod.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.sqlService.instance.settings.denyMaintenancePeriod.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6751,9 +6750,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6787,9 +6786,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.sqlService.instance.settings.maintenanceWindow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.sqlService.instance.settings.maintenanceWindow.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6807,9 +6806,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.sqlService.instance.settings.passwordValidationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.sqlService.instance.settings.passwordValidationPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6839,9 +6838,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.bigqueryService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectBigqueryService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectBigqueryService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.bigqueryService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6851,9 +6850,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.bigqueryService.dataset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectBigqueryServiceDataset).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectBigqueryServiceDataset).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.bigqueryService.dataset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceDataset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6911,9 +6910,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.bigqueryService.dataset.accessEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectBigqueryServiceDatasetAccessEntry).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectBigqueryServiceDatasetAccessEntry).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.bigqueryService.dataset.accessEntry.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceDatasetAccessEntry).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6947,9 +6946,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.bigqueryService.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectBigqueryServiceTable).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectBigqueryServiceTable).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.bigqueryService.table.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7051,9 +7050,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.bigqueryService.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectBigqueryServiceModel).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectBigqueryServiceModel).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.bigqueryService.model.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7103,9 +7102,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.bigqueryService.routine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectBigqueryServiceRoutine).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectBigqueryServiceRoutine).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.bigqueryService.routine.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceRoutine).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7139,9 +7138,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dnsService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDnsService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDnsService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dnsService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7155,9 +7154,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dnsService.managedzone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDnsServiceManagedzone).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDnsServiceManagedzone).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dnsService.managedzone.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceManagedzone).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7203,9 +7202,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dnsService.recordset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDnsServiceRecordset).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDnsServiceRecordset).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dnsService.recordset.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceRecordset).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7231,9 +7230,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dnsService.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDnsServicePolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDnsServicePolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dnsService.policy.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServicePolicy).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7267,9 +7266,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7279,9 +7278,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceCluster).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceCluster).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7435,9 +7434,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.addonsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.addonsConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7491,9 +7490,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.ipAllocationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterIpAllocationPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterIpAllocationPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.ipAllocationPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterIpAllocationPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7547,9 +7546,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.networkConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.networkConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7611,9 +7610,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepool).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepool).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7659,9 +7658,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.autoscaling.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.autoscaling.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -7687,9 +7686,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.networkConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.networkConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7707,9 +7706,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7719,9 +7718,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7835,9 +7834,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.accelerator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.accelerator.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7859,9 +7858,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7875,9 +7874,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.nodeTaint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.nodeTaint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7895,9 +7894,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7907,9 +7906,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7923,9 +7922,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7935,9 +7934,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7955,9 +7954,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7967,9 +7966,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7979,9 +7978,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7991,9 +7990,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8003,9 +8002,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.pubsubService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectPubsubService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectPubsubService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.pubsubService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8023,9 +8022,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.pubsubService.topic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectPubsubServiceTopic).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectPubsubServiceTopic).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.pubsubService.topic.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceTopic).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8039,9 +8038,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.pubsubService.topic.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectPubsubServiceTopicConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectPubsubServiceTopicConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.pubsubService.topic.config.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceTopicConfig).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8063,9 +8062,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.pubsubService.topic.config.messagestoragepolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.pubsubService.topic.config.messagestoragepolicy.configId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy).ConfigId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8075,9 +8074,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.pubsubService.subscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectPubsubServiceSubscription).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectPubsubServiceSubscription).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.pubsubService.subscription.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSubscription).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8091,9 +8090,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.pubsubService.subscription.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.pubsubService.subscription.config.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8131,9 +8130,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.pubsubService.subscription.config.pushconfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.pubsubService.subscription.config.pushconfig.configId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).ConfigId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8147,9 +8146,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.pubsubService.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectPubsubServiceSnapshot).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectPubsubServiceSnapshot).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.pubsubService.snapshot.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSnapshot).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8167,9 +8166,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.kmsService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectKmsService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectKmsService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.kmsService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8183,9 +8182,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.kmsService.keyring.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectKmsServiceKeyring).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectKmsServiceKeyring).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.kmsService.keyring.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyring).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8211,9 +8210,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.kmsService.keyring.cryptokey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectKmsServiceKeyringCryptokey).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.kmsService.keyring.cryptokey.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8271,9 +8270,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.kmsService.keyring.cryptokey.version.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8335,9 +8334,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.attestation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.kmsService.keyring.cryptokey.version.attestation.cryptoKeyVersionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation).CryptoKeyVersionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8351,9 +8350,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains.cryptoKeyVersionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains).CryptoKeyVersionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8371,9 +8370,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.cryptoKeyVersionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions).CryptoKeyVersionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8387,9 +8386,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.essentialContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpEssentialContact).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpEssentialContact).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.essentialContact.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpEssentialContact).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8415,9 +8414,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectApiKey).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectApiKey).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.apiKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8459,9 +8458,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.apiKey.restrictions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectApiKeyRestrictions).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectApiKeyRestrictions).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.apiKey.restrictions.parentResourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKeyRestrictions).ParentResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8487,9 +8486,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.loggingservice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectLoggingservice).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectLoggingservice).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.loggingservice.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingservice).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8507,9 +8506,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.loggingservice.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectLoggingserviceBucket).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectLoggingserviceBucket).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.loggingservice.bucket.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceBucket).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8555,9 +8554,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.loggingservice.bucket.indexConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectLoggingserviceBucketIndexConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectLoggingserviceBucketIndexConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.loggingservice.bucket.indexConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceBucketIndexConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8575,9 +8574,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.loggingservice.metric.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectLoggingserviceMetric).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectLoggingserviceMetric).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.loggingservice.metric.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceMetric).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8599,9 +8598,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.loggingservice.sink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectLoggingserviceSink).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectLoggingserviceSink).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.loggingservice.sink.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceSink).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8631,9 +8630,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.iamService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectIamService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectIamService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.iamService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8643,9 +8642,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.iamService.serviceAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectIamServiceServiceAccount).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectIamServiceServiceAccount).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.iamService.serviceAccount.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccount).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8683,9 +8682,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.iamService.serviceAccount.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectIamServiceServiceAccountKey).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectIamServiceServiceAccountKey).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.iamService.serviceAccount.key.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8715,9 +8714,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudFunction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudFunction).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudFunction).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudFunction.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunction).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8851,9 +8850,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8871,9 +8870,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceCluster).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceCluster).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceCluster).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8911,9 +8910,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceClusterConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceClusterConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.parentResourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfig).ParentResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8983,9 +8982,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9051,9 +9050,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9071,9 +9070,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9091,9 +9090,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.gkeCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceClusterConfigGkeCluster).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceClusterConfigGkeCluster).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.gkeCluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfigGkeCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9107,9 +9106,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.lifecycle.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceClusterConfigLifecycle).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceClusterConfigLifecycle).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.lifecycle.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfigLifecycle).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9131,9 +9130,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceClusterConfigInstance).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceClusterConfigInstance).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfigInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9183,9 +9182,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.instance.diskConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.instance.diskConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9207,9 +9206,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.status.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceClusterStatus).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceClusterStatus).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.status.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterStatus).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9231,9 +9230,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.dataprocService.cluster.virtualClusterConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectDataprocServiceClusterVirtualClusterConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectDataprocServiceClusterVirtualClusterConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.dataprocService.cluster.virtualClusterConfig.parentResourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterVirtualClusterConfig).ParentResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9251,9 +9250,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudRunService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudRunService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudRunService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudRunService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9275,9 +9274,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudRunService.operation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudRunServiceOperation).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudRunServiceOperation).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudRunService.operation.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceOperation).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9291,9 +9290,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudRunService.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudRunServiceService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudRunServiceService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudRunService.service.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9399,9 +9398,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudRunService.service.revisionTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudRunServiceServiceRevisionTemplate).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudRunServiceServiceRevisionTemplate).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudRunService.service.revisionTemplate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceServiceRevisionTemplate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9463,9 +9462,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudRunService.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudRunServiceContainer).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudRunServiceContainer).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudRunService.container.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceContainer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9515,9 +9514,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudRunService.container.probe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudRunServiceContainerProbe).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudRunServiceContainerProbe).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudRunService.container.probe.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceContainerProbe).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9547,9 +9546,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudRunService.condition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudRunServiceCondition).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudRunServiceCondition).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudRunService.condition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceCondition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9575,9 +9574,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudRunService.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudRunServiceJob).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudRunServiceJob).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudRunService.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceJob).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9667,9 +9666,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudRunService.job.executionTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudRunServiceJobExecutionTemplate).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudRunServiceJobExecutionTemplate).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudRunService.job.executionTemplate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceJobExecutionTemplate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9695,9 +9694,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.cloudRunService.job.executionTemplate.taskTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.cloudRunService.job.executionTemplate.taskTemplate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9743,9 +9742,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.accessApprovalSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpAccessApprovalSettings).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpAccessApprovalSettings).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.accessApprovalSettings.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpAccessApprovalSettings).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9775,9 +9774,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.monitoringService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectMonitoringService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectMonitoringService).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.monitoringService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMonitoringService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9787,9 +9786,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.monitoringService.alertPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectMonitoringServiceAlertPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectMonitoringServiceAlertPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.monitoringService.alertPolicy.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMonitoringServiceAlertPolicy).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9851,17 +9850,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.binaryAuthorizationControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectBinaryAuthorizationControl).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectBinaryAuthorizationControl).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.binaryAuthorizationControl.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBinaryAuthorizationControl).Policy, ok = plugin.RawToTValue[*mqlGcpProjectBinaryAuthorizationControlPolicy](v.Value, v.Error)
 		return
 	},
 	"gcp.project.binaryAuthorizationControl.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.binaryAuthorizationControl.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBinaryAuthorizationControlPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9899,9 +9898,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"gcp.project.binaryAuthorizationControl.admissionRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).__id, ok = v.Value.(string)
+		return
+	},
 	"gcp.project.binaryAuthorizationControl.admissionRule.evaluationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).EvaluationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9917,13 +9916,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[gcp] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[gcp] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[gcp] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[gcp] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -9941,16 +9940,16 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlGcpOrganization for the gcp.organization resource
 type mqlGcpOrganization struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpOrganizationInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	State plugin.TValue[string]
-	LifecycleState plugin.TValue[string]
-	IamPolicy plugin.TValue[[]any]
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	State                  plugin.TValue[string]
+	LifecycleState         plugin.TValue[string]
+	IamPolicy              plugin.TValue[[]any]
 	AccessApprovalSettings plugin.TValue[*mqlGcpAccessApprovalSettings]
-	Folders plugin.TValue[*mqlGcpFolders]
-	Projects plugin.TValue[*mqlGcpProjects]
+	Folders                plugin.TValue[*mqlGcpFolders]
+	Projects               plugin.TValue[*mqlGcpProjects]
 }
 
 // createGcpOrganization creates a new instance of this resource
@@ -9965,7 +9964,7 @@ func createGcpOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10079,11 +10078,11 @@ func (c *mqlGcpOrganization) GetProjects() *plugin.TValue[*mqlGcpProjects] {
 // mqlGcpFolders for the gcp.folders resource
 type mqlGcpFolders struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpFoldersInternal it will be used here
 	ParentId plugin.TValue[string]
 	Children plugin.TValue[[]any]
-	List plugin.TValue[[]any]
+	List     plugin.TValue[[]any]
 }
 
 // createGcpFolders creates a new instance of this resource
@@ -10098,7 +10097,7 @@ func createGcpFolders(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10162,7 +10161,7 @@ func (c *mqlGcpFolders) GetList() *plugin.TValue[[]any] {
 // mqlGcpProjectRedisService for the gcp.project.redisService resource
 type mqlGcpProjectRedisService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectRedisServiceInternal it will be used here
 	ProjectId plugin.TValue[string]
 	Instances plugin.TValue[[]any]
@@ -10180,7 +10179,7 @@ func createGcpProjectRedisService(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10228,34 +10227,34 @@ func (c *mqlGcpProjectRedisService) GetInstances() *plugin.TValue[[]any] {
 // mqlGcpProjectRedisServiceInstance for the gcp.project.redisService.instance resource
 type mqlGcpProjectRedisServiceInstance struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectRedisServiceInstanceInternal it will be used here
-	Name plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	LocationId plugin.TValue[string]
-	RedisVersion plugin.TValue[string]
-	ReservedIpRange plugin.TValue[string]
-	SecondaryIpRange plugin.TValue[string]
-	Host plugin.TValue[string]
-	Port plugin.TValue[int64]
-	CurrentLocationId plugin.TValue[string]
-	CreateTime plugin.TValue[*time.Time]
-	State plugin.TValue[string]
-	StatusMessage plugin.TValue[string]
-	RedisConfigs plugin.TValue[map[string]any]
-	MemorySizeGb plugin.TValue[int64]
-	AuthorizedNetwork plugin.TValue[string]
-	PersistenceIamIdentity plugin.TValue[string]
-	ConnectMode plugin.TValue[string]
-	AuthEnabled plugin.TValue[bool]
-	ReplicaCount plugin.TValue[int64]
-	Nodes plugin.TValue[[]any]
-	ReadEndpoint plugin.TValue[string]
-	ReadEndpointPort plugin.TValue[int64]
-	CustomerManagedKey plugin.TValue[string]
-	MaintenanceVersion plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	ProjectId                    plugin.TValue[string]
+	DisplayName                  plugin.TValue[string]
+	Labels                       plugin.TValue[map[string]any]
+	LocationId                   plugin.TValue[string]
+	RedisVersion                 plugin.TValue[string]
+	ReservedIpRange              plugin.TValue[string]
+	SecondaryIpRange             plugin.TValue[string]
+	Host                         plugin.TValue[string]
+	Port                         plugin.TValue[int64]
+	CurrentLocationId            plugin.TValue[string]
+	CreateTime                   plugin.TValue[*time.Time]
+	State                        plugin.TValue[string]
+	StatusMessage                plugin.TValue[string]
+	RedisConfigs                 plugin.TValue[map[string]any]
+	MemorySizeGb                 plugin.TValue[int64]
+	AuthorizedNetwork            plugin.TValue[string]
+	PersistenceIamIdentity       plugin.TValue[string]
+	ConnectMode                  plugin.TValue[string]
+	AuthEnabled                  plugin.TValue[bool]
+	ReplicaCount                 plugin.TValue[int64]
+	Nodes                        plugin.TValue[[]any]
+	ReadEndpoint                 plugin.TValue[string]
+	ReadEndpointPort             plugin.TValue[int64]
+	CustomerManagedKey           plugin.TValue[string]
+	MaintenanceVersion           plugin.TValue[string]
 	AvailableMaintenanceVersions plugin.TValue[[]any]
 }
 
@@ -10271,7 +10270,7 @@ func createGcpProjectRedisServiceInstance(runtime *plugin.Runtime, args map[stri
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10407,11 +10406,11 @@ func (c *mqlGcpProjectRedisServiceInstance) GetAvailableMaintenanceVersions() *p
 // mqlGcpProjectRedisServiceInstanceNodeInfo for the gcp.project.redisService.instance.nodeInfo resource
 type mqlGcpProjectRedisServiceInstanceNodeInfo struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectRedisServiceInstanceNodeInfoInternal it will be used here
 	ProjectId plugin.TValue[string]
-	Id plugin.TValue[string]
-	Zone plugin.TValue[string]
+	Id        plugin.TValue[string]
+	Zone      plugin.TValue[string]
 }
 
 // createGcpProjectRedisServiceInstanceNodeInfo creates a new instance of this resource
@@ -10426,7 +10425,7 @@ func createGcpProjectRedisServiceInstanceNodeInfo(runtime *plugin.Runtime, args 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10466,15 +10465,15 @@ func (c *mqlGcpProjectRedisServiceInstanceNodeInfo) GetZone() *plugin.TValue[str
 // mqlGcpFolder for the gcp.folder resource
 type mqlGcpFolder struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpFolderInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Updated plugin.TValue[*time.Time]
+	Id       plugin.TValue[string]
+	Name     plugin.TValue[string]
+	Created  plugin.TValue[*time.Time]
+	Updated  plugin.TValue[*time.Time]
 	ParentId plugin.TValue[string]
-	State plugin.TValue[string]
-	Folders plugin.TValue[*mqlGcpFolders]
+	State    plugin.TValue[string]
+	Folders  plugin.TValue[*mqlGcpFolders]
 	Projects plugin.TValue[*mqlGcpProjects]
 }
 
@@ -10490,7 +10489,7 @@ func createGcpFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10574,11 +10573,11 @@ func (c *mqlGcpFolder) GetProjects() *plugin.TValue[*mqlGcpProjects] {
 // mqlGcpProjects for the gcp.projects resource
 type mqlGcpProjects struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectsInternal it will be used here
 	ParentId plugin.TValue[string]
 	Children plugin.TValue[[]any]
-	List plugin.TValue[[]any]
+	List     plugin.TValue[[]any]
 }
 
 // createGcpProjects creates a new instance of this resource
@@ -10593,7 +10592,7 @@ func createGcpProjects(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10657,39 +10656,39 @@ func (c *mqlGcpProjects) GetList() *plugin.TValue[[]any] {
 // mqlGcpProject for the gcp.project resource
 type mqlGcpProject struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGcpProjectInternal
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	ParentId plugin.TValue[string]
-	Number plugin.TValue[string]
-	State plugin.TValue[string]
-	LifecycleState plugin.TValue[string]
-	CreateTime plugin.TValue[*time.Time]
-	Labels plugin.TValue[map[string]any]
-	IamPolicy plugin.TValue[[]any]
-	Services plugin.TValue[[]any]
-	Recommendations plugin.TValue[[]any]
-	Gke plugin.TValue[*mqlGcpProjectGkeService]
-	Compute plugin.TValue[*mqlGcpProjectComputeService]
-	Pubsub plugin.TValue[*mqlGcpProjectPubsubService]
-	Kms plugin.TValue[*mqlGcpProjectKmsService]
-	EssentialContacts plugin.TValue[[]any]
-	ApiKeys plugin.TValue[[]any]
-	Logging plugin.TValue[*mqlGcpProjectLoggingservice]
-	Sql plugin.TValue[*mqlGcpProjectSqlService]
-	Iam plugin.TValue[*mqlGcpProjectIamService]
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	ParentId               plugin.TValue[string]
+	Number                 plugin.TValue[string]
+	State                  plugin.TValue[string]
+	LifecycleState         plugin.TValue[string]
+	CreateTime             plugin.TValue[*time.Time]
+	Labels                 plugin.TValue[map[string]any]
+	IamPolicy              plugin.TValue[[]any]
+	Services               plugin.TValue[[]any]
+	Recommendations        plugin.TValue[[]any]
+	Gke                    plugin.TValue[*mqlGcpProjectGkeService]
+	Compute                plugin.TValue[*mqlGcpProjectComputeService]
+	Pubsub                 plugin.TValue[*mqlGcpProjectPubsubService]
+	Kms                    plugin.TValue[*mqlGcpProjectKmsService]
+	EssentialContacts      plugin.TValue[[]any]
+	ApiKeys                plugin.TValue[[]any]
+	Logging                plugin.TValue[*mqlGcpProjectLoggingservice]
+	Sql                    plugin.TValue[*mqlGcpProjectSqlService]
+	Iam                    plugin.TValue[*mqlGcpProjectIamService]
 	CommonInstanceMetadata plugin.TValue[map[string]any]
-	Dns plugin.TValue[*mqlGcpProjectDnsService]
-	Bigquery plugin.TValue[*mqlGcpProjectBigqueryService]
-	CloudFunctions plugin.TValue[[]any]
-	Dataproc plugin.TValue[*mqlGcpProjectDataprocService]
-	CloudRun plugin.TValue[*mqlGcpProjectCloudRunService]
+	Dns                    plugin.TValue[*mqlGcpProjectDnsService]
+	Bigquery               plugin.TValue[*mqlGcpProjectBigqueryService]
+	CloudFunctions         plugin.TValue[[]any]
+	Dataproc               plugin.TValue[*mqlGcpProjectDataprocService]
+	CloudRun               plugin.TValue[*mqlGcpProjectCloudRunService]
 	AccessApprovalSettings plugin.TValue[*mqlGcpAccessApprovalSettings]
-	Storage plugin.TValue[*mqlGcpProjectStorageService]
-	Monitoring plugin.TValue[*mqlGcpProjectMonitoringService]
-	BinaryAuthorization plugin.TValue[*mqlGcpProjectBinaryAuthorizationControl]
-	Redis plugin.TValue[*mqlGcpProjectRedisService]
+	Storage                plugin.TValue[*mqlGcpProjectStorageService]
+	Monitoring             plugin.TValue[*mqlGcpProjectMonitoringService]
+	BinaryAuthorization    plugin.TValue[*mqlGcpProjectBinaryAuthorizationControl]
+	Redis                  plugin.TValue[*mqlGcpProjectRedisService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -10704,7 +10703,7 @@ func createGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11136,14 +11135,14 @@ func (c *mqlGcpProject) GetRedis() *plugin.TValue[*mqlGcpProjectRedisService] {
 // mqlGcpService for the gcp.service resource
 type mqlGcpService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpServiceInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
+	ProjectId  plugin.TValue[string]
+	Name       plugin.TValue[string]
 	ParentName plugin.TValue[string]
-	Title plugin.TValue[string]
-	State plugin.TValue[string]
-	Enabled plugin.TValue[bool]
+	Title      plugin.TValue[string]
+	State      plugin.TValue[string]
+	Enabled    plugin.TValue[bool]
 }
 
 // createGcpService creates a new instance of this resource
@@ -11158,7 +11157,7 @@ func createGcpService(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11212,20 +11211,20 @@ func (c *mqlGcpService) GetEnabled() *plugin.TValue[bool] {
 // mqlGcpRecommendation for the gcp.recommendation resource
 type mqlGcpRecommendation struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpRecommendationInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	ZoneName plugin.TValue[string]
-	Name plugin.TValue[string]
-	Recommender plugin.TValue[string]
-	PrimaryImpact plugin.TValue[any]
+	Id               plugin.TValue[string]
+	ProjectId        plugin.TValue[string]
+	ZoneName         plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Recommender      plugin.TValue[string]
+	PrimaryImpact    plugin.TValue[any]
 	AdditionalImpact plugin.TValue[[]any]
-	Content plugin.TValue[any]
-	Category plugin.TValue[string]
-	Priority plugin.TValue[string]
-	LastRefreshTime plugin.TValue[*time.Time]
-	State plugin.TValue[any]
+	Content          plugin.TValue[any]
+	Category         plugin.TValue[string]
+	Priority         plugin.TValue[string]
+	LastRefreshTime  plugin.TValue[*time.Time]
+	State            plugin.TValue[any]
 }
 
 // createGcpRecommendation creates a new instance of this resource
@@ -11240,7 +11239,7 @@ func createGcpRecommendation(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11316,11 +11315,11 @@ func (c *mqlGcpRecommendation) GetState() *plugin.TValue[any] {
 // mqlGcpResourcemanagerBinding for the gcp.resourcemanager.binding resource
 type mqlGcpResourcemanagerBinding struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpResourcemanagerBindingInternal it will be used here
-	Id plugin.TValue[string]
+	Id      plugin.TValue[string]
 	Members plugin.TValue[[]any]
-	Role plugin.TValue[string]
+	Role    plugin.TValue[string]
 }
 
 // createGcpResourcemanagerBinding creates a new instance of this resource
@@ -11335,7 +11334,7 @@ func createGcpResourcemanagerBinding(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11375,23 +11374,23 @@ func (c *mqlGcpResourcemanagerBinding) GetRole() *plugin.TValue[string] {
 // mqlGcpProjectComputeService for the gcp.project.computeService resource
 type mqlGcpProjectComputeService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Enabled plugin.TValue[bool]
-	Instances plugin.TValue[[]any]
-	Snapshots plugin.TValue[[]any]
-	Disks plugin.TValue[[]any]
-	Images plugin.TValue[[]any]
-	Firewalls plugin.TValue[[]any]
-	Networks plugin.TValue[[]any]
-	Subnetworks plugin.TValue[[]any]
-	Routers plugin.TValue[[]any]
-	MachineTypes plugin.TValue[[]any]
-	Regions plugin.TValue[[]any]
-	Zones plugin.TValue[[]any]
+	ProjectId       plugin.TValue[string]
+	Enabled         plugin.TValue[bool]
+	Instances       plugin.TValue[[]any]
+	Snapshots       plugin.TValue[[]any]
+	Disks           plugin.TValue[[]any]
+	Images          plugin.TValue[[]any]
+	Firewalls       plugin.TValue[[]any]
+	Networks        plugin.TValue[[]any]
+	Subnetworks     plugin.TValue[[]any]
+	Routers         plugin.TValue[[]any]
+	MachineTypes    plugin.TValue[[]any]
+	Regions         plugin.TValue[[]any]
+	Zones           plugin.TValue[[]any]
 	BackendServices plugin.TValue[[]any]
-	Addresses plugin.TValue[[]any]
+	Addresses       plugin.TValue[[]any]
 	ForwardingRules plugin.TValue[[]any]
 }
 
@@ -11407,7 +11406,7 @@ func createGcpProjectComputeService(runtime *plugin.Runtime, args map[string]*ll
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11669,26 +11668,26 @@ func (c *mqlGcpProjectComputeService) GetForwardingRules() *plugin.TValue[[]any]
 // mqlGcpProjectComputeServiceAddress for the gcp.project.computeService.address resource
 type mqlGcpProjectComputeServiceAddress struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceAddressInternal it will be used here
-	Id plugin.TValue[string]
-	Address plugin.TValue[string]
-	AddressType plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Description plugin.TValue[string]
-	IpVersion plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Address          plugin.TValue[string]
+	AddressType      plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	Description      plugin.TValue[string]
+	IpVersion        plugin.TValue[string]
 	Ipv6EndpointType plugin.TValue[string]
-	Name plugin.TValue[string]
-	NetworkUrl plugin.TValue[string]
-	Network plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
-	NetworkTier plugin.TValue[string]
-	PrefixLength plugin.TValue[int64]
-	Purpose plugin.TValue[string]
-	RegionUrl plugin.TValue[string]
-	Status plugin.TValue[string]
-	SubnetworkUrl plugin.TValue[string]
-	Subnetwork plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
-	ResourceUrls plugin.TValue[[]any]
+	Name             plugin.TValue[string]
+	NetworkUrl       plugin.TValue[string]
+	Network          plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	NetworkTier      plugin.TValue[string]
+	PrefixLength     plugin.TValue[int64]
+	Purpose          plugin.TValue[string]
+	RegionUrl        plugin.TValue[string]
+	Status           plugin.TValue[string]
+	SubnetworkUrl    plugin.TValue[string]
+	Subnetwork       plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
+	ResourceUrls     plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceAddress creates a new instance of this resource
@@ -11703,7 +11702,7 @@ func createGcpProjectComputeServiceAddress(runtime *plugin.Runtime, args map[str
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11827,35 +11826,35 @@ func (c *mqlGcpProjectComputeServiceAddress) GetResourceUrls() *plugin.TValue[[]
 // mqlGcpProjectComputeServiceForwardingRule for the gcp.project.computeService.forwardingRule resource
 type mqlGcpProjectComputeServiceForwardingRule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceForwardingRuleInternal it will be used here
-	Id plugin.TValue[string]
-	IpAddress plugin.TValue[string]
-	IpProtocol plugin.TValue[string]
-	AllPorts plugin.TValue[bool]
-	AllowGlobalAccess plugin.TValue[bool]
-	BackendService plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Description plugin.TValue[string]
-	IpVersion plugin.TValue[string]
-	IsMirroringCollector plugin.TValue[bool]
-	Labels plugin.TValue[map[string]any]
-	LoadBalancingScheme plugin.TValue[string]
-	MetadataFilters plugin.TValue[[]any]
-	Name plugin.TValue[string]
-	NetworkUrl plugin.TValue[string]
-	Network plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
-	NetworkTier plugin.TValue[string]
-	NoAutomateDnsZone plugin.TValue[bool]
-	PortRange plugin.TValue[string]
-	Ports plugin.TValue[[]any]
-	RegionUrl plugin.TValue[string]
+	Id                            plugin.TValue[string]
+	IpAddress                     plugin.TValue[string]
+	IpProtocol                    plugin.TValue[string]
+	AllPorts                      plugin.TValue[bool]
+	AllowGlobalAccess             plugin.TValue[bool]
+	BackendService                plugin.TValue[string]
+	Created                       plugin.TValue[*time.Time]
+	Description                   plugin.TValue[string]
+	IpVersion                     plugin.TValue[string]
+	IsMirroringCollector          plugin.TValue[bool]
+	Labels                        plugin.TValue[map[string]any]
+	LoadBalancingScheme           plugin.TValue[string]
+	MetadataFilters               plugin.TValue[[]any]
+	Name                          plugin.TValue[string]
+	NetworkUrl                    plugin.TValue[string]
+	Network                       plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	NetworkTier                   plugin.TValue[string]
+	NoAutomateDnsZone             plugin.TValue[bool]
+	PortRange                     plugin.TValue[string]
+	Ports                         plugin.TValue[[]any]
+	RegionUrl                     plugin.TValue[string]
 	ServiceDirectoryRegistrations plugin.TValue[[]any]
-	ServiceLabel plugin.TValue[string]
-	ServiceName plugin.TValue[string]
-	SubnetworkUrl plugin.TValue[string]
-	Subnetwork plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
-	TargetUrl plugin.TValue[string]
+	ServiceLabel                  plugin.TValue[string]
+	ServiceName                   plugin.TValue[string]
+	SubnetworkUrl                 plugin.TValue[string]
+	Subnetwork                    plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
+	TargetUrl                     plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceForwardingRule creates a new instance of this resource
@@ -11870,7 +11869,7 @@ func createGcpProjectComputeServiceForwardingRule(runtime *plugin.Runtime, args 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12030,15 +12029,15 @@ func (c *mqlGcpProjectComputeServiceForwardingRule) GetTargetUrl() *plugin.TValu
 // mqlGcpProjectComputeServiceRegion for the gcp.project.computeService.region resource
 type mqlGcpProjectComputeServiceRegion struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceRegionInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Status plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Quotas plugin.TValue[map[string]any]
-	Deprecated plugin.TValue[any]
+	Status      plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	Quotas      plugin.TValue[map[string]any]
+	Deprecated  plugin.TValue[any]
 }
 
 // createGcpProjectComputeServiceRegion creates a new instance of this resource
@@ -12053,7 +12052,7 @@ func createGcpProjectComputeServiceRegion(runtime *plugin.Runtime, args map[stri
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12109,13 +12108,13 @@ func (c *mqlGcpProjectComputeServiceRegion) GetDeprecated() *plugin.TValue[any] 
 // mqlGcpProjectComputeServiceZone for the gcp.project.computeService.zone resource
 type mqlGcpProjectComputeServiceZone struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceZoneInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Status plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
+	Status      plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
 }
 
 // createGcpProjectComputeServiceZone creates a new instance of this resource
@@ -12130,7 +12129,7 @@ func createGcpProjectComputeServiceZone(runtime *plugin.Runtime, args map[string
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12178,19 +12177,19 @@ func (c *mqlGcpProjectComputeServiceZone) GetCreated() *plugin.TValue[*time.Time
 // mqlGcpProjectComputeServiceMachineType for the gcp.project.computeService.machineType resource
 type mqlGcpProjectComputeServiceMachineType struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceMachineTypeInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	GuestCpus plugin.TValue[int64]
-	IsSharedCpu plugin.TValue[bool]
-	MaximumPersistentDisks plugin.TValue[int64]
+	Id                           plugin.TValue[string]
+	ProjectId                    plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	GuestCpus                    plugin.TValue[int64]
+	IsSharedCpu                  plugin.TValue[bool]
+	MaximumPersistentDisks       plugin.TValue[int64]
 	MaximumPersistentDisksSizeGb plugin.TValue[int64]
-	MemoryMb plugin.TValue[int64]
-	Created plugin.TValue[*time.Time]
-	Zone plugin.TValue[*mqlGcpProjectComputeServiceZone]
+	MemoryMb                     plugin.TValue[int64]
+	Created                      plugin.TValue[*time.Time]
+	Zone                         plugin.TValue[*mqlGcpProjectComputeServiceZone]
 }
 
 // createGcpProjectComputeServiceMachineType creates a new instance of this resource
@@ -12205,7 +12204,7 @@ func createGcpProjectComputeServiceMachineType(runtime *plugin.Runtime, args map
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12277,47 +12276,47 @@ func (c *mqlGcpProjectComputeServiceMachineType) GetZone() *plugin.TValue[*mqlGc
 // mqlGcpProjectComputeServiceInstance for the gcp.project.computeService.instance resource
 type mqlGcpProjectComputeServiceInstance struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGcpProjectComputeServiceInstanceInternal
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	ProjectId                  plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Description                plugin.TValue[string]
 	ConfidentialInstanceConfig plugin.TValue[any]
-	CanIpForward plugin.TValue[bool]
-	CpuPlatform plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	DeletionProtection plugin.TValue[bool]
-	EnableDisplay plugin.TValue[bool]
-	GuestAccelerators plugin.TValue[[]any]
-	Fingerprint plugin.TValue[string]
-	Hostname plugin.TValue[string]
-	KeyRevocationActionType plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	LastStartTimestamp plugin.TValue[*time.Time]
-	LastStopTimestamp plugin.TValue[*time.Time]
-	LastSuspendedTimestamp plugin.TValue[*time.Time]
-	Metadata plugin.TValue[map[string]any]
-	MinCpuPlatform plugin.TValue[string]
-	NetworkInterfaces plugin.TValue[[]any]
-	PrivateIpv6GoogleAccess plugin.TValue[string]
-	ReservationAffinity plugin.TValue[any]
-	ResourcePolicies plugin.TValue[[]any]
+	CanIpForward               plugin.TValue[bool]
+	CpuPlatform                plugin.TValue[string]
+	Created                    plugin.TValue[*time.Time]
+	DeletionProtection         plugin.TValue[bool]
+	EnableDisplay              plugin.TValue[bool]
+	GuestAccelerators          plugin.TValue[[]any]
+	Fingerprint                plugin.TValue[string]
+	Hostname                   plugin.TValue[string]
+	KeyRevocationActionType    plugin.TValue[string]
+	Labels                     plugin.TValue[map[string]any]
+	LastStartTimestamp         plugin.TValue[*time.Time]
+	LastStopTimestamp          plugin.TValue[*time.Time]
+	LastSuspendedTimestamp     plugin.TValue[*time.Time]
+	Metadata                   plugin.TValue[map[string]any]
+	MinCpuPlatform             plugin.TValue[string]
+	NetworkInterfaces          plugin.TValue[[]any]
+	PrivateIpv6GoogleAccess    plugin.TValue[string]
+	ReservationAffinity        plugin.TValue[any]
+	ResourcePolicies           plugin.TValue[[]any]
 	PhysicalHostResourceStatus plugin.TValue[string]
-	Scheduling plugin.TValue[any]
-	EnableIntegrityMonitoring plugin.TValue[bool]
-	EnableSecureBoot plugin.TValue[bool]
-	EnableVtpm plugin.TValue[bool]
-	StartRestricted plugin.TValue[bool]
-	Status plugin.TValue[string]
-	StatusMessage plugin.TValue[string]
-	SourceMachineImage plugin.TValue[string]
-	Tags plugin.TValue[[]any]
-	TotalEgressBandwidthTier plugin.TValue[string]
-	ServiceAccounts plugin.TValue[[]any]
-	Disks plugin.TValue[[]any]
-	MachineType plugin.TValue[*mqlGcpProjectComputeServiceMachineType]
-	Zone plugin.TValue[*mqlGcpProjectComputeServiceZone]
+	Scheduling                 plugin.TValue[any]
+	EnableIntegrityMonitoring  plugin.TValue[bool]
+	EnableSecureBoot           plugin.TValue[bool]
+	EnableVtpm                 plugin.TValue[bool]
+	StartRestricted            plugin.TValue[bool]
+	Status                     plugin.TValue[string]
+	StatusMessage              plugin.TValue[string]
+	SourceMachineImage         plugin.TValue[string]
+	Tags                       plugin.TValue[[]any]
+	TotalEgressBandwidthTier   plugin.TValue[string]
+	ServiceAccounts            plugin.TValue[[]any]
+	Disks                      plugin.TValue[[]any]
+	MachineType                plugin.TValue[*mqlGcpProjectComputeServiceMachineType]
+	Zone                       plugin.TValue[*mqlGcpProjectComputeServiceZone]
 }
 
 // createGcpProjectComputeServiceInstance creates a new instance of this resource
@@ -12332,7 +12331,7 @@ func createGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12528,9 +12527,9 @@ func (c *mqlGcpProjectComputeServiceInstance) GetZone() *plugin.TValue[*mqlGcpPr
 // mqlGcpProjectComputeServiceServiceaccount for the gcp.project.computeService.serviceaccount resource
 type mqlGcpProjectComputeServiceServiceaccount struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceServiceaccountInternal it will be used here
-	Email plugin.TValue[string]
+	Email  plugin.TValue[string]
 	Scopes plugin.TValue[[]any]
 }
 
@@ -12546,7 +12545,7 @@ func createGcpProjectComputeServiceServiceaccount(runtime *plugin.Runtime, args 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12582,25 +12581,25 @@ func (c *mqlGcpProjectComputeServiceServiceaccount) GetScopes() *plugin.TValue[[
 // mqlGcpProjectComputeServiceDisk for the gcp.project.computeService.disk resource
 type mqlGcpProjectComputeServiceDisk struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceDiskInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Architecture plugin.TValue[string]
-	Description plugin.TValue[string]
-	GuestOsFeatures plugin.TValue[[]any]
-	Labels plugin.TValue[map[string]any]
-	LastAttachTimestamp plugin.TValue[*time.Time]
-	LastDetachTimestamp plugin.TValue[*time.Time]
-	Licenses plugin.TValue[[]any]
-	LocationHint plugin.TValue[string]
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Architecture           plugin.TValue[string]
+	Description            plugin.TValue[string]
+	GuestOsFeatures        plugin.TValue[[]any]
+	Labels                 plugin.TValue[map[string]any]
+	LastAttachTimestamp    plugin.TValue[*time.Time]
+	LastDetachTimestamp    plugin.TValue[*time.Time]
+	Licenses               plugin.TValue[[]any]
+	LocationHint           plugin.TValue[string]
 	PhysicalBlockSizeBytes plugin.TValue[int64]
-	ProvisionedIops plugin.TValue[int64]
-	SizeGb plugin.TValue[int64]
-	Status plugin.TValue[string]
-	Zone plugin.TValue[*mqlGcpProjectComputeServiceZone]
-	Created plugin.TValue[*time.Time]
-	DiskEncryptionKey plugin.TValue[any]
+	ProvisionedIops        plugin.TValue[int64]
+	SizeGb                 plugin.TValue[int64]
+	Status                 plugin.TValue[string]
+	Zone                   plugin.TValue[*mqlGcpProjectComputeServiceZone]
+	Created                plugin.TValue[*time.Time]
+	DiskEncryptionKey      plugin.TValue[any]
 }
 
 // createGcpProjectComputeServiceDisk creates a new instance of this resource
@@ -12615,7 +12614,7 @@ func createGcpProjectComputeServiceDisk(runtime *plugin.Runtime, args map[string
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12711,23 +12710,23 @@ func (c *mqlGcpProjectComputeServiceDisk) GetDiskEncryptionKey() *plugin.TValue[
 // mqlGcpProjectComputeServiceAttachedDisk for the gcp.project.computeService.attachedDisk resource
 type mqlGcpProjectComputeServiceAttachedDisk struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGcpProjectComputeServiceAttachedDiskInternal
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Architecture plugin.TValue[string]
-	AutoDelete plugin.TValue[bool]
-	Boot plugin.TValue[bool]
-	DeviceName plugin.TValue[string]
-	DiskSizeGb plugin.TValue[int64]
-	ForceAttach plugin.TValue[bool]
+	Id              plugin.TValue[string]
+	ProjectId       plugin.TValue[string]
+	Architecture    plugin.TValue[string]
+	AutoDelete      plugin.TValue[bool]
+	Boot            plugin.TValue[bool]
+	DeviceName      plugin.TValue[string]
+	DiskSizeGb      plugin.TValue[int64]
+	ForceAttach     plugin.TValue[bool]
 	GuestOsFeatures plugin.TValue[[]any]
-	Index plugin.TValue[int64]
-	Interface plugin.TValue[string]
-	Licenses plugin.TValue[[]any]
-	Mode plugin.TValue[string]
-	Source plugin.TValue[*mqlGcpProjectComputeServiceDisk]
-	Type plugin.TValue[string]
+	Index           plugin.TValue[int64]
+	Interface       plugin.TValue[string]
+	Licenses        plugin.TValue[[]any]
+	Mode            plugin.TValue[string]
+	Source          plugin.TValue[*mqlGcpProjectComputeServiceDisk]
+	Type            plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceAttachedDisk creates a new instance of this resource
@@ -12742,7 +12741,7 @@ func createGcpProjectComputeServiceAttachedDisk(runtime *plugin.Runtime, args ma
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12842,24 +12841,24 @@ func (c *mqlGcpProjectComputeServiceAttachedDisk) GetType() *plugin.TValue[strin
 // mqlGcpProjectComputeServiceSnapshot for the gcp.project.computeService.snapshot resource
 type mqlGcpProjectComputeServiceSnapshot struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceSnapshotInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Architecture plugin.TValue[string]
-	AutoCreated plugin.TValue[bool]
-	ChainName plugin.TValue[string]
-	CreationSizeBytes plugin.TValue[int64]
-	DiskSizeGb plugin.TValue[int64]
-	DownloadBytes plugin.TValue[int64]
-	StorageBytes plugin.TValue[int64]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Architecture       plugin.TValue[string]
+	AutoCreated        plugin.TValue[bool]
+	ChainName          plugin.TValue[string]
+	CreationSizeBytes  plugin.TValue[int64]
+	DiskSizeGb         plugin.TValue[int64]
+	DownloadBytes      plugin.TValue[int64]
+	StorageBytes       plugin.TValue[int64]
 	StorageBytesStatus plugin.TValue[string]
-	SnapshotType plugin.TValue[string]
-	Licenses plugin.TValue[[]any]
-	Labels plugin.TValue[map[string]any]
-	Created plugin.TValue[*time.Time]
-	Status plugin.TValue[string]
+	SnapshotType       plugin.TValue[string]
+	Licenses           plugin.TValue[[]any]
+	Labels             plugin.TValue[map[string]any]
+	Created            plugin.TValue[*time.Time]
+	Status             plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceSnapshot creates a new instance of this resource
@@ -12874,7 +12873,7 @@ func createGcpProjectComputeServiceSnapshot(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12966,20 +12965,20 @@ func (c *mqlGcpProjectComputeServiceSnapshot) GetStatus() *plugin.TValue[string]
 // mqlGcpProjectComputeServiceImage for the gcp.project.computeService.image resource
 type mqlGcpProjectComputeServiceImage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceImageInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Architecture plugin.TValue[string]
+	Id               plugin.TValue[string]
+	ProjectId        plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Architecture     plugin.TValue[string]
 	ArchiveSizeBytes plugin.TValue[int64]
-	DiskSizeGb plugin.TValue[int64]
-	Family plugin.TValue[string]
-	Licenses plugin.TValue[[]any]
-	Labels plugin.TValue[map[string]any]
-	Created plugin.TValue[*time.Time]
-	Status plugin.TValue[string]
+	DiskSizeGb       plugin.TValue[int64]
+	Family           plugin.TValue[string]
+	Licenses         plugin.TValue[[]any]
+	Labels           plugin.TValue[map[string]any]
+	Created          plugin.TValue[*time.Time]
+	Status           plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceImage creates a new instance of this resource
@@ -12994,7 +12993,7 @@ func createGcpProjectComputeServiceImage(runtime *plugin.Runtime, args map[strin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13070,23 +13069,23 @@ func (c *mqlGcpProjectComputeServiceImage) GetStatus() *plugin.TValue[string] {
 // mqlGcpProjectComputeServiceFirewall for the gcp.project.computeService.firewall resource
 type mqlGcpProjectComputeServiceFirewall struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceFirewallInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Priority plugin.TValue[int64]
-	Direction plugin.TValue[string]
-	Disabled plugin.TValue[bool]
-	SourceRanges plugin.TValue[[]any]
+	Id                    plugin.TValue[string]
+	ProjectId             plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Priority              plugin.TValue[int64]
+	Direction             plugin.TValue[string]
+	Disabled              plugin.TValue[bool]
+	SourceRanges          plugin.TValue[[]any]
 	SourceServiceAccounts plugin.TValue[[]any]
-	SourceTags plugin.TValue[[]any]
-	DestinationRanges plugin.TValue[[]any]
+	SourceTags            plugin.TValue[[]any]
+	DestinationRanges     plugin.TValue[[]any]
 	TargetServiceAccounts plugin.TValue[[]any]
-	Created plugin.TValue[*time.Time]
-	Allowed plugin.TValue[[]any]
-	Denied plugin.TValue[[]any]
+	Created               plugin.TValue[*time.Time]
+	Allowed               plugin.TValue[[]any]
+	Denied                plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceFirewall creates a new instance of this resource
@@ -13101,7 +13100,7 @@ func createGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13189,23 +13188,23 @@ func (c *mqlGcpProjectComputeServiceFirewall) GetDenied() *plugin.TValue[[]any] 
 // mqlGcpProjectComputeServiceNetwork for the gcp.project.computeService.network resource
 type mqlGcpProjectComputeServiceNetwork struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceNetworkInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	AutoCreateSubnetworks plugin.TValue[bool]
-	EnableUlaInternalIpv6 plugin.TValue[bool]
-	GatewayIPv4 plugin.TValue[string]
-	Mtu plugin.TValue[int64]
+	Id                                    plugin.TValue[string]
+	ProjectId                             plugin.TValue[string]
+	Name                                  plugin.TValue[string]
+	Description                           plugin.TValue[string]
+	AutoCreateSubnetworks                 plugin.TValue[bool]
+	EnableUlaInternalIpv6                 plugin.TValue[bool]
+	GatewayIPv4                           plugin.TValue[string]
+	Mtu                                   plugin.TValue[int64]
 	NetworkFirewallPolicyEnforcementOrder plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Peerings plugin.TValue[[]any]
-	RoutingMode plugin.TValue[string]
-	Mode plugin.TValue[string]
-	SubnetworkUrls plugin.TValue[[]any]
-	Subnetworks plugin.TValue[[]any]
+	Created                               plugin.TValue[*time.Time]
+	Peerings                              plugin.TValue[[]any]
+	RoutingMode                           plugin.TValue[string]
+	Mode                                  plugin.TValue[string]
+	SubnetworkUrls                        plugin.TValue[[]any]
+	Subnetworks                           plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceNetwork creates a new instance of this resource
@@ -13220,7 +13219,7 @@ func createGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[str
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13320,30 +13319,30 @@ func (c *mqlGcpProjectComputeServiceNetwork) GetSubnetworks() *plugin.TValue[[]a
 // mqlGcpProjectComputeServiceSubnetwork for the gcp.project.computeService.subnetwork resource
 type mqlGcpProjectComputeServiceSubnetwork struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceSubnetworkInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	EnableFlowLogs plugin.TValue[bool]
-	ExternalIpv6Prefix plugin.TValue[string]
-	Fingerprint plugin.TValue[string]
-	GatewayAddress plugin.TValue[string]
-	InternalIpv6Prefix plugin.TValue[string]
-	IpCidrRange plugin.TValue[string]
-	Ipv6AccessType plugin.TValue[string]
-	Ipv6CidrRange plugin.TValue[string]
-	LogConfig plugin.TValue[*mqlGcpProjectComputeServiceSubnetworkLogConfig]
-	PrivateIpGoogleAccess plugin.TValue[bool]
+	Id                      plugin.TValue[string]
+	ProjectId               plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
+	EnableFlowLogs          plugin.TValue[bool]
+	ExternalIpv6Prefix      plugin.TValue[string]
+	Fingerprint             plugin.TValue[string]
+	GatewayAddress          plugin.TValue[string]
+	InternalIpv6Prefix      plugin.TValue[string]
+	IpCidrRange             plugin.TValue[string]
+	Ipv6AccessType          plugin.TValue[string]
+	Ipv6CidrRange           plugin.TValue[string]
+	LogConfig               plugin.TValue[*mqlGcpProjectComputeServiceSubnetworkLogConfig]
+	PrivateIpGoogleAccess   plugin.TValue[bool]
 	PrivateIpv6GoogleAccess plugin.TValue[string]
-	Purpose plugin.TValue[string]
-	Region plugin.TValue[*mqlGcpProjectComputeServiceRegion]
-	RegionUrl plugin.TValue[string]
-	Role plugin.TValue[string]
-	StackType plugin.TValue[string]
-	State plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
+	Purpose                 plugin.TValue[string]
+	Region                  plugin.TValue[*mqlGcpProjectComputeServiceRegion]
+	RegionUrl               plugin.TValue[string]
+	Role                    plugin.TValue[string]
+	StackType               plugin.TValue[string]
+	State                   plugin.TValue[string]
+	Created                 plugin.TValue[*time.Time]
 }
 
 // createGcpProjectComputeServiceSubnetwork creates a new instance of this resource
@@ -13358,7 +13357,7 @@ func createGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13486,15 +13485,15 @@ func (c *mqlGcpProjectComputeServiceSubnetwork) GetCreated() *plugin.TValue[*tim
 // mqlGcpProjectComputeServiceSubnetworkLogConfig for the gcp.project.computeService.subnetwork.logConfig resource
 type mqlGcpProjectComputeServiceSubnetworkLogConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceSubnetworkLogConfigInternal it will be used here
-	Id plugin.TValue[string]
+	Id                  plugin.TValue[string]
 	AggregationInterval plugin.TValue[string]
-	Enable plugin.TValue[bool]
-	FilterExpression plugin.TValue[string]
-	FlowSampling plugin.TValue[float64]
-	Metadata plugin.TValue[string]
-	MetadataFields plugin.TValue[[]any]
+	Enable              plugin.TValue[bool]
+	FilterExpression    plugin.TValue[string]
+	FlowSampling        plugin.TValue[float64]
+	Metadata            plugin.TValue[string]
+	MetadataFields      plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceSubnetworkLogConfig creates a new instance of this resource
@@ -13509,7 +13508,7 @@ func createGcpProjectComputeServiceSubnetworkLogConfig(runtime *plugin.Runtime, 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13565,16 +13564,16 @@ func (c *mqlGcpProjectComputeServiceSubnetworkLogConfig) GetMetadataFields() *pl
 // mqlGcpProjectComputeServiceRouter for the gcp.project.computeService.router resource
 type mqlGcpProjectComputeServiceRouter struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceRouterInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Bgp plugin.TValue[any]
-	BgpPeers plugin.TValue[[]any]
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	Bgp                         plugin.TValue[any]
+	BgpPeers                    plugin.TValue[[]any]
 	EncryptedInterconnectRouter plugin.TValue[bool]
-	Nats plugin.TValue[[]any]
-	Created plugin.TValue[*time.Time]
+	Nats                        plugin.TValue[[]any]
+	Created                     plugin.TValue[*time.Time]
 }
 
 // createGcpProjectComputeServiceRouter creates a new instance of this resource
@@ -13589,7 +13588,7 @@ func createGcpProjectComputeServiceRouter(runtime *plugin.Runtime, args map[stri
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13649,41 +13648,41 @@ func (c *mqlGcpProjectComputeServiceRouter) GetCreated() *plugin.TValue[*time.Ti
 // mqlGcpProjectComputeServiceBackendService for the gcp.project.computeService.backendService resource
 type mqlGcpProjectComputeServiceBackendService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceBackendServiceInternal it will be used here
-	Id plugin.TValue[string]
-	AffinityCookieTtlSec plugin.TValue[int64]
-	Backends plugin.TValue[[]any]
-	CdnPolicy plugin.TValue[*mqlGcpProjectComputeServiceBackendServiceCdnPolicy]
-	CircuitBreakers plugin.TValue[any]
-	CompressionMode plugin.TValue[string]
-	ConnectionDraining plugin.TValue[any]
+	Id                       plugin.TValue[string]
+	AffinityCookieTtlSec     plugin.TValue[int64]
+	Backends                 plugin.TValue[[]any]
+	CdnPolicy                plugin.TValue[*mqlGcpProjectComputeServiceBackendServiceCdnPolicy]
+	CircuitBreakers          plugin.TValue[any]
+	CompressionMode          plugin.TValue[string]
+	ConnectionDraining       plugin.TValue[any]
 	ConnectionTrackingPolicy plugin.TValue[any]
-	ConsistentHash plugin.TValue[any]
-	Created plugin.TValue[*time.Time]
-	CustomRequestHeaders plugin.TValue[[]any]
-	CustomResponseHeaders plugin.TValue[[]any]
-	Description plugin.TValue[string]
-	EdgeSecurityPolicy plugin.TValue[string]
-	EnableCDN plugin.TValue[bool]
-	FailoverPolicy plugin.TValue[any]
-	HealthChecks plugin.TValue[[]any]
-	Iap plugin.TValue[any]
-	LoadBalancingScheme plugin.TValue[string]
-	LocalityLbPolicies plugin.TValue[[]any]
-	LocalityLbPolicy plugin.TValue[string]
-	LogConfig plugin.TValue[any]
-	MaxStreamDuration plugin.TValue[*time.Time]
-	Name plugin.TValue[string]
-	NetworkUrl plugin.TValue[string]
-	PortName plugin.TValue[string]
-	Protocol plugin.TValue[string]
-	RegionUrl plugin.TValue[string]
-	SecurityPolicyUrl plugin.TValue[string]
-	SecuritySettings plugin.TValue[any]
-	ServiceBindingUrls plugin.TValue[[]any]
-	SessionAffinity plugin.TValue[string]
-	TimeoutSec plugin.TValue[int64]
+	ConsistentHash           plugin.TValue[any]
+	Created                  plugin.TValue[*time.Time]
+	CustomRequestHeaders     plugin.TValue[[]any]
+	CustomResponseHeaders    plugin.TValue[[]any]
+	Description              plugin.TValue[string]
+	EdgeSecurityPolicy       plugin.TValue[string]
+	EnableCDN                plugin.TValue[bool]
+	FailoverPolicy           plugin.TValue[any]
+	HealthChecks             plugin.TValue[[]any]
+	Iap                      plugin.TValue[any]
+	LoadBalancingScheme      plugin.TValue[string]
+	LocalityLbPolicies       plugin.TValue[[]any]
+	LocalityLbPolicy         plugin.TValue[string]
+	LogConfig                plugin.TValue[any]
+	MaxStreamDuration        plugin.TValue[*time.Time]
+	Name                     plugin.TValue[string]
+	NetworkUrl               plugin.TValue[string]
+	PortName                 plugin.TValue[string]
+	Protocol                 plugin.TValue[string]
+	RegionUrl                plugin.TValue[string]
+	SecurityPolicyUrl        plugin.TValue[string]
+	SecuritySettings         plugin.TValue[any]
+	ServiceBindingUrls       plugin.TValue[[]any]
+	SessionAffinity          plugin.TValue[string]
+	TimeoutSec               plugin.TValue[int64]
 }
 
 // createGcpProjectComputeServiceBackendService creates a new instance of this resource
@@ -13698,7 +13697,7 @@ func createGcpProjectComputeServiceBackendService(runtime *plugin.Runtime, args 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13858,21 +13857,21 @@ func (c *mqlGcpProjectComputeServiceBackendService) GetTimeoutSec() *plugin.TVal
 // mqlGcpProjectComputeServiceBackendServiceBackend for the gcp.project.computeService.backendService.backend resource
 type mqlGcpProjectComputeServiceBackendServiceBackend struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceBackendServiceBackendInternal it will be used here
-	Id plugin.TValue[string]
-	BalancingMode plugin.TValue[string]
-	CapacityScaler plugin.TValue[float64]
-	Description plugin.TValue[string]
-	Failover plugin.TValue[bool]
-	GroupUrl plugin.TValue[string]
-	MaxConnections plugin.TValue[int64]
+	Id                        plugin.TValue[string]
+	BalancingMode             plugin.TValue[string]
+	CapacityScaler            plugin.TValue[float64]
+	Description               plugin.TValue[string]
+	Failover                  plugin.TValue[bool]
+	GroupUrl                  plugin.TValue[string]
+	MaxConnections            plugin.TValue[int64]
 	MaxConnectionsPerEndpoint plugin.TValue[int64]
 	MaxConnectionsPerInstance plugin.TValue[int64]
-	MaxRate plugin.TValue[int64]
-	MaxRatePerEndpoint plugin.TValue[float64]
-	MaxRatePerInstance plugin.TValue[float64]
-	MaxUtilization plugin.TValue[float64]
+	MaxRate                   plugin.TValue[int64]
+	MaxRatePerEndpoint        plugin.TValue[float64]
+	MaxRatePerInstance        plugin.TValue[float64]
+	MaxUtilization            plugin.TValue[float64]
 }
 
 // createGcpProjectComputeServiceBackendServiceBackend creates a new instance of this resource
@@ -13887,7 +13886,7 @@ func createGcpProjectComputeServiceBackendServiceBackend(runtime *plugin.Runtime
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13967,21 +13966,21 @@ func (c *mqlGcpProjectComputeServiceBackendServiceBackend) GetMaxUtilization() *
 // mqlGcpProjectComputeServiceBackendServiceCdnPolicy for the gcp.project.computeService.backendService.cdnPolicy resource
 type mqlGcpProjectComputeServiceBackendServiceCdnPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceBackendServiceCdnPolicyInternal it will be used here
-	Id plugin.TValue[string]
+	Id                          plugin.TValue[string]
 	BypassCacheOnRequestHeaders plugin.TValue[[]any]
-	CacheKeyPolicy plugin.TValue[any]
-	CacheMode plugin.TValue[string]
-	ClientTtl plugin.TValue[int64]
-	DefaultTtl plugin.TValue[int64]
-	MaxTtl plugin.TValue[int64]
-	NegativeCaching plugin.TValue[bool]
-	NegativeCachingPolicy plugin.TValue[[]any]
-	RequestCoalescing plugin.TValue[bool]
-	ServeWhileStale plugin.TValue[int64]
-	SignedUrlCacheMaxAgeSec plugin.TValue[int64]
-	SignedUrlKeyNames plugin.TValue[[]any]
+	CacheKeyPolicy              plugin.TValue[any]
+	CacheMode                   plugin.TValue[string]
+	ClientTtl                   plugin.TValue[int64]
+	DefaultTtl                  plugin.TValue[int64]
+	MaxTtl                      plugin.TValue[int64]
+	NegativeCaching             plugin.TValue[bool]
+	NegativeCachingPolicy       plugin.TValue[[]any]
+	RequestCoalescing           plugin.TValue[bool]
+	ServeWhileStale             plugin.TValue[int64]
+	SignedUrlCacheMaxAgeSec     plugin.TValue[int64]
+	SignedUrlKeyNames           plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceBackendServiceCdnPolicy creates a new instance of this resource
@@ -13996,7 +13995,7 @@ func createGcpProjectComputeServiceBackendServiceCdnPolicy(runtime *plugin.Runti
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14076,10 +14075,10 @@ func (c *mqlGcpProjectComputeServiceBackendServiceCdnPolicy) GetSignedUrlKeyName
 // mqlGcpProjectStorageService for the gcp.project.storageService resource
 type mqlGcpProjectStorageService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectStorageServiceInternal it will be used here
 	ProjectId plugin.TValue[string]
-	Buckets plugin.TValue[[]any]
+	Buckets   plugin.TValue[[]any]
 }
 
 // createGcpProjectStorageService creates a new instance of this resource
@@ -14094,7 +14093,7 @@ func createGcpProjectStorageService(runtime *plugin.Runtime, args map[string]*ll
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14142,23 +14141,23 @@ func (c *mqlGcpProjectStorageService) GetBuckets() *plugin.TValue[[]any] {
 // mqlGcpProjectStorageServiceBucket for the gcp.project.storageService.bucket resource
 type mqlGcpProjectStorageServiceBucket struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectStorageServiceBucketInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Location plugin.TValue[string]
-	LocationType plugin.TValue[string]
-	ProjectNumber plugin.TValue[string]
-	StorageClass plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Updated plugin.TValue[*time.Time]
-	IamPolicy plugin.TValue[[]any]
+	Id               plugin.TValue[string]
+	ProjectId        plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Labels           plugin.TValue[map[string]any]
+	Location         plugin.TValue[string]
+	LocationType     plugin.TValue[string]
+	ProjectNumber    plugin.TValue[string]
+	StorageClass     plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	Updated          plugin.TValue[*time.Time]
+	IamPolicy        plugin.TValue[[]any]
 	IamConfiguration plugin.TValue[any]
-	RetentionPolicy plugin.TValue[any]
-	Encryption plugin.TValue[any]
-	Lifecycle plugin.TValue[[]any]
+	RetentionPolicy  plugin.TValue[any]
+	Encryption       plugin.TValue[any]
+	Lifecycle        plugin.TValue[[]any]
 }
 
 // createGcpProjectStorageServiceBucket creates a new instance of this resource
@@ -14173,7 +14172,7 @@ func createGcpProjectStorageServiceBucket(runtime *plugin.Runtime, args map[stri
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14273,9 +14272,9 @@ func (c *mqlGcpProjectStorageServiceBucket) GetLifecycle() *plugin.TValue[[]any]
 // mqlGcpProjectStorageServiceBucketLifecycleRule for the gcp.project.storageService.bucket.lifecycleRule resource
 type mqlGcpProjectStorageServiceBucketLifecycleRule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectStorageServiceBucketLifecycleRuleInternal it will be used here
-	Action plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleAction]
+	Action    plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleAction]
 	Condition plugin.TValue[*mqlGcpProjectStorageServiceBucketLifecycleRuleCondition]
 }
 
@@ -14322,10 +14321,10 @@ func (c *mqlGcpProjectStorageServiceBucketLifecycleRule) GetCondition() *plugin.
 // mqlGcpProjectStorageServiceBucketLifecycleRuleAction for the gcp.project.storageService.bucket.lifecycleRuleAction resource
 type mqlGcpProjectStorageServiceBucketLifecycleRuleAction struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectStorageServiceBucketLifecycleRuleActionInternal it will be used here
 	StorageClass plugin.TValue[string]
-	Type plugin.TValue[string]
+	Type         plugin.TValue[string]
 }
 
 // createGcpProjectStorageServiceBucketLifecycleRuleAction creates a new instance of this resource
@@ -14371,20 +14370,20 @@ func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleAction) GetType() *plugin
 // mqlGcpProjectStorageServiceBucketLifecycleRuleCondition for the gcp.project.storageService.bucket.lifecycleRuleCondition resource
 type mqlGcpProjectStorageServiceBucketLifecycleRuleCondition struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectStorageServiceBucketLifecycleRuleConditionInternal it will be used here
-	Age plugin.TValue[int64]
-	CreatedBefore plugin.TValue[string]
-	CustomTimeBefore plugin.TValue[string]
-	DaysSinceCustomTime plugin.TValue[int64]
+	Age                     plugin.TValue[int64]
+	CreatedBefore           plugin.TValue[string]
+	CustomTimeBefore        plugin.TValue[string]
+	DaysSinceCustomTime     plugin.TValue[int64]
 	DaysSinceNoncurrentTime plugin.TValue[int64]
-	IsLive plugin.TValue[bool]
-	MatchesPattern plugin.TValue[string]
-	MatchesPrefix plugin.TValue[[]any]
-	MatchesStorageClass plugin.TValue[[]any]
-	MatchesSuffix plugin.TValue[[]any]
-	NoncurrentTimeBefore plugin.TValue[string]
-	NumNewerVersions plugin.TValue[int64]
+	IsLive                  plugin.TValue[bool]
+	MatchesPattern          plugin.TValue[string]
+	MatchesPrefix           plugin.TValue[[]any]
+	MatchesStorageClass     plugin.TValue[[]any]
+	MatchesSuffix           plugin.TValue[[]any]
+	NoncurrentTimeBefore    plugin.TValue[string]
+	NumNewerVersions        plugin.TValue[int64]
 }
 
 // createGcpProjectStorageServiceBucketLifecycleRuleCondition creates a new instance of this resource
@@ -14470,7 +14469,7 @@ func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetNumNewerVer
 // mqlGcpProjectSqlService for the gcp.project.sqlService resource
 type mqlGcpProjectSqlService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInternal it will be used here
 	ProjectId plugin.TValue[string]
 	Instances plugin.TValue[[]any]
@@ -14488,7 +14487,7 @@ func createGcpProjectSqlService(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14536,33 +14535,33 @@ func (c *mqlGcpProjectSqlService) GetInstances() *plugin.TValue[[]any] {
 // mqlGcpProjectSqlServiceInstance for the gcp.project.sqlService.instance resource
 type mqlGcpProjectSqlServiceInstance struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceInternal it will be used here
-	ProjectId plugin.TValue[string]
+	ProjectId                    plugin.TValue[string]
 	AvailableMaintenanceVersions plugin.TValue[[]any]
-	BackendType plugin.TValue[string]
-	ConnectionName plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	CurrentDiskSize plugin.TValue[int64]
-	DatabaseInstalledVersion plugin.TValue[string]
-	DatabaseVersion plugin.TValue[string]
-	DiskEncryptionConfiguration plugin.TValue[any]
-	DiskEncryptionStatus plugin.TValue[any]
-	FailoverReplica plugin.TValue[any]
-	GceZone plugin.TValue[string]
-	InstanceType plugin.TValue[string]
-	IpAddresses plugin.TValue[[]any]
-	MaintenanceVersion plugin.TValue[string]
-	MasterInstanceName plugin.TValue[string]
-	MaxDiskSize plugin.TValue[int64]
-	Name plugin.TValue[string]
-	Project plugin.TValue[string]
-	Region plugin.TValue[string]
-	ReplicaNames plugin.TValue[[]any]
-	Settings plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettings]
-	ServiceAccountEmailAddress plugin.TValue[string]
-	State plugin.TValue[string]
-	Databases plugin.TValue[[]any]
+	BackendType                  plugin.TValue[string]
+	ConnectionName               plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	CurrentDiskSize              plugin.TValue[int64]
+	DatabaseInstalledVersion     plugin.TValue[string]
+	DatabaseVersion              plugin.TValue[string]
+	DiskEncryptionConfiguration  plugin.TValue[any]
+	DiskEncryptionStatus         plugin.TValue[any]
+	FailoverReplica              plugin.TValue[any]
+	GceZone                      plugin.TValue[string]
+	InstanceType                 plugin.TValue[string]
+	IpAddresses                  plugin.TValue[[]any]
+	MaintenanceVersion           plugin.TValue[string]
+	MasterInstanceName           plugin.TValue[string]
+	MaxDiskSize                  plugin.TValue[int64]
+	Name                         plugin.TValue[string]
+	Project                      plugin.TValue[string]
+	Region                       plugin.TValue[string]
+	ReplicaNames                 plugin.TValue[[]any]
+	Settings                     plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettings]
+	ServiceAccountEmailAddress   plugin.TValue[string]
+	State                        plugin.TValue[string]
+	Databases                    plugin.TValue[[]any]
 }
 
 // createGcpProjectSqlServiceInstance creates a new instance of this resource
@@ -14577,7 +14576,7 @@ func createGcpProjectSqlServiceInstance(runtime *plugin.Runtime, args map[string
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14717,13 +14716,13 @@ func (c *mqlGcpProjectSqlServiceInstance) GetDatabases() *plugin.TValue[[]any] {
 // mqlGcpProjectSqlServiceInstanceDatabase for the gcp.project.sqlService.instance.database resource
 type mqlGcpProjectSqlServiceInstanceDatabase struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceDatabaseInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Charset plugin.TValue[string]
-	Collation plugin.TValue[string]
-	Instance plugin.TValue[string]
-	Name plugin.TValue[string]
+	ProjectId                plugin.TValue[string]
+	Charset                  plugin.TValue[string]
+	Collation                plugin.TValue[string]
+	Instance                 plugin.TValue[string]
+	Name                     plugin.TValue[string]
 	SqlserverDatabaseDetails plugin.TValue[any]
 }
 
@@ -14739,7 +14738,7 @@ func createGcpProjectSqlServiceInstanceDatabase(runtime *plugin.Runtime, args ma
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14791,12 +14790,12 @@ func (c *mqlGcpProjectSqlServiceInstanceDatabase) GetSqlserverDatabaseDetails() 
 // mqlGcpProjectSqlServiceInstanceIpMapping for the gcp.project.sqlService.instance.ipMapping resource
 type mqlGcpProjectSqlServiceInstanceIpMapping struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceIpMappingInternal it will be used here
-	Id plugin.TValue[string]
-	IpAddress plugin.TValue[string]
+	Id           plugin.TValue[string]
+	IpAddress    plugin.TValue[string]
 	TimeToRetire plugin.TValue[*time.Time]
-	Type plugin.TValue[string]
+	Type         plugin.TValue[string]
 }
 
 // createGcpProjectSqlServiceInstanceIpMapping creates a new instance of this resource
@@ -14811,7 +14810,7 @@ func createGcpProjectSqlServiceInstanceIpMapping(runtime *plugin.Runtime, args m
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14855,37 +14854,37 @@ func (c *mqlGcpProjectSqlServiceInstanceIpMapping) GetType() *plugin.TValue[stri
 // mqlGcpProjectSqlServiceInstanceSettings for the gcp.project.sqlService.instance.settings resource
 type mqlGcpProjectSqlServiceInstanceSettings struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceSettingsInternal it will be used here
-	ProjectId plugin.TValue[string]
-	InstanceName plugin.TValue[string]
-	ActivationPolicy plugin.TValue[string]
-	ActiveDirectoryConfig plugin.TValue[any]
-	AvailabilityType plugin.TValue[string]
-	BackupConfiguration plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration]
-	Collation plugin.TValue[string]
-	ConnectorEnforcement plugin.TValue[string]
+	ProjectId                   plugin.TValue[string]
+	InstanceName                plugin.TValue[string]
+	ActivationPolicy            plugin.TValue[string]
+	ActiveDirectoryConfig       plugin.TValue[any]
+	AvailabilityType            plugin.TValue[string]
+	BackupConfiguration         plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration]
+	Collation                   plugin.TValue[string]
+	ConnectorEnforcement        plugin.TValue[string]
 	CrashSafeReplicationEnabled plugin.TValue[bool]
-	DataDiskSizeGb plugin.TValue[int64]
-	DataDiskType plugin.TValue[string]
-	DatabaseFlags plugin.TValue[map[string]any]
-	DatabaseReplicationEnabled plugin.TValue[bool]
-	DeletionProtectionEnabled plugin.TValue[bool]
-	DenyMaintenancePeriods plugin.TValue[[]any]
-	InsightsConfig plugin.TValue[any]
-	IpConfiguration plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration]
-	LocationPreference plugin.TValue[any]
-	MaintenanceWindow plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow]
-	PasswordValidationPolicy plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy]
-	PricingPlan plugin.TValue[string]
-	ReplicationType plugin.TValue[string]
-	SettingsVersion plugin.TValue[int64]
-	SqlServerAuditConfig plugin.TValue[any]
-	StorageAutoResize plugin.TValue[bool]
-	StorageAutoResizeLimit plugin.TValue[int64]
-	Tier plugin.TValue[string]
-	TimeZone plugin.TValue[string]
-	UserLabels plugin.TValue[map[string]any]
+	DataDiskSizeGb              plugin.TValue[int64]
+	DataDiskType                plugin.TValue[string]
+	DatabaseFlags               plugin.TValue[map[string]any]
+	DatabaseReplicationEnabled  plugin.TValue[bool]
+	DeletionProtectionEnabled   plugin.TValue[bool]
+	DenyMaintenancePeriods      plugin.TValue[[]any]
+	InsightsConfig              plugin.TValue[any]
+	IpConfiguration             plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration]
+	LocationPreference          plugin.TValue[any]
+	MaintenanceWindow           plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow]
+	PasswordValidationPolicy    plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy]
+	PricingPlan                 plugin.TValue[string]
+	ReplicationType             plugin.TValue[string]
+	SettingsVersion             plugin.TValue[int64]
+	SqlServerAuditConfig        plugin.TValue[any]
+	StorageAutoResize           plugin.TValue[bool]
+	StorageAutoResizeLimit      plugin.TValue[int64]
+	Tier                        plugin.TValue[string]
+	TimeZone                    plugin.TValue[string]
+	UserLabels                  plugin.TValue[map[string]any]
 }
 
 // createGcpProjectSqlServiceInstanceSettings creates a new instance of this resource
@@ -14900,7 +14899,7 @@ func createGcpProjectSqlServiceInstanceSettings(runtime *plugin.Runtime, args ma
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15044,15 +15043,15 @@ func (c *mqlGcpProjectSqlServiceInstanceSettings) GetUserLabels() *plugin.TValue
 // mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration for the gcp.project.sqlService.instance.settings.backupconfiguration resource
 type mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceSettingsBackupconfigurationInternal it will be used here
-	Id plugin.TValue[string]
-	BackupRetentionSettings plugin.TValue[any]
-	BinaryLogEnabled plugin.TValue[bool]
-	Enabled plugin.TValue[bool]
-	Location plugin.TValue[string]
-	PointInTimeRecoveryEnabled plugin.TValue[bool]
-	StartTime plugin.TValue[string]
+	Id                          plugin.TValue[string]
+	BackupRetentionSettings     plugin.TValue[any]
+	BinaryLogEnabled            plugin.TValue[bool]
+	Enabled                     plugin.TValue[bool]
+	Location                    plugin.TValue[string]
+	PointInTimeRecoveryEnabled  plugin.TValue[bool]
+	StartTime                   plugin.TValue[string]
 	TransactionLogRetentionDays plugin.TValue[int64]
 }
 
@@ -15068,7 +15067,7 @@ func createGcpProjectSqlServiceInstanceSettingsBackupconfiguration(runtime *plug
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15128,12 +15127,12 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration) GetTransact
 // mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod for the gcp.project.sqlService.instance.settings.denyMaintenancePeriod resource
 type mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriodInternal it will be used here
-	Id plugin.TValue[string]
-	EndDate plugin.TValue[string]
+	Id        plugin.TValue[string]
+	EndDate   plugin.TValue[string]
 	StartDate plugin.TValue[string]
-	Time plugin.TValue[string]
+	Time      plugin.TValue[string]
 }
 
 // createGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod creates a new instance of this resource
@@ -15148,7 +15147,7 @@ func createGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod(runtime *pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15192,15 +15191,15 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod) GetTime()
 // mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration for the gcp.project.sqlService.instance.settings.ipConfiguration resource
 type mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationInternal it will be used here
-	Id plugin.TValue[string]
-	AllocatedIpRange plugin.TValue[string]
-	AuthorizedNetworks plugin.TValue[[]any]
-	Ipv4Enabled plugin.TValue[bool]
-	PrivateNetwork plugin.TValue[string]
-	RequireSsl plugin.TValue[bool]
-	SslMode plugin.TValue[string]
+	Id                                      plugin.TValue[string]
+	AllocatedIpRange                        plugin.TValue[string]
+	AuthorizedNetworks                      plugin.TValue[[]any]
+	Ipv4Enabled                             plugin.TValue[bool]
+	PrivateNetwork                          plugin.TValue[string]
+	RequireSsl                              plugin.TValue[bool]
+	SslMode                                 plugin.TValue[string]
 	EnablePrivatePathForGoogleCloudServices plugin.TValue[bool]
 }
 
@@ -15216,7 +15215,7 @@ func createGcpProjectSqlServiceInstanceSettingsIpConfiguration(runtime *plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15276,11 +15275,11 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetEnablePrivat
 // mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow for the gcp.project.sqlService.instance.settings.maintenanceWindow resource
 type mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindowInternal it will be used here
-	Id plugin.TValue[string]
-	Day plugin.TValue[int64]
-	Hour plugin.TValue[int64]
+	Id          plugin.TValue[string]
+	Day         plugin.TValue[int64]
+	Hour        plugin.TValue[int64]
 	UpdateTrack plugin.TValue[string]
 }
 
@@ -15296,7 +15295,7 @@ func createGcpProjectSqlServiceInstanceSettingsMaintenanceWindow(runtime *plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15340,15 +15339,15 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow) GetUpdateTrac
 // mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy for the gcp.project.sqlService.instance.settings.passwordValidationPolicy resource
 type mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicyInternal it will be used here
-	Id plugin.TValue[string]
-	Complexity plugin.TValue[string]
+	Id                        plugin.TValue[string]
+	Complexity                plugin.TValue[string]
 	DisallowUsernameSubstring plugin.TValue[bool]
-	EnabledPasswordPolicy plugin.TValue[bool]
-	MinLength plugin.TValue[int64]
-	PasswordChangeInterval plugin.TValue[string]
-	ReuseInterval plugin.TValue[int64]
+	EnabledPasswordPolicy     plugin.TValue[bool]
+	MinLength                 plugin.TValue[int64]
+	PasswordChangeInterval    plugin.TValue[string]
+	ReuseInterval             plugin.TValue[int64]
 }
 
 // createGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy creates a new instance of this resource
@@ -15363,7 +15362,7 @@ func createGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy(runtime 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15419,10 +15418,10 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy) GetReu
 // mqlGcpProjectBigqueryService for the gcp.project.bigqueryService resource
 type mqlGcpProjectBigqueryService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGcpProjectBigqueryServiceInternal
 	ProjectId plugin.TValue[string]
-	Datasets plugin.TValue[[]any]
+	Datasets  plugin.TValue[[]any]
 }
 
 // createGcpProjectBigqueryService creates a new instance of this resource
@@ -15437,7 +15436,7 @@ func createGcpProjectBigqueryService(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15485,22 +15484,22 @@ func (c *mqlGcpProjectBigqueryService) GetDatasets() *plugin.TValue[[]any] {
 // mqlGcpProjectBigqueryServiceDataset for the gcp.project.bigqueryService.dataset resource
 type mqlGcpProjectBigqueryServiceDataset struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectBigqueryServiceDatasetInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id          plugin.TValue[string]
+	ProjectId   plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Location plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Created plugin.TValue[*time.Time]
-	Modified plugin.TValue[*time.Time]
-	Tags plugin.TValue[map[string]any]
-	KmsName plugin.TValue[string]
-	Access plugin.TValue[[]any]
-	Tables plugin.TValue[[]any]
-	Models plugin.TValue[[]any]
-	Routines plugin.TValue[[]any]
+	Location    plugin.TValue[string]
+	Labels      plugin.TValue[map[string]any]
+	Created     plugin.TValue[*time.Time]
+	Modified    plugin.TValue[*time.Time]
+	Tags        plugin.TValue[map[string]any]
+	KmsName     plugin.TValue[string]
+	Access      plugin.TValue[[]any]
+	Tables      plugin.TValue[[]any]
+	Models      plugin.TValue[[]any]
+	Routines    plugin.TValue[[]any]
 }
 
 // createGcpProjectBigqueryServiceDataset creates a new instance of this resource
@@ -15515,7 +15514,7 @@ func createGcpProjectBigqueryServiceDataset(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15635,14 +15634,14 @@ func (c *mqlGcpProjectBigqueryServiceDataset) GetRoutines() *plugin.TValue[[]any
 // mqlGcpProjectBigqueryServiceDatasetAccessEntry for the gcp.project.bigqueryService.dataset.accessEntry resource
 type mqlGcpProjectBigqueryServiceDatasetAccessEntry struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectBigqueryServiceDatasetAccessEntryInternal it will be used here
-	Id plugin.TValue[string]
-	DatasetId plugin.TValue[string]
-	Role plugin.TValue[string]
+	Id         plugin.TValue[string]
+	DatasetId  plugin.TValue[string]
+	Role       plugin.TValue[string]
 	EntityType plugin.TValue[string]
-	Entity plugin.TValue[string]
-	ViewRef plugin.TValue[any]
+	Entity     plugin.TValue[string]
+	ViewRef    plugin.TValue[any]
 	RoutineRef plugin.TValue[any]
 	DatasetRef plugin.TValue[any]
 }
@@ -15659,7 +15658,7 @@ func createGcpProjectBigqueryServiceDatasetAccessEntry(runtime *plugin.Runtime, 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15719,33 +15718,33 @@ func (c *mqlGcpProjectBigqueryServiceDatasetAccessEntry) GetDatasetRef() *plugin
 // mqlGcpProjectBigqueryServiceTable for the gcp.project.bigqueryService.table resource
 type mqlGcpProjectBigqueryServiceTable struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectBigqueryServiceTableInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	DatasetId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Location plugin.TValue[string]
-	Description plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	UseLegacySQL plugin.TValue[bool]
+	Id                     plugin.TValue[string]
+	ProjectId              plugin.TValue[string]
+	DatasetId              plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Location               plugin.TValue[string]
+	Description            plugin.TValue[string]
+	Labels                 plugin.TValue[map[string]any]
+	UseLegacySQL           plugin.TValue[bool]
 	RequirePartitionFilter plugin.TValue[bool]
-	Created plugin.TValue[*time.Time]
-	Modified plugin.TValue[*time.Time]
-	NumBytes plugin.TValue[int64]
-	NumLongTermBytes plugin.TValue[int64]
-	NumRows plugin.TValue[int64]
-	Type plugin.TValue[string]
-	ExpirationTime plugin.TValue[*time.Time]
-	KmsName plugin.TValue[string]
-	SnapshotTime plugin.TValue[*time.Time]
-	ViewQuery plugin.TValue[string]
-	ClusteringFields plugin.TValue[any]
-	ExternalDataConfig plugin.TValue[any]
-	MaterializedView plugin.TValue[any]
-	RangePartitioning plugin.TValue[any]
-	TimePartitioning plugin.TValue[any]
-	Schema plugin.TValue[[]any]
+	Created                plugin.TValue[*time.Time]
+	Modified               plugin.TValue[*time.Time]
+	NumBytes               plugin.TValue[int64]
+	NumLongTermBytes       plugin.TValue[int64]
+	NumRows                plugin.TValue[int64]
+	Type                   plugin.TValue[string]
+	ExpirationTime         plugin.TValue[*time.Time]
+	KmsName                plugin.TValue[string]
+	SnapshotTime           plugin.TValue[*time.Time]
+	ViewQuery              plugin.TValue[string]
+	ClusteringFields       plugin.TValue[any]
+	ExternalDataConfig     plugin.TValue[any]
+	MaterializedView       plugin.TValue[any]
+	RangePartitioning      plugin.TValue[any]
+	TimePartitioning       plugin.TValue[any]
+	Schema                 plugin.TValue[[]any]
 }
 
 // createGcpProjectBigqueryServiceTable creates a new instance of this resource
@@ -15760,7 +15759,7 @@ func createGcpProjectBigqueryServiceTable(runtime *plugin.Runtime, args map[stri
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15888,20 +15887,20 @@ func (c *mqlGcpProjectBigqueryServiceTable) GetSchema() *plugin.TValue[[]any] {
 // mqlGcpProjectBigqueryServiceModel for the gcp.project.bigqueryService.model resource
 type mqlGcpProjectBigqueryServiceModel struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectBigqueryServiceModelInternal it will be used here
-	Id plugin.TValue[string]
-	DatasetId plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Location plugin.TValue[string]
-	Description plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Created plugin.TValue[*time.Time]
-	Modified plugin.TValue[*time.Time]
-	Type plugin.TValue[string]
+	Id             plugin.TValue[string]
+	DatasetId      plugin.TValue[string]
+	ProjectId      plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Location       plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Labels         plugin.TValue[map[string]any]
+	Created        plugin.TValue[*time.Time]
+	Modified       plugin.TValue[*time.Time]
+	Type           plugin.TValue[string]
 	ExpirationTime plugin.TValue[*time.Time]
-	KmsName plugin.TValue[string]
+	KmsName        plugin.TValue[string]
 }
 
 // createGcpProjectBigqueryServiceModel creates a new instance of this resource
@@ -15916,7 +15915,7 @@ func createGcpProjectBigqueryServiceModel(runtime *plugin.Runtime, args map[stri
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15992,16 +15991,16 @@ func (c *mqlGcpProjectBigqueryServiceModel) GetKmsName() *plugin.TValue[string] 
 // mqlGcpProjectBigqueryServiceRoutine for the gcp.project.bigqueryService.routine resource
 type mqlGcpProjectBigqueryServiceRoutine struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectBigqueryServiceRoutineInternal it will be used here
-	Id plugin.TValue[string]
-	DatasetId plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Language plugin.TValue[string]
+	Id          plugin.TValue[string]
+	DatasetId   plugin.TValue[string]
+	ProjectId   plugin.TValue[string]
+	Language    plugin.TValue[string]
 	Description plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Modified plugin.TValue[*time.Time]
-	Type plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	Modified    plugin.TValue[*time.Time]
+	Type        plugin.TValue[string]
 }
 
 // createGcpProjectBigqueryServiceRoutine creates a new instance of this resource
@@ -16016,7 +16015,7 @@ func createGcpProjectBigqueryServiceRoutine(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -16076,11 +16075,11 @@ func (c *mqlGcpProjectBigqueryServiceRoutine) GetType() *plugin.TValue[string] {
 // mqlGcpProjectDnsService for the gcp.project.dnsService resource
 type mqlGcpProjectDnsService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGcpProjectDnsServiceInternal
-	ProjectId plugin.TValue[string]
+	ProjectId    plugin.TValue[string]
 	ManagedZones plugin.TValue[[]any]
-	Policies plugin.TValue[[]any]
+	Policies     plugin.TValue[[]any]
 }
 
 // createGcpProjectDnsService creates a new instance of this resource
@@ -16095,7 +16094,7 @@ func createGcpProjectDnsService(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -16159,19 +16158,19 @@ func (c *mqlGcpProjectDnsService) GetPolicies() *plugin.TValue[[]any] {
 // mqlGcpProjectDnsServiceManagedzone for the gcp.project.dnsService.managedzone resource
 type mqlGcpProjectDnsServiceManagedzone struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDnsServiceManagedzoneInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	DnssecConfig plugin.TValue[any]
-	DnsName plugin.TValue[string]
+	Id            plugin.TValue[string]
+	ProjectId     plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	DnssecConfig  plugin.TValue[any]
+	DnsName       plugin.TValue[string]
 	NameServerSet plugin.TValue[string]
-	NameServers plugin.TValue[[]any]
-	Visibility plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	RecordSets plugin.TValue[[]any]
+	NameServers   plugin.TValue[[]any]
+	Visibility    plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	RecordSets    plugin.TValue[[]any]
 }
 
 // createGcpProjectDnsServiceManagedzone creates a new instance of this resource
@@ -16186,7 +16185,7 @@ func createGcpProjectDnsServiceManagedzone(runtime *plugin.Runtime, args map[str
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -16270,14 +16269,14 @@ func (c *mqlGcpProjectDnsServiceManagedzone) GetRecordSets() *plugin.TValue[[]an
 // mqlGcpProjectDnsServiceRecordset for the gcp.project.dnsService.recordset resource
 type mqlGcpProjectDnsServiceRecordset struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDnsServiceRecordsetInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Rrdatas plugin.TValue[[]any]
+	ProjectId        plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Rrdatas          plugin.TValue[[]any]
 	SignatureRrdatas plugin.TValue[[]any]
-	Ttl plugin.TValue[int64]
-	Type plugin.TValue[string]
+	Ttl              plugin.TValue[int64]
+	Type             plugin.TValue[string]
 }
 
 // createGcpProjectDnsServiceRecordset creates a new instance of this resource
@@ -16292,7 +16291,7 @@ func createGcpProjectDnsServiceRecordset(runtime *plugin.Runtime, args map[strin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -16344,16 +16343,16 @@ func (c *mqlGcpProjectDnsServiceRecordset) GetType() *plugin.TValue[string] {
 // mqlGcpProjectDnsServicePolicy for the gcp.project.dnsService.policy resource
 type mqlGcpProjectDnsServicePolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDnsServicePolicyInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
+	ProjectId               plugin.TValue[string]
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
 	EnableInboundForwarding plugin.TValue[bool]
-	EnableLogging plugin.TValue[bool]
-	NetworkNames plugin.TValue[[]any]
-	Networks plugin.TValue[[]any]
+	EnableLogging           plugin.TValue[bool]
+	NetworkNames            plugin.TValue[[]any]
+	Networks                plugin.TValue[[]any]
 }
 
 // createGcpProjectDnsServicePolicy creates a new instance of this resource
@@ -16368,7 +16367,7 @@ func createGcpProjectDnsServicePolicy(runtime *plugin.Runtime, args map[string]*
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -16440,10 +16439,10 @@ func (c *mqlGcpProjectDnsServicePolicy) GetNetworks() *plugin.TValue[[]any] {
 // mqlGcpProjectGkeService for the gcp.project.gkeService resource
 type mqlGcpProjectGkeService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGcpProjectGkeServiceInternal
 	ProjectId plugin.TValue[string]
-	Clusters plugin.TValue[[]any]
+	Clusters  plugin.TValue[[]any]
 }
 
 // createGcpProjectGkeService creates a new instance of this resource
@@ -16458,7 +16457,7 @@ func createGcpProjectGkeService(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -16506,46 +16505,46 @@ func (c *mqlGcpProjectGkeService) GetClusters() *plugin.TValue[[]any] {
 // mqlGcpProjectGkeServiceCluster for the gcp.project.gkeService.cluster resource
 type mqlGcpProjectGkeServiceCluster struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	LoggingService plugin.TValue[string]
-	MonitoringService plugin.TValue[string]
-	Network plugin.TValue[string]
-	ClusterIpv4Cidr plugin.TValue[string]
-	Subnetwork plugin.TValue[string]
-	NodePools plugin.TValue[[]any]
-	Locations plugin.TValue[[]any]
-	EnableKubernetesAlpha plugin.TValue[bool]
-	AutopilotEnabled plugin.TValue[bool]
-	Zone plugin.TValue[string]
-	Location plugin.TValue[string]
-	Endpoint plugin.TValue[string]
-	InitialClusterVersion plugin.TValue[string]
-	CurrentMasterVersion plugin.TValue[string]
-	Status plugin.TValue[string]
-	ResourceLabels plugin.TValue[map[string]any]
-	Created plugin.TValue[*time.Time]
-	ExpirationTime plugin.TValue[*time.Time]
-	AddonsConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfig]
-	WorkloadIdentityConfig plugin.TValue[any]
-	IpAllocationPolicy plugin.TValue[*mqlGcpProjectGkeServiceClusterIpAllocationPolicy]
-	NetworkConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkConfig]
-	BinaryAuthorization plugin.TValue[any]
-	LegacyAbac plugin.TValue[any]
-	MasterAuth plugin.TValue[any]
+	ProjectId                      plugin.TValue[string]
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Description                    plugin.TValue[string]
+	LoggingService                 plugin.TValue[string]
+	MonitoringService              plugin.TValue[string]
+	Network                        plugin.TValue[string]
+	ClusterIpv4Cidr                plugin.TValue[string]
+	Subnetwork                     plugin.TValue[string]
+	NodePools                      plugin.TValue[[]any]
+	Locations                      plugin.TValue[[]any]
+	EnableKubernetesAlpha          plugin.TValue[bool]
+	AutopilotEnabled               plugin.TValue[bool]
+	Zone                           plugin.TValue[string]
+	Location                       plugin.TValue[string]
+	Endpoint                       plugin.TValue[string]
+	InitialClusterVersion          plugin.TValue[string]
+	CurrentMasterVersion           plugin.TValue[string]
+	Status                         plugin.TValue[string]
+	ResourceLabels                 plugin.TValue[map[string]any]
+	Created                        plugin.TValue[*time.Time]
+	ExpirationTime                 plugin.TValue[*time.Time]
+	AddonsConfig                   plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfig]
+	WorkloadIdentityConfig         plugin.TValue[any]
+	IpAllocationPolicy             plugin.TValue[*mqlGcpProjectGkeServiceClusterIpAllocationPolicy]
+	NetworkConfig                  plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkConfig]
+	BinaryAuthorization            plugin.TValue[any]
+	LegacyAbac                     plugin.TValue[any]
+	MasterAuth                     plugin.TValue[any]
 	MasterAuthorizedNetworksConfig plugin.TValue[any]
-	PrivateClusterConfig plugin.TValue[any]
-	DatabaseEncryption plugin.TValue[any]
-	ShieldedNodesConfig plugin.TValue[any]
-	CostManagementConfig plugin.TValue[any]
-	ConfidentialNodesConfig plugin.TValue[any]
-	IdentityServiceConfig plugin.TValue[any]
-	NetworkPolicyConfig plugin.TValue[any]
-	ReleaseChannel plugin.TValue[string]
+	PrivateClusterConfig           plugin.TValue[any]
+	DatabaseEncryption             plugin.TValue[any]
+	ShieldedNodesConfig            plugin.TValue[any]
+	CostManagementConfig           plugin.TValue[any]
+	ConfidentialNodesConfig        plugin.TValue[any]
+	IdentityServiceConfig          plugin.TValue[any]
+	NetworkPolicyConfig            plugin.TValue[any]
+	ReleaseChannel                 plugin.TValue[string]
 }
 
 // createGcpProjectGkeServiceCluster creates a new instance of this resource
@@ -16560,7 +16559,7 @@ func createGcpProjectGkeServiceCluster(runtime *plugin.Runtime, args map[string]
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -16740,21 +16739,21 @@ func (c *mqlGcpProjectGkeServiceCluster) GetReleaseChannel() *plugin.TValue[stri
 // mqlGcpProjectGkeServiceClusterAddonsConfig for the gcp.project.gkeService.cluster.addonsConfig resource
 type mqlGcpProjectGkeServiceClusterAddonsConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterAddonsConfigInternal it will be used here
-	Id plugin.TValue[string]
-	HttpLoadBalancing plugin.TValue[any]
-	HorizontalPodAutoscaling plugin.TValue[any]
-	KubernetesDashboard plugin.TValue[any]
-	NetworkPolicyConfig plugin.TValue[any]
-	CloudRunConfig plugin.TValue[any]
-	DnsCacheConfig plugin.TValue[any]
-	ConfigConnectorConfig plugin.TValue[any]
+	Id                               plugin.TValue[string]
+	HttpLoadBalancing                plugin.TValue[any]
+	HorizontalPodAutoscaling         plugin.TValue[any]
+	KubernetesDashboard              plugin.TValue[any]
+	NetworkPolicyConfig              plugin.TValue[any]
+	CloudRunConfig                   plugin.TValue[any]
+	DnsCacheConfig                   plugin.TValue[any]
+	ConfigConnectorConfig            plugin.TValue[any]
 	GcePersistentDiskCsiDriverConfig plugin.TValue[any]
-	GcpFilestoreCsiDriverConfig plugin.TValue[any]
-	GkeBackupAgentConfig plugin.TValue[any]
-	GcsFuseCsiDriverConfig plugin.TValue[any]
-	StatefulHaConfig plugin.TValue[any]
+	GcpFilestoreCsiDriverConfig      plugin.TValue[any]
+	GkeBackupAgentConfig             plugin.TValue[any]
+	GcsFuseCsiDriverConfig           plugin.TValue[any]
+	StatefulHaConfig                 plugin.TValue[any]
 }
 
 // createGcpProjectGkeServiceClusterAddonsConfig creates a new instance of this resource
@@ -16769,7 +16768,7 @@ func createGcpProjectGkeServiceClusterAddonsConfig(runtime *plugin.Runtime, args
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -16849,21 +16848,21 @@ func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetStatefulHaConfig() *plug
 // mqlGcpProjectGkeServiceClusterIpAllocationPolicy for the gcp.project.gkeService.cluster.ipAllocationPolicy resource
 type mqlGcpProjectGkeServiceClusterIpAllocationPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterIpAllocationPolicyInternal it will be used here
-	Id plugin.TValue[string]
-	UseIpAliases plugin.TValue[bool]
-	CreateSubnetwork plugin.TValue[bool]
-	SubnetworkName plugin.TValue[string]
-	ClusterSecondaryRangeName plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	UseIpAliases               plugin.TValue[bool]
+	CreateSubnetwork           plugin.TValue[bool]
+	SubnetworkName             plugin.TValue[string]
+	ClusterSecondaryRangeName  plugin.TValue[string]
 	ServicesSecondaryRangeName plugin.TValue[string]
-	ClusterIpv4CidrBlock plugin.TValue[string]
-	NodeIpv4CidrBlock plugin.TValue[string]
-	ServicesIpv4CidrBlock plugin.TValue[string]
-	TpuIpv4CidrBlock plugin.TValue[string]
-	UseRoutes plugin.TValue[bool]
-	StackType plugin.TValue[string]
-	Ipv6AccessType plugin.TValue[string]
+	ClusterIpv4CidrBlock       plugin.TValue[string]
+	NodeIpv4CidrBlock          plugin.TValue[string]
+	ServicesIpv4CidrBlock      plugin.TValue[string]
+	TpuIpv4CidrBlock           plugin.TValue[string]
+	UseRoutes                  plugin.TValue[bool]
+	StackType                  plugin.TValue[string]
+	Ipv6AccessType             plugin.TValue[string]
 }
 
 // createGcpProjectGkeServiceClusterIpAllocationPolicy creates a new instance of this resource
@@ -16878,7 +16877,7 @@ func createGcpProjectGkeServiceClusterIpAllocationPolicy(runtime *plugin.Runtime
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -16958,22 +16957,22 @@ func (c *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) GetIpv6AccessType() *
 // mqlGcpProjectGkeServiceClusterNetworkConfig for the gcp.project.gkeService.cluster.networkConfig resource
 type mqlGcpProjectGkeServiceClusterNetworkConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNetworkConfigInternal it will be used here
-	Id plugin.TValue[string]
-	NetworkPath plugin.TValue[string]
-	Network plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
-	SubnetworkPath plugin.TValue[string]
-	Subnetwork plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
-	EnableIntraNodeVisibility plugin.TValue[bool]
-	DefaultSnatStatus plugin.TValue[any]
-	EnableL4IlbSubsetting plugin.TValue[bool]
-	DatapathProvider plugin.TValue[string]
-	PrivateIpv6GoogleAccess plugin.TValue[string]
-	DnsConfig plugin.TValue[any]
-	ServiceExternalIpsConfig plugin.TValue[any]
-	EnableMultiNetworking plugin.TValue[bool]
-	EnableFqdnNetworkPolicy plugin.TValue[bool]
+	Id                                   plugin.TValue[string]
+	NetworkPath                          plugin.TValue[string]
+	Network                              plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	SubnetworkPath                       plugin.TValue[string]
+	Subnetwork                           plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
+	EnableIntraNodeVisibility            plugin.TValue[bool]
+	DefaultSnatStatus                    plugin.TValue[any]
+	EnableL4IlbSubsetting                plugin.TValue[bool]
+	DatapathProvider                     plugin.TValue[string]
+	PrivateIpv6GoogleAccess              plugin.TValue[string]
+	DnsConfig                            plugin.TValue[any]
+	ServiceExternalIpsConfig             plugin.TValue[any]
+	EnableMultiNetworking                plugin.TValue[bool]
+	EnableFqdnNetworkPolicy              plugin.TValue[bool]
 	EnableCiliumClusterwideNetworkPolicy plugin.TValue[bool]
 }
 
@@ -16989,7 +16988,7 @@ func createGcpProjectGkeServiceClusterNetworkConfig(runtime *plugin.Runtime, arg
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17101,19 +17100,19 @@ func (c *mqlGcpProjectGkeServiceClusterNetworkConfig) GetEnableCiliumClusterwide
 // mqlGcpProjectGkeServiceClusterNodepool for the gcp.project.gkeService.cluster.nodepool resource
 type mqlGcpProjectGkeServiceClusterNodepool struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Config plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfig]
-	InitialNodeCount plugin.TValue[int64]
-	Locations plugin.TValue[[]any]
-	NetworkConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig]
-	Version plugin.TValue[string]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Config            plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfig]
+	InitialNodeCount  plugin.TValue[int64]
+	Locations         plugin.TValue[[]any]
+	NetworkConfig     plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig]
+	Version           plugin.TValue[string]
 	InstanceGroupUrls plugin.TValue[[]any]
-	Status plugin.TValue[string]
-	Management plugin.TValue[any]
-	Autoscaling plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling]
+	Status            plugin.TValue[string]
+	Management        plugin.TValue[any]
+	Autoscaling       plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling]
 }
 
 // createGcpProjectGkeServiceClusterNodepool creates a new instance of this resource
@@ -17128,7 +17127,7 @@ func createGcpProjectGkeServiceClusterNodepool(runtime *plugin.Runtime, args map
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17200,12 +17199,12 @@ func (c *mqlGcpProjectGkeServiceClusterNodepool) GetAutoscaling() *plugin.TValue
 // mqlGcpProjectGkeServiceClusterNodepoolAutoscaling for the gcp.project.gkeService.cluster.nodepool.autoscaling resource
 type mqlGcpProjectGkeServiceClusterNodepoolAutoscaling struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolAutoscalingInternal it will be used here
-	Enabled plugin.TValue[bool]
-	MinNodeCount plugin.TValue[int64]
-	MaxNodeCount plugin.TValue[int64]
-	Autoprovisioned plugin.TValue[bool]
+	Enabled           plugin.TValue[bool]
+	MinNodeCount      plugin.TValue[int64]
+	MaxNodeCount      plugin.TValue[int64]
+	Autoprovisioned   plugin.TValue[bool]
 	TotalMinNodeCount plugin.TValue[int64]
 	TotalMaxNodeCount plugin.TValue[int64]
 }
@@ -17269,11 +17268,11 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolAutoscaling) GetTotalMaxNodeCount
 // mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig for the gcp.project.gkeService.cluster.nodepool.networkConfig resource
 type mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigInternal it will be used here
-	Id plugin.TValue[string]
-	PodRange plugin.TValue[string]
-	PodIpv4CidrBlock plugin.TValue[string]
+	Id                plugin.TValue[string]
+	PodRange          plugin.TValue[string]
+	PodIpv4CidrBlock  plugin.TValue[string]
 	PerformanceConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig]
 }
 
@@ -17289,7 +17288,7 @@ func createGcpProjectGkeServiceClusterNodepoolNetworkConfig(runtime *plugin.Runt
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17333,9 +17332,9 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) GetPerformanceConf
 // mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig for the gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig resource
 type mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfigInternal it will be used here
-	Id plugin.TValue[string]
+	Id                       plugin.TValue[string]
 	TotalEgressBandwidthTier plugin.TValue[string]
 }
 
@@ -17351,7 +17350,7 @@ func createGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig(run
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17387,36 +17386,36 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig) G
 // mqlGcpProjectGkeServiceClusterNodepoolConfig for the gcp.project.gkeService.cluster.nodepool.config resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	MachineType plugin.TValue[string]
-	DiskSizeGb plugin.TValue[int64]
-	OauthScopes plugin.TValue[[]any]
-	ServiceAccountEmail plugin.TValue[string]
-	ServiceAccount plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
-	Metadata plugin.TValue[map[string]any]
-	ImageType plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	LocalSsdCount plugin.TValue[int64]
-	Tags plugin.TValue[[]any]
-	Preemptible plugin.TValue[bool]
-	Accelerators plugin.TValue[[]any]
-	DiskType plugin.TValue[string]
-	MinCpuPlatform plugin.TValue[string]
-	WorkloadMetadataMode plugin.TValue[string]
-	Taints plugin.TValue[[]any]
-	SandboxConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig]
-	ShieldedInstanceConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig]
-	LinuxNodeConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig]
-	KubeletConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig]
-	BootDiskKmsKey plugin.TValue[string]
-	GcfsConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig]
+	Id                      plugin.TValue[string]
+	ProjectId               plugin.TValue[string]
+	MachineType             plugin.TValue[string]
+	DiskSizeGb              plugin.TValue[int64]
+	OauthScopes             plugin.TValue[[]any]
+	ServiceAccountEmail     plugin.TValue[string]
+	ServiceAccount          plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	Metadata                plugin.TValue[map[string]any]
+	ImageType               plugin.TValue[string]
+	Labels                  plugin.TValue[map[string]any]
+	LocalSsdCount           plugin.TValue[int64]
+	Tags                    plugin.TValue[[]any]
+	Preemptible             plugin.TValue[bool]
+	Accelerators            plugin.TValue[[]any]
+	DiskType                plugin.TValue[string]
+	MinCpuPlatform          plugin.TValue[string]
+	WorkloadMetadataMode    plugin.TValue[string]
+	Taints                  plugin.TValue[[]any]
+	SandboxConfig           plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig]
+	ShieldedInstanceConfig  plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig]
+	LinuxNodeConfig         plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig]
+	KubeletConfig           plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig]
+	BootDiskKmsKey          plugin.TValue[string]
+	GcfsConfig              plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig]
 	AdvancedMachineFeatures plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures]
-	GvnicConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig]
-	Spot plugin.TValue[bool]
-	ConfidentialNodes plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes]
+	GvnicConfig             plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig]
+	Spot                    plugin.TValue[bool]
+	ConfidentialNodes       plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes]
 }
 
 // createGcpProjectGkeServiceClusterNodepoolConfig creates a new instance of this resource
@@ -17431,7 +17430,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfig(runtime *plugin.Runtime, ar
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17583,11 +17582,11 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetConfidentialNodes() *p
 // mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator for the gcp.project.gkeService.cluster.nodepool.config.accelerator resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorInternal it will be used here
-	Id plugin.TValue[string]
-	Count plugin.TValue[int64]
-	Type plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Count            plugin.TValue[int64]
+	Type             plugin.TValue[string]
 	GpuPartitionSize plugin.TValue[string]
 	GpuSharingConfig plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig]
 }
@@ -17604,7 +17603,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigAccelerator(runtime *plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17652,11 +17651,11 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) GetGpuSharingC
 // mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig for the gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfigInternal it will be used here
-	Id plugin.TValue[string]
+	Id                     plugin.TValue[string]
 	MaxSharedClientsPerGpu plugin.TValue[int64]
-	Strategy plugin.TValue[string]
+	Strategy               plugin.TValue[string]
 }
 
 // createGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig creates a new instance of this resource
@@ -17671,7 +17670,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig(
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17711,11 +17710,11 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig
 // mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint for the gcp.project.gkeService.cluster.nodepool.config.nodeTaint resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaintInternal it will be used here
-	Id plugin.TValue[string]
-	Key plugin.TValue[string]
-	Value plugin.TValue[string]
+	Id     plugin.TValue[string]
+	Key    plugin.TValue[string]
+	Value  plugin.TValue[string]
 	Effect plugin.TValue[string]
 }
 
@@ -17731,7 +17730,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigNodeTaint(runtime *plugin.Ru
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17775,9 +17774,9 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) GetEffect() *plu
 // mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig for the gcp.project.gkeService.cluster.nodepool.config.sandboxConfig resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfigInternal it will be used here
-	Id plugin.TValue[string]
+	Id   plugin.TValue[string]
 	Type plugin.TValue[string]
 }
 
@@ -17793,7 +17792,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig(runtime *plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17829,10 +17828,10 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig) GetType() *p
 // mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig for the gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfigInternal it will be used here
-	Id plugin.TValue[string]
-	EnableSecureBoot plugin.TValue[bool]
+	Id                        plugin.TValue[string]
+	EnableSecureBoot          plugin.TValue[bool]
 	EnableIntegrityMonitoring plugin.TValue[bool]
 }
 
@@ -17848,7 +17847,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig(runti
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17888,9 +17887,9 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) Get
 // mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig for the gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfigInternal it will be used here
-	Id plugin.TValue[string]
+	Id      plugin.TValue[string]
 	Sysctls plugin.TValue[map[string]any]
 }
 
@@ -17906,7 +17905,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig(runtime *plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -17942,12 +17941,12 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) GetSysctls
 // mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig for the gcp.project.gkeService.cluster.nodepool.config.kubeletConfig resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfigInternal it will be used here
-	Id plugin.TValue[string]
-	CpuManagerPolicy plugin.TValue[string]
+	Id                plugin.TValue[string]
+	CpuManagerPolicy  plugin.TValue[string]
 	CpuCfsQuotaPeriod plugin.TValue[string]
-	PodPidsLimit plugin.TValue[int64]
+	PodPidsLimit      plugin.TValue[int64]
 }
 
 // createGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig creates a new instance of this resource
@@ -17962,7 +17961,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig(runtime *plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18006,9 +18005,9 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) GetPodPidsLi
 // mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig for the gcp.project.gkeService.cluster.nodepool.config.gcfsConfig resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfigInternal it will be used here
-	Id plugin.TValue[string]
+	Id      plugin.TValue[string]
 	Enabled plugin.TValue[bool]
 }
 
@@ -18024,7 +18023,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig(runtime *plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18060,9 +18059,9 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig) GetEnabled() *p
 // mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures for the gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeaturesInternal it will be used here
-	Id plugin.TValue[string]
+	Id             plugin.TValue[string]
 	ThreadsPerCore plugin.TValue[int64]
 }
 
@@ -18078,7 +18077,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures(runt
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18114,9 +18113,9 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures) Ge
 // mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig for the gcp.project.gkeService.cluster.nodepool.config.gvnicConfig resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfigInternal it will be used here
-	Id plugin.TValue[string]
+	Id      plugin.TValue[string]
 	Enabled plugin.TValue[bool]
 }
 
@@ -18132,7 +18131,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig(runtime *plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18168,9 +18167,9 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig) GetEnabled() *
 // mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes for the gcp.project.gkeService.cluster.nodepool.config.confidentialNodes resource
 type mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodesInternal it will be used here
-	Id plugin.TValue[string]
+	Id      plugin.TValue[string]
 	Enabled plugin.TValue[bool]
 }
 
@@ -18186,7 +18185,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes(runtime *p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18222,12 +18221,12 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) GetEnabl
 // mqlGcpProjectPubsubService for the gcp.project.pubsubService resource
 type mqlGcpProjectPubsubService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Topics plugin.TValue[[]any]
+	ProjectId     plugin.TValue[string]
+	Topics        plugin.TValue[[]any]
 	Subscriptions plugin.TValue[[]any]
-	Snapshots plugin.TValue[[]any]
+	Snapshots     plugin.TValue[[]any]
 }
 
 // createGcpProjectPubsubService creates a new instance of this resource
@@ -18242,7 +18241,7 @@ func createGcpProjectPubsubService(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18322,11 +18321,11 @@ func (c *mqlGcpProjectPubsubService) GetSnapshots() *plugin.TValue[[]any] {
 // mqlGcpProjectPubsubServiceTopic for the gcp.project.pubsubService.topic resource
 type mqlGcpProjectPubsubServiceTopic struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceTopicInternal it will be used here
 	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Config plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfig]
+	Name      plugin.TValue[string]
+	Config    plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfig]
 }
 
 // createGcpProjectPubsubServiceTopic creates a new instance of this resource
@@ -18341,7 +18340,7 @@ func createGcpProjectPubsubServiceTopic(runtime *plugin.Runtime, args map[string
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18393,12 +18392,12 @@ func (c *mqlGcpProjectPubsubServiceTopic) GetConfig() *plugin.TValue[*mqlGcpProj
 // mqlGcpProjectPubsubServiceTopicConfig for the gcp.project.pubsubService.topic.config resource
 type mqlGcpProjectPubsubServiceTopicConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceTopicConfigInternal it will be used here
-	ProjectId plugin.TValue[string]
-	TopicName plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	KmsKeyName plugin.TValue[string]
+	ProjectId            plugin.TValue[string]
+	TopicName            plugin.TValue[string]
+	Labels               plugin.TValue[map[string]any]
+	KmsKeyName           plugin.TValue[string]
 	MessageStoragePolicy plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy]
 }
 
@@ -18414,7 +18413,7 @@ func createGcpProjectPubsubServiceTopicConfig(runtime *plugin.Runtime, args map[
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18462,9 +18461,9 @@ func (c *mqlGcpProjectPubsubServiceTopicConfig) GetMessageStoragePolicy() *plugi
 // mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy for the gcp.project.pubsubService.topic.config.messagestoragepolicy resource
 type mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicyInternal it will be used here
-	ConfigId plugin.TValue[string]
+	ConfigId                  plugin.TValue[string]
 	AllowedPersistenceRegions plugin.TValue[[]any]
 }
 
@@ -18480,7 +18479,7 @@ func createGcpProjectPubsubServiceTopicConfigMessagestoragepolicy(runtime *plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18516,11 +18515,11 @@ func (c *mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy) GetAllowedPe
 // mqlGcpProjectPubsubServiceSubscription for the gcp.project.pubsubService.subscription resource
 type mqlGcpProjectPubsubServiceSubscription struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceSubscriptionInternal it will be used here
 	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Config plugin.TValue[*mqlGcpProjectPubsubServiceSubscriptionConfig]
+	Name      plugin.TValue[string]
+	Config    plugin.TValue[*mqlGcpProjectPubsubServiceSubscriptionConfig]
 }
 
 // createGcpProjectPubsubServiceSubscription creates a new instance of this resource
@@ -18535,7 +18534,7 @@ func createGcpProjectPubsubServiceSubscription(runtime *plugin.Runtime, args map
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18587,17 +18586,17 @@ func (c *mqlGcpProjectPubsubServiceSubscription) GetConfig() *plugin.TValue[*mql
 // mqlGcpProjectPubsubServiceSubscriptionConfig for the gcp.project.pubsubService.subscription.config resource
 type mqlGcpProjectPubsubServiceSubscriptionConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceSubscriptionConfigInternal it will be used here
-	ProjectId plugin.TValue[string]
-	SubscriptionName plugin.TValue[string]
-	Topic plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
-	PushConfig plugin.TValue[*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig]
-	AckDeadline plugin.TValue[*time.Time]
+	ProjectId           plugin.TValue[string]
+	SubscriptionName    plugin.TValue[string]
+	Topic               plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
+	PushConfig          plugin.TValue[*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig]
+	AckDeadline         plugin.TValue[*time.Time]
 	RetainAckedMessages plugin.TValue[bool]
-	RetentionDuration plugin.TValue[*time.Time]
-	ExpirationPolicy plugin.TValue[*time.Time]
-	Labels plugin.TValue[map[string]any]
+	RetentionDuration   plugin.TValue[*time.Time]
+	ExpirationPolicy    plugin.TValue[*time.Time]
+	Labels              plugin.TValue[map[string]any]
 }
 
 // createGcpProjectPubsubServiceSubscriptionConfig creates a new instance of this resource
@@ -18612,7 +18611,7 @@ func createGcpProjectPubsubServiceSubscriptionConfig(runtime *plugin.Runtime, ar
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18676,10 +18675,10 @@ func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetLabels() *plugin.TValu
 // mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig for the gcp.project.pubsubService.subscription.config.pushconfig resource
 type mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceSubscriptionConfigPushconfigInternal it will be used here
-	ConfigId plugin.TValue[string]
-	Endpoint plugin.TValue[string]
+	ConfigId   plugin.TValue[string]
+	Endpoint   plugin.TValue[string]
 	Attributes plugin.TValue[map[string]any]
 }
 
@@ -18695,7 +18694,7 @@ func createGcpProjectPubsubServiceSubscriptionConfigPushconfig(runtime *plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18735,11 +18734,11 @@ func (c *mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig) GetAttributes()
 // mqlGcpProjectPubsubServiceSnapshot for the gcp.project.pubsubService.snapshot resource
 type mqlGcpProjectPubsubServiceSnapshot struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceSnapshotInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Topic plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
+	ProjectId  plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Topic      plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
 	Expiration plugin.TValue[*time.Time]
 }
 
@@ -18755,7 +18754,7 @@ func createGcpProjectPubsubServiceSnapshot(runtime *plugin.Runtime, args map[str
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18799,11 +18798,11 @@ func (c *mqlGcpProjectPubsubServiceSnapshot) GetExpiration() *plugin.TValue[*tim
 // mqlGcpProjectKmsService for the gcp.project.kmsService resource
 type mqlGcpProjectKmsService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectKmsServiceInternal it will be used here
 	ProjectId plugin.TValue[string]
 	Locations plugin.TValue[[]any]
-	Keyrings plugin.TValue[[]any]
+	Keyrings  plugin.TValue[[]any]
 }
 
 // createGcpProjectKmsService creates a new instance of this resource
@@ -18818,7 +18817,7 @@ func createGcpProjectKmsService(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18872,14 +18871,14 @@ func (c *mqlGcpProjectKmsService) GetKeyrings() *plugin.TValue[[]any] {
 // mqlGcpProjectKmsServiceKeyring for the gcp.project.kmsService.keyring resource
 type mqlGcpProjectKmsServiceKeyring struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectKmsServiceKeyringInternal it will be used here
-	ProjectId plugin.TValue[string]
+	ProjectId    plugin.TValue[string]
 	ResourcePath plugin.TValue[string]
-	Name plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Location plugin.TValue[string]
-	Cryptokeys plugin.TValue[[]any]
+	Name         plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	Location     plugin.TValue[string]
+	Cryptokeys   plugin.TValue[[]any]
 }
 
 // createGcpProjectKmsServiceKeyring creates a new instance of this resource
@@ -18894,7 +18893,7 @@ func createGcpProjectKmsServiceKeyring(runtime *plugin.Runtime, args map[string]
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -18958,22 +18957,22 @@ func (c *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() *plugin.TValue[[]any] {
 // mqlGcpProjectKmsServiceKeyringCryptokey for the gcp.project.kmsService.keyring.cryptokey resource
 type mqlGcpProjectKmsServiceKeyringCryptokey struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectKmsServiceKeyringCryptokeyInternal it will be used here
-	ResourcePath plugin.TValue[string]
-	Name plugin.TValue[string]
-	Primary plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersion]
-	Purpose plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	NextRotation plugin.TValue[*time.Time]
-	RotationPeriod plugin.TValue[*time.Time]
-	VersionTemplate plugin.TValue[any]
-	Labels plugin.TValue[map[string]any]
-	ImportOnly plugin.TValue[bool]
+	ResourcePath             plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Primary                  plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersion]
+	Purpose                  plugin.TValue[string]
+	Created                  plugin.TValue[*time.Time]
+	NextRotation             plugin.TValue[*time.Time]
+	RotationPeriod           plugin.TValue[*time.Time]
+	VersionTemplate          plugin.TValue[any]
+	Labels                   plugin.TValue[map[string]any]
+	ImportOnly               plugin.TValue[bool]
 	DestroyScheduledDuration plugin.TValue[*time.Time]
-	CryptoKeyBackend plugin.TValue[string]
-	Versions plugin.TValue[[]any]
-	IamPolicy plugin.TValue[[]any]
+	CryptoKeyBackend         plugin.TValue[string]
+	Versions                 plugin.TValue[[]any]
+	IamPolicy                plugin.TValue[[]any]
 }
 
 // createGcpProjectKmsServiceKeyringCryptokey creates a new instance of this resource
@@ -18988,7 +18987,7 @@ func createGcpProjectKmsServiceKeyringCryptokey(runtime *plugin.Runtime, args ma
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19096,23 +19095,23 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() *plugin.TValue[
 // mqlGcpProjectKmsServiceKeyringCryptokeyVersion for the gcp.project.kmsService.keyring.cryptokey.version resource
 type mqlGcpProjectKmsServiceKeyringCryptokeyVersion struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectKmsServiceKeyringCryptokeyVersionInternal it will be used here
-	ResourcePath plugin.TValue[string]
-	Name plugin.TValue[string]
-	State plugin.TValue[string]
-	ProtectionLevel plugin.TValue[string]
-	Algorithm plugin.TValue[string]
-	Attestation plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation]
-	Created plugin.TValue[*time.Time]
-	Generated plugin.TValue[*time.Time]
-	Destroyed plugin.TValue[*time.Time]
-	DestroyEventTime plugin.TValue[*time.Time]
-	ImportJob plugin.TValue[string]
-	ImportTime plugin.TValue[*time.Time]
-	ImportFailureReason plugin.TValue[string]
+	ResourcePath                   plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	State                          plugin.TValue[string]
+	ProtectionLevel                plugin.TValue[string]
+	Algorithm                      plugin.TValue[string]
+	Attestation                    plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation]
+	Created                        plugin.TValue[*time.Time]
+	Generated                      plugin.TValue[*time.Time]
+	Destroyed                      plugin.TValue[*time.Time]
+	DestroyEventTime               plugin.TValue[*time.Time]
+	ImportJob                      plugin.TValue[string]
+	ImportTime                     plugin.TValue[*time.Time]
+	ImportFailureReason            plugin.TValue[string]
 	ExternalProtectionLevelOptions plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions]
-	ReimportEligible plugin.TValue[bool]
+	ReimportEligible               plugin.TValue[bool]
 }
 
 // createGcpProjectKmsServiceKeyringCryptokeyVersion creates a new instance of this resource
@@ -19127,7 +19126,7 @@ func createGcpProjectKmsServiceKeyringCryptokeyVersion(runtime *plugin.Runtime, 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19215,11 +19214,11 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) GetReimportEligible() *
 // mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation for the gcp.project.kmsService.keyring.cryptokey.version.attestation resource
 type mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationInternal it will be used here
 	CryptoKeyVersionName plugin.TValue[string]
-	Format plugin.TValue[string]
-	CertificateChains plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains]
+	Format               plugin.TValue[string]
+	CertificateChains    plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains]
 }
 
 // createGcpProjectKmsServiceKeyringCryptokeyVersionAttestation creates a new instance of this resource
@@ -19234,7 +19233,7 @@ func createGcpProjectKmsServiceKeyringCryptokeyVersionAttestation(runtime *plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19274,11 +19273,11 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation) GetCertifica
 // mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains for the gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains resource
 type mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechainsInternal it will be used here
 	CryptoKeyVersionName plugin.TValue[string]
-	CaviumCerts plugin.TValue[[]any]
-	GoogleCardCerts plugin.TValue[[]any]
+	CaviumCerts          plugin.TValue[[]any]
+	GoogleCardCerts      plugin.TValue[[]any]
 	GooglePartitionCerts plugin.TValue[[]any]
 }
 
@@ -19294,7 +19293,7 @@ func createGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechai
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19338,10 +19337,10 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatecha
 // mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions for the gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions resource
 type mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptionsInternal it will be used here
 	CryptoKeyVersionName plugin.TValue[string]
-	ExternalKeyUri plugin.TValue[string]
+	ExternalKeyUri       plugin.TValue[string]
 	EkmConnectionKeyPath plugin.TValue[string]
 }
 
@@ -19357,7 +19356,7 @@ func createGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOpt
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19397,14 +19396,14 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOp
 // mqlGcpEssentialContact for the gcp.essentialContact resource
 type mqlGcpEssentialContact struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpEssentialContactInternal it will be used here
-	ResourcePath plugin.TValue[string]
-	Email plugin.TValue[string]
-	LanguageTag plugin.TValue[string]
+	ResourcePath           plugin.TValue[string]
+	Email                  plugin.TValue[string]
+	LanguageTag            plugin.TValue[string]
 	NotificationCategories plugin.TValue[[]any]
-	Validated plugin.TValue[*time.Time]
-	ValidationState plugin.TValue[string]
+	Validated              plugin.TValue[*time.Time]
+	ValidationState        plugin.TValue[string]
 }
 
 // createGcpEssentialContact creates a new instance of this resource
@@ -19419,7 +19418,7 @@ func createGcpEssentialContact(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19471,18 +19470,18 @@ func (c *mqlGcpEssentialContact) GetValidationState() *plugin.TValue[string] {
 // mqlGcpProjectApiKey for the gcp.project.apiKey resource
 type mqlGcpProjectApiKey struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectApiKeyInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id           plugin.TValue[string]
+	ProjectId    plugin.TValue[string]
+	Name         plugin.TValue[string]
 	ResourcePath plugin.TValue[string]
-	Annotations plugin.TValue[map[string]any]
-	Created plugin.TValue[*time.Time]
-	Deleted plugin.TValue[*time.Time]
-	KeyString plugin.TValue[string]
+	Annotations  plugin.TValue[map[string]any]
+	Created      plugin.TValue[*time.Time]
+	Deleted      plugin.TValue[*time.Time]
+	KeyString    plugin.TValue[string]
 	Restrictions plugin.TValue[*mqlGcpProjectApiKeyRestrictions]
-	Updated plugin.TValue[*time.Time]
+	Updated      plugin.TValue[*time.Time]
 }
 
 // createGcpProjectApiKey creates a new instance of this resource
@@ -19497,7 +19496,7 @@ func createGcpProjectApiKey(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19565,14 +19564,14 @@ func (c *mqlGcpProjectApiKey) GetUpdated() *plugin.TValue[*time.Time] {
 // mqlGcpProjectApiKeyRestrictions for the gcp.project.apiKey.restrictions resource
 type mqlGcpProjectApiKeyRestrictions struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectApiKeyRestrictionsInternal it will be used here
-	ParentResourcePath plugin.TValue[string]
+	ParentResourcePath     plugin.TValue[string]
 	AndroidKeyRestrictions plugin.TValue[any]
-	ApiTargets plugin.TValue[[]any]
+	ApiTargets             plugin.TValue[[]any]
 	BrowserKeyRestrictions plugin.TValue[any]
-	IosKeyRestrictions plugin.TValue[any]
-	ServerKeyRestrictions plugin.TValue[any]
+	IosKeyRestrictions     plugin.TValue[any]
+	ServerKeyRestrictions  plugin.TValue[any]
 }
 
 // createGcpProjectApiKeyRestrictions creates a new instance of this resource
@@ -19587,7 +19586,7 @@ func createGcpProjectApiKeyRestrictions(runtime *plugin.Runtime, args map[string
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19639,12 +19638,12 @@ func (c *mqlGcpProjectApiKeyRestrictions) GetServerKeyRestrictions() *plugin.TVa
 // mqlGcpProjectLoggingservice for the gcp.project.loggingservice resource
 type mqlGcpProjectLoggingservice struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectLoggingserviceInternal it will be used here
 	ProjectId plugin.TValue[string]
-	Buckets plugin.TValue[[]any]
-	Metrics plugin.TValue[[]any]
-	Sinks plugin.TValue[[]any]
+	Buckets   plugin.TValue[[]any]
+	Metrics   plugin.TValue[[]any]
+	Sinks     plugin.TValue[[]any]
 }
 
 // createGcpProjectLoggingservice creates a new instance of this resource
@@ -19659,7 +19658,7 @@ func createGcpProjectLoggingservice(runtime *plugin.Runtime, args map[string]*ll
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19739,19 +19738,19 @@ func (c *mqlGcpProjectLoggingservice) GetSinks() *plugin.TValue[[]any] {
 // mqlGcpProjectLoggingserviceBucket for the gcp.project.loggingservice.bucket resource
 type mqlGcpProjectLoggingserviceBucket struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectLoggingserviceBucketInternal it will be used here
-	ProjectId plugin.TValue[string]
-	CmekSettings plugin.TValue[any]
-	Created plugin.TValue[*time.Time]
-	Description plugin.TValue[string]
-	IndexConfigs plugin.TValue[[]any]
-	LifecycleState plugin.TValue[string]
-	Locked plugin.TValue[bool]
-	Name plugin.TValue[string]
+	ProjectId        plugin.TValue[string]
+	CmekSettings     plugin.TValue[any]
+	Created          plugin.TValue[*time.Time]
+	Description      plugin.TValue[string]
+	IndexConfigs     plugin.TValue[[]any]
+	LifecycleState   plugin.TValue[string]
+	Locked           plugin.TValue[bool]
+	Name             plugin.TValue[string]
 	RestrictedFields plugin.TValue[[]any]
-	RetentionDays plugin.TValue[int64]
-	Updated plugin.TValue[*time.Time]
+	RetentionDays    plugin.TValue[int64]
+	Updated          plugin.TValue[*time.Time]
 }
 
 // createGcpProjectLoggingserviceBucket creates a new instance of this resource
@@ -19766,7 +19765,7 @@ func createGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[stri
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19838,12 +19837,12 @@ func (c *mqlGcpProjectLoggingserviceBucket) GetUpdated() *plugin.TValue[*time.Ti
 // mqlGcpProjectLoggingserviceBucketIndexConfig for the gcp.project.loggingservice.bucket.indexConfig resource
 type mqlGcpProjectLoggingserviceBucketIndexConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectLoggingserviceBucketIndexConfigInternal it will be used here
-	Id plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
+	Id        plugin.TValue[string]
+	Created   plugin.TValue[*time.Time]
 	FieldPath plugin.TValue[string]
-	Type plugin.TValue[string]
+	Type      plugin.TValue[string]
 }
 
 // createGcpProjectLoggingserviceBucketIndexConfig creates a new instance of this resource
@@ -19858,7 +19857,7 @@ func createGcpProjectLoggingserviceBucketIndexConfig(runtime *plugin.Runtime, ar
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19902,12 +19901,12 @@ func (c *mqlGcpProjectLoggingserviceBucketIndexConfig) GetType() *plugin.TValue[
 // mqlGcpProjectLoggingserviceMetric for the gcp.project.loggingservice.metric resource
 type mqlGcpProjectLoggingserviceMetric struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectLoggingserviceMetricInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Description plugin.TValue[string]
-	Filter plugin.TValue[string]
+	Id            plugin.TValue[string]
+	ProjectId     plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Filter        plugin.TValue[string]
 	AlertPolicies plugin.TValue[[]any]
 }
 
@@ -19923,7 +19922,7 @@ func createGcpProjectLoggingserviceMetric(runtime *plugin.Runtime, args map[stri
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19983,14 +19982,14 @@ func (c *mqlGcpProjectLoggingserviceMetric) GetAlertPolicies() *plugin.TValue[[]
 // mqlGcpProjectLoggingserviceSink for the gcp.project.loggingservice.sink resource
 type mqlGcpProjectLoggingserviceSink struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectLoggingserviceSinkInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Destination plugin.TValue[string]
-	StorageBucket plugin.TValue[*mqlGcpProjectStorageServiceBucket]
-	Filter plugin.TValue[string]
-	WriterIdentity plugin.TValue[string]
+	Id              plugin.TValue[string]
+	ProjectId       plugin.TValue[string]
+	Destination     plugin.TValue[string]
+	StorageBucket   plugin.TValue[*mqlGcpProjectStorageServiceBucket]
+	Filter          plugin.TValue[string]
+	WriterIdentity  plugin.TValue[string]
 	IncludeChildren plugin.TValue[bool]
 }
 
@@ -20006,7 +20005,7 @@ func createGcpProjectLoggingserviceSink(runtime *plugin.Runtime, args map[string
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -20074,9 +20073,9 @@ func (c *mqlGcpProjectLoggingserviceSink) GetIncludeChildren() *plugin.TValue[bo
 // mqlGcpProjectIamService for the gcp.project.iamService resource
 type mqlGcpProjectIamService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectIamServiceInternal it will be used here
-	ProjectId plugin.TValue[string]
+	ProjectId       plugin.TValue[string]
 	ServiceAccounts plugin.TValue[[]any]
 }
 
@@ -20092,7 +20091,7 @@ func createGcpProjectIamService(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -20140,17 +20139,17 @@ func (c *mqlGcpProjectIamService) GetServiceAccounts() *plugin.TValue[[]any] {
 // mqlGcpProjectIamServiceServiceAccount for the gcp.project.iamService.serviceAccount resource
 type mqlGcpProjectIamServiceServiceAccount struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectIamServiceServiceAccountInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	UniqueId plugin.TValue[string]
-	Email plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
+	ProjectId      plugin.TValue[string]
+	Name           plugin.TValue[string]
+	UniqueId       plugin.TValue[string]
+	Email          plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Description    plugin.TValue[string]
 	Oauth2ClientId plugin.TValue[string]
-	Disabled plugin.TValue[bool]
-	Keys plugin.TValue[[]any]
+	Disabled       plugin.TValue[bool]
+	Keys           plugin.TValue[[]any]
 }
 
 // createGcpProjectIamServiceServiceAccount creates a new instance of this resource
@@ -20165,7 +20164,7 @@ func createGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -20241,15 +20240,15 @@ func (c *mqlGcpProjectIamServiceServiceAccount) GetKeys() *plugin.TValue[[]any] 
 // mqlGcpProjectIamServiceServiceAccountKey for the gcp.project.iamService.serviceAccount.key resource
 type mqlGcpProjectIamServiceServiceAccountKey struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectIamServiceServiceAccountKeyInternal it will be used here
-	Name plugin.TValue[string]
-	KeyAlgorithm plugin.TValue[string]
-	ValidAfterTime plugin.TValue[*time.Time]
+	Name            plugin.TValue[string]
+	KeyAlgorithm    plugin.TValue[string]
+	ValidAfterTime  plugin.TValue[*time.Time]
 	ValidBeforeTime plugin.TValue[*time.Time]
-	KeyOrigin plugin.TValue[string]
-	KeyType plugin.TValue[string]
-	Disabled plugin.TValue[bool]
+	KeyOrigin       plugin.TValue[string]
+	KeyType         plugin.TValue[string]
+	Disabled        plugin.TValue[bool]
 }
 
 // createGcpProjectIamServiceServiceAccountKey creates a new instance of this resource
@@ -20264,7 +20263,7 @@ func createGcpProjectIamServiceServiceAccountKey(runtime *plugin.Runtime, args m
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -20320,41 +20319,41 @@ func (c *mqlGcpProjectIamServiceServiceAccountKey) GetDisabled() *plugin.TValue[
 // mqlGcpProjectCloudFunction for the gcp.project.cloudFunction resource
 type mqlGcpProjectCloudFunction struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudFunctionInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	SourceArchiveUrl plugin.TValue[string]
-	SourceRepository plugin.TValue[any]
-	SourceUploadUrl plugin.TValue[string]
-	HttpsTrigger plugin.TValue[any]
-	EventTrigger plugin.TValue[any]
-	Status plugin.TValue[string]
-	EntryPoint plugin.TValue[string]
-	Runtime plugin.TValue[string]
-	Timeout plugin.TValue[*time.Time]
-	AvailableMemoryMb plugin.TValue[int64]
+	ProjectId           plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	SourceArchiveUrl    plugin.TValue[string]
+	SourceRepository    plugin.TValue[any]
+	SourceUploadUrl     plugin.TValue[string]
+	HttpsTrigger        plugin.TValue[any]
+	EventTrigger        plugin.TValue[any]
+	Status              plugin.TValue[string]
+	EntryPoint          plugin.TValue[string]
+	Runtime             plugin.TValue[string]
+	Timeout             plugin.TValue[*time.Time]
+	AvailableMemoryMb   plugin.TValue[int64]
 	ServiceAccountEmail plugin.TValue[string]
-	Updated plugin.TValue[*time.Time]
-	VersionId plugin.TValue[int64]
-	Labels plugin.TValue[map[string]any]
-	EnvVars plugin.TValue[map[string]any]
-	BuildEnvVars plugin.TValue[map[string]any]
-	Network plugin.TValue[string]
-	MaxInstances plugin.TValue[int64]
-	MinInstances plugin.TValue[int64]
-	VpcConnector plugin.TValue[string]
-	EgressSettings plugin.TValue[string]
-	IngressSettings plugin.TValue[string]
-	KmsKeyName plugin.TValue[string]
-	BuildWorkerPool plugin.TValue[string]
-	BuildId plugin.TValue[string]
-	BuildName plugin.TValue[string]
-	SecretEnvVars plugin.TValue[map[string]any]
-	SecretVolumes plugin.TValue[[]any]
-	DockerRepository plugin.TValue[string]
-	DockerRegistry plugin.TValue[string]
+	Updated             plugin.TValue[*time.Time]
+	VersionId           plugin.TValue[int64]
+	Labels              plugin.TValue[map[string]any]
+	EnvVars             plugin.TValue[map[string]any]
+	BuildEnvVars        plugin.TValue[map[string]any]
+	Network             plugin.TValue[string]
+	MaxInstances        plugin.TValue[int64]
+	MinInstances        plugin.TValue[int64]
+	VpcConnector        plugin.TValue[string]
+	EgressSettings      plugin.TValue[string]
+	IngressSettings     plugin.TValue[string]
+	KmsKeyName          plugin.TValue[string]
+	BuildWorkerPool     plugin.TValue[string]
+	BuildId             plugin.TValue[string]
+	BuildName           plugin.TValue[string]
+	SecretEnvVars       plugin.TValue[map[string]any]
+	SecretVolumes       plugin.TValue[[]any]
+	DockerRepository    plugin.TValue[string]
+	DockerRegistry      plugin.TValue[string]
 }
 
 // createGcpProjectCloudFunction creates a new instance of this resource
@@ -20369,7 +20368,7 @@ func createGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -20529,12 +20528,12 @@ func (c *mqlGcpProjectCloudFunction) GetDockerRegistry() *plugin.TValue[string] 
 // mqlGcpProjectDataprocService for the gcp.project.dataprocService resource
 type mqlGcpProjectDataprocService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceInternal it will be used here
 	ProjectId plugin.TValue[string]
-	Enabled plugin.TValue[bool]
-	Regions plugin.TValue[[]any]
-	Clusters plugin.TValue[[]any]
+	Enabled   plugin.TValue[bool]
+	Regions   plugin.TValue[[]any]
+	Clusters  plugin.TValue[[]any]
 }
 
 // createGcpProjectDataprocService creates a new instance of this resource
@@ -20549,7 +20548,7 @@ func createGcpProjectDataprocService(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -20607,16 +20606,16 @@ func (c *mqlGcpProjectDataprocService) GetClusters() *plugin.TValue[[]any] {
 // mqlGcpProjectDataprocServiceCluster for the gcp.project.dataprocService.cluster resource
 type mqlGcpProjectDataprocServiceCluster struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Uuid plugin.TValue[string]
-	Config plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfig]
-	Labels plugin.TValue[map[string]any]
-	Metrics plugin.TValue[any]
-	Status plugin.TValue[*mqlGcpProjectDataprocServiceClusterStatus]
-	StatusHistory plugin.TValue[[]any]
+	ProjectId            plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Uuid                 plugin.TValue[string]
+	Config               plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfig]
+	Labels               plugin.TValue[map[string]any]
+	Metrics              plugin.TValue[any]
+	Status               plugin.TValue[*mqlGcpProjectDataprocServiceClusterStatus]
+	StatusHistory        plugin.TValue[[]any]
 	VirtualClusterConfig plugin.TValue[*mqlGcpProjectDataprocServiceClusterVirtualClusterConfig]
 }
 
@@ -20632,7 +20631,7 @@ func createGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -20696,25 +20695,25 @@ func (c *mqlGcpProjectDataprocServiceCluster) GetVirtualClusterConfig() *plugin.
 // mqlGcpProjectDataprocServiceClusterConfig for the gcp.project.dataprocService.cluster.config resource
 type mqlGcpProjectDataprocServiceClusterConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterConfigInternal it will be used here
-	ParentResourcePath plugin.TValue[string]
-	Autoscaling plugin.TValue[any]
-	ConfigBucket plugin.TValue[string]
-	Metrics plugin.TValue[any]
-	Encryption plugin.TValue[any]
-	Endpoint plugin.TValue[any]
-	GceCluster plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceCluster]
-	GkeCluster plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGkeCluster]
+	ParentResourcePath    plugin.TValue[string]
+	Autoscaling           plugin.TValue[any]
+	ConfigBucket          plugin.TValue[string]
+	Metrics               plugin.TValue[any]
+	Encryption            plugin.TValue[any]
+	Endpoint              plugin.TValue[any]
+	GceCluster            plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceCluster]
+	GkeCluster            plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGkeCluster]
 	InitializationActions plugin.TValue[[]any]
-	Lifecycle plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigLifecycle]
-	Master plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigInstance]
-	Metastore plugin.TValue[any]
-	SecondaryWorker plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigInstance]
-	Security plugin.TValue[any]
-	Software plugin.TValue[any]
-	TempBucket plugin.TValue[string]
-	Worker plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigInstance]
+	Lifecycle             plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigLifecycle]
+	Master                plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigInstance]
+	Metastore             plugin.TValue[any]
+	SecondaryWorker       plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigInstance]
+	Security              plugin.TValue[any]
+	Software              plugin.TValue[any]
+	TempBucket            plugin.TValue[string]
+	Worker                plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigInstance]
 }
 
 // createGcpProjectDataprocServiceClusterConfig creates a new instance of this resource
@@ -20729,7 +20728,7 @@ func createGcpProjectDataprocServiceClusterConfig(runtime *plugin.Runtime, args 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -20825,24 +20824,24 @@ func (c *mqlGcpProjectDataprocServiceClusterConfig) GetWorker() *plugin.TValue[*
 // mqlGcpProjectDataprocServiceClusterConfigGceCluster for the gcp.project.dataprocService.cluster.config.gceCluster resource
 type mqlGcpProjectDataprocServiceClusterConfigGceCluster struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterConfigGceClusterInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	ConfidentialInstance plugin.TValue[any]
-	InternalIpOnly plugin.TValue[bool]
-	Metadata plugin.TValue[map[string]any]
-	NetworkUri plugin.TValue[string]
-	NodeGroupAffinity plugin.TValue[any]
+	Id                      plugin.TValue[string]
+	ProjectId               plugin.TValue[string]
+	ConfidentialInstance    plugin.TValue[any]
+	InternalIpOnly          plugin.TValue[bool]
+	Metadata                plugin.TValue[map[string]any]
+	NetworkUri              plugin.TValue[string]
+	NodeGroupAffinity       plugin.TValue[any]
 	PrivateIpv6GoogleAccess plugin.TValue[string]
-	ReservationAffinity plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity]
-	ServiceAccountEmail plugin.TValue[string]
-	ServiceAccount plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
-	ServiceAccountScopes plugin.TValue[[]any]
-	ShieldedInstanceConfig plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig]
-	SubnetworkUri plugin.TValue[string]
-	Tags plugin.TValue[[]any]
-	ZoneUri plugin.TValue[string]
+	ReservationAffinity     plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity]
+	ServiceAccountEmail     plugin.TValue[string]
+	ServiceAccount          plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	ServiceAccountScopes    plugin.TValue[[]any]
+	ShieldedInstanceConfig  plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig]
+	SubnetworkUri           plugin.TValue[string]
+	Tags                    plugin.TValue[[]any]
+	ZoneUri                 plugin.TValue[string]
 }
 
 // createGcpProjectDataprocServiceClusterConfigGceCluster creates a new instance of this resource
@@ -20857,7 +20856,7 @@ func createGcpProjectDataprocServiceClusterConfigGceCluster(runtime *plugin.Runt
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -20961,12 +20960,12 @@ func (c *mqlGcpProjectDataprocServiceClusterConfigGceCluster) GetZoneUri() *plug
 // mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity for the gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity resource
 type mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinityInternal it will be used here
-	Id plugin.TValue[string]
+	Id                     plugin.TValue[string]
 	ConsumeReservationType plugin.TValue[string]
-	Key plugin.TValue[string]
-	Values plugin.TValue[[]any]
+	Key                    plugin.TValue[string]
+	Values                 plugin.TValue[[]any]
 }
 
 // createGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity creates a new instance of this resource
@@ -20981,7 +20980,7 @@ func createGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity(r
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21025,12 +21024,12 @@ func (c *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity)
 // mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig for the gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig resource
 type mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfigInternal it will be used here
-	Id plugin.TValue[string]
+	Id                        plugin.TValue[string]
 	EnableIntegrityMonitoring plugin.TValue[bool]
-	EnableSecureBoot plugin.TValue[bool]
-	EnableVtpm plugin.TValue[bool]
+	EnableSecureBoot          plugin.TValue[bool]
+	EnableVtpm                plugin.TValue[bool]
 }
 
 // createGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig creates a new instance of this resource
@@ -21045,7 +21044,7 @@ func createGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21089,11 +21088,11 @@ func (c *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConf
 // mqlGcpProjectDataprocServiceClusterConfigGkeCluster for the gcp.project.dataprocService.cluster.config.gkeCluster resource
 type mqlGcpProjectDataprocServiceClusterConfigGkeCluster struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterConfigGkeClusterInternal it will be used here
-	Id plugin.TValue[string]
+	Id               plugin.TValue[string]
 	GkeClusterTarget plugin.TValue[string]
-	NodePoolTarget plugin.TValue[[]any]
+	NodePoolTarget   plugin.TValue[[]any]
 }
 
 // createGcpProjectDataprocServiceClusterConfigGkeCluster creates a new instance of this resource
@@ -21108,7 +21107,7 @@ func createGcpProjectDataprocServiceClusterConfigGkeCluster(runtime *plugin.Runt
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21148,13 +21147,13 @@ func (c *mqlGcpProjectDataprocServiceClusterConfigGkeCluster) GetNodePoolTarget(
 // mqlGcpProjectDataprocServiceClusterConfigLifecycle for the gcp.project.dataprocService.cluster.config.lifecycle resource
 type mqlGcpProjectDataprocServiceClusterConfigLifecycle struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterConfigLifecycleInternal it will be used here
-	Id plugin.TValue[string]
+	Id             plugin.TValue[string]
 	AutoDeleteTime plugin.TValue[string]
-	AutoDeleteTtl plugin.TValue[string]
-	IdleDeleteTtl plugin.TValue[string]
-	IdleStartTime plugin.TValue[string]
+	AutoDeleteTtl  plugin.TValue[string]
+	IdleDeleteTtl  plugin.TValue[string]
+	IdleStartTime  plugin.TValue[string]
 }
 
 // createGcpProjectDataprocServiceClusterConfigLifecycle creates a new instance of this resource
@@ -21169,7 +21168,7 @@ func createGcpProjectDataprocServiceClusterConfigLifecycle(runtime *plugin.Runti
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21217,20 +21216,20 @@ func (c *mqlGcpProjectDataprocServiceClusterConfigLifecycle) GetIdleStartTime() 
 // mqlGcpProjectDataprocServiceClusterConfigInstance for the gcp.project.dataprocService.cluster.config.instance resource
 type mqlGcpProjectDataprocServiceClusterConfigInstance struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterConfigInstanceInternal it will be used here
-	Id plugin.TValue[string]
-	Accelerators plugin.TValue[[]any]
-	DiskConfig plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig]
-	ImageUri plugin.TValue[string]
-	InstanceNames plugin.TValue[[]any]
+	Id                 plugin.TValue[string]
+	Accelerators       plugin.TValue[[]any]
+	DiskConfig         plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig]
+	ImageUri           plugin.TValue[string]
+	InstanceNames      plugin.TValue[[]any]
 	InstanceReferences plugin.TValue[[]any]
-	IsPreemptible plugin.TValue[bool]
-	MachineTypeUri plugin.TValue[string]
+	IsPreemptible      plugin.TValue[bool]
+	MachineTypeUri     plugin.TValue[string]
 	ManagedGroupConfig plugin.TValue[any]
-	MinCpuPlatform plugin.TValue[string]
-	NumInstances plugin.TValue[int64]
-	Preemptibility plugin.TValue[string]
+	MinCpuPlatform     plugin.TValue[string]
+	NumInstances       plugin.TValue[int64]
+	Preemptibility     plugin.TValue[string]
 }
 
 // createGcpProjectDataprocServiceClusterConfigInstance creates a new instance of this resource
@@ -21245,7 +21244,7 @@ func createGcpProjectDataprocServiceClusterConfigInstance(runtime *plugin.Runtim
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21321,13 +21320,13 @@ func (c *mqlGcpProjectDataprocServiceClusterConfigInstance) GetPreemptibility() 
 // mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig for the gcp.project.dataprocService.cluster.config.instance.diskConfig resource
 type mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfigInternal it will be used here
-	Id plugin.TValue[string]
-	BootDiskSizeGb plugin.TValue[int64]
-	BootDiskType plugin.TValue[string]
+	Id                plugin.TValue[string]
+	BootDiskSizeGb    plugin.TValue[int64]
+	BootDiskType      plugin.TValue[string]
 	LocalSsdInterface plugin.TValue[string]
-	NumLocalSsds plugin.TValue[int64]
+	NumLocalSsds      plugin.TValue[int64]
 }
 
 // createGcpProjectDataprocServiceClusterConfigInstanceDiskConfig creates a new instance of this resource
@@ -21342,7 +21341,7 @@ func createGcpProjectDataprocServiceClusterConfigInstanceDiskConfig(runtime *plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21390,12 +21389,12 @@ func (c *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) GetNumLoca
 // mqlGcpProjectDataprocServiceClusterStatus for the gcp.project.dataprocService.cluster.status resource
 type mqlGcpProjectDataprocServiceClusterStatus struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterStatusInternal it will be used here
-	Id plugin.TValue[string]
-	Detail plugin.TValue[string]
-	State plugin.TValue[string]
-	Started plugin.TValue[*time.Time]
+	Id       plugin.TValue[string]
+	Detail   plugin.TValue[string]
+	State    plugin.TValue[string]
+	Started  plugin.TValue[*time.Time]
 	Substate plugin.TValue[string]
 }
 
@@ -21411,7 +21410,7 @@ func createGcpProjectDataprocServiceClusterStatus(runtime *plugin.Runtime, args 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21459,12 +21458,12 @@ func (c *mqlGcpProjectDataprocServiceClusterStatus) GetSubstate() *plugin.TValue
 // mqlGcpProjectDataprocServiceClusterVirtualClusterConfig for the gcp.project.dataprocService.cluster.virtualClusterConfig resource
 type mqlGcpProjectDataprocServiceClusterVirtualClusterConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterVirtualClusterConfigInternal it will be used here
 	ParentResourcePath plugin.TValue[string]
-	AuxiliaryServices plugin.TValue[any]
-	KubernetesCluster plugin.TValue[any]
-	StagingBucket plugin.TValue[string]
+	AuxiliaryServices  plugin.TValue[any]
+	KubernetesCluster  plugin.TValue[any]
+	StagingBucket      plugin.TValue[string]
 }
 
 // createGcpProjectDataprocServiceClusterVirtualClusterConfig creates a new instance of this resource
@@ -21479,7 +21478,7 @@ func createGcpProjectDataprocServiceClusterVirtualClusterConfig(runtime *plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21523,13 +21522,13 @@ func (c *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) GetStagingBuck
 // mqlGcpProjectCloudRunService for the gcp.project.cloudRunService resource
 type mqlGcpProjectCloudRunService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Regions plugin.TValue[[]any]
+	ProjectId  plugin.TValue[string]
+	Regions    plugin.TValue[[]any]
 	Operations plugin.TValue[[]any]
-	Services plugin.TValue[[]any]
-	Jobs plugin.TValue[[]any]
+	Services   plugin.TValue[[]any]
+	Jobs       plugin.TValue[[]any]
 }
 
 // createGcpProjectCloudRunService creates a new instance of this resource
@@ -21544,7 +21543,7 @@ func createGcpProjectCloudRunService(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21630,11 +21629,11 @@ func (c *mqlGcpProjectCloudRunService) GetJobs() *plugin.TValue[[]any] {
 // mqlGcpProjectCloudRunServiceOperation for the gcp.project.cloudRunService.operation resource
 type mqlGcpProjectCloudRunServiceOperation struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceOperationInternal it will be used here
 	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Done plugin.TValue[bool]
+	Name      plugin.TValue[string]
+	Done      plugin.TValue[bool]
 }
 
 // createGcpProjectCloudRunServiceOperation creates a new instance of this resource
@@ -21649,7 +21648,7 @@ func createGcpProjectCloudRunServiceOperation(runtime *plugin.Runtime, args map[
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21689,34 +21688,34 @@ func (c *mqlGcpProjectCloudRunServiceOperation) GetDone() *plugin.TValue[bool] {
 // mqlGcpProjectCloudRunServiceService for the gcp.project.cloudRunService.service resource
 type mqlGcpProjectCloudRunServiceService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceServiceInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Region plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Generation plugin.TValue[int64]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Created plugin.TValue[*time.Time]
-	Updated plugin.TValue[*time.Time]
-	Deleted plugin.TValue[*time.Time]
-	Expired plugin.TValue[*time.Time]
-	Creator plugin.TValue[string]
-	LastModifier plugin.TValue[string]
-	Ingress plugin.TValue[string]
-	LaunchStage plugin.TValue[string]
-	Template plugin.TValue[*mqlGcpProjectCloudRunServiceServiceRevisionTemplate]
-	Traffic plugin.TValue[[]any]
-	ObservedGeneration plugin.TValue[int64]
-	TerminalCondition plugin.TValue[*mqlGcpProjectCloudRunServiceCondition]
-	Conditions plugin.TValue[[]any]
-	LatestReadyRevision plugin.TValue[string]
+	Id                    plugin.TValue[string]
+	ProjectId             plugin.TValue[string]
+	Region                plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Generation            plugin.TValue[int64]
+	Labels                plugin.TValue[map[string]any]
+	Annotations           plugin.TValue[map[string]any]
+	Created               plugin.TValue[*time.Time]
+	Updated               plugin.TValue[*time.Time]
+	Deleted               plugin.TValue[*time.Time]
+	Expired               plugin.TValue[*time.Time]
+	Creator               plugin.TValue[string]
+	LastModifier          plugin.TValue[string]
+	Ingress               plugin.TValue[string]
+	LaunchStage           plugin.TValue[string]
+	Template              plugin.TValue[*mqlGcpProjectCloudRunServiceServiceRevisionTemplate]
+	Traffic               plugin.TValue[[]any]
+	ObservedGeneration    plugin.TValue[int64]
+	TerminalCondition     plugin.TValue[*mqlGcpProjectCloudRunServiceCondition]
+	Conditions            plugin.TValue[[]any]
+	LatestReadyRevision   plugin.TValue[string]
 	LatestCreatedRevision plugin.TValue[string]
-	TrafficStatuses plugin.TValue[[]any]
-	Uri plugin.TValue[string]
-	Reconciling plugin.TValue[bool]
+	TrafficStatuses       plugin.TValue[[]any]
+	Uri                   plugin.TValue[string]
+	Reconciling           plugin.TValue[bool]
 }
 
 // createGcpProjectCloudRunServiceService creates a new instance of this resource
@@ -21731,7 +21730,7 @@ func createGcpProjectCloudRunServiceService(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21863,22 +21862,22 @@ func (c *mqlGcpProjectCloudRunServiceService) GetReconciling() *plugin.TValue[bo
 // mqlGcpProjectCloudRunServiceServiceRevisionTemplate for the gcp.project.cloudRunService.service.revisionTemplate resource
 type mqlGcpProjectCloudRunServiceServiceRevisionTemplate struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceServiceRevisionTemplateInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Scaling plugin.TValue[any]
-	VpcAccess plugin.TValue[any]
-	Timeout plugin.TValue[*time.Time]
-	ServiceAccountEmail plugin.TValue[string]
-	ServiceAccount plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
-	Containers plugin.TValue[[]any]
-	Volumes plugin.TValue[[]any]
-	ExecutionEnvironment plugin.TValue[string]
-	EncryptionKey plugin.TValue[string]
+	Id                            plugin.TValue[string]
+	ProjectId                     plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Labels                        plugin.TValue[map[string]any]
+	Annotations                   plugin.TValue[map[string]any]
+	Scaling                       plugin.TValue[any]
+	VpcAccess                     plugin.TValue[any]
+	Timeout                       plugin.TValue[*time.Time]
+	ServiceAccountEmail           plugin.TValue[string]
+	ServiceAccount                plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	Containers                    plugin.TValue[[]any]
+	Volumes                       plugin.TValue[[]any]
+	ExecutionEnvironment          plugin.TValue[string]
+	EncryptionKey                 plugin.TValue[string]
 	MaxInstanceRequestConcurrency plugin.TValue[int64]
 }
 
@@ -21894,7 +21893,7 @@ func createGcpProjectCloudRunServiceServiceRevisionTemplate(runtime *plugin.Runt
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -21994,20 +21993,20 @@ func (c *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) GetMaxInstanceRequ
 // mqlGcpProjectCloudRunServiceContainer for the gcp.project.cloudRunService.container resource
 type mqlGcpProjectCloudRunServiceContainer struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceContainerInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Image plugin.TValue[string]
-	Command plugin.TValue[[]any]
-	Args plugin.TValue[[]any]
-	Env plugin.TValue[[]any]
-	Resources plugin.TValue[any]
-	Ports plugin.TValue[[]any]
-	VolumeMounts plugin.TValue[[]any]
-	WorkingDir plugin.TValue[string]
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Image         plugin.TValue[string]
+	Command       plugin.TValue[[]any]
+	Args          plugin.TValue[[]any]
+	Env           plugin.TValue[[]any]
+	Resources     plugin.TValue[any]
+	Ports         plugin.TValue[[]any]
+	VolumeMounts  plugin.TValue[[]any]
+	WorkingDir    plugin.TValue[string]
 	LivenessProbe plugin.TValue[*mqlGcpProjectCloudRunServiceContainerProbe]
-	StartupProbe plugin.TValue[*mqlGcpProjectCloudRunServiceContainerProbe]
+	StartupProbe  plugin.TValue[*mqlGcpProjectCloudRunServiceContainerProbe]
 }
 
 // createGcpProjectCloudRunServiceContainer creates a new instance of this resource
@@ -22022,7 +22021,7 @@ func createGcpProjectCloudRunServiceContainer(runtime *plugin.Runtime, args map[
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -22098,15 +22097,15 @@ func (c *mqlGcpProjectCloudRunServiceContainer) GetStartupProbe() *plugin.TValue
 // mqlGcpProjectCloudRunServiceContainerProbe for the gcp.project.cloudRunService.container.probe resource
 type mqlGcpProjectCloudRunServiceContainerProbe struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceContainerProbeInternal it will be used here
-	Id plugin.TValue[string]
+	Id                  plugin.TValue[string]
 	InitialDelaySeconds plugin.TValue[int64]
-	TimeoutSeconds plugin.TValue[int64]
-	PeriodSeconds plugin.TValue[int64]
-	FailureThreshold plugin.TValue[int64]
-	HttpGet plugin.TValue[any]
-	TcpSocket plugin.TValue[any]
+	TimeoutSeconds      plugin.TValue[int64]
+	PeriodSeconds       plugin.TValue[int64]
+	FailureThreshold    plugin.TValue[int64]
+	HttpGet             plugin.TValue[any]
+	TcpSocket           plugin.TValue[any]
 }
 
 // createGcpProjectCloudRunServiceContainerProbe creates a new instance of this resource
@@ -22121,7 +22120,7 @@ func createGcpProjectCloudRunServiceContainerProbe(runtime *plugin.Runtime, args
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -22177,14 +22176,14 @@ func (c *mqlGcpProjectCloudRunServiceContainerProbe) GetTcpSocket() *plugin.TVal
 // mqlGcpProjectCloudRunServiceCondition for the gcp.project.cloudRunService.condition resource
 type mqlGcpProjectCloudRunServiceCondition struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceConditionInternal it will be used here
-	Id plugin.TValue[string]
-	Type plugin.TValue[string]
-	State plugin.TValue[string]
-	Message plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	Type               plugin.TValue[string]
+	State              plugin.TValue[string]
+	Message            plugin.TValue[string]
 	LastTransitionTime plugin.TValue[*time.Time]
-	Severity plugin.TValue[string]
+	Severity           plugin.TValue[string]
 }
 
 // createGcpProjectCloudRunServiceCondition creates a new instance of this resource
@@ -22199,7 +22198,7 @@ func createGcpProjectCloudRunServiceCondition(runtime *plugin.Runtime, args map[
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -22251,30 +22250,30 @@ func (c *mqlGcpProjectCloudRunServiceCondition) GetSeverity() *plugin.TValue[str
 // mqlGcpProjectCloudRunServiceJob for the gcp.project.cloudRunService.job resource
 type mqlGcpProjectCloudRunServiceJob struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceJobInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	Region plugin.TValue[string]
-	Name plugin.TValue[string]
-	Generation plugin.TValue[int64]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Created plugin.TValue[*time.Time]
-	Updated plugin.TValue[*time.Time]
-	Deleted plugin.TValue[*time.Time]
-	Expired plugin.TValue[*time.Time]
-	Creator plugin.TValue[string]
-	LastModifier plugin.TValue[string]
-	Client plugin.TValue[string]
-	ClientVersion plugin.TValue[string]
-	LaunchStage plugin.TValue[string]
-	Template plugin.TValue[*mqlGcpProjectCloudRunServiceJobExecutionTemplate]
+	Id                 plugin.TValue[string]
+	ProjectId          plugin.TValue[string]
+	Region             plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Generation         plugin.TValue[int64]
+	Labels             plugin.TValue[map[string]any]
+	Annotations        plugin.TValue[map[string]any]
+	Created            plugin.TValue[*time.Time]
+	Updated            plugin.TValue[*time.Time]
+	Deleted            plugin.TValue[*time.Time]
+	Expired            plugin.TValue[*time.Time]
+	Creator            plugin.TValue[string]
+	LastModifier       plugin.TValue[string]
+	Client             plugin.TValue[string]
+	ClientVersion      plugin.TValue[string]
+	LaunchStage        plugin.TValue[string]
+	Template           plugin.TValue[*mqlGcpProjectCloudRunServiceJobExecutionTemplate]
 	ObservedGeneration plugin.TValue[int64]
-	TerminalCondition plugin.TValue[*mqlGcpProjectCloudRunServiceCondition]
-	Conditions plugin.TValue[[]any]
-	ExecutionCount plugin.TValue[int64]
-	Reconciling plugin.TValue[bool]
+	TerminalCondition  plugin.TValue[*mqlGcpProjectCloudRunServiceCondition]
+	Conditions         plugin.TValue[[]any]
+	ExecutionCount     plugin.TValue[int64]
+	Reconciling        plugin.TValue[bool]
 }
 
 // createGcpProjectCloudRunServiceJob creates a new instance of this resource
@@ -22289,7 +22288,7 @@ func createGcpProjectCloudRunServiceJob(runtime *plugin.Runtime, args map[string
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -22405,14 +22404,14 @@ func (c *mqlGcpProjectCloudRunServiceJob) GetReconciling() *plugin.TValue[bool] 
 // mqlGcpProjectCloudRunServiceJobExecutionTemplate for the gcp.project.cloudRunService.job.executionTemplate resource
 type mqlGcpProjectCloudRunServiceJobExecutionTemplate struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceJobExecutionTemplateInternal it will be used here
-	Id plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
+	Id          plugin.TValue[string]
+	Labels      plugin.TValue[map[string]any]
 	Annotations plugin.TValue[map[string]any]
 	Parallelism plugin.TValue[int64]
-	TaskCount plugin.TValue[int64]
-	Template plugin.TValue[*mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate]
+	TaskCount   plugin.TValue[int64]
+	Template    plugin.TValue[*mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate]
 }
 
 // createGcpProjectCloudRunServiceJobExecutionTemplate creates a new instance of this resource
@@ -22427,7 +22426,7 @@ func createGcpProjectCloudRunServiceJobExecutionTemplate(runtime *plugin.Runtime
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -22479,19 +22478,19 @@ func (c *mqlGcpProjectCloudRunServiceJobExecutionTemplate) GetTemplate() *plugin
 // mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate for the gcp.project.cloudRunService.job.executionTemplate.taskTemplate resource
 type mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplateInternal it will be used here
-	Id plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	VpcAccess plugin.TValue[any]
-	Timeout plugin.TValue[*time.Time]
-	ServiceAccountEmail plugin.TValue[string]
-	ServiceAccount plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
-	Containers plugin.TValue[[]any]
-	Volumes plugin.TValue[[]any]
+	Id                   plugin.TValue[string]
+	ProjectId            plugin.TValue[string]
+	VpcAccess            plugin.TValue[any]
+	Timeout              plugin.TValue[*time.Time]
+	ServiceAccountEmail  plugin.TValue[string]
+	ServiceAccount       plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	Containers           plugin.TValue[[]any]
+	Volumes              plugin.TValue[[]any]
 	ExecutionEnvironment plugin.TValue[string]
-	EncryptionKey plugin.TValue[string]
-	MaxRetries plugin.TValue[int64]
+	EncryptionKey        plugin.TValue[string]
+	MaxRetries           plugin.TValue[int64]
 }
 
 // createGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate creates a new instance of this resource
@@ -22506,7 +22505,7 @@ func createGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate(runtime *pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -22590,15 +22589,15 @@ func (c *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) GetMaxRet
 // mqlGcpAccessApprovalSettings for the gcp.accessApprovalSettings resource
 type mqlGcpAccessApprovalSettings struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpAccessApprovalSettingsInternal it will be used here
-	ResourcePath plugin.TValue[string]
-	NotificationEmails plugin.TValue[[]any]
-	EnrolledServices plugin.TValue[[]any]
-	EnrolledAncestor plugin.TValue[bool]
-	ActiveKeyVersion plugin.TValue[string]
+	ResourcePath                plugin.TValue[string]
+	NotificationEmails          plugin.TValue[[]any]
+	EnrolledServices            plugin.TValue[[]any]
+	EnrolledAncestor            plugin.TValue[bool]
+	ActiveKeyVersion            plugin.TValue[string]
 	AncestorHasActiveKeyVersion plugin.TValue[bool]
-	InvalidKeyVersion plugin.TValue[bool]
+	InvalidKeyVersion           plugin.TValue[bool]
 }
 
 // createGcpAccessApprovalSettings creates a new instance of this resource
@@ -22613,7 +22612,7 @@ func createGcpAccessApprovalSettings(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -22669,9 +22668,9 @@ func (c *mqlGcpAccessApprovalSettings) GetInvalidKeyVersion() *plugin.TValue[boo
 // mqlGcpProjectMonitoringService for the gcp.project.monitoringService resource
 type mqlGcpProjectMonitoringService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectMonitoringServiceInternal it will be used here
-	ProjectId plugin.TValue[string]
+	ProjectId     plugin.TValue[string]
 	AlertPolicies plugin.TValue[[]any]
 }
 
@@ -22687,7 +22686,7 @@ func createGcpProjectMonitoringService(runtime *plugin.Runtime, args map[string]
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -22735,23 +22734,23 @@ func (c *mqlGcpProjectMonitoringService) GetAlertPolicies() *plugin.TValue[[]any
 // mqlGcpProjectMonitoringServiceAlertPolicy for the gcp.project.monitoringService.alertPolicy resource
 type mqlGcpProjectMonitoringServiceAlertPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectMonitoringServiceAlertPolicyInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Name plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Documentation plugin.TValue[any]
-	Labels plugin.TValue[map[string]any]
-	Conditions plugin.TValue[[]any]
-	Combiner plugin.TValue[string]
-	Enabled plugin.TValue[bool]
-	Validity plugin.TValue[any]
+	ProjectId               plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	DisplayName             plugin.TValue[string]
+	Documentation           plugin.TValue[any]
+	Labels                  plugin.TValue[map[string]any]
+	Conditions              plugin.TValue[[]any]
+	Combiner                plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	Validity                plugin.TValue[any]
 	NotificationChannelUrls plugin.TValue[[]any]
-	Created plugin.TValue[*time.Time]
-	CreatedBy plugin.TValue[string]
-	Updated plugin.TValue[*time.Time]
-	UpdatedBy plugin.TValue[string]
-	AlertStrategy plugin.TValue[any]
+	Created                 plugin.TValue[*time.Time]
+	CreatedBy               plugin.TValue[string]
+	Updated                 plugin.TValue[*time.Time]
+	UpdatedBy               plugin.TValue[string]
+	AlertStrategy           plugin.TValue[any]
 }
 
 // createGcpProjectMonitoringServiceAlertPolicy creates a new instance of this resource
@@ -22766,7 +22765,7 @@ func createGcpProjectMonitoringServiceAlertPolicy(runtime *plugin.Runtime, args 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -22854,7 +22853,7 @@ func (c *mqlGcpProjectMonitoringServiceAlertPolicy) GetAlertStrategy() *plugin.T
 // mqlGcpProjectBinaryAuthorizationControl for the gcp.project.binaryAuthorizationControl resource
 type mqlGcpProjectBinaryAuthorizationControl struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectBinaryAuthorizationControlInternal it will be used here
 	Policy plugin.TValue[*mqlGcpProjectBinaryAuthorizationControlPolicy]
 }
@@ -22898,17 +22897,17 @@ func (c *mqlGcpProjectBinaryAuthorizationControl) GetPolicy() *plugin.TValue[*mq
 // mqlGcpProjectBinaryAuthorizationControlPolicy for the gcp.project.binaryAuthorizationControl.policy resource
 type mqlGcpProjectBinaryAuthorizationControlPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectBinaryAuthorizationControlPolicyInternal it will be used here
-	Name plugin.TValue[string]
-	GlobalPolicyEvaluationMode plugin.TValue[string]
-	AdmissionWhitelistPatterns plugin.TValue[[]any]
-	ClusterAdmissionRules plugin.TValue[map[string]any]
-	KubernetesNamespaceAdmissionRules plugin.TValue[map[string]any]
+	Name                                   plugin.TValue[string]
+	GlobalPolicyEvaluationMode             plugin.TValue[string]
+	AdmissionWhitelistPatterns             plugin.TValue[[]any]
+	ClusterAdmissionRules                  plugin.TValue[map[string]any]
+	KubernetesNamespaceAdmissionRules      plugin.TValue[map[string]any]
 	KubernetesServiceAccountAdmissionRules plugin.TValue[map[string]any]
-	IstioServiceIdentityAdmissionRules plugin.TValue[map[string]any]
-	DefaultAdmissionRule plugin.TValue[*mqlGcpProjectBinaryAuthorizationControlAdmissionRule]
-	Updated plugin.TValue[*time.Time]
+	IstioServiceIdentityAdmissionRules     plugin.TValue[map[string]any]
+	DefaultAdmissionRule                   plugin.TValue[*mqlGcpProjectBinaryAuthorizationControlAdmissionRule]
+	Updated                                plugin.TValue[*time.Time]
 }
 
 // createGcpProjectBinaryAuthorizationControlPolicy creates a new instance of this resource
@@ -22982,10 +22981,10 @@ func (c *mqlGcpProjectBinaryAuthorizationControlPolicy) GetUpdated() *plugin.TVa
 // mqlGcpProjectBinaryAuthorizationControlAdmissionRule for the gcp.project.binaryAuthorizationControl.admissionRule resource
 type mqlGcpProjectBinaryAuthorizationControlAdmissionRule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGcpProjectBinaryAuthorizationControlAdmissionRuleInternal it will be used here
-	EvaluationMode plugin.TValue[string]
-	EnforcementMode plugin.TValue[string]
+	EvaluationMode        plugin.TValue[string]
+	EnforcementMode       plugin.TValue[string]
 	RequireAttestationsBy plugin.TValue[[]any]
 }
 

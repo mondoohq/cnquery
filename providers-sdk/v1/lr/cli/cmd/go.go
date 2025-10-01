@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"go/format"
 	"os"
 	"path"
 	"strings"
@@ -53,12 +54,16 @@ var goCmd = &cobra.Command{
 		}
 
 		collector := lr.NewCollector(args[0])
-		godata, err := lr.Go(packageName, res, collector, headerTpl)
+		goCode, err := lr.Go(packageName, res, collector, headerTpl)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to compile go code")
 		}
 
-		err = os.WriteFile(args[0]+".go", []byte(godata), 0o644)
+		fmtGoData, err := format.Source([]byte(goCode))
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to format go code")
+		}
+		err = os.WriteFile(args[0]+".go", fmtGoData, 0o644)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to write to go file")
 		}
