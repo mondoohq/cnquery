@@ -15,6 +15,17 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceShodan string = "shodan"
+	ResourceShodanHost string = "shodan.host"
+	ResourceShodanDomain string = "shodan.domain"
+	ResourceShodanNsrecord string = "shodan.nsrecord"
+	ResourceShodanProfile string = "shodan.profile"
+	ResourceShodanApiPlan string = "shodan.apiPlan"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

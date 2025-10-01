@@ -14,6 +14,23 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceVcd string = "vcd"
+	ResourceVcdOrganization string = "vcd.organization"
+	ResourceVcdOrganizationLdapSettings string = "vcd.organization.ldapSettings"
+	ResourceVcdVdcProvider string = "vcd.vdcProvider"
+	ResourceVcdNetworkPool string = "vcd.networkPool"
+	ResourceVcdExternalNetwork string = "vcd.externalNetwork"
+	ResourceVcdVm string = "vcd.vm"
+	ResourceVcdServerInstance string = "vcd.serverInstance"
+	ResourceVcdRight string = "vcd.right"
+	ResourceVcdRole string = "vcd.role"
+	ResourceVcdVdc string = "vcd.vdc"
+	ResourceVcdVdcGroup string = "vcd.vdcGroup"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

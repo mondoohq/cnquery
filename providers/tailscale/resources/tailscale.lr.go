@@ -15,6 +15,14 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceTailscale string = "tailscale"
+	ResourceTailscaleDevice string = "tailscale.device"
+	ResourceTailscaleUser string = "tailscale.user"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

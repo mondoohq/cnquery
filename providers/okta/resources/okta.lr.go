@@ -15,6 +15,26 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceOkta string = "okta"
+	ResourceOktaOrganization string = "okta.organization"
+	ResourceOktaPolicies string = "okta.policies"
+	ResourceOktaUser string = "okta.user"
+	ResourceOktaRole string = "okta.role"
+	ResourceOktaGroup string = "okta.group"
+	ResourceOktaGroupRule string = "okta.groupRule"
+	ResourceOktaApplication string = "okta.application"
+	ResourceOktaDomain string = "okta.domain"
+	ResourceOktaPolicy string = "okta.policy"
+	ResourceOktaPolicyRule string = "okta.policyRule"
+	ResourceOktaTrustedOrigin string = "okta.trustedOrigin"
+	ResourceOktaNetwork string = "okta.network"
+	ResourceOktaThreatsConfiguration string = "okta.threatsConfiguration"
+	ResourceOktaCustomRole string = "okta.customRole"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

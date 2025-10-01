@@ -14,6 +14,14 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceCloudformationTemplate string = "cloudformation.template"
+	ResourceCloudformationResource string = "cloudformation.resource"
+	ResourceCloudformationOutput string = "cloudformation.output"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

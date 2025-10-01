@@ -15,6 +15,19 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceGitlabGroup string = "gitlab.group"
+	ResourceGitlabProject string = "gitlab.project"
+	ResourceGitlabProjectApprovalRule string = "gitlab.project.approvalRule"
+	ResourceGitlabProjectApprovalSetting string = "gitlab.project.approvalSetting"
+	ResourceGitlabProjectProtectedBranch string = "gitlab.project.protectedBranch"
+	ResourceGitlabProjectMember string = "gitlab.project.member"
+	ResourceGitlabProjectFile string = "gitlab.project.file"
+	ResourceGitlabProjectWebhook string = "gitlab.project.webhook"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

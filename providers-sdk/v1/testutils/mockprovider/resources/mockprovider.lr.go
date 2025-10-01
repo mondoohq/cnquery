@@ -14,6 +14,16 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceMuser string = "muser"
+	ResourceMgroup string = "mgroup"
+	ResourceMos string = "mos"
+	ResourceCustomGroups string = "customGroups"
+	ResourceEmptyGroups string = "emptyGroups"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

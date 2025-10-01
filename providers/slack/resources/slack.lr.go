@@ -15,6 +15,20 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceSlack string = "slack"
+	ResourceSlackConversations string = "slack.conversations"
+	ResourceSlackTeam string = "slack.team"
+	ResourceSlackUsers string = "slack.users"
+	ResourceSlackUser string = "slack.user"
+	ResourceSlackEnterpriseUser string = "slack.enterpriseUser"
+	ResourceSlackUserGroup string = "slack.userGroup"
+	ResourceSlackLogin string = "slack.login"
+	ResourceSlackConversation string = "slack.conversation"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

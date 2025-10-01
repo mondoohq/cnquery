@@ -14,6 +14,13 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceIpmi string = "ipmi"
+	ResourceIpmiChassis string = "ipmi.chassis"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

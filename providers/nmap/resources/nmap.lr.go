@@ -15,6 +15,16 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceNmap string = "nmap"
+	ResourceNmapNetwork string = "nmap.network"
+	ResourceNmapHost string = "nmap.host"
+	ResourceNmapPort string = "nmap.port"
+	ResourceNmapVersionInformation string = "nmap.versionInformation"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

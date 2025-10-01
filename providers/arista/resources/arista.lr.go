@@ -14,6 +14,23 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceAristaEos string = "arista.eos"
+	ResourceAristaEosRunningConfig string = "arista.eos.runningConfig"
+	ResourceAristaEosRunningConfigSection string = "arista.eos.runningConfig.section"
+	ResourceAristaEosUser string = "arista.eos.user"
+	ResourceAristaEosRole string = "arista.eos.role"
+	ResourceAristaEosSnmpSetting string = "arista.eos.snmpSetting"
+	ResourceAristaEosNtpSetting string = "arista.eos.ntpSetting"
+	ResourceAristaEosInterface string = "arista.eos.interface"
+	ResourceAristaEosIpInterface string = "arista.eos.ipInterface"
+	ResourceAristaEosStp string = "arista.eos.stp"
+	ResourceAristaEosStpMst string = "arista.eos.stp.mst"
+	ResourceAristaEosSptMstInterface string = "arista.eos.spt.mstInterface"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

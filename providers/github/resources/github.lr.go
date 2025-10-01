@@ -15,6 +15,37 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceGithub string = "github"
+	ResourceGitCommit string = "git.commit"
+	ResourceGitCommitAuthor string = "git.commitAuthor"
+	ResourceGitGpgSignature string = "git.gpgSignature"
+	ResourceGithubOrganization string = "github.organization"
+	ResourceGithubOrganizationCustomProperty string = "github.organization.customProperty"
+	ResourceGithubUser string = "github.user"
+	ResourceGithubTeam string = "github.team"
+	ResourceGithubCollaborator string = "github.collaborator"
+	ResourceGithubPackage string = "github.package"
+	ResourceGithubPackages string = "github.packages"
+	ResourceGithubRepository string = "github.repository"
+	ResourceGithubLicense string = "github.license"
+	ResourceGithubFile string = "github.file"
+	ResourceGithubRelease string = "github.release"
+	ResourceGithubWebhook string = "github.webhook"
+	ResourceGithubWorkflow string = "github.workflow"
+	ResourceGithubBranch string = "github.branch"
+	ResourceGithubBranchprotection string = "github.branchprotection"
+	ResourceGithubCommit string = "github.commit"
+	ResourceGithubMergeRequest string = "github.mergeRequest"
+	ResourceGithubReview string = "github.review"
+	ResourceGithubInstallation string = "github.installation"
+	ResourceGithubGist string = "github.gist"
+	ResourceGithubGistfile string = "github.gistfile"
+	ResourceGithubIssue string = "github.issue"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

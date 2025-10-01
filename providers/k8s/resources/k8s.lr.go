@@ -15,6 +15,47 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceK8s string = "k8s"
+	ResourceK8sApiresource string = "k8s.apiresource"
+	ResourceK8sNamespace string = "k8s.namespace"
+	ResourceK8sNode string = "k8s.node"
+	ResourceK8sPod string = "k8s.pod"
+	ResourceK8sDeployment string = "k8s.deployment"
+	ResourceK8sDaemonset string = "k8s.daemonset"
+	ResourceK8sStatefulset string = "k8s.statefulset"
+	ResourceK8sReplicaset string = "k8s.replicaset"
+	ResourceK8sJob string = "k8s.job"
+	ResourceK8sCronjob string = "k8s.cronjob"
+	ResourceK8sContainer string = "k8s.container"
+	ResourceK8sInitContainer string = "k8s.initContainer"
+	ResourceK8sEphemeralContainer string = "k8s.ephemeralContainer"
+	ResourceK8sSecret string = "k8s.secret"
+	ResourceK8sConfigmap string = "k8s.configmap"
+	ResourceK8sService string = "k8s.service"
+	ResourceK8sIngressresourceref string = "k8s.ingressresourceref"
+	ResourceK8sIngressservicebackend string = "k8s.ingressservicebackend"
+	ResourceK8sIngressbackend string = "k8s.ingressbackend"
+	ResourceK8sIngresshttprulepath string = "k8s.ingresshttprulepath"
+	ResourceK8sIngressrule string = "k8s.ingressrule"
+	ResourceK8sIngresstls string = "k8s.ingresstls"
+	ResourceK8sIngress string = "k8s.ingress"
+	ResourceK8sServiceaccount string = "k8s.serviceaccount"
+	ResourceK8sRbacClusterrole string = "k8s.rbac.clusterrole"
+	ResourceK8sRbacClusterrolebinding string = "k8s.rbac.clusterrolebinding"
+	ResourceK8sRbacRole string = "k8s.rbac.role"
+	ResourceK8sRbacRolebinding string = "k8s.rbac.rolebinding"
+	ResourceK8sNetworkpolicy string = "k8s.networkpolicy"
+	ResourceK8sCustomresource string = "k8s.customresource"
+	ResourceK8sAdmissionreview string = "k8s.admissionreview"
+	ResourceK8sAdmissionrequest string = "k8s.admissionrequest"
+	ResourceK8sUserinfo string = "k8s.userinfo"
+	ResourceK8sAdmissionValidatingwebhookconfiguration string = "k8s.admission.validatingwebhookconfiguration"
+	ResourceK8sApp string = "k8s.app"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

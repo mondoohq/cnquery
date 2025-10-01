@@ -15,6 +15,24 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceSnowflake string = "snowflake"
+	ResourceSnowflakeAccount string = "snowflake.account"
+	ResourceSnowflakeUser string = "snowflake.user"
+	ResourceSnowflakeRole string = "snowflake.role"
+	ResourceSnowflakeSecurityIntegration string = "snowflake.securityIntegration"
+	ResourceSnowflakePasswordPolicy string = "snowflake.passwordPolicy"
+	ResourceSnowflakeNetworkPolicy string = "snowflake.networkPolicy"
+	ResourceSnowflakeProcedure string = "snowflake.procedure"
+	ResourceSnowflakeParameter string = "snowflake.parameter"
+	ResourceSnowflakeStage string = "snowflake.stage"
+	ResourceSnowflakeDatabase string = "snowflake.database"
+	ResourceSnowflakeWarehouse string = "snowflake.warehouse"
+	ResourceSnowflakeView string = "snowflake.view"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {

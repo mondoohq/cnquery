@@ -15,6 +15,35 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceAsset string = "asset"
+	ResourceVulnmgmt string = "vulnmgmt"
+	ResourceVulnCve string = "vuln.cve"
+	ResourceVulnAdvisory string = "vuln.advisory"
+	ResourceVulnPackage string = "vuln.package"
+	ResourceAuditCvss string = "audit.cvss"
+	ResourceVsphere string = "vsphere"
+	ResourceVsphereLicense string = "vsphere.license"
+	ResourceEsxi string = "esxi"
+	ResourceVsphereDatacenter string = "vsphere.datacenter"
+	ResourceVsphereCluster string = "vsphere.cluster"
+	ResourceVsphereHost string = "vsphere.host"
+	ResourceVsphereVm string = "vsphere.vm"
+	ResourceVsphereVswitchStandard string = "vsphere.vswitch.standard"
+	ResourceVsphereVswitchDvs string = "vsphere.vswitch.dvs"
+	ResourceVsphereVswitchPortgroup string = "vsphere.vswitch.portgroup"
+	ResourceVsphereVmnic string = "vsphere.vmnic"
+	ResourceVsphereVmknic string = "vsphere.vmknic"
+	ResourceEsxiCommand string = "esxi.command"
+	ResourceEsxiVib string = "esxi.vib"
+	ResourceEsxiKernelmodule string = "esxi.kernelmodule"
+	ResourceEsxiService string = "esxi.service"
+	ResourceEsxiTimezone string = "esxi.timezone"
+	ResourceEsxiNtpconfig string = "esxi.ntpconfig"
+)
+
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
