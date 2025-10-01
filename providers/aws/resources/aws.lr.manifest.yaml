@@ -36,9 +36,19 @@ resources:
         The `aws.account` resource provides configuration for AWS accounts, including the account number and configured aliases.
     fields:
       aliases: {}
+      alternateContacts:
+        min_mondoo_version: 9.0.0
+      billingContact:
+        min_mondoo_version: 9.0.0
+      contactInformation:
+        min_mondoo_version: 9.0.0
       id: {}
+      operationsContact:
+        min_mondoo_version: 9.0.0
       organization:
         min_mondoo_version: 6.11.0
+      securityContact:
+        min_mondoo_version: 9.0.0
       tags:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
@@ -48,6 +58,20 @@ resources:
     snippets:
     - query: "aws.account { \n  id \n  aliases \n}\n"
       title: Return the account ID (number) and any configured account aliases
+  aws.account.alternateContact:
+    fields:
+      accountId: {}
+      contactType: {}
+      emailAddress: {}
+      exists: {}
+      name: {}
+      phoneNumber: {}
+      title: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.acm:
     docs:
       desc: Use the `aws.acm` resource to assess the configuration of the AWS Certificates
