@@ -16,25 +16,24 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAristaEos string = "arista.eos"
-	ResourceAristaEosRunningConfig string = "arista.eos.runningConfig"
+	ResourceAristaEos                     string = "arista.eos"
+	ResourceAristaEosRunningConfig        string = "arista.eos.runningConfig"
 	ResourceAristaEosRunningConfigSection string = "arista.eos.runningConfig.section"
-	ResourceAristaEosUser string = "arista.eos.user"
-	ResourceAristaEosRole string = "arista.eos.role"
-	ResourceAristaEosSnmpSetting string = "arista.eos.snmpSetting"
-	ResourceAristaEosNtpSetting string = "arista.eos.ntpSetting"
-	ResourceAristaEosInterface string = "arista.eos.interface"
-	ResourceAristaEosIpInterface string = "arista.eos.ipInterface"
-	ResourceAristaEosStp string = "arista.eos.stp"
-	ResourceAristaEosStpMst string = "arista.eos.stp.mst"
-	ResourceAristaEosSptMstInterface string = "arista.eos.spt.mstInterface"
+	ResourceAristaEosUser                 string = "arista.eos.user"
+	ResourceAristaEosRole                 string = "arista.eos.role"
+	ResourceAristaEosSnmpSetting          string = "arista.eos.snmpSetting"
+	ResourceAristaEosNtpSetting           string = "arista.eos.ntpSetting"
+	ResourceAristaEosInterface            string = "arista.eos.interface"
+	ResourceAristaEosIpInterface          string = "arista.eos.ipInterface"
+	ResourceAristaEosStp                  string = "arista.eos.stp"
+	ResourceAristaEosStpMst               string = "arista.eos.stp.mst"
+	ResourceAristaEosSptMstInterface      string = "arista.eos.spt.mstInterface"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"arista.eos": {
 			// to override args, implement: initAristaEos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAristaEos,
@@ -104,7 +103,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -381,11 +380,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"arista.eos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEos).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEos).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.systemConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEos).SystemConfig, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -427,17 +426,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.runningConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosRunningConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosRunningConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.runningConfig.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosRunningConfig).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"arista.eos.runningConfig.section.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosRunningConfigSection).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosRunningConfigSection).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.runningConfig.section.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosRunningConfigSection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -447,9 +446,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosUser).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -479,9 +478,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosRole).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosRole).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -495,9 +494,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.snmpSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosSnmpSetting).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosSnmpSetting).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.snmpSetting.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosSnmpSetting).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -507,17 +506,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.ntpSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosNtpSetting).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosNtpSetting).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.ntpSetting.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosNtpSetting).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"arista.eos.interface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosInterface).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosInterface).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.interface.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosInterface).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -587,9 +586,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.ipInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosIpInterface).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosIpInterface).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.ipInterface.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosIpInterface).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -603,17 +602,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.stp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosStp).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosStp).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.stp.mstInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosStp).MstInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.stp.mst.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosStpMst).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosStpMst).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.stp.mst.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosStpMst).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -643,9 +642,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"arista.eos.spt.mstInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAristaEosSptMstInterface).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAristaEosSptMstInterface).__id, ok = v.Value.(string)
+		return
+	},
 	"arista.eos.spt.mstInterface.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosSptMstInterface).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -709,13 +708,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[arista] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[arista] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[arista] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[arista] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -733,18 +732,18 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlAristaEos for the arista.eos resource
 type mqlAristaEos struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosInternal it will be used here
 	SystemConfig plugin.TValue[map[string]any]
 	IpInterfaces plugin.TValue[[]any]
-	Interfaces plugin.TValue[[]any]
-	Version plugin.TValue[any]
-	Hostname plugin.TValue[string]
-	Fqdn plugin.TValue[string]
-	Users plugin.TValue[[]any]
-	Roles plugin.TValue[[]any]
-	Snmp plugin.TValue[*mqlAristaEosSnmpSetting]
-	Ntp plugin.TValue[*mqlAristaEosNtpSetting]
+	Interfaces   plugin.TValue[[]any]
+	Version      plugin.TValue[any]
+	Hostname     plugin.TValue[string]
+	Fqdn         plugin.TValue[string]
+	Users        plugin.TValue[[]any]
+	Roles        plugin.TValue[[]any]
+	Snmp         plugin.TValue[*mqlAristaEosSnmpSetting]
+	Ntp          plugin.TValue[*mqlAristaEosNtpSetting]
 }
 
 // createAristaEos creates a new instance of this resource
@@ -759,7 +758,7 @@ func createAristaEos(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -907,7 +906,7 @@ func (c *mqlAristaEos) GetNtp() *plugin.TValue[*mqlAristaEosNtpSetting] {
 // mqlAristaEosRunningConfig for the arista.eos.runningConfig resource
 type mqlAristaEosRunningConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosRunningConfigInternal it will be used here
 	Content plugin.TValue[string]
 }
@@ -924,7 +923,7 @@ func createAristaEosRunningConfig(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -958,9 +957,9 @@ func (c *mqlAristaEosRunningConfig) GetContent() *plugin.TValue[string] {
 // mqlAristaEosRunningConfigSection for the arista.eos.runningConfig.section resource
 type mqlAristaEosRunningConfigSection struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosRunningConfigSectionInternal it will be used here
-	Name plugin.TValue[string]
+	Name    plugin.TValue[string]
 	Content plugin.TValue[string]
 }
 
@@ -976,7 +975,7 @@ func createAristaEosRunningConfigSection(runtime *plugin.Runtime, args map[strin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1014,15 +1013,15 @@ func (c *mqlAristaEosRunningConfigSection) GetContent() *plugin.TValue[string] {
 // mqlAristaEosUser for the arista.eos.user resource
 type mqlAristaEosUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosUserInternal it will be used here
-	Name plugin.TValue[string]
-	Privilege plugin.TValue[string]
-	Role plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Privilege  plugin.TValue[string]
+	Role       plugin.TValue[string]
 	Nopassword plugin.TValue[string]
-	Format plugin.TValue[string]
-	Secret plugin.TValue[string]
-	Sshkey plugin.TValue[string]
+	Format     plugin.TValue[string]
+	Secret     plugin.TValue[string]
+	Sshkey     plugin.TValue[string]
 }
 
 // createAristaEosUser creates a new instance of this resource
@@ -1037,7 +1036,7 @@ func createAristaEosUser(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1093,11 +1092,11 @@ func (c *mqlAristaEosUser) GetSshkey() *plugin.TValue[string] {
 // mqlAristaEosRole for the arista.eos.role resource
 type mqlAristaEosRole struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosRoleInternal it will be used here
-	Name plugin.TValue[string]
+	Name    plugin.TValue[string]
 	Default plugin.TValue[bool]
-	Rules plugin.TValue[[]any]
+	Rules   plugin.TValue[[]any]
 }
 
 // createAristaEosRole creates a new instance of this resource
@@ -1112,7 +1111,7 @@ func createAristaEosRole(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1152,9 +1151,9 @@ func (c *mqlAristaEosRole) GetRules() *plugin.TValue[[]any] {
 // mqlAristaEosSnmpSetting for the arista.eos.snmpSetting resource
 type mqlAristaEosSnmpSetting struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosSnmpSettingInternal it will be used here
-	Enabled plugin.TValue[bool]
+	Enabled       plugin.TValue[bool]
 	Notifications plugin.TValue[[]any]
 }
 
@@ -1170,7 +1169,7 @@ func createAristaEosSnmpSetting(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1208,7 +1207,7 @@ func (c *mqlAristaEosSnmpSetting) GetNotifications() *plugin.TValue[[]any] {
 // mqlAristaEosNtpSetting for the arista.eos.ntpSetting resource
 type mqlAristaEosNtpSetting struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosNtpSettingInternal it will be used here
 	Status plugin.TValue[string]
 }
@@ -1225,7 +1224,7 @@ func createAristaEosNtpSetting(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1257,25 +1256,25 @@ func (c *mqlAristaEosNtpSetting) GetStatus() *plugin.TValue[string] {
 // mqlAristaEosInterface for the arista.eos.interface resource
 type mqlAristaEosInterface struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosInterfaceInternal it will be used here
-	Name plugin.TValue[string]
-	Bandwidth plugin.TValue[int64]
-	BurnedInAddress plugin.TValue[string]
-	Description plugin.TValue[string]
-	ForwardingModel plugin.TValue[string]
-	Hardware plugin.TValue[string]
-	InterfaceAddress plugin.TValue[[]any]
-	InterfaceCounters plugin.TValue[any]
-	InterfaceMembership plugin.TValue[string]
-	InterfaceStatistics plugin.TValue[any]
-	InterfaceStatus plugin.TValue[string]
-	L2Mtu plugin.TValue[int64]
+	Name                      plugin.TValue[string]
+	Bandwidth                 plugin.TValue[int64]
+	BurnedInAddress           plugin.TValue[string]
+	Description               plugin.TValue[string]
+	ForwardingModel           plugin.TValue[string]
+	Hardware                  plugin.TValue[string]
+	InterfaceAddress          plugin.TValue[[]any]
+	InterfaceCounters         plugin.TValue[any]
+	InterfaceMembership       plugin.TValue[string]
+	InterfaceStatistics       plugin.TValue[any]
+	InterfaceStatus           plugin.TValue[string]
+	L2Mtu                     plugin.TValue[int64]
 	LastStatusChangeTimestamp plugin.TValue[int64]
-	LineProtocolStatus plugin.TValue[string]
-	Mtu plugin.TValue[int64]
-	PhysicalAddress plugin.TValue[string]
-	Status plugin.TValue[any]
+	LineProtocolStatus        plugin.TValue[string]
+	Mtu                       plugin.TValue[int64]
+	PhysicalAddress           plugin.TValue[string]
+	Status                    plugin.TValue[any]
 }
 
 // createAristaEosInterface creates a new instance of this resource
@@ -1290,7 +1289,7 @@ func createAristaEosInterface(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1388,11 +1387,11 @@ func (c *mqlAristaEosInterface) GetStatus() *plugin.TValue[any] {
 // mqlAristaEosIpInterface for the arista.eos.ipInterface resource
 type mqlAristaEosIpInterface struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosIpInterfaceInternal it will be used here
-	Name plugin.TValue[string]
+	Name    plugin.TValue[string]
 	Address plugin.TValue[string]
-	Mtu plugin.TValue[string]
+	Mtu     plugin.TValue[string]
 }
 
 // createAristaEosIpInterface creates a new instance of this resource
@@ -1407,7 +1406,7 @@ func createAristaEosIpInterface(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1447,7 +1446,7 @@ func (c *mqlAristaEosIpInterface) GetMtu() *plugin.TValue[string] {
 // mqlAristaEosStp for the arista.eos.stp resource
 type mqlAristaEosStp struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosStpInternal it will be used here
 	MstInstances plugin.TValue[[]any]
 }
@@ -1464,7 +1463,7 @@ func createAristaEosStp(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1508,15 +1507,15 @@ func (c *mqlAristaEosStp) GetMstInstances() *plugin.TValue[[]any] {
 // mqlAristaEosStpMst for the arista.eos.stp.mst resource
 type mqlAristaEosStpMst struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosStpMstInternal it will be used here
-	InstanceId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Protocol plugin.TValue[string]
-	Bridge plugin.TValue[any]
-	RootBridge plugin.TValue[any]
+	InstanceId         plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Protocol           plugin.TValue[string]
+	Bridge             plugin.TValue[any]
+	RootBridge         plugin.TValue[any]
 	RegionalRootBridge plugin.TValue[any]
-	Interfaces plugin.TValue[[]any]
+	Interfaces         plugin.TValue[[]any]
 }
 
 // createAristaEosStpMst creates a new instance of this resource
@@ -1531,7 +1530,7 @@ func createAristaEosStpMst(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1587,23 +1586,23 @@ func (c *mqlAristaEosStpMst) GetInterfaces() *plugin.TValue[[]any] {
 // mqlAristaEosSptMstInterface for the arista.eos.spt.mstInterface resource
 type mqlAristaEosSptMstInterface struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAristaEosSptMstInterfaceInternal it will be used here
-	Id plugin.TValue[string]
-	MstInstanceId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Priority plugin.TValue[int64]
-	LinkType plugin.TValue[string]
-	State plugin.TValue[string]
-	Cost plugin.TValue[int64]
-	Role plugin.TValue[string]
+	Id                   plugin.TValue[string]
+	MstInstanceId        plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Priority             plugin.TValue[int64]
+	LinkType             plugin.TValue[string]
+	State                plugin.TValue[string]
+	Cost                 plugin.TValue[int64]
+	Role                 plugin.TValue[string]
 	InconsistentFeatures plugin.TValue[any]
-	PortNumber plugin.TValue[int64]
-	IsEdgePort plugin.TValue[bool]
-	Detail plugin.TValue[any]
-	BoundaryType plugin.TValue[string]
-	Counters plugin.TValue[any]
-	Features plugin.TValue[any]
+	PortNumber           plugin.TValue[int64]
+	IsEdgePort           plugin.TValue[bool]
+	Detail               plugin.TValue[any]
+	BoundaryType         plugin.TValue[string]
+	Counters             plugin.TValue[any]
+	Features             plugin.TValue[any]
 }
 
 // createAristaEosSptMstInterface creates a new instance of this resource
@@ -1618,7 +1617,7 @@ func createAristaEosSptMstInterface(runtime *plugin.Runtime, args map[string]*ll
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

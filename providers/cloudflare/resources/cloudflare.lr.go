@@ -17,38 +17,37 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceCloudflare string = "cloudflare"
-	ResourceCloudflareZone string = "cloudflare.zone"
-	ResourceCloudflareZoneAccount string = "cloudflare.zone.account"
-	ResourceCloudflareDns string = "cloudflare.dns"
-	ResourceCloudflareDnsRecord string = "cloudflare.dns.record"
-	ResourceCloudflareAccount string = "cloudflare.account"
-	ResourceCloudflareAccountSettings string = "cloudflare.account.settings"
-	ResourceCloudflareStreams string = "cloudflare.streams"
+	ResourceCloudflare                 string = "cloudflare"
+	ResourceCloudflareZone             string = "cloudflare.zone"
+	ResourceCloudflareZoneAccount      string = "cloudflare.zone.account"
+	ResourceCloudflareDns              string = "cloudflare.dns"
+	ResourceCloudflareDnsRecord        string = "cloudflare.dns.record"
+	ResourceCloudflareAccount          string = "cloudflare.account"
+	ResourceCloudflareAccountSettings  string = "cloudflare.account.settings"
+	ResourceCloudflareStreams          string = "cloudflare.streams"
 	ResourceCloudflareStreamsLiveInput string = "cloudflare.streams.liveInput"
-	ResourceCloudflareStreamsVideo string = "cloudflare.streams.video"
-	ResourceCloudflareR2 string = "cloudflare.r2"
-	ResourceCloudflareR2Bucket string = "cloudflare.r2.bucket"
-	ResourceCloudflareWorkers string = "cloudflare.workers"
-	ResourceCloudflareWorkersWorker string = "cloudflare.workers.worker"
-	ResourceCloudflareWorkersPage string = "cloudflare.workers.page"
-	ResourceCloudflareOne string = "cloudflare.one"
-	ResourceCloudflareOneApp string = "cloudflare.one.app"
-	ResourceCloudflareCorsHeaders string = "cloudflare.corsHeaders"
-	ResourceCloudflareOneIdp string = "cloudflare.one.idp"
+	ResourceCloudflareStreamsVideo     string = "cloudflare.streams.video"
+	ResourceCloudflareR2               string = "cloudflare.r2"
+	ResourceCloudflareR2Bucket         string = "cloudflare.r2.bucket"
+	ResourceCloudflareWorkers          string = "cloudflare.workers"
+	ResourceCloudflareWorkersWorker    string = "cloudflare.workers.worker"
+	ResourceCloudflareWorkersPage      string = "cloudflare.workers.page"
+	ResourceCloudflareOne              string = "cloudflare.one"
+	ResourceCloudflareOneApp           string = "cloudflare.one.app"
+	ResourceCloudflareCorsHeaders      string = "cloudflare.corsHeaders"
+	ResourceCloudflareOneIdp           string = "cloudflare.one.idp"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"cloudflare": {
 			// to override args, implement: initCloudflare(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflare,
 		},
 		"cloudflare.zone": {
-			Init: initCloudflareZone,
+			Init:   initCloudflareZone,
 			Create: createCloudflareZone,
 		},
 		"cloudflare.zone.account": {
@@ -64,7 +63,7 @@ func init() {
 			Create: createCloudflareDnsRecord,
 		},
 		"cloudflare.account": {
-			Init: initCloudflareAccount,
+			Init:   initCloudflareAccount,
 			Create: createCloudflareAccount,
 		},
 		"cloudflare.account.settings": {
@@ -140,7 +139,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -579,11 +578,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"cloudflare.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflare).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflare).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflare).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -593,9 +592,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareZone).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareZone).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.zone.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZone).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -661,9 +660,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.zone.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareZoneAccount).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareZoneAccount).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.zone.account.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZoneAccount).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -681,17 +680,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.dns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareDns).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareDns).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.dns.records": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareDns).Records, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cloudflare.dns.record.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareDnsRecord).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareDnsRecord).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.dns.record.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareDnsRecord).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -737,9 +736,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareAccount).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareAccount).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.account.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareAccount).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -765,21 +764,21 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.account.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareAccountSettings).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareAccountSettings).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.account.settings.enforceTwoFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareAccountSettings).EnforceTwoFactor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"cloudflare.streams.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareStreams).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareStreams).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.streams.liveInput.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareStreamsLiveInput).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareStreamsLiveInput).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.streams.liveInput.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareStreamsLiveInput).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -797,9 +796,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.streams.video.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareStreamsVideo).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareStreamsVideo).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.streams.video.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareStreamsVideo).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -873,17 +872,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.r2.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareR2).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareR2).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.r2.buckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareR2).Buckets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cloudflare.r2.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareR2Bucket).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareR2Bucket).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.r2.bucket.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareR2Bucket).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -897,9 +896,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.workers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareWorkers).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareWorkers).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.workers.workers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareWorkers).Workers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -909,9 +908,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.workers.worker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareWorkersWorker).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareWorkersWorker).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.workers.worker.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareWorkersWorker).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -953,9 +952,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.workers.page.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareWorkersPage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareWorkersPage).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.workers.page.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareWorkersPage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -997,9 +996,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.one.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareOne).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareOne).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.one.apps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareOne).Apps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1009,9 +1008,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.one.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareOneApp).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareOneApp).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.one.app.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareOneApp).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1097,9 +1096,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.corsHeaders.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareCorsHeaders).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareCorsHeaders).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.corsHeaders.allowAllHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareCorsHeaders).AllowAllHeaders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -1133,9 +1132,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudflare.one.idp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudflareOneIdp).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudflareOneIdp).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudflare.one.idp.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareOneIdp).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1151,13 +1150,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[cloudflare] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[cloudflare] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[cloudflare] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[cloudflare] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -1175,9 +1174,9 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlCloudflare for the cloudflare resource
 type mqlCloudflare struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareInternal it will be used here
-	Zones plugin.TValue[[]any]
+	Zones    plugin.TValue[[]any]
 	Accounts plugin.TValue[[]any]
 }
 
@@ -1193,7 +1192,7 @@ func createCloudflare(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1253,24 +1252,24 @@ func (c *mqlCloudflare) GetAccounts() *plugin.TValue[[]any] {
 // mqlCloudflareZone for the cloudflare.zone resource
 type mqlCloudflareZone struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareZoneInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	NameServers plugin.TValue[[]any]
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	NameServers         plugin.TValue[[]any]
 	OriginalNameServers plugin.TValue[[]any]
-	Status plugin.TValue[string]
-	Paused plugin.TValue[bool]
-	Type plugin.TValue[string]
-	CreatedOn plugin.TValue[*time.Time]
-	ModifiedOn plugin.TValue[*time.Time]
-	Account plugin.TValue[*mqlCloudflareZoneAccount]
-	Dns plugin.TValue[*mqlCloudflareDns]
-	LiveInputs plugin.TValue[[]any]
-	Videos plugin.TValue[[]any]
-	R2 plugin.TValue[*mqlCloudflareR2]
-	Workers plugin.TValue[*mqlCloudflareWorkers]
-	One plugin.TValue[*mqlCloudflareOne]
+	Status              plugin.TValue[string]
+	Paused              plugin.TValue[bool]
+	Type                plugin.TValue[string]
+	CreatedOn           plugin.TValue[*time.Time]
+	ModifiedOn          plugin.TValue[*time.Time]
+	Account             plugin.TValue[*mqlCloudflareZoneAccount]
+	Dns                 plugin.TValue[*mqlCloudflareDns]
+	LiveInputs          plugin.TValue[[]any]
+	Videos              plugin.TValue[[]any]
+	R2                  plugin.TValue[*mqlCloudflareR2]
+	Workers             plugin.TValue[*mqlCloudflareWorkers]
+	One                 plugin.TValue[*mqlCloudflareOne]
 }
 
 // createCloudflareZone creates a new instance of this resource
@@ -1285,7 +1284,7 @@ func createCloudflareZone(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1449,11 +1448,11 @@ func (c *mqlCloudflareZone) GetOne() *plugin.TValue[*mqlCloudflareOne] {
 // mqlCloudflareZoneAccount for the cloudflare.zone.account resource
 type mqlCloudflareZoneAccount struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareZoneAccountInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Type plugin.TValue[string]
+	Id    plugin.TValue[string]
+	Name  plugin.TValue[string]
+	Type  plugin.TValue[string]
 	Email plugin.TValue[string]
 }
 
@@ -1469,7 +1468,7 @@ func createCloudflareZoneAccount(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1513,7 +1512,7 @@ func (c *mqlCloudflareZoneAccount) GetEmail() *plugin.TValue[string] {
 // mqlCloudflareDns for the cloudflare.dns resource
 type mqlCloudflareDns struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlCloudflareDnsInternal
 	Records plugin.TValue[[]any]
 }
@@ -1569,18 +1568,18 @@ func (c *mqlCloudflareDns) GetRecords() *plugin.TValue[[]any] {
 // mqlCloudflareDnsRecord for the cloudflare.dns.record resource
 type mqlCloudflareDnsRecord struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareDnsRecordInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Comment plugin.TValue[string]
-	Tags plugin.TValue[[]any]
-	Proxied plugin.TValue[bool]
-	Proxiable plugin.TValue[bool]
-	Type plugin.TValue[string]
-	Content plugin.TValue[string]
-	Ttl plugin.TValue[int64]
-	CreatedOn plugin.TValue[*time.Time]
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Comment    plugin.TValue[string]
+	Tags       plugin.TValue[[]any]
+	Proxied    plugin.TValue[bool]
+	Proxiable  plugin.TValue[bool]
+	Type       plugin.TValue[string]
+	Content    plugin.TValue[string]
+	Ttl        plugin.TValue[int64]
+	CreatedOn  plugin.TValue[*time.Time]
 	ModifiedOn plugin.TValue[*time.Time]
 }
 
@@ -1596,7 +1595,7 @@ func createCloudflareDnsRecord(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1668,14 +1667,14 @@ func (c *mqlCloudflareDnsRecord) GetModifiedOn() *plugin.TValue[*time.Time] {
 // mqlCloudflareAccount for the cloudflare.account resource
 type mqlCloudflareAccount struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareAccountInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Settings plugin.TValue[*mqlCloudflareAccountSettings]
-	CreatedOn plugin.TValue[*time.Time]
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Settings   plugin.TValue[*mqlCloudflareAccountSettings]
+	CreatedOn  plugin.TValue[*time.Time]
 	LiveInputs plugin.TValue[[]any]
-	Videos plugin.TValue[[]any]
+	Videos     plugin.TValue[[]any]
 }
 
 // createCloudflareAccount creates a new instance of this resource
@@ -1690,7 +1689,7 @@ func createCloudflareAccount(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1766,7 +1765,7 @@ func (c *mqlCloudflareAccount) GetVideos() *plugin.TValue[[]any] {
 // mqlCloudflareAccountSettings for the cloudflare.account.settings resource
 type mqlCloudflareAccountSettings struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareAccountSettingsInternal it will be used here
 	EnforceTwoFactor plugin.TValue[bool]
 }
@@ -1810,7 +1809,7 @@ func (c *mqlCloudflareAccountSettings) GetEnforceTwoFactor() *plugin.TValue[bool
 // mqlCloudflareStreams for the cloudflare.streams resource
 type mqlCloudflareStreams struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareStreamsInternal it will be used here
 }
 
@@ -1849,11 +1848,11 @@ func (c *mqlCloudflareStreams) MqlID() string {
 // mqlCloudflareStreamsLiveInput for the cloudflare.streams.liveInput resource
 type mqlCloudflareStreamsLiveInput struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareStreamsLiveInputInternal it will be used here
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id                       plugin.TValue[string]
+	Uid                      plugin.TValue[string]
+	Name                     plugin.TValue[string]
 	DeleteRecordingAfterDays plugin.TValue[int64]
 }
 
@@ -1869,7 +1868,7 @@ func createCloudflareStreamsLiveInput(runtime *plugin.Runtime, args map[string]*
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1913,26 +1912,26 @@ func (c *mqlCloudflareStreamsLiveInput) GetDeleteRecordingAfterDays() *plugin.TV
 // mqlCloudflareStreamsVideo for the cloudflare.streams.video resource
 type mqlCloudflareStreamsVideo struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareStreamsVideoInternal it will be used here
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
-	Name plugin.TValue[string]
-	Creator plugin.TValue[string]
-	Duration plugin.TValue[float64]
-	Height plugin.TValue[int64]
-	Width plugin.TValue[int64]
-	LiveInput plugin.TValue[string]
-	Dash plugin.TValue[string]
-	Hls plugin.TValue[string]
-	Preview plugin.TValue[string]
-	Ready plugin.TValue[bool]
-	RequireSignedUrls plugin.TValue[bool]
-	ScheduledDeletion plugin.TValue[*time.Time]
-	Size plugin.TValue[int64]
-	Thumbnail plugin.TValue[string]
+	Id                    plugin.TValue[string]
+	Uid                   plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Creator               plugin.TValue[string]
+	Duration              plugin.TValue[float64]
+	Height                plugin.TValue[int64]
+	Width                 plugin.TValue[int64]
+	LiveInput             plugin.TValue[string]
+	Dash                  plugin.TValue[string]
+	Hls                   plugin.TValue[string]
+	Preview               plugin.TValue[string]
+	Ready                 plugin.TValue[bool]
+	RequireSignedUrls     plugin.TValue[bool]
+	ScheduledDeletion     plugin.TValue[*time.Time]
+	Size                  plugin.TValue[int64]
+	Thumbnail             plugin.TValue[string]
 	ThumbnailTimestampPct plugin.TValue[float64]
-	Uploaded plugin.TValue[*time.Time]
+	Uploaded              plugin.TValue[*time.Time]
 }
 
 // createCloudflareStreamsVideo creates a new instance of this resource
@@ -1947,7 +1946,7 @@ func createCloudflareStreamsVideo(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2047,7 +2046,7 @@ func (c *mqlCloudflareStreamsVideo) GetUploaded() *plugin.TValue[*time.Time] {
 // mqlCloudflareR2 for the cloudflare.r2 resource
 type mqlCloudflareR2 struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlCloudflareR2Internal
 	Buckets plugin.TValue[[]any]
 }
@@ -2064,7 +2063,7 @@ func createCloudflareR2(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2108,10 +2107,10 @@ func (c *mqlCloudflareR2) GetBuckets() *plugin.TValue[[]any] {
 // mqlCloudflareR2Bucket for the cloudflare.r2.bucket resource
 type mqlCloudflareR2Bucket struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareR2BucketInternal it will be used here
-	Name plugin.TValue[string]
-	Location plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Location  plugin.TValue[string]
 	CreatedOn plugin.TValue[*time.Time]
 }
 
@@ -2127,7 +2126,7 @@ func createCloudflareR2Bucket(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2167,10 +2166,10 @@ func (c *mqlCloudflareR2Bucket) GetCreatedOn() *plugin.TValue[*time.Time] {
 // mqlCloudflareWorkers for the cloudflare.workers resource
 type mqlCloudflareWorkers struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlCloudflareWorkersInternal
 	Workers plugin.TValue[[]any]
-	Pages plugin.TValue[[]any]
+	Pages   plugin.TValue[[]any]
 }
 
 // createCloudflareWorkers creates a new instance of this resource
@@ -2240,18 +2239,18 @@ func (c *mqlCloudflareWorkers) GetPages() *plugin.TValue[[]any] {
 // mqlCloudflareWorkersWorker for the cloudflare.workers.worker resource
 type mqlCloudflareWorkersWorker struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareWorkersWorkerInternal it will be used here
-	Id plugin.TValue[string]
-	Etag plugin.TValue[string]
-	Size plugin.TValue[int64]
-	DeploymentId plugin.TValue[string]
-	PipelineHash plugin.TValue[string]
-	PlacementMode plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Etag             plugin.TValue[string]
+	Size             plugin.TValue[int64]
+	DeploymentId     plugin.TValue[string]
+	PipelineHash     plugin.TValue[string]
+	PlacementMode    plugin.TValue[string]
 	LastDeployedFrom plugin.TValue[string]
-	LogPush plugin.TValue[bool]
-	CreatedOn plugin.TValue[*time.Time]
-	ModifiedOn plugin.TValue[*time.Time]
+	LogPush          plugin.TValue[bool]
+	CreatedOn        plugin.TValue[*time.Time]
+	ModifiedOn       plugin.TValue[*time.Time]
 }
 
 // createCloudflareWorkersWorker creates a new instance of this resource
@@ -2329,18 +2328,18 @@ func (c *mqlCloudflareWorkersWorker) GetModifiedOn() *plugin.TValue[*time.Time] 
 // mqlCloudflareWorkersPage for the cloudflare.workers.page resource
 type mqlCloudflareWorkersPage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareWorkersPageInternal it will be used here
-	Id plugin.TValue[string]
-	ShortId plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	ProjectName plugin.TValue[string]
-	Environment plugin.TValue[string]
-	Url plugin.TValue[string]
-	Aliases plugin.TValue[[]any]
+	Id               plugin.TValue[string]
+	ShortId          plugin.TValue[string]
+	ProjectId        plugin.TValue[string]
+	ProjectName      plugin.TValue[string]
+	Environment      plugin.TValue[string]
+	Url              plugin.TValue[string]
+	Aliases          plugin.TValue[[]any]
 	ProductionBranch plugin.TValue[string]
-	CreatedOn plugin.TValue[*time.Time]
-	ModifiedOn plugin.TValue[*time.Time]
+	CreatedOn        plugin.TValue[*time.Time]
+	ModifiedOn       plugin.TValue[*time.Time]
 }
 
 // createCloudflareWorkersPage creates a new instance of this resource
@@ -2418,9 +2417,9 @@ func (c *mqlCloudflareWorkersPage) GetModifiedOn() *plugin.TValue[*time.Time] {
 // mqlCloudflareOne for the cloudflare.one resource
 type mqlCloudflareOne struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlCloudflareOneInternal
-	Apps plugin.TValue[[]any]
+	Apps              plugin.TValue[[]any]
 	IdentityProviders plugin.TValue[[]any]
 }
 
@@ -2491,29 +2490,29 @@ func (c *mqlCloudflareOne) GetIdentityProviders() *plugin.TValue[[]any] {
 // mqlCloudflareOneApp for the cloudflare.one.app resource
 type mqlCloudflareOneApp struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareOneAppInternal it will be used here
-	Id plugin.TValue[string]
-	Aud plugin.TValue[string]
-	Name plugin.TValue[string]
-	Domain plugin.TValue[string]
+	Id                       plugin.TValue[string]
+	Aud                      plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Domain                   plugin.TValue[string]
 	AllowedIdentityProviders plugin.TValue[[]any]
-	AppLauncherVisible plugin.TValue[bool]
-	AutoRedirectToIdentity plugin.TValue[bool]
-	CorsHeaders plugin.TValue[*mqlCloudflareCorsHeaders]
-	OptionsPreflightBypass plugin.TValue[bool]
-	CustomDenyMessage plugin.TValue[string]
-	CustomDenyUrl plugin.TValue[string]
-	ServiceAuth401Redirect plugin.TValue[bool]
-	EnableBindingCookie plugin.TValue[bool]
-	HttpOnlyCookieAttribute plugin.TValue[bool]
-	SameSiteCookieAttribute plugin.TValue[string]
-	LogoUrl plugin.TValue[string]
-	SessionDuration plugin.TValue[string]
-	SkipInterstitial plugin.TValue[bool]
-	Type plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
+	AppLauncherVisible       plugin.TValue[bool]
+	AutoRedirectToIdentity   plugin.TValue[bool]
+	CorsHeaders              plugin.TValue[*mqlCloudflareCorsHeaders]
+	OptionsPreflightBypass   plugin.TValue[bool]
+	CustomDenyMessage        plugin.TValue[string]
+	CustomDenyUrl            plugin.TValue[string]
+	ServiceAuth401Redirect   plugin.TValue[bool]
+	EnableBindingCookie      plugin.TValue[bool]
+	HttpOnlyCookieAttribute  plugin.TValue[bool]
+	SameSiteCookieAttribute  plugin.TValue[string]
+	LogoUrl                  plugin.TValue[string]
+	SessionDuration          plugin.TValue[string]
+	SkipInterstitial         plugin.TValue[bool]
+	Type                     plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
+	UpdatedAt                plugin.TValue[*time.Time]
 }
 
 // createCloudflareOneApp creates a new instance of this resource
@@ -2528,7 +2527,7 @@ func createCloudflareOneApp(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2640,16 +2639,16 @@ func (c *mqlCloudflareOneApp) GetUpdatedAt() *plugin.TValue[*time.Time] {
 // mqlCloudflareCorsHeaders for the cloudflare.corsHeaders resource
 type mqlCloudflareCorsHeaders struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareCorsHeadersInternal it will be used here
-	AllowAllHeaders plugin.TValue[bool]
-	AllowAllMethods plugin.TValue[bool]
-	AllowAllOrigins plugin.TValue[bool]
+	AllowAllHeaders  plugin.TValue[bool]
+	AllowAllMethods  plugin.TValue[bool]
+	AllowAllOrigins  plugin.TValue[bool]
 	AllowCredentials plugin.TValue[bool]
-	AllowedHeaders plugin.TValue[[]any]
-	AllowedMethods plugin.TValue[[]any]
-	AllowedOrigins plugin.TValue[[]any]
-	MaxAge plugin.TValue[int64]
+	AllowedHeaders   plugin.TValue[[]any]
+	AllowedMethods   plugin.TValue[[]any]
+	AllowedOrigins   plugin.TValue[[]any]
+	MaxAge           plugin.TValue[int64]
 }
 
 // createCloudflareCorsHeaders creates a new instance of this resource
@@ -2719,9 +2718,9 @@ func (c *mqlCloudflareCorsHeaders) GetMaxAge() *plugin.TValue[int64] {
 // mqlCloudflareOneIdp for the cloudflare.one.idp resource
 type mqlCloudflareOneIdp struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudflareOneIdpInternal it will be used here
-	Id plugin.TValue[string]
+	Id   plugin.TValue[string]
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
 }
@@ -2738,7 +2737,7 @@ func createCloudflareOneIdp(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

@@ -17,111 +17,110 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceMicrosoft string = "microsoft"
-	ResourceMicrosoftIdentityAndAccessAccessReviews string = "microsoft.identityAndAccess.accessReviews"
-	ResourceMicrosoftIdentityAndAccessAccessReviewDefinition string = "microsoft.identityAndAccess.accessReviewDefinition"
-	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings string = "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"
-	ResourceMicrosoftGroups string = "microsoft.groups"
-	ResourceMicrosoftApplications string = "microsoft.applications"
-	ResourceMicrosoftTenant string = "microsoft.tenant"
-	ResourceMicrosoftTenantSettings string = "microsoft.tenantSettings"
-	ResourceMicrosoftTenantFormsSettings string = "microsoft.tenantFormsSettings"
-	ResourceMicrosoftUsers string = "microsoft.users"
-	ResourceMicrosoftIdentityAndAccess string = "microsoft.identityAndAccess"
-	ResourceMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance string = "microsoft.identityAndAccess.roleEligibilityScheduleInstance"
-	ResourceMicrosoftIdentityAndAccessPolicy string = "microsoft.identityAndAccess.policy"
-	ResourceMicrosoftIdentityAndAccessPolicyRule string = "microsoft.identityAndAccess.policy.rule"
-	ResourceMicrosoftIdentityAndAccessPolicyRuleTarget string = "microsoft.identityAndAccess.policy.ruleTarget"
-	ResourceMicrosoftIdentityAndAccessIdentityAndSignIn string = "microsoft.identityAndAccess.identityAndSignIn"
-	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPolicies string = "microsoft.identityAndAccess.identityAndSignIn.policies"
+	ResourceMicrosoft                                                                                    string = "microsoft"
+	ResourceMicrosoftIdentityAndAccessAccessReviews                                                      string = "microsoft.identityAndAccess.accessReviews"
+	ResourceMicrosoftIdentityAndAccessAccessReviewDefinition                                             string = "microsoft.identityAndAccess.accessReviewDefinition"
+	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings                 string = "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"
+	ResourceMicrosoftGroups                                                                              string = "microsoft.groups"
+	ResourceMicrosoftApplications                                                                        string = "microsoft.applications"
+	ResourceMicrosoftTenant                                                                              string = "microsoft.tenant"
+	ResourceMicrosoftTenantSettings                                                                      string = "microsoft.tenantSettings"
+	ResourceMicrosoftTenantFormsSettings                                                                 string = "microsoft.tenantFormsSettings"
+	ResourceMicrosoftUsers                                                                               string = "microsoft.users"
+	ResourceMicrosoftIdentityAndAccess                                                                   string = "microsoft.identityAndAccess"
+	ResourceMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance                                    string = "microsoft.identityAndAccess.roleEligibilityScheduleInstance"
+	ResourceMicrosoftIdentityAndAccessPolicy                                                             string = "microsoft.identityAndAccess.policy"
+	ResourceMicrosoftIdentityAndAccessPolicyRule                                                         string = "microsoft.identityAndAccess.policy.rule"
+	ResourceMicrosoftIdentityAndAccessPolicyRuleTarget                                                   string = "microsoft.identityAndAccess.policy.ruleTarget"
+	ResourceMicrosoftIdentityAndAccessIdentityAndSignIn                                                  string = "microsoft.identityAndAccess.identityAndSignIn"
+	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPolicies                                          string = "microsoft.identityAndAccess.identityAndSignIn.policies"
 	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy string = "microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy"
-	ResourceMicrosoftUserAssignedLicense string = "microsoft.user.assignedLicense"
-	ResourceMicrosoftUserLicenseDetail string = "microsoft.user.licenseDetail"
-	ResourceMicrosoftUserLicenseDetailServicePlanInfo string = "microsoft.user.licenseDetail.servicePlanInfo"
-	ResourceMicrosoftConditionalAccess string = "microsoft.conditionalAccess"
-	ResourceMicrosoftConditionalAccessAuthenticationMethodsPolicy string = "microsoft.conditionalAccess.authenticationMethodsPolicy"
-	ResourceMicrosoftConditionalAccessAuthenticationMethodConfiguration string = "microsoft.conditionalAccess.authenticationMethodConfiguration"
-	ResourceMicrosoftConditionalAccessNamedLocations string = "microsoft.conditionalAccess.namedLocations"
-	ResourceMicrosoftConditionalAccessPolicy string = "microsoft.conditionalAccess.policy"
-	ResourceMicrosoftConditionalAccessPolicyConditions string = "microsoft.conditionalAccess.policy.conditions"
-	ResourceMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows string = "microsoft.conditionalAccess.policy.conditions.authenticationFlows"
-	ResourceMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength string = "microsoft.conditionalAccess.policy.grantControls.authenticationStrength"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsSignInFrequency string = "microsoft.conditionalAccess.policy.sessionControls.signInFrequency"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity string = "microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser string = "microsoft.conditionalAccess.policy.sessionControls.persistentBrowser"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions string = "microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions"
-	ResourceMicrosoftConditionalAccessPolicyConditionsClientApplications string = "microsoft.conditionalAccess.policy.conditions.clientApplications"
-	ResourceMicrosoftConditionalAccessPolicyConditionsPlatforms string = "microsoft.conditionalAccess.policy.conditions.platforms"
-	ResourceMicrosoftConditionalAccessPolicyConditionsApplications string = "microsoft.conditionalAccess.policy.conditions.applications"
-	ResourceMicrosoftConditionalAccessPolicyConditionsUsers string = "microsoft.conditionalAccess.policy.conditions.users"
-	ResourceMicrosoftConditionalAccessPolicyConditionsLocations string = "microsoft.conditionalAccess.policy.conditions.locations"
-	ResourceMicrosoftConditionalAccessPolicyGrantControls string = "microsoft.conditionalAccess.policy.grantControls"
-	ResourceMicrosoftConditionalAccessPolicySessionControls string = "microsoft.conditionalAccess.policy.sessionControls"
-	ResourceMicrosoftConditionalAccessIpNamedLocation string = "microsoft.conditionalAccess.ipNamedLocation"
-	ResourceMicrosoftConditionalAccessCountryNamedLocation string = "microsoft.conditionalAccess.countryNamedLocation"
-	ResourceMicrosoftUser string = "microsoft.user"
-	ResourceMicrosoftUserAuthenticationRequirements string = "microsoft.user.authenticationRequirements"
-	ResourceMicrosoftUserAuditlog string = "microsoft.user.auditlog"
-	ResourceMicrosoftUserIdentity string = "microsoft.user.identity"
-	ResourceMicrosoftUserSignin string = "microsoft.user.signin"
-	ResourceMicrosoftUserAuthenticationMethods string = "microsoft.user.authenticationMethods"
-	ResourceMicrosoftUserAuthenticationMethodsUserRegistrationDetails string = "microsoft.user.authenticationMethods.userRegistrationDetails"
-	ResourceMicrosoftGroup string = "microsoft.group"
-	ResourceMicrosoftGroupLifecyclePolicy string = "microsoft.groupLifecyclePolicy"
-	ResourceMicrosoftDevices string = "microsoft.devices"
-	ResourceMicrosoftDevice string = "microsoft.device"
-	ResourceMicrosoftDomain string = "microsoft.domain"
-	ResourceMicrosoftDomaindnsrecord string = "microsoft.domaindnsrecord"
-	ResourceMicrosoftApplication string = "microsoft.application"
-	ResourceMicrosoftApplicationRole string = "microsoft.application.role"
-	ResourceMicrosoftKeyCredential string = "microsoft.keyCredential"
-	ResourceMicrosoftPasswordCredential string = "microsoft.passwordCredential"
-	ResourceMicrosoftServiceprincipal string = "microsoft.serviceprincipal"
-	ResourceMicrosoftServiceprincipalAssignment string = "microsoft.serviceprincipal.assignment"
-	ResourceMicrosoftApplicationPermission string = "microsoft.application.permission"
-	ResourceMicrosoftSecurity string = "microsoft.security"
-	ResourceMicrosoftSecuritySecurityscore string = "microsoft.security.securityscore"
-	ResourceMicrosoftSecurityRiskyUser string = "microsoft.security.riskyUser"
-	ResourceMicrosoftSecurityExchange string = "microsoft.security.exchange"
-	ResourceMicrosoftSecurityExchangeAntispam string = "microsoft.security.exchange.antispam"
-	ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy string = "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy"
-	ResourceMicrosoftPolicies string = "microsoft.policies"
-	ResourceMicrosoftPoliciesExternalIdentitiesPolicy string = "microsoft.policies.externalIdentitiesPolicy"
-	ResourceMicrosoftPoliciesActivityBasedTimeoutPolicy string = "microsoft.policies.activityBasedTimeoutPolicy"
-	ResourceMicrosoftAdminConsentRequestPolicy string = "microsoft.adminConsentRequestPolicy"
-	ResourceMicrosoftGraphAccessReviewReviewerScope string = "microsoft.graph.accessReviewReviewerScope"
-	ResourceMicrosoftPoliciesAuthenticationMethodsPolicy string = "microsoft.policies.authenticationMethodsPolicy"
-	ResourceMicrosoftPoliciesAuthenticationMethodConfiguration string = "microsoft.policies.authenticationMethodConfiguration"
-	ResourceMicrosoftRoles string = "microsoft.roles"
-	ResourceMicrosoftRolemanagement string = "microsoft.rolemanagement"
-	ResourceMicrosoftRolemanagementRoledefinition string = "microsoft.rolemanagement.roledefinition"
-	ResourceMicrosoftRolemanagementRoleassignment string = "microsoft.rolemanagement.roleassignment"
-	ResourceMicrosoftDevicemanagement string = "microsoft.devicemanagement"
-	ResourceMicrosoftDevicemanagementDeviceEnrollmentConfiguration string = "microsoft.devicemanagement.deviceEnrollmentConfiguration"
-	ResourceMicrosoftDevicemanagementManageddevice string = "microsoft.devicemanagement.manageddevice"
-	ResourceMicrosoftDevicemanagementDeviceconfiguration string = "microsoft.devicemanagement.deviceconfiguration"
-	ResourceMicrosoftDevicemanagementDevicecompliancepolicy string = "microsoft.devicemanagement.devicecompliancepolicy"
-	ResourceMs365Exchangeonline string = "ms365.exchangeonline"
-	ResourceMs365ExchangeonlineMailboxAuditBypassAssociation string = "ms365.exchangeonlineMailboxAuditBypassAssociation"
-	ResourceMs365ExchangeonlineSecurityAndCompliance string = "ms365.exchangeonline.securityAndCompliance"
-	ResourceMs365ExchangeonlineTeamsProtectionPolicy string = "ms365.exchangeonline.teamsProtectionPolicy"
-	ResourceMs365ExchangeonlineReportSubmissionPolicy string = "ms365.exchangeonline.reportSubmissionPolicy"
-	ResourceMs365ExchangeonlineExternalSender string = "ms365.exchangeonline.externalSender"
-	ResourceMs365ExchangeonlineExoMailbox string = "ms365.exchangeonline.exoMailbox"
-	ResourceMs365ExchangeonlineMailbox string = "ms365.exchangeonline.mailbox"
-	ResourceMs365Sharepointonline string = "ms365.sharepointonline"
-	ResourceMs365SharepointonlineSite string = "ms365.sharepointonline.site"
-	ResourceMs365Teams string = "ms365.teams"
-	ResourceMs365TeamsTenantFederationConfig string = "ms365.teams.tenantFederationConfig"
-	ResourceMs365TeamsTeamsMeetingPolicyConfig string = "ms365.teams.teamsMeetingPolicyConfig"
-	ResourceMs365TeamsTeamsMessagingPolicyConfig string = "ms365.teams.teamsMessagingPolicyConfig"
+	ResourceMicrosoftUserAssignedLicense                                                                 string = "microsoft.user.assignedLicense"
+	ResourceMicrosoftUserLicenseDetail                                                                   string = "microsoft.user.licenseDetail"
+	ResourceMicrosoftUserLicenseDetailServicePlanInfo                                                    string = "microsoft.user.licenseDetail.servicePlanInfo"
+	ResourceMicrosoftConditionalAccess                                                                   string = "microsoft.conditionalAccess"
+	ResourceMicrosoftConditionalAccessAuthenticationMethodsPolicy                                        string = "microsoft.conditionalAccess.authenticationMethodsPolicy"
+	ResourceMicrosoftConditionalAccessAuthenticationMethodConfiguration                                  string = "microsoft.conditionalAccess.authenticationMethodConfiguration"
+	ResourceMicrosoftConditionalAccessNamedLocations                                                     string = "microsoft.conditionalAccess.namedLocations"
+	ResourceMicrosoftConditionalAccessPolicy                                                             string = "microsoft.conditionalAccess.policy"
+	ResourceMicrosoftConditionalAccessPolicyConditions                                                   string = "microsoft.conditionalAccess.policy.conditions"
+	ResourceMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows                                string = "microsoft.conditionalAccess.policy.conditions.authenticationFlows"
+	ResourceMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength                          string = "microsoft.conditionalAccess.policy.grantControls.authenticationStrength"
+	ResourceMicrosoftConditionalAccessPolicySessionControlsSignInFrequency                               string = "microsoft.conditionalAccess.policy.sessionControls.signInFrequency"
+	ResourceMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity                              string = "microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity"
+	ResourceMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser                             string = "microsoft.conditionalAccess.policy.sessionControls.persistentBrowser"
+	ResourceMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions               string = "microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions"
+	ResourceMicrosoftConditionalAccessPolicyConditionsClientApplications                                 string = "microsoft.conditionalAccess.policy.conditions.clientApplications"
+	ResourceMicrosoftConditionalAccessPolicyConditionsPlatforms                                          string = "microsoft.conditionalAccess.policy.conditions.platforms"
+	ResourceMicrosoftConditionalAccessPolicyConditionsApplications                                       string = "microsoft.conditionalAccess.policy.conditions.applications"
+	ResourceMicrosoftConditionalAccessPolicyConditionsUsers                                              string = "microsoft.conditionalAccess.policy.conditions.users"
+	ResourceMicrosoftConditionalAccessPolicyConditionsLocations                                          string = "microsoft.conditionalAccess.policy.conditions.locations"
+	ResourceMicrosoftConditionalAccessPolicyGrantControls                                                string = "microsoft.conditionalAccess.policy.grantControls"
+	ResourceMicrosoftConditionalAccessPolicySessionControls                                              string = "microsoft.conditionalAccess.policy.sessionControls"
+	ResourceMicrosoftConditionalAccessIpNamedLocation                                                    string = "microsoft.conditionalAccess.ipNamedLocation"
+	ResourceMicrosoftConditionalAccessCountryNamedLocation                                               string = "microsoft.conditionalAccess.countryNamedLocation"
+	ResourceMicrosoftUser                                                                                string = "microsoft.user"
+	ResourceMicrosoftUserAuthenticationRequirements                                                      string = "microsoft.user.authenticationRequirements"
+	ResourceMicrosoftUserAuditlog                                                                        string = "microsoft.user.auditlog"
+	ResourceMicrosoftUserIdentity                                                                        string = "microsoft.user.identity"
+	ResourceMicrosoftUserSignin                                                                          string = "microsoft.user.signin"
+	ResourceMicrosoftUserAuthenticationMethods                                                           string = "microsoft.user.authenticationMethods"
+	ResourceMicrosoftUserAuthenticationMethodsUserRegistrationDetails                                    string = "microsoft.user.authenticationMethods.userRegistrationDetails"
+	ResourceMicrosoftGroup                                                                               string = "microsoft.group"
+	ResourceMicrosoftGroupLifecyclePolicy                                                                string = "microsoft.groupLifecyclePolicy"
+	ResourceMicrosoftDevices                                                                             string = "microsoft.devices"
+	ResourceMicrosoftDevice                                                                              string = "microsoft.device"
+	ResourceMicrosoftDomain                                                                              string = "microsoft.domain"
+	ResourceMicrosoftDomaindnsrecord                                                                     string = "microsoft.domaindnsrecord"
+	ResourceMicrosoftApplication                                                                         string = "microsoft.application"
+	ResourceMicrosoftApplicationRole                                                                     string = "microsoft.application.role"
+	ResourceMicrosoftKeyCredential                                                                       string = "microsoft.keyCredential"
+	ResourceMicrosoftPasswordCredential                                                                  string = "microsoft.passwordCredential"
+	ResourceMicrosoftServiceprincipal                                                                    string = "microsoft.serviceprincipal"
+	ResourceMicrosoftServiceprincipalAssignment                                                          string = "microsoft.serviceprincipal.assignment"
+	ResourceMicrosoftApplicationPermission                                                               string = "microsoft.application.permission"
+	ResourceMicrosoftSecurity                                                                            string = "microsoft.security"
+	ResourceMicrosoftSecuritySecurityscore                                                               string = "microsoft.security.securityscore"
+	ResourceMicrosoftSecurityRiskyUser                                                                   string = "microsoft.security.riskyUser"
+	ResourceMicrosoftSecurityExchange                                                                    string = "microsoft.security.exchange"
+	ResourceMicrosoftSecurityExchangeAntispam                                                            string = "microsoft.security.exchange.antispam"
+	ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy                                string = "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy"
+	ResourceMicrosoftPolicies                                                                            string = "microsoft.policies"
+	ResourceMicrosoftPoliciesExternalIdentitiesPolicy                                                    string = "microsoft.policies.externalIdentitiesPolicy"
+	ResourceMicrosoftPoliciesActivityBasedTimeoutPolicy                                                  string = "microsoft.policies.activityBasedTimeoutPolicy"
+	ResourceMicrosoftAdminConsentRequestPolicy                                                           string = "microsoft.adminConsentRequestPolicy"
+	ResourceMicrosoftGraphAccessReviewReviewerScope                                                      string = "microsoft.graph.accessReviewReviewerScope"
+	ResourceMicrosoftPoliciesAuthenticationMethodsPolicy                                                 string = "microsoft.policies.authenticationMethodsPolicy"
+	ResourceMicrosoftPoliciesAuthenticationMethodConfiguration                                           string = "microsoft.policies.authenticationMethodConfiguration"
+	ResourceMicrosoftRoles                                                                               string = "microsoft.roles"
+	ResourceMicrosoftRolemanagement                                                                      string = "microsoft.rolemanagement"
+	ResourceMicrosoftRolemanagementRoledefinition                                                        string = "microsoft.rolemanagement.roledefinition"
+	ResourceMicrosoftRolemanagementRoleassignment                                                        string = "microsoft.rolemanagement.roleassignment"
+	ResourceMicrosoftDevicemanagement                                                                    string = "microsoft.devicemanagement"
+	ResourceMicrosoftDevicemanagementDeviceEnrollmentConfiguration                                       string = "microsoft.devicemanagement.deviceEnrollmentConfiguration"
+	ResourceMicrosoftDevicemanagementManageddevice                                                       string = "microsoft.devicemanagement.manageddevice"
+	ResourceMicrosoftDevicemanagementDeviceconfiguration                                                 string = "microsoft.devicemanagement.deviceconfiguration"
+	ResourceMicrosoftDevicemanagementDevicecompliancepolicy                                              string = "microsoft.devicemanagement.devicecompliancepolicy"
+	ResourceMs365Exchangeonline                                                                          string = "ms365.exchangeonline"
+	ResourceMs365ExchangeonlineMailboxAuditBypassAssociation                                             string = "ms365.exchangeonlineMailboxAuditBypassAssociation"
+	ResourceMs365ExchangeonlineSecurityAndCompliance                                                     string = "ms365.exchangeonline.securityAndCompliance"
+	ResourceMs365ExchangeonlineTeamsProtectionPolicy                                                     string = "ms365.exchangeonline.teamsProtectionPolicy"
+	ResourceMs365ExchangeonlineReportSubmissionPolicy                                                    string = "ms365.exchangeonline.reportSubmissionPolicy"
+	ResourceMs365ExchangeonlineExternalSender                                                            string = "ms365.exchangeonline.externalSender"
+	ResourceMs365ExchangeonlineExoMailbox                                                                string = "ms365.exchangeonline.exoMailbox"
+	ResourceMs365ExchangeonlineMailbox                                                                   string = "ms365.exchangeonline.mailbox"
+	ResourceMs365Sharepointonline                                                                        string = "ms365.sharepointonline"
+	ResourceMs365SharepointonlineSite                                                                    string = "ms365.sharepointonline.site"
+	ResourceMs365Teams                                                                                   string = "ms365.teams"
+	ResourceMs365TeamsTenantFederationConfig                                                             string = "ms365.teams.tenantFederationConfig"
+	ResourceMs365TeamsTeamsMeetingPolicyConfig                                                           string = "ms365.teams.teamsMeetingPolicyConfig"
+	ResourceMs365TeamsTeamsMessagingPolicyConfig                                                         string = "ms365.teams.teamsMessagingPolicyConfig"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"microsoft": {
 			// to override args, implement: initMicrosoft(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoft,
@@ -139,7 +138,7 @@ func init() {
 			Create: createMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings,
 		},
 		"microsoft.groups": {
-			Init: initMicrosoftGroups,
+			Init:   initMicrosoftGroups,
 			Create: createMicrosoftGroups,
 		},
 		"microsoft.applications": {
@@ -147,7 +146,7 @@ func init() {
 			Create: createMicrosoftApplications,
 		},
 		"microsoft.tenant": {
-			Init: initMicrosoftTenant,
+			Init:   initMicrosoftTenant,
 			Create: createMicrosoftTenant,
 		},
 		"microsoft.tenantSettings": {
@@ -159,11 +158,11 @@ func init() {
 			Create: createMicrosoftTenantFormsSettings,
 		},
 		"microsoft.users": {
-			Init: initMicrosoftUsers,
+			Init:   initMicrosoftUsers,
 			Create: createMicrosoftUsers,
 		},
 		"microsoft.identityAndAccess": {
-			Init: initMicrosoftIdentityAndAccess,
+			Init:   initMicrosoftIdentityAndAccess,
 			Create: createMicrosoftIdentityAndAccess,
 		},
 		"microsoft.identityAndAccess.roleEligibilityScheduleInstance": {
@@ -291,7 +290,7 @@ func init() {
 			Create: createMicrosoftConditionalAccessCountryNamedLocation,
 		},
 		"microsoft.user": {
-			Init: initMicrosoftUser,
+			Init:   initMicrosoftUser,
 			Create: createMicrosoftUser,
 		},
 		"microsoft.user.authenticationRequirements": {
@@ -327,11 +326,11 @@ func init() {
 			Create: createMicrosoftGroupLifecyclePolicy,
 		},
 		"microsoft.devices": {
-			Init: initMicrosoftDevices,
+			Init:   initMicrosoftDevices,
 			Create: createMicrosoftDevices,
 		},
 		"microsoft.device": {
-			Init: initMicrosoftDevice,
+			Init:   initMicrosoftDevice,
 			Create: createMicrosoftDevice,
 		},
 		"microsoft.domain": {
@@ -343,7 +342,7 @@ func init() {
 			Create: createMicrosoftDomaindnsrecord,
 		},
 		"microsoft.application": {
-			Init: initMicrosoftApplication,
+			Init:   initMicrosoftApplication,
 			Create: createMicrosoftApplication,
 		},
 		"microsoft.application.role": {
@@ -359,7 +358,7 @@ func init() {
 			Create: createMicrosoftPasswordCredential,
 		},
 		"microsoft.serviceprincipal": {
-			Init: initMicrosoftServiceprincipal,
+			Init:   initMicrosoftServiceprincipal,
 			Create: createMicrosoftServiceprincipal,
 		},
 		"microsoft.serviceprincipal.assignment": {
@@ -423,7 +422,7 @@ func init() {
 			Create: createMicrosoftPoliciesAuthenticationMethodConfiguration,
 		},
 		"microsoft.roles": {
-			Init: initMicrosoftRoles,
+			Init:   initMicrosoftRoles,
 			Create: createMicrosoftRoles,
 		},
 		"microsoft.rolemanagement": {
@@ -535,7 +534,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -2492,11 +2491,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"microsoft.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoft).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoft).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.organizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).Organizations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2550,9 +2549,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.identityAndAccess.accessReviews.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessAccessReviews).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviews).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.accessReviews.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviews).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2562,9 +2561,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.accessReviewDefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2586,9 +2585,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.autoApplyDecisionsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).AutoApplyDecisionsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -2630,9 +2629,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.groups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftGroups).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftGroups).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.groups.length": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroups).Length, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -2642,9 +2641,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.applications.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftApplications).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftApplications).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.applications.length": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplications).Length, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -2654,9 +2653,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.tenant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftTenant).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftTenant).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.tenant.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2718,9 +2717,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.tenantSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftTenantSettings).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftTenantSettings).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.tenantSettings.isAppAndServicesTrialEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantSettings).IsAppAndServicesTrialEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -2730,9 +2729,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.tenantFormsSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftTenantFormsSettings).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftTenantFormsSettings).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.tenantFormsSettings.isExternalSendFormEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantFormsSettings).IsExternalSendFormEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -2762,9 +2761,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUsers).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUsers).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.users.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUsers).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2778,9 +2777,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.identityAndAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccess).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccess).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccess).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2798,9 +2797,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2838,9 +2837,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.identityAndAccess.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccessPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2878,9 +2877,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.identityAndAccess.policy.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessPolicyRule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccessPolicyRule).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.policy.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessPolicyRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2890,9 +2889,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.identityAndAccess.policy.ruleTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.policy.ruleTarget.caller": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessPolicyRuleTarget).Caller, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2914,25 +2913,25 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.identityAndAccess.identityAndSignIn.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignIn).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignIn).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.identityAndSignIn.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignIn).Policies, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.identityAndSignIn.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies).IdentitySecurityDefaultsEnforcementPolicy, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2950,9 +2949,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.user.assignedLicense.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUserAssignedLicense).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUserAssignedLicense).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.user.assignedLicense.disabledPlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserAssignedLicense).DisabledPlans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2962,9 +2961,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.user.licenseDetail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUserLicenseDetail).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUserLicenseDetail).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.user.licenseDetail.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserLicenseDetail).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2982,9 +2981,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.user.licenseDetail.servicePlanInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.user.licenseDetail.servicePlanInfo.appliesTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserLicenseDetailServicePlanInfo).AppliesTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3002,9 +3001,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccess).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccess).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.namedLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccess).NamedLocations, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessNamedLocations](v.Value, v.Error)
 		return
@@ -3018,9 +3017,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.authenticationMethodsPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.authenticationMethodsPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3046,9 +3045,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.authenticationMethodConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.authenticationMethodConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3058,9 +3057,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.namedLocations.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessNamedLocations).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessNamedLocations).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.namedLocations.ipLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessNamedLocations).IpLocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3070,9 +3069,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3110,9 +3109,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.conditions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicyConditions).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicyConditions).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.conditions.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyConditions).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3162,17 +3161,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.conditions.authenticationFlows.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.conditions.authenticationFlows.transferMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows).TransferMethods, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.grantControls.authenticationStrength.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3206,9 +3205,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.authenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).AuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3222,9 +3221,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.cloudAppSecurityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity).CloudAppSecurityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3234,9 +3233,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3246,17 +3245,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.policy.conditions.clientApplications.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.conditions.clientApplications.excludeServicePrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).ExcludeServicePrincipals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3266,9 +3265,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.conditions.platforms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.conditions.platforms.excludePlatforms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms).ExcludePlatforms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3278,9 +3277,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.conditions.applications.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicyConditionsApplications).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsApplications).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.conditions.applications.includeApplications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyConditionsApplications).IncludeApplications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3294,9 +3293,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.conditions.users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.conditions.users.includeUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).IncludeUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3322,9 +3321,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.conditions.locations.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicyConditionsLocations).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsLocations).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.conditions.locations.includeLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyConditionsLocations).IncludeLocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3334,9 +3333,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.grantControls.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.grantControls.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyGrantControls).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3362,9 +3361,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessPolicySessionControls).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.policy.sessionControls.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3390,9 +3389,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessIpNamedLocation).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessIpNamedLocation).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.ipNamedLocation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessIpNamedLocation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3402,9 +3401,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.conditionalAccess.countryNamedLocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftConditionalAccessCountryNamedLocation).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftConditionalAccessCountryNamedLocation).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.conditionalAccess.countryNamedLocation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessCountryNamedLocation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3414,9 +3413,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUser).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3546,17 +3545,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.user.authenticationRequirements.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUserAuthenticationRequirements).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUserAuthenticationRequirements).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.user.authenticationRequirements.perUserMfaState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserAuthenticationRequirements).PerUserMfaState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.auditlog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUserAuditlog).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUserAuditlog).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.user.auditlog.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserAuditlog).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3574,9 +3573,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.user.identity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUserIdentity).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUserIdentity).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.user.identity.issuerAssignedId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserIdentity).IssuerAssignedId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3590,9 +3589,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.user.signin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUserSignin).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUserSignin).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.user.signin.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserSignin).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3626,9 +3625,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.user.authenticationMethods.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUserAuthenticationMethods).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUserAuthenticationMethods).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.user.authenticationMethods.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserAuthenticationMethods).Count, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -3670,9 +3669,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.user.authenticationMethods.userRegistrationDetails.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.user.authenticationMethods.userRegistrationDetails.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3738,9 +3737,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftGroup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftGroup).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3786,9 +3785,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.groupLifecyclePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftGroupLifecyclePolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftGroupLifecyclePolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.groupLifecyclePolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroupLifecyclePolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3806,9 +3805,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.devices.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftDevices).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftDevices).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.devices.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevices).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3822,9 +3821,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftDevice).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftDevice).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.device.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3898,9 +3897,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftDomain).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftDomain).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.domain.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDomain).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3950,9 +3949,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.domaindnsrecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftDomaindnsrecord).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftDomaindnsrecord).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.domaindnsrecord.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDomaindnsrecord).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3982,9 +3981,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftApplication).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftApplication).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.application.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplication).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4130,9 +4129,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.application.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftApplicationRole).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftApplicationRole).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.application.role.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplicationRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4158,9 +4157,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.keyCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftKeyCredential).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftKeyCredential).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.keyCredential.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftKeyCredential).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4190,9 +4189,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.passwordCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftPasswordCredential).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftPasswordCredential).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.passwordCredential.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPasswordCredential).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4214,9 +4213,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.serviceprincipal.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftServiceprincipal).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftServiceprincipal).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.serviceprincipal.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipal).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4330,9 +4329,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.serviceprincipal.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftServiceprincipalAssignment).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftServiceprincipalAssignment).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.serviceprincipal.assignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipalAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4346,9 +4345,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.application.permission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftApplicationPermission).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftApplicationPermission).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.application.permission.appId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplicationPermission).AppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4378,9 +4377,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.security.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftSecurity).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftSecurity).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.security.secureScores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurity).SecureScores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4398,9 +4397,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.security.securityscore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftSecuritySecurityscore).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftSecuritySecurityscore).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.security.securityscore.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecuritySecurityscore).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4446,9 +4445,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.security.riskyUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftSecurityRiskyUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftSecurityRiskyUser).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.security.riskyUser.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurityRiskyUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4482,25 +4481,25 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.security.exchange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftSecurityExchange).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftSecurityExchange).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.security.exchange.antispam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurityExchange).Antispam, ok = plugin.RawToTValue[*mqlMicrosoftSecurityExchangeAntispam](v.Value, v.Error)
 		return
 	},
 	"microsoft.security.exchange.antispam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftSecurityExchangeAntispam).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftSecurityExchangeAntispam).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurityExchangeAntispam).HostedConnectionFilterPolicy, ok = plugin.RawToTValue[*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy](v.Value, v.Error)
 		return
 	},
 	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4522,9 +4521,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftPolicies).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftPolicies).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.policies.authorizationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPolicies).AuthorizationPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -4558,9 +4557,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.policies.externalIdentitiesPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.policies.externalIdentitiesPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4578,9 +4577,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.policies.activityBasedTimeoutPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.policies.activityBasedTimeoutPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPoliciesActivityBasedTimeoutPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4598,9 +4597,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.adminConsentRequestPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftAdminConsentRequestPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftAdminConsentRequestPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.adminConsentRequestPolicy.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftAdminConsentRequestPolicy).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -4626,9 +4625,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.graph.accessReviewReviewerScope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftGraphAccessReviewReviewerScope).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftGraphAccessReviewReviewerScope).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.graph.accessReviewReviewerScope.query": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGraphAccessReviewReviewerScope).Query, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4642,9 +4641,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.policies.authenticationMethodsPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.policies.authenticationMethodsPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4670,9 +4669,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.policies.authenticationMethodConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.policies.authenticationMethodConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4686,9 +4685,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.roles.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftRoles).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftRoles).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.roles.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftRoles).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4702,17 +4701,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.rolemanagement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftRolemanagement).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftRolemanagement).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.rolemanagement.roleDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftRolemanagement).RoleDefinitions, ok = plugin.RawToTValue[*mqlMicrosoftRoles](v.Value, v.Error)
 		return
 	},
 	"microsoft.rolemanagement.roledefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftRolemanagementRoledefinition).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftRolemanagementRoledefinition).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.rolemanagement.roledefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftRolemanagementRoledefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4750,9 +4749,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.rolemanagement.roleassignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftRolemanagementRoleassignment).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftRolemanagementRoleassignment).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.rolemanagement.roleassignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftRolemanagementRoleassignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4770,9 +4769,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.devicemanagement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftDevicemanagement).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftDevicemanagement).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.devicemanagement.managedDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagement).ManagedDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4790,9 +4789,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.devicemanagement.deviceEnrollmentConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.devicemanagement.deviceEnrollmentConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4822,9 +4821,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.devicemanagement.manageddevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftDevicemanagementManageddevice).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftDevicemanagementManageddevice).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.devicemanagement.manageddevice.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementManageddevice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4942,9 +4941,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.devicemanagement.deviceconfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.devicemanagement.deviceconfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4974,9 +4973,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"microsoft.devicemanagement.devicecompliancepolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5010,9 +5009,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.exchangeonline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365Exchangeonline).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365Exchangeonline).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.exchangeonline.malwareFilterPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Exchangeonline).MalwareFilterPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -5114,9 +5113,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.exchangeonlineMailboxAuditBypassAssociation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365ExchangeonlineMailboxAuditBypassAssociation).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365ExchangeonlineMailboxAuditBypassAssociation).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.exchangeonlineMailboxAuditBypassAssociation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineMailboxAuditBypassAssociation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5126,17 +5125,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.exchangeonline.securityAndCompliance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365ExchangeonlineSecurityAndCompliance).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365ExchangeonlineSecurityAndCompliance).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.exchangeonline.securityAndCompliance.dlpCompliancePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineSecurityAndCompliance).DlpCompliancePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.exchangeonline.teamsProtectionPolicy.zapEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).ZapEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -5146,9 +5145,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.exchangeonline.reportSubmissionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.exchangeonline.reportSubmissionPolicy.reportJunkToCustomizedAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportJunkToCustomizedAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -5182,9 +5181,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.exchangeonline.externalSender.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365ExchangeonlineExternalSender).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365ExchangeonlineExternalSender).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.exchangeonline.externalSender.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineExternalSender).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5198,9 +5197,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.exchangeonline.exoMailbox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365ExchangeonlineExoMailbox).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365ExchangeonlineExoMailbox).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.exchangeonline.exoMailbox.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineExoMailbox).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5214,9 +5213,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.exchangeonline.mailbox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365ExchangeonlineMailbox).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365ExchangeonlineMailbox).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.exchangeonline.mailbox.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineMailbox).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5254,9 +5253,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.sharepointonline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365Sharepointonline).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365Sharepointonline).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.sharepointonline.spoTenant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Sharepointonline).SpoTenant, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -5274,9 +5273,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.sharepointonline.site.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365SharepointonlineSite).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365SharepointonlineSite).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.sharepointonline.site.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365SharepointonlineSite).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5286,9 +5285,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.teams.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365Teams).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365Teams).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Teams).CsTeamsClientConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -5306,9 +5305,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.teams.tenantFederationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365TeamsTenantFederationConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365TeamsTenantFederationConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.teams.tenantFederationConfig.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTenantFederationConfig).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5350,9 +5349,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.teams.teamsMeetingPolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.teams.teamsMeetingPolicyConfig.allowAnonymousUsersToJoinMeeting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowAnonymousUsersToJoinMeeting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -5394,9 +5393,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.teams.teamsMessagingPolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).AllowSecurityEndUserReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -5404,13 +5403,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[ms365] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[ms365] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[ms365] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[ms365] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -5428,21 +5427,21 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlMicrosoft for the microsoft resource
 type mqlMicrosoft struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlMicrosoftInternal
-	Organizations plugin.TValue[[]any]
-	Users plugin.TValue[*mqlMicrosoftUsers]
-	Groups plugin.TValue[*mqlMicrosoftGroups]
+	Organizations          plugin.TValue[[]any]
+	Users                  plugin.TValue[*mqlMicrosoftUsers]
+	Groups                 plugin.TValue[*mqlMicrosoftGroups]
 	GroupLifecyclePolicies plugin.TValue[[]any]
-	Domains plugin.TValue[[]any]
-	Applications plugin.TValue[*mqlMicrosoftApplications]
-	Serviceprincipals plugin.TValue[[]any]
+	Domains                plugin.TValue[[]any]
+	Applications           plugin.TValue[*mqlMicrosoftApplications]
+	Serviceprincipals      plugin.TValue[[]any]
 	EnterpriseApplications plugin.TValue[[]any]
-	Roles plugin.TValue[*mqlMicrosoftRoles]
-	Settings plugin.TValue[any]
-	TenantDomainName plugin.TValue[string]
-	IdentityAndAccess plugin.TValue[*mqlMicrosoftIdentityAndAccess]
-	AccessReviews plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviews]
+	Roles                  plugin.TValue[*mqlMicrosoftRoles]
+	Settings               plugin.TValue[any]
+	TenantDomainName       plugin.TValue[string]
+	IdentityAndAccess      plugin.TValue[*mqlMicrosoftIdentityAndAccess]
+	AccessReviews          plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviews]
 }
 
 // createMicrosoft creates a new instance of this resource
@@ -5668,10 +5667,10 @@ func (c *mqlMicrosoft) GetAccessReviews() *plugin.TValue[*mqlMicrosoftIdentityAn
 // mqlMicrosoftIdentityAndAccessAccessReviews for the microsoft.identityAndAccess.accessReviews resource
 type mqlMicrosoftIdentityAndAccessAccessReviews struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessAccessReviewsInternal it will be used here
 	Filter plugin.TValue[string]
-	List plugin.TValue[[]any]
+	List   plugin.TValue[[]any]
 }
 
 // createMicrosoftIdentityAndAccessAccessReviews creates a new instance of this resource
@@ -5729,13 +5728,13 @@ func (c *mqlMicrosoftIdentityAndAccessAccessReviews) GetList() *plugin.TValue[[]
 // mqlMicrosoftIdentityAndAccessAccessReviewDefinition for the microsoft.identityAndAccess.accessReviewDefinition resource
 type mqlMicrosoftIdentityAndAccessAccessReviewDefinition struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessAccessReviewDefinitionInternal it will be used here
-	Id plugin.TValue[string]
+	Id          plugin.TValue[string]
 	DisplayName plugin.TValue[string]
-	Status plugin.TValue[string]
-	Reviewers plugin.TValue[any]
-	Settings plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings]
+	Status      plugin.TValue[string]
+	Reviewers   plugin.TValue[any]
+	Settings    plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings]
 }
 
 // createMicrosoftIdentityAndAccessAccessReviewDefinition creates a new instance of this resource
@@ -5793,18 +5792,18 @@ func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetSettings() *plu
 // mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings for the microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings resource
 type mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettingsInternal it will be used here
-	AutoApplyDecisionsEnabled plugin.TValue[bool]
+	AutoApplyDecisionsEnabled            plugin.TValue[bool]
 	DecisionHistoriesForReviewersEnabled plugin.TValue[bool]
-	DefaultDecision plugin.TValue[string]
-	DefaultDecisionEnabled plugin.TValue[bool]
-	InstanceDurationInDays plugin.TValue[int64]
-	ReminderNotificationsEnabled plugin.TValue[bool]
-	JustificationRequiredOnApproval plugin.TValue[bool]
-	MailNotificationsEnabled plugin.TValue[bool]
-	RecommendationsEnabled plugin.TValue[bool]
-	Recurrence plugin.TValue[any]
+	DefaultDecision                      plugin.TValue[string]
+	DefaultDecisionEnabled               plugin.TValue[bool]
+	InstanceDurationInDays               plugin.TValue[int64]
+	ReminderNotificationsEnabled         plugin.TValue[bool]
+	JustificationRequiredOnApproval      plugin.TValue[bool]
+	MailNotificationsEnabled             plugin.TValue[bool]
+	RecommendationsEnabled               plugin.TValue[bool]
+	Recurrence                           plugin.TValue[any]
 }
 
 // createMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings creates a new instance of this resource
@@ -5882,10 +5881,10 @@ func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewSchedule
 // mqlMicrosoftGroups for the microsoft.groups resource
 type mqlMicrosoftGroups struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftGroupsInternal it will be used here
 	Length plugin.TValue[int64]
-	List plugin.TValue[[]any]
+	List   plugin.TValue[[]any]
 }
 
 // createMicrosoftGroups creates a new instance of this resource
@@ -5945,10 +5944,10 @@ func (c *mqlMicrosoftGroups) GetList() *plugin.TValue[[]any] {
 // mqlMicrosoftApplications for the microsoft.applications resource
 type mqlMicrosoftApplications struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftApplicationsInternal it will be used here
 	Length plugin.TValue[int64]
-	List plugin.TValue[[]any]
+	List   plugin.TValue[[]any]
 }
 
 // createMicrosoftApplications creates a new instance of this resource
@@ -6008,23 +6007,23 @@ func (c *mqlMicrosoftApplications) GetList() *plugin.TValue[[]any] {
 // mqlMicrosoftTenant for the microsoft.tenant resource
 type mqlMicrosoftTenant struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftTenantInternal it will be used here
-	Id plugin.TValue[string]
-	AssignedPlans plugin.TValue[[]any]
-	ProvisionedPlans plugin.TValue[[]any]
-	CreatedDateTime plugin.TValue[*time.Time]
-	Name plugin.TValue[string]
-	VerifiedDomains plugin.TValue[[]any]
-	OnPremisesSyncEnabled plugin.TValue[bool]
-	CreatedAt plugin.TValue[*time.Time]
-	Type plugin.TValue[string]
-	Subscriptions plugin.TValue[[]any]
-	Settings plugin.TValue[*mqlMicrosoftTenantSettings]
-	FormsSettings plugin.TValue[*mqlMicrosoftTenantFormsSettings]
-	PrivacyProfile plugin.TValue[any]
+	Id                         plugin.TValue[string]
+	AssignedPlans              plugin.TValue[[]any]
+	ProvisionedPlans           plugin.TValue[[]any]
+	CreatedDateTime            plugin.TValue[*time.Time]
+	Name                       plugin.TValue[string]
+	VerifiedDomains            plugin.TValue[[]any]
+	OnPremisesSyncEnabled      plugin.TValue[bool]
+	CreatedAt                  plugin.TValue[*time.Time]
+	Type                       plugin.TValue[string]
+	Subscriptions              plugin.TValue[[]any]
+	Settings                   plugin.TValue[*mqlMicrosoftTenantSettings]
+	FormsSettings              plugin.TValue[*mqlMicrosoftTenantFormsSettings]
+	PrivacyProfile             plugin.TValue[any]
 	TechnicalNotificationMails plugin.TValue[[]any]
-	PreferredLanguage plugin.TValue[string]
+	PreferredLanguage          plugin.TValue[string]
 }
 
 // createMicrosoftTenant creates a new instance of this resource
@@ -6039,7 +6038,7 @@ func createMicrosoftTenant(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6153,10 +6152,10 @@ func (c *mqlMicrosoftTenant) GetPreferredLanguage() *plugin.TValue[string] {
 // mqlMicrosoftTenantSettings for the microsoft.tenantSettings resource
 type mqlMicrosoftTenantSettings struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftTenantSettingsInternal it will be used here
 	IsAppAndServicesTrialEnabled plugin.TValue[bool]
-	IsOfficeStoreEnabled plugin.TValue[bool]
+	IsOfficeStoreEnabled         plugin.TValue[bool]
 }
 
 // createMicrosoftTenantSettings creates a new instance of this resource
@@ -6202,15 +6201,15 @@ func (c *mqlMicrosoftTenantSettings) GetIsOfficeStoreEnabled() *plugin.TValue[bo
 // mqlMicrosoftTenantFormsSettings for the microsoft.tenantFormsSettings resource
 type mqlMicrosoftTenantFormsSettings struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftTenantFormsSettingsInternal it will be used here
-	IsExternalSendFormEnabled plugin.TValue[bool]
+	IsExternalSendFormEnabled           plugin.TValue[bool]
 	IsExternalShareCollaborationEnabled plugin.TValue[bool]
-	IsExternalShareResultEnabled plugin.TValue[bool]
-	IsExternalShareTemplateEnabled plugin.TValue[bool]
-	IsRecordIdentityByDefaultEnabled plugin.TValue[bool]
-	IsBingImageSearchEnabled plugin.TValue[bool]
-	IsInOrgFormsPhishingScanEnabled plugin.TValue[bool]
+	IsExternalShareResultEnabled        plugin.TValue[bool]
+	IsExternalShareTemplateEnabled      plugin.TValue[bool]
+	IsRecordIdentityByDefaultEnabled    plugin.TValue[bool]
+	IsBingImageSearchEnabled            plugin.TValue[bool]
+	IsInOrgFormsPhishingScanEnabled     plugin.TValue[bool]
 }
 
 // createMicrosoftTenantFormsSettings creates a new instance of this resource
@@ -6276,11 +6275,11 @@ func (c *mqlMicrosoftTenantFormsSettings) GetIsInOrgFormsPhishingScanEnabled() *
 // mqlMicrosoftUsers for the microsoft.users resource
 type mqlMicrosoftUsers struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUsersInternal it will be used here
 	Filter plugin.TValue[string]
 	Search plugin.TValue[string]
-	List plugin.TValue[[]any]
+	List   plugin.TValue[[]any]
 }
 
 // createMicrosoftUsers creates a new instance of this resource
@@ -6342,12 +6341,12 @@ func (c *mqlMicrosoftUsers) GetList() *plugin.TValue[[]any] {
 // mqlMicrosoftIdentityAndAccess for the microsoft.identityAndAccess resource
 type mqlMicrosoftIdentityAndAccess struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessInternal it will be used here
-	Filter plugin.TValue[string]
+	Filter                           plugin.TValue[string]
 	RoleEligibilityScheduleInstances plugin.TValue[[]any]
-	IdentityAndSignIn plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignIn]
-	List plugin.TValue[[]any]
+	IdentityAndSignIn                plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignIn]
+	List                             plugin.TValue[[]any]
 }
 
 // createMicrosoftIdentityAndAccess creates a new instance of this resource
@@ -6437,16 +6436,16 @@ func (c *mqlMicrosoftIdentityAndAccess) GetList() *plugin.TValue[[]any] {
 // mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance for the microsoft.identityAndAccess.roleEligibilityScheduleInstance resource
 type mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstanceInternal it will be used here
-	Id plugin.TValue[string]
-	PrincipalId plugin.TValue[string]
-	RoleDefinitionId plugin.TValue[string]
-	DirectoryScopeId plugin.TValue[string]
-	AppScopeId plugin.TValue[string]
-	StartDateTime plugin.TValue[*time.Time]
-	EndDateTime plugin.TValue[*time.Time]
-	MemberType plugin.TValue[string]
+	Id                        plugin.TValue[string]
+	PrincipalId               plugin.TValue[string]
+	RoleDefinitionId          plugin.TValue[string]
+	DirectoryScopeId          plugin.TValue[string]
+	AppScopeId                plugin.TValue[string]
+	StartDateTime             plugin.TValue[*time.Time]
+	EndDateTime               plugin.TValue[*time.Time]
+	MemberType                plugin.TValue[string]
 	RoleEligibilityScheduleId plugin.TValue[string]
 }
 
@@ -6521,17 +6520,17 @@ func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetRoleEl
 // mqlMicrosoftIdentityAndAccessPolicy for the microsoft.identityAndAccess.policy resource
 type mqlMicrosoftIdentityAndAccessPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessPolicyInternal it will be used here
-	Id plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
+	Id                    plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	Description           plugin.TValue[string]
 	IsOrganizationDefault plugin.TValue[bool]
-	ScopeId plugin.TValue[string]
-	ScopeType plugin.TValue[string]
-	LastModifiedDateTime plugin.TValue[*time.Time]
-	LastModifiedBy plugin.TValue[any]
-	Rules plugin.TValue[[]any]
+	ScopeId               plugin.TValue[string]
+	ScopeType             plugin.TValue[string]
+	LastModifiedDateTime  plugin.TValue[*time.Time]
+	LastModifiedBy        plugin.TValue[any]
+	Rules                 plugin.TValue[[]any]
 }
 
 // createMicrosoftIdentityAndAccessPolicy creates a new instance of this resource
@@ -6617,9 +6616,9 @@ func (c *mqlMicrosoftIdentityAndAccessPolicy) GetRules() *plugin.TValue[[]any] {
 // mqlMicrosoftIdentityAndAccessPolicyRule for the microsoft.identityAndAccess.policy.rule resource
 type mqlMicrosoftIdentityAndAccessPolicyRule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessPolicyRuleInternal it will be used here
-	Id plugin.TValue[string]
+	Id     plugin.TValue[string]
 	Target plugin.TValue[*mqlMicrosoftIdentityAndAccessPolicyRuleTarget]
 }
 
@@ -6666,13 +6665,13 @@ func (c *mqlMicrosoftIdentityAndAccessPolicyRule) GetTarget() *plugin.TValue[*mq
 // mqlMicrosoftIdentityAndAccessPolicyRuleTarget for the microsoft.identityAndAccess.policy.ruleTarget resource
 type mqlMicrosoftIdentityAndAccessPolicyRuleTarget struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessPolicyRuleTargetInternal it will be used here
-	Caller plugin.TValue[string]
-	EnforcedSettings plugin.TValue[[]any]
+	Caller              plugin.TValue[string]
+	EnforcedSettings    plugin.TValue[[]any]
 	InheritableSettings plugin.TValue[[]any]
-	Level plugin.TValue[string]
-	Operations plugin.TValue[[]any]
+	Level               plugin.TValue[string]
+	Operations          plugin.TValue[[]any]
 }
 
 // createMicrosoftIdentityAndAccessPolicyRuleTarget creates a new instance of this resource
@@ -6730,7 +6729,7 @@ func (c *mqlMicrosoftIdentityAndAccessPolicyRuleTarget) GetOperations() *plugin.
 // mqlMicrosoftIdentityAndAccessIdentityAndSignIn for the microsoft.identityAndAccess.identityAndSignIn resource
 type mqlMicrosoftIdentityAndAccessIdentityAndSignIn struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessIdentityAndSignInInternal it will be used here
 	Policies plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies]
 }
@@ -6786,7 +6785,7 @@ func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignIn) GetPolicies() *plugin.T
 // mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies for the microsoft.identityAndAccess.identityAndSignIn.policies resource
 type mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesInternal it will be used here
 	IdentitySecurityDefaultsEnforcementPolicy plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy]
 }
@@ -6842,12 +6841,12 @@ func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies) GetIdentitySecu
 // mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy for the microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy resource
 type mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicyInternal it will be used here
-	Id plugin.TValue[string]
+	Id          plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Description plugin.TValue[string]
-	IsEnabled plugin.TValue[bool]
+	IsEnabled   plugin.TValue[bool]
 }
 
 // createMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy creates a new instance of this resource
@@ -6901,10 +6900,10 @@ func (c *mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityD
 // mqlMicrosoftUserAssignedLicense for the microsoft.user.assignedLicense resource
 type mqlMicrosoftUserAssignedLicense struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUserAssignedLicenseInternal it will be used here
 	DisabledPlans plugin.TValue[[]any]
-	SkuId plugin.TValue[string]
+	SkuId         plugin.TValue[string]
 }
 
 // createMicrosoftUserAssignedLicense creates a new instance of this resource
@@ -6950,12 +6949,12 @@ func (c *mqlMicrosoftUserAssignedLicense) GetSkuId() *plugin.TValue[string] {
 // mqlMicrosoftUserLicenseDetail for the microsoft.user.licenseDetail resource
 type mqlMicrosoftUserLicenseDetail struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUserLicenseDetailInternal it will be used here
-	Id plugin.TValue[string]
-	SkuId plugin.TValue[string]
+	Id            plugin.TValue[string]
+	SkuId         plugin.TValue[string]
 	SkuPartNumber plugin.TValue[string]
-	ServicePlans plugin.TValue[[]any]
+	ServicePlans  plugin.TValue[[]any]
 }
 
 // createMicrosoftUserLicenseDetail creates a new instance of this resource
@@ -7009,12 +7008,12 @@ func (c *mqlMicrosoftUserLicenseDetail) GetServicePlans() *plugin.TValue[[]any] 
 // mqlMicrosoftUserLicenseDetailServicePlanInfo for the microsoft.user.licenseDetail.servicePlanInfo resource
 type mqlMicrosoftUserLicenseDetailServicePlanInfo struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUserLicenseDetailServicePlanInfoInternal it will be used here
-	AppliesTo plugin.TValue[string]
+	AppliesTo          plugin.TValue[string]
 	ProvisioningStatus plugin.TValue[string]
-	ServicePlanId plugin.TValue[string]
-	ServicePlanName plugin.TValue[string]
+	ServicePlanId      plugin.TValue[string]
+	ServicePlanName    plugin.TValue[string]
 }
 
 // createMicrosoftUserLicenseDetailServicePlanInfo creates a new instance of this resource
@@ -7068,10 +7067,10 @@ func (c *mqlMicrosoftUserLicenseDetailServicePlanInfo) GetServicePlanName() *plu
 // mqlMicrosoftConditionalAccess for the microsoft.conditionalAccess resource
 type mqlMicrosoftConditionalAccess struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessInternal it will be used here
-	NamedLocations plugin.TValue[*mqlMicrosoftConditionalAccessNamedLocations]
-	Policies plugin.TValue[[]any]
+	NamedLocations              plugin.TValue[*mqlMicrosoftConditionalAccessNamedLocations]
+	Policies                    plugin.TValue[[]any]
 	AuthenticationMethodsPolicy plugin.TValue[*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy]
 }
 
@@ -7146,13 +7145,13 @@ func (c *mqlMicrosoftConditionalAccess) GetAuthenticationMethodsPolicy() *plugin
 // mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy for the microsoft.conditionalAccess.authenticationMethodsPolicy resource
 type mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessAuthenticationMethodsPolicyInternal it will be used here
-	Id plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
-	LastModifiedDateTime plugin.TValue[*time.Time]
-	PolicyVersion plugin.TValue[string]
+	Id                                 plugin.TValue[string]
+	DisplayName                        plugin.TValue[string]
+	Description                        plugin.TValue[string]
+	LastModifiedDateTime               plugin.TValue[*time.Time]
+	PolicyVersion                      plugin.TValue[string]
 	AuthenticationMethodConfigurations plugin.TValue[[]any]
 }
 
@@ -7215,9 +7214,9 @@ func (c *mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy) GetAuthentica
 // mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration for the microsoft.conditionalAccess.authenticationMethodConfiguration resource
 type mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessAuthenticationMethodConfigurationInternal it will be used here
-	Id plugin.TValue[string]
+	Id    plugin.TValue[string]
 	State plugin.TValue[string]
 }
 
@@ -7264,9 +7263,9 @@ func (c *mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration) GetStat
 // mqlMicrosoftConditionalAccessNamedLocations for the microsoft.conditionalAccess.namedLocations resource
 type mqlMicrosoftConditionalAccessNamedLocations struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessNamedLocationsInternal it will be used here
-	IpLocations plugin.TValue[[]any]
+	IpLocations      plugin.TValue[[]any]
 	CountryLocations plugin.TValue[[]any]
 }
 
@@ -7337,17 +7336,17 @@ func (c *mqlMicrosoftConditionalAccessNamedLocations) GetCountryLocations() *plu
 // mqlMicrosoftConditionalAccessPolicy for the microsoft.conditionalAccess.policy resource
 type mqlMicrosoftConditionalAccessPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyInternal it will be used here
-	Id plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	State plugin.TValue[string]
-	CreatedDateTime plugin.TValue[*time.Time]
+	Id               plugin.TValue[string]
+	DisplayName      plugin.TValue[string]
+	State            plugin.TValue[string]
+	CreatedDateTime  plugin.TValue[*time.Time]
 	ModifiedDateTime plugin.TValue[*time.Time]
-	Conditions plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditions]
-	GrantControls plugin.TValue[*mqlMicrosoftConditionalAccessPolicyGrantControls]
-	SessionControls plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControls]
-	TemplateId plugin.TValue[string]
+	Conditions       plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditions]
+	GrantControls    plugin.TValue[*mqlMicrosoftConditionalAccessPolicyGrantControls]
+	SessionControls  plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControls]
+	TemplateId       plugin.TValue[string]
 }
 
 // createMicrosoftConditionalAccessPolicy creates a new instance of this resource
@@ -7362,7 +7361,7 @@ func createMicrosoftConditionalAccessPolicy(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -7426,20 +7425,20 @@ func (c *mqlMicrosoftConditionalAccessPolicy) GetTemplateId() *plugin.TValue[str
 // mqlMicrosoftConditionalAccessPolicyConditions for the microsoft.conditionalAccess.policy.conditions resource
 type mqlMicrosoftConditionalAccessPolicyConditions struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsInternal it will be used here
-	Id plugin.TValue[string]
-	Applications plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsApplications]
-	AuthenticationFlows plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows]
-	ClientApplications plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications]
-	ClientAppTypes plugin.TValue[[]any]
-	Locations plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsLocations]
-	Platforms plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms]
+	Id                         plugin.TValue[string]
+	Applications               plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsApplications]
+	AuthenticationFlows        plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows]
+	ClientApplications         plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications]
+	ClientAppTypes             plugin.TValue[[]any]
+	Locations                  plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsLocations]
+	Platforms                  plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms]
 	ServicePrincipalRiskLevels plugin.TValue[[]any]
-	SignInRiskLevels plugin.TValue[[]any]
-	UserRiskLevels plugin.TValue[[]any]
-	Users plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsUsers]
-	InsiderRiskLevels plugin.TValue[string]
+	SignInRiskLevels           plugin.TValue[[]any]
+	UserRiskLevels             plugin.TValue[[]any]
+	Users                      plugin.TValue[*mqlMicrosoftConditionalAccessPolicyConditionsUsers]
+	InsiderRiskLevels          plugin.TValue[string]
 }
 
 // createMicrosoftConditionalAccessPolicyConditions creates a new instance of this resource
@@ -7454,7 +7453,7 @@ func createMicrosoftConditionalAccessPolicyConditions(runtime *plugin.Runtime, a
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -7530,7 +7529,7 @@ func (c *mqlMicrosoftConditionalAccessPolicyConditions) GetInsiderRiskLevels() *
 // mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows for the microsoft.conditionalAccess.policy.conditions.authenticationFlows resource
 type mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlowsInternal it will be used here
 	TransferMethods plugin.TValue[string]
 }
@@ -7574,16 +7573,16 @@ func (c *mqlMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows) GetTr
 // mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength for the microsoft.conditionalAccess.policy.grantControls.authenticationStrength resource
 type mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrengthInternal it will be used here
-	Id plugin.TValue[string]
-	AllowedCombinations plugin.TValue[[]any]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
-	PolicyType plugin.TValue[string]
+	Id                    plugin.TValue[string]
+	AllowedCombinations   plugin.TValue[[]any]
+	DisplayName           plugin.TValue[string]
+	Description           plugin.TValue[string]
+	PolicyType            plugin.TValue[string]
 	RequirementsSatisfied plugin.TValue[string]
-	CreatedDateTime plugin.TValue[*time.Time]
-	ModifiedDateTime plugin.TValue[*time.Time]
+	CreatedDateTime       plugin.TValue[*time.Time]
+	ModifiedDateTime      plugin.TValue[*time.Time]
 }
 
 // createMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength creates a new instance of this resource
@@ -7653,11 +7652,11 @@ func (c *mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength)
 // mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency for the microsoft.conditionalAccess.policy.sessionControls.signInFrequency resource
 type mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequencyInternal it will be used here
 	AuthenticationType plugin.TValue[string]
-	FrequencyInterval plugin.TValue[string]
-	IsEnabled plugin.TValue[bool]
+	FrequencyInterval  plugin.TValue[string]
+	IsEnabled          plugin.TValue[bool]
 }
 
 // createMicrosoftConditionalAccessPolicySessionControlsSignInFrequency creates a new instance of this resource
@@ -7707,10 +7706,10 @@ func (c *mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency) GetI
 // mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity for the microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity resource
 type mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurityInternal it will be used here
 	CloudAppSecurityType plugin.TValue[string]
-	IsEnabled plugin.TValue[bool]
+	IsEnabled            plugin.TValue[bool]
 }
 
 // createMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity creates a new instance of this resource
@@ -7756,9 +7755,9 @@ func (c *mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity) Get
 // mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser for the microsoft.conditionalAccess.policy.sessionControls.persistentBrowser resource
 type mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowserInternal it will be used here
-	Mode plugin.TValue[string]
+	Mode      plugin.TValue[string]
 	IsEnabled plugin.TValue[bool]
 }
 
@@ -7805,7 +7804,7 @@ func (c *mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser) Ge
 // mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions for the microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions resource
 type mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictionsInternal it will be used here
 	IsEnabled plugin.TValue[bool]
 }
@@ -7849,7 +7848,7 @@ func (c *mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRe
 // mqlMicrosoftConditionalAccessPolicyConditionsClientApplications for the microsoft.conditionalAccess.policy.conditions.clientApplications resource
 type mqlMicrosoftConditionalAccessPolicyConditionsClientApplications struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsClientApplicationsInternal it will be used here
 	ExcludeServicePrincipals plugin.TValue[[]any]
 	IncludeServicePrincipals plugin.TValue[[]any]
@@ -7898,7 +7897,7 @@ func (c *mqlMicrosoftConditionalAccessPolicyConditionsClientApplications) GetInc
 // mqlMicrosoftConditionalAccessPolicyConditionsPlatforms for the microsoft.conditionalAccess.policy.conditions.platforms resource
 type mqlMicrosoftConditionalAccessPolicyConditionsPlatforms struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsPlatformsInternal it will be used here
 	ExcludePlatforms plugin.TValue[[]any]
 	IncludePlatforms plugin.TValue[[]any]
@@ -7947,11 +7946,11 @@ func (c *mqlMicrosoftConditionalAccessPolicyConditionsPlatforms) GetIncludePlatf
 // mqlMicrosoftConditionalAccessPolicyConditionsApplications for the microsoft.conditionalAccess.policy.conditions.applications resource
 type mqlMicrosoftConditionalAccessPolicyConditionsApplications struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsApplicationsInternal it will be used here
 	IncludeApplications plugin.TValue[[]any]
 	ExcludeApplications plugin.TValue[[]any]
-	IncludeUserActions plugin.TValue[[]any]
+	IncludeUserActions  plugin.TValue[[]any]
 }
 
 // createMicrosoftConditionalAccessPolicyConditionsApplications creates a new instance of this resource
@@ -8001,14 +8000,14 @@ func (c *mqlMicrosoftConditionalAccessPolicyConditionsApplications) GetIncludeUs
 // mqlMicrosoftConditionalAccessPolicyConditionsUsers for the microsoft.conditionalAccess.policy.conditions.users resource
 type mqlMicrosoftConditionalAccessPolicyConditionsUsers struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsUsersInternal it will be used here
-	IncludeUsers plugin.TValue[[]any]
-	ExcludeUsers plugin.TValue[[]any]
+	IncludeUsers  plugin.TValue[[]any]
+	ExcludeUsers  plugin.TValue[[]any]
 	IncludeGroups plugin.TValue[[]any]
 	ExcludeGroups plugin.TValue[[]any]
-	IncludeRoles plugin.TValue[[]any]
-	ExcludeRoles plugin.TValue[[]any]
+	IncludeRoles  plugin.TValue[[]any]
+	ExcludeRoles  plugin.TValue[[]any]
 }
 
 // createMicrosoftConditionalAccessPolicyConditionsUsers creates a new instance of this resource
@@ -8070,7 +8069,7 @@ func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetExcludeRoles() *
 // mqlMicrosoftConditionalAccessPolicyConditionsLocations for the microsoft.conditionalAccess.policy.conditions.locations resource
 type mqlMicrosoftConditionalAccessPolicyConditionsLocations struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsLocationsInternal it will be used here
 	IncludeLocations plugin.TValue[[]any]
 	ExcludeLocations plugin.TValue[[]any]
@@ -8119,14 +8118,14 @@ func (c *mqlMicrosoftConditionalAccessPolicyConditionsLocations) GetExcludeLocat
 // mqlMicrosoftConditionalAccessPolicyGrantControls for the microsoft.conditionalAccess.policy.grantControls resource
 type mqlMicrosoftConditionalAccessPolicyGrantControls struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyGrantControlsInternal it will be used here
-	Id plugin.TValue[string]
-	Operator plugin.TValue[string]
-	BuiltInControls plugin.TValue[[]any]
-	AuthenticationStrength plugin.TValue[*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength]
+	Id                          plugin.TValue[string]
+	Operator                    plugin.TValue[string]
+	BuiltInControls             plugin.TValue[[]any]
+	AuthenticationStrength      plugin.TValue[*mqlMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength]
 	CustomAuthenticationFactors plugin.TValue[[]any]
-	TermsOfUse plugin.TValue[[]any]
+	TermsOfUse                  plugin.TValue[[]any]
 }
 
 // createMicrosoftConditionalAccessPolicyGrantControls creates a new instance of this resource
@@ -8141,7 +8140,7 @@ func createMicrosoftConditionalAccessPolicyGrantControls(runtime *plugin.Runtime
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8193,14 +8192,14 @@ func (c *mqlMicrosoftConditionalAccessPolicyGrantControls) GetTermsOfUse() *plug
 // mqlMicrosoftConditionalAccessPolicySessionControls for the microsoft.conditionalAccess.policy.sessionControls resource
 type mqlMicrosoftConditionalAccessPolicySessionControls struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicySessionControlsInternal it will be used here
-	Id plugin.TValue[string]
-	SignInFrequency plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency]
-	CloudAppSecurity plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity]
-	PersistentBrowser plugin.TValue[any]
+	Id                              plugin.TValue[string]
+	SignInFrequency                 plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency]
+	CloudAppSecurity                plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity]
+	PersistentBrowser               plugin.TValue[any]
 	ApplicationEnforcedRestrictions plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions]
-	SecureSignInSession plugin.TValue[any]
+	SecureSignInSession             plugin.TValue[any]
 }
 
 // createMicrosoftConditionalAccessPolicySessionControls creates a new instance of this resource
@@ -8215,7 +8214,7 @@ func createMicrosoftConditionalAccessPolicySessionControls(runtime *plugin.Runti
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8267,9 +8266,9 @@ func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetSecureSignInSess
 // mqlMicrosoftConditionalAccessIpNamedLocation for the microsoft.conditionalAccess.ipNamedLocation resource
 type mqlMicrosoftConditionalAccessIpNamedLocation struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessIpNamedLocationInternal it will be used here
-	Name plugin.TValue[string]
+	Name    plugin.TValue[string]
 	Trusted plugin.TValue[bool]
 }
 
@@ -8285,7 +8284,7 @@ func createMicrosoftConditionalAccessIpNamedLocation(runtime *plugin.Runtime, ar
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8321,9 +8320,9 @@ func (c *mqlMicrosoftConditionalAccessIpNamedLocation) GetTrusted() *plugin.TVal
 // mqlMicrosoftConditionalAccessCountryNamedLocation for the microsoft.conditionalAccess.countryNamedLocation resource
 type mqlMicrosoftConditionalAccessCountryNamedLocation struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessCountryNamedLocationInternal it will be used here
-	Name plugin.TValue[string]
+	Name         plugin.TValue[string]
 	LookupMethod plugin.TValue[string]
 }
 
@@ -8339,7 +8338,7 @@ func createMicrosoftConditionalAccessCountryNamedLocation(runtime *plugin.Runtim
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8375,39 +8374,39 @@ func (c *mqlMicrosoftConditionalAccessCountryNamedLocation) GetLookupMethod() *p
 // mqlMicrosoftUser for the microsoft.user resource
 type mqlMicrosoftUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUserInternal it will be used here
-	Id plugin.TValue[string]
-	AccountEnabled plugin.TValue[bool]
-	City plugin.TValue[string]
-	CompanyName plugin.TValue[string]
-	Country plugin.TValue[string]
-	CreatedDateTime plugin.TValue[*time.Time]
-	Department plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	EmployeeId plugin.TValue[string]
-	GivenName plugin.TValue[string]
-	JobTitle plugin.TValue[string]
-	Mail plugin.TValue[string]
-	MobilePhone plugin.TValue[string]
-	OtherMails plugin.TValue[[]any]
-	OfficeLocation plugin.TValue[string]
-	PostalCode plugin.TValue[string]
-	State plugin.TValue[string]
-	StreetAddress plugin.TValue[string]
-	Surname plugin.TValue[string]
-	UserPrincipalName plugin.TValue[string]
-	UserType plugin.TValue[string]
-	Settings plugin.TValue[any]
-	Job plugin.TValue[any]
-	Contact plugin.TValue[any]
-	AuthMethods plugin.TValue[*mqlMicrosoftUserAuthenticationMethods]
-	MfaEnabled plugin.TValue[bool]
-	CreationType plugin.TValue[string]
-	Identities plugin.TValue[[]any]
-	Auditlog plugin.TValue[*mqlMicrosoftUserAuditlog]
-	AssignedLicenses plugin.TValue[[]any]
-	LicenseDetails plugin.TValue[[]any]
+	Id                         plugin.TValue[string]
+	AccountEnabled             plugin.TValue[bool]
+	City                       plugin.TValue[string]
+	CompanyName                plugin.TValue[string]
+	Country                    plugin.TValue[string]
+	CreatedDateTime            plugin.TValue[*time.Time]
+	Department                 plugin.TValue[string]
+	DisplayName                plugin.TValue[string]
+	EmployeeId                 plugin.TValue[string]
+	GivenName                  plugin.TValue[string]
+	JobTitle                   plugin.TValue[string]
+	Mail                       plugin.TValue[string]
+	MobilePhone                plugin.TValue[string]
+	OtherMails                 plugin.TValue[[]any]
+	OfficeLocation             plugin.TValue[string]
+	PostalCode                 plugin.TValue[string]
+	State                      plugin.TValue[string]
+	StreetAddress              plugin.TValue[string]
+	Surname                    plugin.TValue[string]
+	UserPrincipalName          plugin.TValue[string]
+	UserType                   plugin.TValue[string]
+	Settings                   plugin.TValue[any]
+	Job                        plugin.TValue[any]
+	Contact                    plugin.TValue[any]
+	AuthMethods                plugin.TValue[*mqlMicrosoftUserAuthenticationMethods]
+	MfaEnabled                 plugin.TValue[bool]
+	CreationType               plugin.TValue[string]
+	Identities                 plugin.TValue[[]any]
+	Auditlog                   plugin.TValue[*mqlMicrosoftUserAuditlog]
+	AssignedLicenses           plugin.TValue[[]any]
+	LicenseDetails             plugin.TValue[[]any]
 	AuthenticationRequirements plugin.TValue[*mqlMicrosoftUserAuthenticationRequirements]
 }
 
@@ -8630,7 +8629,7 @@ func (c *mqlMicrosoftUser) GetAuthenticationRequirements() *plugin.TValue[*mqlMi
 // mqlMicrosoftUserAuthenticationRequirements for the microsoft.user.authenticationRequirements resource
 type mqlMicrosoftUserAuthenticationRequirements struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUserAuthenticationRequirementsInternal it will be used here
 	PerUserMfaState plugin.TValue[string]
 }
@@ -8674,11 +8673,11 @@ func (c *mqlMicrosoftUserAuthenticationRequirements) GetPerUserMfaState() *plugi
 // mqlMicrosoftUserAuditlog for the microsoft.user.auditlog resource
 type mqlMicrosoftUserAuditlog struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUserAuditlogInternal it will be used here
-	UserId plugin.TValue[string]
-	Signins plugin.TValue[[]any]
-	LastInteractiveSignIn plugin.TValue[*mqlMicrosoftUserSignin]
+	UserId                   plugin.TValue[string]
+	Signins                  plugin.TValue[[]any]
+	LastInteractiveSignIn    plugin.TValue[*mqlMicrosoftUserSignin]
 	LastNonInteractiveSignIn plugin.TValue[*mqlMicrosoftUserSignin]
 }
 
@@ -8769,11 +8768,11 @@ func (c *mqlMicrosoftUserAuditlog) GetLastNonInteractiveSignIn() *plugin.TValue[
 // mqlMicrosoftUserIdentity for the microsoft.user.identity resource
 type mqlMicrosoftUserIdentity struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUserIdentityInternal it will be used here
 	IssuerAssignedId plugin.TValue[string]
-	Issuer plugin.TValue[string]
-	SignInType plugin.TValue[string]
+	Issuer           plugin.TValue[string]
+	SignInType       plugin.TValue[string]
 }
 
 // createMicrosoftUserIdentity creates a new instance of this resource
@@ -8823,16 +8822,16 @@ func (c *mqlMicrosoftUserIdentity) GetSignInType() *plugin.TValue[string] {
 // mqlMicrosoftUserSignin for the microsoft.user.signin resource
 type mqlMicrosoftUserSignin struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUserSigninInternal it will be used here
-	Id plugin.TValue[string]
-	CreatedDateTime plugin.TValue[*time.Time]
-	UserId plugin.TValue[string]
-	UserDisplayName plugin.TValue[string]
-	ClientAppUsed plugin.TValue[string]
-	AppDisplayName plugin.TValue[string]
+	Id                  plugin.TValue[string]
+	CreatedDateTime     plugin.TValue[*time.Time]
+	UserId              plugin.TValue[string]
+	UserDisplayName     plugin.TValue[string]
+	ClientAppUsed       plugin.TValue[string]
+	AppDisplayName      plugin.TValue[string]
 	ResourceDisplayName plugin.TValue[string]
-	Interactive plugin.TValue[bool]
+	Interactive         plugin.TValue[bool]
 }
 
 // createMicrosoftUserSignin creates a new instance of this resource
@@ -8902,18 +8901,18 @@ func (c *mqlMicrosoftUserSignin) GetInteractive() *plugin.TValue[bool] {
 // mqlMicrosoftUserAuthenticationMethods for the microsoft.user.authenticationMethods resource
 type mqlMicrosoftUserAuthenticationMethods struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUserAuthenticationMethodsInternal it will be used here
-	Count plugin.TValue[int64]
-	PhoneMethods plugin.TValue[[]any]
-	EmailMethods plugin.TValue[[]any]
-	Fido2Methods plugin.TValue[[]any]
-	SoftwareMethods plugin.TValue[[]any]
-	MicrosoftAuthenticator plugin.TValue[[]any]
-	PasswordMethods plugin.TValue[[]any]
+	Count                      plugin.TValue[int64]
+	PhoneMethods               plugin.TValue[[]any]
+	EmailMethods               plugin.TValue[[]any]
+	Fido2Methods               plugin.TValue[[]any]
+	SoftwareMethods            plugin.TValue[[]any]
+	MicrosoftAuthenticator     plugin.TValue[[]any]
+	PasswordMethods            plugin.TValue[[]any]
 	TemporaryAccessPassMethods plugin.TValue[[]any]
-	WindowsHelloMethods plugin.TValue[[]any]
-	RegistrationDetails plugin.TValue[*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails]
+	WindowsHelloMethods        plugin.TValue[[]any]
+	RegistrationDetails        plugin.TValue[*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails]
 }
 
 // createMicrosoftUserAuthenticationMethods creates a new instance of this resource
@@ -9003,24 +9002,24 @@ func (c *mqlMicrosoftUserAuthenticationMethods) GetRegistrationDetails() *plugin
 // mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails for the microsoft.user.authenticationMethods.userRegistrationDetails resource
 type mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetailsInternal it will be used here
-	Id plugin.TValue[string]
-	IsAdmin plugin.TValue[bool]
-	IsMfaCapable plugin.TValue[bool]
-	IsMfaRegistered plugin.TValue[bool]
-	IsPasswordlessCapable plugin.TValue[bool]
-	IsSsprCapable plugin.TValue[bool]
-	IsSsprEnabled plugin.TValue[bool]
-	IsSsprRegistered plugin.TValue[bool]
-	IsSystemPreferredAuthenticationMethodEnabled plugin.TValue[bool]
-	LastUpdatedDateTime plugin.TValue[*time.Time]
-	MethodsRegistered plugin.TValue[[]any]
-	SystemPreferredAuthenticationMethods plugin.TValue[[]any]
-	UserDisplayName plugin.TValue[string]
+	Id                                            plugin.TValue[string]
+	IsAdmin                                       plugin.TValue[bool]
+	IsMfaCapable                                  plugin.TValue[bool]
+	IsMfaRegistered                               plugin.TValue[bool]
+	IsPasswordlessCapable                         plugin.TValue[bool]
+	IsSsprCapable                                 plugin.TValue[bool]
+	IsSsprEnabled                                 plugin.TValue[bool]
+	IsSsprRegistered                              plugin.TValue[bool]
+	IsSystemPreferredAuthenticationMethodEnabled  plugin.TValue[bool]
+	LastUpdatedDateTime                           plugin.TValue[*time.Time]
+	MethodsRegistered                             plugin.TValue[[]any]
+	SystemPreferredAuthenticationMethods          plugin.TValue[[]any]
+	UserDisplayName                               plugin.TValue[string]
 	UserPreferredMethodForSecondaryAuthentication plugin.TValue[string]
-	UserPrincipalName plugin.TValue[string]
-	UserType plugin.TValue[string]
+	UserPrincipalName                             plugin.TValue[string]
+	UserType                                      plugin.TValue[string]
 }
 
 // createMicrosoftUserAuthenticationMethodsUserRegistrationDetails creates a new instance of this resource
@@ -9122,18 +9121,18 @@ func (c *mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails) GetUserTy
 // mqlMicrosoftGroup for the microsoft.group resource
 type mqlMicrosoftGroup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftGroupInternal it will be used here
-	Id plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	SecurityEnabled plugin.TValue[bool]
-	MailEnabled plugin.TValue[bool]
-	MailNickname plugin.TValue[string]
-	Mail plugin.TValue[string]
-	Visibility plugin.TValue[string]
-	Members plugin.TValue[[]any]
-	GroupTypes plugin.TValue[[]any]
-	MembershipRule plugin.TValue[string]
+	Id                            plugin.TValue[string]
+	DisplayName                   plugin.TValue[string]
+	SecurityEnabled               plugin.TValue[bool]
+	MailEnabled                   plugin.TValue[bool]
+	MailNickname                  plugin.TValue[string]
+	Mail                          plugin.TValue[string]
+	Visibility                    plugin.TValue[string]
+	Members                       plugin.TValue[[]any]
+	GroupTypes                    plugin.TValue[[]any]
+	MembershipRule                plugin.TValue[string]
 	MembershipRuleProcessingState plugin.TValue[string]
 }
 
@@ -9149,7 +9148,7 @@ func createMicrosoftGroup(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9233,11 +9232,11 @@ func (c *mqlMicrosoftGroup) GetMembershipRuleProcessingState() *plugin.TValue[st
 // mqlMicrosoftGroupLifecyclePolicy for the microsoft.groupLifecyclePolicy resource
 type mqlMicrosoftGroupLifecyclePolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftGroupLifecyclePolicyInternal it will be used here
-	Id plugin.TValue[string]
-	GroupLifetimeInDays plugin.TValue[int64]
-	ManagedGroupTypes plugin.TValue[string]
+	Id                          plugin.TValue[string]
+	GroupLifetimeInDays         plugin.TValue[int64]
+	ManagedGroupTypes           plugin.TValue[string]
 	AlternateNotificationEmails plugin.TValue[string]
 }
 
@@ -9292,11 +9291,11 @@ func (c *mqlMicrosoftGroupLifecyclePolicy) GetAlternateNotificationEmails() *plu
 // mqlMicrosoftDevices for the microsoft.devices resource
 type mqlMicrosoftDevices struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftDevicesInternal it will be used here
 	Filter plugin.TValue[string]
 	Search plugin.TValue[string]
-	List plugin.TValue[[]any]
+	List   plugin.TValue[[]any]
 }
 
 // createMicrosoftDevices creates a new instance of this resource
@@ -9358,26 +9357,26 @@ func (c *mqlMicrosoftDevices) GetList() *plugin.TValue[[]any] {
 // mqlMicrosoftDevice for the microsoft.device resource
 type mqlMicrosoftDevice struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftDeviceInternal it will be used here
-	Id plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	DeviceId plugin.TValue[string]
-	DeviceCategory plugin.TValue[string]
-	EnrollmentProfileName plugin.TValue[string]
-	EnrollmentType plugin.TValue[string]
-	IsCompliant plugin.TValue[bool]
-	IsManaged plugin.TValue[bool]
-	Manufacturer plugin.TValue[string]
-	IsRooted plugin.TValue[bool]
-	MdmAppId plugin.TValue[string]
-	Model plugin.TValue[string]
-	OperatingSystem plugin.TValue[string]
+	Id                     plugin.TValue[string]
+	DisplayName            plugin.TValue[string]
+	DeviceId               plugin.TValue[string]
+	DeviceCategory         plugin.TValue[string]
+	EnrollmentProfileName  plugin.TValue[string]
+	EnrollmentType         plugin.TValue[string]
+	IsCompliant            plugin.TValue[bool]
+	IsManaged              plugin.TValue[bool]
+	Manufacturer           plugin.TValue[string]
+	IsRooted               plugin.TValue[bool]
+	MdmAppId               plugin.TValue[string]
+	Model                  plugin.TValue[string]
+	OperatingSystem        plugin.TValue[string]
 	OperatingSystemVersion plugin.TValue[string]
-	PhysicalIds plugin.TValue[[]any]
-	RegistrationDateTime plugin.TValue[*time.Time]
-	SystemLabels plugin.TValue[[]any]
-	TrustType plugin.TValue[string]
+	PhysicalIds            plugin.TValue[[]any]
+	RegistrationDateTime   plugin.TValue[*time.Time]
+	SystemLabels           plugin.TValue[[]any]
+	TrustType              plugin.TValue[string]
 }
 
 // createMicrosoftDevice creates a new instance of this resource
@@ -9487,20 +9486,20 @@ func (c *mqlMicrosoftDevice) GetTrustType() *plugin.TValue[string] {
 // mqlMicrosoftDomain for the microsoft.domain resource
 type mqlMicrosoftDomain struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftDomainInternal it will be used here
-	Id plugin.TValue[string]
-	AuthenticationType plugin.TValue[string]
-	AvailabilityStatus plugin.TValue[string]
-	IsAdminManaged plugin.TValue[bool]
-	IsDefault plugin.TValue[bool]
-	IsInitial plugin.TValue[bool]
-	IsRoot plugin.TValue[bool]
-	IsVerified plugin.TValue[bool]
+	Id                               plugin.TValue[string]
+	AuthenticationType               plugin.TValue[string]
+	AvailabilityStatus               plugin.TValue[string]
+	IsAdminManaged                   plugin.TValue[bool]
+	IsDefault                        plugin.TValue[bool]
+	IsInitial                        plugin.TValue[bool]
+	IsRoot                           plugin.TValue[bool]
+	IsVerified                       plugin.TValue[bool]
 	PasswordNotificationWindowInDays plugin.TValue[int64]
-	PasswordValidityPeriodInDays plugin.TValue[int64]
-	SupportedServices plugin.TValue[[]any]
-	ServiceConfigurationRecords plugin.TValue[[]any]
+	PasswordValidityPeriodInDays     plugin.TValue[int64]
+	SupportedServices                plugin.TValue[[]any]
+	ServiceConfigurationRecords      plugin.TValue[[]any]
 }
 
 // createMicrosoftDomain creates a new instance of this resource
@@ -9515,7 +9514,7 @@ func createMicrosoftDomain(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9603,15 +9602,15 @@ func (c *mqlMicrosoftDomain) GetServiceConfigurationRecords() *plugin.TValue[[]a
 // mqlMicrosoftDomaindnsrecord for the microsoft.domaindnsrecord resource
 type mqlMicrosoftDomaindnsrecord struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftDomaindnsrecordInternal it will be used here
-	Id plugin.TValue[string]
-	IsOptional plugin.TValue[bool]
-	Label plugin.TValue[string]
-	RecordType plugin.TValue[string]
+	Id               plugin.TValue[string]
+	IsOptional       plugin.TValue[bool]
+	Label            plugin.TValue[string]
+	RecordType       plugin.TValue[string]
 	SupportedService plugin.TValue[string]
-	Ttl plugin.TValue[int64]
-	Properties plugin.TValue[any]
+	Ttl              plugin.TValue[int64]
+	Properties       plugin.TValue[any]
 }
 
 // createMicrosoftDomaindnsrecord creates a new instance of this resource
@@ -9626,7 +9625,7 @@ func createMicrosoftDomaindnsrecord(runtime *plugin.Runtime, args map[string]*ll
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9682,44 +9681,44 @@ func (c *mqlMicrosoftDomaindnsrecord) GetProperties() *plugin.TValue[any] {
 // mqlMicrosoftApplication for the microsoft.application resource
 type mqlMicrosoftApplication struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftApplicationInternal it will be used here
-	Id plugin.TValue[string]
-	AppId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Notes plugin.TValue[string]
-	Tags plugin.TValue[[]any]
-	ApplicationTemplateId plugin.TValue[string]
-	DisabledByMicrosoftStatus plugin.TValue[string]
-	GroupMembershipClaims plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	IdentifierUris plugin.TValue[[]any]
-	PublisherDomain plugin.TValue[string]
-	SignInAudience plugin.TValue[string]
-	Info plugin.TValue[any]
-	Api plugin.TValue[any]
-	Web plugin.TValue[any]
-	Spa plugin.TValue[any]
-	Secrets plugin.TValue[[]any]
-	Certificates plugin.TValue[[]any]
-	HasExpiredCredentials plugin.TValue[bool]
-	Owners plugin.TValue[[]any]
-	ServicePrincipal plugin.TValue[*mqlMicrosoftServiceprincipal]
-	IsDeviceOnlyAuthSupported plugin.TValue[bool]
-	IsFallbackPublicClient plugin.TValue[bool]
-	NativeAuthenticationApisEnabled plugin.TValue[string]
-	ServiceManagementReference plugin.TValue[string]
-	TokenEncryptionKeyId plugin.TValue[string]
-	SamlMetadataUrl plugin.TValue[string]
-	DefaultRedirectUri plugin.TValue[string]
-	Certification plugin.TValue[any]
-	OptionalClaims plugin.TValue[any]
+	Id                                plugin.TValue[string]
+	AppId                             plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	Description                       plugin.TValue[string]
+	Notes                             plugin.TValue[string]
+	Tags                              plugin.TValue[[]any]
+	ApplicationTemplateId             plugin.TValue[string]
+	DisabledByMicrosoftStatus         plugin.TValue[string]
+	GroupMembershipClaims             plugin.TValue[string]
+	CreatedAt                         plugin.TValue[*time.Time]
+	IdentifierUris                    plugin.TValue[[]any]
+	PublisherDomain                   plugin.TValue[string]
+	SignInAudience                    plugin.TValue[string]
+	Info                              plugin.TValue[any]
+	Api                               plugin.TValue[any]
+	Web                               plugin.TValue[any]
+	Spa                               plugin.TValue[any]
+	Secrets                           plugin.TValue[[]any]
+	Certificates                      plugin.TValue[[]any]
+	HasExpiredCredentials             plugin.TValue[bool]
+	Owners                            plugin.TValue[[]any]
+	ServicePrincipal                  plugin.TValue[*mqlMicrosoftServiceprincipal]
+	IsDeviceOnlyAuthSupported         plugin.TValue[bool]
+	IsFallbackPublicClient            plugin.TValue[bool]
+	NativeAuthenticationApisEnabled   plugin.TValue[string]
+	ServiceManagementReference        plugin.TValue[string]
+	TokenEncryptionKeyId              plugin.TValue[string]
+	SamlMetadataUrl                   plugin.TValue[string]
+	DefaultRedirectUri                plugin.TValue[string]
+	Certification                     plugin.TValue[any]
+	OptionalClaims                    plugin.TValue[any]
 	ServicePrincipalLockConfiguration plugin.TValue[any]
-	RequestSignatureVerification plugin.TValue[any]
-	ParentalControlSettings plugin.TValue[any]
-	PublicClient plugin.TValue[any]
-	AppRoles plugin.TValue[[]any]
+	RequestSignatureVerification      plugin.TValue[any]
+	ParentalControlSettings           plugin.TValue[any]
+	PublicClient                      plugin.TValue[any]
+	AppRoles                          plugin.TValue[[]any]
 }
 
 // createMicrosoftApplication creates a new instance of this resource
@@ -9927,14 +9926,14 @@ func (c *mqlMicrosoftApplication) GetAppRoles() *plugin.TValue[[]any] {
 // mqlMicrosoftApplicationRole for the microsoft.application.role resource
 type mqlMicrosoftApplicationRole struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftApplicationRoleInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Value plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Value              plugin.TValue[string]
 	AllowedMemberTypes plugin.TValue[[]any]
-	IsEnabled plugin.TValue[bool]
+	IsEnabled          plugin.TValue[bool]
 }
 
 // createMicrosoftApplicationRole creates a new instance of this resource
@@ -9996,15 +9995,15 @@ func (c *mqlMicrosoftApplicationRole) GetIsEnabled() *plugin.TValue[bool] {
 // mqlMicrosoftKeyCredential for the microsoft.keyCredential resource
 type mqlMicrosoftKeyCredential struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftKeyCredentialInternal it will be used here
-	KeyId plugin.TValue[string]
+	KeyId       plugin.TValue[string]
 	Description plugin.TValue[string]
-	Thumbprint plugin.TValue[string]
-	Type plugin.TValue[string]
-	Usage plugin.TValue[string]
-	Expires plugin.TValue[*time.Time]
-	Expired plugin.TValue[bool]
+	Thumbprint  plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Usage       plugin.TValue[string]
+	Expires     plugin.TValue[*time.Time]
+	Expired     plugin.TValue[bool]
 }
 
 // createMicrosoftKeyCredential creates a new instance of this resource
@@ -10070,13 +10069,13 @@ func (c *mqlMicrosoftKeyCredential) GetExpired() *plugin.TValue[bool] {
 // mqlMicrosoftPasswordCredential for the microsoft.passwordCredential resource
 type mqlMicrosoftPasswordCredential struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftPasswordCredentialInternal it will be used here
-	KeyId plugin.TValue[string]
+	KeyId       plugin.TValue[string]
 	Description plugin.TValue[string]
-	Hint plugin.TValue[string]
-	Expires plugin.TValue[*time.Time]
-	Expired plugin.TValue[bool]
+	Hint        plugin.TValue[string]
+	Expires     plugin.TValue[*time.Time]
+	Expired     plugin.TValue[bool]
 }
 
 // createMicrosoftPasswordCredential creates a new instance of this resource
@@ -10134,36 +10133,36 @@ func (c *mqlMicrosoftPasswordCredential) GetExpired() *plugin.TValue[bool] {
 // mqlMicrosoftServiceprincipal for the microsoft.serviceprincipal resource
 type mqlMicrosoftServiceprincipal struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftServiceprincipalInternal it will be used here
-	Id plugin.TValue[string]
-	Type plugin.TValue[string]
-	Name plugin.TValue[string]
-	AppId plugin.TValue[string]
-	AppOwnerOrganizationId plugin.TValue[string]
-	Description plugin.TValue[string]
-	Tags plugin.TValue[[]any]
-	Enabled plugin.TValue[bool]
-	HomepageUrl plugin.TValue[string]
-	TermsOfServiceUrl plugin.TValue[string]
-	ReplyUrls plugin.TValue[[]any]
-	AssignmentRequired plugin.TValue[bool]
-	VisibleToUsers plugin.TValue[bool]
-	Notes plugin.TValue[string]
-	Assignments plugin.TValue[[]any]
-	ApplicationTemplateId plugin.TValue[string]
-	VerifiedPublisher plugin.TValue[any]
-	LoginUrl plugin.TValue[string]
-	LogoutUrl plugin.TValue[string]
-	ServicePrincipalNames plugin.TValue[[]any]
-	SignInAudience plugin.TValue[string]
-	PreferredSingleSignOnMode plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	AppId                      plugin.TValue[string]
+	AppOwnerOrganizationId     plugin.TValue[string]
+	Description                plugin.TValue[string]
+	Tags                       plugin.TValue[[]any]
+	Enabled                    plugin.TValue[bool]
+	HomepageUrl                plugin.TValue[string]
+	TermsOfServiceUrl          plugin.TValue[string]
+	ReplyUrls                  plugin.TValue[[]any]
+	AssignmentRequired         plugin.TValue[bool]
+	VisibleToUsers             plugin.TValue[bool]
+	Notes                      plugin.TValue[string]
+	Assignments                plugin.TValue[[]any]
+	ApplicationTemplateId      plugin.TValue[string]
+	VerifiedPublisher          plugin.TValue[any]
+	LoginUrl                   plugin.TValue[string]
+	LogoutUrl                  plugin.TValue[string]
+	ServicePrincipalNames      plugin.TValue[[]any]
+	SignInAudience             plugin.TValue[string]
+	PreferredSingleSignOnMode  plugin.TValue[string]
 	NotificationEmailAddresses plugin.TValue[[]any]
-	AppRoleAssignmentRequired plugin.TValue[bool]
-	AccountEnabled plugin.TValue[bool]
-	IsFirstParty plugin.TValue[bool]
-	AppRoles plugin.TValue[[]any]
-	Permissions plugin.TValue[[]any]
+	AppRoleAssignmentRequired  plugin.TValue[bool]
+	AccountEnabled             plugin.TValue[bool]
+	IsFirstParty               plugin.TValue[bool]
+	AppRoles                   plugin.TValue[[]any]
+	Permissions                plugin.TValue[[]any]
 }
 
 // createMicrosoftServiceprincipal creates a new instance of this resource
@@ -10178,7 +10177,7 @@ func createMicrosoftServiceprincipal(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10332,11 +10331,11 @@ func (c *mqlMicrosoftServiceprincipal) GetPermissions() *plugin.TValue[[]any] {
 // mqlMicrosoftServiceprincipalAssignment for the microsoft.serviceprincipal.assignment resource
 type mqlMicrosoftServiceprincipalAssignment struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftServiceprincipalAssignmentInternal it will be used here
-	Id plugin.TValue[string]
+	Id          plugin.TValue[string]
 	DisplayName plugin.TValue[string]
-	Type plugin.TValue[string]
+	Type        plugin.TValue[string]
 }
 
 // createMicrosoftServiceprincipalAssignment creates a new instance of this resource
@@ -10351,7 +10350,7 @@ func createMicrosoftServiceprincipalAssignment(runtime *plugin.Runtime, args map
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10391,15 +10390,15 @@ func (c *mqlMicrosoftServiceprincipalAssignment) GetType() *plugin.TValue[string
 // mqlMicrosoftApplicationPermission for the microsoft.application.permission resource
 type mqlMicrosoftApplicationPermission struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftApplicationPermissionInternal it will be used here
-	AppId plugin.TValue[string]
-	AppName plugin.TValue[string]
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	AppId       plugin.TValue[string]
+	AppName     plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Type plugin.TValue[string]
-	Status plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Status      plugin.TValue[string]
 }
 
 // createMicrosoftApplicationPermission creates a new instance of this resource
@@ -10465,12 +10464,12 @@ func (c *mqlMicrosoftApplicationPermission) GetStatus() *plugin.TValue[string] {
 // mqlMicrosoftSecurity for the microsoft.security resource
 type mqlMicrosoftSecurity struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftSecurityInternal it will be used here
-	SecureScores plugin.TValue[[]any]
+	SecureScores       plugin.TValue[[]any]
 	LatestSecureScores plugin.TValue[*mqlMicrosoftSecuritySecurityscore]
-	RiskyUsers plugin.TValue[[]any]
-	Exchange plugin.TValue[*mqlMicrosoftSecurityExchange]
+	RiskyUsers         plugin.TValue[[]any]
+	Exchange           plugin.TValue[*mqlMicrosoftSecurityExchange]
 }
 
 // createMicrosoftSecurity creates a new instance of this resource
@@ -10572,19 +10571,19 @@ func (c *mqlMicrosoftSecurity) GetExchange() *plugin.TValue[*mqlMicrosoftSecurit
 // mqlMicrosoftSecuritySecurityscore for the microsoft.security.securityscore resource
 type mqlMicrosoftSecuritySecurityscore struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftSecuritySecurityscoreInternal it will be used here
-	Id plugin.TValue[string]
-	ActiveUserCount plugin.TValue[int64]
+	Id                       plugin.TValue[string]
+	ActiveUserCount          plugin.TValue[int64]
 	AverageComparativeScores plugin.TValue[[]any]
-	AzureTenantId plugin.TValue[string]
-	ControlScores plugin.TValue[[]any]
-	CreatedDateTime plugin.TValue[*time.Time]
-	CurrentScore plugin.TValue[float64]
-	EnabledServices plugin.TValue[[]any]
-	LicensedUserCount plugin.TValue[int64]
-	MaxScore plugin.TValue[float64]
-	VendorInformation plugin.TValue[any]
+	AzureTenantId            plugin.TValue[string]
+	ControlScores            plugin.TValue[[]any]
+	CreatedDateTime          plugin.TValue[*time.Time]
+	CurrentScore             plugin.TValue[float64]
+	EnabledServices          plugin.TValue[[]any]
+	LicensedUserCount        plugin.TValue[int64]
+	MaxScore                 plugin.TValue[float64]
+	VendorInformation        plugin.TValue[any]
 }
 
 // createMicrosoftSecuritySecurityscore creates a new instance of this resource
@@ -10599,7 +10598,7 @@ func createMicrosoftSecuritySecurityscore(runtime *plugin.Runtime, args map[stri
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10671,15 +10670,15 @@ func (c *mqlMicrosoftSecuritySecurityscore) GetVendorInformation() *plugin.TValu
 // mqlMicrosoftSecurityRiskyUser for the microsoft.security.riskyUser resource
 type mqlMicrosoftSecurityRiskyUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftSecurityRiskyUserInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
 	PrincipalName plugin.TValue[string]
-	User plugin.TValue[*mqlMicrosoftUser]
-	RiskDetail plugin.TValue[string]
-	RiskLevel plugin.TValue[string]
-	RiskState plugin.TValue[string]
+	User          plugin.TValue[*mqlMicrosoftUser]
+	RiskDetail    plugin.TValue[string]
+	RiskLevel     plugin.TValue[string]
+	RiskState     plugin.TValue[string]
 	LastUpdatedAt plugin.TValue[*time.Time]
 }
 
@@ -10762,7 +10761,7 @@ func (c *mqlMicrosoftSecurityRiskyUser) GetLastUpdatedAt() *plugin.TValue[*time.
 // mqlMicrosoftSecurityExchange for the microsoft.security.exchange resource
 type mqlMicrosoftSecurityExchange struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlMicrosoftSecurityExchangeInternal
 	Antispam plugin.TValue[*mqlMicrosoftSecurityExchangeAntispam]
 }
@@ -10818,7 +10817,7 @@ func (c *mqlMicrosoftSecurityExchange) GetAntispam() *plugin.TValue[*mqlMicrosof
 // mqlMicrosoftSecurityExchangeAntispam for the microsoft.security.exchange.antispam resource
 type mqlMicrosoftSecurityExchangeAntispam struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlMicrosoftSecurityExchangeAntispamInternal
 	HostedConnectionFilterPolicy plugin.TValue[*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy]
 }
@@ -10874,13 +10873,13 @@ func (c *mqlMicrosoftSecurityExchangeAntispam) GetHostedConnectionFilterPolicy()
 // mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy for the microsoft.security.exchange.antispam.hostedConnectionFilterPolicy resource
 type mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicyInternal
-	Identity plugin.TValue[string]
+	Identity         plugin.TValue[string]
 	AdminDisplayName plugin.TValue[string]
-	IpAllowList plugin.TValue[[]any]
-	IpBlockList plugin.TValue[[]any]
-	EnableSafeList plugin.TValue[bool]
+	IpAllowList      plugin.TValue[[]any]
+	IpBlockList      plugin.TValue[[]any]
+	EnableSafeList   plugin.TValue[bool]
 }
 
 // createMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy creates a new instance of this resource
@@ -10938,16 +10937,16 @@ func (c *mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy) GetEn
 // mqlMicrosoftPolicies for the microsoft.policies resource
 type mqlMicrosoftPolicies struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftPoliciesInternal it will be used here
-	AuthorizationPolicy plugin.TValue[any]
+	AuthorizationPolicy                       plugin.TValue[any]
 	IdentitySecurityDefaultsEnforcementPolicy plugin.TValue[any]
-	AdminConsentRequestPolicy plugin.TValue[*mqlMicrosoftAdminConsentRequestPolicy]
-	PermissionGrantPolicies plugin.TValue[[]any]
-	ConsentPolicySettings plugin.TValue[any]
-	AuthenticationMethodsPolicy plugin.TValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy]
-	ActivityBasedTimeoutPolicies plugin.TValue[[]any]
-	ExternalIdentitiesPolicy plugin.TValue[*mqlMicrosoftPoliciesExternalIdentitiesPolicy]
+	AdminConsentRequestPolicy                 plugin.TValue[*mqlMicrosoftAdminConsentRequestPolicy]
+	PermissionGrantPolicies                   plugin.TValue[[]any]
+	ConsentPolicySettings                     plugin.TValue[any]
+	AuthenticationMethodsPolicy               plugin.TValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy]
+	ActivityBasedTimeoutPolicies              plugin.TValue[[]any]
+	ExternalIdentitiesPolicy                  plugin.TValue[*mqlMicrosoftPoliciesExternalIdentitiesPolicy]
 }
 
 // createMicrosoftPolicies creates a new instance of this resource
@@ -11073,11 +11072,11 @@ func (c *mqlMicrosoftPolicies) GetExternalIdentitiesPolicy() *plugin.TValue[*mql
 // mqlMicrosoftPoliciesExternalIdentitiesPolicy for the microsoft.policies.externalIdentitiesPolicy resource
 type mqlMicrosoftPoliciesExternalIdentitiesPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftPoliciesExternalIdentitiesPolicyInternal it will be used here
-	Id plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
+	Id                             plugin.TValue[string]
+	DisplayName                    plugin.TValue[string]
+	Description                    plugin.TValue[string]
 	AllowExternalIdentitiesToLeave plugin.TValue[bool]
 }
 
@@ -11132,11 +11131,11 @@ func (c *mqlMicrosoftPoliciesExternalIdentitiesPolicy) GetAllowExternalIdentitie
 // mqlMicrosoftPoliciesActivityBasedTimeoutPolicy for the microsoft.policies.activityBasedTimeoutPolicy resource
 type mqlMicrosoftPoliciesActivityBasedTimeoutPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftPoliciesActivityBasedTimeoutPolicyInternal it will be used here
-	Id plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Definition plugin.TValue[[]any]
+	Id                    plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	Definition            plugin.TValue[[]any]
 	IsOrganizationDefault plugin.TValue[bool]
 }
 
@@ -11191,14 +11190,14 @@ func (c *mqlMicrosoftPoliciesActivityBasedTimeoutPolicy) GetIsOrganizationDefaul
 // mqlMicrosoftAdminConsentRequestPolicy for the microsoft.adminConsentRequestPolicy resource
 type mqlMicrosoftAdminConsentRequestPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftAdminConsentRequestPolicyInternal it will be used here
-	IsEnabled plugin.TValue[bool]
-	NotifyReviewers plugin.TValue[bool]
-	RemindersEnabled plugin.TValue[bool]
+	IsEnabled             plugin.TValue[bool]
+	NotifyReviewers       plugin.TValue[bool]
+	RemindersEnabled      plugin.TValue[bool]
 	RequestDurationInDays plugin.TValue[int64]
-	Reviewers plugin.TValue[[]any]
-	Version plugin.TValue[int64]
+	Reviewers             plugin.TValue[[]any]
+	Version               plugin.TValue[int64]
 }
 
 // createMicrosoftAdminConsentRequestPolicy creates a new instance of this resource
@@ -11260,9 +11259,9 @@ func (c *mqlMicrosoftAdminConsentRequestPolicy) GetVersion() *plugin.TValue[int6
 // mqlMicrosoftGraphAccessReviewReviewerScope for the microsoft.graph.accessReviewReviewerScope resource
 type mqlMicrosoftGraphAccessReviewReviewerScope struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftGraphAccessReviewReviewerScopeInternal it will be used here
-	Query plugin.TValue[string]
+	Query     plugin.TValue[string]
 	QueryRoot plugin.TValue[string]
 	QueryType plugin.TValue[string]
 }
@@ -11314,13 +11313,13 @@ func (c *mqlMicrosoftGraphAccessReviewReviewerScope) GetQueryType() *plugin.TVal
 // mqlMicrosoftPoliciesAuthenticationMethodsPolicy for the microsoft.policies.authenticationMethodsPolicy resource
 type mqlMicrosoftPoliciesAuthenticationMethodsPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftPoliciesAuthenticationMethodsPolicyInternal it will be used here
-	Id plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
-	LastModifiedDateTime plugin.TValue[*time.Time]
-	PolicyVersion plugin.TValue[string]
+	Id                                 plugin.TValue[string]
+	DisplayName                        plugin.TValue[string]
+	Description                        plugin.TValue[string]
+	LastModifiedDateTime               plugin.TValue[*time.Time]
+	PolicyVersion                      plugin.TValue[string]
 	AuthenticationMethodConfigurations plugin.TValue[[]any]
 }
 
@@ -11383,10 +11382,10 @@ func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetAuthenticationMetho
 // mqlMicrosoftPoliciesAuthenticationMethodConfiguration for the microsoft.policies.authenticationMethodConfiguration resource
 type mqlMicrosoftPoliciesAuthenticationMethodConfiguration struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftPoliciesAuthenticationMethodConfigurationInternal it will be used here
-	Id plugin.TValue[string]
-	State plugin.TValue[string]
+	Id             plugin.TValue[string]
+	State          plugin.TValue[string]
 	ExcludeTargets plugin.TValue[[]any]
 }
 
@@ -11437,11 +11436,11 @@ func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) GetExcludeTarget
 // mqlMicrosoftRoles for the microsoft.roles resource
 type mqlMicrosoftRoles struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftRolesInternal it will be used here
 	Filter plugin.TValue[string]
 	Search plugin.TValue[string]
-	List plugin.TValue[[]any]
+	List   plugin.TValue[[]any]
 }
 
 // createMicrosoftRoles creates a new instance of this resource
@@ -11503,7 +11502,7 @@ func (c *mqlMicrosoftRoles) GetList() *plugin.TValue[[]any] {
 // mqlMicrosoftRolemanagement for the microsoft.rolemanagement resource
 type mqlMicrosoftRolemanagement struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftRolemanagementInternal it will be used here
 	RoleDefinitions plugin.TValue[*mqlMicrosoftRoles]
 }
@@ -11559,17 +11558,17 @@ func (c *mqlMicrosoftRolemanagement) GetRoleDefinitions() *plugin.TValue[*mqlMic
 // mqlMicrosoftRolemanagementRoledefinition for the microsoft.rolemanagement.roledefinition resource
 type mqlMicrosoftRolemanagementRoledefinition struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftRolemanagementRoledefinitionInternal it will be used here
-	Id plugin.TValue[string]
-	Description plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	IsBuiltIn plugin.TValue[bool]
-	IsEnabled plugin.TValue[bool]
+	Id              plugin.TValue[string]
+	Description     plugin.TValue[string]
+	DisplayName     plugin.TValue[string]
+	IsBuiltIn       plugin.TValue[bool]
+	IsEnabled       plugin.TValue[bool]
 	RolePermissions plugin.TValue[[]any]
-	TemplateId plugin.TValue[string]
-	Version plugin.TValue[string]
-	Assignments plugin.TValue[[]any]
+	TemplateId      plugin.TValue[string]
+	Version         plugin.TValue[string]
+	Assignments     plugin.TValue[[]any]
 }
 
 // createMicrosoftRolemanagementRoledefinition creates a new instance of this resource
@@ -11584,7 +11583,7 @@ func createMicrosoftRolemanagementRoledefinition(runtime *plugin.Runtime, args m
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11660,12 +11659,12 @@ func (c *mqlMicrosoftRolemanagementRoledefinition) GetAssignments() *plugin.TVal
 // mqlMicrosoftRolemanagementRoleassignment for the microsoft.rolemanagement.roleassignment resource
 type mqlMicrosoftRolemanagementRoleassignment struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftRolemanagementRoleassignmentInternal it will be used here
-	Id plugin.TValue[string]
+	Id               plugin.TValue[string]
 	RoleDefinitionId plugin.TValue[string]
-	PrincipalId plugin.TValue[string]
-	Principal plugin.TValue[any]
+	PrincipalId      plugin.TValue[string]
+	Principal        plugin.TValue[any]
 }
 
 // createMicrosoftRolemanagementRoleassignment creates a new instance of this resource
@@ -11680,7 +11679,7 @@ func createMicrosoftRolemanagementRoleassignment(runtime *plugin.Runtime, args m
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11724,11 +11723,11 @@ func (c *mqlMicrosoftRolemanagementRoleassignment) GetPrincipal() *plugin.TValue
 // mqlMicrosoftDevicemanagement for the microsoft.devicemanagement resource
 type mqlMicrosoftDevicemanagement struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftDevicemanagementInternal it will be used here
-	ManagedDevices plugin.TValue[[]any]
-	DeviceConfigurations plugin.TValue[[]any]
-	DeviceCompliancePolicies plugin.TValue[[]any]
+	ManagedDevices                 plugin.TValue[[]any]
+	DeviceConfigurations           plugin.TValue[[]any]
+	DeviceCompliancePolicies       plugin.TValue[[]any]
 	DeviceEnrollmentConfigurations plugin.TValue[[]any]
 }
 
@@ -11831,15 +11830,15 @@ func (c *mqlMicrosoftDevicemanagement) GetDeviceEnrollmentConfigurations() *plug
 // mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration for the microsoft.devicemanagement.deviceEnrollmentConfiguration resource
 type mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftDevicemanagementDeviceEnrollmentConfigurationInternal it will be used here
-	Id plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
-	Priority plugin.TValue[int64]
-	CreatedDateTime plugin.TValue[*time.Time]
+	Id                   plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Priority             plugin.TValue[int64]
+	CreatedDateTime      plugin.TValue[*time.Time]
 	LastModifiedDateTime plugin.TValue[*time.Time]
-	Version plugin.TValue[int64]
+	Version              plugin.TValue[int64]
 }
 
 // createMicrosoftDevicemanagementDeviceEnrollmentConfiguration creates a new instance of this resource
@@ -11905,37 +11904,37 @@ func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetVersion()
 // mqlMicrosoftDevicemanagementManageddevice for the microsoft.devicemanagement.manageddevice resource
 type mqlMicrosoftDevicemanagementManageddevice struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftDevicemanagementManageddeviceInternal it will be used here
-	Id plugin.TValue[string]
-	UserId plugin.TValue[string]
-	Name plugin.TValue[string]
-	OperatingSystem plugin.TValue[string]
-	JailBroken plugin.TValue[string]
-	OsVersion plugin.TValue[string]
-	EasActivated plugin.TValue[bool]
-	EasDeviceId plugin.TValue[string]
-	AzureADRegistered plugin.TValue[bool]
-	EmailAddress plugin.TValue[string]
+	Id                           plugin.TValue[string]
+	UserId                       plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	OperatingSystem              plugin.TValue[string]
+	JailBroken                   plugin.TValue[string]
+	OsVersion                    plugin.TValue[string]
+	EasActivated                 plugin.TValue[bool]
+	EasDeviceId                  plugin.TValue[string]
+	AzureADRegistered            plugin.TValue[bool]
+	EmailAddress                 plugin.TValue[string]
 	AzureActiveDirectoryDeviceId plugin.TValue[string]
-	DeviceCategoryDisplayName plugin.TValue[string]
-	IsSupervised plugin.TValue[bool]
-	IsEncrypted plugin.TValue[bool]
-	UserPrincipalName plugin.TValue[string]
-	Model plugin.TValue[string]
-	Manufacturer plugin.TValue[string]
-	Imei plugin.TValue[string]
-	SerialNumber plugin.TValue[string]
-	AndroidSecurityPatchLevel plugin.TValue[string]
-	UserDisplayName plugin.TValue[string]
-	WiFiMacAddress plugin.TValue[string]
-	Meid plugin.TValue[string]
-	Iccid plugin.TValue[string]
-	Udid plugin.TValue[string]
-	Notes plugin.TValue[string]
-	EthernetMacAddress plugin.TValue[string]
-	EnrollmentProfileName plugin.TValue[string]
-	WindowsProtectionState plugin.TValue[any]
+	DeviceCategoryDisplayName    plugin.TValue[string]
+	IsSupervised                 plugin.TValue[bool]
+	IsEncrypted                  plugin.TValue[bool]
+	UserPrincipalName            plugin.TValue[string]
+	Model                        plugin.TValue[string]
+	Manufacturer                 plugin.TValue[string]
+	Imei                         plugin.TValue[string]
+	SerialNumber                 plugin.TValue[string]
+	AndroidSecurityPatchLevel    plugin.TValue[string]
+	UserDisplayName              plugin.TValue[string]
+	WiFiMacAddress               plugin.TValue[string]
+	Meid                         plugin.TValue[string]
+	Iccid                        plugin.TValue[string]
+	Udid                         plugin.TValue[string]
+	Notes                        plugin.TValue[string]
+	EthernetMacAddress           plugin.TValue[string]
+	EnrollmentProfileName        plugin.TValue[string]
+	WindowsProtectionState       plugin.TValue[any]
 }
 
 // createMicrosoftDevicemanagementManageddevice creates a new instance of this resource
@@ -12089,15 +12088,15 @@ func (c *mqlMicrosoftDevicemanagementManageddevice) GetWindowsProtectionState() 
 // mqlMicrosoftDevicemanagementDeviceconfiguration for the microsoft.devicemanagement.deviceconfiguration resource
 type mqlMicrosoftDevicemanagementDeviceconfiguration struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftDevicemanagementDeviceconfigurationInternal it will be used here
-	Id plugin.TValue[string]
+	Id                   plugin.TValue[string]
 	LastModifiedDateTime plugin.TValue[*time.Time]
-	CreatedDateTime plugin.TValue[*time.Time]
-	Description plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Version plugin.TValue[int64]
-	Properties plugin.TValue[any]
+	CreatedDateTime      plugin.TValue[*time.Time]
+	Description          plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	Version              plugin.TValue[int64]
+	Properties           plugin.TValue[any]
 }
 
 // createMicrosoftDevicemanagementDeviceconfiguration creates a new instance of this resource
@@ -12112,7 +12111,7 @@ func createMicrosoftDevicemanagementDeviceconfiguration(runtime *plugin.Runtime,
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12168,16 +12167,16 @@ func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetProperties() *plugi
 // mqlMicrosoftDevicemanagementDevicecompliancepolicy for the microsoft.devicemanagement.devicecompliancepolicy resource
 type mqlMicrosoftDevicemanagementDevicecompliancepolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMicrosoftDevicemanagementDevicecompliancepolicyInternal it will be used here
-	Id plugin.TValue[string]
-	CreatedDateTime plugin.TValue[*time.Time]
-	Description plugin.TValue[string]
-	DisplayName plugin.TValue[string]
+	Id                   plugin.TValue[string]
+	CreatedDateTime      plugin.TValue[*time.Time]
+	Description          plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
 	LastModifiedDateTime plugin.TValue[*time.Time]
-	Version plugin.TValue[int64]
-	Assignments plugin.TValue[[]any]
-	Properties plugin.TValue[any]
+	Version              plugin.TValue[int64]
+	Assignments          plugin.TValue[[]any]
+	Properties           plugin.TValue[any]
 }
 
 // createMicrosoftDevicemanagementDevicecompliancepolicy creates a new instance of this resource
@@ -12192,7 +12191,7 @@ func createMicrosoftDevicemanagementDevicecompliancepolicy(runtime *plugin.Runti
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12252,33 +12251,33 @@ func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetProperties() *pl
 // mqlMs365Exchangeonline for the ms365.exchangeonline resource
 type mqlMs365Exchangeonline struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlMs365ExchangeonlineInternal
-	MalwareFilterPolicy plugin.TValue[[]any]
+	MalwareFilterPolicy            plugin.TValue[[]any]
 	HostedOutboundSpamFilterPolicy plugin.TValue[[]any]
-	TransportRule plugin.TValue[[]any]
-	RemoteDomain plugin.TValue[[]any]
-	SafeLinksPolicy plugin.TValue[[]any]
-	SafeAttachmentPolicy plugin.TValue[[]any]
-	OrganizationConfig plugin.TValue[any]
-	AuthenticationPolicy plugin.TValue[[]any]
-	AntiPhishPolicy plugin.TValue[[]any]
-	DkimSigningConfig plugin.TValue[[]any]
-	OwaMailboxPolicy plugin.TValue[[]any]
-	AdminAuditLogConfig plugin.TValue[any]
-	PhishFilterPolicy plugin.TValue[[]any]
-	Mailbox plugin.TValue[[]any]
-	AtpPolicyForO365 plugin.TValue[[]any]
-	SharingPolicy plugin.TValue[[]any]
-	RoleAssignmentPolicy plugin.TValue[[]any]
-	ExternalInOutlook plugin.TValue[[]any]
-	SharedMailboxes plugin.TValue[[]any]
-	TeamsProtectionPolicies plugin.TValue[[]any]
-	ReportSubmissionPolicies plugin.TValue[[]any]
-	MailboxesWithAudit plugin.TValue[[]any]
-	TransportConfig plugin.TValue[any]
-	SecurityAndCompliance plugin.TValue[*mqlMs365ExchangeonlineSecurityAndCompliance]
-	MailboxAuditBypassAssociation plugin.TValue[[]any]
+	TransportRule                  plugin.TValue[[]any]
+	RemoteDomain                   plugin.TValue[[]any]
+	SafeLinksPolicy                plugin.TValue[[]any]
+	SafeAttachmentPolicy           plugin.TValue[[]any]
+	OrganizationConfig             plugin.TValue[any]
+	AuthenticationPolicy           plugin.TValue[[]any]
+	AntiPhishPolicy                plugin.TValue[[]any]
+	DkimSigningConfig              plugin.TValue[[]any]
+	OwaMailboxPolicy               plugin.TValue[[]any]
+	AdminAuditLogConfig            plugin.TValue[any]
+	PhishFilterPolicy              plugin.TValue[[]any]
+	Mailbox                        plugin.TValue[[]any]
+	AtpPolicyForO365               plugin.TValue[[]any]
+	SharingPolicy                  plugin.TValue[[]any]
+	RoleAssignmentPolicy           plugin.TValue[[]any]
+	ExternalInOutlook              plugin.TValue[[]any]
+	SharedMailboxes                plugin.TValue[[]any]
+	TeamsProtectionPolicies        plugin.TValue[[]any]
+	ReportSubmissionPolicies       plugin.TValue[[]any]
+	MailboxesWithAudit             plugin.TValue[[]any]
+	TransportConfig                plugin.TValue[any]
+	SecurityAndCompliance          plugin.TValue[*mqlMs365ExchangeonlineSecurityAndCompliance]
+	MailboxAuditBypassAssociation  plugin.TValue[[]any]
 }
 
 // createMs365Exchangeonline creates a new instance of this resource
@@ -12536,9 +12535,9 @@ func (c *mqlMs365Exchangeonline) GetMailboxAuditBypassAssociation() *plugin.TVal
 // mqlMs365ExchangeonlineMailboxAuditBypassAssociation for the ms365.exchangeonlineMailboxAuditBypassAssociation resource
 type mqlMs365ExchangeonlineMailboxAuditBypassAssociation struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMs365ExchangeonlineMailboxAuditBypassAssociationInternal it will be used here
-	Name plugin.TValue[string]
+	Name               plugin.TValue[string]
 	AuditBypassEnabled plugin.TValue[bool]
 }
 
@@ -12585,7 +12584,7 @@ func (c *mqlMs365ExchangeonlineMailboxAuditBypassAssociation) GetAuditBypassEnab
 // mqlMs365ExchangeonlineSecurityAndCompliance for the ms365.exchangeonline.securityAndCompliance resource
 type mqlMs365ExchangeonlineSecurityAndCompliance struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlMs365ExchangeonlineSecurityAndComplianceInternal
 	DlpCompliancePolicies plugin.TValue[[]any]
 }
@@ -12631,10 +12630,10 @@ func (c *mqlMs365ExchangeonlineSecurityAndCompliance) GetDlpCompliancePolicies()
 // mqlMs365ExchangeonlineTeamsProtectionPolicy for the ms365.exchangeonline.teamsProtectionPolicy resource
 type mqlMs365ExchangeonlineTeamsProtectionPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMs365ExchangeonlineTeamsProtectionPolicyInternal it will be used here
 	ZapEnabled plugin.TValue[bool]
-	IsValid plugin.TValue[bool]
+	IsValid    plugin.TValue[bool]
 }
 
 // createMs365ExchangeonlineTeamsProtectionPolicy creates a new instance of this resource
@@ -12680,15 +12679,15 @@ func (c *mqlMs365ExchangeonlineTeamsProtectionPolicy) GetIsValid() *plugin.TValu
 // mqlMs365ExchangeonlineReportSubmissionPolicy for the ms365.exchangeonline.reportSubmissionPolicy resource
 type mqlMs365ExchangeonlineReportSubmissionPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMs365ExchangeonlineReportSubmissionPolicyInternal it will be used here
-	ReportJunkToCustomizedAddress plugin.TValue[bool]
-	ReportNotJunkToCustomizedAddress plugin.TValue[bool]
-	ReportPhishToCustomizedAddress plugin.TValue[bool]
-	ReportJunkAddresses plugin.TValue[[]any]
-	ReportNotJunkAddresses plugin.TValue[[]any]
-	ReportPhishAddresses plugin.TValue[[]any]
-	ReportChatMessageEnabled plugin.TValue[bool]
+	ReportJunkToCustomizedAddress               plugin.TValue[bool]
+	ReportNotJunkToCustomizedAddress            plugin.TValue[bool]
+	ReportPhishToCustomizedAddress              plugin.TValue[bool]
+	ReportJunkAddresses                         plugin.TValue[[]any]
+	ReportNotJunkAddresses                      plugin.TValue[[]any]
+	ReportPhishAddresses                        plugin.TValue[[]any]
+	ReportChatMessageEnabled                    plugin.TValue[bool]
 	ReportChatMessageToCustomizedAddressEnabled plugin.TValue[bool]
 }
 
@@ -12759,11 +12758,11 @@ func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportChatMessageToCus
 // mqlMs365ExchangeonlineExternalSender for the ms365.exchangeonline.externalSender resource
 type mqlMs365ExchangeonlineExternalSender struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMs365ExchangeonlineExternalSenderInternal it will be used here
-	Identity plugin.TValue[string]
+	Identity  plugin.TValue[string]
 	AllowList plugin.TValue[[]any]
-	Enabled plugin.TValue[bool]
+	Enabled   plugin.TValue[bool]
 }
 
 // createMs365ExchangeonlineExternalSender creates a new instance of this resource
@@ -12778,7 +12777,7 @@ func createMs365ExchangeonlineExternalSender(runtime *plugin.Runtime, args map[s
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12818,10 +12817,10 @@ func (c *mqlMs365ExchangeonlineExternalSender) GetEnabled() *plugin.TValue[bool]
 // mqlMs365ExchangeonlineExoMailbox for the ms365.exchangeonline.exoMailbox resource
 type mqlMs365ExchangeonlineExoMailbox struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMs365ExchangeonlineExoMailboxInternal it will be used here
-	Identity plugin.TValue[string]
-	User plugin.TValue[*mqlMicrosoftUser]
+	Identity                  plugin.TValue[string]
+	User                      plugin.TValue[*mqlMicrosoftUser]
 	ExternalDirectoryObjectId plugin.TValue[string]
 }
 
@@ -12837,7 +12836,7 @@ func createMs365ExchangeonlineExoMailbox(runtime *plugin.Runtime, args map[strin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12889,17 +12888,17 @@ func (c *mqlMs365ExchangeonlineExoMailbox) GetExternalDirectoryObjectId() *plugi
 // mqlMs365ExchangeonlineMailbox for the ms365.exchangeonline.mailbox resource
 type mqlMs365ExchangeonlineMailbox struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMs365ExchangeonlineMailboxInternal it will be used here
-	Identity plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	PrimarySmtpAddress plugin.TValue[string]
+	Identity             plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	PrimarySmtpAddress   plugin.TValue[string]
 	RecipientTypeDetails plugin.TValue[string]
-	AuditEnabled plugin.TValue[bool]
-	AuditAdmin plugin.TValue[[]any]
-	AuditDelegate plugin.TValue[[]any]
-	AuditOwner plugin.TValue[[]any]
-	AuditLogAgeLimit plugin.TValue[string]
+	AuditEnabled         plugin.TValue[bool]
+	AuditAdmin           plugin.TValue[[]any]
+	AuditDelegate        plugin.TValue[[]any]
+	AuditOwner           plugin.TValue[[]any]
+	AuditLogAgeLimit     plugin.TValue[string]
 }
 
 // createMs365ExchangeonlineMailbox creates a new instance of this resource
@@ -12973,12 +12972,12 @@ func (c *mqlMs365ExchangeonlineMailbox) GetAuditLogAgeLimit() *plugin.TValue[str
 // mqlMs365Sharepointonline for the ms365.sharepointonline resource
 type mqlMs365Sharepointonline struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlMs365SharepointonlineInternal
-	SpoTenant plugin.TValue[any]
+	SpoTenant                      plugin.TValue[any]
 	SpoTenantSyncClientRestriction plugin.TValue[any]
-	SpoSites plugin.TValue[[]any]
-	DefaultLinkPermission plugin.TValue[string]
+	SpoSites                       plugin.TValue[[]any]
+	DefaultLinkPermission          plugin.TValue[string]
 }
 
 // createMs365Sharepointonline creates a new instance of this resource
@@ -13050,9 +13049,9 @@ func (c *mqlMs365Sharepointonline) GetDefaultLinkPermission() *plugin.TValue[str
 // mqlMs365SharepointonlineSite for the ms365.sharepointonline.site resource
 type mqlMs365SharepointonlineSite struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMs365SharepointonlineSiteInternal it will be used here
-	Url plugin.TValue[string]
+	Url                      plugin.TValue[string]
 	DenyAddAndCustomizePages plugin.TValue[bool]
 }
 
@@ -13068,7 +13067,7 @@ func createMs365SharepointonlineSite(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13104,12 +13103,12 @@ func (c *mqlMs365SharepointonlineSite) GetDenyAddAndCustomizePages() *plugin.TVa
 // mqlMs365Teams for the ms365.teams resource
 type mqlMs365Teams struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlMs365TeamsInternal
-	CsTeamsClientConfiguration plugin.TValue[any]
+	CsTeamsClientConfiguration      plugin.TValue[any]
 	CsTenantFederationConfiguration plugin.TValue[*mqlMs365TeamsTenantFederationConfig]
-	CsTeamsMeetingPolicy plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]
-	CsTeamsMessagingPolicy plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]
+	CsTeamsMeetingPolicy            plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]
+	CsTeamsMessagingPolicy          plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]
 }
 
 // createMs365Teams creates a new instance of this resource
@@ -13201,17 +13200,17 @@ func (c *mqlMs365Teams) GetCsTeamsMessagingPolicy() *plugin.TValue[*mqlMs365Team
 // mqlMs365TeamsTenantFederationConfig for the ms365.teams.tenantFederationConfig resource
 type mqlMs365TeamsTenantFederationConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMs365TeamsTenantFederationConfigInternal it will be used here
-	Identity plugin.TValue[string]
-	BlockedDomains plugin.TValue[any]
-	AllowedDomains plugin.TValue[[]any]
-	AllowFederatedUsers plugin.TValue[bool]
-	AllowPublicUsers plugin.TValue[bool]
-	AllowTeamsConsumer plugin.TValue[bool]
-	AllowTeamsConsumerInbound plugin.TValue[bool]
-	TreatDiscoveredPartnersAsUnverified plugin.TValue[bool]
-	SharedSipAddressSpace plugin.TValue[bool]
+	Identity                                    plugin.TValue[string]
+	BlockedDomains                              plugin.TValue[any]
+	AllowedDomains                              plugin.TValue[[]any]
+	AllowFederatedUsers                         plugin.TValue[bool]
+	AllowPublicUsers                            plugin.TValue[bool]
+	AllowTeamsConsumer                          plugin.TValue[bool]
+	AllowTeamsConsumerInbound                   plugin.TValue[bool]
+	TreatDiscoveredPartnersAsUnverified         plugin.TValue[bool]
+	SharedSipAddressSpace                       plugin.TValue[bool]
 	RestrictTeamsConsumerToExternalUserProfiles plugin.TValue[bool]
 }
 
@@ -13290,18 +13289,18 @@ func (c *mqlMs365TeamsTenantFederationConfig) GetRestrictTeamsConsumerToExternal
 // mqlMs365TeamsTeamsMeetingPolicyConfig for the ms365.teams.teamsMeetingPolicyConfig resource
 type mqlMs365TeamsTeamsMeetingPolicyConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMs365TeamsTeamsMeetingPolicyConfigInternal it will be used here
-	AllowAnonymousUsersToJoinMeeting plugin.TValue[bool]
-	AllowAnonymousUsersToStartMeeting plugin.TValue[bool]
-	AllowExternalNonTrustedMeetingChat plugin.TValue[bool]
-	AutoAdmittedUsers plugin.TValue[string]
-	AllowPSTNUsersToBypassLobby plugin.TValue[bool]
-	MeetingChatEnabledType plugin.TValue[string]
-	DesignatedPresenterRoleMode plugin.TValue[string]
+	AllowAnonymousUsersToJoinMeeting           plugin.TValue[bool]
+	AllowAnonymousUsersToStartMeeting          plugin.TValue[bool]
+	AllowExternalNonTrustedMeetingChat         plugin.TValue[bool]
+	AutoAdmittedUsers                          plugin.TValue[string]
+	AllowPSTNUsersToBypassLobby                plugin.TValue[bool]
+	MeetingChatEnabledType                     plugin.TValue[string]
+	DesignatedPresenterRoleMode                plugin.TValue[string]
 	AllowExternalParticipantGiveRequestControl plugin.TValue[bool]
-	AllowSecurityEndUserReporting plugin.TValue[bool]
-	AllowCloudRecordingForCalls plugin.TValue[bool]
+	AllowSecurityEndUserReporting              plugin.TValue[bool]
+	AllowCloudRecordingForCalls                plugin.TValue[bool]
 }
 
 // createMs365TeamsTeamsMeetingPolicyConfig creates a new instance of this resource
@@ -13379,7 +13378,7 @@ func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowCloudRecordingForCalls()
 // mqlMs365TeamsTeamsMessagingPolicyConfig for the ms365.teams.teamsMessagingPolicyConfig resource
 type mqlMs365TeamsTeamsMessagingPolicyConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMs365TeamsTeamsMessagingPolicyConfigInternal it will be used here
 	AllowSecurityEndUserReporting plugin.TValue[bool]
 }

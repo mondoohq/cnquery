@@ -16,25 +16,24 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceVcd string = "vcd"
-	ResourceVcdOrganization string = "vcd.organization"
+	ResourceVcd                         string = "vcd"
+	ResourceVcdOrganization             string = "vcd.organization"
 	ResourceVcdOrganizationLdapSettings string = "vcd.organization.ldapSettings"
-	ResourceVcdVdcProvider string = "vcd.vdcProvider"
-	ResourceVcdNetworkPool string = "vcd.networkPool"
-	ResourceVcdExternalNetwork string = "vcd.externalNetwork"
-	ResourceVcdVm string = "vcd.vm"
-	ResourceVcdServerInstance string = "vcd.serverInstance"
-	ResourceVcdRight string = "vcd.right"
-	ResourceVcdRole string = "vcd.role"
-	ResourceVcdVdc string = "vcd.vdc"
-	ResourceVcdVdcGroup string = "vcd.vdcGroup"
+	ResourceVcdVdcProvider              string = "vcd.vdcProvider"
+	ResourceVcdNetworkPool              string = "vcd.networkPool"
+	ResourceVcdExternalNetwork          string = "vcd.externalNetwork"
+	ResourceVcdVm                       string = "vcd.vm"
+	ResourceVcdServerInstance           string = "vcd.serverInstance"
+	ResourceVcdRight                    string = "vcd.right"
+	ResourceVcdRole                     string = "vcd.role"
+	ResourceVcdVdc                      string = "vcd.vdc"
+	ResourceVcdVdcGroup                 string = "vcd.vdcGroup"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"vcd": {
 			// to override args, implement: initVcd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVcd,
@@ -104,7 +103,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -525,11 +524,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"vcd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcd).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcd).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.organizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcd).Organizations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -551,9 +550,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdOrganization).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdOrganization).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.organization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -603,9 +602,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.organization.ldapSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdOrganizationLdapSettings).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdOrganizationLdapSettings).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.organization.ldapSettings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdOrganizationLdapSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -631,9 +630,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.vdcProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdVdcProvider).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdVdcProvider).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.vdcProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdVdcProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -719,9 +718,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.networkPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdNetworkPool).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdNetworkPool).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.networkPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdNetworkPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -735,9 +734,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.externalNetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdExternalNetwork).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdExternalNetwork).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.externalNetwork.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdExternalNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -759,9 +758,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdVm).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdVm).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.vm.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdVm).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -875,9 +874,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.serverInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdServerInstance).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdServerInstance).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.serverInstance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdServerInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -919,9 +918,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.right.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdRight).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdRight).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.right.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdRight).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -951,9 +950,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdRole).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdRole).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.role.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -967,9 +966,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.vdc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdVdc).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdVdc).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.vdc.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdVdc).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1011,9 +1010,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vcd.vdcGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVcdVdcGroup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVcdVdcGroup).__id, ok = v.Value.(string)
+		return
+	},
 	"vcd.vdcGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdVdcGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1045,13 +1044,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[vcd] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[vcd] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[vcd] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[vcd] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -1069,13 +1068,13 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlVcd for the vcd resource
 type mqlVcd struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVcdInternal it will be used here
-	Organizations plugin.TValue[[]any]
-	ProviderVDCs plugin.TValue[[]any]
-	NetworkPools plugin.TValue[[]any]
+	Organizations    plugin.TValue[[]any]
+	ProviderVDCs     plugin.TValue[[]any]
+	NetworkPools     plugin.TValue[[]any]
 	ExternalNetworks plugin.TValue[[]any]
-	ServerInstances plugin.TValue[[]any]
+	ServerInstances  plugin.TValue[[]any]
 }
 
 // createVcd creates a new instance of this resource
@@ -1090,7 +1089,7 @@ func createVcd(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1198,19 +1197,19 @@ func (c *mqlVcd) GetServerInstances() *plugin.TValue[[]any] {
 // mqlVcdOrganization for the vcd.organization resource
 type mqlVcdOrganization struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVcdOrganizationInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	FullName plugin.TValue[string]
-	IsEnabled plugin.TValue[bool]
-	Description plugin.TValue[string]
-	Vms plugin.TValue[[]any]
-	Rights plugin.TValue[[]any]
-	Vdcs plugin.TValue[[]any]
-	VdcGroups plugin.TValue[[]any]
-	Roles plugin.TValue[[]any]
-	Settings plugin.TValue[any]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	FullName          plugin.TValue[string]
+	IsEnabled         plugin.TValue[bool]
+	Description       plugin.TValue[string]
+	Vms               plugin.TValue[[]any]
+	Rights            plugin.TValue[[]any]
+	Vdcs              plugin.TValue[[]any]
+	VdcGroups         plugin.TValue[[]any]
+	Roles             plugin.TValue[[]any]
+	Settings          plugin.TValue[any]
 	LdapConfiguration plugin.TValue[*mqlVcdOrganizationLdapSettings]
 }
 
@@ -1226,7 +1225,7 @@ func createVcdOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1376,14 +1375,14 @@ func (c *mqlVcdOrganization) GetLdapConfiguration() *plugin.TValue[*mqlVcdOrgani
 // mqlVcdOrganizationLdapSettings for the vcd.organization.ldapSettings resource
 type mqlVcdOrganizationLdapSettings struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVcdOrganizationLdapSettingsInternal it will be used here
-	Id plugin.TValue[string]
+	Id            plugin.TValue[string]
 	CustomUsersOu plugin.TValue[string]
-	OrgLdapMode plugin.TValue[string]
-	Hostname plugin.TValue[string]
-	Username plugin.TValue[string]
-	Realm plugin.TValue[string]
+	OrgLdapMode   plugin.TValue[string]
+	Hostname      plugin.TValue[string]
+	Username      plugin.TValue[string]
+	Realm         plugin.TValue[string]
 }
 
 // createVcdOrganizationLdapSettings creates a new instance of this resource
@@ -1398,7 +1397,7 @@ func createVcdOrganizationLdapSettings(runtime *plugin.Runtime, args map[string]
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1450,29 +1449,29 @@ func (c *mqlVcdOrganizationLdapSettings) GetRealm() *plugin.TValue[string] {
 // mqlVcdVdcProvider for the vcd.vdcProvider resource
 type mqlVcdVdcProvider struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVcdVdcProviderInternal it will be used here
-	Name plugin.TValue[string]
-	Status plugin.TValue[string]
-	IsBusy plugin.TValue[bool]
-	IsDeleted plugin.TValue[bool]
-	IsEnabled plugin.TValue[bool]
-	CpuAllocationMhz plugin.TValue[int64]
-	CpuLimitMhz plugin.TValue[int64]
-	CpuUsedMhz plugin.TValue[int64]
-	NumberOfDatastores plugin.TValue[int64]
+	Name                    plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	IsBusy                  plugin.TValue[bool]
+	IsDeleted               plugin.TValue[bool]
+	IsEnabled               plugin.TValue[bool]
+	CpuAllocationMhz        plugin.TValue[int64]
+	CpuLimitMhz             plugin.TValue[int64]
+	CpuUsedMhz              plugin.TValue[int64]
+	NumberOfDatastores      plugin.TValue[int64]
 	NumberOfStorageProfiles plugin.TValue[int64]
-	NumberOfVdcs plugin.TValue[int64]
-	MemoryAllocationMB plugin.TValue[int64]
-	MemoryLimitMB plugin.TValue[int64]
-	MemoryUsedMB plugin.TValue[int64]
-	StorageAllocationMB plugin.TValue[int64]
-	StorageLimitMB plugin.TValue[int64]
-	StorageUsedMB plugin.TValue[int64]
-	CpuOverheadMhz plugin.TValue[int64]
-	StorageOverheadMB plugin.TValue[int64]
-	MemoryOverheadMB plugin.TValue[int64]
-	Metadata plugin.TValue[map[string]any]
+	NumberOfVdcs            plugin.TValue[int64]
+	MemoryAllocationMB      plugin.TValue[int64]
+	MemoryLimitMB           plugin.TValue[int64]
+	MemoryUsedMB            plugin.TValue[int64]
+	StorageAllocationMB     plugin.TValue[int64]
+	StorageLimitMB          plugin.TValue[int64]
+	StorageUsedMB           plugin.TValue[int64]
+	CpuOverheadMhz          plugin.TValue[int64]
+	StorageOverheadMB       plugin.TValue[int64]
+	MemoryOverheadMB        plugin.TValue[int64]
+	Metadata                plugin.TValue[map[string]any]
 }
 
 // createVcdVdcProvider creates a new instance of this resource
@@ -1487,7 +1486,7 @@ func createVcdVdcProvider(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1601,10 +1600,10 @@ func (c *mqlVcdVdcProvider) GetMetadata() *plugin.TValue[map[string]any] {
 // mqlVcdNetworkPool for the vcd.networkPool resource
 type mqlVcdNetworkPool struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVcdNetworkPoolInternal it will be used here
-	Name plugin.TValue[string]
-	IsBusy plugin.TValue[bool]
+	Name            plugin.TValue[string]
+	IsBusy          plugin.TValue[bool]
 	NetworkPoolType plugin.TValue[int64]
 }
 
@@ -1620,7 +1619,7 @@ func createVcdNetworkPool(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1660,12 +1659,12 @@ func (c *mqlVcdNetworkPool) GetNetworkPoolType() *plugin.TValue[int64] {
 // mqlVcdExternalNetwork for the vcd.externalNetwork resource
 type mqlVcdExternalNetwork struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlVcdExternalNetworkInternal
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Urn plugin.TValue[string]
-	Description plugin.TValue[string]
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Urn           plugin.TValue[string]
+	Description   plugin.TValue[string]
 	Configuration plugin.TValue[any]
 }
 
@@ -1681,7 +1680,7 @@ func createVcdExternalNetwork(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1735,36 +1734,36 @@ func (c *mqlVcdExternalNetwork) GetConfiguration() *plugin.TValue[any] {
 // mqlVcdVm for the vcd.vm resource
 type mqlVcdVm struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVcdVmInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	ContainerName plugin.TValue[string]
-	ContainerID plugin.TValue[string]
-	OwnerId plugin.TValue[string]
-	OwnerName plugin.TValue[string]
-	IsDeleted plugin.TValue[bool]
-	GuestOs plugin.TValue[string]
-	NumberOfCpus plugin.TValue[int64]
-	MemoryMB plugin.TValue[int64]
-	Status plugin.TValue[string]
-	NetworkName plugin.TValue[string]
-	IpAddress plugin.TValue[string]
-	IsBusy plugin.TValue[bool]
-	IsDeployed plugin.TValue[bool]
-	IsPublished plugin.TValue[bool]
-	CatalogName plugin.TValue[string]
-	HardwareVersion plugin.TValue[int64]
-	VmToolsStatus plugin.TValue[string]
-	IsInMaintenanceMode plugin.TValue[bool]
-	IsAutoNature plugin.TValue[bool]
-	StorageProfileName plugin.TValue[string]
-	GcStatus plugin.TValue[string]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	ContainerName            plugin.TValue[string]
+	ContainerID              plugin.TValue[string]
+	OwnerId                  plugin.TValue[string]
+	OwnerName                plugin.TValue[string]
+	IsDeleted                plugin.TValue[bool]
+	GuestOs                  plugin.TValue[string]
+	NumberOfCpus             plugin.TValue[int64]
+	MemoryMB                 plugin.TValue[int64]
+	Status                   plugin.TValue[string]
+	NetworkName              plugin.TValue[string]
+	IpAddress                plugin.TValue[string]
+	IsBusy                   plugin.TValue[bool]
+	IsDeployed               plugin.TValue[bool]
+	IsPublished              plugin.TValue[bool]
+	CatalogName              plugin.TValue[string]
+	HardwareVersion          plugin.TValue[int64]
+	VmToolsStatus            plugin.TValue[string]
+	IsInMaintenanceMode      plugin.TValue[bool]
+	IsAutoNature             plugin.TValue[bool]
+	StorageProfileName       plugin.TValue[string]
+	GcStatus                 plugin.TValue[string]
 	IsComputePolicyCompliant plugin.TValue[bool]
-	Encrypted plugin.TValue[bool]
-	TotalStorageAllocatedMb plugin.TValue[int64]
-	IsExpired plugin.TValue[bool]
-	HostName plugin.TValue[string]
+	Encrypted                plugin.TValue[bool]
+	TotalStorageAllocatedMb  plugin.TValue[int64]
+	IsExpired                plugin.TValue[bool]
+	HostName                 plugin.TValue[string]
 }
 
 // createVcdVm creates a new instance of this resource
@@ -1779,7 +1778,7 @@ func createVcdVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1919,18 +1918,18 @@ func (c *mqlVcdVm) GetHostName() *plugin.TValue[string] {
 // mqlVcdServerInstance for the vcd.serverInstance resource
 type mqlVcdServerInstance struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVcdServerInstanceInternal it will be used here
-	Name plugin.TValue[string]
-	IsBusy plugin.TValue[bool]
-	IsEnabled plugin.TValue[bool]
-	IsSupported plugin.TValue[bool]
+	Name          plugin.TValue[string]
+	IsBusy        plugin.TValue[bool]
+	IsEnabled     plugin.TValue[bool]
+	IsSupported   plugin.TValue[bool]
 	ListenerState plugin.TValue[string]
-	Status plugin.TValue[string]
-	UserName plugin.TValue[string]
-	VcVersion plugin.TValue[string]
-	Uuid plugin.TValue[string]
-	VsmIP plugin.TValue[string]
+	Status        plugin.TValue[string]
+	UserName      plugin.TValue[string]
+	VcVersion     plugin.TValue[string]
+	Uuid          plugin.TValue[string]
+	VsmIP         plugin.TValue[string]
 }
 
 // createVcdServerInstance creates a new instance of this resource
@@ -1945,7 +1944,7 @@ func createVcdServerInstance(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2013,15 +2012,15 @@ func (c *mqlVcdServerInstance) GetVsmIP() *plugin.TValue[string] {
 // mqlVcdRight for the vcd.right resource
 type mqlVcdRight struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVcdRightInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	BundleKey plugin.TValue[string]
-	Category plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	BundleKey        plugin.TValue[string]
+	Category         plugin.TValue[string]
 	ServiceNamespace plugin.TValue[string]
-	RightType plugin.TValue[string]
+	RightType        plugin.TValue[string]
 }
 
 // createVcdRight creates a new instance of this resource
@@ -2036,7 +2035,7 @@ func createVcdRight(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2092,10 +2091,10 @@ func (c *mqlVcdRight) GetRightType() *plugin.TValue[string] {
 // mqlVcdRole for the vcd.role resource
 type mqlVcdRole struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVcdRoleInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
 }
 
@@ -2111,7 +2110,7 @@ func createVcdRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2151,18 +2150,18 @@ func (c *mqlVcdRole) GetDescription() *plugin.TValue[string] {
 // mqlVcdVdc for the vcd.vdc resource
 type mqlVcdVdc struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlVcdVdcInternal
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Status plugin.TValue[int64]
-	Description plugin.TValue[string]
-	AllocationModel plugin.TValue[string]
-	NicQuota plugin.TValue[int64]
-	NetworkQuota plugin.TValue[int64]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Status           plugin.TValue[int64]
+	Description      plugin.TValue[string]
+	AllocationModel  plugin.TValue[string]
+	NicQuota         plugin.TValue[int64]
+	NetworkQuota     plugin.TValue[int64]
 	UsedNetworkCount plugin.TValue[int64]
-	VmQuota plugin.TValue[int64]
-	IsEnabled plugin.TValue[bool]
+	VmQuota          plugin.TValue[int64]
+	IsEnabled        plugin.TValue[bool]
 }
 
 // createVcdVdc creates a new instance of this resource
@@ -2177,7 +2176,7 @@ func createVcdVdc(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2245,15 +2244,15 @@ func (c *mqlVcdVdc) GetIsEnabled() *plugin.TValue[bool] {
 // mqlVcdVdcGroup for the vcd.vdcGroup resource
 type mqlVcdVdcGroup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVcdVdcGroupInternal it will be used here
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	LocalEgress plugin.TValue[bool]
-	Status plugin.TValue[string]
-	Type plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Description                plugin.TValue[string]
+	LocalEgress                plugin.TValue[bool]
+	Status                     plugin.TValue[string]
+	Type                       plugin.TValue[string]
 	UniversalNetworkingEnabled plugin.TValue[bool]
-	DfwEnabled plugin.TValue[bool]
+	DfwEnabled                 plugin.TValue[bool]
 }
 
 // createVcdVdcGroup creates a new instance of this resource
@@ -2268,7 +2267,7 @@ func createVcdVdcGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

@@ -17,38 +17,37 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceSocket string = "socket"
-	ResourceHttp string = "http"
-	ResourceHttpGet string = "http.get"
-	ResourceHttpHeader string = "http.header"
-	ResourceHttpHeaderSts string = "http.header.sts"
+	ResourceSocket                  string = "socket"
+	ResourceHttp                    string = "http"
+	ResourceHttpGet                 string = "http.get"
+	ResourceHttpHeader              string = "http.header"
+	ResourceHttpHeaderSts           string = "http.header.sts"
 	ResourceHttpHeaderXssProtection string = "http.header.xssProtection"
-	ResourceHttpHeaderContentType string = "http.header.contentType"
-	ResourceHttpHeaderSetCookie string = "http.header.setCookie"
-	ResourceUrl string = "url"
-	ResourceTls string = "tls"
-	ResourceCertificates string = "certificates"
-	ResourceCertificate string = "certificate"
-	ResourcePkixName string = "pkix.name"
-	ResourcePkixExtension string = "pkix.extension"
-	ResourcePkixSanExtension string = "pkix.sanExtension"
-	ResourceOpenpgpEntities string = "openpgp.entities"
-	ResourceOpenpgpEntity string = "openpgp.entity"
-	ResourceOpenpgpPublicKey string = "openpgp.publicKey"
-	ResourceOpenpgpIdentity string = "openpgp.identity"
-	ResourceOpenpgpSignature string = "openpgp.signature"
-	ResourceDomainName string = "domainName"
-	ResourceDns string = "dns"
-	ResourceDnsRecord string = "dns.record"
-	ResourceDnsMxRecord string = "dns.mxRecord"
-	ResourceDnsDkimRecord string = "dns.dkimRecord"
+	ResourceHttpHeaderContentType   string = "http.header.contentType"
+	ResourceHttpHeaderSetCookie     string = "http.header.setCookie"
+	ResourceUrl                     string = "url"
+	ResourceTls                     string = "tls"
+	ResourceCertificates            string = "certificates"
+	ResourceCertificate             string = "certificate"
+	ResourcePkixName                string = "pkix.name"
+	ResourcePkixExtension           string = "pkix.extension"
+	ResourcePkixSanExtension        string = "pkix.sanExtension"
+	ResourceOpenpgpEntities         string = "openpgp.entities"
+	ResourceOpenpgpEntity           string = "openpgp.entity"
+	ResourceOpenpgpPublicKey        string = "openpgp.publicKey"
+	ResourceOpenpgpIdentity         string = "openpgp.identity"
+	ResourceOpenpgpSignature        string = "openpgp.signature"
+	ResourceDomainName              string = "domainName"
+	ResourceDns                     string = "dns"
+	ResourceDnsRecord               string = "dns.record"
+	ResourceDnsMxRecord             string = "dns.mxRecord"
+	ResourceDnsDkimRecord           string = "dns.dkimRecord"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"socket": {
 			// to override args, implement: initSocket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSocket,
@@ -58,7 +57,7 @@ func init() {
 			Create: createHttp,
 		},
 		"http.get": {
-			Init: initHttpGet,
+			Init:   initHttpGet,
 			Create: createHttpGet,
 		},
 		"http.header": {
@@ -82,11 +81,11 @@ func init() {
 			Create: createHttpHeaderSetCookie,
 		},
 		"url": {
-			Init: initUrl,
+			Init:   initUrl,
 			Create: createUrl,
 		},
 		"tls": {
-			Init: initTls,
+			Init:   initTls,
 			Create: createTls,
 		},
 		"certificates": {
@@ -130,11 +129,11 @@ func init() {
 			Create: createOpenpgpSignature,
 		},
 		"domainName": {
-			Init: initDomainName,
+			Init:   initDomainName,
 			Create: createDomainName,
 		},
 		"dns": {
-			Init: initDns,
+			Init:   initDns,
 			Create: createDns,
 		},
 		"dns.record": {
@@ -170,7 +169,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -693,11 +692,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"socket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSocket).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSocket).__id, ok = v.Value.(string)
+		return
+	},
 	"socket.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSocket).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -711,13 +710,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"http.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlHttp).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlHttp).__id, ok = v.Value.(string)
+		return
+	},
 	"http.get.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlHttpGet).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlHttpGet).__id, ok = v.Value.(string)
+		return
+	},
 	"http.get.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpGet).Url, ok = plugin.RawToTValue[*mqlUrl](v.Value, v.Error)
 		return
@@ -743,9 +742,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"http.header.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlHttpHeader).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlHttpHeader).__id, ok = v.Value.(string)
+		return
+	},
 	"http.header.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpHeader).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -783,9 +782,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"http.header.sts.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlHttpHeaderSts).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlHttpHeaderSts).__id, ok = v.Value.(string)
+		return
+	},
 	"http.header.sts.maxAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpHeaderSts).MaxAge, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -799,9 +798,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"http.header.xssProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlHttpHeaderXssProtection).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlHttpHeaderXssProtection).__id, ok = v.Value.(string)
+		return
+	},
 	"http.header.xssProtection.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpHeaderXssProtection).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -815,9 +814,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"http.header.contentType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlHttpHeaderContentType).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlHttpHeaderContentType).__id, ok = v.Value.(string)
+		return
+	},
 	"http.header.contentType.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpHeaderContentType).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -827,9 +826,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"http.header.setCookie.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlHttpHeaderSetCookie).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlHttpHeaderSetCookie).__id, ok = v.Value.(string)
+		return
+	},
 	"http.header.setCookie.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpHeaderSetCookie).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -843,9 +842,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"url.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlUrl).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlUrl).__id, ok = v.Value.(string)
+		return
+	},
 	"url.string": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUrl).String, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -887,9 +886,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"tls.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTls).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTls).__id, ok = v.Value.(string)
+		return
+	},
 	"tls.socket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTls).Socket, ok = plugin.RawToTValue[*mqlSocket](v.Value, v.Error)
 		return
@@ -923,9 +922,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"certificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCertificates).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCertificates).__id, ok = v.Value.(string)
+		return
+	},
 	"certificates.pem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCertificates).Pem, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -935,9 +934,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCertificate).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCertificate).__id, ok = v.Value.(string)
+		return
+	},
 	"certificate.pem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCertificate).Pem, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1039,9 +1038,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"pkix.name.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPkixName).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPkixName).__id, ok = v.Value.(string)
+		return
+	},
 	"pkix.name.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPkixName).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1095,9 +1094,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"pkix.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPkixExtension).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPkixExtension).__id, ok = v.Value.(string)
+		return
+	},
 	"pkix.extension.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPkixExtension).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1115,9 +1114,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"pkix.sanExtension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPkixSanExtension).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPkixSanExtension).__id, ok = v.Value.(string)
+		return
+	},
 	"pkix.sanExtension.extension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPkixSanExtension).Extension, ok = plugin.RawToTValue[*mqlPkixExtension](v.Value, v.Error)
 		return
@@ -1139,9 +1138,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"openpgp.entities.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOpenpgpEntities).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOpenpgpEntities).__id, ok = v.Value.(string)
+		return
+	},
 	"openpgp.entities.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenpgpEntities).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1151,9 +1150,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"openpgp.entity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOpenpgpEntity).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOpenpgpEntity).__id, ok = v.Value.(string)
+		return
+	},
 	"openpgp.entity.primaryPublicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenpgpEntity).PrimaryPublicKey, ok = plugin.RawToTValue[*mqlOpenpgpPublicKey](v.Value, v.Error)
 		return
@@ -1163,9 +1162,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"openpgp.publicKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOpenpgpPublicKey).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOpenpgpPublicKey).__id, ok = v.Value.(string)
+		return
+	},
 	"openpgp.publicKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenpgpPublicKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1191,9 +1190,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"openpgp.identity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOpenpgpIdentity).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOpenpgpIdentity).__id, ok = v.Value.(string)
+		return
+	},
 	"openpgp.identity.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenpgpIdentity).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1219,9 +1218,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"openpgp.signature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOpenpgpSignature).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOpenpgpSignature).__id, ok = v.Value.(string)
+		return
+	},
 	"openpgp.signature.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenpgpSignature).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1267,9 +1266,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"domainName.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDomainName).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDomainName).__id, ok = v.Value.(string)
+		return
+	},
 	"domainName.fqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDomainName).Fqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1291,9 +1290,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"dns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDns).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDns).__id, ok = v.Value.(string)
+		return
+	},
 	"dns.fqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDns).Fqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1315,9 +1314,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"dns.record.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDnsRecord).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDnsRecord).__id, ok = v.Value.(string)
+		return
+	},
 	"dns.record.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsRecord).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1339,9 +1338,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"dns.mxRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDnsMxRecord).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDnsMxRecord).__id, ok = v.Value.(string)
+		return
+	},
 	"dns.mxRecord.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsMxRecord).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1355,9 +1354,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"dns.dkimRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDnsDkimRecord).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDnsDkimRecord).__id, ok = v.Value.(string)
+		return
+	},
 	"dns.dkimRecord.dnsTxt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsDkimRecord).DnsTxt, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1401,13 +1400,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[network] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[network] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[network] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[network] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -1425,11 +1424,11 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlSocket for the socket resource
 type mqlSocket struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSocketInternal it will be used here
 	Protocol plugin.TValue[string]
-	Port plugin.TValue[int64]
-	Address plugin.TValue[string]
+	Port     plugin.TValue[int64]
+	Address  plugin.TValue[string]
 }
 
 // createSocket creates a new instance of this resource
@@ -1444,7 +1443,7 @@ func createSocket(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1484,7 +1483,7 @@ func (c *mqlSocket) GetAddress() *plugin.TValue[string] {
 // mqlHttp for the http resource
 type mqlHttp struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlHttpInternal it will be used here
 }
 
@@ -1523,14 +1522,14 @@ func (c *mqlHttp) MqlID() string {
 // mqlHttpGet for the http.get resource
 type mqlHttpGet struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlHttpGetInternal
-	Url plugin.TValue[*mqlUrl]
+	Url             plugin.TValue[*mqlUrl]
 	FollowRedirects plugin.TValue[bool]
-	Header plugin.TValue[*mqlHttpHeader]
-	StatusCode plugin.TValue[int64]
-	Version plugin.TValue[string]
-	Body plugin.TValue[string]
+	Header          plugin.TValue[*mqlHttpHeader]
+	StatusCode      plugin.TValue[int64]
+	Version         plugin.TValue[string]
+	Body            plugin.TValue[string]
 }
 
 // createHttpGet creates a new instance of this resource
@@ -1545,7 +1544,7 @@ func createHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1615,17 +1614,17 @@ func (c *mqlHttpGet) GetBody() *plugin.TValue[string] {
 // mqlHttpHeader for the http.header resource
 type mqlHttpHeader struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlHttpHeaderInternal it will be used here
-	Params plugin.TValue[map[string]any]
-	Sts plugin.TValue[*mqlHttpHeaderSts]
-	XFrameOptions plugin.TValue[string]
-	XXssProtection plugin.TValue[*mqlHttpHeaderXssProtection]
+	Params              plugin.TValue[map[string]any]
+	Sts                 plugin.TValue[*mqlHttpHeaderSts]
+	XFrameOptions       plugin.TValue[string]
+	XXssProtection      plugin.TValue[*mqlHttpHeaderXssProtection]
 	XContentTypeOptions plugin.TValue[string]
-	ReferrerPolicy plugin.TValue[string]
-	ContentType plugin.TValue[*mqlHttpHeaderContentType]
-	SetCookie plugin.TValue[*mqlHttpHeaderSetCookie]
-	Csp plugin.TValue[map[string]any]
+	ReferrerPolicy      plugin.TValue[string]
+	ContentType         plugin.TValue[*mqlHttpHeaderContentType]
+	SetCookie           plugin.TValue[*mqlHttpHeaderSetCookie]
+	Csp                 plugin.TValue[map[string]any]
 }
 
 // createHttpHeader creates a new instance of this resource
@@ -1640,7 +1639,7 @@ func createHttpHeader(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1760,11 +1759,11 @@ func (c *mqlHttpHeader) GetCsp() *plugin.TValue[map[string]any] {
 // mqlHttpHeaderSts for the http.header.sts resource
 type mqlHttpHeaderSts struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlHttpHeaderStsInternal it will be used here
-	MaxAge plugin.TValue[*time.Time]
+	MaxAge            plugin.TValue[*time.Time]
 	IncludeSubDomains plugin.TValue[bool]
-	Preload plugin.TValue[bool]
+	Preload           plugin.TValue[bool]
 }
 
 // createHttpHeaderSts creates a new instance of this resource
@@ -1779,7 +1778,7 @@ func createHttpHeaderSts(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1819,11 +1818,11 @@ func (c *mqlHttpHeaderSts) GetPreload() *plugin.TValue[bool] {
 // mqlHttpHeaderXssProtection for the http.header.xssProtection resource
 type mqlHttpHeaderXssProtection struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlHttpHeaderXssProtectionInternal it will be used here
 	Enabled plugin.TValue[bool]
-	Mode plugin.TValue[string]
-	Report plugin.TValue[string]
+	Mode    plugin.TValue[string]
+	Report  plugin.TValue[string]
 }
 
 // createHttpHeaderXssProtection creates a new instance of this resource
@@ -1838,7 +1837,7 @@ func createHttpHeaderXssProtection(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1878,9 +1877,9 @@ func (c *mqlHttpHeaderXssProtection) GetReport() *plugin.TValue[string] {
 // mqlHttpHeaderContentType for the http.header.contentType resource
 type mqlHttpHeaderContentType struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlHttpHeaderContentTypeInternal it will be used here
-	Type plugin.TValue[string]
+	Type   plugin.TValue[string]
 	Params plugin.TValue[map[string]any]
 }
 
@@ -1896,7 +1895,7 @@ func createHttpHeaderContentType(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1932,10 +1931,10 @@ func (c *mqlHttpHeaderContentType) GetParams() *plugin.TValue[map[string]any] {
 // mqlHttpHeaderSetCookie for the http.header.setCookie resource
 type mqlHttpHeaderSetCookie struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlHttpHeaderSetCookieInternal it will be used here
-	Name plugin.TValue[string]
-	Value plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Value  plugin.TValue[string]
 	Params plugin.TValue[map[string]any]
 }
 
@@ -1951,7 +1950,7 @@ func createHttpHeaderSetCookie(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1991,17 +1990,17 @@ func (c *mqlHttpHeaderSetCookie) GetParams() *plugin.TValue[map[string]any] {
 // mqlUrl for the url resource
 type mqlUrl struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlUrlInternal it will be used here
-	String plugin.TValue[string]
-	Scheme plugin.TValue[string]
-	User plugin.TValue[string]
-	Password plugin.TValue[string]
-	Host plugin.TValue[string]
-	Port plugin.TValue[int64]
-	Path plugin.TValue[string]
-	Query plugin.TValue[map[string]any]
-	RawQuery plugin.TValue[string]
+	String      plugin.TValue[string]
+	Scheme      plugin.TValue[string]
+	User        plugin.TValue[string]
+	Password    plugin.TValue[string]
+	Host        plugin.TValue[string]
+	Port        plugin.TValue[int64]
+	Path        plugin.TValue[string]
+	Query       plugin.TValue[map[string]any]
+	RawQuery    plugin.TValue[string]
 	RawFragment plugin.TValue[string]
 }
 
@@ -2017,7 +2016,7 @@ func createUrl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2087,15 +2086,15 @@ func (c *mqlUrl) GetRawFragment() *plugin.TValue[string] {
 // mqlTls for the tls resource
 type mqlTls struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlTlsInternal
-	Socket plugin.TValue[*mqlSocket]
-	DomainName plugin.TValue[string]
-	Params plugin.TValue[any]
-	Versions plugin.TValue[[]any]
-	Ciphers plugin.TValue[[]any]
-	Extensions plugin.TValue[[]any]
-	Certificates plugin.TValue[[]any]
+	Socket             plugin.TValue[*mqlSocket]
+	DomainName         plugin.TValue[string]
+	Params             plugin.TValue[any]
+	Versions           plugin.TValue[[]any]
+	Ciphers            plugin.TValue[[]any]
+	Extensions         plugin.TValue[[]any]
+	Certificates       plugin.TValue[[]any]
 	NonSniCertificates plugin.TValue[[]any]
 }
 
@@ -2111,7 +2110,7 @@ func createTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2248,9 +2247,9 @@ func (c *mqlTls) GetNonSniCertificates() *plugin.TValue[[]any] {
 // mqlCertificates for the certificates resource
 type mqlCertificates struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCertificatesInternal it will be used here
-	Pem plugin.TValue[string]
+	Pem  plugin.TValue[string]
 	List plugin.TValue[[]any]
 }
 
@@ -2266,7 +2265,7 @@ func createCertificates(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2314,33 +2313,33 @@ func (c *mqlCertificates) GetList() *plugin.TValue[[]any] {
 // mqlCertificate for the certificate resource
 type mqlCertificate struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlCertificateInternal
-	Pem plugin.TValue[string]
-	Fingerprints plugin.TValue[map[string]any]
-	Serial plugin.TValue[string]
-	SubjectKeyID plugin.TValue[string]
-	AuthorityKeyID plugin.TValue[string]
-	Subject plugin.TValue[*mqlPkixName]
-	Issuer plugin.TValue[*mqlPkixName]
-	Version plugin.TValue[int64]
-	NotBefore plugin.TValue[*time.Time]
-	NotAfter plugin.TValue[*time.Time]
-	ExpiresIn plugin.TValue[*time.Time]
-	Signature plugin.TValue[string]
-	SigningAlgorithm plugin.TValue[string]
-	IsCA plugin.TValue[bool]
-	KeyUsage plugin.TValue[[]any]
-	ExtendedKeyUsage plugin.TValue[[]any]
-	Extensions plugin.TValue[[]any]
-	PolicyIdentifier plugin.TValue[[]any]
+	Pem                   plugin.TValue[string]
+	Fingerprints          plugin.TValue[map[string]any]
+	Serial                plugin.TValue[string]
+	SubjectKeyID          plugin.TValue[string]
+	AuthorityKeyID        plugin.TValue[string]
+	Subject               plugin.TValue[*mqlPkixName]
+	Issuer                plugin.TValue[*mqlPkixName]
+	Version               plugin.TValue[int64]
+	NotBefore             plugin.TValue[*time.Time]
+	NotAfter              plugin.TValue[*time.Time]
+	ExpiresIn             plugin.TValue[*time.Time]
+	Signature             plugin.TValue[string]
+	SigningAlgorithm      plugin.TValue[string]
+	IsCA                  plugin.TValue[bool]
+	KeyUsage              plugin.TValue[[]any]
+	ExtendedKeyUsage      plugin.TValue[[]any]
+	Extensions            plugin.TValue[[]any]
+	PolicyIdentifier      plugin.TValue[[]any]
 	CrlDistributionPoints plugin.TValue[[]any]
-	OcspServer plugin.TValue[[]any]
+	OcspServer            plugin.TValue[[]any]
 	IssuingCertificateUrl plugin.TValue[[]any]
-	IsRevoked plugin.TValue[bool]
-	RevokedAt plugin.TValue[*time.Time]
-	IsVerified plugin.TValue[bool]
-	SanExtension plugin.TValue[*mqlPkixSanExtension]
+	IsRevoked             plugin.TValue[bool]
+	RevokedAt             plugin.TValue[*time.Time]
+	IsVerified            plugin.TValue[bool]
+	SanExtension          plugin.TValue[*mqlPkixSanExtension]
 }
 
 // createCertificate creates a new instance of this resource
@@ -2355,7 +2354,7 @@ func createCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2571,21 +2570,21 @@ func (c *mqlCertificate) GetSanExtension() *plugin.TValue[*mqlPkixSanExtension] 
 // mqlPkixName for the pkix.name resource
 type mqlPkixName struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPkixNameInternal it will be used here
-	Id plugin.TValue[string]
-	Dn plugin.TValue[string]
-	SerialNumber plugin.TValue[string]
-	CommonName plugin.TValue[string]
-	Country plugin.TValue[[]any]
-	Organization plugin.TValue[[]any]
+	Id                 plugin.TValue[string]
+	Dn                 plugin.TValue[string]
+	SerialNumber       plugin.TValue[string]
+	CommonName         plugin.TValue[string]
+	Country            plugin.TValue[[]any]
+	Organization       plugin.TValue[[]any]
 	OrganizationalUnit plugin.TValue[[]any]
-	Locality plugin.TValue[[]any]
-	Province plugin.TValue[[]any]
-	StreetAddress plugin.TValue[[]any]
-	PostalCode plugin.TValue[[]any]
-	Names plugin.TValue[map[string]any]
-	ExtraNames plugin.TValue[map[string]any]
+	Locality           plugin.TValue[[]any]
+	Province           plugin.TValue[[]any]
+	StreetAddress      plugin.TValue[[]any]
+	PostalCode         plugin.TValue[[]any]
+	Names              plugin.TValue[map[string]any]
+	ExtraNames         plugin.TValue[map[string]any]
 }
 
 // createPkixName creates a new instance of this resource
@@ -2600,7 +2599,7 @@ func createPkixName(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2680,12 +2679,12 @@ func (c *mqlPkixName) GetExtraNames() *plugin.TValue[map[string]any] {
 // mqlPkixExtension for the pkix.extension resource
 type mqlPkixExtension struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPkixExtensionInternal it will be used here
-	Id plugin.TValue[string]
+	Id         plugin.TValue[string]
 	Identifier plugin.TValue[string]
-	Critical plugin.TValue[bool]
-	Value plugin.TValue[string]
+	Critical   plugin.TValue[bool]
+	Value      plugin.TValue[string]
 }
 
 // createPkixExtension creates a new instance of this resource
@@ -2700,7 +2699,7 @@ func createPkixExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2744,13 +2743,13 @@ func (c *mqlPkixExtension) GetValue() *plugin.TValue[string] {
 // mqlPkixSanExtension for the pkix.sanExtension resource
 type mqlPkixSanExtension struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPkixSanExtensionInternal it will be used here
-	Extension plugin.TValue[*mqlPkixExtension]
-	DnsNames plugin.TValue[[]any]
-	IpAddresses plugin.TValue[[]any]
+	Extension      plugin.TValue[*mqlPkixExtension]
+	DnsNames       plugin.TValue[[]any]
+	IpAddresses    plugin.TValue[[]any]
 	EmailAddresses plugin.TValue[[]any]
-	Uris plugin.TValue[[]any]
+	Uris           plugin.TValue[[]any]
 }
 
 // createPkixSanExtension creates a new instance of this resource
@@ -2765,7 +2764,7 @@ func createPkixSanExtension(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2813,10 +2812,10 @@ func (c *mqlPkixSanExtension) GetUris() *plugin.TValue[[]any] {
 // mqlOpenpgpEntities for the openpgp.entities resource
 type mqlOpenpgpEntities struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOpenpgpEntitiesInternal it will be used here
 	Content plugin.TValue[string]
-	List plugin.TValue[[]any]
+	List    plugin.TValue[[]any]
 }
 
 // createOpenpgpEntities creates a new instance of this resource
@@ -2879,10 +2878,10 @@ func (c *mqlOpenpgpEntities) GetList() *plugin.TValue[[]any] {
 // mqlOpenpgpEntity for the openpgp.entity resource
 type mqlOpenpgpEntity struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlOpenpgpEntityInternal
 	PrimaryPublicKey plugin.TValue[*mqlOpenpgpPublicKey]
-	Identities plugin.TValue[[]any]
+	Identities       plugin.TValue[[]any]
 }
 
 // createOpenpgpEntity creates a new instance of this resource
@@ -2897,7 +2896,7 @@ func createOpenpgpEntity(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2945,13 +2944,13 @@ func (c *mqlOpenpgpEntity) GetIdentities() *plugin.TValue[[]any] {
 // mqlOpenpgpPublicKey for the openpgp.publicKey resource
 type mqlOpenpgpPublicKey struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOpenpgpPublicKeyInternal it will be used here
-	Id plugin.TValue[string]
-	Version plugin.TValue[int64]
-	Fingerprint plugin.TValue[string]
+	Id           plugin.TValue[string]
+	Version      plugin.TValue[int64]
+	Fingerprint  plugin.TValue[string]
 	KeyAlgorithm plugin.TValue[string]
-	BitLength plugin.TValue[int64]
+	BitLength    plugin.TValue[int64]
 	CreationTime plugin.TValue[*time.Time]
 }
 
@@ -2967,7 +2966,7 @@ func createOpenpgpPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3019,14 +3018,14 @@ func (c *mqlOpenpgpPublicKey) GetCreationTime() *plugin.TValue[*time.Time] {
 // mqlOpenpgpIdentity for the openpgp.identity resource
 type mqlOpenpgpIdentity struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlOpenpgpIdentityInternal
 	Fingerprint plugin.TValue[string]
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Email plugin.TValue[string]
-	Comment plugin.TValue[string]
-	Signatures plugin.TValue[[]any]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Email       plugin.TValue[string]
+	Comment     plugin.TValue[string]
+	Signatures  plugin.TValue[[]any]
 }
 
 // createOpenpgpIdentity creates a new instance of this resource
@@ -3041,7 +3040,7 @@ func createOpenpgpIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3105,19 +3104,19 @@ func (c *mqlOpenpgpIdentity) GetSignatures() *plugin.TValue[[]any] {
 // mqlOpenpgpSignature for the openpgp.signature resource
 type mqlOpenpgpSignature struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOpenpgpSignatureInternal it will be used here
-	Fingerprint plugin.TValue[string]
-	IdentityName plugin.TValue[string]
-	Hash plugin.TValue[string]
-	Version plugin.TValue[int64]
-	SignatureType plugin.TValue[string]
-	KeyAlgorithm plugin.TValue[string]
-	CreationTime plugin.TValue[*time.Time]
-	LifetimeSecs plugin.TValue[int64]
-	ExpiresIn plugin.TValue[*time.Time]
+	Fingerprint     plugin.TValue[string]
+	IdentityName    plugin.TValue[string]
+	Hash            plugin.TValue[string]
+	Version         plugin.TValue[int64]
+	SignatureType   plugin.TValue[string]
+	KeyAlgorithm    plugin.TValue[string]
+	CreationTime    plugin.TValue[*time.Time]
+	LifetimeSecs    plugin.TValue[int64]
+	ExpiresIn       plugin.TValue[*time.Time]
 	KeyLifetimeSecs plugin.TValue[int64]
-	KeyExpiresIn plugin.TValue[*time.Time]
+	KeyExpiresIn    plugin.TValue[*time.Time]
 }
 
 // createOpenpgpSignature creates a new instance of this resource
@@ -3132,7 +3131,7 @@ func createOpenpgpSignature(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3204,13 +3203,13 @@ func (c *mqlOpenpgpSignature) GetKeyExpiresIn() *plugin.TValue[*time.Time] {
 // mqlDomainName for the domainName resource
 type mqlDomainName struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDomainNameInternal it will be used here
-	Fqdn plugin.TValue[string]
+	Fqdn                plugin.TValue[string]
 	EffectiveTLDPlusOne plugin.TValue[string]
-	Tld plugin.TValue[string]
-	TldIcannManaged plugin.TValue[bool]
-	Labels plugin.TValue[[]any]
+	Tld                 plugin.TValue[string]
+	TldIcannManaged     plugin.TValue[bool]
+	Labels              plugin.TValue[[]any]
 }
 
 // createDomainName creates a new instance of this resource
@@ -3225,7 +3224,7 @@ func createDomainName(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3273,13 +3272,13 @@ func (c *mqlDomainName) GetLabels() *plugin.TValue[[]any] {
 // mqlDns for the dns resource
 type mqlDns struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDnsInternal it will be used here
-	Fqdn plugin.TValue[string]
-	Params plugin.TValue[any]
+	Fqdn    plugin.TValue[string]
+	Params  plugin.TValue[any]
 	Records plugin.TValue[[]any]
-	Mx plugin.TValue[[]any]
-	Dkim plugin.TValue[[]any]
+	Mx      plugin.TValue[[]any]
+	Dkim    plugin.TValue[[]any]
 }
 
 // createDns creates a new instance of this resource
@@ -3294,7 +3293,7 @@ func createDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3400,12 +3399,12 @@ func (c *mqlDns) GetDkim() *plugin.TValue[[]any] {
 // mqlDnsRecord for the dns.record resource
 type mqlDnsRecord struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDnsRecordInternal it will be used here
-	Name plugin.TValue[string]
-	Ttl plugin.TValue[int64]
+	Name  plugin.TValue[string]
+	Ttl   plugin.TValue[int64]
 	Class plugin.TValue[string]
-	Type plugin.TValue[string]
+	Type  plugin.TValue[string]
 	Rdata plugin.TValue[[]any]
 }
 
@@ -3421,7 +3420,7 @@ func createDnsRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3469,9 +3468,9 @@ func (c *mqlDnsRecord) GetRdata() *plugin.TValue[[]any] {
 // mqlDnsMxRecord for the dns.mxRecord resource
 type mqlDnsMxRecord struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDnsMxRecordInternal it will be used here
-	Name plugin.TValue[string]
+	Name       plugin.TValue[string]
 	Preference plugin.TValue[int64]
 	DomainName plugin.TValue[string]
 }
@@ -3488,7 +3487,7 @@ func createDnsMxRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3528,18 +3527,18 @@ func (c *mqlDnsMxRecord) GetDomainName() *plugin.TValue[string] {
 // mqlDnsDkimRecord for the dns.dkimRecord resource
 type mqlDnsDkimRecord struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlDnsDkimRecordInternal
-	DnsTxt plugin.TValue[string]
-	Domain plugin.TValue[string]
-	Version plugin.TValue[string]
+	DnsTxt         plugin.TValue[string]
+	Domain         plugin.TValue[string]
+	Version        plugin.TValue[string]
 	HashAlgorithms plugin.TValue[[]any]
-	KeyType plugin.TValue[string]
-	Notes plugin.TValue[string]
-	PublicKeyData plugin.TValue[string]
-	ServiceTypes plugin.TValue[[]any]
-	Flags plugin.TValue[[]any]
-	Valid plugin.TValue[bool]
+	KeyType        plugin.TValue[string]
+	Notes          plugin.TValue[string]
+	PublicKeyData  plugin.TValue[string]
+	ServiceTypes   plugin.TValue[[]any]
+	Flags          plugin.TValue[[]any]
+	Valid          plugin.TValue[bool]
 }
 
 // createDnsDkimRecord creates a new instance of this resource
@@ -3554,7 +3553,7 @@ func createDnsDkimRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

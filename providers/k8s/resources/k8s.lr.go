@@ -17,49 +17,48 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceK8s string = "k8s"
-	ResourceK8sApiresource string = "k8s.apiresource"
-	ResourceK8sNamespace string = "k8s.namespace"
-	ResourceK8sNode string = "k8s.node"
-	ResourceK8sPod string = "k8s.pod"
-	ResourceK8sDeployment string = "k8s.deployment"
-	ResourceK8sDaemonset string = "k8s.daemonset"
-	ResourceK8sStatefulset string = "k8s.statefulset"
-	ResourceK8sReplicaset string = "k8s.replicaset"
-	ResourceK8sJob string = "k8s.job"
-	ResourceK8sCronjob string = "k8s.cronjob"
-	ResourceK8sContainer string = "k8s.container"
-	ResourceK8sInitContainer string = "k8s.initContainer"
-	ResourceK8sEphemeralContainer string = "k8s.ephemeralContainer"
-	ResourceK8sSecret string = "k8s.secret"
-	ResourceK8sConfigmap string = "k8s.configmap"
-	ResourceK8sService string = "k8s.service"
-	ResourceK8sIngressresourceref string = "k8s.ingressresourceref"
-	ResourceK8sIngressservicebackend string = "k8s.ingressservicebackend"
-	ResourceK8sIngressbackend string = "k8s.ingressbackend"
-	ResourceK8sIngresshttprulepath string = "k8s.ingresshttprulepath"
-	ResourceK8sIngressrule string = "k8s.ingressrule"
-	ResourceK8sIngresstls string = "k8s.ingresstls"
-	ResourceK8sIngress string = "k8s.ingress"
-	ResourceK8sServiceaccount string = "k8s.serviceaccount"
-	ResourceK8sRbacClusterrole string = "k8s.rbac.clusterrole"
-	ResourceK8sRbacClusterrolebinding string = "k8s.rbac.clusterrolebinding"
-	ResourceK8sRbacRole string = "k8s.rbac.role"
-	ResourceK8sRbacRolebinding string = "k8s.rbac.rolebinding"
-	ResourceK8sNetworkpolicy string = "k8s.networkpolicy"
-	ResourceK8sCustomresource string = "k8s.customresource"
-	ResourceK8sAdmissionreview string = "k8s.admissionreview"
-	ResourceK8sAdmissionrequest string = "k8s.admissionrequest"
-	ResourceK8sUserinfo string = "k8s.userinfo"
+	ResourceK8s                                        string = "k8s"
+	ResourceK8sApiresource                             string = "k8s.apiresource"
+	ResourceK8sNamespace                               string = "k8s.namespace"
+	ResourceK8sNode                                    string = "k8s.node"
+	ResourceK8sPod                                     string = "k8s.pod"
+	ResourceK8sDeployment                              string = "k8s.deployment"
+	ResourceK8sDaemonset                               string = "k8s.daemonset"
+	ResourceK8sStatefulset                             string = "k8s.statefulset"
+	ResourceK8sReplicaset                              string = "k8s.replicaset"
+	ResourceK8sJob                                     string = "k8s.job"
+	ResourceK8sCronjob                                 string = "k8s.cronjob"
+	ResourceK8sContainer                               string = "k8s.container"
+	ResourceK8sInitContainer                           string = "k8s.initContainer"
+	ResourceK8sEphemeralContainer                      string = "k8s.ephemeralContainer"
+	ResourceK8sSecret                                  string = "k8s.secret"
+	ResourceK8sConfigmap                               string = "k8s.configmap"
+	ResourceK8sService                                 string = "k8s.service"
+	ResourceK8sIngressresourceref                      string = "k8s.ingressresourceref"
+	ResourceK8sIngressservicebackend                   string = "k8s.ingressservicebackend"
+	ResourceK8sIngressbackend                          string = "k8s.ingressbackend"
+	ResourceK8sIngresshttprulepath                     string = "k8s.ingresshttprulepath"
+	ResourceK8sIngressrule                             string = "k8s.ingressrule"
+	ResourceK8sIngresstls                              string = "k8s.ingresstls"
+	ResourceK8sIngress                                 string = "k8s.ingress"
+	ResourceK8sServiceaccount                          string = "k8s.serviceaccount"
+	ResourceK8sRbacClusterrole                         string = "k8s.rbac.clusterrole"
+	ResourceK8sRbacClusterrolebinding                  string = "k8s.rbac.clusterrolebinding"
+	ResourceK8sRbacRole                                string = "k8s.rbac.role"
+	ResourceK8sRbacRolebinding                         string = "k8s.rbac.rolebinding"
+	ResourceK8sNetworkpolicy                           string = "k8s.networkpolicy"
+	ResourceK8sCustomresource                          string = "k8s.customresource"
+	ResourceK8sAdmissionreview                         string = "k8s.admissionreview"
+	ResourceK8sAdmissionrequest                        string = "k8s.admissionrequest"
+	ResourceK8sUserinfo                                string = "k8s.userinfo"
 	ResourceK8sAdmissionValidatingwebhookconfiguration string = "k8s.admission.validatingwebhookconfiguration"
-	ResourceK8sApp string = "k8s.app"
+	ResourceK8sApp                                     string = "k8s.app"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"k8s": {
 			// to override args, implement: initK8s(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8s,
@@ -69,39 +68,39 @@ func init() {
 			Create: createK8sApiresource,
 		},
 		"k8s.namespace": {
-			Init: initK8sNamespace,
+			Init:   initK8sNamespace,
 			Create: createK8sNamespace,
 		},
 		"k8s.node": {
-			Init: initK8sNode,
+			Init:   initK8sNode,
 			Create: createK8sNode,
 		},
 		"k8s.pod": {
-			Init: initK8sPod,
+			Init:   initK8sPod,
 			Create: createK8sPod,
 		},
 		"k8s.deployment": {
-			Init: initK8sDeployment,
+			Init:   initK8sDeployment,
 			Create: createK8sDeployment,
 		},
 		"k8s.daemonset": {
-			Init: initK8sDaemonset,
+			Init:   initK8sDaemonset,
 			Create: createK8sDaemonset,
 		},
 		"k8s.statefulset": {
-			Init: initK8sStatefulset,
+			Init:   initK8sStatefulset,
 			Create: createK8sStatefulset,
 		},
 		"k8s.replicaset": {
-			Init: initK8sReplicaset,
+			Init:   initK8sReplicaset,
 			Create: createK8sReplicaset,
 		},
 		"k8s.job": {
-			Init: initK8sJob,
+			Init:   initK8sJob,
 			Create: createK8sJob,
 		},
 		"k8s.cronjob": {
-			Init: initK8sCronjob,
+			Init:   initK8sCronjob,
 			Create: createK8sCronjob,
 		},
 		"k8s.container": {
@@ -117,15 +116,15 @@ func init() {
 			Create: createK8sEphemeralContainer,
 		},
 		"k8s.secret": {
-			Init: initK8sSecret,
+			Init:   initK8sSecret,
 			Create: createK8sSecret,
 		},
 		"k8s.configmap": {
-			Init: initK8sConfigmap,
+			Init:   initK8sConfigmap,
 			Create: createK8sConfigmap,
 		},
 		"k8s.service": {
-			Init: initK8sService,
+			Init:   initK8sService,
 			Create: createK8sService,
 		},
 		"k8s.ingressresourceref": {
@@ -153,31 +152,31 @@ func init() {
 			Create: createK8sIngresstls,
 		},
 		"k8s.ingress": {
-			Init: initK8sIngress,
+			Init:   initK8sIngress,
 			Create: createK8sIngress,
 		},
 		"k8s.serviceaccount": {
-			Init: initK8sServiceaccount,
+			Init:   initK8sServiceaccount,
 			Create: createK8sServiceaccount,
 		},
 		"k8s.rbac.clusterrole": {
-			Init: initK8sRbacClusterrole,
+			Init:   initK8sRbacClusterrole,
 			Create: createK8sRbacClusterrole,
 		},
 		"k8s.rbac.clusterrolebinding": {
-			Init: initK8sRbacClusterrolebinding,
+			Init:   initK8sRbacClusterrolebinding,
 			Create: createK8sRbacClusterrolebinding,
 		},
 		"k8s.rbac.role": {
-			Init: initK8sRbacRole,
+			Init:   initK8sRbacRole,
 			Create: createK8sRbacRole,
 		},
 		"k8s.rbac.rolebinding": {
-			Init: initK8sRbacRolebinding,
+			Init:   initK8sRbacRolebinding,
 			Create: createK8sRbacRolebinding,
 		},
 		"k8s.networkpolicy": {
-			Init: initK8sNetworkpolicy,
+			Init:   initK8sNetworkpolicy,
 			Create: createK8sNetworkpolicy,
 		},
 		"k8s.customresource": {
@@ -225,7 +224,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -1378,11 +1377,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"k8s.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8s).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8s).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.serverVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).ServerVersion, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -1480,9 +1479,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sApiresource).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sApiresource).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.apiresource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sApiresource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1516,9 +1515,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.namespace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sNamespace).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sNamespace).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.namespace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNamespace).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1552,9 +1551,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sNode).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sNode).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.node.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNode).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1596,9 +1595,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.pod.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sPod).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sPod).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.pod.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1664,9 +1663,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sDeployment).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sDeployment).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1720,9 +1719,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.daemonset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sDaemonset).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sDaemonset).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.daemonset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1776,9 +1775,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.statefulset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sStatefulset).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sStatefulset).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.statefulset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStatefulset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1832,9 +1831,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.replicaset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sReplicaset).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sReplicaset).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.replicaset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1888,9 +1887,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sJob).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sJob).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sJob).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1944,9 +1943,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.cronjob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sCronjob).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sCronjob).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.cronjob.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCronjob).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2000,9 +1999,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sContainer).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sContainer).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.container.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sContainer).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2072,9 +2071,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.initContainer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sInitContainer).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sInitContainer).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.initContainer.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sInitContainer).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2136,9 +2135,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ephemeralContainer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sEphemeralContainer).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sEphemeralContainer).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.ephemeralContainer.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEphemeralContainer).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2196,9 +2195,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sSecret).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sSecret).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.secret.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sSecret).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2248,9 +2247,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.configmap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sConfigmap).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sConfigmap).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.configmap.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sConfigmap).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2296,9 +2295,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sService).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.service.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2344,9 +2343,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingressresourceref.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sIngressresourceref).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sIngressresourceref).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.ingressresourceref.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngressresourceref).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2364,9 +2363,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingressservicebackend.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sIngressservicebackend).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sIngressservicebackend).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.ingressservicebackend.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngressservicebackend).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2384,9 +2383,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingressbackend.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sIngressbackend).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sIngressbackend).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.ingressbackend.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngressbackend).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2400,9 +2399,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingresshttprulepath.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sIngresshttprulepath).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sIngresshttprulepath).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.ingresshttprulepath.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngresshttprulepath).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2420,9 +2419,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingressrule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sIngressrule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sIngressrule).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.ingressrule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngressrule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2436,9 +2435,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingresstls.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sIngresstls).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sIngresstls).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.ingresstls.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngresstls).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2452,9 +2451,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.ingress.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sIngress).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sIngress).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.ingress.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngress).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2504,9 +2503,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.serviceaccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sServiceaccount).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sServiceaccount).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.serviceaccount.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sServiceaccount).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2560,9 +2559,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.clusterrole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sRbacClusterrole).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sRbacClusterrole).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.rbac.clusterrole.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2608,9 +2607,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.clusterrolebinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sRbacClusterrolebinding).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sRbacClusterrolebinding).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.rbac.clusterrolebinding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrolebinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2656,9 +2655,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sRbacRole).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sRbacRole).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.rbac.role.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2704,9 +2703,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.rbac.rolebinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sRbacRolebinding).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sRbacRolebinding).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.rbac.rolebinding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRolebinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2756,9 +2755,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.networkpolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sNetworkpolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sNetworkpolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.networkpolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNetworkpolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2804,9 +2803,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.customresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sCustomresource).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sCustomresource).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.customresource.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCustomresource).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2848,17 +2847,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.admissionreview.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sAdmissionreview).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sAdmissionreview).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.admissionreview.request": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAdmissionreview).Request, ok = plugin.RawToTValue[*mqlK8sAdmissionrequest](v.Value, v.Error)
 		return
 	},
 	"k8s.admissionrequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sAdmissionrequest).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sAdmissionrequest).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.admissionrequest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAdmissionrequest).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2884,9 +2883,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.userinfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sUserinfo).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sUserinfo).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.userinfo.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sUserinfo).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2896,9 +2895,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.admission.validatingwebhookconfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sAdmissionValidatingwebhookconfiguration).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.admission.validatingwebhookconfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2940,9 +2939,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"k8s.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlK8sApp).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlK8sApp).__id, ok = v.Value.(string)
+		return
+	},
 	"k8s.app.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sApp).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2970,13 +2969,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[k8s] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[k8s] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[k8s] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[k8s] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -2994,32 +2993,32 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlK8s for the k8s resource
 type mqlK8s struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sInternal
-	ServerVersion plugin.TValue[any]
-	ApiResources plugin.TValue[[]any]
-	Namespaces plugin.TValue[[]any]
-	Nodes plugin.TValue[[]any]
-	Pods plugin.TValue[[]any]
-	Deployments plugin.TValue[[]any]
-	Daemonsets plugin.TValue[[]any]
-	Statefulsets plugin.TValue[[]any]
-	Replicasets plugin.TValue[[]any]
-	Jobs plugin.TValue[[]any]
-	Cronjobs plugin.TValue[[]any]
-	Secrets plugin.TValue[[]any]
-	Configmaps plugin.TValue[[]any]
-	Services plugin.TValue[[]any]
-	Ingresses plugin.TValue[[]any]
-	Serviceaccounts plugin.TValue[[]any]
-	Clusterroles plugin.TValue[[]any]
-	Clusterrolebindings plugin.TValue[[]any]
-	Roles plugin.TValue[[]any]
-	Rolebindings plugin.TValue[[]any]
-	NetworkPolicies plugin.TValue[[]any]
-	Customresources plugin.TValue[[]any]
+	ServerVersion                   plugin.TValue[any]
+	ApiResources                    plugin.TValue[[]any]
+	Namespaces                      plugin.TValue[[]any]
+	Nodes                           plugin.TValue[[]any]
+	Pods                            plugin.TValue[[]any]
+	Deployments                     plugin.TValue[[]any]
+	Daemonsets                      plugin.TValue[[]any]
+	Statefulsets                    plugin.TValue[[]any]
+	Replicasets                     plugin.TValue[[]any]
+	Jobs                            plugin.TValue[[]any]
+	Cronjobs                        plugin.TValue[[]any]
+	Secrets                         plugin.TValue[[]any]
+	Configmaps                      plugin.TValue[[]any]
+	Services                        plugin.TValue[[]any]
+	Ingresses                       plugin.TValue[[]any]
+	Serviceaccounts                 plugin.TValue[[]any]
+	Clusterroles                    plugin.TValue[[]any]
+	Clusterrolebindings             plugin.TValue[[]any]
+	Roles                           plugin.TValue[[]any]
+	Rolebindings                    plugin.TValue[[]any]
+	NetworkPolicies                 plugin.TValue[[]any]
+	Customresources                 plugin.TValue[[]any]
 	ValidatingWebhookConfigurations plugin.TValue[[]any]
-	Apps plugin.TValue[[]any]
+	Apps                            plugin.TValue[[]any]
 }
 
 // createK8s creates a new instance of this resource
@@ -3431,16 +3430,16 @@ func (c *mqlK8s) GetApps() *plugin.TValue[[]any] {
 // mqlK8sApiresource for the k8s.apiresource resource
 type mqlK8sApiresource struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sApiresourceInternal it will be used here
-	Name plugin.TValue[string]
+	Name         plugin.TValue[string]
 	SingularName plugin.TValue[string]
-	Namespaced plugin.TValue[bool]
-	Group plugin.TValue[string]
-	Version plugin.TValue[string]
-	Kind plugin.TValue[string]
-	ShortNames plugin.TValue[[]any]
-	Categories plugin.TValue[[]any]
+	Namespaced   plugin.TValue[bool]
+	Group        plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Kind         plugin.TValue[string]
+	ShortNames   plugin.TValue[[]any]
+	Categories   plugin.TValue[[]any]
 }
 
 // createK8sApiresource creates a new instance of this resource
@@ -3455,7 +3454,7 @@ func createK8sApiresource(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3515,15 +3514,15 @@ func (c *mqlK8sApiresource) GetCategories() *plugin.TValue[[]any] {
 // mqlK8sNamespace for the k8s.namespace resource
 type mqlK8sNamespace struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sNamespaceInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
-	Name plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Kind plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
+	Id          plugin.TValue[string]
+	Uid         plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	Manifest    plugin.TValue[any]
+	Kind        plugin.TValue[string]
+	Labels      plugin.TValue[map[string]any]
 	Annotations plugin.TValue[map[string]any]
 }
 
@@ -3539,7 +3538,7 @@ func createK8sNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3605,18 +3604,18 @@ func (c *mqlK8sNamespace) GetAnnotations() *plugin.TValue[map[string]any] {
 // mqlK8sNode for the k8s.node resource
 type mqlK8sNode struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sNodeInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
 	ResourceVersion plugin.TValue[string]
-	Name plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	NodeInfo plugin.TValue[any]
-	KubeletPort plugin.TValue[int64]
+	Name            plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	NodeInfo        plugin.TValue[any]
+	KubeletPort     plugin.TValue[int64]
 }
 
 // createK8sNode creates a new instance of this resource
@@ -3631,7 +3630,7 @@ func createK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3703,24 +3702,24 @@ func (c *mqlK8sNode) GetKubeletPort() *plugin.TValue[int64] {
 // mqlK8sPod for the k8s.pod resource
 type mqlK8sPod struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sPodInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	ApiVersion plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	PodSpec plugin.TValue[any]
+	Id                  plugin.TValue[string]
+	Uid                 plugin.TValue[string]
+	ResourceVersion     plugin.TValue[string]
+	Labels              plugin.TValue[map[string]any]
+	Annotations         plugin.TValue[map[string]any]
+	Name                plugin.TValue[string]
+	Namespace           plugin.TValue[string]
+	ApiVersion          plugin.TValue[string]
+	Kind                plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
+	Manifest            plugin.TValue[any]
+	PodSpec             plugin.TValue[any]
 	EphemeralContainers plugin.TValue[[]any]
-	InitContainers plugin.TValue[[]any]
-	Containers plugin.TValue[[]any]
-	Node plugin.TValue[*mqlK8sNode]
+	InitContainers      plugin.TValue[[]any]
+	Containers          plugin.TValue[[]any]
+	Node                plugin.TValue[*mqlK8sNode]
 }
 
 // createK8sPod creates a new instance of this resource
@@ -3735,7 +3734,7 @@ func createK8sPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3883,21 +3882,21 @@ func (c *mqlK8sPod) GetNode() *plugin.TValue[*mqlK8sNode] {
 // mqlK8sDeployment for the k8s.deployment resource
 type mqlK8sDeployment struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sDeploymentInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	PodSpec plugin.TValue[any]
-	InitContainers plugin.TValue[[]any]
-	Containers plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	PodSpec         plugin.TValue[any]
+	InitContainers  plugin.TValue[[]any]
+	Containers      plugin.TValue[[]any]
 }
 
 // createK8sDeployment creates a new instance of this resource
@@ -3912,7 +3911,7 @@ func createK8sDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4024,21 +4023,21 @@ func (c *mqlK8sDeployment) GetContainers() *plugin.TValue[[]any] {
 // mqlK8sDaemonset for the k8s.daemonset resource
 type mqlK8sDaemonset struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sDaemonsetInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	PodSpec plugin.TValue[any]
-	InitContainers plugin.TValue[[]any]
-	Containers plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	PodSpec         plugin.TValue[any]
+	InitContainers  plugin.TValue[[]any]
+	Containers      plugin.TValue[[]any]
 }
 
 // createK8sDaemonset creates a new instance of this resource
@@ -4053,7 +4052,7 @@ func createK8sDaemonset(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4165,21 +4164,21 @@ func (c *mqlK8sDaemonset) GetContainers() *plugin.TValue[[]any] {
 // mqlK8sStatefulset for the k8s.statefulset resource
 type mqlK8sStatefulset struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sStatefulsetInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	PodSpec plugin.TValue[any]
-	InitContainers plugin.TValue[[]any]
-	Containers plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	PodSpec         plugin.TValue[any]
+	InitContainers  plugin.TValue[[]any]
+	Containers      plugin.TValue[[]any]
 }
 
 // createK8sStatefulset creates a new instance of this resource
@@ -4194,7 +4193,7 @@ func createK8sStatefulset(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4306,21 +4305,21 @@ func (c *mqlK8sStatefulset) GetContainers() *plugin.TValue[[]any] {
 // mqlK8sReplicaset for the k8s.replicaset resource
 type mqlK8sReplicaset struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sReplicasetInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	PodSpec plugin.TValue[any]
-	InitContainers plugin.TValue[[]any]
-	Containers plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	PodSpec         plugin.TValue[any]
+	InitContainers  plugin.TValue[[]any]
+	Containers      plugin.TValue[[]any]
 }
 
 // createK8sReplicaset creates a new instance of this resource
@@ -4335,7 +4334,7 @@ func createK8sReplicaset(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4447,21 +4446,21 @@ func (c *mqlK8sReplicaset) GetContainers() *plugin.TValue[[]any] {
 // mqlK8sJob for the k8s.job resource
 type mqlK8sJob struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sJobInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	PodSpec plugin.TValue[any]
-	InitContainers plugin.TValue[[]any]
-	Containers plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	PodSpec         plugin.TValue[any]
+	InitContainers  plugin.TValue[[]any]
+	Containers      plugin.TValue[[]any]
 }
 
 // createK8sJob creates a new instance of this resource
@@ -4476,7 +4475,7 @@ func createK8sJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4588,21 +4587,21 @@ func (c *mqlK8sJob) GetContainers() *plugin.TValue[[]any] {
 // mqlK8sCronjob for the k8s.cronjob resource
 type mqlK8sCronjob struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sCronjobInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	PodSpec plugin.TValue[any]
-	InitContainers plugin.TValue[[]any]
-	Containers plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	PodSpec         plugin.TValue[any]
+	InitContainers  plugin.TValue[[]any]
+	Containers      plugin.TValue[[]any]
 }
 
 // createK8sCronjob creates a new instance of this resource
@@ -4617,7 +4616,7 @@ func createK8sCronjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4729,25 +4728,25 @@ func (c *mqlK8sCronjob) GetContainers() *plugin.TValue[[]any] {
 // mqlK8sContainer for the k8s.container resource
 type mqlK8sContainer struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sContainerInternal it will be used here
-	Uid plugin.TValue[string]
-	Name plugin.TValue[string]
-	ImageName plugin.TValue[string]
-	ContainerImage plugin.TValue[plugin.Resource]
-	Command plugin.TValue[[]any]
-	Args plugin.TValue[[]any]
-	Resources plugin.TValue[any]
-	VolumeMounts plugin.TValue[[]any]
-	VolumeDevices plugin.TValue[[]any]
-	LivenessProbe plugin.TValue[any]
-	ReadinessProbe plugin.TValue[any]
+	Uid             plugin.TValue[string]
+	Name            plugin.TValue[string]
+	ImageName       plugin.TValue[string]
+	ContainerImage  plugin.TValue[plugin.Resource]
+	Command         plugin.TValue[[]any]
+	Args            plugin.TValue[[]any]
+	Resources       plugin.TValue[any]
+	VolumeMounts    plugin.TValue[[]any]
+	VolumeDevices   plugin.TValue[[]any]
+	LivenessProbe   plugin.TValue[any]
+	ReadinessProbe  plugin.TValue[any]
 	ImagePullPolicy plugin.TValue[string]
 	SecurityContext plugin.TValue[any]
-	WorkingDir plugin.TValue[string]
-	Tty plugin.TValue[bool]
-	Env plugin.TValue[any]
-	EnvFrom plugin.TValue[any]
+	WorkingDir      plugin.TValue[string]
+	Tty             plugin.TValue[bool]
+	Env             plugin.TValue[any]
+	EnvFrom         plugin.TValue[any]
 }
 
 // createK8sContainer creates a new instance of this resource
@@ -4762,7 +4761,7 @@ func createK8sContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4870,23 +4869,23 @@ func (c *mqlK8sContainer) GetEnvFrom() *plugin.TValue[any] {
 // mqlK8sInitContainer for the k8s.initContainer resource
 type mqlK8sInitContainer struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sInitContainerInternal it will be used here
-	Uid plugin.TValue[string]
-	Name plugin.TValue[string]
-	ImageName plugin.TValue[string]
-	ContainerImage plugin.TValue[plugin.Resource]
-	Command plugin.TValue[[]any]
-	Args plugin.TValue[[]any]
-	Resources plugin.TValue[any]
-	VolumeMounts plugin.TValue[[]any]
-	VolumeDevices plugin.TValue[[]any]
+	Uid             plugin.TValue[string]
+	Name            plugin.TValue[string]
+	ImageName       plugin.TValue[string]
+	ContainerImage  plugin.TValue[plugin.Resource]
+	Command         plugin.TValue[[]any]
+	Args            plugin.TValue[[]any]
+	Resources       plugin.TValue[any]
+	VolumeMounts    plugin.TValue[[]any]
+	VolumeDevices   plugin.TValue[[]any]
 	ImagePullPolicy plugin.TValue[string]
 	SecurityContext plugin.TValue[any]
-	WorkingDir plugin.TValue[string]
-	Tty plugin.TValue[bool]
-	Env plugin.TValue[any]
-	EnvFrom plugin.TValue[any]
+	WorkingDir      plugin.TValue[string]
+	Tty             plugin.TValue[bool]
+	Env             plugin.TValue[any]
+	EnvFrom         plugin.TValue[any]
 }
 
 // createK8sInitContainer creates a new instance of this resource
@@ -4901,7 +4900,7 @@ func createK8sInitContainer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5001,22 +5000,22 @@ func (c *mqlK8sInitContainer) GetEnvFrom() *plugin.TValue[any] {
 // mqlK8sEphemeralContainer for the k8s.ephemeralContainer resource
 type mqlK8sEphemeralContainer struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sEphemeralContainerInternal it will be used here
-	Uid plugin.TValue[string]
-	Name plugin.TValue[string]
-	ImageName plugin.TValue[string]
-	ContainerImage plugin.TValue[plugin.Resource]
-	Command plugin.TValue[[]any]
-	Args plugin.TValue[[]any]
-	VolumeMounts plugin.TValue[[]any]
-	VolumeDevices plugin.TValue[[]any]
+	Uid             plugin.TValue[string]
+	Name            plugin.TValue[string]
+	ImageName       plugin.TValue[string]
+	ContainerImage  plugin.TValue[plugin.Resource]
+	Command         plugin.TValue[[]any]
+	Args            plugin.TValue[[]any]
+	VolumeMounts    plugin.TValue[[]any]
+	VolumeDevices   plugin.TValue[[]any]
 	ImagePullPolicy plugin.TValue[string]
 	SecurityContext plugin.TValue[any]
-	WorkingDir plugin.TValue[string]
-	Tty plugin.TValue[bool]
-	Env plugin.TValue[any]
-	EnvFrom plugin.TValue[any]
+	WorkingDir      plugin.TValue[string]
+	Tty             plugin.TValue[bool]
+	Env             plugin.TValue[any]
+	EnvFrom         plugin.TValue[any]
 }
 
 // createK8sEphemeralContainer creates a new instance of this resource
@@ -5031,7 +5030,7 @@ func createK8sEphemeralContainer(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5127,20 +5126,20 @@ func (c *mqlK8sEphemeralContainer) GetEnvFrom() *plugin.TValue[any] {
 // mqlK8sSecret for the k8s.secret resource
 type mqlK8sSecret struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sSecretInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Type plugin.TValue[string]
-	Certificates plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Type            plugin.TValue[string]
+	Certificates    plugin.TValue[[]any]
 }
 
 // createK8sSecret creates a new instance of this resource
@@ -5155,7 +5154,7 @@ func createK8sSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5249,19 +5248,19 @@ func (c *mqlK8sSecret) GetCertificates() *plugin.TValue[[]any] {
 // mqlK8sConfigmap for the k8s.configmap resource
 type mqlK8sConfigmap struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sConfigmapInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Data plugin.TValue[map[string]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Data            plugin.TValue[map[string]any]
 }
 
 // createK8sConfigmap creates a new instance of this resource
@@ -5276,7 +5275,7 @@ func createK8sConfigmap(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5354,19 +5353,19 @@ func (c *mqlK8sConfigmap) GetData() *plugin.TValue[map[string]any] {
 // mqlK8sService for the k8s.service resource
 type mqlK8sService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sServiceInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Spec plugin.TValue[any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Spec            plugin.TValue[any]
 }
 
 // createK8sService creates a new instance of this resource
@@ -5381,7 +5380,7 @@ func createK8sService(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5461,12 +5460,12 @@ func (c *mqlK8sService) GetSpec() *plugin.TValue[any] {
 // mqlK8sIngressresourceref for the k8s.ingressresourceref resource
 type mqlK8sIngressresourceref struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sIngressresourcerefInternal it will be used here
-	Id plugin.TValue[string]
+	Id       plugin.TValue[string]
 	ApiGroup plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Name plugin.TValue[string]
+	Kind     plugin.TValue[string]
+	Name     plugin.TValue[string]
 }
 
 // createK8sIngressresourceref creates a new instance of this resource
@@ -5481,7 +5480,7 @@ func createK8sIngressresourceref(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5525,11 +5524,11 @@ func (c *mqlK8sIngressresourceref) GetName() *plugin.TValue[string] {
 // mqlK8sIngressservicebackend for the k8s.ingressservicebackend resource
 type mqlK8sIngressservicebackend struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sIngressservicebackendInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	PortName plugin.TValue[string]
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	PortName   plugin.TValue[string]
 	PortNumber plugin.TValue[int64]
 }
 
@@ -5545,7 +5544,7 @@ func createK8sIngressservicebackend(runtime *plugin.Runtime, args map[string]*ll
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5589,10 +5588,10 @@ func (c *mqlK8sIngressservicebackend) GetPortNumber() *plugin.TValue[int64] {
 // mqlK8sIngressbackend for the k8s.ingressbackend resource
 type mqlK8sIngressbackend struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sIngressbackendInternal it will be used here
-	Id plugin.TValue[string]
-	Service plugin.TValue[*mqlK8sIngressservicebackend]
+	Id          plugin.TValue[string]
+	Service     plugin.TValue[*mqlK8sIngressservicebackend]
 	ResourceRef plugin.TValue[*mqlK8sIngressresourceref]
 }
 
@@ -5608,7 +5607,7 @@ func createK8sIngressbackend(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5648,12 +5647,12 @@ func (c *mqlK8sIngressbackend) GetResourceRef() *plugin.TValue[*mqlK8sIngressres
 // mqlK8sIngresshttprulepath for the k8s.ingresshttprulepath resource
 type mqlK8sIngresshttprulepath struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sIngresshttprulepathInternal it will be used here
-	Id plugin.TValue[string]
-	Path plugin.TValue[string]
+	Id       plugin.TValue[string]
+	Path     plugin.TValue[string]
 	PathType plugin.TValue[string]
-	Backend plugin.TValue[*mqlK8sIngressbackend]
+	Backend  plugin.TValue[*mqlK8sIngressbackend]
 }
 
 // createK8sIngresshttprulepath creates a new instance of this resource
@@ -5668,7 +5667,7 @@ func createK8sIngresshttprulepath(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5712,10 +5711,10 @@ func (c *mqlK8sIngresshttprulepath) GetBackend() *plugin.TValue[*mqlK8sIngressba
 // mqlK8sIngressrule for the k8s.ingressrule resource
 type mqlK8sIngressrule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sIngressruleInternal it will be used here
-	Id plugin.TValue[string]
-	Host plugin.TValue[string]
+	Id        plugin.TValue[string]
+	Host      plugin.TValue[string]
 	HttpPaths plugin.TValue[[]any]
 }
 
@@ -5731,7 +5730,7 @@ func createK8sIngressrule(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5771,10 +5770,10 @@ func (c *mqlK8sIngressrule) GetHttpPaths() *plugin.TValue[[]any] {
 // mqlK8sIngresstls for the k8s.ingresstls resource
 type mqlK8sIngresstls struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sIngresstlsInternal it will be used here
-	Id plugin.TValue[string]
-	Hosts plugin.TValue[[]any]
+	Id           plugin.TValue[string]
+	Hosts        plugin.TValue[[]any]
 	Certificates plugin.TValue[[]any]
 }
 
@@ -5790,7 +5789,7 @@ func createK8sIngresstls(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5830,20 +5829,20 @@ func (c *mqlK8sIngresstls) GetCertificates() *plugin.TValue[[]any] {
 // mqlK8sIngress for the k8s.ingress resource
 type mqlK8sIngress struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sIngressInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Rules plugin.TValue[[]any]
-	Tls plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Rules           plugin.TValue[[]any]
+	Tls             plugin.TValue[[]any]
 }
 
 // createK8sIngress creates a new instance of this resource
@@ -5858,7 +5857,7 @@ func createK8sIngress(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5952,20 +5951,20 @@ func (c *mqlK8sIngress) GetTls() *plugin.TValue[[]any] {
 // mqlK8sServiceaccount for the k8s.serviceaccount resource
 type mqlK8sServiceaccount struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sServiceaccountInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Secrets plugin.TValue[[]any]
-	ImagePullSecrets plugin.TValue[[]any]
+	Id                           plugin.TValue[string]
+	Uid                          plugin.TValue[string]
+	ResourceVersion              plugin.TValue[string]
+	Labels                       plugin.TValue[map[string]any]
+	Annotations                  plugin.TValue[map[string]any]
+	Name                         plugin.TValue[string]
+	Namespace                    plugin.TValue[string]
+	Kind                         plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	Manifest                     plugin.TValue[any]
+	Secrets                      plugin.TValue[[]any]
+	ImagePullSecrets             plugin.TValue[[]any]
 	AutomountServiceAccountToken plugin.TValue[bool]
 }
 
@@ -5981,7 +5980,7 @@ func createK8sServiceaccount(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6067,18 +6066,18 @@ func (c *mqlK8sServiceaccount) GetAutomountServiceAccountToken() *plugin.TValue[
 // mqlK8sRbacClusterrole for the k8s.rbac.clusterrole resource
 type mqlK8sRbacClusterrole struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sRbacClusterroleInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Rules plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Rules           plugin.TValue[[]any]
 	AggregationRule plugin.TValue[any]
 }
 
@@ -6094,7 +6093,7 @@ func createK8sRbacClusterrole(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6172,19 +6171,19 @@ func (c *mqlK8sRbacClusterrole) GetAggregationRule() *plugin.TValue[any] {
 // mqlK8sRbacClusterrolebinding for the k8s.rbac.clusterrolebinding resource
 type mqlK8sRbacClusterrolebinding struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sRbacClusterrolebindingInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Subjects plugin.TValue[[]any]
-	RoleRef plugin.TValue[any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Subjects        plugin.TValue[[]any]
+	RoleRef         plugin.TValue[any]
 }
 
 // createK8sRbacClusterrolebinding creates a new instance of this resource
@@ -6199,7 +6198,7 @@ func createK8sRbacClusterrolebinding(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6277,19 +6276,19 @@ func (c *mqlK8sRbacClusterrolebinding) GetRoleRef() *plugin.TValue[any] {
 // mqlK8sRbacRole for the k8s.rbac.role resource
 type mqlK8sRbacRole struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sRbacRoleInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Rules plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Rules           plugin.TValue[[]any]
 }
 
 // createK8sRbacRole creates a new instance of this resource
@@ -6304,7 +6303,7 @@ func createK8sRbacRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6382,20 +6381,20 @@ func (c *mqlK8sRbacRole) GetRules() *plugin.TValue[[]any] {
 // mqlK8sRbacRolebinding for the k8s.rbac.rolebinding resource
 type mqlK8sRbacRolebinding struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sRbacRolebindingInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Subjects plugin.TValue[[]any]
-	RoleRef plugin.TValue[any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Subjects        plugin.TValue[[]any]
+	RoleRef         plugin.TValue[any]
 }
 
 // createK8sRbacRolebinding creates a new instance of this resource
@@ -6410,7 +6409,7 @@ func createK8sRbacRolebinding(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6492,19 +6491,19 @@ func (c *mqlK8sRbacRolebinding) GetRoleRef() *plugin.TValue[any] {
 // mqlK8sNetworkpolicy for the k8s.networkpolicy resource
 type mqlK8sNetworkpolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sNetworkpolicyInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Spec plugin.TValue[any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Spec            plugin.TValue[any]
 }
 
 // createK8sNetworkpolicy creates a new instance of this resource
@@ -6519,7 +6518,7 @@ func createK8sNetworkpolicy(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6599,18 +6598,18 @@ func (c *mqlK8sNetworkpolicy) GetSpec() *plugin.TValue[any] {
 // mqlK8sCustomresource for the k8s.customresource resource
 type mqlK8sCustomresource struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sCustomresourceInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
 }
 
 // createK8sCustomresource creates a new instance of this resource
@@ -6625,7 +6624,7 @@ func createK8sCustomresource(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6699,7 +6698,7 @@ func (c *mqlK8sCustomresource) GetManifest() *plugin.TValue[any] {
 // mqlK8sAdmissionreview for the k8s.admissionreview resource
 type mqlK8sAdmissionreview struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sAdmissionreviewInternal it will be used here
 	Request plugin.TValue[*mqlK8sAdmissionrequest]
 }
@@ -6755,13 +6754,13 @@ func (c *mqlK8sAdmissionreview) GetRequest() *plugin.TValue[*mqlK8sAdmissionrequ
 // mqlK8sAdmissionrequest for the k8s.admissionrequest resource
 type mqlK8sAdmissionrequest struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sAdmissionrequestInternal
-	Name plugin.TValue[string]
+	Name      plugin.TValue[string]
 	Namespace plugin.TValue[string]
 	Operation plugin.TValue[string]
-	UserInfo plugin.TValue[*mqlK8sUserinfo]
-	Object plugin.TValue[any]
+	UserInfo  plugin.TValue[*mqlK8sUserinfo]
+	Object    plugin.TValue[any]
 	OldObject plugin.TValue[any]
 }
 
@@ -6777,7 +6776,7 @@ func createK8sAdmissionrequest(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6841,10 +6840,10 @@ func (c *mqlK8sAdmissionrequest) GetOldObject() *plugin.TValue[any] {
 // mqlK8sUserinfo for the k8s.userinfo resource
 type mqlK8sUserinfo struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sUserinfoInternal it will be used here
 	Username plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Uid      plugin.TValue[string]
 }
 
 // createK8sUserinfo creates a new instance of this resource
@@ -6859,7 +6858,7 @@ func createK8sUserinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6895,18 +6894,18 @@ func (c *mqlK8sUserinfo) GetUid() *plugin.TValue[string] {
 // mqlK8sAdmissionValidatingwebhookconfiguration for the k8s.admission.validatingwebhookconfiguration resource
 type mqlK8sAdmissionValidatingwebhookconfiguration struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlK8sAdmissionValidatingwebhookconfigurationInternal
-	Id plugin.TValue[string]
-	Uid plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
 	ResourceVersion plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Name plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Manifest plugin.TValue[any]
-	Webhooks plugin.TValue[[]any]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Webhooks        plugin.TValue[[]any]
 }
 
 // createK8sAdmissionValidatingwebhookconfiguration creates a new instance of this resource
@@ -6992,13 +6991,13 @@ func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetWebhooks() *plugin.TV
 // mqlK8sApp for the k8s.app resource
 type mqlK8sApp struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlK8sAppInternal it will be used here
-	Name plugin.TValue[string]
-	Version plugin.TValue[string]
-	Instance plugin.TValue[string]
-	ManagedBy plugin.TValue[string]
-	PartOf plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Version    plugin.TValue[string]
+	Instance   plugin.TValue[string]
+	ManagedBy  plugin.TValue[string]
+	PartOf     plugin.TValue[string]
 	Components plugin.TValue[[]any]
 }
 

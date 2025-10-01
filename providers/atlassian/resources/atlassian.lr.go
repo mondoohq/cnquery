@@ -17,30 +17,29 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAtlassianScim string = "atlassian.scim"
-	ResourceAtlassianScimUser string = "atlassian.scim.user"
-	ResourceAtlassianScimGroup string = "atlassian.scim.group"
-	ResourceAtlassianAdminOrganization string = "atlassian.admin.organization"
+	ResourceAtlassianScim                         string = "atlassian.scim"
+	ResourceAtlassianScimUser                     string = "atlassian.scim.user"
+	ResourceAtlassianScimGroup                    string = "atlassian.scim.group"
+	ResourceAtlassianAdminOrganization            string = "atlassian.admin.organization"
 	ResourceAtlassianAdminOrganizationManagedUser string = "atlassian.admin.organization.managedUser"
-	ResourceAtlassianAdminOrganizationPolicy string = "atlassian.admin.organization.policy"
-	ResourceAtlassianAdminOrganizationDomain string = "atlassian.admin.organization.domain"
-	ResourceAtlassianJira string = "atlassian.jira"
-	ResourceAtlassianJiraIssue string = "atlassian.jira.issue"
-	ResourceAtlassianJiraServerInfo string = "atlassian.jira.serverInfo"
-	ResourceAtlassianJiraUser string = "atlassian.jira.user"
-	ResourceAtlassianJiraApplicationRole string = "atlassian.jira.applicationRole"
-	ResourceAtlassianJiraProject string = "atlassian.jira.project"
-	ResourceAtlassianJiraProjectProperty string = "atlassian.jira.project.property"
-	ResourceAtlassianJiraGroup string = "atlassian.jira.group"
-	ResourceAtlassianConfluence string = "atlassian.confluence"
-	ResourceAtlassianConfluenceUser string = "atlassian.confluence.user"
+	ResourceAtlassianAdminOrganizationPolicy      string = "atlassian.admin.organization.policy"
+	ResourceAtlassianAdminOrganizationDomain      string = "atlassian.admin.organization.domain"
+	ResourceAtlassianJira                         string = "atlassian.jira"
+	ResourceAtlassianJiraIssue                    string = "atlassian.jira.issue"
+	ResourceAtlassianJiraServerInfo               string = "atlassian.jira.serverInfo"
+	ResourceAtlassianJiraUser                     string = "atlassian.jira.user"
+	ResourceAtlassianJiraApplicationRole          string = "atlassian.jira.applicationRole"
+	ResourceAtlassianJiraProject                  string = "atlassian.jira.project"
+	ResourceAtlassianJiraProjectProperty          string = "atlassian.jira.project.property"
+	ResourceAtlassianJiraGroup                    string = "atlassian.jira.group"
+	ResourceAtlassianConfluence                   string = "atlassian.confluence"
+	ResourceAtlassianConfluenceUser               string = "atlassian.confluence.user"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"atlassian.scim": {
 			// to override args, implement: initAtlassianScim(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianScim,
@@ -54,7 +53,7 @@ func init() {
 			Create: createAtlassianScimGroup,
 		},
 		"atlassian.admin.organization": {
-			Init: initAtlassianAdminOrganization,
+			Init:   initAtlassianAdminOrganization,
 			Create: createAtlassianAdminOrganization,
 		},
 		"atlassian.admin.organization.managedUser": {
@@ -130,7 +129,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -416,11 +415,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"atlassian.scim.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianScim).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianScim).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.scim.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianScim).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -430,9 +429,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.scim.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianScimUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianScimUser).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.scim.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianScimUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -454,9 +453,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.scim.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianScimGroup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianScimGroup).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.scim.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianScimGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -466,9 +465,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.admin.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianAdminOrganization).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianAdminOrganization).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.admin.organization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -494,9 +493,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.admin.organization.managedUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianAdminOrganizationManagedUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianAdminOrganizationManagedUser).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.admin.organization.managedUser.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganizationManagedUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -526,9 +525,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.admin.organization.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianAdminOrganizationPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianAdminOrganizationPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.admin.organization.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganizationPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -550,9 +549,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.admin.organization.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianAdminOrganizationDomain).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianAdminOrganizationDomain).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.admin.organization.domain.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganizationDomain).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -566,9 +565,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.jira.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianJira).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianJira).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.jira.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJira).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -590,9 +589,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.jira.issue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianJiraIssue).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianJiraIssue).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.jira.issue.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraIssue).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -626,9 +625,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.jira.serverInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianJiraServerInfo).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianJiraServerInfo).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.jira.serverInfo.baseUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraServerInfo).BaseUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -646,9 +645,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.jira.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianJiraUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianJiraUser).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.jira.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -674,9 +673,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.jira.applicationRole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianJiraApplicationRole).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianJiraApplicationRole).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.jira.applicationRole.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraApplicationRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -686,9 +685,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.jira.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianJiraProject).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianJiraProject).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.jira.project.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraProject).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -730,17 +729,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.jira.project.property.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianJiraProjectProperty).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianJiraProjectProperty).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.jira.project.property.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraProjectProperty).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianJiraGroup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianJiraGroup).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.jira.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -750,17 +749,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.confluence.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianConfluence).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianConfluence).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.confluence.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluence).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.confluence.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianConfluenceUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAtlassianConfluenceUser).__id, ok = v.Value.(string)
+		return
+	},
 	"atlassian.confluence.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluenceUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -776,13 +775,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[atlassian] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[atlassian] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[atlassian] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[atlassian] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -800,9 +799,9 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlAtlassianScim for the atlassian.scim resource
 type mqlAtlassianScim struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianScimInternal it will be used here
-	Users plugin.TValue[[]any]
+	Users  plugin.TValue[[]any]
 	Groups plugin.TValue[[]any]
 }
 
@@ -818,7 +817,7 @@ func createAtlassianScim(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -878,13 +877,13 @@ func (c *mqlAtlassianScim) GetGroups() *plugin.TValue[[]any] {
 // mqlAtlassianScimUser for the atlassian.scim.user resource
 type mqlAtlassianScimUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianScimUserInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	DisplayName plugin.TValue[string]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	DisplayName  plugin.TValue[string]
 	Organization plugin.TValue[string]
-	Title plugin.TValue[string]
+	Title        plugin.TValue[string]
 }
 
 // createAtlassianScimUser creates a new instance of this resource
@@ -899,7 +898,7 @@ func createAtlassianScimUser(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -947,9 +946,9 @@ func (c *mqlAtlassianScimUser) GetTitle() *plugin.TValue[string] {
 // mqlAtlassianScimGroup for the atlassian.scim.group resource
 type mqlAtlassianScimGroup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianScimGroupInternal it will be used here
-	Id plugin.TValue[string]
+	Id   plugin.TValue[string]
 	Name plugin.TValue[string]
 }
 
@@ -965,7 +964,7 @@ func createAtlassianScimGroup(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1001,13 +1000,13 @@ func (c *mqlAtlassianScimGroup) GetName() *plugin.TValue[string] {
 // mqlAtlassianAdminOrganization for the atlassian.admin.organization resource
 type mqlAtlassianAdminOrganization struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianAdminOrganizationInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Type plugin.TValue[string]
-	Policies plugin.TValue[[]any]
-	Domains plugin.TValue[[]any]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Type         plugin.TValue[string]
+	Policies     plugin.TValue[[]any]
+	Domains      plugin.TValue[[]any]
 	ManagedUsers plugin.TValue[[]any]
 }
 
@@ -1023,7 +1022,7 @@ func createAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1111,14 +1110,14 @@ func (c *mqlAtlassianAdminOrganization) GetManagedUsers() *plugin.TValue[[]any] 
 // mqlAtlassianAdminOrganizationManagedUser for the atlassian.admin.organization.managedUser resource
 type mqlAtlassianAdminOrganizationManagedUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianAdminOrganizationManagedUserInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Type plugin.TValue[string]
-	Email plugin.TValue[string]
-	Status plugin.TValue[string]
-	LastActive plugin.TValue[*time.Time]
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Email         plugin.TValue[string]
+	Status        plugin.TValue[string]
+	LastActive    plugin.TValue[*time.Time]
 	ProductAccess plugin.TValue[[]any]
 }
 
@@ -1134,7 +1133,7 @@ func createAtlassianAdminOrganizationManagedUser(runtime *plugin.Runtime, args m
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1190,13 +1189,13 @@ func (c *mqlAtlassianAdminOrganizationManagedUser) GetProductAccess() *plugin.TV
 // mqlAtlassianAdminOrganizationPolicy for the atlassian.admin.organization.policy resource
 type mqlAtlassianAdminOrganizationPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianAdminOrganizationPolicyInternal it will be used here
-	Id plugin.TValue[string]
-	Type plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id         plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Name       plugin.TValue[string]
 	PolicyType plugin.TValue[string]
-	Status plugin.TValue[string]
+	Status     plugin.TValue[string]
 }
 
 // createAtlassianAdminOrganizationPolicy creates a new instance of this resource
@@ -1211,7 +1210,7 @@ func createAtlassianAdminOrganizationPolicy(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1259,9 +1258,9 @@ func (c *mqlAtlassianAdminOrganizationPolicy) GetStatus() *plugin.TValue[string]
 // mqlAtlassianAdminOrganizationDomain for the atlassian.admin.organization.domain resource
 type mqlAtlassianAdminOrganizationDomain struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianAdminOrganizationDomainInternal it will be used here
-	Id plugin.TValue[string]
+	Id   plugin.TValue[string]
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
 }
@@ -1278,7 +1277,7 @@ func createAtlassianAdminOrganizationDomain(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1318,12 +1317,12 @@ func (c *mqlAtlassianAdminOrganizationDomain) GetType() *plugin.TValue[string] {
 // mqlAtlassianJira for the atlassian.jira resource
 type mqlAtlassianJira struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianJiraInternal it will be used here
-	Users plugin.TValue[[]any]
-	Projects plugin.TValue[[]any]
-	Issues plugin.TValue[[]any]
-	Groups plugin.TValue[[]any]
+	Users       plugin.TValue[[]any]
+	Projects    plugin.TValue[[]any]
+	Issues      plugin.TValue[[]any]
+	Groups      plugin.TValue[[]any]
 	ServerInfos plugin.TValue[*mqlAtlassianJiraServerInfo]
 }
 
@@ -1339,7 +1338,7 @@ func createAtlassianJira(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1447,16 +1446,16 @@ func (c *mqlAtlassianJira) GetServerInfos() *plugin.TValue[*mqlAtlassianJiraServ
 // mqlAtlassianJiraIssue for the atlassian.jira.issue resource
 type mqlAtlassianJiraIssue struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianJiraIssueInternal it will be used here
-	Id plugin.TValue[string]
-	Project plugin.TValue[string]
-	ProjectKey plugin.TValue[string]
-	Status plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Project     plugin.TValue[string]
+	ProjectKey  plugin.TValue[string]
+	Status      plugin.TValue[string]
 	Description plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	Creator plugin.TValue[*mqlAtlassianJiraUser]
-	TypeName plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	Creator     plugin.TValue[*mqlAtlassianJiraUser]
+	TypeName    plugin.TValue[string]
 }
 
 // createAtlassianJiraIssue creates a new instance of this resource
@@ -1471,7 +1470,7 @@ func createAtlassianJiraIssue(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1531,11 +1530,11 @@ func (c *mqlAtlassianJiraIssue) GetTypeName() *plugin.TValue[string] {
 // mqlAtlassianJiraServerInfo for the atlassian.jira.serverInfo resource
 type mqlAtlassianJiraServerInfo struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianJiraServerInfoInternal it will be used here
-	BaseUrl plugin.TValue[string]
-	BuildNumber plugin.TValue[int64]
-	ServerTitle plugin.TValue[string]
+	BaseUrl        plugin.TValue[string]
+	BuildNumber    plugin.TValue[int64]
+	ServerTitle    plugin.TValue[string]
 	DeploymentType plugin.TValue[string]
 }
 
@@ -1590,13 +1589,13 @@ func (c *mqlAtlassianJiraServerInfo) GetDeploymentType() *plugin.TValue[string] 
 // mqlAtlassianJiraUser for the atlassian.jira.user resource
 type mqlAtlassianJiraUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianJiraUserInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Type plugin.TValue[string]
-	Picture plugin.TValue[string]
-	Groups plugin.TValue[[]any]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Picture          plugin.TValue[string]
+	Groups           plugin.TValue[[]any]
 	ApplicationRoles plugin.TValue[[]any]
 }
 
@@ -1612,7 +1611,7 @@ func createAtlassianJiraUser(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1688,9 +1687,9 @@ func (c *mqlAtlassianJiraUser) GetApplicationRoles() *plugin.TValue[[]any] {
 // mqlAtlassianJiraApplicationRole for the atlassian.jira.applicationRole resource
 type mqlAtlassianJiraApplicationRole struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianJiraApplicationRoleInternal it will be used here
-	Id plugin.TValue[string]
+	Id   plugin.TValue[string]
 	Name plugin.TValue[string]
 }
 
@@ -1737,17 +1736,17 @@ func (c *mqlAtlassianJiraApplicationRole) GetName() *plugin.TValue[string] {
 // mqlAtlassianJiraProject for the atlassian.jira.project resource
 type mqlAtlassianJiraProject struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianJiraProjectInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Uuid plugin.TValue[string]
-	Key plugin.TValue[string]
-	Url plugin.TValue[string]
-	Email plugin.TValue[string]
-	Private plugin.TValue[bool]
-	Deleted plugin.TValue[bool]
-	Archived plugin.TValue[bool]
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Uuid       plugin.TValue[string]
+	Key        plugin.TValue[string]
+	Url        plugin.TValue[string]
+	Email      plugin.TValue[string]
+	Private    plugin.TValue[bool]
+	Deleted    plugin.TValue[bool]
+	Archived   plugin.TValue[bool]
 	Properties plugin.TValue[[]any]
 }
 
@@ -1763,7 +1762,7 @@ func createAtlassianJiraProject(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1843,7 +1842,7 @@ func (c *mqlAtlassianJiraProject) GetProperties() *plugin.TValue[[]any] {
 // mqlAtlassianJiraProjectProperty for the atlassian.jira.project.property resource
 type mqlAtlassianJiraProjectProperty struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianJiraProjectPropertyInternal it will be used here
 	Id plugin.TValue[string]
 }
@@ -1860,7 +1859,7 @@ func createAtlassianJiraProjectProperty(runtime *plugin.Runtime, args map[string
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1892,9 +1891,9 @@ func (c *mqlAtlassianJiraProjectProperty) GetId() *plugin.TValue[string] {
 // mqlAtlassianJiraGroup for the atlassian.jira.group resource
 type mqlAtlassianJiraGroup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianJiraGroupInternal it will be used here
-	Id plugin.TValue[string]
+	Id   plugin.TValue[string]
 	Name plugin.TValue[string]
 }
 
@@ -1910,7 +1909,7 @@ func createAtlassianJiraGroup(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1946,7 +1945,7 @@ func (c *mqlAtlassianJiraGroup) GetName() *plugin.TValue[string] {
 // mqlAtlassianConfluence for the atlassian.confluence resource
 type mqlAtlassianConfluence struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianConfluenceInternal it will be used here
 	Users plugin.TValue[[]any]
 }
@@ -1963,7 +1962,7 @@ func createAtlassianConfluence(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2007,9 +2006,9 @@ func (c *mqlAtlassianConfluence) GetUsers() *plugin.TValue[[]any] {
 // mqlAtlassianConfluenceUser for the atlassian.confluence.user resource
 type mqlAtlassianConfluenceUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAtlassianConfluenceUserInternal it will be used here
-	Id plugin.TValue[string]
+	Id   plugin.TValue[string]
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
 }
@@ -2026,7 +2025,7 @@ func createAtlassianConfluenceUser(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

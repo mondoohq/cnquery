@@ -17,18 +17,17 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceNmap string = "nmap"
-	ResourceNmapNetwork string = "nmap.network"
-	ResourceNmapHost string = "nmap.host"
-	ResourceNmapPort string = "nmap.port"
+	ResourceNmap                   string = "nmap"
+	ResourceNmapNetwork            string = "nmap.network"
+	ResourceNmapHost               string = "nmap.host"
+	ResourceNmapPort               string = "nmap.port"
 	ResourceNmapVersionInformation string = "nmap.versionInformation"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"nmap": {
 			// to override args, implement: initNmap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNmap,
@@ -38,7 +37,7 @@ func init() {
 			Create: createNmapNetwork,
 		},
 		"nmap.host": {
-			Init: initNmapHost,
+			Init:   initNmapHost,
 			Create: createNmapHost,
 		},
 		"nmap.port": {
@@ -70,7 +69,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -218,19 +217,19 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"nmap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNmap).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlNmap).__id, ok = v.Value.(string)
+		return
+	},
 	"nmap.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNmap).Version, ok = plugin.RawToTValue[*mqlNmapVersionInformation](v.Value, v.Error)
 		return
 	},
 	"nmap.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNmapNetwork).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlNmapNetwork).__id, ok = v.Value.(string)
+		return
+	},
 	"nmap.network.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNmapNetwork).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -244,9 +243,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"nmap.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNmapHost).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlNmapHost).__id, ok = v.Value.(string)
+		return
+	},
 	"nmap.host.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNmapHost).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -288,9 +287,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"nmap.port.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNmapPort).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlNmapPort).__id, ok = v.Value.(string)
+		return
+	},
 	"nmap.port.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNmapPort).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -320,9 +319,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"nmap.versionInformation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNmapVersionInformation).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlNmapVersionInformation).__id, ok = v.Value.(string)
+		return
+	},
 	"nmap.versionInformation.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNmapVersionInformation).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -346,13 +345,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[nmap] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[nmap] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[nmap] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[nmap] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -370,7 +369,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlNmap for the nmap resource
 type mqlNmap struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlNmapInternal it will be used here
 	Version plugin.TValue[*mqlNmapVersionInformation]
 }
@@ -387,7 +386,7 @@ func createNmap(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -431,10 +430,10 @@ func (c *mqlNmap) GetVersion() *plugin.TValue[*mqlNmapVersionInformation] {
 // mqlNmapNetwork for the nmap.network resource
 type mqlNmapNetwork struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlNmapNetworkInternal
-	Target plugin.TValue[string]
-	Hosts plugin.TValue[[]any]
+	Target   plugin.TValue[string]
+	Hosts    plugin.TValue[[]any]
 	Warnings plugin.TValue[[]any]
 }
 
@@ -450,7 +449,7 @@ func createNmapNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -504,18 +503,18 @@ func (c *mqlNmapNetwork) GetWarnings() *plugin.TValue[[]any] {
 // mqlNmapHost for the nmap.host resource
 type mqlNmapHost struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlNmapHostInternal
-	Name plugin.TValue[string]
-	Distance plugin.TValue[any]
-	Os plugin.TValue[any]
-	EndTime plugin.TValue[*time.Time]
-	Comment plugin.TValue[string]
-	Trace plugin.TValue[any]
+	Name      plugin.TValue[string]
+	Distance  plugin.TValue[any]
+	Os        plugin.TValue[any]
+	EndTime   plugin.TValue[*time.Time]
+	Comment   plugin.TValue[string]
+	Trace     plugin.TValue[any]
 	Addresses plugin.TValue[[]any]
 	Hostnames plugin.TValue[[]any]
-	Ports plugin.TValue[[]any]
-	State plugin.TValue[string]
+	Ports     plugin.TValue[[]any]
+	State     plugin.TValue[string]
 }
 
 // createNmapHost creates a new instance of this resource
@@ -530,7 +529,7 @@ func createNmapHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -626,15 +625,15 @@ func (c *mqlNmapHost) GetState() *plugin.TValue[string] {
 // mqlNmapPort for the nmap.port resource
 type mqlNmapPort struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlNmapPortInternal it will be used here
-	Port plugin.TValue[int64]
-	Service plugin.TValue[string]
-	Method plugin.TValue[string]
+	Port     plugin.TValue[int64]
+	Service  plugin.TValue[string]
+	Method   plugin.TValue[string]
 	Protocol plugin.TValue[string]
-	Product plugin.TValue[string]
-	Version plugin.TValue[string]
-	State plugin.TValue[string]
+	Product  plugin.TValue[string]
+	Version  plugin.TValue[string]
+	State    plugin.TValue[string]
 }
 
 // createNmapPort creates a new instance of this resource
@@ -700,13 +699,13 @@ func (c *mqlNmapPort) GetState() *plugin.TValue[string] {
 // mqlNmapVersionInformation for the nmap.versionInformation resource
 type mqlNmapVersionInformation struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlNmapVersionInformationInternal it will be used here
-	Version plugin.TValue[string]
-	Platform plugin.TValue[string]
-	CompiledWith plugin.TValue[[]any]
+	Version         plugin.TValue[string]
+	Platform        plugin.TValue[string]
+	CompiledWith    plugin.TValue[[]any]
 	CompiledWithout plugin.TValue[[]any]
-	NsockEngines plugin.TValue[[]any]
+	NsockEngines    plugin.TValue[[]any]
 }
 
 // createNmapVersionInformation creates a new instance of this resource

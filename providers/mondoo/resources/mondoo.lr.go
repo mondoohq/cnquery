@@ -17,32 +17,31 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceMondooClient string = "mondoo.client"
+	ResourceMondooClient       string = "mondoo.client"
 	ResourceMondooOrganization string = "mondoo.organization"
-	ResourceMondooSpace string = "mondoo.space"
-	ResourceMondooAsset string = "mondoo.asset"
-	ResourceMondooResource string = "mondoo.resource"
+	ResourceMondooSpace        string = "mondoo.space"
+	ResourceMondooAsset        string = "mondoo.asset"
+	ResourceMondooResource     string = "mondoo.resource"
 )
-
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"mondoo.client": {
 			// to override args, implement: initMondooClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMondooClient,
 		},
 		"mondoo.organization": {
-			Init: initMondooOrganization,
+			Init:   initMondooOrganization,
 			Create: createMondooOrganization,
 		},
 		"mondoo.space": {
-			Init: initMondooSpace,
+			Init:   initMondooSpace,
 			Create: createMondooSpace,
 		},
 		"mondoo.asset": {
-			Init: initMondooAsset,
+			Init:   initMondooAsset,
 			Create: createMondooAsset,
 		},
 		"mondoo.resource": {
@@ -70,7 +69,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -194,19 +193,19 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"mondoo.client.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMondooClient).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMondooClient).__id, ok = v.Value.(string)
+		return
+	},
 	"mondoo.client.mrn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooClient).Mrn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mondoo.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMondooOrganization).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMondooOrganization).__id, ok = v.Value.(string)
+		return
+	},
 	"mondoo.organization.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooOrganization).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -220,9 +219,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mondoo.space.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMondooSpace).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMondooSpace).__id, ok = v.Value.(string)
+		return
+	},
 	"mondoo.space.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooSpace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -236,9 +235,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mondoo.asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMondooAsset).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMondooAsset).__id, ok = v.Value.(string)
+		return
+	},
 	"mondoo.asset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooAsset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -276,9 +275,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mondoo.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMondooResource).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMondooResource).__id, ok = v.Value.(string)
+		return
+	},
 	"mondoo.resource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooResource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -290,13 +289,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[mondoo] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[mondoo] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[mondoo] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[mondoo] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -314,7 +313,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlMondooClient for the mondoo.client resource
 type mqlMondooClient struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMondooClientInternal it will be used here
 	Mrn plugin.TValue[string]
 }
@@ -358,10 +357,10 @@ func (c *mqlMondooClient) GetMrn() *plugin.TValue[string] {
 // mqlMondooOrganization for the mondoo.organization resource
 type mqlMondooOrganization struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMondooOrganizationInternal it will be used here
-	Name plugin.TValue[string]
-	Mrn plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Mrn    plugin.TValue[string]
 	Spaces plugin.TValue[[]any]
 }
 
@@ -377,7 +376,7 @@ func createMondooOrganization(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -429,10 +428,10 @@ func (c *mqlMondooOrganization) GetSpaces() *plugin.TValue[[]any] {
 // mqlMondooSpace for the mondoo.space resource
 type mqlMondooSpace struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMondooSpaceInternal it will be used here
-	Name plugin.TValue[string]
-	Mrn plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Mrn    plugin.TValue[string]
 	Assets plugin.TValue[[]any]
 }
 
@@ -448,7 +447,7 @@ func createMondooSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -500,17 +499,17 @@ func (c *mqlMondooSpace) GetAssets() *plugin.TValue[[]any] {
 // mqlMondooAsset for the mondoo.asset resource
 type mqlMondooAsset struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMondooAssetInternal it will be used here
-	Name plugin.TValue[string]
-	Mrn plugin.TValue[string]
-	Platform plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Mrn         plugin.TValue[string]
+	Platform    plugin.TValue[string]
 	Annotations plugin.TValue[map[string]any]
-	Labels plugin.TValue[map[string]any]
-	UpdatedAt plugin.TValue[*time.Time]
-	ScoreValue plugin.TValue[int64]
-	ScoreGrade plugin.TValue[string]
-	Resources plugin.TValue[[]any]
+	Labels      plugin.TValue[map[string]any]
+	UpdatedAt   plugin.TValue[*time.Time]
+	ScoreValue  plugin.TValue[int64]
+	ScoreGrade  plugin.TValue[string]
+	Resources   plugin.TValue[[]any]
 }
 
 // createMondooAsset creates a new instance of this resource
@@ -525,7 +524,7 @@ func createMondooAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -601,10 +600,10 @@ func (c *mqlMondooAsset) GetResources() *plugin.TValue[[]any] {
 // mqlMondooResource for the mondoo.resource resource
 type mqlMondooResource struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMondooResourceInternal it will be used here
 	Name plugin.TValue[string]
-	Id plugin.TValue[string]
+	Id   plugin.TValue[string]
 }
 
 // createMondooResource creates a new instance of this resource
@@ -619,7 +618,7 @@ func createMondooResource(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
