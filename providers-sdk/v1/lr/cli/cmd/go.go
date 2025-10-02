@@ -29,6 +29,8 @@ var goCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("failed to get dist flag")
 		}
 
+		failOnDups, _ := cmd.Flags().GetBool("fail-on-duplicates")
+
 		file := args[0]
 		packageName := path.Base(path.Dir(file))
 
@@ -38,6 +40,13 @@ var goCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to resolve")
 			return
+		}
+
+		dups := res.GetDuplicates()
+		if failOnDups && len(dups) > 0 {
+			log.Fatal().Int("count", len(dups)).Strs("paths", dups).Msg("duplicate field paths detected, exiting")
+		} else if len(dups) > 0 {
+			log.Warn().Int("count", len(dups)).Strs("paths", dups).Msg("duplicate field paths detected")
 		}
 
 		// add license header
@@ -120,6 +129,7 @@ var goCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(goCmd)
+	goCmd.Flags().Bool("fail-on-duplicates", false, "fail if duplicate LR field paths are detected")
 	goCmd.Flags().String("dist", "", "folder for output json generation")
 	goCmd.Flags().String("license-header-file", "", "optional file path to read license header from")
 }
