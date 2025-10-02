@@ -543,7 +543,6 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"locations":                      llx.ArrayData(convert.SliceAnyToInterface(c.Locations), types.String),
 			"enableKubernetesAlpha":          llx.BoolData(c.EnableKubernetesAlpha),
 			"autopilotEnabled":               llx.BoolData(autopilotEnabled),
-			"zone":                           llx.StringData(c.Zone),
 			"location":                       llx.StringData(c.Location),
 			"endpoint":                       llx.StringData(c.Endpoint),
 			"initialClusterVersion":          llx.StringData(c.InitialClusterVersion),

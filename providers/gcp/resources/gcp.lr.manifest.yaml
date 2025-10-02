@@ -72,7 +72,6 @@ resources:
       folders: {}
       iamPolicy: {}
       id: {}
-      lifecycleState: {}
       name: {}
       projects: {}
       state: {}
@@ -103,11 +102,9 @@ resources:
       id: {}
       kms: {}
       labels: {}
-      lifecycleState: {}
       logging: {}
       monitoring: {}
       name: {}
-      number: {}
       parentId: {}
       pubsub: {}
       recommendations: {}
@@ -1413,7 +1410,6 @@ resources:
       status: {}
       subnetwork: {}
       workloadIdentityConfig: {}
-      zone: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2400,7 +2396,6 @@ resources:
       backendType: {}
       connectionName: {}
       created: {}
-      currentDiskSize: {}
       databaseInstalledVersion: {}
       databaseVersion: {}
       databases: {}
@@ -2414,7 +2409,6 @@ resources:
       masterInstanceName: {}
       maxDiskSize: {}
       name: {}
-      project: {}
       projectId: {}
       region: {}
       replicaNames: {}
