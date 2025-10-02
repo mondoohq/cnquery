@@ -43,24 +43,6 @@ type mqlVcdExternalNetworkInternal struct {
 	externalNetwork *govcd.ExternalNetwork
 }
 
-func (v *mqlVcdExternalNetwork) id() (string, error) {
-	if v.Name.Error != nil {
-		return "", v.Name.Error
-	}
-
-	// FIXME: DEPRECATED, remove in v10.0. The ID field will be removed and
-	// this request won't be necessary anymore. vv
-	urn := v.GetUrn()
-	if urn == nil {
-		v.Id = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
-	} else {
-		v.Id = *urn
-	}
-	// ^^
-
-	return "vcd.externalNetwork/" + v.Name.Data, nil
-}
-
 func (v *mqlVcdExternalNetwork) getData() (*types.ExternalNetwork, error) {
 	// check if the data is cached
 	// TODO: probably we need locking here to make sure concurrent access is covered
