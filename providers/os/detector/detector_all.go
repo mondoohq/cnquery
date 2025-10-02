@@ -632,6 +632,18 @@ var plcnext = &PlatformResolver{
 	},
 }
 
+var openeuler = &PlatformResolver{
+	Name:     "openeuler",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "openEuler" {
+			pf.Name = "openeuler"
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 // fallback linux detection, since we do not know the system, the family detection may not be correct
 var defaultLinux = &PlatformResolver{
 	Name:     "generic-linux",
@@ -901,10 +913,19 @@ var archFamily = &PlatformResolver{
 	},
 }
 
+var eulerFamily = &PlatformResolver{
+	Name:     "euler",
+	IsFamily: true,
+	Children: []*PlatformResolver{openeuler},
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return true, nil
+	},
+}
+
 var linuxFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_LINUX,
 	IsFamily: true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, plcnext, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, plcnext, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)
