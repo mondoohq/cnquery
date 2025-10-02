@@ -409,7 +409,7 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 						isPlatformEol(convert.ToValue(entry.Name), convert.ToValue(major.Value))
 
 					id := strings.Join([]string{
-						"azure.subscription", subId,
+						ResourceAzureSubscription, subId,
 						"webService.appRuntimeStack", os, runtimeVersion,
 					}, "/")
 
