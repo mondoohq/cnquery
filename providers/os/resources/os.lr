@@ -1526,8 +1526,6 @@ yum.repo {
   baseurl []string
   // Indicator when the repository will expire
   expire string
-  // Deprecated; use file.path
-  filename string
   // Repository configuration file path
   file file
   // Repository revision
