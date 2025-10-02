@@ -2,9 +2,7 @@ module go.mondoo.com/cnquery/v12/providers/equinix
 
 replace go.mondoo.com/cnquery/v12 => ../..
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.25
 
 require (
 	github.com/packethost/packngo v0.31.0
