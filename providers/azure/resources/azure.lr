@@ -2387,8 +2387,6 @@ private azure.subscription.cloudDefenderService.securityContact @defaults("id na
   name string
   // Emails that receive security alerts
   emails []string
-  // Deprecated: use `notificationSources` instead
-  alertNotifications dict
   // A collection of sources which evaluate the email notification
   notificationSources dict
   // Notifications by role settings
