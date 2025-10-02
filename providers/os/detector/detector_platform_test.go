@@ -878,3 +878,14 @@ func TestUbiOSDetector(t *testing.T) {
 	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
+
+func TestElementaryOSDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-elementary.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "elementary", di.Name, "os name should be identified")
+	assert.Equal(t, "elementary OS 7 Horus", di.Title, "os title should be identified")
+	assert.Equal(t, "7", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}

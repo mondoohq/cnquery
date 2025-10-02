@@ -1,0 +1,34 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.15.0-56-generic"
+
+[files."/etc/os-release"]
+content = """
+PRETTY_NAME="elementary OS 7 Horus"
+NAME="elementary OS"
+CPE_NAME="cpe:/o:elementary:elementary_os:7"
+VERSION_ID="7"
+VERSION="7 Horus"
+VERSION_CODENAME=horus
+ID=elementary
+ID_LIKE="ubuntu debian"
+HOME_URL="https://elementary.io/"
+DOCUMENTATION_URL="https://elementary.io/docs/learning-the-basics"
+SUPPORT_URL="https://elementary.io/support"
+BUG_REPORT_URL="https://docs.elementary.io/contributor-guide/feedback/reporting-issues"
+PRIVACY_POLICY_URL="https://elementary.io/privacy-policy"
+UBUNTU_CODENAME=jammy
+UBUNTU_PRETTY_NAME="Ubuntu 22.04.2 LTS"
+UBUNTU_NAME="Ubuntu"
+UBUNTU_VERSION_ID="22.04"
+UBUNTU_VERSION="22.04.2 LTS (Jammy Jellyfish)"
+UBUNTU_VERSION_CODENAME=jammy
+"""
+
+[files."/etc/debian_version"]
+content = "bookworm/sid"
