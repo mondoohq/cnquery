@@ -168,7 +168,7 @@ func computeWebAppStack(runtime *plugin.Runtime, config *mqlAzureSubscriptionWeb
 		runtimeInfo.MinorVersion = version
 	}
 
-	obj, err := CreateResource(runtime, "azure.subscription.webService", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, ResourceAzureSubscriptionWebService, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -477,7 +477,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscr
 		return nil, err
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsiteconfig",
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteconfig,
 		map[string]*llx.RawData{
 			"id":         llx.StringDataPtr(entry.ID),
 			"name":       llx.StringDataPtr(entry.Name),
@@ -524,7 +524,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) authenticationSettings() (*mqlAz
 		return nil, err
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsiteauthsettings",
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteauthsettings,
 		map[string]*llx.RawData{
 			"id":         llx.StringDataPtr(configuration.ID),
 			"name":       llx.StringDataPtr(configuration.Name),
@@ -610,7 +610,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) ftp() (*mqlAzureSubscriptionWebS
 	if response.Properties != nil {
 		args["allow"] = llx.BoolDataPtr(response.Properties.Allow)
 	}
-	mqlResource, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies", args)
+	mqlResource, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, args)
 	if err != nil {
 		return nil, err
 	}
@@ -655,7 +655,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) scm() (*mqlAzureSubscriptionWebS
 	if response.Properties != nil {
 		args["allow"] = llx.BoolDataPtr(response.Properties.Allow)
 	}
-	mqlResource, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies", args)
+	mqlResource, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, args)
 	if err != nil {
 		return nil, err
 	}
@@ -696,7 +696,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.function",
+			mqlAzure, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceFunction,
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(entry.ID),
 					"name":       llx.StringDataPtr(entry.Name),
@@ -762,7 +762,7 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) parent() (*mqlAzureSubscriptionW
 		return nil, err
 	}
 
-	parentResource, err := createWebAppResourceFromSite(a.MqlRuntime, "azure.subscription.webService.appsite", &response.Site)
+	parentResource, err := createWebAppResourceFromSite(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsite, &response.Site)
 	if err != nil {
 		return nil, err
 	}
@@ -790,7 +790,7 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) configuration() (*mqlAzureSubscr
 		properties = props
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsiteconfig",
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteconfig,
 		map[string]*llx.RawData{
 			"id":         llx.StringDataPtr(configuration.ID),
 			"name":       llx.StringDataPtr(configuration.Name),
@@ -825,7 +825,7 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) authenticationSettings() (*mqlAz
 		properties = props
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsiteauthsettings",
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteauthsettings,
 		map[string]*llx.RawData{
 			"id":         llx.StringDataPtr(configuration.ID),
 			"name":       llx.StringDataPtr(configuration.Name),
@@ -940,7 +940,7 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) functions() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.function",
+			mqlAzure, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceFunction,
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(entry.ID),
 					"name":       llx.StringDataPtr(entry.Name),
@@ -978,7 +978,7 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) ftp() (*mqlAzureSubscriptionWebS
 		args["allow"] = llx.BoolDataPtr(response.Properties.Allow)
 	}
 
-	mqlResource, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies", args)
+	mqlResource, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, args)
 	if err != nil {
 		return nil, err
 	}
@@ -1006,7 +1006,7 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) scm() (*mqlAzureSubscriptionWebS
 		args["allow"] = llx.BoolDataPtr(response.Properties.Allow)
 	}
 
-	mqlResource, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies", args)
+	mqlResource, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, args)
 	if err != nil {
 		return nil, err
 	}
