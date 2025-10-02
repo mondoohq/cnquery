@@ -1724,9 +1724,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"sshd.config.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
 	},
-	"sshd.config.content": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSshdConfig).GetContent()).ToDataRes(types.String)
-	},
 	"sshd.config.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -4945,10 +4942,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"sshd.config.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfig).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"sshd.config.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSshdConfig).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"sshd.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12362,7 +12355,6 @@ type mqlSshdConfig struct {
 	mqlSshdConfigInternal
 	File            plugin.TValue[*mqlFile]
 	Files           plugin.TValue[[]any]
-	Content         plugin.TValue[string]
 	Params          plugin.TValue[map[string]any]
 	Blocks          plugin.TValue[[]any]
 	Ciphers         plugin.TValue[[]any]
@@ -12443,17 +12435,6 @@ func (c *mqlSshdConfig) GetFiles() *plugin.TValue[[]any] {
 		}
 
 		return c.files(vargFile.Data)
-	})
-}
-
-func (c *mqlSshdConfig) GetContent() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
-		vargFile := c.GetFile()
-		if vargFile.Error != nil {
-			return "", vargFile.Error
-		}
-
-		return c.content(vargFile.Data)
 	})
 }
 
