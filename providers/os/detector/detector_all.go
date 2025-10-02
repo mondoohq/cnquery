@@ -817,13 +817,8 @@ var redhatFamily = &PlatformResolver{
 	IsFamily: true,
 	// NOTE: oracle pretends to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
 	// want to check that platform before redhat
-	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux, openeuler},
+	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		// openeuler does not have /etc/redhat-release but it is rhelish
-		if pf.Name == "openEuler" {
-			return true, nil
-		}
-
 		f, err := conn.FileSystem().Open("/etc/redhat-release")
 		if err != nil {
 			log.Debug().Err(err)
@@ -918,10 +913,19 @@ var archFamily = &PlatformResolver{
 	},
 }
 
+var eulerFamily = &PlatformResolver{
+	Name:     "euler",
+	IsFamily: true,
+	Children: []*PlatformResolver{openeuler},
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return true, nil
+	},
+}
+
 var linuxFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_LINUX,
 	IsFamily: true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, plcnext, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, plcnext, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)

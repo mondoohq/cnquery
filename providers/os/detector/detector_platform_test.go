@@ -898,5 +898,5 @@ func TestOpenEulerDetector(t *testing.T) {
 	assert.Equal(t, "openEuler 24.03 (LTS-SP2)", di.Title, "os title should be identified")
 	assert.Equal(t, "24.03", di.Version, "os version should be identified")
 	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
-	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+	assert.Equal(t, []string{"euler", "linux", "unix", "os"}, di.Family)
 }
