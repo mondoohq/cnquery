@@ -632,6 +632,18 @@ var plcnext = &PlatformResolver{
 	},
 }
 
+var openeuler = &PlatformResolver{
+	Name:     "openeuler",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "openEuler" {
+			pf.Name = "openeuler"
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 // fallback linux detection, since we do not know the system, the family detection may not be correct
 var defaultLinux = &PlatformResolver{
 	Name:     "generic-linux",
@@ -805,8 +817,13 @@ var redhatFamily = &PlatformResolver{
 	IsFamily: true,
 	// NOTE: oracle pretends to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
 	// want to check that platform before redhat
-	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux},
+	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux, openeuler},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		// openeuler does not have /etc/redhat-release but it is rhelish
+		if pf.Name == "openEuler" {
+			return true, nil
+		}
+
 		f, err := conn.FileSystem().Open("/etc/redhat-release")
 		if err != nil {
 			log.Debug().Err(err)

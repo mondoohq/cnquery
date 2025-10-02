@@ -889,3 +889,14 @@ func TestElementaryOSDetector(t *testing.T) {
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
+
+func TestOpenEulerDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-openeuler.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "openeuler", di.Name, "os name should be identified")
+	assert.Equal(t, "openEuler 24.03 (LTS-SP2)", di.Title, "os title should be identified")
+	assert.Equal(t, "24.03", di.Version, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
