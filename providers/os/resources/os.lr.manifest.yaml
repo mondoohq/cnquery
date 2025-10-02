@@ -1292,7 +1292,6 @@ resources:
       expire: {}
       file:
         min_mondoo_version: 5.18.0
-      filename: {}
       id: {}
       mirrors: {}
       name: {}
