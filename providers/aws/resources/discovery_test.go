@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"sort"
 	"testing"
 	"time"
 
@@ -75,32 +74,67 @@ func TestAddConnInfoToEc2Instances(t *testing.T) {
 }
 
 func TestGetDiscoveryTargets(t *testing.T) {
-	config := &inventory.Config{
-		Discover: &inventory.Discovery{
-			Targets: []string{},
+	cases := []struct {
+		name    string
+		targets []string
+		want    []string
+	}{
+		{
+			name:    "empty",
+			targets: []string{},
+			want:    Auto,
+		},
+		{
+			name:    "all",
+			targets: []string{"all"},
+			want:    allDiscovery(),
+		},
+		{
+			name:    "auto",
+			targets: []string{"auto"},
+			want:    Auto,
+		},
+		{
+			name:    "resources",
+			targets: []string{"resources"},
+			want:    AllAPIResources,
+		},
+		{
+			name:    "auto and resources",
+			targets: []string{"auto", "resources"},
+			want:    append(Auto, AllAPIResources...),
+		},
+		{
+			name:    "all and resources",
+			targets: []string{"all", "resources"},
+			want:    allDiscovery(),
+		},
+		{
+			name:    "all, auto and resources",
+			targets: []string{"all", "resources"},
+			want:    allDiscovery(),
+		},
+		{
+			name:    "random",
+			targets: []string{"s3-buckets", "iam-users", "instances"},
+			want:    []string{DiscoveryS3Buckets, DiscoveryIAMUsers, DiscoveryInstances},
+		},
+		{
+			name:    "duplicates",
+			targets: []string{"auto", "s3-buckets", "iam-users", "s3-buckets", "auto"},
+			want:    append(Auto, []string{DiscoveryS3Buckets, DiscoveryIAMUsers}...),
 		},
 	}
-	// test all with other stuff
-	config.Discover.Targets = []string{"all", "projects", "instances"}
-	require.Equal(t, allDiscovery(), getDiscoveryTargets(config))
 
-	// test just all
-	config.Discover.Targets = []string{"all"}
-	require.Equal(t, allDiscovery(), getDiscoveryTargets(config))
-
-	// test auto with other stuff
-	config.Discover.Targets = []string{"auto", "s3-buckets", "iam-users"}
-	res := append(Auto, []string{DiscoveryS3Buckets, DiscoveryIAMUsers}...)
-	sort.Strings(res)
-	targets := getDiscoveryTargets(config)
-	sort.Strings(targets)
-	require.Equal(t, res, targets)
-
-	// test just auto
-	config.Discover.Targets = []string{"auto"}
-	require.Equal(t, Auto, getDiscoveryTargets(config))
-
-	// test random
-	config.Discover.Targets = []string{"s3-buckets", "iam-users", "instances"}
-	require.Equal(t, []string{DiscoveryS3Buckets, DiscoveryIAMUsers, DiscoveryInstances}, getDiscoveryTargets(config))
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := &inventory.Config{
+				Discover: &inventory.Discovery{
+					Targets: tc.targets,
+				},
+			}
+			got := getDiscoveryTargets(config)
+			require.ElementsMatch(t, tc.want, got)
+		})
+	}
 }
