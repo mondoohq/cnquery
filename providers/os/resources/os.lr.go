@@ -2118,9 +2118,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"yum.repo.expire": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlYumRepo).GetExpire()).ToDataRes(types.String)
 	},
-	"yum.repo.filename": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlYumRepo).GetFilename()).ToDataRes(types.String)
-	},
 	"yum.repo.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlYumRepo).GetFile()).ToDataRes(types.Resource("file"))
 	},
@@ -5031,10 +5028,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"yum.repo.expire": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlYumRepo).Expire, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"yum.repo.filename": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlYumRepo).Filename, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"yum.repo.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14065,7 +14058,6 @@ type mqlYumRepo struct {
 	Status   plugin.TValue[string]
 	Baseurl  plugin.TValue[[]any]
 	Expire   plugin.TValue[string]
-	Filename plugin.TValue[string]
 	File     plugin.TValue[*mqlFile]
 	Revision plugin.TValue[string]
 	Pkgs     plugin.TValue[string]
@@ -14129,10 +14121,6 @@ func (c *mqlYumRepo) GetBaseurl() *plugin.TValue[[]any] {
 
 func (c *mqlYumRepo) GetExpire() *plugin.TValue[string] {
 	return &c.Expire
-}
-
-func (c *mqlYumRepo) GetFilename() *plugin.TValue[string] {
-	return &c.Filename
 }
 
 func (c *mqlYumRepo) GetFile() *plugin.TValue[*mqlFile] {
