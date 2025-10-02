@@ -1312,7 +1312,6 @@ resources:
       blocks:
         min_mondoo_version: latest
       ciphers: {}
-      content: {}
       file: {}
       files:
         min_mondoo_version: latest
