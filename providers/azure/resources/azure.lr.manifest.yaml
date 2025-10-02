@@ -2919,6 +2919,8 @@ resources:
       properties: {}
       scm:
         min_mondoo_version: 9.0.0
+      slots:
+        min_mondoo_version: 9.0.0
       stack: {}
       tags: {}
       type: {}
@@ -2971,6 +2973,32 @@ resources:
     refs:
     - title: Azure Web documentation
       url: https://learn.microsoft.com/en-us/azure/?product=web
+  azure.subscription.webService.appslot:
+    fields:
+      applicationSettings: {}
+      authenticationSettings: {}
+      configuration: {}
+      connectionSettings: {}
+      diagnosticSettings: {}
+      ftp: {}
+      functions: {}
+      id: {}
+      identity: {}
+      kind: {}
+      location: {}
+      metadata: {}
+      name: {}
+      parent: {}
+      properties: {}
+      scm: {}
+      stack: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.webService.function:
     fields:
       id: {}

@@ -71,6 +71,7 @@ const (
 	ResourceAzureSubscriptionWebService                                                string = "azure.subscription.webService"
 	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                 string = "azure.subscription.webService.appRuntimeStack"
 	ResourceAzureSubscriptionWebServiceAppsite                                         string = "azure.subscription.webService.appsite"
+	ResourceAzureSubscriptionWebServiceAppslot                                         string = "azure.subscription.webService.appslot"
 	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies       string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
 	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                             string = "azure.subscription.webService.appsiteauthsettings"
 	ResourceAzureSubscriptionWebServiceAppsiteconfig                                   string = "azure.subscription.webService.appsiteconfig"
@@ -347,6 +348,10 @@ func init() {
 		"azure.subscription.webService.appsite": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceAppsite,
+		},
+		"azure.subscription.webService.appslot": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppslot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppslot,
 		},
 		"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1920,6 +1925,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appsite.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetIdentity()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.webService.appsite.slots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetSlots()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appslot")))
+	},
 	"azure.subscription.webService.appsite.configuration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetConfiguration()).ToDataRes(types.Resource("azure.subscription.webService.appsiteconfig"))
 	},
@@ -1949,6 +1957,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.appsite.scm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetScm()).ToDataRes(types.Resource("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"))
+	},
+	"azure.subscription.webService.appslot.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appslot.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appslot.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appslot.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appslot.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appslot.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.webService.appslot.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.appslot.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.appslot.parent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetParent()).ToDataRes(types.Resource("azure.subscription.webService.appsite"))
+	},
+	"azure.subscription.webService.appslot.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetConfiguration()).ToDataRes(types.Resource("azure.subscription.webService.appsiteconfig"))
+	},
+	"azure.subscription.webService.appslot.authenticationSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetAuthenticationSettings()).ToDataRes(types.Resource("azure.subscription.webService.appsiteauthsettings"))
+	},
+	"azure.subscription.webService.appslot.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetMetadata()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.appslot.applicationSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetApplicationSettings()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.appslot.connectionSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetConnectionSettings()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.appslot.stack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetStack()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.appslot.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
+	},
+	"azure.subscription.webService.appslot.functions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetFunctions()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.function")))
+	},
+	"azure.subscription.webService.appslot.ftp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetFtp()).ToDataRes(types.Resource("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"))
+	},
+	"azure.subscription.webService.appslot.scm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetScm()).ToDataRes(types.Resource("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"))
 	},
 	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies).GetId()).ToDataRes(types.String)
@@ -5041,6 +5106,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebServiceAppsite).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.webService.appsite.slots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).Slots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.webService.appsite.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).Configuration, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteconfig](v.Value, v.Error)
 		return
@@ -5079,6 +5148,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appsite.scm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).Scm, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.webService.appslot.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Parent, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsite](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Configuration, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteconfig](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.authenticationSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).AuthenticationSettings, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.applicationSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).ApplicationSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.connectionSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).ConnectionSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.stack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Stack, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.diagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.ftp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Ftp, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.scm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).Scm, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsite.basicPublishingCredentialsPolicies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12036,6 +12185,7 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	Tags                   plugin.TValue[map[string]any]
 	Properties             plugin.TValue[any]
 	Identity               plugin.TValue[any]
+	Slots                  plugin.TValue[[]any]
 	Configuration          plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
 	AuthenticationSettings plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
 	Metadata               plugin.TValue[any]
@@ -12115,6 +12265,22 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetProperties() *plugin.TValue[a
 
 func (c *mqlAzureSubscriptionWebServiceAppsite) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetSlots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Slots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "slots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.slots()
+	})
 }
 
 func (c *mqlAzureSubscriptionWebServiceAppsite) GetConfiguration() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig] {
@@ -12225,6 +12391,237 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetScm() *plugin.TValue[*mqlAzur
 	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](&c.Scm, func() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "scm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
+			}
+		}
+
+		return c.scm()
+	})
+}
+
+// mqlAzureSubscriptionWebServiceAppslot for the azure.subscription.webService.appslot resource
+type mqlAzureSubscriptionWebServiceAppslot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppslotInternal it will be used here
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Kind                   plugin.TValue[string]
+	Location               plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Tags                   plugin.TValue[map[string]any]
+	Properties             plugin.TValue[any]
+	Identity               plugin.TValue[any]
+	Parent                 plugin.TValue[*mqlAzureSubscriptionWebServiceAppsite]
+	Configuration          plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
+	AuthenticationSettings plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
+	Metadata               plugin.TValue[any]
+	ApplicationSettings    plugin.TValue[any]
+	ConnectionSettings     plugin.TValue[any]
+	Stack                  plugin.TValue[any]
+	DiagnosticSettings     plugin.TValue[[]any]
+	Functions              plugin.TValue[[]any]
+	Ftp                    plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	Scm                    plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+}
+
+// createAzureSubscriptionWebServiceAppslot creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppslot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppslot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appslot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) MqlName() string {
+	return "azure.subscription.webService.appslot"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetParent() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsite] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsite](&c.Parent, func() (*mqlAzureSubscriptionWebServiceAppsite, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appslot", c.__id, "parent")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionWebServiceAppsite), nil
+			}
+		}
+
+		return c.parent()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetConfiguration() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsiteconfig](&c.Configuration, func() (*mqlAzureSubscriptionWebServiceAppsiteconfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appslot", c.__id, "configuration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionWebServiceAppsiteconfig), nil
+			}
+		}
+
+		return c.configuration()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetAuthenticationSettings() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsiteauthsettings](&c.AuthenticationSettings, func() (*mqlAzureSubscriptionWebServiceAppsiteauthsettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appslot", c.__id, "authenticationSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings), nil
+			}
+		}
+
+		return c.authenticationSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetMetadata() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Metadata, func() (any, error) {
+		return c.metadata()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetApplicationSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ApplicationSettings, func() (any, error) {
+		return c.applicationSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetConnectionSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ConnectionSettings, func() (any, error) {
+		return c.connectionSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetStack() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Stack, func() (any, error) {
+		return c.stack()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetDiagnosticSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiagnosticSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appslot", c.__id, "diagnosticSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diagnosticSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Functions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appslot", c.__id, "functions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.functions()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetFtp() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](&c.Ftp, func() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appslot", c.__id, "ftp")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies), nil
+			}
+		}
+
+		return c.ftp()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetScm() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](&c.Scm, func() (*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appslot", c.__id, "scm")
 			if err != nil {
 				return nil, err
 			}
