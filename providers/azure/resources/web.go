@@ -270,7 +270,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) slots() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			slotResource, err := createWebAppResourceFromSite(a.MqlRuntime, "azure.subscription.webService.appslot", entry)
+			slotResource, err := createWebAppResourceFromSite(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppslot, entry)
 			if err != nil {
 				return nil, err
 			}
@@ -310,7 +310,7 @@ func (a *mqlAzureSubscriptionWebService) apps() ([]any, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite",
+			mqlAzure, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsite,
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(entry.ID),
 					"name":       llx.StringDataPtr(entry.Name),
@@ -408,7 +408,8 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 					deprecated := convert.ToValue(settings.IsDeprecated) ||
 						isPlatformEol(convert.ToValue(entry.Name), convert.ToValue(major.Value))
 
-					id := strings.Join([]string{"azure.subscription", subId,
+					id := strings.Join([]string{
+						"azure.subscription", subId,
 						"webService.appRuntimeStack", os, runtimeVersion,
 					}, "/")
 
@@ -417,7 +418,7 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 					}
 					mapIDs[id] = struct{}{}
 
-					resource, err := NewResource(a.MqlRuntime, "azure.subscription.webService.appRuntimeStack",
+					resource, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppRuntimeStack,
 						map[string]*llx.RawData{
 							"__id":           llx.StringData(id),
 							"name":           llx.StringData(stackName),
