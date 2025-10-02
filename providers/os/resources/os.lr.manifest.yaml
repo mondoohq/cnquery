@@ -1078,7 +1078,6 @@ resources:
       content: {}
       file: {}
       list: {}
-      path: {}
     min_mondoo_version: latest
   parse.plist:
     fields:
