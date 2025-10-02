@@ -1,8 +1,6 @@
 module go.mondoo.com/cnquery/v12
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.25
 
 require (
 	cloud.google.com/go/logging v1.11.0
