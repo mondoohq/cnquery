@@ -34,6 +34,8 @@ azure.subscription @defaults ("name") {
   resourceGroups() []azure.subscription.resourcegroup
   // Compute resources in the subscription
   compute() azure.subscription.computeService
+  // Batch resources in the subscription
+  batch() azure.subscription.batchService
   // Network resources in the subscription
   network() azure.subscription.networkService
   // Storage resources in the subscription
@@ -192,6 +194,94 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   sku dict
   // Disk resource properties
   properties dict
+}
+
+// Azure Batch
+private azure.subscription.batchService {
+  // Subscription identifier
+  subscriptionId string
+  // Batch accounts in the subscription
+  accounts() []azure.subscription.batchService.account
+}
+
+// Azure Batch account
+azure.subscription.batchService.account @defaults("id name location") {
+  // Batch account ID
+  id string
+  // Batch account name
+  name string
+  // Batch account location
+  location string
+  // Batch account tags
+  tags map[string]string
+  // Batch account type
+  type string
+  // Batch account identity
+  identity dict
+  // Batch account properties
+  properties dict
+  // Batch account endpoint
+  accountEndpoint string
+  // Batch account provisioning state
+  provisioningState string
+  // Batch account pool allocation mode
+  poolAllocationMode string
+  // Batch account public network access level
+  publicNetworkAccess string
+  // Batch account node management endpoint
+  nodeManagementEndpoint string
+  // Batch account active job and job schedule quota
+  activeJobAndJobScheduleQuota int
+  // Batch account dedicated core quota
+  dedicatedCoreQuota int
+  // Whether dedicated core quota per VM family is enforced
+  dedicatedCoreQuotaPerVmFamilyEnforced bool
+  // Batch account dedicated core quota per VM family
+  dedicatedCoreQuotaPerVmFamily []dict
+  // Batch account low priority core quota
+  lowPriorityCoreQuota int
+  // Batch account pool quota
+  poolQuota int
+  // Batch account allowed authentication modes
+  allowedAuthenticationModes []string
+  // Batch account auto storage settings
+  autoStorage dict
+  // Batch account encryption settings
+  encryption dict
+  // Batch account key vault reference
+  keyVaultReference dict
+  // Batch account network profile
+  networkProfile dict
+  // Batch account private endpoint connections
+  privateEndpointConnections []dict
+  // Batch account pools
+  pools() []azure.subscription.batchService.account.pool
+  // Batch account diagnostic settings
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+}
+
+// Azure Batch pool
+azure.subscription.batchService.account.pool @defaults("id name") {
+  // Pool resource ID
+  id string
+  // Pool name
+  name string
+  // Pool resource type
+  type string
+  // Pool etag
+  etag string
+  // Pool identity configuration
+  identity dict
+  // Pool properties
+  properties dict
+  // Pool provisioning state
+  provisioningState string
+  // Pool virtual machine size
+  vmSize string
+  // Pool deployment configuration
+  deploymentConfiguration dict
+  // Pool virtual machine configuration
+  virtualMachineConfiguration dict
 }
 
 // Azure network
