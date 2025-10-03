@@ -27,6 +27,7 @@ const (
 	ResourceAzureSubscriptionComputeServiceDisk                                        string = "azure.subscription.computeService.disk"
 	ResourceAzureSubscriptionBatchService                                              string = "azure.subscription.batchService"
 	ResourceAzureSubscriptionBatchServiceAccount                                       string = "azure.subscription.batchService.account"
+	ResourceAzureSubscriptionBatchServiceAccountPool                                   string = "azure.subscription.batchService.account.pool"
 	ResourceAzureSubscriptionNetworkService                                            string = "azure.subscription.networkService"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                       string = "azure.subscription.networkService.virtualNetworkGateway"
 	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                            string = "azure.subscription.networkService.appSecurityGroup"
@@ -174,6 +175,10 @@ func init() {
 		"azure.subscription.batchService.account": {
 			// to override args, implement: initAzureSubscriptionBatchServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionBatchServiceAccount,
+		},
+		"azure.subscription.batchService.account.pool": {
+			// to override args, implement: initAzureSubscriptionBatchServiceAccountPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionBatchServiceAccountPool,
 		},
 		"azure.subscription.networkService": {
 			Init:   initAzureSubscriptionNetworkService,
@@ -980,6 +985,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.batchService.account.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccount).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.batchService.account.pools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccount).GetPools()).ToDataRes(types.Array(types.Resource("azure.subscription.batchService.account.pool")))
+	},
+	"azure.subscription.batchService.account.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccount).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
+	},
+	"azure.subscription.batchService.account.pool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.batchService.account.pool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.batchService.account.pool.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.batchService.account.pool.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.batchService.account.pool.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.batchService.account.pool.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.batchService.account.pool.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.batchService.account.pool.vmSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetVmSize()).ToDataRes(types.String)
+	},
+	"azure.subscription.batchService.account.pool.deploymentConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetDeploymentConfiguration()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.batchService.account.pool.virtualMachineConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetVirtualMachineConfiguration()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.networkService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetSubscriptionId()).ToDataRes(types.String)
@@ -3747,6 +3788,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.batchService.account.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionBatchServiceAccount).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccount).Pools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.diagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccount).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.batchService.account.pool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.vmSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).VmSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.deploymentConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).DeploymentConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.virtualMachineConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).VirtualMachineConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8373,6 +8466,8 @@ type mqlAzureSubscriptionBatchServiceAccount struct {
 	KeyVaultReference                     plugin.TValue[any]
 	NetworkProfile                        plugin.TValue[any]
 	PrivateEndpointConnections            plugin.TValue[[]any]
+	Pools                                 plugin.TValue[[]any]
+	DiagnosticSettings                    plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionBatchServiceAccount creates a new instance of this resource
@@ -8506,6 +8601,132 @@ func (c *mqlAzureSubscriptionBatchServiceAccount) GetNetworkProfile() *plugin.TV
 
 func (c *mqlAzureSubscriptionBatchServiceAccount) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
 	return &c.PrivateEndpointConnections
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccount) GetPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.batchService.account", c.__id, "pools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pools()
+	})
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccount) GetDiagnosticSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiagnosticSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.batchService.account", c.__id, "diagnosticSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diagnosticSettings()
+	})
+}
+
+// mqlAzureSubscriptionBatchServiceAccountPool for the azure.subscription.batchService.account.pool resource
+type mqlAzureSubscriptionBatchServiceAccountPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionBatchServiceAccountPoolInternal it will be used here
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Type                        plugin.TValue[string]
+	Etag                        plugin.TValue[string]
+	Identity                    plugin.TValue[any]
+	Properties                  plugin.TValue[any]
+	ProvisioningState           plugin.TValue[string]
+	VmSize                      plugin.TValue[string]
+	DeploymentConfiguration     plugin.TValue[any]
+	VirtualMachineConfiguration plugin.TValue[any]
+}
+
+// createAzureSubscriptionBatchServiceAccountPool creates a new instance of this resource
+func createAzureSubscriptionBatchServiceAccountPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionBatchServiceAccountPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.batchService.account.pool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) MqlName() string {
+	return "azure.subscription.batchService.account.pool"
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetVmSize() *plugin.TValue[string] {
+	return &c.VmSize
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetDeploymentConfiguration() *plugin.TValue[any] {
+	return &c.DeploymentConfiguration
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetVirtualMachineConfiguration() *plugin.TValue[any] {
+	return &c.VirtualMachineConfiguration
 }
 
 // mqlAzureSubscriptionNetworkService for the azure.subscription.networkService resource

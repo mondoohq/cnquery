@@ -254,6 +254,34 @@ azure.subscription.batchService.account @defaults("id name location") {
   networkProfile dict
   // Batch account private endpoint connections
   privateEndpointConnections []dict
+  // Batch account pools
+  pools() []azure.subscription.batchService.account.pool
+  // Batch account diagnostic settings
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+}
+
+// Azure Batch pool
+azure.subscription.batchService.account.pool @defaults("id name") {
+  // Pool resource ID
+  id string
+  // Pool name
+  name string
+  // Pool resource type
+  type string
+  // Pool etag
+  etag string
+  // Pool identity configuration
+  identity dict
+  // Pool properties
+  properties dict
+  // Pool provisioning state
+  provisioningState string
+  // Pool virtual machine size
+  vmSize string
+  // Pool deployment configuration
+  deploymentConfiguration dict
+  // Pool virtual machine configuration
+  virtualMachineConfiguration dict
 }
 
 // Azure network

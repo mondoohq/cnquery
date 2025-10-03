@@ -374,6 +374,7 @@ resources:
       dedicatedCoreQuota: {}
       dedicatedCoreQuotaPerVmFamily: {}
       dedicatedCoreQuotaPerVmFamilyEnforced: {}
+      diagnosticSettings: {}
       encryption: {}
       id: {}
       identity: {}
@@ -385,12 +386,29 @@ resources:
       nodeManagementEndpoint: {}
       poolAllocationMode: {}
       poolQuota: {}
+      pools: {}
       privateEndpointConnections: {}
       properties: {}
       provisioningState: {}
       publicNetworkAccess: {}
       tags: {}
       type: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.batchService.account.pool:
+    fields:
+      deploymentConfiguration: {}
+      etag: {}
+      id: {}
+      identity: {}
+      name: {}
+      properties: {}
+      provisioningState: {}
+      type: {}
+      virtualMachineConfiguration: {}
+      vmSize: {}
     min_mondoo_version: 9.0.0
     platform:
       name:

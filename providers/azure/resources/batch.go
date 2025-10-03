@@ -256,3 +256,127 @@ func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mql
 
 	return res.(*mqlAzureSubscriptionBatchServiceAccount), nil
 }
+
+func (a *mqlAzureSubscriptionBatchServiceAccount) pools() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	accountName, err := resourceID.Component("batchAccounts")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armbatch.NewPoolClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListByBatchAccountPager(resourceID.ResourceGroup, accountName, &armbatch.PoolClientListByBatchAccountOptions{})
+	res := []any{}
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+
+			poolResource, err := batchPoolToMql(a.MqlRuntime, entry)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, poolResource)
+		}
+	}
+
+	return res, nil
+}
+
+func (p *mqlAzureSubscriptionBatchServiceAccountPool) id() (string, error) {
+	return p.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionBatchServiceAccount) diagnosticSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
+}
+
+func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubscriptionBatchServiceAccountPool, error) {
+	identityData := llx.NilData
+	if pool.Identity != nil {
+		if dict, err := convert.JsonToDict(pool.Identity); err != nil {
+			return nil, err
+		} else if dict != nil {
+			identityData = llx.DictData(dict)
+		}
+	}
+
+	propertiesData := llx.NilData
+	deploymentConfigurationData := llx.NilData
+	virtualMachineConfigurationData := llx.NilData
+	vmSizeData := llx.NilData
+	provisioningStateData := llx.NilData
+
+	if pool.Properties != nil {
+		if dict, err := convert.JsonToDict(pool.Properties); err != nil {
+			return nil, err
+		} else if dict != nil {
+			propertiesData = llx.DictData(dict)
+		}
+
+		if pool.Properties.DeploymentConfiguration != nil {
+			if dict, err := convert.JsonToDict(pool.Properties.DeploymentConfiguration); err != nil {
+				return nil, err
+			} else if dict != nil {
+				deploymentConfigurationData = llx.DictData(dict)
+			}
+
+			if pool.Properties.DeploymentConfiguration.VirtualMachineConfiguration != nil {
+				if dict, err := convert.JsonToDict(pool.Properties.DeploymentConfiguration.VirtualMachineConfiguration); err != nil {
+					return nil, err
+				} else if dict != nil {
+					virtualMachineConfigurationData = llx.DictData(dict)
+				}
+			}
+		}
+
+		if pool.Properties.VMSize != nil {
+			vmSizeData = llx.StringData(*pool.Properties.VMSize)
+		}
+
+		if pool.Properties.ProvisioningState != nil {
+			provisioningStateData = llx.StringData(string(*pool.Properties.ProvisioningState))
+		}
+	}
+
+	etagData := llx.StringDataPtr(pool.Etag)
+
+	resource, err := CreateResource(runtime, ResourceAzureSubscriptionBatchServiceAccountPool, map[string]*llx.RawData{
+		"id":                          llx.StringDataPtr(pool.ID),
+		"name":                        llx.StringDataPtr(pool.Name),
+		"type":                        llx.StringDataPtr(pool.Type),
+		"etag":                        etagData,
+		"identity":                    identityData,
+		"properties":                  propertiesData,
+		"deploymentConfiguration":     deploymentConfigurationData,
+		"virtualMachineConfiguration": virtualMachineConfigurationData,
+		"vmSize":                      vmSizeData,
+		"provisioningState":           provisioningStateData,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlAzureSubscriptionBatchServiceAccountPool), nil
+}
