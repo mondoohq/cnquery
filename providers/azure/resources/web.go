@@ -8,11 +8,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/rs/zerolog/log"
 
@@ -769,6 +771,10 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
@@ -1013,6 +1019,10 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) functions() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
