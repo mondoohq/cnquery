@@ -74,19 +74,31 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					if err != nil {
 						return nil, err
 					}
-					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
-						map[string]*llx.RawData{
-							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, region, conn.AccountId(), convert.ToValue(lb.LoadBalancerName))),
-							"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
-							"createdAt":            llx.TimeDataPtr(lb.CreatedTime),
-							"dnsName":              llx.StringDataPtr(lb.DNSName),
-							"elbType":              llx.StringData("classic"),
-							"listenerDescriptions": llx.AnyData(jsonListeners),
-							"name":                 llx.StringDataPtr(lb.LoadBalancerName),
-							"region":               llx.StringData(region),
-							"scheme":               llx.StringDataPtr(lb.Scheme),
-							"vpcId":                llx.StringDataPtr(lb.VPCId),
-						})
+
+					args := map[string]*llx.RawData{
+						"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, region, conn.AccountId(), convert.ToValue(lb.LoadBalancerName))),
+						"createdAt":            llx.TimeDataPtr(lb.CreatedTime),
+						"dnsName":              llx.StringDataPtr(lb.DNSName),
+						"elbType":              llx.StringData("classic"),
+						"listenerDescriptions": llx.AnyData(jsonListeners),
+						"name":                 llx.StringDataPtr(lb.LoadBalancerName),
+						"region":               llx.StringData(region),
+						"scheme":               llx.StringDataPtr(lb.Scheme),
+					}
+
+					if lb.VPCId != nil {
+						mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+							map[string]*llx.RawData{
+								"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(lb.VPCId))),
+							})
+						if err != nil {
+							return nil, err
+						}
+						// update the vpc setting
+						args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
+					}
+
+					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer", args)
 					if err != nil {
 						return nil, err
 					}
@@ -168,14 +180,12 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					args := map[string]*llx.RawData{
 						"arn":               llx.StringDataPtr(lb.LoadBalancerArn),
 						"availabilityZones": llx.ArrayData(availabilityZones, types.String),
-						"createdTime":       llx.TimeDataPtr(lb.CreatedTime),
 						"createdAt":         llx.TimeDataPtr(lb.CreatedTime),
 						"dnsName":           llx.StringDataPtr(lb.DNSName),
 						"hostedZoneId":      llx.StringDataPtr(lb.CanonicalHostedZoneId),
 						"name":              llx.StringDataPtr(lb.LoadBalancerName),
 						"scheme":            llx.StringData(string(lb.Scheme)),
 						"securityGroups":    llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
-						"vpcId":             llx.StringDataPtr(lb.VpcId),
 						"elbType":           llx.StringData(string(lb.Type)),
 						"region":            llx.StringData(region),
 						"vpc":               llx.NilData, // set vpc to nil as default, if vpc is not set

@@ -2897,9 +2897,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.securityContact.emails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetEmails()).ToDataRes(types.Array(types.String))
 	},
-	"azure.subscription.cloudDefenderService.securityContact.alertNotifications": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetAlertNotifications()).ToDataRes(types.Dict)
-	},
 	"azure.subscription.cloudDefenderService.securityContact.notificationSources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetNotificationSources()).ToDataRes(types.Dict)
 	},
@@ -6564,10 +6561,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.securityContact.emails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).Emails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.cloudDefenderService.securityContact.alertNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).AlertNotifications, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.securityContact.notificationSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16439,7 +16432,6 @@ type mqlAzureSubscriptionCloudDefenderServiceSecurityContact struct {
 	Id                  plugin.TValue[string]
 	Name                plugin.TValue[string]
 	Emails              plugin.TValue[[]any]
-	AlertNotifications  plugin.TValue[any]
 	NotificationSources plugin.TValue[any]
 	NotificationsByRole plugin.TValue[any]
 }
@@ -16491,10 +16483,6 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetName() *plu
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetEmails() *plugin.TValue[[]any] {
 	return &c.Emails
-}
-
-func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetAlertNotifications() *plugin.TValue[any] {
-	return &c.AlertNotifications
 }
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetNotificationSources() *plugin.TValue[any] {
