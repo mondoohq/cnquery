@@ -900,3 +900,14 @@ func TestOpenEulerDetector(t *testing.T) {
 	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"euler", "linux", "unix", "os"}, di.Family)
 }
+
+func TestMageiaDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-mageia-9.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "mageia", di.Name, "os name should be identified")
+	assert.Equal(t, "Mageia 9", di.Title, "os title should be identified")
+	assert.Equal(t, "9", di.Version, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
