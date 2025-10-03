@@ -168,7 +168,7 @@ jobs:
       - name: "Build dependencies"
         run: |
           make providers/proto
-          go build -o lr ./providers-sdk/v1/lr/cli/main.go
+          make providers/lr
 
       - name: "Build Provider"
         id: build-providers

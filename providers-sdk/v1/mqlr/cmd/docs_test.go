@@ -4,13 +4,14 @@
 package cmd
 
 import (
-	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr/docs"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
 )
 
-var defaultLrDocsEntry = &docs.LrDocsEntry{
-	Fields:           map[string]*docs.LrDocsField{},
+var defaultLrDocsEntry = &lrcore.LrDocsEntry{
+	Fields:           map[string]*lrcore.LrDocsField{},
 	MinMondooVersion: "9.1.0",
 }
 

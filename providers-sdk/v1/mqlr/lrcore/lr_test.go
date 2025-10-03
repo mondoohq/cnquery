@@ -1,7 +1,7 @@
 // copyright: 2019, Dominik Richter and Christoph Hartmann
 // author: Dominik Richter
 // author: Christoph Hartmann
-package lr
+package lrcore
 
 import (
 	"bytes"
@@ -279,7 +279,7 @@ func TestParseLR(t *testing.T) {
 
 	for i := range files {
 		lrPath := files[i]
-		absPath := "../../../providers/" + lrPath
+		absPath := "../../../../providers/" + lrPath
 
 		t.Run(lrPath, func(t *testing.T) {
 			hasImports := false

@@ -2,7 +2,7 @@
 // author: Dominik Richter
 // author: Christoph Hartmann
 
-package lr
+package lrcore
 
 import (
 	"errors"

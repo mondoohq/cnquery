@@ -23,8 +23,7 @@ import (
 	"go.mondoo.com/cnquery/v12/mqlc"
 	"go.mondoo.com/cnquery/v12/providers"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr/docs"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils/mockprovider"
@@ -168,11 +167,11 @@ func MustLoadSchema(provider SchemaProvider) *resources.Schema {
 		path = provider.Path
 	}
 
-	res, err := lr.Resolve(path, func(path string) ([]byte, error) { return os.ReadFile(path) })
+	res, err := lrcore.Resolve(path, func(path string) ([]byte, error) { return os.ReadFile(path) })
 	if err != nil {
 		panic(err.Error())
 	}
-	schema, err := lr.Schema(res)
+	schema, err := lrcore.Schema(res)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -183,10 +182,10 @@ func MustLoadSchema(provider SchemaProvider) *resources.Schema {
 		// into the schema
 		raw, err := os.ReadFile(manifestPath)
 		if err == nil {
-			var lrDocsData docs.LrDocs
+			var lrDocsData lrcore.LrDocs
 			err = yaml.Unmarshal(raw, &lrDocsData)
 			if err == nil {
-				docs.InjectMetadata(schema, &lrDocsData)
+				lrcore.InjectMetadata(schema, &lrDocsData)
 			}
 		}
 	}
