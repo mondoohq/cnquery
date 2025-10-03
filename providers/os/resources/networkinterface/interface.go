@@ -54,6 +54,7 @@ func (r *InterfaceResource) Interfaces() ([]Interface, error) {
 		handler := &GoNativeInterfaceHandler{}
 		return handler.Interfaces()
 	} else if asset.Platform.Name == "macos" {
+		log.Debug().Msg("detected macos platform")
 		handler := &MacOSInterfaceHandler{
 			conn: r.conn,
 		}
@@ -65,13 +66,14 @@ func (r *InterfaceResource) Interfaces() ([]Interface, error) {
 		}
 		return handler.Interfaces()
 	} else if asset.Platform.Name == "windows" {
+		log.Debug().Msg("detected windows platform")
 		handler := &WindowsInterfaceHandler{
 			conn: r.conn,
 		}
 		return handler.Interfaces()
 	}
 
-	return nil, errors.New("interfaces does not support platform: " + asset.Platform.Name)
+	return nil, errors.New("interfaces does not yet support platform: " + asset.Platform.Name)
 }
 
 func (r *InterfaceResource) InterfaceByName(name string) (*Interface, error) {
@@ -132,7 +134,7 @@ func (i *LinuxInterfaceHandler) Interfaces() ([]Interface, error) {
 	// fetch all network adapter via ip addr show
 	cmd, err := i.conn.RunCommand("ip -o addr show")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch macos network adapter")
+		return nil, errors.Wrap(err, "could not run 'ip -o addr show' to fetch network interfaces")
 	}
 
 	return i.ParseIpAddr(cmd.Stdout)
