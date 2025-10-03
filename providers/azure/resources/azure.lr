@@ -196,7 +196,7 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   properties dict
 }
 
-// Azure batch
+// Azure Batch
 private azure.subscription.batchService {
   // Subscription identifier
   subscriptionId string
@@ -204,7 +204,7 @@ private azure.subscription.batchService {
   accounts() []azure.subscription.batchService.account
 }
 
-// Azure batch account
+// Azure Batch account
 azure.subscription.batchService.account @defaults("id name location") {
   // Batch account ID
   id string
