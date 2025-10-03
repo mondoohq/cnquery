@@ -16,6 +16,8 @@ resources:
       advisor: {}
       aks: {}
       authorizationSource: {}
+      batch:
+        min_mondoo_version: 9.0.0
       cloudDefender: {}
       compute: {}
       cosmosDb: {}
@@ -354,6 +356,45 @@ resources:
     refs:
     - title: Azure RBAC documentation
       url: https://learn.microsoft.com/en-us/azure/role-based-access-control/
+  azure.subscription.batchService:
+    fields:
+      accounts: {}
+      subscriptionId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.batchService.account:
+    fields:
+      accountEndpoint: {}
+      activeJobAndJobScheduleQuota: {}
+      allowedAuthenticationModes: {}
+      autoStorage: {}
+      dedicatedCoreQuota: {}
+      dedicatedCoreQuotaPerVmFamily: {}
+      dedicatedCoreQuotaPerVmFamilyEnforced: {}
+      encryption: {}
+      id: {}
+      identity: {}
+      keyVaultReference: {}
+      location: {}
+      lowPriorityCoreQuota: {}
+      name: {}
+      networkProfile: {}
+      nodeManagementEndpoint: {}
+      poolAllocationMode: {}
+      poolQuota: {}
+      privateEndpointConnections: {}
+      properties: {}
+      provisioningState: {}
+      publicNetworkAccess: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.cloudDefender:
     fields:
       defenderForAppServices: {}
