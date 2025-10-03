@@ -19,8 +19,7 @@ import (
 	"github.com/olekukonko/tablewriter/tw"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr/docs"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
 	"sigs.k8s.io/yaml"
 )
@@ -59,18 +58,18 @@ var markdownCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("no output directory provided")
 		}
 
-		res, err := lr.Parse(string(raw))
+		res, err := lrcore.Parse(string(raw))
 		if err != nil {
 			log.Error().Msg(err.Error())
 			return
 		}
 
-		schema, err := lr.Schema(res)
+		schema, err := lrcore.Schema(res)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to generate schema")
 		}
 
-		var lrDocsData docs.LrDocs
+		var lrDocsData lrcore.LrDocs
 
 		docsFilepath, _ := cmd.Flags().GetString("docs-file")
 		if docsFilepath != "" { // as soon as a path has been provided, we try to load the file
@@ -120,7 +119,7 @@ var markdownCmd = &cobra.Command{
 
 		for i := range res.Resources {
 			resource := res.Resources[i]
-			var docs *docs.LrDocsEntry
+			var docs *lrcore.LrDocsEntry
 			var ok bool
 			if lrDocsData.Resources != nil {
 				docs, ok = lrDocsData.Resources[resource.ID]
@@ -149,7 +148,7 @@ func toID(s string) string {
 	return strings.Trim(s, ".")
 }
 
-func (l *lrSchemaRenderer) renderToc(packName string, description string, resources []*lr.Resource, schema *resources.Schema) string {
+func (l *lrSchemaRenderer) renderToc(packName string, description string, resources []*lrcore.Resource, schema *resources.Schema) string {
 	builder := &strings.Builder{}
 
 	// render front matter
@@ -225,7 +224,7 @@ func trimColon(s string) string {
 	return strings.ReplaceAll(s, ":", "")
 }
 
-func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *resources.Schema, docs *docs.LrDocsEntry) string {
+func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema *resources.Schema, docs *lrcore.LrDocsEntry) string {
 	builder := &strings.Builder{}
 
 	builder.WriteString("---\n")
@@ -297,7 +296,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *res
 		builder.WriteString("\n\n")
 	}
 
-	basicFields := []*lr.BasicField{}
+	basicFields := []*lrcore.BasicField{}
 	comments := [][]string{}
 	for _, f := range resource.Body.Fields {
 		if f.BasicField != nil {
@@ -397,7 +396,7 @@ func mdRef(name string) string {
 	return strings.ToLower(name) + ".md"
 }
 
-func renderLrType(t lr.Type, resourceHrefMap map[string]bool) string {
+func renderLrType(t lrcore.Type, resourceHrefMap map[string]bool) string {
 	switch {
 	case t.SimpleType != nil:
 		_, ok := resourceHrefMap[t.SimpleType.Type]

@@ -13,8 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr/docs"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
 	"sigs.k8s.io/yaml"
 )
 
@@ -34,7 +33,7 @@ var goCmd = &cobra.Command{
 		file := args[0]
 		packageName := path.Base(path.Dir(file))
 
-		res, err := lr.Resolve(file, func(path string) ([]byte, error) {
+		res, err := lrcore.Resolve(file, func(path string) ([]byte, error) {
 			return os.ReadFile(path)
 		})
 		if err != nil {
@@ -62,8 +61,8 @@ var goCmd = &cobra.Command{
 			}
 		}
 
-		collector := lr.NewCollector(args[0])
-		goCode, err := lr.Go(packageName, res, collector, headerTpl)
+		collector := lrcore.NewCollector(args[0])
+		goCode, err := lrcore.Go(packageName, res, collector, headerTpl)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to compile go code")
 		}
@@ -77,7 +76,7 @@ var goCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("failed to write to go file")
 		}
 
-		schema, err := lr.Schema(res)
+		schema, err := lrcore.Schema(res)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to generate schema")
 		}
@@ -87,13 +86,13 @@ var goCmd = &cobra.Command{
 		manifestPath := file + ".manifest.yaml"
 		raw, err := os.ReadFile(manifestPath)
 		if err == nil {
-			var lrDocsData docs.LrDocs
+			var lrDocsData lrcore.LrDocs
 			err = yaml.Unmarshal(raw, &lrDocsData)
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not load yaml data")
 			}
 
-			docs.InjectMetadata(schema, &lrDocsData)
+			lrcore.InjectMetadata(schema, &lrDocsData)
 		} else if os.IsNotExist(err) {
 			log.Info().Str("path", manifestPath).Msg("no manifest found, ignoring")
 		} else {
