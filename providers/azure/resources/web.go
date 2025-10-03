@@ -99,6 +99,85 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		})
 }
 
+type runtimeStackDescriptor struct {
+	Name         string
+	MinorVersion string
+	ID           string
+	IsDefault    bool
+	IsDeprecated bool
+}
+
+func runtimeStackDescriptorFromEntry(entry any) (*runtimeStackDescriptor, bool) {
+	switch v := entry.(type) {
+	case map[string]any:
+		return runtimeStackDescriptorFromMap(v), true
+	case *mqlAzureSubscriptionWebServiceAppRuntimeStack:
+		return runtimeStackDescriptorFromResource(v), true
+	default:
+		return nil, false
+	}
+}
+
+func runtimeStackDescriptorFromMap(values map[string]any) *runtimeStackDescriptor {
+	descriptor := &runtimeStackDescriptor{}
+	if values == nil {
+		return descriptor
+	}
+	if name, ok := values["name"].(string); ok {
+		descriptor.Name = strings.ToLower(name)
+	}
+	if minor, ok := values["minorVersion"].(string); ok {
+		descriptor.MinorVersion = strings.ToLower(minor)
+	}
+	if id, ok := values["id"].(string); ok {
+		descriptor.ID = id
+	}
+	if isDefault, ok := values["isDefault"].(bool); ok {
+		descriptor.IsDefault = isDefault
+	}
+	if isDeprecated, ok := values["isDeprecated"].(bool); ok {
+		descriptor.IsDeprecated = isDeprecated
+	}
+	return descriptor
+}
+
+func runtimeStackDescriptorFromResource(runtime *mqlAzureSubscriptionWebServiceAppRuntimeStack) *runtimeStackDescriptor {
+	descriptor := &runtimeStackDescriptor{}
+	if runtime == nil {
+		return descriptor
+	}
+	if name, ok := stringFromTValue(&runtime.Name); ok {
+		descriptor.Name = strings.ToLower(name)
+	}
+	if minor, ok := stringFromTValue(&runtime.MinorVersion); ok {
+		descriptor.MinorVersion = strings.ToLower(minor)
+	}
+	if id, ok := stringFromTValue(&runtime.RuntimeVersion); ok {
+		descriptor.ID = id
+	}
+	if isDefault, ok := boolFromTValue(&runtime.AutoUpdate); ok {
+		descriptor.IsDefault = isDefault
+	}
+	if isDeprecated, ok := boolFromTValue(&runtime.Deprecated); ok {
+		descriptor.IsDeprecated = isDeprecated
+	}
+	return descriptor
+}
+
+func stringFromTValue(tv *plugin.TValue[string]) (string, bool) {
+	if tv == nil || !tv.IsSet() || tv.IsNull() {
+		return "", false
+	}
+	return tv.Data, true
+}
+
+func boolFromTValue(tv *plugin.TValue[bool]) (bool, bool) {
+	if tv == nil || !tv.IsSet() || tv.IsNull() {
+		return false, false
+	}
+	return tv.Data, true
+}
+
 func computeWebAppStack(runtime *plugin.Runtime, config *mqlAzureSubscriptionWebServiceAppsiteconfig, metadata any) (any, error) {
 	if config == nil {
 		return nil, errors.New("web app configuration is nil")
@@ -179,23 +258,24 @@ func computeWebAppStack(runtime *plugin.Runtime, config *mqlAzureSubscriptionWeb
 	}
 
 	runtimes := runtimesPlugin.Data
-	var match map[string]any
+	var match *runtimeStackDescriptor
 
-	for i := range runtimes {
-		rt := runtimes[i]
-		hashmap := rt.(map[string]any)
-		if (hashmap["name"] == runtimeInfo.Name && hashmap["minorVersion"] == runtimeInfo.MinorVersion) || hashmap["id"] == runtimeInfo.ID {
-			match = hashmap
+	for _, rt := range runtimes {
+		descriptor, ok := runtimeStackDescriptorFromEntry(rt)
+		if !ok || descriptor == nil {
+			continue
+		}
+		sameStack := descriptor.Name != "" && strings.EqualFold(descriptor.Name, runtimeInfo.Name) &&
+			strings.EqualFold(descriptor.MinorVersion, runtimeInfo.MinorVersion)
+		sameID := descriptor.ID != "" && strings.EqualFold(descriptor.ID, runtimeInfo.ID)
+		if sameStack || sameID {
+			match = descriptor
 		}
 	}
 
 	if match != nil {
-		if match["isDefault"] != nil {
-			runtimeInfo.IsDefault = match["isDefault"].(bool)
-		}
-		if match["isDeprecated"] != nil {
-			runtimeInfo.IsDeprecated = match["isDeprecated"].(bool)
-		}
+		runtimeInfo.IsDefault = match.IsDefault
+		runtimeInfo.IsDeprecated = match.IsDeprecated
 	} else {
 		if len(runtimeInfo.MinorVersion) > 0 {
 			runtimeInfo.IsDeprecated = true
