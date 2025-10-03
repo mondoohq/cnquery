@@ -48,34 +48,39 @@ func (p *Property) id() string {
 
 // RefreshChecksumAndType by compiling the query and updating the Checksum field
 func (p *Property) RefreshChecksumAndType(conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
-	if p.Mql == "" {
-		return nil, errors.New("property must not be empty (property '" + p.id() + "')")
+	var bundle *llx.CodeBundle
+
+	if p.Mql == "" && p.Type == "" {
+		return nil, errors.New("property must not be empty or must define a type (property '" + p.id() + "')")
 	}
 
-	bundle, err := p.Compile(nil, conf)
-	if err != nil {
-		return bundle, multierr.Wrap(err, "failed to compile property '"+p.id()+"', mql: '"+p.Mql+"'")
-	}
+	if p.Mql != "" {
+		var err error
+		bundle, err = p.Compile(nil, conf)
+		if err != nil {
+			return bundle, multierr.Wrap(err, "failed to compile property '"+p.id()+"', mql: '"+p.Mql+"'")
+		}
 
-	if bundle.GetCodeV2().GetId() == "" {
-		return bundle, errors.New("failed to compile query: received empty result values")
-	}
+		if bundle.GetCodeV2().GetId() == "" {
+			return bundle, errors.New("failed to compile query: received empty result values")
+		}
 
-	// We think its ok to always use the new code id
-	p.CodeId = bundle.CodeV2.Id
+		// We think its ok to always use the new code id
+		p.CodeId = bundle.CodeV2.Id
 
-	// the compile step also dedents the code
-	p.Mql = bundle.Source
+		// the compile step also dedents the code
+		p.Mql = bundle.Source
 
-	// TODO: record multiple entrypoints and types
-	// TODO(jaym): is it possible that the 2 could produce different types
-	if entrypoints := bundle.CodeV2.Entrypoints(); len(entrypoints) == 1 {
-		ep := entrypoints[0]
-		chunk := bundle.CodeV2.Chunk(ep)
-		typ := chunk.Type()
-		p.Type = string(typ)
-	} else {
-		p.Type = string(types.Any)
+		// TODO: record multiple entrypoints and types
+		// TODO(jaym): is it possible that the 2 could produce different types
+		if entrypoints := bundle.CodeV2.Entrypoints(); len(entrypoints) == 1 {
+			ep := entrypoints[0]
+			chunk := bundle.CodeV2.Chunk(ep)
+			typ := chunk.Type()
+			p.Type = string(typ)
+		} else {
+			p.Type = string(types.Any)
+		}
 	}
 
 	c := checksums.New.
