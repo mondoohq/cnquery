@@ -155,9 +155,7 @@ func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mql
 				}
 				values = append(values, string(*mode))
 			}
-			if values != nil {
-				allowedAuthenticationModes = llx.ArrayData(values, types.String)
-			}
+			allowedAuthenticationModes = llx.ArrayData(values, types.String)
 		}
 
 		if props.AutoStorage != nil {
@@ -201,9 +199,7 @@ func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mql
 				}
 				items = append(items, dict)
 			}
-			if items != nil {
-				dedicatedCoreQuotaPerVmFamily = llx.ArrayData(items, types.Dict)
-			}
+			dedicatedCoreQuotaPerVmFamily = llx.ArrayData(items, types.Dict)
 		}
 
 		if props.PrivateEndpointConnections != nil {
@@ -218,9 +214,7 @@ func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mql
 				}
 				items = append(items, dict)
 			}
-			if items != nil {
-				privateEndpointConnections = llx.ArrayData(items, types.Dict)
-			}
+			privateEndpointConnections = llx.ArrayData(items, types.Dict)
 		}
 	}
 
@@ -258,7 +252,10 @@ func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mql
 }
 
 func (a *mqlAzureSubscriptionBatchServiceAccount) pools() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
 	ctx := context.Background()
 	token := conn.Token()
 
