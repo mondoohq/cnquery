@@ -66,8 +66,9 @@ func (n *neti) detectLinuxInterfaces() ([]Interface, error) {
 
 func (n *neti) getLinuxIPv4GatewayDetails() (interfaces []Interface, err error) {
 	output, err := n.RunCommand("ip route show")
+	log.Debug().Msg("os.network.interface> run command ip route show")
 	if err != nil {
-		log.Debug().Msg("os.network.interface> could not run ip route show")
+		log.Debug().Msg("os.network.interface> failed running ip route show")
 		return nil, err
 	}
 
@@ -95,8 +96,9 @@ func (n *neti) getLinuxIPv4GatewayDetails() (interfaces []Interface, err error) 
 
 func (n *neti) getLinuxIPv6GatewayDetails() (interfaces []Interface, err error) {
 	output, err := n.RunCommand("ip -6 route show")
+	log.Debug().Msg("os.network.interface> run command ip -6 route show")
 	if err != nil {
-		log.Debug().Msg("os.network.interface> could not run ip -6 route show")
+		log.Debug().Msg("os.network.interface> failed running ip -6 route show")
 		return nil, err
 	}
 
@@ -123,6 +125,8 @@ func (n *neti) getLinuxIPv6GatewayDetails() (interfaces []Interface, err error) 
 }
 
 func (n *neti) getLinuxSysfsInterfaces() (interfaces []Interface, err error) {
+	log.Debug().Msg("os.network.interface> detecting interfaces via sysfs")
+
 	dirEntries, err := afero.ReadDir(n.connection.FileSystem(), "/sys/class/net")
 	if err != nil {
 		log.Debug().Msg("os.network.interface> could not read /sys/class/net")
@@ -239,9 +243,12 @@ func parseHexFlags(hexStr string) []string {
 }
 
 func (n *neti) getLinuxCmdInterfaces() ([]Interface, error) {
+	log.Debug().Msg("os.network.interface> detecting interfaces via command line")
+
 	output, err := n.RunCommand("ip addr show")
+	log.Debug().Msg("os.network.interface> run command ip addr show")
 	if err != nil {
-		log.Debug().Msg("os.network.interface> could not run ip addr show")
+		log.Debug().Msg("os.network.interface> failed running ip addr show")
 		return nil, err
 	}
 
