@@ -557,6 +557,16 @@ func TestAmazon2022LinuxDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+func TestBottlerocketDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-bottlerocket.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "bottlerocket", di.Name, "os name should be identified")
+	assert.Equal(t, "Bottlerocket OS 1.33.0 (aws-ecs-2-fips)", di.Title, "os title should be identified")
+	assert.Equal(t, "1.33.0", di.Version, "os version should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestScientificLinuxDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-scientific.toml")
 	assert.Nil(t, err, "was able to create the provider")
