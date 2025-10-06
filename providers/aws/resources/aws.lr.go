@@ -2631,6 +2631,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.cluster.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.ecs.cluster.activeServicesCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetActiveServicesCount()).ToDataRes(types.Int)
+	},
 	"aws.ecs.instance.agentConnected": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsInstance).GetAgentConnected()).ToDataRes(types.Bool)
 	},
@@ -2717,6 +2720,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.container.containerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsContainer).GetContainerName()).ToDataRes(types.String)
+	},
+	"aws.ecs.container.cpuUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsContainer).GetCpuUnits()).ToDataRes(types.String)
+	},
+	"aws.ecs.container.memorySoftLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsContainer).GetMemorySoftLimit()).ToDataRes(types.String)
+	},
+	"aws.ecs.container.memoryHardLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsContainer).GetMemoryHardLimit()).ToDataRes(types.String)
+	},
+	"aws.ecs.container.reason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsContainer).GetReason()).ToDataRes(types.String)
 	},
 	"aws.emr.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmr).GetClusters()).ToDataRes(types.Array(types.Resource("aws.emr.cluster")))
@@ -7905,6 +7920,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.cluster.activeServicesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).ActiveServicesCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsInstance).__id, ok = v.Value.(string)
 		return
@@ -8031,6 +8050,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.container.containerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsContainer).ContainerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.container.cpuUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsContainer).CpuUnits, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.container.memorySoftLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsContainer).MemorySoftLimit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.container.memoryHardLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsContainer).MemoryHardLimit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.container.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsContainer).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.emr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19324,6 +19359,7 @@ type mqlAwsEcsCluster struct {
 	Tasks                             plugin.TValue[[]any]
 	ContainerInstances                plugin.TValue[[]any]
 	Region                            plugin.TValue[string]
+	ActiveServicesCount               plugin.TValue[int64]
 }
 
 // createAwsEcsCluster creates a new instance of this resource
@@ -19429,6 +19465,10 @@ func (c *mqlAwsEcsCluster) GetContainerInstances() *plugin.TValue[[]any] {
 
 func (c *mqlAwsEcsCluster) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsEcsCluster) GetActiveServicesCount() *plugin.TValue[int64] {
+	return &c.ActiveServicesCount
 }
 
 // mqlAwsEcsInstance for the aws.ecs.instance resource
@@ -19633,6 +19673,10 @@ type mqlAwsEcsContainer struct {
 	TaskArn           plugin.TValue[string]
 	RuntimeId         plugin.TValue[string]
 	ContainerName     plugin.TValue[string]
+	CpuUnits          plugin.TValue[string]
+	MemorySoftLimit   plugin.TValue[string]
+	MemoryHardLimit   plugin.TValue[string]
+	Reason            plugin.TValue[string]
 }
 
 // createAwsEcsContainer creates a new instance of this resource
@@ -19730,6 +19774,22 @@ func (c *mqlAwsEcsContainer) GetRuntimeId() *plugin.TValue[string] {
 
 func (c *mqlAwsEcsContainer) GetContainerName() *plugin.TValue[string] {
 	return &c.ContainerName
+}
+
+func (c *mqlAwsEcsContainer) GetCpuUnits() *plugin.TValue[string] {
+	return &c.CpuUnits
+}
+
+func (c *mqlAwsEcsContainer) GetMemorySoftLimit() *plugin.TValue[string] {
+	return &c.MemorySoftLimit
+}
+
+func (c *mqlAwsEcsContainer) GetMemoryHardLimit() *plugin.TValue[string] {
+	return &c.MemoryHardLimit
+}
+
+func (c *mqlAwsEcsContainer) GetReason() *plugin.TValue[string] {
+	return &c.Reason
 }
 
 // mqlAwsEmr for the aws.emr resource
