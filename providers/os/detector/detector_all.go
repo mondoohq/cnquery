@@ -403,6 +403,47 @@ var amazonlinux = &PlatformResolver{
 	},
 }
 
+var bottlerocket = &PlatformResolver{
+	Name:     "bottlerocket",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		f, err := conn.FileSystem().Open("/etc/bottlerocket-release")
+		if err != nil {
+			return false, nil
+		}
+		defer f.Close()
+
+		c, err := io.ReadAll(f)
+		if err != nil || len(c) == 0 {
+			log.Debug().Err(err)
+			return false, nil
+		}
+
+		content := strings.TrimSpace(string(c))
+		osr, err := ParseOsRelease(content)
+		if err != nil || osr["ID"] != "bottlerocket" {
+			return false, nil
+		}
+
+		if len(osr["ID"]) > 0 {
+			pf.Name = osr["ID"]
+		}
+
+		if len(osr["PRETTY_NAME"]) > 0 {
+			pf.Title = osr["PRETTY_NAME"]
+		}
+		if len(osr["VERSION_ID"]) > 0 {
+			pf.Version = osr["VERSION_ID"]
+		}
+
+		if len(osr["BUILD_ID"]) > 0 {
+			pf.Build = osr["BUILD_ID"]
+		}
+
+		return false, nil
+	},
+}
+
 var windriver = &PlatformResolver{
 	Name:     "wrlinux",
 	IsFamily: false,
@@ -936,7 +977,7 @@ var eulerFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_LINUX,
 	IsFamily: true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, plcnext, mageia, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, plcnext, mageia, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)
