@@ -8049,9 +8049,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.macie.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAwsMacie).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAwsMacie).__id, ok = v.Value.(string)
+		return
+	},
 	"aws.macie.sessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacie).Sessions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -8069,9 +8069,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.macie.session.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAwsMacieSession).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAwsMacieSession).__id, ok = v.Value.(string)
+		return
+	},
 	"aws.macie.session.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieSession).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8105,9 +8105,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.macie.classificationJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAwsMacieClassificationJob).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAwsMacieClassificationJob).__id, ok = v.Value.(string)
+		return
+	},
 	"aws.macie.classificationJob.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieClassificationJob).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8161,9 +8161,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.macie.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAwsMacieFinding).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAwsMacieFinding).__id, ok = v.Value.(string)
+		return
+	},
 	"aws.macie.finding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieFinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8225,9 +8225,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.macie.customDataIdentifier.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAwsMacieCustomDataIdentifier).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAwsMacieCustomDataIdentifier).__id, ok = v.Value.(string)
+		return
+	},
 	"aws.macie.customDataIdentifier.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieCustomDataIdentifier).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -19618,11 +19618,11 @@ func (c *mqlAwsGuarddutyFinding) GetUpdatedAt() *plugin.TValue[*time.Time] {
 // mqlAwsMacie for the aws.macie resource
 type mqlAwsMacie struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAwsMacieInternal it will be used here
-	Sessions plugin.TValue[[]any]
-	ClassificationJobs plugin.TValue[[]any]
-	Findings plugin.TValue[[]any]
+	Sessions              plugin.TValue[[]any]
+	ClassificationJobs    plugin.TValue[[]any]
+	Findings              plugin.TValue[[]any]
 	CustomDataIdentifiers plugin.TValue[[]any]
 }
 
@@ -19638,7 +19638,7 @@ func createAwsMacie(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19730,16 +19730,16 @@ func (c *mqlAwsMacie) GetCustomDataIdentifiers() *plugin.TValue[[]any] {
 // mqlAwsMacieSession for the aws.macie.session resource
 type mqlAwsMacieSession struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAwsMacieSessionInternal it will be used here
-	Arn plugin.TValue[string]
-	Region plugin.TValue[string]
-	Status plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
+	Arn                        plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	CreatedAt                  plugin.TValue[*time.Time]
+	UpdatedAt                  plugin.TValue[*time.Time]
 	FindingPublishingFrequency plugin.TValue[string]
-	ServiceRole plugin.TValue[string]
-	S3BucketCount plugin.TValue[int64]
+	ServiceRole                plugin.TValue[string]
+	S3BucketCount              plugin.TValue[int64]
 }
 
 // createAwsMacieSession creates a new instance of this resource
@@ -19754,7 +19754,7 @@ func createAwsMacieSession(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19820,21 +19820,21 @@ func (c *mqlAwsMacieSession) GetS3BucketCount() *plugin.TValue[int64] {
 // mqlAwsMacieClassificationJob for the aws.macie.classificationJob resource
 type mqlAwsMacieClassificationJob struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlAwsMacieClassificationJobInternal
-	Arn plugin.TValue[string]
-	JobId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Region plugin.TValue[string]
-	Status plugin.TValue[string]
-	JobType plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	LastRunTime plugin.TValue[*time.Time]
+	Arn                plugin.TValue[string]
+	JobId              plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	Status             plugin.TValue[string]
+	JobType            plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	LastRunTime        plugin.TValue[*time.Time]
 	SamplingPercentage plugin.TValue[int64]
-	BucketDefinitions plugin.TValue[[]any]
-	ScheduleFrequency plugin.TValue[any]
-	Statistics plugin.TValue[any]
-	Tags plugin.TValue[map[string]any]
+	BucketDefinitions  plugin.TValue[[]any]
+	ScheduleFrequency  plugin.TValue[any]
+	Statistics         plugin.TValue[any]
+	Tags               plugin.TValue[map[string]any]
 }
 
 // createAwsMacieClassificationJob creates a new instance of this resource
@@ -19849,7 +19849,7 @@ func createAwsMacieClassificationJob(runtime *plugin.Runtime, args map[string]*l
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -19941,23 +19941,23 @@ func (c *mqlAwsMacieClassificationJob) GetTags() *plugin.TValue[map[string]any] 
 // mqlAwsMacieFinding for the aws.macie.finding resource
 type mqlAwsMacieFinding struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAwsMacieFindingInternal it will be used here
-	Id plugin.TValue[string]
-	Arn plugin.TValue[string]
-	Region plugin.TValue[string]
-	AccountId plugin.TValue[string]
-	Type plugin.TValue[string]
-	Severity plugin.TValue[any]
-	Category plugin.TValue[string]
-	Archived plugin.TValue[bool]
-	Count plugin.TValue[int64]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	Title plugin.TValue[string]
-	Description plugin.TValue[string]
+	Id                    plugin.TValue[string]
+	Arn                   plugin.TValue[string]
+	Region                plugin.TValue[string]
+	AccountId             plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	Severity              plugin.TValue[any]
+	Category              plugin.TValue[string]
+	Archived              plugin.TValue[bool]
+	Count                 plugin.TValue[int64]
+	CreatedAt             plugin.TValue[*time.Time]
+	UpdatedAt             plugin.TValue[*time.Time]
+	Title                 plugin.TValue[string]
+	Description           plugin.TValue[string]
 	ClassificationDetails plugin.TValue[any]
-	ResourcesAffected plugin.TValue[any]
+	ResourcesAffected     plugin.TValue[any]
 }
 
 // createAwsMacieFinding creates a new instance of this resource
@@ -19972,7 +19972,7 @@ func createAwsMacieFinding(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -20064,16 +20064,16 @@ func (c *mqlAwsMacieFinding) GetResourcesAffected() *plugin.TValue[any] {
 // mqlAwsMacieCustomDataIdentifier for the aws.macie.customDataIdentifier resource
 type mqlAwsMacieCustomDataIdentifier struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlAwsMacieCustomDataIdentifierInternal
-	Id plugin.TValue[string]
-	Arn plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Arn         plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Regex plugin.TValue[string]
-	Keywords plugin.TValue[[]any]
-	CreatedAt plugin.TValue[*time.Time]
-	Tags plugin.TValue[map[string]any]
+	Regex       plugin.TValue[string]
+	Keywords    plugin.TValue[[]any]
+	CreatedAt   plugin.TValue[*time.Time]
+	Tags        plugin.TValue[map[string]any]
 }
 
 // createAwsMacieCustomDataIdentifier creates a new instance of this resource
@@ -20088,7 +20088,7 @@ func createAwsMacieCustomDataIdentifier(runtime *plugin.Runtime, args map[string
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
