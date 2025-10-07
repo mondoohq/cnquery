@@ -1454,6 +1454,12 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 	return args, nil, nil
 }
 
+type mqlAwsIamSamlProviderInternal struct {
+	listCreateDate *time.Time
+	listValidUntil *time.Time
+	details        *iam.GetSAMLProviderOutput
+}
+
 func (a *mqlAwsIam) samlProviders() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -1473,34 +1479,17 @@ func (a *mqlAwsIam) samlProviders() ([]any, error) {
 			continue
 		}
 
-		getResp, err := svc.GetSAMLProvider(ctx, &iam.GetSAMLProviderInput{
-			SAMLProviderArn: provider.Arn,
-		})
-		if err != nil {
-			log.Warn().Err(err).Str("arn", *provider.Arn).Msg("could not get saml provider details")
-			continue
-		}
-
-		// Extract provider name from ARN
-		arnParsed, err := arn.Parse(*provider.Arn)
-		if err != nil {
-			log.Warn().Err(err).Str("arn", *provider.Arn).Msg("could not parse saml provider arn")
-			continue
-		}
-		name := strings.TrimPrefix(arnParsed.Resource, "saml-provider/")
-
 		mqlSamlProvider, err := CreateResource(a.MqlRuntime, "aws.iam.samlProvider",
 			map[string]*llx.RawData{
-				"arn":              llx.StringDataPtr(provider.Arn),
-				"name":             llx.StringData(name),
-				"createdAt":        llx.TimeDataPtr(provider.CreateDate),
-				"validUntil":       llx.TimeDataPtr(getResp.ValidUntil),
-				"metadataDocument": llx.StringDataPtr(getResp.SAMLMetadataDocument),
-				"tags":             llx.MapData(iamTagsToMap(getResp.Tags), types.String),
+				"arn": llx.StringDataPtr(provider.Arn),
 			})
 		if err != nil {
 			return nil, err
 		}
+
+		samlProvider := mqlSamlProvider.(*mqlAwsIamSamlProvider)
+		samlProvider.listCreateDate = provider.CreateDate
+		samlProvider.listValidUntil = provider.ValidUntil
 
 		res = append(res, mqlSamlProvider)
 	}
@@ -1558,6 +1547,97 @@ func (a *mqlAwsIamSamlProvider) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsIamSamlProvider) name() (string, error) {
+	arnVal := a.Arn.Data
+	if arnVal == "" {
+		return "", errors.New("arn is empty")
+	}
+
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimPrefix(parsed.Resource, "saml-provider/"), nil
+}
+
+func (a *mqlAwsIamSamlProvider) createdAt() (*time.Time, error) {
+	if a.listCreateDate != nil {
+		return a.listCreateDate, nil
+	}
+
+	details, err := a.fetchSamlProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return details.CreateDate, nil
+}
+
+func (a *mqlAwsIamSamlProvider) validUntil() (*time.Time, error) {
+	if a.listValidUntil != nil {
+		return a.listValidUntil, nil
+	}
+
+	details, err := a.fetchSamlProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return details.ValidUntil, nil
+}
+
+func (a *mqlAwsIamSamlProvider) metadataDocument() (string, error) {
+	details, err := a.fetchSamlProviderDetails()
+	if err != nil {
+		return "", err
+	}
+
+	return convert.ToValue(details.SAMLMetadataDocument), nil
+}
+
+func (a *mqlAwsIamSamlProvider) tags() (map[string]any, error) {
+	details, err := a.fetchSamlProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return iamTagsToMap(details.Tags), nil
+}
+
 func (a *mqlAwsIamOidcProvider) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsIamSamlProvider) fetchSamlProviderDetails() (*iam.GetSAMLProviderOutput, error) {
+	if a.details != nil {
+		return a.details, nil
+	}
+
+	arnVal := a.Arn.Data
+	if arnVal == "" {
+		return nil, errors.New("arn is empty")
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	resp, err := svc.GetSAMLProvider(ctx, &iam.GetSAMLProviderInput{
+		SAMLProviderArn: &arnVal,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	a.details = resp
+	if a.listCreateDate == nil {
+		a.listCreateDate = resp.CreateDate
+	}
+	if a.listValidUntil == nil {
+		a.listValidUntil = resp.ValidUntil
+	}
+
+	return resp, nil
 }

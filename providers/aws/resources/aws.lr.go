@@ -16992,7 +16992,7 @@ func (c *mqlAwsIamVirtualmfadevice) GetUser() *plugin.TValue[*mqlAwsIamUser] {
 type mqlAwsIamSamlProvider struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIamSamlProviderInternal it will be used here
+	mqlAwsIamSamlProviderInternal
 	Arn              plugin.TValue[string]
 	Name             plugin.TValue[string]
 	CreatedAt        plugin.TValue[*time.Time]
