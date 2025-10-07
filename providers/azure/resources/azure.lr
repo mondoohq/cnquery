@@ -1130,7 +1130,7 @@ private azure.subscription.webService.appRuntimeStack @defaults("preferredOs run
   // Web App stack minor version name
   minorVersion string
   // Whether the stack version is auto-updated
-  autoUpdate bool
+  isDefault bool
   // Whether the stack is deprecated
   deprecated bool
   // Whether the stack is hidden

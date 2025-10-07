@@ -157,7 +157,7 @@ func runtimeStackDescriptorFromResource(runtime *mqlAzureSubscriptionWebServiceA
 	if id, ok := stringFromTValue(&runtime.RuntimeVersion); ok {
 		descriptor.ID = id
 	}
-	if isDefault, ok := boolFromTValue(&runtime.AutoUpdate); ok {
+	if isDefault, ok := boolFromTValue(&runtime.IsDefault); ok {
 		descriptor.IsDefault = isDefault
 	}
 	if isDeprecated, ok := boolFromTValue(&runtime.Deprecated); ok {
