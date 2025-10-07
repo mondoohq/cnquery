@@ -19,7 +19,7 @@ import (
 )
 
 func (a *mqlAwsMacie) id() (string, error) {
-	return "aws.macie", nil
+	return ResourceAwsMacie, nil
 }
 
 func (a *mqlAwsMacie) sessions() ([]any, error) {
@@ -75,7 +75,7 @@ func (a *mqlAwsMacie) getSessions(conn *connection.AwsConnection) []*jobpool.Job
 				s3BucketCount = int(*bucketStats.BucketCount)
 			}
 
-			mqlSession, err := CreateResource(a.MqlRuntime, "aws.macie.session",
+			mqlSession, err := CreateResource(a.MqlRuntime, ResourceAwsMacieSession,
 				map[string]*llx.RawData{
 					"arn":                        llx.StringData(generateMacieSessionArn(conn.AccountId(), region)),
 					"region":                     llx.StringData(region),
@@ -148,7 +148,7 @@ func (a *mqlAwsMacie) getClassificationJobs(conn *connection.AwsConnection) []*j
 						jobId = *job.JobId
 					}
 					jobArn := generateClassificationJobArn(conn.AccountId(), region, jobId)
-					mqlJob, err := CreateResource(a.MqlRuntime, "aws.macie.classificationJob",
+					mqlJob, err := CreateResource(a.MqlRuntime, ResourceAwsMacieClassificationJob,
 						map[string]*llx.RawData{
 							"arn":       llx.StringData(jobArn),
 							"jobId":     llx.StringDataPtr(job.JobId),
@@ -279,7 +279,7 @@ func (a *mqlAwsMacie) getCustomDataIdentifiers(conn *connection.AwsConnection) [
 				}
 
 				for _, identifier := range identifiers.Items {
-					mqlIdentifier, err := CreateResource(a.MqlRuntime, "aws.macie.customDataIdentifier",
+					mqlIdentifier, err := CreateResource(a.MqlRuntime, ResourceAwsMacieCustomDataIdentifier,
 						map[string]*llx.RawData{
 							"id":        llx.StringDataPtr(identifier.Id),
 							"arn":       llx.StringDataPtr(identifier.Arn),
@@ -537,7 +537,7 @@ func newMqlMacieFinding(runtime *plugin.Runtime, finding types.Finding, region s
 		findingId = *finding.Id
 	}
 	findingArn := generateFindingArn(accountId, region, findingId)
-	res, err := CreateResource(runtime, "aws.macie.finding", map[string]*llx.RawData{
+	res, err := CreateResource(runtime, ResourceAwsMacieFinding, map[string]*llx.RawData{
 		"id":                    llx.StringDataPtr(finding.Id),
 		"arn":                   llx.StringData(findingArn),
 		"region":                llx.StringData(region),
