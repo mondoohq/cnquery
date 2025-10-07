@@ -1,8 +1,6 @@
 module go.mondoo.com/cnquery/v12/providers/nmap
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.25
 
 replace go.mondoo.com/cnquery/v12 => ../..
 

@@ -1,14 +1,6 @@
 module go.mondoo.com/cnquery/v12
 
-go 1.24.0
-
-toolchain go1.24.3
-
-// Later versions break the build of the os provider for Windows
-replace modernc.org/libc => modernc.org/libc v1.53.3
-
-// Later versions break the build of the os provider for x86
-replace modernc.org/sqlite => modernc.org/sqlite v1.35.0
+go 1.25
 
 require (
 	cloud.google.com/go/logging v1.11.0

@@ -4,8 +4,6 @@
 package resources
 
 import (
-	"slices"
-
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
@@ -157,25 +155,30 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 
 func getDiscoveryTargets(config *inventory.Config) []string {
 	targets := config.Discover.Targets
+
 	if len(targets) == 0 {
 		return Auto
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
+
+	if stringx.Contains(targets, DiscoveryAll) {
 		// return the All list + All Api Resources list
 		return allDiscovery()
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
-		for i, target := range targets {
-			if target == DiscoveryAuto {
-				// remove the auto keyword
-				targets = slices.Delete(targets, i, i+1)
-			}
+
+	// the targets we return.
+	res := []string{}
+	for _, target := range targets {
+		switch target {
+		case DiscoveryAuto:
+			res = append(res, Auto...)
+		case DiscoveryResources:
+			res = append(res, AllAPIResources...)
+		default:
+			res = append(res, target)
 		}
-		// add in the required discovery targets
-		return append(targets, Auto...)
 	}
-	// random assortment of targets
-	return targets
+
+	return stringx.DedupStringArray(res)
 }
 
 // for now we have to post process the filters

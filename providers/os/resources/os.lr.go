@@ -15,16 +15,152 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceAsset                  string = "asset"
+	ResourceAssetEol               string = "asset.eol"
+	ResourceMondooEol              string = "mondoo.eol"
+	ResourcePlatformEol            string = "platform.eol"
+	ResourcePlatform               string = "platform"
+	ResourceVulnmgmt               string = "vulnmgmt"
+	ResourceVulnCve                string = "vuln.cve"
+	ResourceVulnAdvisory           string = "vuln.advisory"
+	ResourceVulnPackage            string = "vuln.package"
+	ResourcePlatformAdvisories     string = "platform.advisories"
+	ResourcePlatformCves           string = "platform.cves"
+	ResourceAuditCvss              string = "audit.cvss"
+	ResourceAuditAdvisory          string = "audit.advisory"
+	ResourceAuditCve               string = "audit.cve"
+	ResourceMachine                string = "machine"
+	ResourceMachineBios            string = "machine.bios"
+	ResourceMachineSystem          string = "machine.system"
+	ResourceMachineBaseboard       string = "machine.baseboard"
+	ResourceMachineChassis         string = "machine.chassis"
+	ResourceOs                     string = "os"
+	ResourceOsUpdate               string = "os.update"
+	ResourceOsBase                 string = "os.base"
+	ResourceOsUnix                 string = "os.unix"
+	ResourceOsLinux                string = "os.linux"
+	ResourceOsRootCertificates     string = "os.rootCertificates"
+	ResourceCommand                string = "command"
+	ResourcePowershell             string = "powershell"
+	ResourceFile                   string = "file"
+	ResourceFileContext            string = "file.context"
+	ResourceFilePermissions        string = "file.permissions"
+	ResourceFiles                  string = "files"
+	ResourceFilesFind              string = "files.find"
+	ResourceParseIni               string = "parse.ini"
+	ResourceParseJson              string = "parse.json"
+	ResourceParseXml               string = "parse.xml"
+	ResourceParsePlist             string = "parse.plist"
+	ResourceParseYaml              string = "parse.yaml"
+	ResourceParseCertificates      string = "parse.certificates"
+	ResourceParseOpenpgp           string = "parse.openpgp"
+	ResourceUser                   string = "user"
+	ResourcePrivatekey             string = "privatekey"
+	ResourceUsers                  string = "users"
+	ResourceAuthorizedkeys         string = "authorizedkeys"
+	ResourceAuthorizedkeysEntry    string = "authorizedkeys.entry"
+	ResourceGroup                  string = "group"
+	ResourceGroups                 string = "groups"
+	ResourcePackage                string = "package"
+	ResourcePkgFileInfo            string = "pkgFileInfo"
+	ResourcePackages               string = "packages"
+	ResourcePamConf                string = "pam.conf"
+	ResourcePamConfServiceEntry    string = "pam.conf.serviceEntry"
+	ResourceSshd                   string = "sshd"
+	ResourceSshdConfig             string = "sshd.config"
+	ResourceSshdConfigMatchBlock   string = "sshd.config.matchBlock"
+	ResourceAuditdConfig           string = "auditd.config"
+	ResourceAuditdRules            string = "auditd.rules"
+	ResourceAuditdRule             string = "auditd.rule"
+	ResourceAuditdRuleControl      string = "auditd.rule.control"
+	ResourceAuditdRuleFile         string = "auditd.rule.file"
+	ResourceAuditdRuleSyscall      string = "auditd.rule.syscall"
+	ResourceService                string = "service"
+	ResourceServices               string = "services"
+	ResourceKernel                 string = "kernel"
+	ResourceKernelModule           string = "kernel.module"
+	ResourceDocker                 string = "docker"
+	ResourceDockerFile             string = "docker.file"
+	ResourceDockerFileStage        string = "docker.file.stage"
+	ResourceDockerFileUser         string = "docker.file.user"
+	ResourceDockerFileExpose       string = "docker.file.expose"
+	ResourceDockerFileFrom         string = "docker.file.from"
+	ResourceDockerFileRun          string = "docker.file.run"
+	ResourceDockerFileAdd          string = "docker.file.add"
+	ResourceDockerFileCopy         string = "docker.file.copy"
+	ResourceDockerImage            string = "docker.image"
+	ResourceDockerContainer        string = "docker.container"
+	ResourceIptables               string = "iptables"
+	ResourceIp6tables              string = "ip6tables"
+	ResourceIptablesEntry          string = "iptables.entry"
+	ResourceFstab                  string = "fstab"
+	ResourceFstabEntry             string = "fstab.entry"
+	ResourceProcess                string = "process"
+	ResourceProcesses              string = "processes"
+	ResourcePort                   string = "port"
+	ResourcePorts                  string = "ports"
+	ResourceAuditpol               string = "auditpol"
+	ResourceAuditpolEntry          string = "auditpol.entry"
+	ResourceSecpol                 string = "secpol"
+	ResourceNtpConf                string = "ntp.conf"
+	ResourceRsyslogConf            string = "rsyslog.conf"
+	ResourceLogindefs              string = "logindefs"
+	ResourceLsblk                  string = "lsblk"
+	ResourceLsblkEntry             string = "lsblk.entry"
+	ResourceMount                  string = "mount"
+	ResourceMountPoint             string = "mount.point"
+	ResourceShadow                 string = "shadow"
+	ResourceShadowEntry            string = "shadow.entry"
+	ResourceYum                    string = "yum"
+	ResourceYumRepo                string = "yum.repo"
+	ResourceRegistrykey            string = "registrykey"
+	ResourceRegistrykeyProperty    string = "registrykey.property"
+	ResourceContainerImage         string = "container.image"
+	ResourceContainerRepository    string = "container.repository"
+	ResourceKubelet                string = "kubelet"
+	ResourcePython                 string = "python"
+	ResourcePythonPackage          string = "python.package"
+	ResourceNpmPackages            string = "npm.packages"
+	ResourceNpmPackage             string = "npm.package"
+	ResourceMacos                  string = "macos"
+	ResourceMacosAlf               string = "macos.alf"
+	ResourceMacosTimemachine       string = "macos.timemachine"
+	ResourceMacosSystemsetup       string = "macos.systemsetup"
+	ResourceWindows                string = "windows"
+	ResourceMacosSystemExtension   string = "macos.systemExtension"
+	ResourceWindowsHotfix          string = "windows.hotfix"
+	ResourceWindowsFeature         string = "windows.feature"
+	ResourceWindowsServerFeature   string = "windows.serverFeature"
+	ResourceWindowsOptionalFeature string = "windows.optionalFeature"
+	ResourceWindowsFirewall        string = "windows.firewall"
+	ResourceWindowsFirewallProfile string = "windows.firewall.profile"
+	ResourceWindowsFirewallRule    string = "windows.firewall.rule"
+	ResourceWindowsBitlocker       string = "windows.bitlocker"
+	ResourceWindowsBitlockerVolume string = "windows.bitlocker.volume"
+	ResourceWindowsSecurity        string = "windows.security"
+	ResourceWindowsSecurityProduct string = "windows.security.product"
+	ResourceWindowsSecurityHealth  string = "windows.security.health"
+	ResourceCloud                  string = "cloud"
+	ResourceCloudInstance          string = "cloudInstance"
+	ResourceIpAddress              string = "ipAddress"
+	ResourceNetwork                string = "network"
+	ResourceNetworkInterface       string = "networkInterface"
+	ResourceUsb                    string = "usb"
+	ResourceUsbDevice              string = "usb.device"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"asset": {
 			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAsset,
 		},
 		"asset.eol": {
-			Init: initAssetEol,
+			Init:   initAssetEol,
 			Create: createAssetEol,
 		},
 		"mondoo.eol": {
@@ -32,7 +168,7 @@ func init() {
 			Create: createMondooEol,
 		},
 		"platform.eol": {
-			Init: initPlatformEol,
+			Init:   initPlatformEol,
 			Create: createPlatformEol,
 		},
 		"platform": {
@@ -80,19 +216,19 @@ func init() {
 			Create: createMachine,
 		},
 		"machine.bios": {
-			Init: initMachineBios,
+			Init:   initMachineBios,
 			Create: createMachineBios,
 		},
 		"machine.system": {
-			Init: initMachineSystem,
+			Init:   initMachineSystem,
 			Create: createMachineSystem,
 		},
 		"machine.baseboard": {
-			Init: initMachineBaseboard,
+			Init:   initMachineBaseboard,
 			Create: createMachineBaseboard,
 		},
 		"machine.chassis": {
-			Init: initMachineChassis,
+			Init:   initMachineChassis,
 			Create: createMachineChassis,
 		},
 		"os": {
@@ -116,7 +252,7 @@ func init() {
 			Create: createOsLinux,
 		},
 		"os.rootCertificates": {
-			Init: initOsRootCertificates,
+			Init:   initOsRootCertificates,
 			Create: createOsRootCertificates,
 		},
 		"command": {
@@ -144,43 +280,43 @@ func init() {
 			Create: createFiles,
 		},
 		"files.find": {
-			Init: initFilesFind,
+			Init:   initFilesFind,
 			Create: createFilesFind,
 		},
 		"parse.ini": {
-			Init: initParseIni,
+			Init:   initParseIni,
 			Create: createParseIni,
 		},
 		"parse.json": {
-			Init: initParseJson,
+			Init:   initParseJson,
 			Create: createParseJson,
 		},
 		"parse.xml": {
-			Init: initParseXml,
+			Init:   initParseXml,
 			Create: createParseXml,
 		},
 		"parse.plist": {
-			Init: initParsePlist,
+			Init:   initParsePlist,
 			Create: createParsePlist,
 		},
 		"parse.yaml": {
-			Init: initParseYaml,
+			Init:   initParseYaml,
 			Create: createParseYaml,
 		},
 		"parse.certificates": {
-			Init: initParseCertificates,
+			Init:   initParseCertificates,
 			Create: createParseCertificates,
 		},
 		"parse.openpgp": {
-			Init: initParseOpenpgp,
+			Init:   initParseOpenpgp,
 			Create: createParseOpenpgp,
 		},
 		"user": {
-			Init: initUser,
+			Init:   initUser,
 			Create: createUser,
 		},
 		"privatekey": {
-			Init: initPrivatekey,
+			Init:   initPrivatekey,
 			Create: createPrivatekey,
 		},
 		"users": {
@@ -188,7 +324,7 @@ func init() {
 			Create: createUsers,
 		},
 		"authorizedkeys": {
-			Init: initAuthorizedkeys,
+			Init:   initAuthorizedkeys,
 			Create: createAuthorizedkeys,
 		},
 		"authorizedkeys.entry": {
@@ -196,7 +332,7 @@ func init() {
 			Create: createAuthorizedkeysEntry,
 		},
 		"group": {
-			Init: initGroup,
+			Init:   initGroup,
 			Create: createGroup,
 		},
 		"groups": {
@@ -204,7 +340,7 @@ func init() {
 			Create: createGroups,
 		},
 		"package": {
-			Init: initPackage,
+			Init:   initPackage,
 			Create: createPackage,
 		},
 		"pkgFileInfo": {
@@ -216,7 +352,7 @@ func init() {
 			Create: createPackages,
 		},
 		"pam.conf": {
-			Init: initPamConf,
+			Init:   initPamConf,
 			Create: createPamConf,
 		},
 		"pam.conf.serviceEntry": {
@@ -228,7 +364,7 @@ func init() {
 			Create: createSshd,
 		},
 		"sshd.config": {
-			Init: initSshdConfig,
+			Init:   initSshdConfig,
 			Create: createSshdConfig,
 		},
 		"sshd.config.matchBlock": {
@@ -236,7 +372,7 @@ func init() {
 			Create: createSshdConfigMatchBlock,
 		},
 		"auditd.config": {
-			Init: initAuditdConfig,
+			Init:   initAuditdConfig,
 			Create: createAuditdConfig,
 		},
 		"auditd.rules": {
@@ -260,7 +396,7 @@ func init() {
 			Create: createAuditdRuleSyscall,
 		},
 		"service": {
-			Init: initService,
+			Init:   initService,
 			Create: createService,
 		},
 		"services": {
@@ -268,11 +404,11 @@ func init() {
 			Create: createServices,
 		},
 		"kernel": {
-			Init: initKernel,
+			Init:   initKernel,
 			Create: createKernel,
 		},
 		"kernel.module": {
-			Init: initKernelModule,
+			Init:   initKernelModule,
 			Create: createKernelModule,
 		},
 		"docker": {
@@ -280,7 +416,7 @@ func init() {
 			Create: createDocker,
 		},
 		"docker.file": {
-			Init: initDockerFile,
+			Init:   initDockerFile,
 			Create: createDockerFile,
 		},
 		"docker.file.stage": {
@@ -332,7 +468,7 @@ func init() {
 			Create: createIptablesEntry,
 		},
 		"fstab": {
-			Init: initFstab,
+			Init:   initFstab,
 			Create: createFstab,
 		},
 		"fstab.entry": {
@@ -340,7 +476,7 @@ func init() {
 			Create: createFstabEntry,
 		},
 		"process": {
-			Init: initProcess,
+			Init:   initProcess,
 			Create: createProcess,
 		},
 		"processes": {
@@ -368,7 +504,7 @@ func init() {
 			Create: createSecpol,
 		},
 		"ntp.conf": {
-			Init: initNtpConf,
+			Init:   initNtpConf,
 			Create: createNtpConf,
 		},
 		"rsyslog.conf": {
@@ -376,7 +512,7 @@ func init() {
 			Create: createRsyslogConf,
 		},
 		"logindefs": {
-			Init: initLogindefs,
+			Init:   initLogindefs,
 			Create: createLogindefs,
 		},
 		"lsblk": {
@@ -392,7 +528,7 @@ func init() {
 			Create: createMount,
 		},
 		"mount.point": {
-			Init: initMountPoint,
+			Init:   initMountPoint,
 			Create: createMountPoint,
 		},
 		"shadow": {
@@ -408,7 +544,7 @@ func init() {
 			Create: createYum,
 		},
 		"yum.repo": {
-			Init: initYumRepo,
+			Init:   initYumRepo,
 			Create: createYumRepo,
 		},
 		"registrykey": {
@@ -416,11 +552,11 @@ func init() {
 			Create: createRegistrykey,
 		},
 		"registrykey.property": {
-			Init: initRegistrykeyProperty,
+			Init:   initRegistrykeyProperty,
 			Create: createRegistrykeyProperty,
 		},
 		"container.image": {
-			Init: initContainerImage,
+			Init:   initContainerImage,
 			Create: createContainerImage,
 		},
 		"container.repository": {
@@ -428,19 +564,19 @@ func init() {
 			Create: createContainerRepository,
 		},
 		"kubelet": {
-			Init: initKubelet,
+			Init:   initKubelet,
 			Create: createKubelet,
 		},
 		"python": {
-			Init: initPython,
+			Init:   initPython,
 			Create: createPython,
 		},
 		"python.package": {
-			Init: initPythonPackage,
+			Init:   initPythonPackage,
 			Create: createPythonPackage,
 		},
 		"npm.packages": {
-			Init: initNpmPackages,
+			Init:   initNpmPackages,
 			Create: createNpmPackages,
 		},
 		"npm.package": {
@@ -452,7 +588,7 @@ func init() {
 			Create: createMacos,
 		},
 		"macos.alf": {
-			Init: initMacosAlf,
+			Init:   initMacosAlf,
 			Create: createMacosAlf,
 		},
 		"macos.timemachine": {
@@ -472,19 +608,19 @@ func init() {
 			Create: createMacosSystemExtension,
 		},
 		"windows.hotfix": {
-			Init: initWindowsHotfix,
+			Init:   initWindowsHotfix,
 			Create: createWindowsHotfix,
 		},
 		"windows.feature": {
-			Init: initWindowsFeature,
+			Init:   initWindowsFeature,
 			Create: createWindowsFeature,
 		},
 		"windows.serverFeature": {
-			Init: initWindowsServerFeature,
+			Init:   initWindowsServerFeature,
 			Create: createWindowsServerFeature,
 		},
 		"windows.optionalFeature": {
-			Init: initWindowsOptionalFeature,
+			Init:   initWindowsOptionalFeature,
 			Create: createWindowsOptionalFeature,
 		},
 		"windows.firewall": {
@@ -516,7 +652,7 @@ func init() {
 			Create: createWindowsSecurityProduct,
 		},
 		"windows.security.health": {
-			Init: initWindowsSecurityHealth,
+			Init:   initWindowsSecurityHealth,
 			Create: createWindowsSecurityHealth,
 		},
 		"cloud": {
@@ -568,7 +704,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -2597,11 +2733,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAsset).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAsset).__id, ok = v.Value.(string)
+		return
+	},
 	"asset.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2615,9 +2751,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"asset.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAssetEol).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAssetEol).__id, ok = v.Value.(string)
+		return
+	},
 	"asset.eol.docsUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAssetEol).DocsUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2631,9 +2767,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mondoo.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMondooEol).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMondooEol).__id, ok = v.Value.(string)
+		return
+	},
 	"mondoo.eol.product": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooEol).Product, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2647,9 +2783,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"platform.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPlatformEol).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPlatformEol).__id, ok = v.Value.(string)
+		return
+	},
 	"platform.eol.docsUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPlatformEol).DocsUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2663,17 +2799,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"platform.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPlatform).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPlatform).__id, ok = v.Value.(string)
+		return
+	},
 	"platform.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPlatform).VulnerabilityReport, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vulnmgmt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVulnmgmt).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVulnmgmt).__id, ok = v.Value.(string)
+		return
+	},
 	"vulnmgmt.cves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVulnmgmt).Cves, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2695,9 +2831,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vuln.cve.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVulnCve).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVulnCve).__id, ok = v.Value.(string)
+		return
+	},
 	"vuln.cve.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVulnCve).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2727,9 +2863,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vuln.advisory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVulnAdvisory).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVulnAdvisory).__id, ok = v.Value.(string)
+		return
+	},
 	"vuln.advisory.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVulnAdvisory).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2755,9 +2891,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"vuln.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlVulnPackage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlVulnPackage).__id, ok = v.Value.(string)
+		return
+	},
 	"vuln.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVulnPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2775,9 +2911,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"platform.advisories.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPlatformAdvisories).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPlatformAdvisories).__id, ok = v.Value.(string)
+		return
+	},
 	"platform.advisories.cvss": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPlatformAdvisories).Cvss, ok = plugin.RawToTValue[*mqlAuditCvss](v.Value, v.Error)
 		return
@@ -2791,9 +2927,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"platform.cves.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPlatformCves).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPlatformCves).__id, ok = v.Value.(string)
+		return
+	},
 	"platform.cves.cvss": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPlatformCves).Cvss, ok = plugin.RawToTValue[*mqlAuditCvss](v.Value, v.Error)
 		return
@@ -2807,9 +2943,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"audit.cvss.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditCvss).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditCvss).__id, ok = v.Value.(string)
+		return
+	},
 	"audit.cvss.score": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditCvss).Score, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
@@ -2819,9 +2955,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"audit.advisory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditAdvisory).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditAdvisory).__id, ok = v.Value.(string)
+		return
+	},
 	"audit.advisory.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditAdvisory).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2851,9 +2987,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"audit.cve.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditCve).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditCve).__id, ok = v.Value.(string)
+		return
+	},
 	"audit.cve.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditCve).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2887,13 +3023,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"machine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMachine).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMachine).__id, ok = v.Value.(string)
+		return
+	},
 	"machine.bios.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMachineBios).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMachineBios).__id, ok = v.Value.(string)
+		return
+	},
 	"machine.bios.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMachineBios).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2907,9 +3043,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"machine.system.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMachineSystem).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMachineSystem).__id, ok = v.Value.(string)
+		return
+	},
 	"machine.system.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMachineSystem).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2939,9 +3075,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"machine.baseboard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMachineBaseboard).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMachineBaseboard).__id, ok = v.Value.(string)
+		return
+	},
 	"machine.baseboard.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMachineBaseboard).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2963,9 +3099,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"machine.chassis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMachineChassis).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMachineChassis).__id, ok = v.Value.(string)
+		return
+	},
 	"machine.chassis.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMachineChassis).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2983,9 +3119,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"os.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOs).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOs).__id, ok = v.Value.(string)
+		return
+	},
 	"os.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOs).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3023,9 +3159,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"os.update.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOsUpdate).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOsUpdate).__id, ok = v.Value.(string)
+		return
+	},
 	"os.update.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsUpdate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3047,9 +3183,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"os.base.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOsBase).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOsBase).__id, ok = v.Value.(string)
+		return
+	},
 	"os.base.machine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsBase).Machine, ok = plugin.RawToTValue[*mqlMachine](v.Value, v.Error)
 		return
@@ -3091,17 +3227,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"os.unix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOsUnix).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOsUnix).__id, ok = v.Value.(string)
+		return
+	},
 	"os.unix.base": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsUnix).Base, ok = plugin.RawToTValue[*mqlOsBase](v.Value, v.Error)
 		return
 	},
 	"os.linux.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOsLinux).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOsLinux).__id, ok = v.Value.(string)
+		return
+	},
 	"os.linux.unix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsLinux).Unix, ok = plugin.RawToTValue[*mqlOsUnix](v.Value, v.Error)
 		return
@@ -3119,9 +3255,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"os.rootCertificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOsRootCertificates).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOsRootCertificates).__id, ok = v.Value.(string)
+		return
+	},
 	"os.rootCertificates.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsRootCertificates).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3135,9 +3271,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"command.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCommand).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCommand).__id, ok = v.Value.(string)
+		return
+	},
 	"command.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCommand).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3155,9 +3291,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"powershell.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPowershell).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPowershell).__id, ok = v.Value.(string)
+		return
+	},
 	"powershell.script": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPowershell).Script, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3175,9 +3311,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlFile).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlFile).__id, ok = v.Value.(string)
+		return
+	},
 	"file.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFile).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3219,9 +3355,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"file.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlFileContext).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlFileContext).__id, ok = v.Value.(string)
+		return
+	},
 	"file.context.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFileContext).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -3235,9 +3371,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"file.permissions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlFilePermissions).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlFilePermissions).__id, ok = v.Value.(string)
+		return
+	},
 	"file.permissions.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFilePermissions).Mode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -3307,13 +3443,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"files.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlFiles).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlFiles).__id, ok = v.Value.(string)
+		return
+	},
 	"files.find.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlFilesFind).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlFilesFind).__id, ok = v.Value.(string)
+		return
+	},
 	"files.find.from": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFilesFind).From, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3347,9 +3483,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"parse.ini.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlParseIni).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlParseIni).__id, ok = v.Value.(string)
+		return
+	},
 	"parse.ini.delimiter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseIni).Delimiter, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3371,9 +3507,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"parse.json.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlParseJson).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlParseJson).__id, ok = v.Value.(string)
+		return
+	},
 	"parse.json.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseJson).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -3387,9 +3523,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"parse.xml.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlParseXml).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlParseXml).__id, ok = v.Value.(string)
+		return
+	},
 	"parse.xml.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseXml).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -3403,9 +3539,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"parse.plist.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlParsePlist).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlParsePlist).__id, ok = v.Value.(string)
+		return
+	},
 	"parse.plist.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParsePlist).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -3419,9 +3555,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"parse.yaml.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlParseYaml).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlParseYaml).__id, ok = v.Value.(string)
+		return
+	},
 	"parse.yaml.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseYaml).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -3439,9 +3575,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"parse.certificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlParseCertificates).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlParseCertificates).__id, ok = v.Value.(string)
+		return
+	},
 	"parse.certificates.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseCertificates).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3459,9 +3595,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"parse.openpgp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlParseOpenpgp).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlParseOpenpgp).__id, ok = v.Value.(string)
+		return
+	},
 	"parse.openpgp.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseOpenpgp).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3479,9 +3615,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlUser).__id, ok = v.Value.(string)
+		return
+	},
 	"user.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUser).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -3523,9 +3659,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"privatekey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPrivatekey).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPrivatekey).__id, ok = v.Value.(string)
+		return
+	},
 	"privatekey.pem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPrivatekey).Pem, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3543,17 +3679,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlUsers).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlUsers).__id, ok = v.Value.(string)
+		return
+	},
 	"users.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUsers).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"authorizedkeys.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuthorizedkeys).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuthorizedkeys).__id, ok = v.Value.(string)
+		return
+	},
 	"authorizedkeys.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuthorizedkeys).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3571,9 +3707,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"authorizedkeys.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuthorizedkeysEntry).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuthorizedkeysEntry).__id, ok = v.Value.(string)
+		return
+	},
 	"authorizedkeys.entry.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuthorizedkeysEntry).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -3599,9 +3735,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGroup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGroup).__id, ok = v.Value.(string)
+		return
+	},
 	"group.gid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGroup).Gid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -3619,17 +3755,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"groups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGroups).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGroups).__id, ok = v.Value.(string)
+		return
+	},
 	"groups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGroups).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPackage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPackage).__id, ok = v.Value.(string)
+		return
+	},
 	"package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3691,25 +3827,25 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"pkgFileInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPkgFileInfo).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPkgFileInfo).__id, ok = v.Value.(string)
+		return
+	},
 	"pkgFileInfo.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPkgFileInfo).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPackages).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPackages).__id, ok = v.Value.(string)
+		return
+	},
 	"packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"pam.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPamConf).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPamConf).__id, ok = v.Value.(string)
+		return
+	},
 	"pam.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPamConf).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3727,9 +3863,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"pam.conf.serviceEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPamConfServiceEntry).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPamConfServiceEntry).__id, ok = v.Value.(string)
+		return
+	},
 	"pam.conf.serviceEntry.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPamConfServiceEntry).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3755,13 +3891,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"sshd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSshd).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSshd).__id, ok = v.Value.(string)
+		return
+	},
 	"sshd.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSshdConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSshdConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"sshd.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -3803,9 +3939,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"sshd.config.matchBlock.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSshdConfigMatchBlock).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSshdConfigMatchBlock).__id, ok = v.Value.(string)
+		return
+	},
 	"sshd.config.matchBlock.criteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfigMatchBlock).Criteria, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3839,9 +3975,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"auditd.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditdConfig).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditdConfig).__id, ok = v.Value.(string)
+		return
+	},
 	"auditd.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -3851,9 +3987,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"auditd.rules.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditdRules).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditdRules).__id, ok = v.Value.(string)
+		return
+	},
 	"auditd.rules.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdRules).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3871,13 +4007,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"auditd.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditdRule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditdRule).__id, ok = v.Value.(string)
+		return
+	},
 	"auditd.rule.control.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditdRuleControl).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditdRuleControl).__id, ok = v.Value.(string)
+		return
+	},
 	"auditd.rule.control.flag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdRuleControl).Flag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3887,9 +4023,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"auditd.rule.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditdRuleFile).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditdRuleFile).__id, ok = v.Value.(string)
+		return
+	},
 	"auditd.rule.file.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdRuleFile).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3903,9 +4039,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"auditd.rule.syscall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditdRuleSyscall).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditdRuleSyscall).__id, ok = v.Value.(string)
+		return
+	},
 	"auditd.rule.syscall.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdRuleSyscall).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3927,9 +4063,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlService).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlService).__id, ok = v.Value.(string)
+		return
+	},
 	"service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3959,17 +4095,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"services.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlServices).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlServices).__id, ok = v.Value.(string)
+		return
+	},
 	"services.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlServices).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"kernel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlKernel).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlKernel).__id, ok = v.Value.(string)
+		return
+	},
 	"kernel.info": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKernel).Info, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -3987,9 +4123,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"kernel.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlKernelModule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlKernelModule).__id, ok = v.Value.(string)
+		return
+	},
 	"kernel.module.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKernelModule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4003,9 +4139,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"docker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDocker).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDocker).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDocker).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4015,9 +4151,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"docker.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDockerFile).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDockerFile).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.file.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFile).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -4031,9 +4167,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"docker.file.stage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDockerFileStage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDockerFileStage).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.file.stage.from": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileStage).From, ok = plugin.RawToTValue[*mqlDockerFileFrom](v.Value, v.Error)
 		return
@@ -4079,9 +4215,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"docker.file.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDockerFileUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDockerFileUser).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.file.user.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileUser).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4091,9 +4227,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"docker.file.expose.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDockerFileExpose).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDockerFileExpose).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.file.expose.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileExpose).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -4103,9 +4239,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"docker.file.from.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDockerFileFrom).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDockerFileFrom).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.file.from.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileFrom).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4127,17 +4263,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"docker.file.run.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDockerFileRun).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDockerFileRun).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.file.run.script": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileRun).Script, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"docker.file.add.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDockerFileAdd).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDockerFileAdd).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.file.add.src": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileAdd).Src, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4155,9 +4291,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"docker.file.copy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDockerFileCopy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDockerFileCopy).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.file.copy.src": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileCopy).Src, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4175,9 +4311,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"docker.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDockerImage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDockerImage).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.image.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerImage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4199,9 +4335,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"docker.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlDockerContainer).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlDockerContainer).__id, ok = v.Value.(string)
+		return
+	},
 	"docker.container.os": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerContainer).Os, ok = plugin.RawToTValue[*mqlOsLinux](v.Value, v.Error)
 		return
@@ -4243,9 +4379,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"iptables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlIptables).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlIptables).__id, ok = v.Value.(string)
+		return
+	},
 	"iptables.input": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIptables).Input, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4255,9 +4391,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ip6tables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlIp6tables).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlIp6tables).__id, ok = v.Value.(string)
+		return
+	},
 	"ip6tables.input": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIp6tables).Input, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4267,9 +4403,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"iptables.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlIptablesEntry).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlIptablesEntry).__id, ok = v.Value.(string)
+		return
+	},
 	"iptables.entry.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIptablesEntry).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -4319,9 +4455,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"fstab.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlFstab).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlFstab).__id, ok = v.Value.(string)
+		return
+	},
 	"fstab.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFstab).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4331,9 +4467,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"fstab.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlFstabEntry).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlFstabEntry).__id, ok = v.Value.(string)
+		return
+	},
 	"fstab.entry.device": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFstabEntry).Device, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4359,9 +4495,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"process.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlProcess).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlProcess).__id, ok = v.Value.(string)
+		return
+	},
 	"process.pid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProcess).Pid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -4383,17 +4519,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"processes.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlProcesses).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlProcesses).__id, ok = v.Value.(string)
+		return
+	},
 	"processes.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProcesses).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"port.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPort).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPort).__id, ok = v.Value.(string)
+		return
+	},
 	"port.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPort).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4431,9 +4567,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ports.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPorts).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPorts).__id, ok = v.Value.(string)
+		return
+	},
 	"ports.listening": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPorts).Listening, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4443,17 +4579,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"auditpol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditpol).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditpol).__id, ok = v.Value.(string)
+		return
+	},
 	"auditpol.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditpol).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"auditpol.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAuditpolEntry).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAuditpolEntry).__id, ok = v.Value.(string)
+		return
+	},
 	"auditpol.entry.machinename": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditpolEntry).Machinename, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4479,9 +4615,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"secpol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSecpol).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSecpol).__id, ok = v.Value.(string)
+		return
+	},
 	"secpol.systemaccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSecpol).Systemaccess, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -4499,9 +4635,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ntp.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNtpConf).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlNtpConf).__id, ok = v.Value.(string)
+		return
+	},
 	"ntp.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNtpConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -4527,9 +4663,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"rsyslog.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlRsyslogConf).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlRsyslogConf).__id, ok = v.Value.(string)
+		return
+	},
 	"rsyslog.conf.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRsyslogConf).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4547,9 +4683,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"logindefs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlLogindefs).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlLogindefs).__id, ok = v.Value.(string)
+		return
+	},
 	"logindefs.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLogindefs).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -4563,17 +4699,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"lsblk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlLsblk).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlLsblk).__id, ok = v.Value.(string)
+		return
+	},
 	"lsblk.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLsblk).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"lsblk.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlLsblkEntry).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlLsblkEntry).__id, ok = v.Value.(string)
+		return
+	},
 	"lsblk.entry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLsblkEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4595,17 +4731,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMount).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMount).__id, ok = v.Value.(string)
+		return
+	},
 	"mount.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMount).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"mount.point.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMountPoint).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMountPoint).__id, ok = v.Value.(string)
+		return
+	},
 	"mount.point.device": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMountPoint).Device, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4627,17 +4763,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"shadow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlShadow).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlShadow).__id, ok = v.Value.(string)
+		return
+	},
 	"shadow.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShadow).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"shadow.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlShadowEntry).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlShadowEntry).__id, ok = v.Value.(string)
+		return
+	},
 	"shadow.entry.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShadowEntry).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4675,9 +4811,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"yum.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlYum).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlYum).__id, ok = v.Value.(string)
+		return
+	},
 	"yum.vars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlYum).Vars, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -4687,9 +4823,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"yum.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlYumRepo).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlYumRepo).__id, ok = v.Value.(string)
+		return
+	},
 	"yum.repo.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlYumRepo).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4739,9 +4875,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"registrykey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlRegistrykey).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlRegistrykey).__id, ok = v.Value.(string)
+		return
+	},
 	"registrykey.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRegistrykey).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4763,9 +4899,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"registrykey.property.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlRegistrykeyProperty).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlRegistrykeyProperty).__id, ok = v.Value.(string)
+		return
+	},
 	"registrykey.property.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRegistrykeyProperty).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4791,9 +4927,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"container.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlContainerImage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlContainerImage).__id, ok = v.Value.(string)
+		return
+	},
 	"container.image.reference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlContainerImage).Reference, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4815,9 +4951,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"container.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlContainerRepository).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlContainerRepository).__id, ok = v.Value.(string)
+		return
+	},
 	"container.repository.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlContainerRepository).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4835,9 +4971,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"kubelet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlKubelet).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlKubelet).__id, ok = v.Value.(string)
+		return
+	},
 	"kubelet.configFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKubelet).ConfigFile, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -4851,9 +4987,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"python.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPython).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPython).__id, ok = v.Value.(string)
+		return
+	},
 	"python.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPython).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4867,9 +5003,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"python.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlPythonPackage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlPythonPackage).__id, ok = v.Value.(string)
+		return
+	},
 	"python.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPythonPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4915,9 +5051,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"npm.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNpmPackages).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlNpmPackages).__id, ok = v.Value.(string)
+		return
+	},
 	"npm.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNpmPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4939,9 +5075,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"npm.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNpmPackage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlNpmPackage).__id, ok = v.Value.(string)
+		return
+	},
 	"npm.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNpmPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4967,9 +5103,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMacos).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMacos).__id, ok = v.Value.(string)
+		return
+	},
 	"macos.userPreferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacos).UserPreferences, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -4987,9 +5123,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"macos.alf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMacosAlf).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMacosAlf).__id, ok = v.Value.(string)
+		return
+	},
 	"macos.alf.allowDownloadSignedEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosAlf).AllowDownloadSignedEnabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -5035,17 +5171,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"macos.timemachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMacosTimemachine).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMacosTimemachine).__id, ok = v.Value.(string)
+		return
+	},
 	"macos.timemachine.preferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosTimemachine).Preferences, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"macos.systemsetup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMacosSystemsetup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMacosSystemsetup).__id, ok = v.Value.(string)
+		return
+	},
 	"macos.systemsetup.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosSystemsetup).Date, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5127,9 +5263,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindows).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindows).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.computerInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindows).ComputerInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -5151,9 +5287,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"macos.systemExtension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMacosSystemExtension).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMacosSystemExtension).__id, ok = v.Value.(string)
+		return
+	},
 	"macos.systemExtension.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosSystemExtension).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5195,9 +5331,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.hotfix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsHotfix).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsHotfix).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.hotfix.hotfixId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsHotfix).HotfixId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5219,9 +5355,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.feature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsFeature).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsFeature).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.feature.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsFeature).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5247,9 +5383,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.serverFeature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsServerFeature).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsServerFeature).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.serverFeature.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsServerFeature).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5275,9 +5411,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.optionalFeature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsOptionalFeature).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsOptionalFeature).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.optionalFeature.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsOptionalFeature).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5299,9 +5435,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsFirewall).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsFirewall).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.firewall.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsFirewall).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -5315,9 +5451,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.firewall.profile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsFirewallProfile).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsFirewallProfile).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.firewall.profile.instanceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsFirewallProfile).InstanceID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5391,9 +5527,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.firewall.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsFirewallRule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsFirewallRule).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.firewall.rule.instanceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsFirewallRule).InstanceID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5459,17 +5595,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.bitlocker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsBitlocker).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsBitlocker).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.bitlocker.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsBitlocker).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsBitlockerVolume).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsBitlockerVolume).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.bitlocker.volume.deviceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsBitlockerVolume).DeviceID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5503,17 +5639,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.security.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsSecurity).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsSecurity).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.security.products": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSecurity).Products, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"windows.security.product.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsSecurityProduct).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsSecurityProduct).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.security.product.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSecurityProduct).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5543,9 +5679,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"windows.security.health.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlWindowsSecurityHealth).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlWindowsSecurityHealth).__id, ok = v.Value.(string)
+		return
+	},
 	"windows.security.health.firewall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSecurityHealth).Firewall, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -5575,9 +5711,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloud.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloud).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloud).__id, ok = v.Value.(string)
+		return
+	},
 	"cloud.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloud).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5587,9 +5723,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudInstance).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudInstance).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudInstance.publicHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudInstance).PublicHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5611,9 +5747,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ipAddress.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlIpAddress).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlIpAddress).__id, ok = v.Value.(string)
+		return
+	},
 	"ipAddress.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIpAddress).Ip, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
@@ -5635,17 +5771,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNetwork).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlNetwork).__id, ok = v.Value.(string)
+		return
+	},
 	"network.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetwork).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"networkInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlNetworkInterface).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlNetworkInterface).__id, ok = v.Value.(string)
+		return
+	},
 	"networkInterface.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetworkInterface).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5679,17 +5815,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlUsb).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlUsb).__id, ok = v.Value.(string)
+		return
+	},
 	"usb.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUsb).Devices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"usb.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlUsbDevice).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlUsbDevice).__id, ok = v.Value.(string)
+		return
+	},
 	"usb.device.vendorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUsbDevice).VendorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5741,13 +5877,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[os] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[os] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[os] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[os] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -5765,11 +5901,11 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlAsset for the asset resource
 type mqlAsset struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAssetInternal it will be used here
-	Cpes plugin.TValue[[]any]
+	Cpes                plugin.TValue[[]any]
 	VulnerabilityReport plugin.TValue[any]
-	Purl plugin.TValue[string]
+	Purl                plugin.TValue[string]
 }
 
 // createAsset creates a new instance of this resource
@@ -5835,11 +5971,11 @@ func (c *mqlAsset) GetPurl() *plugin.TValue[string] {
 // mqlAssetEol for the asset.eol resource
 type mqlAssetEol struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAssetEolInternal it will be used here
-	DocsUrl plugin.TValue[string]
+	DocsUrl    plugin.TValue[string]
 	ProductUrl plugin.TValue[string]
-	Date plugin.TValue[*time.Time]
+	Date       plugin.TValue[*time.Time]
 }
 
 // createAssetEol creates a new instance of this resource
@@ -5889,11 +6025,11 @@ func (c *mqlAssetEol) GetDate() *plugin.TValue[*time.Time] {
 // mqlMondooEol for the mondoo.eol resource
 type mqlMondooEol struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMondooEolInternal it will be used here
 	Product plugin.TValue[string]
 	Version plugin.TValue[string]
-	Date plugin.TValue[*time.Time]
+	Date    plugin.TValue[*time.Time]
 }
 
 // createMondooEol creates a new instance of this resource
@@ -5908,7 +6044,7 @@ func createMondooEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5950,11 +6086,11 @@ func (c *mqlMondooEol) GetDate() *plugin.TValue[*time.Time] {
 // mqlPlatformEol for the platform.eol resource
 type mqlPlatformEol struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPlatformEolInternal it will be used here
-	DocsUrl plugin.TValue[string]
+	DocsUrl    plugin.TValue[string]
 	ProductUrl plugin.TValue[string]
-	Date plugin.TValue[*time.Time]
+	Date       plugin.TValue[*time.Time]
 }
 
 // createPlatformEol creates a new instance of this resource
@@ -6004,7 +6140,7 @@ func (c *mqlPlatformEol) GetDate() *plugin.TValue[*time.Time] {
 // mqlPlatform for the platform resource
 type mqlPlatform struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPlatformInternal it will be used here
 	VulnerabilityReport plugin.TValue[any]
 }
@@ -6050,13 +6186,13 @@ func (c *mqlPlatform) GetVulnerabilityReport() *plugin.TValue[any] {
 // mqlVulnmgmt for the vulnmgmt resource
 type mqlVulnmgmt struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlVulnmgmtInternal
-	Cves plugin.TValue[[]any]
-	Advisories plugin.TValue[[]any]
-	Packages plugin.TValue[[]any]
+	Cves           plugin.TValue[[]any]
+	Advisories     plugin.TValue[[]any]
+	Packages       plugin.TValue[[]any]
 	LastAssessment plugin.TValue[*time.Time]
-	Stats plugin.TValue[*mqlAuditCvss]
+	Stats          plugin.TValue[*mqlAuditCvss]
 }
 
 // createVulnmgmt creates a new instance of this resource
@@ -6164,14 +6300,14 @@ func (c *mqlVulnmgmt) GetStats() *plugin.TValue[*mqlAuditCvss] {
 // mqlVulnCve for the vuln.cve resource
 type mqlVulnCve struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVulnCveInternal it will be used here
-	Id plugin.TValue[string]
-	State plugin.TValue[string]
-	Summary plugin.TValue[string]
-	Unscored plugin.TValue[bool]
-	Published plugin.TValue[*time.Time]
-	Modified plugin.TValue[*time.Time]
+	Id         plugin.TValue[string]
+	State      plugin.TValue[string]
+	Summary    plugin.TValue[string]
+	Unscored   plugin.TValue[bool]
+	Published  plugin.TValue[*time.Time]
+	Modified   plugin.TValue[*time.Time]
 	WorstScore plugin.TValue[*mqlAuditCvss]
 }
 
@@ -6187,7 +6323,7 @@ func createVulnCve(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6243,14 +6379,14 @@ func (c *mqlVulnCve) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
 // mqlVulnAdvisory for the vuln.advisory resource
 type mqlVulnAdvisory struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVulnAdvisoryInternal it will be used here
-	Id plugin.TValue[string]
-	Title plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Title       plugin.TValue[string]
 	Description plugin.TValue[string]
-	Published plugin.TValue[*time.Time]
-	Modified plugin.TValue[*time.Time]
-	WorstScore plugin.TValue[*mqlAuditCvss]
+	Published   plugin.TValue[*time.Time]
+	Modified    plugin.TValue[*time.Time]
+	WorstScore  plugin.TValue[*mqlAuditCvss]
 }
 
 // createVulnAdvisory creates a new instance of this resource
@@ -6265,7 +6401,7 @@ func createVulnAdvisory(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6317,12 +6453,12 @@ func (c *mqlVulnAdvisory) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
 // mqlVulnPackage for the vuln.package resource
 type mqlVulnPackage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlVulnPackageInternal it will be used here
-	Name plugin.TValue[string]
-	Version plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Version   plugin.TValue[string]
 	Available plugin.TValue[string]
-	Arch plugin.TValue[string]
+	Arch      plugin.TValue[string]
 }
 
 // createVulnPackage creates a new instance of this resource
@@ -6337,7 +6473,7 @@ func createVulnPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6381,11 +6517,11 @@ func (c *mqlVulnPackage) GetArch() *plugin.TValue[string] {
 // mqlPlatformAdvisories for the platform.advisories resource
 type mqlPlatformAdvisories struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPlatformAdvisoriesInternal it will be used here
-	Cvss plugin.TValue[*mqlAuditCvss]
+	Cvss  plugin.TValue[*mqlAuditCvss]
 	Stats plugin.TValue[any]
-	List plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
 }
 
 // createPlatformAdvisories creates a new instance of this resource
@@ -6400,7 +6536,7 @@ func createPlatformAdvisories(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6466,11 +6602,11 @@ func (c *mqlPlatformAdvisories) GetList() *plugin.TValue[[]any] {
 // mqlPlatformCves for the platform.cves resource
 type mqlPlatformCves struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPlatformCvesInternal it will be used here
-	Cvss plugin.TValue[*mqlAuditCvss]
+	Cvss  plugin.TValue[*mqlAuditCvss]
 	Stats plugin.TValue[any]
-	List plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
 }
 
 // createPlatformCves creates a new instance of this resource
@@ -6485,7 +6621,7 @@ func createPlatformCves(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -6551,9 +6687,9 @@ func (c *mqlPlatformCves) GetList() *plugin.TValue[[]any] {
 // mqlAuditCvss for the audit.cvss resource
 type mqlAuditCvss struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuditCvssInternal it will be used here
-	Score plugin.TValue[float64]
+	Score  plugin.TValue[float64]
 	Vector plugin.TValue[string]
 }
 
@@ -6600,15 +6736,15 @@ func (c *mqlAuditCvss) GetVector() *plugin.TValue[string] {
 // mqlAuditAdvisory for the audit.advisory resource
 type mqlAuditAdvisory struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuditAdvisoryInternal it will be used here
-	Id plugin.TValue[string]
-	Mrn plugin.TValue[string]
-	Title plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Mrn         plugin.TValue[string]
+	Title       plugin.TValue[string]
 	Description plugin.TValue[string]
-	Published plugin.TValue[*time.Time]
-	Modified plugin.TValue[*time.Time]
-	WorstScore plugin.TValue[*mqlAuditCvss]
+	Published   plugin.TValue[*time.Time]
+	Modified    plugin.TValue[*time.Time]
+	WorstScore  plugin.TValue[*mqlAuditCvss]
 }
 
 // createAuditAdvisory creates a new instance of this resource
@@ -6674,15 +6810,15 @@ func (c *mqlAuditAdvisory) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
 // mqlAuditCve for the audit.cve resource
 type mqlAuditCve struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuditCveInternal it will be used here
-	Id plugin.TValue[string]
-	Mrn plugin.TValue[string]
-	State plugin.TValue[string]
-	Summary plugin.TValue[string]
-	Unscored plugin.TValue[bool]
-	Published plugin.TValue[*time.Time]
-	Modified plugin.TValue[*time.Time]
+	Id         plugin.TValue[string]
+	Mrn        plugin.TValue[string]
+	State      plugin.TValue[string]
+	Summary    plugin.TValue[string]
+	Unscored   plugin.TValue[bool]
+	Published  plugin.TValue[*time.Time]
+	Modified   plugin.TValue[*time.Time]
 	WorstScore plugin.TValue[*mqlAuditCvss]
 }
 
@@ -6753,7 +6889,7 @@ func (c *mqlAuditCve) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
 // mqlMachine for the machine resource
 type mqlMachine struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlMachineInternal
 }
 
@@ -6792,10 +6928,10 @@ func (c *mqlMachine) MqlID() string {
 // mqlMachineBios for the machine.bios resource
 type mqlMachineBios struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMachineBiosInternal it will be used here
-	Vendor plugin.TValue[string]
-	Version plugin.TValue[string]
+	Vendor      plugin.TValue[string]
+	Version     plugin.TValue[string]
 	ReleaseDate plugin.TValue[string]
 }
 
@@ -6846,15 +6982,15 @@ func (c *mqlMachineBios) GetReleaseDate() *plugin.TValue[string] {
 // mqlMachineSystem for the machine.system resource
 type mqlMachineSystem struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMachineSystemInternal it will be used here
 	Manufacturer plugin.TValue[string]
-	Product plugin.TValue[string]
-	Version plugin.TValue[string]
-	Serial plugin.TValue[string]
-	Uuid plugin.TValue[string]
-	Sku plugin.TValue[string]
-	Family plugin.TValue[string]
+	Product      plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Serial       plugin.TValue[string]
+	Uuid         plugin.TValue[string]
+	Sku          plugin.TValue[string]
+	Family       plugin.TValue[string]
 }
 
 // createMachineSystem creates a new instance of this resource
@@ -6920,13 +7056,13 @@ func (c *mqlMachineSystem) GetFamily() *plugin.TValue[string] {
 // mqlMachineBaseboard for the machine.baseboard resource
 type mqlMachineBaseboard struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMachineBaseboardInternal it will be used here
 	Manufacturer plugin.TValue[string]
-	Product plugin.TValue[string]
-	Version plugin.TValue[string]
-	Serial plugin.TValue[string]
-	AssetTag plugin.TValue[string]
+	Product      plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Serial       plugin.TValue[string]
+	AssetTag     plugin.TValue[string]
 }
 
 // createMachineBaseboard creates a new instance of this resource
@@ -6984,12 +7120,12 @@ func (c *mqlMachineBaseboard) GetAssetTag() *plugin.TValue[string] {
 // mqlMachineChassis for the machine.chassis resource
 type mqlMachineChassis struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMachineChassisInternal it will be used here
 	Manufacturer plugin.TValue[string]
-	Version plugin.TValue[string]
-	Serial plugin.TValue[string]
-	AssetTag plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Serial       plugin.TValue[string]
+	AssetTag     plugin.TValue[string]
 }
 
 // createMachineChassis creates a new instance of this resource
@@ -7043,17 +7179,17 @@ func (c *mqlMachineChassis) GetAssetTag() *plugin.TValue[string] {
 // mqlOs for the os resource
 type mqlOs struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOsInternal it will be used here
-	Name plugin.TValue[string]
-	Env plugin.TValue[map[string]any]
-	Path plugin.TValue[[]any]
-	Uptime plugin.TValue[*time.Time]
-	Updates plugin.TValue[[]any]
+	Name          plugin.TValue[string]
+	Env           plugin.TValue[map[string]any]
+	Path          plugin.TValue[[]any]
+	Uptime        plugin.TValue[*time.Time]
+	Updates       plugin.TValue[[]any]
 	Rebootpending plugin.TValue[bool]
-	Hostname plugin.TValue[string]
-	Hypervisor plugin.TValue[string]
-	Machineid plugin.TValue[string]
+	Hostname      plugin.TValue[string]
+	Hypervisor    plugin.TValue[string]
+	Machineid     plugin.TValue[string]
 }
 
 // createOs creates a new instance of this resource
@@ -7160,13 +7296,13 @@ func (c *mqlOs) GetMachineid() *plugin.TValue[string] {
 // mqlOsUpdate for the os.update resource
 type mqlOsUpdate struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOsUpdateInternal it will be used here
-	Name plugin.TValue[string]
+	Name     plugin.TValue[string]
 	Category plugin.TValue[string]
 	Severity plugin.TValue[string]
-	Restart plugin.TValue[bool]
-	Format plugin.TValue[string]
+	Restart  plugin.TValue[bool]
+	Format   plugin.TValue[string]
 }
 
 // createOsUpdate creates a new instance of this resource
@@ -7181,7 +7317,7 @@ func createOsUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -7229,18 +7365,18 @@ func (c *mqlOsUpdate) GetFormat() *plugin.TValue[string] {
 // mqlOsBase for the os.base resource
 type mqlOsBase struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOsBaseInternal it will be used here
-	Machine plugin.TValue[*mqlMachine]
-	Name plugin.TValue[string]
-	Env plugin.TValue[map[string]any]
-	Path plugin.TValue[[]any]
-	Uptime plugin.TValue[*time.Time]
-	Updates plugin.TValue[[]any]
+	Machine       plugin.TValue[*mqlMachine]
+	Name          plugin.TValue[string]
+	Env           plugin.TValue[map[string]any]
+	Path          plugin.TValue[[]any]
+	Uptime        plugin.TValue[*time.Time]
+	Updates       plugin.TValue[[]any]
 	Rebootpending plugin.TValue[bool]
-	Hostname plugin.TValue[string]
-	Groups plugin.TValue[*mqlGroups]
-	Users plugin.TValue[*mqlUsers]
+	Hostname      plugin.TValue[string]
+	Groups        plugin.TValue[*mqlGroups]
+	Users         plugin.TValue[*mqlUsers]
 }
 
 // createOsBase creates a new instance of this resource
@@ -7255,7 +7391,7 @@ func createOsBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -7388,7 +7524,7 @@ func (c *mqlOsBase) GetUsers() *plugin.TValue[*mqlUsers] {
 // mqlOsUnix for the os.unix resource
 type mqlOsUnix struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOsUnixInternal it will be used here
 	Base plugin.TValue[*mqlOsBase]
 }
@@ -7405,7 +7541,7 @@ func createOsUnix(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -7449,12 +7585,12 @@ func (c *mqlOsUnix) GetBase() *plugin.TValue[*mqlOsBase] {
 // mqlOsLinux for the os.linux resource
 type mqlOsLinux struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOsLinuxInternal it will be used here
-	Unix plugin.TValue[*mqlOsUnix]
-	Iptables plugin.TValue[*mqlIptables]
+	Unix      plugin.TValue[*mqlOsUnix]
+	Iptables  plugin.TValue[*mqlIptables]
 	Ip6tables plugin.TValue[*mqlIp6tables]
-	Fstab plugin.TValue[*mqlFstab]
+	Fstab     plugin.TValue[*mqlFstab]
 }
 
 // createOsLinux creates a new instance of this resource
@@ -7469,7 +7605,7 @@ func createOsLinux(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -7561,11 +7697,11 @@ func (c *mqlOsLinux) GetFstab() *plugin.TValue[*mqlFstab] {
 // mqlOsRootCertificates for the os.rootCertificates resource
 type mqlOsRootCertificates struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOsRootCertificatesInternal it will be used here
-	Files plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
 	Content plugin.TValue[[]any]
-	List plugin.TValue[[]any]
+	List    plugin.TValue[[]any]
 }
 
 // createOsRootCertificates creates a new instance of this resource
@@ -7580,7 +7716,7 @@ func createOsRootCertificates(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -7644,11 +7780,11 @@ func (c *mqlOsRootCertificates) GetList() *plugin.TValue[[]any] {
 // mqlCommand for the command resource
 type mqlCommand struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlCommandInternal
-	Command plugin.TValue[string]
-	Stdout plugin.TValue[string]
-	Stderr plugin.TValue[string]
+	Command  plugin.TValue[string]
+	Stdout   plugin.TValue[string]
+	Stderr   plugin.TValue[string]
 	Exitcode plugin.TValue[int64]
 }
 
@@ -7664,7 +7800,7 @@ func createCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -7729,11 +7865,11 @@ func (c *mqlCommand) GetExitcode() *plugin.TValue[int64] {
 // mqlPowershell for the powershell resource
 type mqlPowershell struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlPowershellInternal
-	Script plugin.TValue[string]
-	Stdout plugin.TValue[string]
-	Stderr plugin.TValue[string]
+	Script   plugin.TValue[string]
+	Stdout   plugin.TValue[string]
+	Stderr   plugin.TValue[string]
 	Exitcode plugin.TValue[int64]
 }
 
@@ -7749,7 +7885,7 @@ func createPowershell(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -7799,18 +7935,18 @@ func (c *mqlPowershell) GetExitcode() *plugin.TValue[int64] {
 // mqlFile for the file resource
 type mqlFile struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlFileInternal it will be used here
-	Path plugin.TValue[string]
-	Basename plugin.TValue[string]
-	Dirname plugin.TValue[string]
-	Content plugin.TValue[string]
-	Exists plugin.TValue[bool]
+	Path        plugin.TValue[string]
+	Basename    plugin.TValue[string]
+	Dirname     plugin.TValue[string]
+	Content     plugin.TValue[string]
+	Exists      plugin.TValue[bool]
 	Permissions plugin.TValue[*mqlFilePermissions]
-	Size plugin.TValue[int64]
-	User plugin.TValue[*mqlUser]
-	Group plugin.TValue[*mqlGroup]
-	Empty plugin.TValue[bool]
+	Size        plugin.TValue[int64]
+	User        plugin.TValue[*mqlUser]
+	Group       plugin.TValue[*mqlGroup]
+	Empty       plugin.TValue[bool]
 }
 
 // createFile creates a new instance of this resource
@@ -7825,7 +7961,7 @@ func createFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -7981,10 +8117,10 @@ func (c *mqlFile) GetEmpty() *plugin.TValue[bool] {
 // mqlFileContext for the file.context resource
 type mqlFileContext struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlFileContextInternal it will be used here
-	File plugin.TValue[*mqlFile]
-	Range plugin.TValue[llx.Range]
+	File    plugin.TValue[*mqlFile]
+	Range   plugin.TValue[llx.Range]
 	Content plugin.TValue[string]
 }
 
@@ -8000,7 +8136,7 @@ func createFileContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8052,25 +8188,25 @@ func (c *mqlFileContext) GetContent() *plugin.TValue[string] {
 // mqlFilePermissions for the file.permissions resource
 type mqlFilePermissions struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlFilePermissionsInternal it will be used here
-	Mode plugin.TValue[int64]
-	User_readable plugin.TValue[bool]
-	User_writeable plugin.TValue[bool]
-	User_executable plugin.TValue[bool]
-	Group_readable plugin.TValue[bool]
-	Group_writeable plugin.TValue[bool]
+	Mode             plugin.TValue[int64]
+	User_readable    plugin.TValue[bool]
+	User_writeable   plugin.TValue[bool]
+	User_executable  plugin.TValue[bool]
+	Group_readable   plugin.TValue[bool]
+	Group_writeable  plugin.TValue[bool]
 	Group_executable plugin.TValue[bool]
-	Other_readable plugin.TValue[bool]
-	Other_writeable plugin.TValue[bool]
+	Other_readable   plugin.TValue[bool]
+	Other_writeable  plugin.TValue[bool]
 	Other_executable plugin.TValue[bool]
-	Suid plugin.TValue[bool]
-	Sgid plugin.TValue[bool]
-	Sticky plugin.TValue[bool]
-	IsDirectory plugin.TValue[bool]
-	IsFile plugin.TValue[bool]
-	IsSymlink plugin.TValue[bool]
-	String plugin.TValue[string]
+	Suid             plugin.TValue[bool]
+	Sgid             plugin.TValue[bool]
+	Sticky           plugin.TValue[bool]
+	IsDirectory      plugin.TValue[bool]
+	IsFile           plugin.TValue[bool]
+	IsSymlink        plugin.TValue[bool]
+	String           plugin.TValue[string]
 }
 
 // createFilePermissions creates a new instance of this resource
@@ -8085,7 +8221,7 @@ func createFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8183,7 +8319,7 @@ func (c *mqlFilePermissions) GetString() *plugin.TValue[string] {
 // mqlFiles for the files resource
 type mqlFiles struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlFilesInternal it will be used here
 }
 
@@ -8222,16 +8358,16 @@ func (c *mqlFiles) MqlID() string {
 // mqlFilesFind for the files.find resource
 type mqlFilesFind struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlFilesFindInternal it will be used here
-	From plugin.TValue[string]
-	Xdev plugin.TValue[bool]
-	Type plugin.TValue[string]
-	Regex plugin.TValue[string]
+	From        plugin.TValue[string]
+	Xdev        plugin.TValue[bool]
+	Type        plugin.TValue[string]
+	Regex       plugin.TValue[string]
 	Permissions plugin.TValue[int64]
-	Name plugin.TValue[string]
-	Depth plugin.TValue[int64]
-	List plugin.TValue[[]any]
+	Name        plugin.TValue[string]
+	Depth       plugin.TValue[int64]
+	List        plugin.TValue[[]any]
 }
 
 // createFilesFind creates a new instance of this resource
@@ -8246,7 +8382,7 @@ func createFilesFind(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8318,13 +8454,13 @@ func (c *mqlFilesFind) GetList() *plugin.TValue[[]any] {
 // mqlParseIni for the parse.ini resource
 type mqlParseIni struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlParseIniInternal it will be used here
 	Delimiter plugin.TValue[string]
-	File plugin.TValue[*mqlFile]
-	Content plugin.TValue[string]
-	Sections plugin.TValue[map[string]any]
-	Params plugin.TValue[map[string]any]
+	File      plugin.TValue[*mqlFile]
+	Content   plugin.TValue[string]
+	Sections  plugin.TValue[map[string]any]
+	Params    plugin.TValue[map[string]any]
 }
 
 // createParseIni creates a new instance of this resource
@@ -8339,7 +8475,7 @@ func createParseIni(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8413,11 +8549,11 @@ func (c *mqlParseIni) GetParams() *plugin.TValue[map[string]any] {
 // mqlParseJson for the parse.json resource
 type mqlParseJson struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlParseJsonInternal it will be used here
-	File plugin.TValue[*mqlFile]
+	File    plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
-	Params plugin.TValue[any]
+	Params  plugin.TValue[any]
 }
 
 // createParseJson creates a new instance of this resource
@@ -8432,7 +8568,7 @@ func createParseJson(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8486,11 +8622,11 @@ func (c *mqlParseJson) GetParams() *plugin.TValue[any] {
 // mqlParseXml for the parse.xml resource
 type mqlParseXml struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlParseXmlInternal it will be used here
-	File plugin.TValue[*mqlFile]
+	File    plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
-	Params plugin.TValue[any]
+	Params  plugin.TValue[any]
 }
 
 // createParseXml creates a new instance of this resource
@@ -8505,7 +8641,7 @@ func createParseXml(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8559,11 +8695,11 @@ func (c *mqlParseXml) GetParams() *plugin.TValue[any] {
 // mqlParsePlist for the parse.plist resource
 type mqlParsePlist struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlParsePlistInternal it will be used here
-	File plugin.TValue[*mqlFile]
+	File    plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
-	Params plugin.TValue[any]
+	Params  plugin.TValue[any]
 }
 
 // createParsePlist creates a new instance of this resource
@@ -8578,7 +8714,7 @@ func createParsePlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8632,11 +8768,11 @@ func (c *mqlParsePlist) GetParams() *plugin.TValue[any] {
 // mqlParseYaml for the parse.yaml resource
 type mqlParseYaml struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlParseYamlInternal it will be used here
-	File plugin.TValue[*mqlFile]
-	Content plugin.TValue[string]
-	Params plugin.TValue[any]
+	File      plugin.TValue[*mqlFile]
+	Content   plugin.TValue[string]
+	Params    plugin.TValue[any]
 	Documents plugin.TValue[[]any]
 }
 
@@ -8652,7 +8788,7 @@ func createParseYaml(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8717,12 +8853,12 @@ func (c *mqlParseYaml) GetDocuments() *plugin.TValue[[]any] {
 // mqlParseCertificates for the parse.certificates resource
 type mqlParseCertificates struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlParseCertificatesInternal it will be used here
-	Path plugin.TValue[string]
-	File plugin.TValue[*mqlFile]
+	Path    plugin.TValue[string]
+	File    plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
-	List plugin.TValue[[]any]
+	List    plugin.TValue[[]any]
 }
 
 // createParseCertificates creates a new instance of this resource
@@ -8737,7 +8873,7 @@ func createParseCertificates(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8822,12 +8958,12 @@ func (c *mqlParseCertificates) GetList() *plugin.TValue[[]any] {
 // mqlParseOpenpgp for the parse.openpgp resource
 type mqlParseOpenpgp struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlParseOpenpgpInternal it will be used here
-	Path plugin.TValue[string]
-	File plugin.TValue[*mqlFile]
+	Path    plugin.TValue[string]
+	File    plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
-	List plugin.TValue[[]any]
+	List    plugin.TValue[[]any]
 }
 
 // createParseOpenpgp creates a new instance of this resource
@@ -8842,7 +8978,7 @@ func createParseOpenpgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -8910,18 +9046,18 @@ func (c *mqlParseOpenpgp) GetList() *plugin.TValue[[]any] {
 // mqlUser for the user resource
 type mqlUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlUserInternal it will be used here
-	Uid plugin.TValue[int64]
-	Gid plugin.TValue[int64]
-	Sid plugin.TValue[string]
-	Name plugin.TValue[string]
-	Home plugin.TValue[string]
-	Shell plugin.TValue[string]
-	Enabled plugin.TValue[bool]
+	Uid            plugin.TValue[int64]
+	Gid            plugin.TValue[int64]
+	Sid            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Home           plugin.TValue[string]
+	Shell          plugin.TValue[string]
+	Enabled        plugin.TValue[bool]
 	Authorizedkeys plugin.TValue[*mqlAuthorizedkeys]
-	Sshkeys plugin.TValue[[]any]
-	Group plugin.TValue[*mqlGroup]
+	Sshkeys        plugin.TValue[[]any]
+	Group          plugin.TValue[*mqlGroup]
 }
 
 // createUser creates a new instance of this resource
@@ -8936,7 +9072,7 @@ func createUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9050,11 +9186,11 @@ func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
 // mqlPrivatekey for the privatekey resource
 type mqlPrivatekey struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPrivatekeyInternal it will be used here
-	Pem plugin.TValue[string]
-	Path plugin.TValue[string]
-	File plugin.TValue[*mqlFile]
+	Pem       plugin.TValue[string]
+	Path      plugin.TValue[string]
+	File      plugin.TValue[*mqlFile]
 	Encrypted plugin.TValue[bool]
 }
 
@@ -9070,7 +9206,7 @@ func createPrivatekey(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9114,7 +9250,7 @@ func (c *mqlPrivatekey) GetEncrypted() *plugin.TValue[bool] {
 // mqlUsers for the users resource
 type mqlUsers struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlUsersInternal
 	List plugin.TValue[[]any]
 }
@@ -9170,12 +9306,12 @@ func (c *mqlUsers) GetList() *plugin.TValue[[]any] {
 // mqlAuthorizedkeys for the authorizedkeys resource
 type mqlAuthorizedkeys struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuthorizedkeysInternal it will be used here
-	Path plugin.TValue[string]
-	File plugin.TValue[*mqlFile]
+	Path    plugin.TValue[string]
+	File    plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
-	List plugin.TValue[[]any]
+	List    plugin.TValue[[]any]
 }
 
 // createAuthorizedkeys creates a new instance of this resource
@@ -9190,7 +9326,7 @@ func createAuthorizedkeys(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9263,14 +9399,14 @@ func (c *mqlAuthorizedkeys) GetList() *plugin.TValue[[]any] {
 // mqlAuthorizedkeysEntry for the authorizedkeys.entry resource
 type mqlAuthorizedkeysEntry struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuthorizedkeysEntryInternal it will be used here
-	Line plugin.TValue[int64]
-	Type plugin.TValue[string]
-	Key plugin.TValue[string]
-	Label plugin.TValue[string]
+	Line    plugin.TValue[int64]
+	Type    plugin.TValue[string]
+	Key     plugin.TValue[string]
+	Label   plugin.TValue[string]
 	Options plugin.TValue[[]any]
-	File plugin.TValue[*mqlFile]
+	File    plugin.TValue[*mqlFile]
 }
 
 // createAuthorizedkeysEntry creates a new instance of this resource
@@ -9285,7 +9421,7 @@ func createAuthorizedkeysEntry(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9337,11 +9473,11 @@ func (c *mqlAuthorizedkeysEntry) GetFile() *plugin.TValue[*mqlFile] {
 // mqlGroup for the group resource
 type mqlGroup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGroupInternal
-	Gid plugin.TValue[int64]
-	Sid plugin.TValue[string]
-	Name plugin.TValue[string]
+	Gid     plugin.TValue[int64]
+	Sid     plugin.TValue[string]
+	Name    plugin.TValue[string]
 	Members plugin.TValue[[]any]
 }
 
@@ -9357,7 +9493,7 @@ func createGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9413,7 +9549,7 @@ func (c *mqlGroup) GetMembers() *plugin.TValue[[]any] {
 // mqlGroups for the groups resource
 type mqlGroups struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGroupsInternal
 	List plugin.TValue[[]any]
 }
@@ -9469,23 +9605,23 @@ func (c *mqlGroups) GetList() *plugin.TValue[[]any] {
 // mqlPackage for the package resource
 type mqlPackage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlPackageInternal
-	Name plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Version plugin.TValue[string]
-	Arch plugin.TValue[string]
-	Epoch plugin.TValue[string]
-	Format plugin.TValue[string]
-	Status plugin.TValue[string]
-	Purl plugin.TValue[string]
-	Cpes plugin.TValue[[]any]
-	Origin plugin.TValue[string]
-	Available plugin.TValue[string]
-	Installed plugin.TValue[bool]
-	Outdated plugin.TValue[bool]
-	Files plugin.TValue[[]any]
-	Vendor plugin.TValue[string]
+	Version     plugin.TValue[string]
+	Arch        plugin.TValue[string]
+	Epoch       plugin.TValue[string]
+	Format      plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Purl        plugin.TValue[string]
+	Cpes        plugin.TValue[[]any]
+	Origin      plugin.TValue[string]
+	Available   plugin.TValue[string]
+	Installed   plugin.TValue[bool]
+	Outdated    plugin.TValue[bool]
+	Files       plugin.TValue[[]any]
+	Vendor      plugin.TValue[string]
 }
 
 // createPackage creates a new instance of this resource
@@ -9500,7 +9636,7 @@ func createPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9606,7 +9742,7 @@ func (c *mqlPackage) GetVendor() *plugin.TValue[string] {
 // mqlPkgFileInfo for the pkgFileInfo resource
 type mqlPkgFileInfo struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPkgFileInfoInternal it will be used here
 	Path plugin.TValue[string]
 }
@@ -9623,7 +9759,7 @@ func createPkgFileInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9655,7 +9791,7 @@ func (c *mqlPkgFileInfo) GetPath() *plugin.TValue[string] {
 // mqlPackages for the packages resource
 type mqlPackages struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlPackagesInternal
 	List plugin.TValue[[]any]
 }
@@ -9711,12 +9847,12 @@ func (c *mqlPackages) GetList() *plugin.TValue[[]any] {
 // mqlPamConf for the pam.conf resource
 type mqlPamConf struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPamConfInternal it will be used here
-	Files plugin.TValue[[]any]
-	Content plugin.TValue[string]
+	Files    plugin.TValue[[]any]
+	Content  plugin.TValue[string]
 	Services plugin.TValue[map[string]any]
-	Entries plugin.TValue[map[string]any]
+	Entries  plugin.TValue[map[string]any]
 }
 
 // createPamConf creates a new instance of this resource
@@ -9731,7 +9867,7 @@ func createPamConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9818,14 +9954,14 @@ func (c *mqlPamConf) GetEntries() *plugin.TValue[map[string]any] {
 // mqlPamConfServiceEntry for the pam.conf.serviceEntry resource
 type mqlPamConfServiceEntry struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPamConfServiceEntryInternal it will be used here
-	Service plugin.TValue[string]
+	Service    plugin.TValue[string]
 	LineNumber plugin.TValue[int64]
-	PamType plugin.TValue[string]
-	Control plugin.TValue[string]
-	Module plugin.TValue[string]
-	Options plugin.TValue[[]any]
+	PamType    plugin.TValue[string]
+	Control    plugin.TValue[string]
+	Module     plugin.TValue[string]
+	Options    plugin.TValue[[]any]
 }
 
 // createPamConfServiceEntry creates a new instance of this resource
@@ -9840,7 +9976,7 @@ func createPamConfServiceEntry(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -9892,7 +10028,7 @@ func (c *mqlPamConfServiceEntry) GetOptions() *plugin.TValue[[]any] {
 // mqlSshd for the sshd resource
 type mqlSshd struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSshdInternal it will be used here
 }
 
@@ -9931,17 +10067,17 @@ func (c *mqlSshd) MqlID() string {
 // mqlSshdConfig for the sshd.config resource
 type mqlSshdConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlSshdConfigInternal
-	File plugin.TValue[*mqlFile]
-	Files plugin.TValue[[]any]
-	Content plugin.TValue[string]
-	Params plugin.TValue[map[string]any]
-	Blocks plugin.TValue[[]any]
-	Ciphers plugin.TValue[[]any]
-	Macs plugin.TValue[[]any]
-	Kexs plugin.TValue[[]any]
-	Hostkeys plugin.TValue[[]any]
+	File            plugin.TValue[*mqlFile]
+	Files           plugin.TValue[[]any]
+	Content         plugin.TValue[string]
+	Params          plugin.TValue[map[string]any]
+	Blocks          plugin.TValue[[]any]
+	Ciphers         plugin.TValue[[]any]
+	Macs            plugin.TValue[[]any]
+	Kexs            plugin.TValue[[]any]
+	Hostkeys        plugin.TValue[[]any]
 	PermitRootLogin plugin.TValue[[]any]
 }
 
@@ -9957,7 +10093,7 @@ func createSshdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10120,16 +10256,16 @@ func (c *mqlSshdConfig) GetPermitRootLogin() *plugin.TValue[[]any] {
 // mqlSshdConfigMatchBlock for the sshd.config.matchBlock resource
 type mqlSshdConfigMatchBlock struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSshdConfigMatchBlockInternal it will be used here
-	Criteria plugin.TValue[string]
-	Params plugin.TValue[map[string]any]
-	Ciphers plugin.TValue[[]any]
-	Macs plugin.TValue[[]any]
-	Kexs plugin.TValue[[]any]
-	Hostkeys plugin.TValue[[]any]
+	Criteria        plugin.TValue[string]
+	Params          plugin.TValue[map[string]any]
+	Ciphers         plugin.TValue[[]any]
+	Macs            plugin.TValue[[]any]
+	Kexs            plugin.TValue[[]any]
+	Hostkeys        plugin.TValue[[]any]
 	PermitRootLogin plugin.TValue[[]any]
-	Context plugin.TValue[*mqlFileContext]
+	Context         plugin.TValue[*mqlFileContext]
 }
 
 // createSshdConfigMatchBlock creates a new instance of this resource
@@ -10246,9 +10382,9 @@ func (c *mqlSshdConfigMatchBlock) GetContext() *plugin.TValue[*mqlFileContext] {
 // mqlAuditdConfig for the auditd.config resource
 type mqlAuditdConfig struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlAuditdConfigInternal
-	File plugin.TValue[*mqlFile]
+	File   plugin.TValue[*mqlFile]
 	Params plugin.TValue[map[string]any]
 }
 
@@ -10264,7 +10400,7 @@ func createAuditdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10319,11 +10455,11 @@ func (c *mqlAuditdConfig) GetParams() *plugin.TValue[map[string]any] {
 // mqlAuditdRules for the auditd.rules resource
 type mqlAuditdRules struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlAuditdRulesInternal
-	Path plugin.TValue[string]
+	Path     plugin.TValue[string]
 	Controls plugin.TValue[[]any]
-	Files plugin.TValue[[]any]
+	Files    plugin.TValue[[]any]
 	Syscalls plugin.TValue[[]any]
 }
 
@@ -10339,7 +10475,7 @@ func createAuditdRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10436,7 +10572,7 @@ func (c *mqlAuditdRules) GetSyscalls() *plugin.TValue[[]any] {
 // mqlAuditdRule for the auditd.rule resource
 type mqlAuditdRule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuditdRuleInternal it will be used here
 }
 
@@ -10475,9 +10611,9 @@ func (c *mqlAuditdRule) MqlID() string {
 // mqlAuditdRuleControl for the auditd.rule.control resource
 type mqlAuditdRuleControl struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuditdRuleControlInternal it will be used here
-	Flag plugin.TValue[string]
+	Flag  plugin.TValue[string]
 	Value plugin.TValue[string]
 }
 
@@ -10493,7 +10629,7 @@ func createAuditdRuleControl(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10529,11 +10665,11 @@ func (c *mqlAuditdRuleControl) GetValue() *plugin.TValue[string] {
 // mqlAuditdRuleFile for the auditd.rule.file resource
 type mqlAuditdRuleFile struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuditdRuleFileInternal it will be used here
-	Path plugin.TValue[string]
+	Path        plugin.TValue[string]
 	Permissions plugin.TValue[string]
-	Keyname plugin.TValue[string]
+	Keyname     plugin.TValue[string]
 }
 
 // createAuditdRuleFile creates a new instance of this resource
@@ -10548,7 +10684,7 @@ func createAuditdRuleFile(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10588,13 +10724,13 @@ func (c *mqlAuditdRuleFile) GetKeyname() *plugin.TValue[string] {
 // mqlAuditdRuleSyscall for the auditd.rule.syscall resource
 type mqlAuditdRuleSyscall struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuditdRuleSyscallInternal it will be used here
-	Action plugin.TValue[string]
-	List plugin.TValue[string]
+	Action   plugin.TValue[string]
+	List     plugin.TValue[string]
 	Syscalls plugin.TValue[[]any]
-	Fields plugin.TValue[[]any]
-	Keyname plugin.TValue[string]
+	Fields   plugin.TValue[[]any]
+	Keyname  plugin.TValue[string]
 }
 
 // createAuditdRuleSyscall creates a new instance of this resource
@@ -10609,7 +10745,7 @@ func createAuditdRuleSyscall(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10657,15 +10793,15 @@ func (c *mqlAuditdRuleSyscall) GetKeyname() *plugin.TValue[string] {
 // mqlService for the service resource
 type mqlService struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlServiceInternal it will be used here
-	Name plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Installed plugin.TValue[bool]
-	Running plugin.TValue[bool]
-	Enabled plugin.TValue[bool]
-	Type plugin.TValue[string]
-	Masked plugin.TValue[bool]
+	Installed   plugin.TValue[bool]
+	Running     plugin.TValue[bool]
+	Enabled     plugin.TValue[bool]
+	Type        plugin.TValue[string]
+	Masked      plugin.TValue[bool]
 }
 
 // createService creates a new instance of this resource
@@ -10680,7 +10816,7 @@ func createService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10736,7 +10872,7 @@ func (c *mqlService) GetMasked() *plugin.TValue[bool] {
 // mqlServices for the services resource
 type mqlServices struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlServicesInternal
 	List plugin.TValue[[]any]
 }
@@ -10792,12 +10928,12 @@ func (c *mqlServices) GetList() *plugin.TValue[[]any] {
 // mqlKernel for the kernel resource
 type mqlKernel struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlKernelInternal
-	Info plugin.TValue[any]
+	Info       plugin.TValue[any]
 	Parameters plugin.TValue[map[string]any]
-	Modules plugin.TValue[[]any]
-	Installed plugin.TValue[[]any]
+	Modules    plugin.TValue[[]any]
+	Installed  plugin.TValue[[]any]
 }
 
 // createKernel creates a new instance of this resource
@@ -10869,10 +11005,10 @@ func (c *mqlKernel) GetInstalled() *plugin.TValue[[]any] {
 // mqlKernelModule for the kernel.module resource
 type mqlKernelModule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlKernelModuleInternal it will be used here
-	Name plugin.TValue[string]
-	Size plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Size   plugin.TValue[string]
 	Loaded plugin.TValue[bool]
 }
 
@@ -10888,7 +11024,7 @@ func createKernelModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -10928,9 +11064,9 @@ func (c *mqlKernelModule) GetLoaded() *plugin.TValue[bool] {
 // mqlDocker for the docker resource
 type mqlDocker struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDockerInternal it will be used here
-	Images plugin.TValue[[]any]
+	Images     plugin.TValue[[]any]
 	Containers plugin.TValue[[]any]
 }
 
@@ -11001,11 +11137,11 @@ func (c *mqlDocker) GetContainers() *plugin.TValue[[]any] {
 // mqlDockerFile for the docker.file resource
 type mqlDockerFile struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlDockerFileInternal
-	File plugin.TValue[*mqlFile]
+	File         plugin.TValue[*mqlFile]
 	Instructions plugin.TValue[any]
-	Stages plugin.TValue[[]any]
+	Stages       plugin.TValue[[]any]
 }
 
 // createDockerFile creates a new instance of this resource
@@ -11020,7 +11156,7 @@ func createDockerFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11096,19 +11232,19 @@ func (c *mqlDockerFile) GetStages() *plugin.TValue[[]any] {
 // mqlDockerFileStage for the docker.file.stage resource
 type mqlDockerFileStage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDockerFileStageInternal it will be used here
-	From plugin.TValue[*mqlDockerFileFrom]
-	File plugin.TValue[*mqlDockerFile]
-	Env plugin.TValue[map[string]any]
-	Labels plugin.TValue[map[string]any]
-	Run plugin.TValue[[]any]
-	Cmd plugin.TValue[*mqlDockerFileRun]
-	User plugin.TValue[*mqlDockerFileUser]
+	From       plugin.TValue[*mqlDockerFileFrom]
+	File       plugin.TValue[*mqlDockerFile]
+	Env        plugin.TValue[map[string]any]
+	Labels     plugin.TValue[map[string]any]
+	Run        plugin.TValue[[]any]
+	Cmd        plugin.TValue[*mqlDockerFileRun]
+	User       plugin.TValue[*mqlDockerFileUser]
 	Entrypoint plugin.TValue[*mqlDockerFileRun]
-	Add plugin.TValue[[]any]
-	Copy plugin.TValue[[]any]
-	Expose plugin.TValue[[]any]
+	Add        plugin.TValue[[]any]
+	Copy       plugin.TValue[[]any]
+	Expose     plugin.TValue[[]any]
 }
 
 // createDockerFileStage creates a new instance of this resource
@@ -11190,9 +11326,9 @@ func (c *mqlDockerFileStage) GetExpose() *plugin.TValue[[]any] {
 // mqlDockerFileUser for the docker.file.user resource
 type mqlDockerFileUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDockerFileUserInternal it will be used here
-	User plugin.TValue[string]
+	User  plugin.TValue[string]
 	Group plugin.TValue[string]
 }
 
@@ -11239,9 +11375,9 @@ func (c *mqlDockerFileUser) GetGroup() *plugin.TValue[string] {
 // mqlDockerFileExpose for the docker.file.expose resource
 type mqlDockerFileExpose struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDockerFileExposeInternal it will be used here
-	Port plugin.TValue[int64]
+	Port     plugin.TValue[int64]
 	Protocol plugin.TValue[string]
 }
 
@@ -11288,13 +11424,13 @@ func (c *mqlDockerFileExpose) GetProtocol() *plugin.TValue[string] {
 // mqlDockerFileFrom for the docker.file.from resource
 type mqlDockerFileFrom struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDockerFileFromInternal it will be used here
 	Platform plugin.TValue[string]
-	Image plugin.TValue[string]
-	Tag plugin.TValue[string]
-	Digest plugin.TValue[string]
-	Name plugin.TValue[string]
+	Image    plugin.TValue[string]
+	Tag      plugin.TValue[string]
+	Digest   plugin.TValue[string]
+	Name     plugin.TValue[string]
 }
 
 // createDockerFileFrom creates a new instance of this resource
@@ -11352,7 +11488,7 @@ func (c *mqlDockerFileFrom) GetName() *plugin.TValue[string] {
 // mqlDockerFileRun for the docker.file.run resource
 type mqlDockerFileRun struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDockerFileRunInternal it will be used here
 	Script plugin.TValue[string]
 }
@@ -11396,10 +11532,10 @@ func (c *mqlDockerFileRun) GetScript() *plugin.TValue[string] {
 // mqlDockerFileAdd for the docker.file.add resource
 type mqlDockerFileAdd struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDockerFileAddInternal it will be used here
-	Src plugin.TValue[[]any]
-	Dst plugin.TValue[string]
+	Src   plugin.TValue[[]any]
+	Dst   plugin.TValue[string]
 	Chown plugin.TValue[string]
 	Chmod plugin.TValue[string]
 }
@@ -11455,10 +11591,10 @@ func (c *mqlDockerFileAdd) GetChmod() *plugin.TValue[string] {
 // mqlDockerFileCopy for the docker.file.copy resource
 type mqlDockerFileCopy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDockerFileCopyInternal it will be used here
-	Src plugin.TValue[[]any]
-	Dst plugin.TValue[string]
+	Src   plugin.TValue[[]any]
+	Dst   plugin.TValue[string]
 	Chown plugin.TValue[string]
 	Chmod plugin.TValue[string]
 }
@@ -11514,13 +11650,13 @@ func (c *mqlDockerFileCopy) GetChmod() *plugin.TValue[string] {
 // mqlDockerImage for the docker.image resource
 type mqlDockerImage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDockerImageInternal it will be used here
-	Id plugin.TValue[string]
-	Size plugin.TValue[int64]
+	Id          plugin.TValue[string]
+	Size        plugin.TValue[int64]
 	Virtualsize plugin.TValue[int64]
-	Tags plugin.TValue[[]any]
-	Labels plugin.TValue[map[string]any]
+	Tags        plugin.TValue[[]any]
+	Labels      plugin.TValue[map[string]any]
 }
 
 // createDockerImage creates a new instance of this resource
@@ -11535,7 +11671,7 @@ func createDockerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11583,17 +11719,17 @@ func (c *mqlDockerImage) GetLabels() *plugin.TValue[map[string]any] {
 // mqlDockerContainer for the docker.container resource
 type mqlDockerContainer struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlDockerContainerInternal it will be used here
-	Os plugin.TValue[*mqlOsLinux]
-	Id plugin.TValue[string]
-	Command plugin.TValue[string]
-	Image plugin.TValue[string]
-	Imageid plugin.TValue[string]
-	Names plugin.TValue[[]any]
-	State plugin.TValue[string]
-	Status plugin.TValue[string]
-	Labels plugin.TValue[map[string]any]
+	Os         plugin.TValue[*mqlOsLinux]
+	Id         plugin.TValue[string]
+	Command    plugin.TValue[string]
+	Image      plugin.TValue[string]
+	Imageid    plugin.TValue[string]
+	Names      plugin.TValue[[]any]
+	State      plugin.TValue[string]
+	Status     plugin.TValue[string]
+	Labels     plugin.TValue[map[string]any]
 	HostConfig plugin.TValue[any]
 }
 
@@ -11609,7 +11745,7 @@ func createDockerContainer(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11691,9 +11827,9 @@ func (c *mqlDockerContainer) GetHostConfig() *plugin.TValue[any] {
 // mqlIptables for the iptables resource
 type mqlIptables struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlIptablesInternal it will be used here
-	Input plugin.TValue[[]any]
+	Input  plugin.TValue[[]any]
 	Output plugin.TValue[[]any]
 }
 
@@ -11764,9 +11900,9 @@ func (c *mqlIptables) GetOutput() *plugin.TValue[[]any] {
 // mqlIp6tables for the ip6tables resource
 type mqlIp6tables struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlIp6tablesInternal it will be used here
-	Input plugin.TValue[[]any]
+	Input  plugin.TValue[[]any]
 	Output plugin.TValue[[]any]
 }
 
@@ -11837,20 +11973,20 @@ func (c *mqlIp6tables) GetOutput() *plugin.TValue[[]any] {
 // mqlIptablesEntry for the iptables.entry resource
 type mqlIptablesEntry struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlIptablesEntryInternal it will be used here
-	LineNumber plugin.TValue[int64]
-	Packets plugin.TValue[int64]
-	Bytes plugin.TValue[int64]
-	Target plugin.TValue[string]
-	Protocol plugin.TValue[string]
-	Opt plugin.TValue[string]
-	In plugin.TValue[string]
-	Out plugin.TValue[string]
-	Source plugin.TValue[string]
+	LineNumber  plugin.TValue[int64]
+	Packets     plugin.TValue[int64]
+	Bytes       plugin.TValue[int64]
+	Target      plugin.TValue[string]
+	Protocol    plugin.TValue[string]
+	Opt         plugin.TValue[string]
+	In          plugin.TValue[string]
+	Out         plugin.TValue[string]
+	Source      plugin.TValue[string]
 	Destination plugin.TValue[string]
-	Options plugin.TValue[string]
-	Chain plugin.TValue[string]
+	Options     plugin.TValue[string]
+	Chain       plugin.TValue[string]
 }
 
 // createIptablesEntry creates a new instance of this resource
@@ -11865,7 +12001,7 @@ func createIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -11941,9 +12077,9 @@ func (c *mqlIptablesEntry) GetChain() *plugin.TValue[string] {
 // mqlFstab for the fstab resource
 type mqlFstab struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlFstabInternal it will be used here
-	Path plugin.TValue[string]
+	Path    plugin.TValue[string]
 	Entries plugin.TValue[[]any]
 }
 
@@ -12002,14 +12138,14 @@ func (c *mqlFstab) GetEntries() *plugin.TValue[[]any] {
 // mqlFstabEntry for the fstab.entry resource
 type mqlFstabEntry struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlFstabEntryInternal it will be used here
-	Device plugin.TValue[string]
+	Device     plugin.TValue[string]
 	Mountpoint plugin.TValue[string]
-	Fstype plugin.TValue[string]
-	Options plugin.TValue[string]
-	Dump plugin.TValue[int64]
-	Fsck plugin.TValue[int64]
+	Fstype     plugin.TValue[string]
+	Options    plugin.TValue[string]
+	Dump       plugin.TValue[int64]
+	Fsck       plugin.TValue[int64]
 }
 
 // createFstabEntry creates a new instance of this resource
@@ -12024,7 +12160,7 @@ func createFstabEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12076,13 +12212,13 @@ func (c *mqlFstabEntry) GetFsck() *plugin.TValue[int64] {
 // mqlProcess for the process resource
 type mqlProcess struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlProcessInternal
-	Pid plugin.TValue[int64]
-	State plugin.TValue[string]
+	Pid        plugin.TValue[int64]
+	State      plugin.TValue[string]
 	Executable plugin.TValue[string]
-	Command plugin.TValue[string]
-	Flags plugin.TValue[map[string]any]
+	Command    plugin.TValue[string]
+	Flags      plugin.TValue[map[string]any]
 }
 
 // createProcess creates a new instance of this resource
@@ -12097,7 +12233,7 @@ func createProcess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12153,7 +12289,7 @@ func (c *mqlProcess) GetFlags() *plugin.TValue[map[string]any] {
 // mqlProcesses for the processes resource
 type mqlProcesses struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlProcessesInternal
 	List plugin.TValue[[]any]
 }
@@ -12209,17 +12345,17 @@ func (c *mqlProcesses) GetList() *plugin.TValue[[]any] {
 // mqlPort for the port resource
 type mqlPort struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlPortInternal
-	Protocol plugin.TValue[string]
-	Port plugin.TValue[int64]
-	Address plugin.TValue[string]
-	User plugin.TValue[*mqlUser]
-	Process plugin.TValue[*mqlProcess]
-	State plugin.TValue[string]
+	Protocol      plugin.TValue[string]
+	Port          plugin.TValue[int64]
+	Address       plugin.TValue[string]
+	User          plugin.TValue[*mqlUser]
+	Process       plugin.TValue[*mqlProcess]
+	State         plugin.TValue[string]
 	RemoteAddress plugin.TValue[string]
-	RemotePort plugin.TValue[int64]
-	Tls plugin.TValue[plugin.Resource]
+	RemotePort    plugin.TValue[int64]
+	Tls           plugin.TValue[plugin.Resource]
 }
 
 // createPort creates a new instance of this resource
@@ -12234,7 +12370,7 @@ func createPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12337,10 +12473,10 @@ func (c *mqlPort) GetTls() *plugin.TValue[plugin.Resource] {
 // mqlPorts for the ports resource
 type mqlPorts struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlPortsInternal
 	Listening plugin.TValue[[]any]
-	List plugin.TValue[[]any]
+	List      plugin.TValue[[]any]
 }
 
 // createPorts creates a new instance of this resource
@@ -12410,7 +12546,7 @@ func (c *mqlPorts) GetList() *plugin.TValue[[]any] {
 // mqlAuditpol for the auditpol resource
 type mqlAuditpol struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuditpolInternal it will be used here
 	List plugin.TValue[[]any]
 }
@@ -12466,12 +12602,12 @@ func (c *mqlAuditpol) GetList() *plugin.TValue[[]any] {
 // mqlAuditpolEntry for the auditpol.entry resource
 type mqlAuditpolEntry struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAuditpolEntryInternal it will be used here
-	Machinename plugin.TValue[string]
-	Policytarget plugin.TValue[string]
-	Subcategory plugin.TValue[string]
-	Subcategoryguid plugin.TValue[string]
+	Machinename      plugin.TValue[string]
+	Policytarget     plugin.TValue[string]
+	Subcategory      plugin.TValue[string]
+	Subcategoryguid  plugin.TValue[string]
 	Inclusionsetting plugin.TValue[string]
 	Exclusionsetting plugin.TValue[string]
 }
@@ -12488,7 +12624,7 @@ func createAuditpolEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12540,11 +12676,11 @@ func (c *mqlAuditpolEntry) GetExclusionsetting() *plugin.TValue[string] {
 // mqlSecpol for the secpol resource
 type mqlSecpol struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlSecpolInternal
-	Systemaccess plugin.TValue[map[string]any]
-	Eventaudit plugin.TValue[map[string]any]
-	Registryvalues plugin.TValue[map[string]any]
+	Systemaccess    plugin.TValue[map[string]any]
+	Eventaudit      plugin.TValue[map[string]any]
+	Registryvalues  plugin.TValue[map[string]any]
 	Privilegerights plugin.TValue[map[string]any]
 }
 
@@ -12607,14 +12743,14 @@ func (c *mqlSecpol) GetPrivilegerights() *plugin.TValue[map[string]any] {
 // mqlNtpConf for the ntp.conf resource
 type mqlNtpConf struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlNtpConfInternal it will be used here
-	File plugin.TValue[*mqlFile]
-	Content plugin.TValue[string]
+	File     plugin.TValue[*mqlFile]
+	Content  plugin.TValue[string]
 	Settings plugin.TValue[[]any]
-	Servers plugin.TValue[[]any]
+	Servers  plugin.TValue[[]any]
 	Restrict plugin.TValue[[]any]
-	Fudge plugin.TValue[[]any]
+	Fudge    plugin.TValue[[]any]
 }
 
 // createNtpConf creates a new instance of this resource
@@ -12629,7 +12765,7 @@ func createNtpConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12728,11 +12864,11 @@ func (c *mqlNtpConf) GetFudge() *plugin.TValue[[]any] {
 // mqlRsyslogConf for the rsyslog.conf resource
 type mqlRsyslogConf struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlRsyslogConfInternal it will be used here
-	Path plugin.TValue[string]
-	Files plugin.TValue[[]any]
-	Content plugin.TValue[string]
+	Path     plugin.TValue[string]
+	Files    plugin.TValue[[]any]
+	Content  plugin.TValue[string]
 	Settings plugin.TValue[[]any]
 }
 
@@ -12748,7 +12884,7 @@ func createRsyslogConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12825,11 +12961,11 @@ func (c *mqlRsyslogConf) GetSettings() *plugin.TValue[[]any] {
 // mqlLogindefs for the logindefs resource
 type mqlLogindefs struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlLogindefsInternal it will be used here
-	File plugin.TValue[*mqlFile]
+	File    plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
-	Params plugin.TValue[map[string]any]
+	Params  plugin.TValue[map[string]any]
 }
 
 // createLogindefs creates a new instance of this resource
@@ -12844,7 +12980,7 @@ func createLogindefs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12910,7 +13046,7 @@ func (c *mqlLogindefs) GetParams() *plugin.TValue[map[string]any] {
 // mqlLsblk for the lsblk resource
 type mqlLsblk struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlLsblkInternal it will be used here
 	List plugin.TValue[[]any]
 }
@@ -12927,7 +13063,7 @@ func createLsblk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -12971,12 +13107,12 @@ func (c *mqlLsblk) GetList() *plugin.TValue[[]any] {
 // mqlLsblkEntry for the lsblk.entry resource
 type mqlLsblkEntry struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlLsblkEntryInternal it will be used here
-	Name plugin.TValue[string]
-	Fstype plugin.TValue[string]
-	Label plugin.TValue[string]
-	Uuid plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Fstype      plugin.TValue[string]
+	Label       plugin.TValue[string]
+	Uuid        plugin.TValue[string]
 	Mountpoints plugin.TValue[[]any]
 }
 
@@ -12992,7 +13128,7 @@ func createLsblkEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13040,7 +13176,7 @@ func (c *mqlLsblkEntry) GetMountpoints() *plugin.TValue[[]any] {
 // mqlMount for the mount resource
 type mqlMount struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMountInternal it will be used here
 	List plugin.TValue[[]any]
 }
@@ -13057,7 +13193,7 @@ func createMount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13101,11 +13237,11 @@ func (c *mqlMount) GetList() *plugin.TValue[[]any] {
 // mqlMountPoint for the mount.point resource
 type mqlMountPoint struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMountPointInternal it will be used here
-	Device plugin.TValue[string]
-	Path plugin.TValue[string]
-	Fstype plugin.TValue[string]
+	Device  plugin.TValue[string]
+	Path    plugin.TValue[string]
+	Fstype  plugin.TValue[string]
 	Options plugin.TValue[map[string]any]
 	Mounted plugin.TValue[bool]
 }
@@ -13122,7 +13258,7 @@ func createMountPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13170,7 +13306,7 @@ func (c *mqlMountPoint) GetMounted() *plugin.TValue[bool] {
 // mqlShadow for the shadow resource
 type mqlShadow struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlShadowInternal it will be used here
 	List plugin.TValue[[]any]
 }
@@ -13187,7 +13323,7 @@ func createShadow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13231,17 +13367,17 @@ func (c *mqlShadow) GetList() *plugin.TValue[[]any] {
 // mqlShadowEntry for the shadow.entry resource
 type mqlShadowEntry struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlShadowEntryInternal it will be used here
-	User plugin.TValue[string]
-	Password plugin.TValue[string]
-	Lastchanged plugin.TValue[*time.Time]
-	Mindays plugin.TValue[int64]
-	Maxdays plugin.TValue[int64]
-	Warndays plugin.TValue[int64]
+	User         plugin.TValue[string]
+	Password     plugin.TValue[string]
+	Lastchanged  plugin.TValue[*time.Time]
+	Mindays      plugin.TValue[int64]
+	Maxdays      plugin.TValue[int64]
+	Warndays     plugin.TValue[int64]
 	Inactivedays plugin.TValue[int64]
-	Expirydates plugin.TValue[string]
-	Reserved plugin.TValue[string]
+	Expirydates  plugin.TValue[string]
+	Reserved     plugin.TValue[string]
 }
 
 // createShadowEntry creates a new instance of this resource
@@ -13256,7 +13392,7 @@ func createShadowEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13320,9 +13456,9 @@ func (c *mqlShadowEntry) GetReserved() *plugin.TValue[string] {
 // mqlYum for the yum resource
 type mqlYum struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlYumInternal it will be used here
-	Vars plugin.TValue[map[string]any]
+	Vars  plugin.TValue[map[string]any]
 	Repos plugin.TValue[[]any]
 }
 
@@ -13338,7 +13474,7 @@ func createYum(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13388,20 +13524,20 @@ func (c *mqlYum) GetRepos() *plugin.TValue[[]any] {
 // mqlYumRepo for the yum.repo resource
 type mqlYumRepo struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlYumRepoInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Status plugin.TValue[string]
-	Baseurl plugin.TValue[[]any]
-	Expire plugin.TValue[string]
+	Id       plugin.TValue[string]
+	Name     plugin.TValue[string]
+	Status   plugin.TValue[string]
+	Baseurl  plugin.TValue[[]any]
+	Expire   plugin.TValue[string]
 	Filename plugin.TValue[string]
-	File plugin.TValue[*mqlFile]
+	File     plugin.TValue[*mqlFile]
 	Revision plugin.TValue[string]
-	Pkgs plugin.TValue[string]
-	Size plugin.TValue[string]
-	Mirrors plugin.TValue[string]
-	Enabled plugin.TValue[bool]
+	Pkgs     plugin.TValue[string]
+	Size     plugin.TValue[string]
+	Mirrors  plugin.TValue[string]
+	Enabled  plugin.TValue[bool]
 }
 
 // createYumRepo creates a new instance of this resource
@@ -13416,7 +13552,7 @@ func createYumRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13494,13 +13630,13 @@ func (c *mqlYumRepo) GetEnabled() *plugin.TValue[bool] {
 // mqlRegistrykey for the registrykey resource
 type mqlRegistrykey struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlRegistrykeyInternal it will be used here
-	Path plugin.TValue[string]
-	Exists plugin.TValue[bool]
+	Path       plugin.TValue[string]
+	Exists     plugin.TValue[bool]
 	Properties plugin.TValue[map[string]any]
-	Items plugin.TValue[[]any]
-	Children plugin.TValue[[]any]
+	Items      plugin.TValue[[]any]
+	Children   plugin.TValue[[]any]
 }
 
 // createRegistrykey creates a new instance of this resource
@@ -13515,7 +13651,7 @@ func createRegistrykey(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13581,14 +13717,14 @@ func (c *mqlRegistrykey) GetChildren() *plugin.TValue[[]any] {
 // mqlRegistrykeyProperty for the registrykey.property resource
 type mqlRegistrykeyProperty struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlRegistrykeyPropertyInternal it will be used here
-	Path plugin.TValue[string]
-	Name plugin.TValue[string]
+	Path   plugin.TValue[string]
+	Name   plugin.TValue[string]
 	Exists plugin.TValue[bool]
-	Value plugin.TValue[string]
-	Type plugin.TValue[string]
-	Data plugin.TValue[any]
+	Value  plugin.TValue[string]
+	Type   plugin.TValue[string]
+	Data   plugin.TValue[any]
 }
 
 // createRegistrykeyProperty creates a new instance of this resource
@@ -13603,7 +13739,7 @@ func createRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13663,13 +13799,13 @@ func (c *mqlRegistrykeyProperty) GetData() *plugin.TValue[any] {
 // mqlContainerImage for the container.image resource
 type mqlContainerImage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlContainerImageInternal it will be used here
-	Reference plugin.TValue[string]
-	Name plugin.TValue[string]
-	Identifier plugin.TValue[string]
+	Reference      plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Identifier     plugin.TValue[string]
 	IdentifierType plugin.TValue[string]
-	Repository plugin.TValue[*mqlContainerRepository]
+	Repository     plugin.TValue[*mqlContainerRepository]
 }
 
 // createContainerImage creates a new instance of this resource
@@ -13684,7 +13820,7 @@ func createContainerImage(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13744,10 +13880,10 @@ func (c *mqlContainerImage) GetRepository() *plugin.TValue[*mqlContainerReposito
 // mqlContainerRepository for the container.repository resource
 type mqlContainerRepository struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlContainerRepositoryInternal it will be used here
-	Name plugin.TValue[string]
-	Scheme plugin.TValue[string]
+	Name     plugin.TValue[string]
+	Scheme   plugin.TValue[string]
 	FullName plugin.TValue[string]
 	Registry plugin.TValue[string]
 }
@@ -13764,7 +13900,7 @@ func createContainerRepository(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13808,10 +13944,10 @@ func (c *mqlContainerRepository) GetRegistry() *plugin.TValue[string] {
 // mqlKubelet for the kubelet resource
 type mqlKubelet struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlKubeletInternal it will be used here
-	ConfigFile plugin.TValue[*mqlFile]
-	Process plugin.TValue[*mqlProcess]
+	ConfigFile    plugin.TValue[*mqlFile]
+	Process       plugin.TValue[*mqlProcess]
 	Configuration plugin.TValue[any]
 }
 
@@ -13864,9 +14000,9 @@ func (c *mqlKubelet) GetConfiguration() *plugin.TValue[any] {
 // mqlPython for the python resource
 type mqlPython struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlPythonInternal it will be used here
-	Path plugin.TValue[string]
+	Path     plugin.TValue[string]
 	Packages plugin.TValue[[]any]
 	Toplevel plugin.TValue[[]any]
 }
@@ -13883,7 +14019,7 @@ func createPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -13947,18 +14083,18 @@ func (c *mqlPython) GetToplevel() *plugin.TValue[[]any] {
 // mqlPythonPackage for the python.package resource
 type mqlPythonPackage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlPythonPackageInternal
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	File plugin.TValue[*mqlFile]
-	Version plugin.TValue[string]
-	License plugin.TValue[string]
-	Author plugin.TValue[string]
-	AuthorEmail plugin.TValue[string]
-	Summary plugin.TValue[string]
-	Purl plugin.TValue[string]
-	Cpes plugin.TValue[[]any]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	File         plugin.TValue[*mqlFile]
+	Version      plugin.TValue[string]
+	License      plugin.TValue[string]
+	Author       plugin.TValue[string]
+	AuthorEmail  plugin.TValue[string]
+	Summary      plugin.TValue[string]
+	Purl         plugin.TValue[string]
+	Cpes         plugin.TValue[[]any]
 	Dependencies plugin.TValue[[]any]
 }
 
@@ -13974,7 +14110,7 @@ func createPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14084,13 +14220,13 @@ func (c *mqlPythonPackage) GetDependencies() *plugin.TValue[[]any] {
 // mqlNpmPackages for the npm.packages resource
 type mqlNpmPackages struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlNpmPackagesInternal
-	Path plugin.TValue[string]
-	Root plugin.TValue[*mqlNpmPackage]
+	Path               plugin.TValue[string]
+	Root               plugin.TValue[*mqlNpmPackage]
 	DirectDependencies plugin.TValue[[]any]
-	Files plugin.TValue[[]any]
-	List plugin.TValue[[]any]
+	Files              plugin.TValue[[]any]
+	List               plugin.TValue[[]any]
 }
 
 // createNpmPackages creates a new instance of this resource
@@ -14105,7 +14241,7 @@ func createNpmPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14201,14 +14337,14 @@ func (c *mqlNpmPackages) GetList() *plugin.TValue[[]any] {
 // mqlNpmPackage for the npm.package resource
 type mqlNpmPackage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlNpmPackageInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
 	Version plugin.TValue[string]
-	Purl plugin.TValue[string]
-	Cpes plugin.TValue[[]any]
-	Files plugin.TValue[[]any]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
 }
 
 // createNpmPackage creates a new instance of this resource
@@ -14223,7 +14359,7 @@ func createNpmPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14305,12 +14441,12 @@ func (c *mqlNpmPackage) GetFiles() *plugin.TValue[[]any] {
 // mqlMacos for the macos resource
 type mqlMacos struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMacosInternal it will be used here
-	UserPreferences plugin.TValue[map[string]any]
-	UserHostPreferences plugin.TValue[map[string]any]
+	UserPreferences       plugin.TValue[map[string]any]
+	UserHostPreferences   plugin.TValue[map[string]any]
 	GlobalAccountPolicies plugin.TValue[any]
-	SystemExtensions plugin.TValue[[]any]
+	SystemExtensions      plugin.TValue[[]any]
 }
 
 // createMacos creates a new instance of this resource
@@ -14382,19 +14518,19 @@ func (c *mqlMacos) GetSystemExtensions() *plugin.TValue[[]any] {
 // mqlMacosAlf for the macos.alf resource
 type mqlMacosAlf struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMacosAlfInternal it will be used here
 	AllowDownloadSignedEnabled plugin.TValue[int64]
-	AllowSignedEnabled plugin.TValue[int64]
-	FirewallUnload plugin.TValue[int64]
-	GlobalState plugin.TValue[int64]
-	LoggingEnabled plugin.TValue[int64]
-	LoggingOption plugin.TValue[int64]
-	StealthEnabled plugin.TValue[int64]
-	Version plugin.TValue[string]
-	Exceptions plugin.TValue[[]any]
-	ExplicitAuths plugin.TValue[[]any]
-	Applications plugin.TValue[[]any]
+	AllowSignedEnabled         plugin.TValue[int64]
+	FirewallUnload             plugin.TValue[int64]
+	GlobalState                plugin.TValue[int64]
+	LoggingEnabled             plugin.TValue[int64]
+	LoggingOption              plugin.TValue[int64]
+	StealthEnabled             plugin.TValue[int64]
+	Version                    plugin.TValue[string]
+	Exceptions                 plugin.TValue[[]any]
+	ExplicitAuths              plugin.TValue[[]any]
+	Applications               plugin.TValue[[]any]
 }
 
 // createMacosAlf creates a new instance of this resource
@@ -14476,7 +14612,7 @@ func (c *mqlMacosAlf) GetApplications() *plugin.TValue[[]any] {
 // mqlMacosTimemachine for the macos.timemachine resource
 type mqlMacosTimemachine struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMacosTimemachineInternal it will be used here
 	Preferences plugin.TValue[any]
 }
@@ -14522,27 +14658,27 @@ func (c *mqlMacosTimemachine) GetPreferences() *plugin.TValue[any] {
 // mqlMacosSystemsetup for the macos.systemsetup resource
 type mqlMacosSystemsetup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMacosSystemsetupInternal it will be used here
-	Date plugin.TValue[string]
-	Time plugin.TValue[string]
-	TimeZone plugin.TValue[string]
-	UsingNetworkTime plugin.TValue[string]
-	NetworkTimeServer plugin.TValue[string]
-	Sleep plugin.TValue[[]any]
-	DisplaySleep plugin.TValue[string]
-	HarddiskSleep plugin.TValue[string]
-	WakeOnModem plugin.TValue[string]
-	WakeOnNetworkAccess plugin.TValue[string]
-	RestartPowerFailure plugin.TValue[string]
-	RestartFreeze plugin.TValue[string]
-	AllowPowerButtonToSleepComputer plugin.TValue[string]
-	RemoteLogin plugin.TValue[string]
-	RemoteAppleEvents plugin.TValue[string]
-	ComputerName plugin.TValue[string]
-	LocalSubnetName plugin.TValue[string]
-	StartupDisk plugin.TValue[string]
-	WaitForStartupAfterPowerFailure plugin.TValue[string]
+	Date                                      plugin.TValue[string]
+	Time                                      plugin.TValue[string]
+	TimeZone                                  plugin.TValue[string]
+	UsingNetworkTime                          plugin.TValue[string]
+	NetworkTimeServer                         plugin.TValue[string]
+	Sleep                                     plugin.TValue[[]any]
+	DisplaySleep                              plugin.TValue[string]
+	HarddiskSleep                             plugin.TValue[string]
+	WakeOnModem                               plugin.TValue[string]
+	WakeOnNetworkAccess                       plugin.TValue[string]
+	RestartPowerFailure                       plugin.TValue[string]
+	RestartFreeze                             plugin.TValue[string]
+	AllowPowerButtonToSleepComputer           plugin.TValue[string]
+	RemoteLogin                               plugin.TValue[string]
+	RemoteAppleEvents                         plugin.TValue[string]
+	ComputerName                              plugin.TValue[string]
+	LocalSubnetName                           plugin.TValue[string]
+	StartupDisk                               plugin.TValue[string]
+	WaitForStartupAfterPowerFailure           plugin.TValue[string]
 	DisableKeyboardWhenEnclosureLockIsEngaged plugin.TValue[string]
 }
 
@@ -14701,12 +14837,12 @@ func (c *mqlMacosSystemsetup) GetDisableKeyboardWhenEnclosureLockIsEngaged() *pl
 // mqlWindows for the windows resource
 type mqlWindows struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsInternal it will be used here
-	ComputerInfo plugin.TValue[any]
-	Hotfixes plugin.TValue[[]any]
-	Features plugin.TValue[[]any]
-	ServerFeatures plugin.TValue[[]any]
+	ComputerInfo     plugin.TValue[any]
+	Hotfixes         plugin.TValue[[]any]
+	Features         plugin.TValue[[]any]
+	ServerFeatures   plugin.TValue[[]any]
 	OptionalFeatures plugin.TValue[[]any]
 }
 
@@ -14815,16 +14951,16 @@ func (c *mqlWindows) GetOptionalFeatures() *plugin.TValue[[]any] {
 // mqlMacosSystemExtension for the macos.systemExtension resource
 type mqlMacosSystemExtension struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMacosSystemExtensionInternal it will be used here
 	Identifier plugin.TValue[string]
-	Uuid plugin.TValue[string]
-	Version plugin.TValue[string]
+	Uuid       plugin.TValue[string]
+	Version    plugin.TValue[string]
 	Categories plugin.TValue[[]any]
-	State plugin.TValue[string]
-	Enabled plugin.TValue[bool]
-	Active plugin.TValue[bool]
-	TeamID plugin.TValue[string]
+	State      plugin.TValue[string]
+	Enabled    plugin.TValue[bool]
+	Active     plugin.TValue[bool]
+	TeamID     plugin.TValue[string]
 	BundlePath plugin.TValue[string]
 	MdmManaged plugin.TValue[bool]
 }
@@ -14908,11 +15044,11 @@ func (c *mqlMacosSystemExtension) GetMdmManaged() *plugin.TValue[bool] {
 // mqlWindowsHotfix for the windows.hotfix resource
 type mqlWindowsHotfix struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsHotfixInternal it will be used here
-	HotfixId plugin.TValue[string]
+	HotfixId    plugin.TValue[string]
 	Description plugin.TValue[string]
-	Caption plugin.TValue[string]
+	Caption     plugin.TValue[string]
 	InstalledOn plugin.TValue[*time.Time]
 	InstalledBy plugin.TValue[string]
 }
@@ -14929,7 +15065,7 @@ func createWindowsHotfix(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -14977,13 +15113,13 @@ func (c *mqlWindowsHotfix) GetInstalledBy() *plugin.TValue[string] {
 // mqlWindowsFeature for the windows.feature resource
 type mqlWindowsFeature struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsFeatureInternal it will be used here
-	Path plugin.TValue[string]
-	Name plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
-	Installed plugin.TValue[bool]
+	Path         plugin.TValue[string]
+	Name         plugin.TValue[string]
+	DisplayName  plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Installed    plugin.TValue[bool]
 	InstallState plugin.TValue[int64]
 }
 
@@ -14999,7 +15135,7 @@ func createWindowsFeature(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15051,13 +15187,13 @@ func (c *mqlWindowsFeature) GetInstallState() *plugin.TValue[int64] {
 // mqlWindowsServerFeature for the windows.serverFeature resource
 type mqlWindowsServerFeature struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsServerFeatureInternal it will be used here
-	Path plugin.TValue[string]
-	Name plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
-	Installed plugin.TValue[bool]
+	Path         plugin.TValue[string]
+	Name         plugin.TValue[string]
+	DisplayName  plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Installed    plugin.TValue[bool]
 	InstallState plugin.TValue[int64]
 }
 
@@ -15073,7 +15209,7 @@ func createWindowsServerFeature(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15125,13 +15261,13 @@ func (c *mqlWindowsServerFeature) GetInstallState() *plugin.TValue[int64] {
 // mqlWindowsOptionalFeature for the windows.optionalFeature resource
 type mqlWindowsOptionalFeature struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsOptionalFeatureInternal it will be used here
-	Name plugin.TValue[string]
+	Name        plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Description plugin.TValue[string]
-	Enabled plugin.TValue[bool]
-	State plugin.TValue[int64]
+	Enabled     plugin.TValue[bool]
+	State       plugin.TValue[int64]
 }
 
 // createWindowsOptionalFeature creates a new instance of this resource
@@ -15146,7 +15282,7 @@ func createWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15194,11 +15330,11 @@ func (c *mqlWindowsOptionalFeature) GetState() *plugin.TValue[int64] {
 // mqlWindowsFirewall for the windows.firewall resource
 type mqlWindowsFirewall struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsFirewallInternal it will be used here
 	Settings plugin.TValue[any]
 	Profiles plugin.TValue[[]any]
-	Rules plugin.TValue[[]any]
+	Rules    plugin.TValue[[]any]
 }
 
 // createWindowsFirewall creates a new instance of this resource
@@ -15274,26 +15410,26 @@ func (c *mqlWindowsFirewall) GetRules() *plugin.TValue[[]any] {
 // mqlWindowsFirewallProfile for the windows.firewall.profile resource
 type mqlWindowsFirewallProfile struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsFirewallProfileInternal it will be used here
-	InstanceID plugin.TValue[string]
-	Name plugin.TValue[string]
-	Enabled plugin.TValue[int64]
-	DefaultInboundAction plugin.TValue[int64]
-	DefaultOutboundAction plugin.TValue[int64]
-	AllowInboundRules plugin.TValue[int64]
-	AllowLocalFirewallRules plugin.TValue[int64]
-	AllowLocalIPsecRules plugin.TValue[int64]
-	AllowUserApps plugin.TValue[int64]
-	AllowUserPorts plugin.TValue[int64]
+	InstanceID                      plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Enabled                         plugin.TValue[int64]
+	DefaultInboundAction            plugin.TValue[int64]
+	DefaultOutboundAction           plugin.TValue[int64]
+	AllowInboundRules               plugin.TValue[int64]
+	AllowLocalFirewallRules         plugin.TValue[int64]
+	AllowLocalIPsecRules            plugin.TValue[int64]
+	AllowUserApps                   plugin.TValue[int64]
+	AllowUserPorts                  plugin.TValue[int64]
 	AllowUnicastResponseToMulticast plugin.TValue[int64]
-	NotifyOnListen plugin.TValue[int64]
-	EnableStealthModeForIPsec plugin.TValue[int64]
-	LogMaxSizeKilobytes plugin.TValue[int64]
-	LogAllowed plugin.TValue[int64]
-	LogBlocked plugin.TValue[int64]
-	LogIgnored plugin.TValue[int64]
-	LogFileName plugin.TValue[string]
+	NotifyOnListen                  plugin.TValue[int64]
+	EnableStealthModeForIPsec       plugin.TValue[int64]
+	LogMaxSizeKilobytes             plugin.TValue[int64]
+	LogAllowed                      plugin.TValue[int64]
+	LogBlocked                      plugin.TValue[int64]
+	LogIgnored                      plugin.TValue[int64]
+	LogFileName                     plugin.TValue[string]
 }
 
 // createWindowsFirewallProfile creates a new instance of this resource
@@ -15308,7 +15444,7 @@ func createWindowsFirewallProfile(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15408,23 +15544,23 @@ func (c *mqlWindowsFirewallProfile) GetLogFileName() *plugin.TValue[string] {
 // mqlWindowsFirewallRule for the windows.firewall.rule resource
 type mqlWindowsFirewallRule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsFirewallRuleInternal it will be used here
-	InstanceID plugin.TValue[string]
-	Name plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
-	DisplayGroup plugin.TValue[string]
-	Enabled plugin.TValue[int64]
-	Direction plugin.TValue[int64]
-	Action plugin.TValue[int64]
-	EdgeTraversalPolicy plugin.TValue[int64]
-	LooseSourceMapping plugin.TValue[bool]
-	LocalOnlyMapping plugin.TValue[bool]
-	PrimaryStatus plugin.TValue[int64]
-	Status plugin.TValue[string]
-	EnforcementStatus plugin.TValue[string]
-	PolicyStoreSource plugin.TValue[string]
+	InstanceID            plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	Description           plugin.TValue[string]
+	DisplayGroup          plugin.TValue[string]
+	Enabled               plugin.TValue[int64]
+	Direction             plugin.TValue[int64]
+	Action                plugin.TValue[int64]
+	EdgeTraversalPolicy   plugin.TValue[int64]
+	LooseSourceMapping    plugin.TValue[bool]
+	LocalOnlyMapping      plugin.TValue[bool]
+	PrimaryStatus         plugin.TValue[int64]
+	Status                plugin.TValue[string]
+	EnforcementStatus     plugin.TValue[string]
+	PolicyStoreSource     plugin.TValue[string]
 	PolicyStoreSourceType plugin.TValue[int64]
 }
 
@@ -15440,7 +15576,7 @@ func createWindowsFirewallRule(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15532,7 +15668,7 @@ func (c *mqlWindowsFirewallRule) GetPolicyStoreSourceType() *plugin.TValue[int64
 // mqlWindowsBitlocker for the windows.bitlocker resource
 type mqlWindowsBitlocker struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsBitlockerInternal it will be used here
 	Volumes plugin.TValue[[]any]
 }
@@ -15588,16 +15724,16 @@ func (c *mqlWindowsBitlocker) GetVolumes() *plugin.TValue[[]any] {
 // mqlWindowsBitlockerVolume for the windows.bitlocker.volume resource
 type mqlWindowsBitlockerVolume struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsBitlockerVolumeInternal it will be used here
-	DeviceID plugin.TValue[string]
-	DriveLetter plugin.TValue[string]
-	ConversionStatus plugin.TValue[any]
-	EncryptionMethod plugin.TValue[any]
-	LockStatus plugin.TValue[int64]
+	DeviceID           plugin.TValue[string]
+	DriveLetter        plugin.TValue[string]
+	ConversionStatus   plugin.TValue[any]
+	EncryptionMethod   plugin.TValue[any]
+	LockStatus         plugin.TValue[int64]
 	PersistentVolumeID plugin.TValue[string]
-	ProtectionStatus plugin.TValue[any]
-	Version plugin.TValue[any]
+	ProtectionStatus   plugin.TValue[any]
+	Version            plugin.TValue[any]
 }
 
 // createWindowsBitlockerVolume creates a new instance of this resource
@@ -15612,7 +15748,7 @@ func createWindowsBitlockerVolume(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15672,7 +15808,7 @@ func (c *mqlWindowsBitlockerVolume) GetVersion() *plugin.TValue[any] {
 // mqlWindowsSecurity for the windows.security resource
 type mqlWindowsSecurity struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsSecurityInternal it will be used here
 	Products plugin.TValue[[]any]
 }
@@ -15728,15 +15864,15 @@ func (c *mqlWindowsSecurity) GetProducts() *plugin.TValue[[]any] {
 // mqlWindowsSecurityProduct for the windows.security.product resource
 type mqlWindowsSecurityProduct struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsSecurityProductInternal it will be used here
-	Type plugin.TValue[string]
-	Guid plugin.TValue[string]
-	Name plugin.TValue[string]
-	State plugin.TValue[int64]
-	ProductState plugin.TValue[string]
+	Type           plugin.TValue[string]
+	Guid           plugin.TValue[string]
+	Name           plugin.TValue[string]
+	State          plugin.TValue[int64]
+	ProductState   plugin.TValue[string]
 	SignatureState plugin.TValue[string]
-	Timestamp plugin.TValue[*time.Time]
+	Timestamp      plugin.TValue[*time.Time]
 }
 
 // createWindowsSecurityProduct creates a new instance of this resource
@@ -15751,7 +15887,7 @@ func createWindowsSecurityProduct(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -15807,14 +15943,14 @@ func (c *mqlWindowsSecurityProduct) GetTimestamp() *plugin.TValue[*time.Time] {
 // mqlWindowsSecurityHealth for the windows.security.health resource
 type mqlWindowsSecurityHealth struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlWindowsSecurityHealthInternal it will be used here
-	Firewall plugin.TValue[any]
-	AutoUpdate plugin.TValue[any]
-	AntiVirus plugin.TValue[any]
-	AntiSpyware plugin.TValue[any]
-	InternetSettings plugin.TValue[any]
-	Uac plugin.TValue[any]
+	Firewall              plugin.TValue[any]
+	AutoUpdate            plugin.TValue[any]
+	AntiVirus             plugin.TValue[any]
+	AntiSpyware           plugin.TValue[any]
+	InternetSettings      plugin.TValue[any]
+	Uac                   plugin.TValue[any]
 	SecurityCenterService plugin.TValue[any]
 }
 
@@ -15881,7 +16017,7 @@ func (c *mqlWindowsSecurityHealth) GetSecurityCenterService() *plugin.TValue[any
 // mqlCloud for the cloud resource
 type mqlCloud struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudInternal it will be used here
 	Provider plugin.TValue[string]
 	Instance plugin.TValue[*mqlCloudInstance]
@@ -15944,13 +16080,13 @@ func (c *mqlCloud) GetInstance() *plugin.TValue[*mqlCloudInstance] {
 // mqlCloudInstance for the cloudInstance resource
 type mqlCloudInstance struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlCloudInstanceInternal
-	PublicHostname plugin.TValue[string]
-	PublicIpv4 plugin.TValue[[]any]
+	PublicHostname  plugin.TValue[string]
+	PublicIpv4      plugin.TValue[[]any]
 	PrivateHostname plugin.TValue[string]
-	PrivateIpv4 plugin.TValue[[]any]
-	Metadata plugin.TValue[any]
+	PrivateIpv4     plugin.TValue[[]any]
+	Metadata        plugin.TValue[any]
 }
 
 // createCloudInstance creates a new instance of this resource
@@ -15965,7 +16101,7 @@ func createCloudInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -16043,13 +16179,13 @@ func (c *mqlCloudInstance) GetMetadata() *plugin.TValue[any] {
 // mqlIpAddress for the ipAddress resource
 type mqlIpAddress struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlIpAddressInternal it will be used here
-	Ip plugin.TValue[llx.RawIP]
-	Subnet plugin.TValue[llx.RawIP]
-	Cidr plugin.TValue[llx.RawIP]
+	Ip        plugin.TValue[llx.RawIP]
+	Subnet    plugin.TValue[llx.RawIP]
+	Cidr      plugin.TValue[llx.RawIP]
 	Broadcast plugin.TValue[llx.RawIP]
-	Gateway plugin.TValue[llx.RawIP]
+	Gateway   plugin.TValue[llx.RawIP]
 }
 
 // createIpAddress creates a new instance of this resource
@@ -16107,7 +16243,7 @@ func (c *mqlIpAddress) GetGateway() *plugin.TValue[llx.RawIP] {
 // mqlNetwork for the network resource
 type mqlNetwork struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlNetworkInternal it will be used here
 	Interfaces plugin.TValue[[]any]
 }
@@ -16163,15 +16299,15 @@ func (c *mqlNetwork) GetInterfaces() *plugin.TValue[[]any] {
 // mqlNetworkInterface for the networkInterface resource
 type mqlNetworkInterface struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlNetworkInterfaceInternal it will be used here
-	Name plugin.TValue[string]
-	Mac plugin.TValue[string]
-	Vendor plugin.TValue[string]
-	Ips plugin.TValue[[]any]
-	Mtu plugin.TValue[int64]
-	Flags plugin.TValue[[]any]
-	Active plugin.TValue[bool]
+	Name    plugin.TValue[string]
+	Mac     plugin.TValue[string]
+	Vendor  plugin.TValue[string]
+	Ips     plugin.TValue[[]any]
+	Mtu     plugin.TValue[int64]
+	Flags   plugin.TValue[[]any]
+	Active  plugin.TValue[bool]
 	Virtual plugin.TValue[bool]
 }
 
@@ -16242,7 +16378,7 @@ func (c *mqlNetworkInterface) GetVirtual() *plugin.TValue[bool] {
 // mqlUsb for the usb resource
 type mqlUsb struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlUsbInternal it will be used here
 	Devices plugin.TValue[[]any]
 }
@@ -16298,20 +16434,20 @@ func (c *mqlUsb) GetDevices() *plugin.TValue[[]any] {
 // mqlUsbDevice for the usb.device resource
 type mqlUsbDevice struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlUsbDeviceInternal it will be used here
-	VendorId plugin.TValue[string]
+	VendorId     plugin.TValue[string]
 	Manufacturer plugin.TValue[string]
-	ProductId plugin.TValue[string]
-	Serial plugin.TValue[string]
-	Name plugin.TValue[string]
-	Version plugin.TValue[string]
-	Speed plugin.TValue[string]
-	Class plugin.TValue[string]
-	ClassName plugin.TValue[string]
-	Subclass plugin.TValue[string]
-	Protocol plugin.TValue[string]
-	IsRemovable plugin.TValue[bool]
+	ProductId    plugin.TValue[string]
+	Serial       plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Speed        plugin.TValue[string]
+	Class        plugin.TValue[string]
+	ClassName    plugin.TValue[string]
+	Subclass     plugin.TValue[string]
+	Protocol     plugin.TValue[string]
+	IsRemovable  plugin.TValue[bool]
 }
 
 // createUsbDevice creates a new instance of this resource

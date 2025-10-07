@@ -173,7 +173,7 @@
       "name": "LR the os provider",
       "type": "go",
       "request": "launch",
-      "program": "${workspaceRoot}/providers-sdk/v1/lr/cli/main.go",
+      "program": "${workspaceRoot}/providers-sdk/v1/mqlr/main.go",
       "cwd": "${workspaceRoot}/",
       "args": [
         "go", "./providers/os/resources/os.lr", "--dist", "./providers/os/dist",

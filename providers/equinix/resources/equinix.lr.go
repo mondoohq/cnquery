@@ -15,16 +15,25 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceEquinixMetalProject      string = "equinix.metal.project"
+	ResourceEquinixMetalOrganization string = "equinix.metal.organization"
+	ResourceEquinixMetalUser         string = "equinix.metal.user"
+	ResourceEquinixMetalSshkey       string = "equinix.metal.sshkey"
+	ResourceEquinixMetalDevice       string = "equinix.metal.device"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"equinix.metal.project": {
-			Init: initEquinixMetalProject,
+			Init:   initEquinixMetalProject,
 			Create: createEquinixMetalProject,
 		},
 		"equinix.metal.organization": {
-			Init: initEquinixMetalOrganization,
+			Init:   initEquinixMetalOrganization,
 			Create: createEquinixMetalOrganization,
 		},
 		"equinix.metal.user": {
@@ -60,7 +69,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -298,11 +307,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"equinix.metal.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEquinixMetalProject).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEquinixMetalProject).__id, ok = v.Value.(string)
+		return
+	},
 	"equinix.metal.project.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEquinixMetalProject).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -336,9 +345,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"equinix.metal.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEquinixMetalOrganization).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEquinixMetalOrganization).__id, ok = v.Value.(string)
+		return
+	},
 	"equinix.metal.organization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEquinixMetalOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -396,9 +405,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"equinix.metal.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEquinixMetalUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEquinixMetalUser).__id, ok = v.Value.(string)
+		return
+	},
 	"equinix.metal.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEquinixMetalUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -460,9 +469,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"equinix.metal.sshkey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEquinixMetalSshkey).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEquinixMetalSshkey).__id, ok = v.Value.(string)
+		return
+	},
 	"equinix.metal.sshkey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEquinixMetalSshkey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -492,9 +501,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"equinix.metal.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEquinixMetalDevice).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEquinixMetalDevice).__id, ok = v.Value.(string)
+		return
+	},
 	"equinix.metal.device.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEquinixMetalDevice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -546,13 +555,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[equinix] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[equinix] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[equinix] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[equinix] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -570,16 +579,16 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlEquinixMetalProject for the equinix.metal.project resource
 type mqlEquinixMetalProject struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEquinixMetalProjectInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
 	Organization plugin.TValue[*mqlEquinixMetalOrganization]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	Url plugin.TValue[string]
-	SshKeys plugin.TValue[[]any]
-	Devices plugin.TValue[[]any]
+	CreatedAt    plugin.TValue[*time.Time]
+	UpdatedAt    plugin.TValue[*time.Time]
+	Url          plugin.TValue[string]
+	SshKeys      plugin.TValue[[]any]
+	Devices      plugin.TValue[[]any]
 }
 
 // createEquinixMetalProject creates a new instance of this resource
@@ -594,7 +603,7 @@ func createEquinixMetalProject(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -690,22 +699,22 @@ func (c *mqlEquinixMetalProject) GetDevices() *plugin.TValue[[]any] {
 // mqlEquinixMetalOrganization for the equinix.metal.organization resource
 type mqlEquinixMetalOrganization struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEquinixMetalOrganizationInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Website plugin.TValue[string]
-	Twitter plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	Address plugin.TValue[any]
-	TaxId plugin.TValue[string]
-	MainPhone plugin.TValue[string]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Website      plugin.TValue[string]
+	Twitter      plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+	UpdatedAt    plugin.TValue[*time.Time]
+	Address      plugin.TValue[any]
+	TaxId        plugin.TValue[string]
+	MainPhone    plugin.TValue[string]
 	BillingPhone plugin.TValue[string]
 	CreditAmount plugin.TValue[float64]
-	Url plugin.TValue[string]
-	Users plugin.TValue[[]any]
+	Url          plugin.TValue[string]
+	Users        plugin.TValue[[]any]
 }
 
 // createEquinixMetalOrganization creates a new instance of this resource
@@ -720,7 +729,7 @@ func createEquinixMetalOrganization(runtime *plugin.Runtime, args map[string]*ll
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -816,23 +825,23 @@ func (c *mqlEquinixMetalOrganization) GetUsers() *plugin.TValue[[]any] {
 // mqlEquinixMetalUser for the equinix.metal.user resource
 type mqlEquinixMetalUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEquinixMetalUserInternal it will be used here
-	Id plugin.TValue[string]
-	FirstName plugin.TValue[string]
-	LastName plugin.TValue[string]
-	FullName plugin.TValue[string]
-	Email plugin.TValue[string]
+	Id            plugin.TValue[string]
+	FirstName     plugin.TValue[string]
+	LastName      plugin.TValue[string]
+	FullName      plugin.TValue[string]
+	Email         plugin.TValue[string]
 	TwoFactorAuth plugin.TValue[string]
-	AvatarUrl plugin.TValue[string]
-	Twitter plugin.TValue[string]
-	Facebook plugin.TValue[string]
-	Linkedin plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	Timezone plugin.TValue[string]
-	PhoneNumber plugin.TValue[string]
-	Url plugin.TValue[string]
+	AvatarUrl     plugin.TValue[string]
+	Twitter       plugin.TValue[string]
+	Facebook      plugin.TValue[string]
+	Linkedin      plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+	Timezone      plugin.TValue[string]
+	PhoneNumber   plugin.TValue[string]
+	Url           plugin.TValue[string]
 }
 
 // createEquinixMetalUser creates a new instance of this resource
@@ -847,7 +856,7 @@ func createEquinixMetalUser(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -935,15 +944,15 @@ func (c *mqlEquinixMetalUser) GetUrl() *plugin.TValue[string] {
 // mqlEquinixMetalSshkey for the equinix.metal.sshkey resource
 type mqlEquinixMetalSshkey struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEquinixMetalSshkeyInternal it will be used here
-	Id plugin.TValue[string]
-	Label plugin.TValue[string]
-	Key plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Label       plugin.TValue[string]
+	Key         plugin.TValue[string]
 	FingerPrint plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	Url plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+	Url         plugin.TValue[string]
 }
 
 // createEquinixMetalSshkey creates a new instance of this resource
@@ -958,7 +967,7 @@ func createEquinixMetalSshkey(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1014,20 +1023,20 @@ func (c *mqlEquinixMetalSshkey) GetUrl() *plugin.TValue[string] {
 // mqlEquinixMetalDevice for the equinix.metal.device resource
 type mqlEquinixMetalDevice struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEquinixMetalDeviceInternal it will be used here
-	Id plugin.TValue[string]
-	ShortID plugin.TValue[string]
-	Url plugin.TValue[string]
-	Hostname plugin.TValue[string]
-	Description plugin.TValue[string]
-	State plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	Locked plugin.TValue[bool]
+	Id           plugin.TValue[string]
+	ShortID      plugin.TValue[string]
+	Url          plugin.TValue[string]
+	Hostname     plugin.TValue[string]
+	Description  plugin.TValue[string]
+	State        plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+	UpdatedAt    plugin.TValue[*time.Time]
+	Locked       plugin.TValue[bool]
 	BillingCycle plugin.TValue[string]
 	SpotInstance plugin.TValue[bool]
-	Os plugin.TValue[any]
+	Os           plugin.TValue[any]
 }
 
 // createEquinixMetalDevice creates a new instance of this resource
@@ -1042,7 +1051,7 @@ func createEquinixMetalDevice(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

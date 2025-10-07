@@ -107,7 +107,7 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		pms = append(pms, &SnapPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux":
 		fallthrough
-	case asset.Platform.IsFamily("redhat"): // rhel family
+	case asset.Platform.IsFamily("redhat") || asset.Platform.IsFamily("euler") || asset.Platform.Name == "mageia": // rhel/euler/mageia based systems
 		pms = append(pms, &RpmPkgManager{conn: conn, platform: asset.Platform})
 		if asset.Platform.Name == "fedora" {
 			// https: // snapcraft.io/docs/distro-support
@@ -117,7 +117,7 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		pms = append(pms, &SusePkgManager{RpmPkgManager{conn: conn, platform: asset.Platform}})
 	case asset.Platform.Name == "alpine" || asset.Platform.Name == "wolfi": // alpine & wolfi share apk
 		pms = append(pms, &AlpinePkgManager{conn: conn, platform: asset.Platform})
-	case asset.Platform.Name == "macos": // mac os family
+	case asset.Platform.Name == "macos": // macos family
 		pms = append(pms, &MacOSPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "windows":
 		pms = append(pms, &WinPkgManager{conn: conn, platform: asset.Platform})

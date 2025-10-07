@@ -1,0 +1,18 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "aarch64"
+
+[commands."uname -r"]
+stdout = "6.10.14-linuxkit"
+
+[files."/etc/os-release"]
+content = """
+NAME="openEuler"
+VERSION="24.03 (LTS-SP2)"
+ID="openEuler"
+VERSION_ID="24.03"
+PRETTY_NAME="openEuler 24.03 (LTS-SP2)"
+ANSI_COLOR="0;31"
+"""

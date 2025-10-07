@@ -10,7 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
 )
 
 var parseCmd = &cobra.Command{
@@ -25,7 +25,7 @@ var parseCmd = &cobra.Command{
 			return
 		}
 
-		res, err := lr.Parse(string(raw))
+		res, err := lrcore.Parse(string(raw))
 		if err != nil {
 			log.Error().Msg(err.Error())
 			return

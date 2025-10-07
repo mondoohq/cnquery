@@ -557,6 +557,16 @@ func TestAmazon2022LinuxDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+func TestBottlerocketDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-bottlerocket.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "bottlerocket", di.Name, "os name should be identified")
+	assert.Equal(t, "Bottlerocket OS 1.33.0 (aws-ecs-2-fips)", di.Title, "os title should be identified")
+	assert.Equal(t, "1.33.0", di.Version, "os version should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestScientificLinuxDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-scientific.toml")
 	assert.Nil(t, err, "was able to create the provider")
@@ -875,6 +885,39 @@ func TestUbiOSDetector(t *testing.T) {
 	assert.Equal(t, "ubios", di.Name, "os name should be identified")
 	assert.Equal(t, "UbiOS 1.12.24.4315", di.Title, "os title should be identified")
 	assert.Equal(t, "v1.12.24.4315-136ee7c", di.Version, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
+func TestElementaryOSDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-elementary.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "elementary", di.Name, "os name should be identified")
+	assert.Equal(t, "elementary OS 7 Horus", di.Title, "os title should be identified")
+	assert.Equal(t, "7", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
+func TestOpenEulerDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-openeuler.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "openeuler", di.Name, "os name should be identified")
+	assert.Equal(t, "openEuler 24.03 (LTS-SP2)", di.Title, "os title should be identified")
+	assert.Equal(t, "24.03", di.Version, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"euler", "linux", "unix", "os"}, di.Family)
+}
+
+func TestMageiaDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-mageia-9.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "mageia", di.Name, "os name should be identified")
+	assert.Equal(t, "Mageia 9", di.Title, "os title should be identified")
+	assert.Equal(t, "9", di.Version, "os version should be identified")
 	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }

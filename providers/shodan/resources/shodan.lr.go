@@ -15,20 +15,30 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceShodan         string = "shodan"
+	ResourceShodanHost     string = "shodan.host"
+	ResourceShodanDomain   string = "shodan.domain"
+	ResourceShodanNsrecord string = "shodan.nsrecord"
+	ResourceShodanProfile  string = "shodan.profile"
+	ResourceShodanApiPlan  string = "shodan.apiPlan"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"shodan": {
 			// to override args, implement: initShodan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createShodan,
 		},
 		"shodan.host": {
-			Init: initShodanHost,
+			Init:   initShodanHost,
 			Create: createShodanHost,
 		},
 		"shodan.domain": {
-			Init: initShodanDomain,
+			Init:   initShodanDomain,
 			Create: createShodanDomain,
 		},
 		"shodan.nsrecord": {
@@ -36,11 +46,11 @@ func init() {
 			Create: createShodanNsrecord,
 		},
 		"shodan.profile": {
-			Init: initShodanProfile,
+			Init:   initShodanProfile,
 			Create: createShodanProfile,
 		},
 		"shodan.apiPlan": {
-			Init: initShodanApiPlan,
+			Init:   initShodanApiPlan,
 			Create: createShodanApiPlan,
 		},
 	}
@@ -64,7 +74,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -224,15 +234,15 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"shodan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlShodan).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlShodan).__id, ok = v.Value.(string)
+		return
+	},
 	"shodan.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlShodanHost).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlShodanHost).__id, ok = v.Value.(string)
+		return
+	},
 	"shodan.host.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShodanHost).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -278,9 +288,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"shodan.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlShodanDomain).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlShodanDomain).__id, ok = v.Value.(string)
+		return
+	},
 	"shodan.domain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShodanDomain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -298,9 +308,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"shodan.nsrecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlShodanNsrecord).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlShodanNsrecord).__id, ok = v.Value.(string)
+		return
+	},
 	"shodan.nsrecord.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShodanNsrecord).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -322,9 +332,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"shodan.profile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlShodanProfile).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlShodanProfile).__id, ok = v.Value.(string)
+		return
+	},
 	"shodan.profile.member": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShodanProfile).Member, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -342,9 +352,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"shodan.apiPlan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlShodanApiPlan).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlShodanApiPlan).__id, ok = v.Value.(string)
+		return
+	},
 	"shodan.apiPlan.scanCredits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShodanApiPlan).ScanCredits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -372,13 +382,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[shodan] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[shodan] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[shodan] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[shodan] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -396,7 +406,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlShodan for the shodan resource
 type mqlShodan struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlShodanInternal it will be used here
 }
 
@@ -412,7 +422,7 @@ func createShodan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -440,19 +450,19 @@ func (c *mqlShodan) MqlID() string {
 // mqlShodanHost for the shodan.host resource
 type mqlShodanHost struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlShodanHostInternal it will be used here
-	Ip plugin.TValue[string]
-	Os plugin.TValue[string]
-	Org plugin.TValue[string]
-	Isp plugin.TValue[string]
-	Asn plugin.TValue[string]
-	Tags plugin.TValue[[]any]
-	Hostnames plugin.TValue[[]any]
-	Ports plugin.TValue[[]any]
+	Ip              plugin.TValue[string]
+	Os              plugin.TValue[string]
+	Org             plugin.TValue[string]
+	Isp             plugin.TValue[string]
+	Asn             plugin.TValue[string]
+	Tags            plugin.TValue[[]any]
+	Hostnames       plugin.TValue[[]any]
+	Ports           plugin.TValue[[]any]
 	Vulnerabilities plugin.TValue[[]any]
-	Country plugin.TValue[string]
-	City plugin.TValue[string]
+	Country         plugin.TValue[string]
+	City            plugin.TValue[string]
 }
 
 // createShodanHost creates a new instance of this resource
@@ -467,7 +477,7 @@ func createShodanHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -559,12 +569,12 @@ func (c *mqlShodanHost) GetCity() *plugin.TValue[string] {
 // mqlShodanDomain for the shodan.domain resource
 type mqlShodanDomain struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlShodanDomainInternal it will be used here
-	Name plugin.TValue[string]
-	Tags plugin.TValue[[]any]
+	Name       plugin.TValue[string]
+	Tags       plugin.TValue[[]any]
 	Subdomains plugin.TValue[[]any]
-	Nsrecords plugin.TValue[[]any]
+	Nsrecords  plugin.TValue[[]any]
 }
 
 // createShodanDomain creates a new instance of this resource
@@ -579,7 +589,7 @@ func createShodanDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -639,13 +649,13 @@ func (c *mqlShodanDomain) GetNsrecords() *plugin.TValue[[]any] {
 // mqlShodanNsrecord for the shodan.nsrecord resource
 type mqlShodanNsrecord struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlShodanNsrecordInternal it will be used here
-	Domain plugin.TValue[string]
+	Domain    plugin.TValue[string]
 	Subdomain plugin.TValue[string]
-	Type plugin.TValue[string]
-	Value plugin.TValue[string]
-	LastSeen plugin.TValue[*time.Time]
+	Type      plugin.TValue[string]
+	Value     plugin.TValue[string]
+	LastSeen  plugin.TValue[*time.Time]
 }
 
 // createShodanNsrecord creates a new instance of this resource
@@ -660,7 +670,7 @@ func createShodanNsrecord(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -708,12 +718,12 @@ func (c *mqlShodanNsrecord) GetLastSeen() *plugin.TValue[*time.Time] {
 // mqlShodanProfile for the shodan.profile resource
 type mqlShodanProfile struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlShodanProfileInternal it will be used here
-	Member plugin.TValue[bool]
-	Credits plugin.TValue[int64]
+	Member      plugin.TValue[bool]
+	Credits     plugin.TValue[int64]
 	DisplayName plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
+	CreatedAt   plugin.TValue[*time.Time]
 }
 
 // createShodanProfile creates a new instance of this resource
@@ -728,7 +738,7 @@ func createShodanProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -772,13 +782,13 @@ func (c *mqlShodanProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
 // mqlShodanApiPlan for the shodan.apiPlan resource
 type mqlShodanApiPlan struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlShodanApiPlanInternal it will be used here
-	ScanCredits plugin.TValue[int64]
-	Plan plugin.TValue[string]
-	Unlocked plugin.TValue[bool]
+	ScanCredits  plugin.TValue[int64]
+	Plan         plugin.TValue[string]
+	Unlocked     plugin.TValue[bool]
 	UnlockedLeft plugin.TValue[int64]
-	Telnet plugin.TValue[bool]
+	Telnet       plugin.TValue[bool]
 	MonitoredIps plugin.TValue[int64]
 }
 
@@ -794,7 +804,7 @@ func createShodanApiPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

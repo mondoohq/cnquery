@@ -4,13 +4,14 @@
 package resources
 
 import (
+	"strconv"
+
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/ansible/connection"
 	"go.mondoo.com/cnquery/v12/providers/ansible/play"
 	"go.mondoo.com/cnquery/v12/types"
-	"strconv"
 )
 
 func (r *mqlAnsible) id() (string, error) {

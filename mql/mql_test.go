@@ -497,3 +497,19 @@ func TestAndShortCircuiting(t *testing.T) {
 		},
 	})
 }
+
+func TestResource_Empty_Panic_Issue6017(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "customGroups == empty || true",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "customGroups != empty || true",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+	})
+}
