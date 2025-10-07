@@ -1067,6 +1067,8 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   properties dict
   // App site identity
   identity dict
+  // Deployment slots for the web app site
+  slots() []azure.subscription.webService.appslot
   // App site configuration
   configuration() azure.subscription.webService.appsiteconfig
   // App site authentication settings
@@ -1086,6 +1088,48 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   // FTP publishing method policies
   ftp() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
   // SCM publishing method policies
+  scm() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
+}
+
+// Azure Web app deployment slot
+private azure.subscription.webService.appslot @defaults("id name location") {
+  // App slot ID
+  id string
+  // App slot name
+  name string
+  // App slot kind
+  kind string
+  // App slot location
+  location string
+  // App slot type
+  type string
+  // App slot tags
+  tags map[string]string
+  // App slot properties
+  properties dict
+  // App slot identity
+  identity dict
+  // Parent web app site for this slot
+  parent() azure.subscription.webService.appsite
+  // App slot configuration
+  configuration() azure.subscription.webService.appsiteconfig
+  // App slot authentication settings
+  authenticationSettings() azure.subscription.webService.appsiteauthsettings
+  // App slot metadata
+  metadata() dict
+  // App slot application settings
+  applicationSettings() dict
+  // App slot connection settings
+  connectionSettings() dict
+  // App slot stack
+  stack() dict
+  // App slot diagnostic settings
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // List of functions for the app slot
+  functions() []azure.subscription.webService.function
+  // FTP publishing method policies for the slot
+  ftp() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
+  // SCM publishing method policies for the slot
   scm() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
 }
 

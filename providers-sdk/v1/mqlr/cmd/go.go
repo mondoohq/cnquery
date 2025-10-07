@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"go/format"
 	"os"
 	"path"
 	"strings"
@@ -12,8 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr/docs"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
 	"sigs.k8s.io/yaml"
 )
 
@@ -28,15 +28,24 @@ var goCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("failed to get dist flag")
 		}
 
+		failOnDups, _ := cmd.Flags().GetBool("fail-on-duplicates")
+
 		file := args[0]
 		packageName := path.Base(path.Dir(file))
 
-		res, err := lr.Resolve(file, func(path string) ([]byte, error) {
+		res, err := lrcore.Resolve(file, func(path string) ([]byte, error) {
 			return os.ReadFile(path)
 		})
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to resolve")
 			return
+		}
+
+		dups := res.GetDuplicates()
+		if failOnDups && len(dups) > 0 {
+			log.Fatal().Int("count", len(dups)).Strs("paths", dups).Msg("duplicate field paths detected, exiting")
+		} else if len(dups) > 0 {
+			log.Warn().Int("count", len(dups)).Strs("paths", dups).Msg("duplicate field paths detected")
 		}
 
 		// add license header
@@ -52,18 +61,22 @@ var goCmd = &cobra.Command{
 			}
 		}
 
-		collector := lr.NewCollector(args[0])
-		godata, err := lr.Go(packageName, res, collector, headerTpl)
+		collector := lrcore.NewCollector(args[0])
+		goCode, err := lrcore.Go(packageName, res, collector, headerTpl)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to compile go code")
 		}
 
-		err = os.WriteFile(args[0]+".go", []byte(godata), 0o644)
+		fmtGoData, err := format.Source([]byte(goCode))
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to format go code")
+		}
+		err = os.WriteFile(args[0]+".go", fmtGoData, 0o644)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to write to go file")
 		}
 
-		schema, err := lr.Schema(res)
+		schema, err := lrcore.Schema(res)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to generate schema")
 		}
@@ -73,13 +86,13 @@ var goCmd = &cobra.Command{
 		manifestPath := file + ".manifest.yaml"
 		raw, err := os.ReadFile(manifestPath)
 		if err == nil {
-			var lrDocsData docs.LrDocs
+			var lrDocsData lrcore.LrDocs
 			err = yaml.Unmarshal(raw, &lrDocsData)
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not load yaml data")
 			}
 
-			docs.InjectMetadata(schema, &lrDocsData)
+			lrcore.InjectMetadata(schema, &lrDocsData)
 		} else if os.IsNotExist(err) {
 			log.Info().Str("path", manifestPath).Msg("no manifest found, ignoring")
 		} else {
@@ -115,6 +128,7 @@ var goCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(goCmd)
+	goCmd.Flags().Bool("fail-on-duplicates", false, "fail if duplicate LR field paths are detected")
 	goCmd.Flags().String("dist", "", "folder for output json generation")
 	goCmd.Flags().String("license-header-file", "", "optional file path to read license header from")
 }

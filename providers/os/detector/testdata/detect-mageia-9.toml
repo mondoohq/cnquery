@@ -1,0 +1,26 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "aarch64"
+
+[commands."uname -r"]
+stdout = "6.10.14-linuxkit"
+
+[files."/etc/redhat-release"]
+content = "Mageia release 9 (Official) for aarch64"
+
+[files."/etc/os-release"]
+content = """
+NAME="Mageia"
+VERSION="9"
+ID=mageia
+VERSION_ID=9
+ID_LIKE="mandriva fedora"
+PRETTY_NAME="Mageia 9"
+ANSI_COLOR="1;36"
+HOME_URL="https://www.mageia.org/"
+SUPPORT_URL="https://www.mageia.org/support/"
+BUG_REPORT_URL="https://bugs.mageia.org/"
+PRIVACY_POLICY_URL="https://wiki.mageia.org/en/Privacy_policy"
+"""

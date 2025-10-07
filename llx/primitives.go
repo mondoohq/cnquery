@@ -295,6 +295,8 @@ func (p *Primitive) LabelV2(code *CodeV2) string {
 		return "<ref>"
 	case types.Nil:
 		return "null"
+	case types.Empty:
+		return "empty"
 	case types.Bool:
 		if len(p.Value) == 0 {
 			return "null"

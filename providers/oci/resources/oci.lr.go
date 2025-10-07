@@ -15,16 +15,39 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceOci                          string = "oci"
+	ResourceOciTenancy                   string = "oci.tenancy"
+	ResourceOciRegion                    string = "oci.region"
+	ResourceOciCompartment               string = "oci.compartment"
+	ResourceOciIdentity                  string = "oci.identity"
+	ResourceOciIdentityUser              string = "oci.identity.user"
+	ResourceOciIdentityApiKey            string = "oci.identity.apiKey"
+	ResourceOciIdentityCustomerSecretKey string = "oci.identity.customerSecretKey"
+	ResourceOciIdentityAuthToken         string = "oci.identity.authToken"
+	ResourceOciIdentityGroup             string = "oci.identity.group"
+	ResourceOciIdentityPolicy            string = "oci.identity.policy"
+	ResourceOciCompute                   string = "oci.compute"
+	ResourceOciComputeInstance           string = "oci.compute.instance"
+	ResourceOciComputeImage              string = "oci.compute.image"
+	ResourceOciNetwork                   string = "oci.network"
+	ResourceOciNetworkVcn                string = "oci.network.vcn"
+	ResourceOciNetworkSecurityList       string = "oci.network.securityList"
+	ResourceOciObjectStorage             string = "oci.objectStorage"
+	ResourceOciObjectStorageBucket       string = "oci.objectStorage.bucket"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"oci": {
 			// to override args, implement: initOci(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOci,
 		},
 		"oci.tenancy": {
-			Init: initOciTenancy,
+			Init:   initOciTenancy,
 			Create: createOciTenancy,
 		},
 		"oci.region": {
@@ -116,7 +139,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -492,11 +515,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"oci.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOci).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOci).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.regions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOci).Regions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -506,9 +529,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.tenancy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciTenancy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciTenancy).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.tenancy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciTenancy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -526,9 +549,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.region.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciRegion).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciRegion).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.region.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciRegion).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -546,9 +569,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.compartment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciCompartment).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciCompartment).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.compartment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciCompartment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -570,9 +593,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.identity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciIdentity).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciIdentity).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.identity.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentity).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -586,9 +609,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.identity.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciIdentityUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciIdentityUser).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.identity.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -654,9 +677,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.identity.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciIdentityApiKey).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciIdentityApiKey).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.identity.apiKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityApiKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -678,9 +701,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.identity.customerSecretKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciIdentityCustomerSecretKey).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciIdentityCustomerSecretKey).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.identity.customerSecretKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityCustomerSecretKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -698,9 +721,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.identity.authToken.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciIdentityAuthToken).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciIdentityAuthToken).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.identity.authToken.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityAuthToken).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -722,9 +745,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.identity.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciIdentityGroup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciIdentityGroup).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.identity.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -750,9 +773,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.identity.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciIdentityPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciIdentityPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.identity.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciIdentityPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -782,9 +805,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.compute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciCompute).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciCompute).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.compute.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciCompute).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -794,9 +817,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.compute.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciComputeInstance).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciComputeInstance).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.compute.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -818,9 +841,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.compute.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciComputeImage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciComputeImage).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.compute.image.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeImage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -842,9 +865,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciNetwork).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciNetwork).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.network.vcns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetwork).Vcns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -854,9 +877,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.network.vcn.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciNetworkVcn).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciNetworkVcn).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.network.vcn.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkVcn).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -886,9 +909,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.network.securityList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciNetworkSecurityList).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciNetworkSecurityList).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.network.securityList.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkSecurityList).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -918,9 +941,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.objectStorage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciObjectStorage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciObjectStorage).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.objectStorage.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciObjectStorage).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -930,9 +953,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"oci.objectStorage.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlOciObjectStorageBucket).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlOciObjectStorageBucket).__id, ok = v.Value.(string)
+		return
+	},
 	"oci.objectStorage.bucket.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciObjectStorageBucket).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -980,13 +1003,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[oci] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[oci] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[oci] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[oci] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -1004,9 +1027,9 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlOci for the oci resource
 type mqlOci struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciInternal it will be used here
-	Regions plugin.TValue[[]any]
+	Regions      plugin.TValue[[]any]
 	Compartments plugin.TValue[[]any]
 }
 
@@ -1022,7 +1045,7 @@ func createOci(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1082,11 +1105,11 @@ func (c *mqlOci) GetCompartments() *plugin.TValue[[]any] {
 // mqlOciTenancy for the oci.tenancy resource
 type mqlOciTenancy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciTenancyInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
 	RetentionPeriod plugin.TValue[*time.Time]
 }
 
@@ -1102,7 +1125,7 @@ func createOciTenancy(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1148,12 +1171,12 @@ func (c *mqlOciTenancy) GetRetentionPeriod() *plugin.TValue[*time.Time] {
 // mqlOciRegion for the oci.region resource
 type mqlOciRegion struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciRegionInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
 	IsHomeRegion plugin.TValue[bool]
-	Status plugin.TValue[string]
+	Status       plugin.TValue[string]
 }
 
 // createOciRegion creates a new instance of this resource
@@ -1168,7 +1191,7 @@ func createOciRegion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1212,13 +1235,13 @@ func (c *mqlOciRegion) GetStatus() *plugin.TValue[string] {
 // mqlOciCompartment for the oci.compartment resource
 type mqlOciCompartment struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciCompartmentInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	State plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	State       plugin.TValue[string]
 }
 
 // createOciCompartment creates a new instance of this resource
@@ -1233,7 +1256,7 @@ func createOciCompartment(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1281,10 +1304,10 @@ func (c *mqlOciCompartment) GetState() *plugin.TValue[string] {
 // mqlOciIdentity for the oci.identity resource
 type mqlOciIdentity struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciIdentityInternal it will be used here
-	Users plugin.TValue[[]any]
-	Groups plugin.TValue[[]any]
+	Users    plugin.TValue[[]any]
+	Groups   plugin.TValue[[]any]
 	Policies plugin.TValue[[]any]
 }
 
@@ -1300,7 +1323,7 @@ func createOciIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1376,24 +1399,24 @@ func (c *mqlOciIdentity) GetPolicies() *plugin.TValue[[]any] {
 // mqlOciIdentityUser for the oci.identity.user resource
 type mqlOciIdentityUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciIdentityUserInternal it will be used here
-	Id plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	State plugin.TValue[string]
-	MfaActivated plugin.TValue[bool]
-	Email plugin.TValue[string]
-	EmailVerified plugin.TValue[bool]
-	Capabilities plugin.TValue[map[string]any]
-	LastLogin plugin.TValue[*time.Time]
-	PreviousLogin plugin.TValue[*time.Time]
-	ApiKeys plugin.TValue[[]any]
+	Id                 plugin.TValue[string]
+	CompartmentID      plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
+	State              plugin.TValue[string]
+	MfaActivated       plugin.TValue[bool]
+	Email              plugin.TValue[string]
+	EmailVerified      plugin.TValue[bool]
+	Capabilities       plugin.TValue[map[string]any]
+	LastLogin          plugin.TValue[*time.Time]
+	PreviousLogin      plugin.TValue[*time.Time]
+	ApiKeys            plugin.TValue[[]any]
 	CustomerSecretKeys plugin.TValue[[]any]
-	AuthTokens plugin.TValue[[]any]
-	Groups plugin.TValue[[]any]
+	AuthTokens         plugin.TValue[[]any]
+	Groups             plugin.TValue[[]any]
 }
 
 // createOciIdentityUser creates a new instance of this resource
@@ -1408,7 +1431,7 @@ func createOciIdentityUser(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1548,13 +1571,13 @@ func (c *mqlOciIdentityUser) GetGroups() *plugin.TValue[[]any] {
 // mqlOciIdentityApiKey for the oci.identity.apiKey resource
 type mqlOciIdentityApiKey struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciIdentityApiKeyInternal it will be used here
-	Id plugin.TValue[string]
-	Value plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Value       plugin.TValue[string]
 	Fingerprint plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	State plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	State       plugin.TValue[string]
 }
 
 // createOciIdentityApiKey creates a new instance of this resource
@@ -1569,7 +1592,7 @@ func createOciIdentityApiKey(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1617,12 +1640,12 @@ func (c *mqlOciIdentityApiKey) GetState() *plugin.TValue[string] {
 // mqlOciIdentityCustomerSecretKey for the oci.identity.customerSecretKey resource
 type mqlOciIdentityCustomerSecretKey struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciIdentityCustomerSecretKeyInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
-	State plugin.TValue[string]
+	State   plugin.TValue[string]
 }
 
 // createOciIdentityCustomerSecretKey creates a new instance of this resource
@@ -1637,7 +1660,7 @@ func createOciIdentityCustomerSecretKey(runtime *plugin.Runtime, args map[string
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1681,13 +1704,13 @@ func (c *mqlOciIdentityCustomerSecretKey) GetState() *plugin.TValue[string] {
 // mqlOciIdentityAuthToken for the oci.identity.authToken resource
 type mqlOciIdentityAuthToken struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciIdentityAuthTokenInternal it will be used here
-	Id plugin.TValue[string]
+	Id          plugin.TValue[string]
 	Description plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Expires plugin.TValue[*time.Time]
-	State plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	Expires     plugin.TValue[*time.Time]
+	State       plugin.TValue[string]
 }
 
 // createOciIdentityAuthToken creates a new instance of this resource
@@ -1702,7 +1725,7 @@ func createOciIdentityAuthToken(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1750,14 +1773,14 @@ func (c *mqlOciIdentityAuthToken) GetState() *plugin.TValue[string] {
 // mqlOciIdentityGroup for the oci.identity.group resource
 type mqlOciIdentityGroup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciIdentityGroupInternal it will be used here
-	Id plugin.TValue[string]
+	Id            plugin.TValue[string]
 	CompartmentID plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	State plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	State         plugin.TValue[string]
 }
 
 // createOciIdentityGroup creates a new instance of this resource
@@ -1772,7 +1795,7 @@ func createOciIdentityGroup(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1824,15 +1847,15 @@ func (c *mqlOciIdentityGroup) GetState() *plugin.TValue[string] {
 // mqlOciIdentityPolicy for the oci.identity.policy resource
 type mqlOciIdentityPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciIdentityPolicyInternal it will be used here
-	Id plugin.TValue[string]
+	Id            plugin.TValue[string]
 	CompartmentID plugin.TValue[string]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	State plugin.TValue[string]
-	Statements plugin.TValue[[]any]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	State         plugin.TValue[string]
+	Statements    plugin.TValue[[]any]
 }
 
 // createOciIdentityPolicy creates a new instance of this resource
@@ -1847,7 +1870,7 @@ func createOciIdentityPolicy(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1903,10 +1926,10 @@ func (c *mqlOciIdentityPolicy) GetStatements() *plugin.TValue[[]any] {
 // mqlOciCompute for the oci.compute resource
 type mqlOciCompute struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciComputeInternal it will be used here
 	Instances plugin.TValue[[]any]
-	Images plugin.TValue[[]any]
+	Images    plugin.TValue[[]any]
 }
 
 // createOciCompute creates a new instance of this resource
@@ -1921,7 +1944,7 @@ func createOciCompute(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1981,13 +2004,13 @@ func (c *mqlOciCompute) GetImages() *plugin.TValue[[]any] {
 // mqlOciComputeInstance for the oci.compute.instance resource
 type mqlOciComputeInstance struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciComputeInstanceInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Region plugin.TValue[*mqlOciRegion]
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Region  plugin.TValue[*mqlOciRegion]
 	Created plugin.TValue[*time.Time]
-	State plugin.TValue[string]
+	State   plugin.TValue[string]
 }
 
 // createOciComputeInstance creates a new instance of this resource
@@ -2002,7 +2025,7 @@ func createOciComputeInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2050,13 +2073,13 @@ func (c *mqlOciComputeInstance) GetState() *plugin.TValue[string] {
 // mqlOciComputeImage for the oci.compute.image resource
 type mqlOciComputeImage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciComputeImageInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Region plugin.TValue[*mqlOciRegion]
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Region  plugin.TValue[*mqlOciRegion]
 	Created plugin.TValue[*time.Time]
-	State plugin.TValue[string]
+	State   plugin.TValue[string]
 }
 
 // createOciComputeImage creates a new instance of this resource
@@ -2071,7 +2094,7 @@ func createOciComputeImage(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2119,9 +2142,9 @@ func (c *mqlOciComputeImage) GetState() *plugin.TValue[string] {
 // mqlOciNetwork for the oci.network resource
 type mqlOciNetwork struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciNetworkInternal it will be used here
-	Vcns plugin.TValue[[]any]
+	Vcns          plugin.TValue[[]any]
 	SecurityLists plugin.TValue[[]any]
 }
 
@@ -2137,7 +2160,7 @@ func createOciNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2197,15 +2220,15 @@ func (c *mqlOciNetwork) GetSecurityLists() *plugin.TValue[[]any] {
 // mqlOciNetworkVcn for the oci.network.vcn resource
 type mqlOciNetworkVcn struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciNetworkVcnInternal it will be used here
-	Id plugin.TValue[string]
+	Id            plugin.TValue[string]
 	CompartmentID plugin.TValue[string]
-	Name plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	State plugin.TValue[string]
-	CidrBlock plugin.TValue[string]
-	CidrBlocks plugin.TValue[[]any]
+	Name          plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	State         plugin.TValue[string]
+	CidrBlock     plugin.TValue[string]
+	CidrBlocks    plugin.TValue[[]any]
 }
 
 // createOciNetworkVcn creates a new instance of this resource
@@ -2220,7 +2243,7 @@ func createOciNetworkVcn(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2276,14 +2299,14 @@ func (c *mqlOciNetworkVcn) GetCidrBlocks() *plugin.TValue[[]any] {
 // mqlOciNetworkSecurityList for the oci.network.securityList resource
 type mqlOciNetworkSecurityList struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciNetworkSecurityListInternal it will be used here
-	Id plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Name plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	State plugin.TValue[string]
-	EgressSecurityRules plugin.TValue[[]any]
+	Id                   plugin.TValue[string]
+	CompartmentID        plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	State                plugin.TValue[string]
+	EgressSecurityRules  plugin.TValue[[]any]
 	IngressSecurityRules plugin.TValue[[]any]
 }
 
@@ -2299,7 +2322,7 @@ func createOciNetworkSecurityList(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2355,10 +2378,10 @@ func (c *mqlOciNetworkSecurityList) GetIngressSecurityRules() *plugin.TValue[[]a
 // mqlOciObjectStorage for the oci.objectStorage resource
 type mqlOciObjectStorage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlOciObjectStorageInternal it will be used here
 	Namespace plugin.TValue[string]
-	Buckets plugin.TValue[[]any]
+	Buckets   plugin.TValue[[]any]
 }
 
 // createOciObjectStorage creates a new instance of this resource
@@ -2373,7 +2396,7 @@ func createOciObjectStorage(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2423,19 +2446,19 @@ func (c *mqlOciObjectStorage) GetBuckets() *plugin.TValue[[]any] {
 // mqlOciObjectStorageBucket for the oci.objectStorage.bucket resource
 type mqlOciObjectStorageBucket struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlOciObjectStorageBucketInternal
-	Namespace plugin.TValue[string]
-	Name plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Created plugin.TValue[*time.Time]
-	Region plugin.TValue[*mqlOciRegion]
-	PublicAccessType plugin.TValue[string]
-	StorageTier plugin.TValue[string]
-	AutoTiering plugin.TValue[string]
-	Versioning plugin.TValue[string]
+	Namespace           plugin.TValue[string]
+	Name                plugin.TValue[string]
+	CompartmentID       plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
+	Region              plugin.TValue[*mqlOciRegion]
+	PublicAccessType    plugin.TValue[string]
+	StorageTier         plugin.TValue[string]
+	AutoTiering         plugin.TValue[string]
+	Versioning          plugin.TValue[string]
 	ObjectEventsEnabled plugin.TValue[bool]
-	ReplicationEnabled plugin.TValue[bool]
+	ReplicationEnabled  plugin.TValue[bool]
 }
 
 // createOciObjectStorageBucket creates a new instance of this resource
@@ -2450,7 +2473,7 @@ func createOciObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

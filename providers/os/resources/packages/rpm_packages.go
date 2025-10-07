@@ -237,8 +237,9 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 		"/usr/lib/sysimage/rpm/Packages",     // used on opensuse container
 		"/usr/lib/sysimage/rpm/Packages.db",  // used on SLES bci-base container
 		"/usr/lib/sysimage/rpm/rpmdb.sqlite", // used on fedora 36+ and photon4
-		"/var/lib/rpm/rpmdb.sqlite",          // used on fedora 33-35
+		"/var/lib/rpm/rpmdb.sqlite",          // used on fedora 33-35 and mageia
 		"/var/lib/rpm/Packages",              // used on fedora 32
+		"/var/lib/rpm/Packages.db",           // used on openeuler
 	}
 	var tmpRpmDBFile string
 	var detectedPath string

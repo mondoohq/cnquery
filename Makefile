@@ -178,10 +178,17 @@ providers/defaults:
 
 .PHONY: providers/lr
 providers/lr:
-	go build -o lr ./providers-sdk/v1/lr/cli/main.go
+	go build -o lr ./providers-sdk/v1/mqlr/main.go
 
 providers/lr/install: providers/lr
 	cp ./lr ${GOPATH}/bin
+
+.PHONY: providers/mqlr
+providers/mqlr:
+	go build -o mqlr ./providers-sdk/v1/mqlr/main.go
+
+providers/mqlr/install: providers/mqlr
+	cp ./mqlr ${GOPATH}/bin
 
 .PHONY: providers/build
 # Note we need \ to escape the target line into multiple lines
@@ -494,7 +501,7 @@ providers/test:
 	@$(call testGoModProvider, providers/tailscale)
 
 lr/test:
-	go test ./providers-sdk/v1/lr/...
+	go test ./providers-sdk/v1/mqlr/...
 
 # TODO: migrate
 .PHONY: lr/docs/serve

@@ -1,6 +1,7 @@
 ACCOUNTADMIN
 Adddays
 antispam
+appslot
 atlassian
 auditlog
 Auths

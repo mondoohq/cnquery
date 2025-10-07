@@ -15,10 +15,40 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceGithub                           string = "github"
+	ResourceGitCommit                        string = "git.commit"
+	ResourceGitCommitAuthor                  string = "git.commitAuthor"
+	ResourceGitGpgSignature                  string = "git.gpgSignature"
+	ResourceGithubOrganization               string = "github.organization"
+	ResourceGithubOrganizationCustomProperty string = "github.organization.customProperty"
+	ResourceGithubUser                       string = "github.user"
+	ResourceGithubTeam                       string = "github.team"
+	ResourceGithubCollaborator               string = "github.collaborator"
+	ResourceGithubPackage                    string = "github.package"
+	ResourceGithubPackages                   string = "github.packages"
+	ResourceGithubRepository                 string = "github.repository"
+	ResourceGithubLicense                    string = "github.license"
+	ResourceGithubFile                       string = "github.file"
+	ResourceGithubRelease                    string = "github.release"
+	ResourceGithubWebhook                    string = "github.webhook"
+	ResourceGithubWorkflow                   string = "github.workflow"
+	ResourceGithubBranch                     string = "github.branch"
+	ResourceGithubBranchprotection           string = "github.branchprotection"
+	ResourceGithubCommit                     string = "github.commit"
+	ResourceGithubMergeRequest               string = "github.mergeRequest"
+	ResourceGithubReview                     string = "github.review"
+	ResourceGithubInstallation               string = "github.installation"
+	ResourceGithubGist                       string = "github.gist"
+	ResourceGithubGistfile                   string = "github.gistfile"
+	ResourceGithubIssue                      string = "github.issue"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"github": {
 			// to override args, implement: initGithub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithub,
@@ -36,7 +66,7 @@ func init() {
 			Create: createGitGpgSignature,
 		},
 		"github.organization": {
-			Init: initGithubOrganization,
+			Init:   initGithubOrganization,
 			Create: createGithubOrganization,
 		},
 		"github.organization.customProperty": {
@@ -44,7 +74,7 @@ func init() {
 			Create: createGithubOrganizationCustomProperty,
 		},
 		"github.user": {
-			Init: initGithubUser,
+			Init:   initGithubUser,
 			Create: createGithubUser,
 		},
 		"github.team": {
@@ -64,7 +94,7 @@ func init() {
 			Create: createGithubPackages,
 		},
 		"github.repository": {
-			Init: initGithubRepository,
+			Init:   initGithubRepository,
 			Create: createGithubRepository,
 		},
 		"github.license": {
@@ -144,7 +174,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -1027,15 +1057,15 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"github.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithub).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithub).__id, ok = v.Value.(string)
+		return
+	},
 	"git.commit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGitCommit).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGitCommit).__id, ok = v.Value.(string)
+		return
+	},
 	"git.commit.sha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitCommit).Sha, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1057,9 +1087,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"git.commitAuthor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGitCommitAuthor).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGitCommitAuthor).__id, ok = v.Value.(string)
+		return
+	},
 	"git.commitAuthor.sha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitCommitAuthor).Sha, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1077,9 +1107,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"git.gpgSignature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGitGpgSignature).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGitGpgSignature).__id, ok = v.Value.(string)
+		return
+	},
 	"git.gpgSignature.sha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitGpgSignature).Sha, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1101,9 +1131,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubOrganization).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubOrganization).__id, ok = v.Value.(string)
+		return
+	},
 	"github.organization.login": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganization).Login, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1281,9 +1311,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.organization.customProperty.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubOrganizationCustomProperty).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubOrganizationCustomProperty).__id, ok = v.Value.(string)
+		return
+	},
 	"github.organization.customProperty.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganizationCustomProperty).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1317,9 +1347,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubUser).__id, ok = v.Value.(string)
+		return
+	},
 	"github.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubUser).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -1389,9 +1419,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.team.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubTeam).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubTeam).__id, ok = v.Value.(string)
+		return
+	},
 	"github.team.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubTeam).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -1429,9 +1459,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.collaborator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubCollaborator).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubCollaborator).__id, ok = v.Value.(string)
+		return
+	},
 	"github.collaborator.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubCollaborator).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -1445,9 +1475,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubPackage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubPackage).__id, ok = v.Value.(string)
+		return
+	},
 	"github.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubPackage).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -1485,9 +1515,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubPackages).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubPackages).__id, ok = v.Value.(string)
+		return
+	},
 	"github.packages.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubPackages).Public, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1505,9 +1535,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubRepository).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubRepository).__id, ok = v.Value.(string)
+		return
+	},
 	"github.repository.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -1737,9 +1767,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubLicense).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubLicense).__id, ok = v.Value.(string)
+		return
+	},
 	"github.license.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubLicense).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1757,9 +1787,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubFile).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubFile).__id, ok = v.Value.(string)
+		return
+	},
 	"github.file.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubFile).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1805,9 +1835,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.release.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubRelease).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubRelease).__id, ok = v.Value.(string)
+		return
+	},
 	"github.release.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRelease).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1825,9 +1855,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.webhook.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubWebhook).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubWebhook).__id, ok = v.Value.(string)
+		return
+	},
 	"github.webhook.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubWebhook).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -1853,9 +1883,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.workflow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubWorkflow).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubWorkflow).__id, ok = v.Value.(string)
+		return
+	},
 	"github.workflow.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubWorkflow).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -1889,9 +1919,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.branch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubBranch).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubBranch).__id, ok = v.Value.(string)
+		return
+	},
 	"github.branch.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubBranch).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1925,9 +1955,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.branchprotection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubBranchprotection).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubBranchprotection).__id, ok = v.Value.(string)
+		return
+	},
 	"github.branchprotection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubBranchprotection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1969,9 +1999,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.commit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubCommit).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubCommit).__id, ok = v.Value.(string)
+		return
+	},
 	"github.commit.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubCommit).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2013,9 +2043,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.mergeRequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubMergeRequest).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubMergeRequest).__id, ok = v.Value.(string)
+		return
+	},
 	"github.mergeRequest.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubMergeRequest).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -2061,9 +2091,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.review.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubReview).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubReview).__id, ok = v.Value.(string)
+		return
+	},
 	"github.review.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubReview).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2081,9 +2111,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.installation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubInstallation).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubInstallation).__id, ok = v.Value.(string)
+		return
+	},
 	"github.installation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubInstallation).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -2105,9 +2135,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.gist.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubGist).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubGist).__id, ok = v.Value.(string)
+		return
+	},
 	"github.gist.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubGist).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2137,9 +2167,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.gistfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubGistfile).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubGistfile).__id, ok = v.Value.(string)
+		return
+	},
 	"github.gistfile.gistId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubGistfile).GistId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2169,9 +2199,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"github.issue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlGithubIssue).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlGithubIssue).__id, ok = v.Value.(string)
+		return
+	},
 	"github.issue.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubIssue).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -2219,13 +2249,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[github] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[github] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[github] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[github] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -2243,7 +2273,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlGithub for the github resource
 type mqlGithub struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGithubInternal
 }
 
@@ -2282,12 +2312,12 @@ func (c *mqlGithub) MqlID() string {
 // mqlGitCommit for the git.commit resource
 type mqlGitCommit struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGitCommitInternal it will be used here
-	Sha plugin.TValue[string]
-	Message plugin.TValue[string]
-	Author plugin.TValue[*mqlGitCommitAuthor]
-	Committer plugin.TValue[*mqlGitCommitAuthor]
+	Sha                   plugin.TValue[string]
+	Message               plugin.TValue[string]
+	Author                plugin.TValue[*mqlGitCommitAuthor]
+	Committer             plugin.TValue[*mqlGitCommitAuthor]
 	SignatureVerification plugin.TValue[*mqlGitGpgSignature]
 }
 
@@ -2303,7 +2333,7 @@ func createGitCommit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2351,12 +2381,12 @@ func (c *mqlGitCommit) GetSignatureVerification() *plugin.TValue[*mqlGitGpgSigna
 // mqlGitCommitAuthor for the git.commitAuthor resource
 type mqlGitCommitAuthor struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGitCommitAuthorInternal it will be used here
-	Sha plugin.TValue[string]
-	Name plugin.TValue[string]
+	Sha   plugin.TValue[string]
+	Name  plugin.TValue[string]
 	Email plugin.TValue[string]
-	Date plugin.TValue[*time.Time]
+	Date  plugin.TValue[*time.Time]
 }
 
 // createGitCommitAuthor creates a new instance of this resource
@@ -2371,7 +2401,7 @@ func createGitCommitAuthor(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2415,12 +2445,12 @@ func (c *mqlGitCommitAuthor) GetDate() *plugin.TValue[*time.Time] {
 // mqlGitGpgSignature for the git.gpgSignature resource
 type mqlGitGpgSignature struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGitGpgSignatureInternal it will be used here
-	Sha plugin.TValue[string]
-	Reason plugin.TValue[string]
-	Verified plugin.TValue[bool]
-	Payload plugin.TValue[string]
+	Sha       plugin.TValue[string]
+	Reason    plugin.TValue[string]
+	Verified  plugin.TValue[bool]
+	Payload   plugin.TValue[string]
 	Signature plugin.TValue[string]
 }
 
@@ -2436,7 +2466,7 @@ func createGitGpgSignature(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2484,52 +2514,52 @@ func (c *mqlGitGpgSignature) GetSignature() *plugin.TValue[string] {
 // mqlGithubOrganization for the github.organization resource
 type mqlGithubOrganization struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGithubOrganizationInternal
-	Login plugin.TValue[string]
-	Id plugin.TValue[int64]
-	NodeId plugin.TValue[string]
-	Name plugin.TValue[string]
-	Company plugin.TValue[string]
-	Blog plugin.TValue[string]
-	Location plugin.TValue[string]
-	Email plugin.TValue[string]
-	TwitterUsername plugin.TValue[string]
-	AvatarUrl plugin.TValue[string]
-	Followers plugin.TValue[int64]
-	Following plugin.TValue[int64]
-	Description plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	TotalPrivateRepos plugin.TValue[int64]
-	TotalPublicRepos plugin.TValue[int64]
-	OwnedPrivateRepos plugin.TValue[int64]
-	PrivateGists plugin.TValue[int64]
-	DiskUsage plugin.TValue[int64]
-	Collaborators plugin.TValue[int64]
-	BillingEmail plugin.TValue[string]
-	Plan plugin.TValue[any]
-	TwoFactorRequirementEnabled plugin.TValue[bool]
-	IsVerified plugin.TValue[bool]
-	DefaultRepositoryPermission plugin.TValue[string]
-	MembersCanCreateRepositories plugin.TValue[bool]
-	MembersCanCreatePublicRepositories plugin.TValue[bool]
-	MembersCanCreatePrivateRepositories plugin.TValue[bool]
+	Login                                plugin.TValue[string]
+	Id                                   plugin.TValue[int64]
+	NodeId                               plugin.TValue[string]
+	Name                                 plugin.TValue[string]
+	Company                              plugin.TValue[string]
+	Blog                                 plugin.TValue[string]
+	Location                             plugin.TValue[string]
+	Email                                plugin.TValue[string]
+	TwitterUsername                      plugin.TValue[string]
+	AvatarUrl                            plugin.TValue[string]
+	Followers                            plugin.TValue[int64]
+	Following                            plugin.TValue[int64]
+	Description                          plugin.TValue[string]
+	CreatedAt                            plugin.TValue[*time.Time]
+	UpdatedAt                            plugin.TValue[*time.Time]
+	TotalPrivateRepos                    plugin.TValue[int64]
+	TotalPublicRepos                     plugin.TValue[int64]
+	OwnedPrivateRepos                    plugin.TValue[int64]
+	PrivateGists                         plugin.TValue[int64]
+	DiskUsage                            plugin.TValue[int64]
+	Collaborators                        plugin.TValue[int64]
+	BillingEmail                         plugin.TValue[string]
+	Plan                                 plugin.TValue[any]
+	TwoFactorRequirementEnabled          plugin.TValue[bool]
+	IsVerified                           plugin.TValue[bool]
+	DefaultRepositoryPermission          plugin.TValue[string]
+	MembersCanCreateRepositories         plugin.TValue[bool]
+	MembersCanCreatePublicRepositories   plugin.TValue[bool]
+	MembersCanCreatePrivateRepositories  plugin.TValue[bool]
 	MembersCanCreateInternalRepositories plugin.TValue[bool]
-	MembersCanCreatePages plugin.TValue[bool]
-	MembersCanCreatePublicPages plugin.TValue[bool]
-	MembersCanCreatePrivatePages plugin.TValue[bool]
-	MembersCanForkPrivateRepos plugin.TValue[bool]
-	Owners plugin.TValue[[]any]
-	Members plugin.TValue[[]any]
-	Teams plugin.TValue[[]any]
-	Repositories plugin.TValue[[]any]
-	Installations plugin.TValue[[]any]
-	Webhooks plugin.TValue[[]any]
-	Packages plugin.TValue[[]any]
-	HasOrganizationProjects plugin.TValue[bool]
-	HasRepositoryProjects plugin.TValue[bool]
-	CustomProperties plugin.TValue[[]any]
+	MembersCanCreatePages                plugin.TValue[bool]
+	MembersCanCreatePublicPages          plugin.TValue[bool]
+	MembersCanCreatePrivatePages         plugin.TValue[bool]
+	MembersCanForkPrivateRepos           plugin.TValue[bool]
+	Owners                               plugin.TValue[[]any]
+	Members                              plugin.TValue[[]any]
+	Teams                                plugin.TValue[[]any]
+	Repositories                         plugin.TValue[[]any]
+	Installations                        plugin.TValue[[]any]
+	Webhooks                             plugin.TValue[[]any]
+	Packages                             plugin.TValue[[]any]
+	HasOrganizationProjects              plugin.TValue[bool]
+	HasRepositoryProjects                plugin.TValue[bool]
+	CustomProperties                     plugin.TValue[[]any]
 }
 
 // createGithubOrganization creates a new instance of this resource
@@ -2544,7 +2574,7 @@ func createGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2844,15 +2874,15 @@ func (c *mqlGithubOrganization) GetCustomProperties() *plugin.TValue[[]any] {
 // mqlGithubOrganizationCustomProperty for the github.organization.customProperty resource
 type mqlGithubOrganizationCustomProperty struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubOrganizationCustomPropertyInternal it will be used here
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	SourceType plugin.TValue[string]
-	ValueType plugin.TValue[string]
-	Required plugin.TValue[bool]
-	DefaultValue plugin.TValue[string]
-	AllowedValues plugin.TValue[[]any]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	SourceType       plugin.TValue[string]
+	ValueType        plugin.TValue[string]
+	Required         plugin.TValue[bool]
+	DefaultValue     plugin.TValue[string]
+	AllowedValues    plugin.TValue[[]any]
 	ValuesEditableBy plugin.TValue[string]
 }
 
@@ -2868,7 +2898,7 @@ func createGithubOrganizationCustomProperty(runtime *plugin.Runtime, args map[st
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2928,25 +2958,25 @@ func (c *mqlGithubOrganizationCustomProperty) GetValuesEditableBy() *plugin.TVal
 // mqlGithubUser for the github.user resource
 type mqlGithubUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGithubUserInternal
-	Id plugin.TValue[int64]
-	Login plugin.TValue[string]
-	Name plugin.TValue[string]
-	Email plugin.TValue[string]
-	Bio plugin.TValue[string]
-	Blog plugin.TValue[string]
-	Location plugin.TValue[string]
-	AvatarUrl plugin.TValue[string]
-	Followers plugin.TValue[int64]
-	Following plugin.TValue[int64]
+	Id              plugin.TValue[int64]
+	Login           plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Email           plugin.TValue[string]
+	Bio             plugin.TValue[string]
+	Blog            plugin.TValue[string]
+	Location        plugin.TValue[string]
+	AvatarUrl       plugin.TValue[string]
+	Followers       plugin.TValue[int64]
+	Following       plugin.TValue[int64]
 	TwitterUsername plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	SuspendedAt plugin.TValue[*time.Time]
-	Company plugin.TValue[string]
-	Repositories plugin.TValue[[]any]
-	Gists plugin.TValue[[]any]
+	CreatedAt       plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
+	SuspendedAt     plugin.TValue[*time.Time]
+	Company         plugin.TValue[string]
+	Repositories    plugin.TValue[[]any]
+	Gists           plugin.TValue[[]any]
 }
 
 // createGithubUser creates a new instance of this resource
@@ -2961,7 +2991,7 @@ func createGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3081,17 +3111,17 @@ func (c *mqlGithubUser) GetGists() *plugin.TValue[[]any] {
 // mqlGithubTeam for the github.team resource
 type mqlGithubTeam struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubTeamInternal it will be used here
-	Id plugin.TValue[int64]
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	Slug plugin.TValue[string]
-	Privacy plugin.TValue[string]
+	Id                plugin.TValue[int64]
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	Slug              plugin.TValue[string]
+	Privacy           plugin.TValue[string]
 	DefaultPermission plugin.TValue[string]
-	Members plugin.TValue[[]any]
-	Repositories plugin.TValue[[]any]
-	Organization plugin.TValue[*mqlGithubOrganization]
+	Members           plugin.TValue[[]any]
+	Repositories      plugin.TValue[[]any]
+	Organization      plugin.TValue[*mqlGithubOrganization]
 }
 
 // createGithubTeam creates a new instance of this resource
@@ -3106,7 +3136,7 @@ func createGithubTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3194,10 +3224,10 @@ func (c *mqlGithubTeam) GetOrganization() *plugin.TValue[*mqlGithubOrganization]
 // mqlGithubCollaborator for the github.collaborator resource
 type mqlGithubCollaborator struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubCollaboratorInternal it will be used here
-	Id plugin.TValue[int64]
-	User plugin.TValue[*mqlGithubUser]
+	Id          plugin.TValue[int64]
+	User        plugin.TValue[*mqlGithubUser]
 	Permissions plugin.TValue[[]any]
 }
 
@@ -3213,7 +3243,7 @@ func createGithubCollaborator(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3253,17 +3283,17 @@ func (c *mqlGithubCollaborator) GetPermissions() *plugin.TValue[[]any] {
 // mqlGithubPackage for the github.package resource
 type mqlGithubPackage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGithubPackageInternal
-	Id plugin.TValue[int64]
-	Name plugin.TValue[string]
-	PackageType plugin.TValue[string]
-	Owner plugin.TValue[*mqlGithubUser]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
+	Id           plugin.TValue[int64]
+	Name         plugin.TValue[string]
+	PackageType  plugin.TValue[string]
+	Owner        plugin.TValue[*mqlGithubUser]
+	CreatedAt    plugin.TValue[*time.Time]
+	UpdatedAt    plugin.TValue[*time.Time]
 	VersionCount plugin.TValue[int64]
-	Visibility plugin.TValue[string]
-	Repository plugin.TValue[*mqlGithubRepository]
+	Visibility   plugin.TValue[string]
+	Repository   plugin.TValue[*mqlGithubRepository]
 }
 
 // createGithubPackage creates a new instance of this resource
@@ -3278,7 +3308,7 @@ func createGithubPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3354,12 +3384,12 @@ func (c *mqlGithubPackage) GetRepository() *plugin.TValue[*mqlGithubRepository] 
 // mqlGithubPackages for the github.packages resource
 type mqlGithubPackages struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubPackagesInternal it will be used here
-	Public plugin.TValue[[]any]
-	Private plugin.TValue[[]any]
+	Public   plugin.TValue[[]any]
+	Private  plugin.TValue[[]any]
 	Internal plugin.TValue[[]any]
-	List plugin.TValue[[]any]
+	List     plugin.TValue[[]any]
 }
 
 // createGithubPackages creates a new instance of this resource
@@ -3374,7 +3404,7 @@ func createGithubPackages(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -3466,65 +3496,65 @@ func (c *mqlGithubPackages) GetList() *plugin.TValue[[]any] {
 // mqlGithubRepository for the github.repository resource
 type mqlGithubRepository struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGithubRepositoryInternal
-	Id plugin.TValue[int64]
-	Name plugin.TValue[string]
-	FullName plugin.TValue[string]
-	Description plugin.TValue[string]
-	CloneUrl plugin.TValue[string]
-	SshUrl plugin.TValue[string]
-	Homepage plugin.TValue[string]
-	Topics plugin.TValue[[]any]
-	Language plugin.TValue[string]
-	WatchersCount plugin.TValue[int64]
-	ForksCount plugin.TValue[int64]
-	StargazersCount plugin.TValue[int64]
-	OpenIssuesCount plugin.TValue[int64]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	PushedAt plugin.TValue[*time.Time]
-	Archived plugin.TValue[bool]
-	Disabled plugin.TValue[bool]
-	Private plugin.TValue[bool]
-	IsFork plugin.TValue[bool]
-	Visibility plugin.TValue[string]
-	AllowAutoMerge plugin.TValue[bool]
-	AllowForking plugin.TValue[bool]
-	AllowMergeCommit plugin.TValue[bool]
-	AllowRebaseMerge plugin.TValue[bool]
-	AllowSquashMerge plugin.TValue[bool]
-	HasIssues plugin.TValue[bool]
-	HasProjects plugin.TValue[bool]
-	HasWiki plugin.TValue[bool]
-	HasPages plugin.TValue[bool]
-	HasDownloads plugin.TValue[bool]
-	HasDiscussions plugin.TValue[bool]
-	IsTemplate plugin.TValue[bool]
-	CustomProperties plugin.TValue[any]
-	OpenMergeRequests plugin.TValue[[]any]
+	Id                  plugin.TValue[int64]
+	Name                plugin.TValue[string]
+	FullName            plugin.TValue[string]
+	Description         plugin.TValue[string]
+	CloneUrl            plugin.TValue[string]
+	SshUrl              plugin.TValue[string]
+	Homepage            plugin.TValue[string]
+	Topics              plugin.TValue[[]any]
+	Language            plugin.TValue[string]
+	WatchersCount       plugin.TValue[int64]
+	ForksCount          plugin.TValue[int64]
+	StargazersCount     plugin.TValue[int64]
+	OpenIssuesCount     plugin.TValue[int64]
+	CreatedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+	PushedAt            plugin.TValue[*time.Time]
+	Archived            plugin.TValue[bool]
+	Disabled            plugin.TValue[bool]
+	Private             plugin.TValue[bool]
+	IsFork              plugin.TValue[bool]
+	Visibility          plugin.TValue[string]
+	AllowAutoMerge      plugin.TValue[bool]
+	AllowForking        plugin.TValue[bool]
+	AllowMergeCommit    plugin.TValue[bool]
+	AllowRebaseMerge    plugin.TValue[bool]
+	AllowSquashMerge    plugin.TValue[bool]
+	HasIssues           plugin.TValue[bool]
+	HasProjects         plugin.TValue[bool]
+	HasWiki             plugin.TValue[bool]
+	HasPages            plugin.TValue[bool]
+	HasDownloads        plugin.TValue[bool]
+	HasDiscussions      plugin.TValue[bool]
+	IsTemplate          plugin.TValue[bool]
+	CustomProperties    plugin.TValue[any]
+	OpenMergeRequests   plugin.TValue[[]any]
 	ClosedMergeRequests plugin.TValue[[]any]
-	AllMergeRequests plugin.TValue[[]any]
-	Branches plugin.TValue[[]any]
-	DefaultBranchName plugin.TValue[string]
-	DefaultBranch plugin.TValue[*mqlGithubBranch]
-	Commits plugin.TValue[[]any]
-	Contributors plugin.TValue[[]any]
-	Collaborators plugin.TValue[[]any]
-	AdminCollaborators plugin.TValue[[]any]
-	Files plugin.TValue[[]any]
-	Releases plugin.TValue[[]any]
-	Owner plugin.TValue[*mqlGithubUser]
-	Webhooks plugin.TValue[[]any]
-	Workflows plugin.TValue[[]any]
-	Forks plugin.TValue[[]any]
-	Stargazers plugin.TValue[[]any]
-	OpenIssues plugin.TValue[[]any]
-	ClosedIssues plugin.TValue[[]any]
-	License plugin.TValue[*mqlGithubLicense]
-	CodeOfConductFile plugin.TValue[*mqlGithubFile]
-	SupportFile plugin.TValue[*mqlGithubFile]
-	SecurityFile plugin.TValue[*mqlGithubFile]
+	AllMergeRequests    plugin.TValue[[]any]
+	Branches            plugin.TValue[[]any]
+	DefaultBranchName   plugin.TValue[string]
+	DefaultBranch       plugin.TValue[*mqlGithubBranch]
+	Commits             plugin.TValue[[]any]
+	Contributors        plugin.TValue[[]any]
+	Collaborators       plugin.TValue[[]any]
+	AdminCollaborators  plugin.TValue[[]any]
+	Files               plugin.TValue[[]any]
+	Releases            plugin.TValue[[]any]
+	Owner               plugin.TValue[*mqlGithubUser]
+	Webhooks            plugin.TValue[[]any]
+	Workflows           plugin.TValue[[]any]
+	Forks               plugin.TValue[[]any]
+	Stargazers          plugin.TValue[[]any]
+	OpenIssues          plugin.TValue[[]any]
+	ClosedIssues        plugin.TValue[[]any]
+	License             plugin.TValue[*mqlGithubLicense]
+	CodeOfConductFile   plugin.TValue[*mqlGithubFile]
+	SupportFile         plugin.TValue[*mqlGithubFile]
+	SecurityFile        plugin.TValue[*mqlGithubFile]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -3539,7 +3569,7 @@ func createGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4047,11 +4077,11 @@ func (c *mqlGithubRepository) GetSecurityFile() *plugin.TValue[*mqlGithubFile] {
 // mqlGithubLicense for the github.license resource
 type mqlGithubLicense struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubLicenseInternal it will be used here
-	Key plugin.TValue[string]
-	Name plugin.TValue[string]
-	Url plugin.TValue[string]
+	Key    plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Url    plugin.TValue[string]
 	SpdxId plugin.TValue[string]
 }
 
@@ -4067,7 +4097,7 @@ func createGithubLicense(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4111,19 +4141,19 @@ func (c *mqlGithubLicense) GetSpdxId() *plugin.TValue[string] {
 // mqlGithubFile for the github.file resource
 type mqlGithubFile struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubFileInternal it will be used here
-	Path plugin.TValue[string]
-	Name plugin.TValue[string]
-	Type plugin.TValue[string]
-	Sha plugin.TValue[string]
-	IsBinary plugin.TValue[bool]
-	Files plugin.TValue[[]any]
-	OwnerName plugin.TValue[string]
-	RepoName plugin.TValue[string]
-	Content plugin.TValue[string]
+	Path        plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Sha         plugin.TValue[string]
+	IsBinary    plugin.TValue[bool]
+	Files       plugin.TValue[[]any]
+	OwnerName   plugin.TValue[string]
+	RepoName    plugin.TValue[string]
+	Content     plugin.TValue[string]
 	DownloadUrl plugin.TValue[string]
-	Exists plugin.TValue[bool]
+	Exists      plugin.TValue[bool]
 }
 
 // createGithubFile creates a new instance of this resource
@@ -4138,7 +4168,7 @@ func createGithubFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4224,11 +4254,11 @@ func (c *mqlGithubFile) GetExists() *plugin.TValue[bool] {
 // mqlGithubRelease for the github.release resource
 type mqlGithubRelease struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubReleaseInternal it will be used here
-	Url plugin.TValue[string]
-	Name plugin.TValue[string]
-	TagName plugin.TValue[string]
+	Url        plugin.TValue[string]
+	Name       plugin.TValue[string]
+	TagName    plugin.TValue[string]
 	PreRelease plugin.TValue[bool]
 }
 
@@ -4244,7 +4274,7 @@ func createGithubRelease(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4288,11 +4318,11 @@ func (c *mqlGithubRelease) GetPreRelease() *plugin.TValue[bool] {
 // mqlGithubWebhook for the github.webhook resource
 type mqlGithubWebhook struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubWebhookInternal it will be used here
-	Id plugin.TValue[int64]
-	Name plugin.TValue[string]
-	Url plugin.TValue[string]
+	Id     plugin.TValue[int64]
+	Name   plugin.TValue[string]
+	Url    plugin.TValue[string]
 	Events plugin.TValue[[]any]
 	Config plugin.TValue[any]
 	Active plugin.TValue[bool]
@@ -4310,7 +4340,7 @@ func createGithubWebhook(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4362,15 +4392,15 @@ func (c *mqlGithubWebhook) GetActive() *plugin.TValue[bool] {
 // mqlGithubWorkflow for the github.workflow resource
 type mqlGithubWorkflow struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlGithubWorkflowInternal
-	Id plugin.TValue[int64]
-	Name plugin.TValue[string]
-	Path plugin.TValue[string]
-	State plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	File plugin.TValue[*mqlGithubFile]
+	Id            plugin.TValue[int64]
+	Name          plugin.TValue[string]
+	Path          plugin.TValue[string]
+	State         plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+	File          plugin.TValue[*mqlGithubFile]
 	Configuration plugin.TValue[any]
 }
 
@@ -4386,7 +4416,7 @@ func createGithubWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4460,16 +4490,16 @@ func (c *mqlGithubWorkflow) GetConfiguration() *plugin.TValue[any] {
 // mqlGithubBranch for the github.branch resource
 type mqlGithubBranch struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubBranchInternal it will be used here
-	Name plugin.TValue[string]
-	IsProtected plugin.TValue[bool]
-	HeadCommit plugin.TValue[*mqlGithubCommit]
-	HeadCommitSha plugin.TValue[string]
+	Name            plugin.TValue[string]
+	IsProtected     plugin.TValue[bool]
+	HeadCommit      plugin.TValue[*mqlGithubCommit]
+	HeadCommitSha   plugin.TValue[string]
 	ProtectionRules plugin.TValue[*mqlGithubBranchprotection]
-	RepoName plugin.TValue[string]
-	Owner plugin.TValue[*mqlGithubUser]
-	IsDefault plugin.TValue[bool]
+	RepoName        plugin.TValue[string]
+	Owner           plugin.TValue[*mqlGithubUser]
+	IsDefault       plugin.TValue[bool]
 }
 
 // createGithubBranch creates a new instance of this resource
@@ -4484,7 +4514,7 @@ func createGithubBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4568,18 +4598,18 @@ func (c *mqlGithubBranch) GetIsDefault() *plugin.TValue[bool] {
 // mqlGithubBranchprotection for the github.branchprotection resource
 type mqlGithubBranchprotection struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubBranchprotectionInternal it will be used here
-	Id plugin.TValue[string]
-	RequiredStatusChecks plugin.TValue[any]
-	RequiredPullRequestReviews plugin.TValue[any]
+	Id                             plugin.TValue[string]
+	RequiredStatusChecks           plugin.TValue[any]
+	RequiredPullRequestReviews     plugin.TValue[any]
 	RequiredConversationResolution plugin.TValue[any]
-	RequiredSignatures plugin.TValue[bool]
-	RequireLinearHistory plugin.TValue[any]
-	EnforceAdmins plugin.TValue[any]
-	Restrictions plugin.TValue[any]
-	AllowForcePushes plugin.TValue[any]
-	AllowDeletions plugin.TValue[any]
+	RequiredSignatures             plugin.TValue[bool]
+	RequireLinearHistory           plugin.TValue[any]
+	EnforceAdmins                  plugin.TValue[any]
+	Restrictions                   plugin.TValue[any]
+	AllowForcePushes               plugin.TValue[any]
+	AllowDeletions                 plugin.TValue[any]
 }
 
 // createGithubBranchprotection creates a new instance of this resource
@@ -4594,7 +4624,7 @@ func createGithubBranchprotection(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4662,17 +4692,17 @@ func (c *mqlGithubBranchprotection) GetAllowDeletions() *plugin.TValue[any] {
 // mqlGithubCommit for the github.commit resource
 type mqlGithubCommit struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubCommitInternal it will be used here
-	Owner plugin.TValue[string]
-	Repository plugin.TValue[string]
-	Sha plugin.TValue[string]
-	Url plugin.TValue[string]
-	Author plugin.TValue[*mqlGithubUser]
-	Committer plugin.TValue[*mqlGithubUser]
-	Commit plugin.TValue[*mqlGitCommit]
-	Stats plugin.TValue[any]
-	AuthoredDate plugin.TValue[*time.Time]
+	Owner         plugin.TValue[string]
+	Repository    plugin.TValue[string]
+	Sha           plugin.TValue[string]
+	Url           plugin.TValue[string]
+	Author        plugin.TValue[*mqlGithubUser]
+	Committer     plugin.TValue[*mqlGithubUser]
+	Commit        plugin.TValue[*mqlGitCommit]
+	Stats         plugin.TValue[any]
+	AuthoredDate  plugin.TValue[*time.Time]
 	CommittedDate plugin.TValue[*time.Time]
 }
 
@@ -4688,7 +4718,7 @@ func createGithubCommit(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4756,19 +4786,19 @@ func (c *mqlGithubCommit) GetCommittedDate() *plugin.TValue[*time.Time] {
 // mqlGithubMergeRequest for the github.mergeRequest resource
 type mqlGithubMergeRequest struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubMergeRequestInternal it will be used here
-	Id plugin.TValue[int64]
-	Number plugin.TValue[int64]
-	State plugin.TValue[string]
+	Id        plugin.TValue[int64]
+	Number    plugin.TValue[int64]
+	State     plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
-	Labels plugin.TValue[[]any]
-	Title plugin.TValue[string]
-	Owner plugin.TValue[*mqlGithubUser]
+	Labels    plugin.TValue[[]any]
+	Title     plugin.TValue[string]
+	Owner     plugin.TValue[*mqlGithubUser]
 	Assignees plugin.TValue[[]any]
-	Commits plugin.TValue[[]any]
-	Reviews plugin.TValue[[]any]
-	RepoName plugin.TValue[string]
+	Commits   plugin.TValue[[]any]
+	Reviews   plugin.TValue[[]any]
+	RepoName  plugin.TValue[string]
 }
 
 // createGithubMergeRequest creates a new instance of this resource
@@ -4783,7 +4813,7 @@ func createGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4879,12 +4909,12 @@ func (c *mqlGithubMergeRequest) GetRepoName() *plugin.TValue[string] {
 // mqlGithubReview for the github.review resource
 type mqlGithubReview struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubReviewInternal it will be used here
-	Url plugin.TValue[string]
-	State plugin.TValue[string]
+	Url               plugin.TValue[string]
+	State             plugin.TValue[string]
 	AuthorAssociation plugin.TValue[string]
-	User plugin.TValue[*mqlGithubUser]
+	User              plugin.TValue[*mqlGithubUser]
 }
 
 // createGithubReview creates a new instance of this resource
@@ -4899,7 +4929,7 @@ func createGithubReview(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -4943,11 +4973,11 @@ func (c *mqlGithubReview) GetUser() *plugin.TValue[*mqlGithubUser] {
 // mqlGithubInstallation for the github.installation resource
 type mqlGithubInstallation struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubInstallationInternal it will be used here
-	Id plugin.TValue[int64]
-	AppId plugin.TValue[int64]
-	AppSlug plugin.TValue[string]
+	Id        plugin.TValue[int64]
+	AppId     plugin.TValue[int64]
+	AppSlug   plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
 }
@@ -4964,7 +4994,7 @@ func createGithubInstallation(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5012,15 +5042,15 @@ func (c *mqlGithubInstallation) GetUpdatedAt() *plugin.TValue[*time.Time] {
 // mqlGithubGist for the github.gist resource
 type mqlGithubGist struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubGistInternal it will be used here
-	Id plugin.TValue[string]
+	Id          plugin.TValue[string]
 	Description plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	Owner plugin.TValue[*mqlGithubUser]
-	Public plugin.TValue[bool]
-	Files plugin.TValue[[]any]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+	Owner       plugin.TValue[*mqlGithubUser]
+	Public      plugin.TValue[bool]
+	Files       plugin.TValue[[]any]
 }
 
 // createGithubGist creates a new instance of this resource
@@ -5035,7 +5065,7 @@ func createGithubGist(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5091,15 +5121,15 @@ func (c *mqlGithubGist) GetFiles() *plugin.TValue[[]any] {
 // mqlGithubGistfile for the github.gistfile resource
 type mqlGithubGistfile struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubGistfileInternal it will be used here
-	GistId plugin.TValue[string]
+	GistId   plugin.TValue[string]
 	Filename plugin.TValue[string]
-	Type plugin.TValue[string]
+	Type     plugin.TValue[string]
 	Language plugin.TValue[string]
-	RawUrl plugin.TValue[string]
-	Size plugin.TValue[int64]
-	Content plugin.TValue[string]
+	RawUrl   plugin.TValue[string]
+	Size     plugin.TValue[int64]
+	Content  plugin.TValue[string]
 }
 
 // createGithubGistfile creates a new instance of this resource
@@ -5114,7 +5144,7 @@ func createGithubGistfile(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -5172,19 +5202,19 @@ func (c *mqlGithubGistfile) GetContent() *plugin.TValue[string] {
 // mqlGithubIssue for the github.issue resource
 type mqlGithubIssue struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlGithubIssueInternal it will be used here
-	Id plugin.TValue[int64]
-	Number plugin.TValue[int64]
-	Title plugin.TValue[string]
-	State plugin.TValue[string]
-	Body plugin.TValue[string]
-	Url plugin.TValue[string]
+	Id        plugin.TValue[int64]
+	Number    plugin.TValue[int64]
+	Title     plugin.TValue[string]
+	State     plugin.TValue[string]
+	Body      plugin.TValue[string]
+	Url       plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
-	ClosedAt plugin.TValue[*time.Time]
+	ClosedAt  plugin.TValue[*time.Time]
 	Assignees plugin.TValue[[]any]
-	ClosedBy plugin.TValue[*mqlGithubUser]
+	ClosedBy  plugin.TValue[*mqlGithubUser]
 }
 
 // createGithubIssue creates a new instance of this resource
@@ -5199,7 +5229,7 @@ func createGithubIssue(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
