@@ -1458,6 +1458,8 @@ resources:
       - aws
   aws.ecs.cluster:
     fields:
+      activeServicesCount:
+        min_mondoo_version: 9.0.0
       arn: {}
       configuration: {}
       containerInstances: {}
@@ -1480,12 +1482,20 @@ resources:
       clusterName: {}
       command: {}
       containerName: {}
+      cpuUnits:
+        min_mondoo_version: 9.0.0
       image: {}
       logDriver: {}
+      memoryHardLimit:
+        min_mondoo_version: 9.0.0
+      memorySoftLimit:
+        min_mondoo_version: 9.0.0
       name: {}
       platformFamily: {}
       platformVersion: {}
       publicIp: {}
+      reason:
+        min_mondoo_version: 9.0.0
       region: {}
       runtimeId: {}
       status: {}

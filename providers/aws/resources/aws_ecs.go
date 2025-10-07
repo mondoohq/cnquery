@@ -186,14 +186,15 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if err != nil {
 		return nil, nil, err
 	}
-	args["name"] = llx.StringDataPtr(c.ClusterName)
-	args["tags"] = llx.MapData(ecsTagsToMap(c.Tags), types.String)
-	args["runningTasksCount"] = llx.IntData(int64(c.RunningTasksCount))
-	args["pendingTasksCount"] = llx.IntData(int64(c.PendingTasksCount))
-	args["registeredContainerInstancesCount"] = llx.IntData(int64(c.RegisteredContainerInstancesCount))
+	args["activeServicesCount"] = llx.IntData(int64(c.ActiveServicesCount))
 	args["configuration"] = llx.MapData(configuration, types.String)
-	args["status"] = llx.StringDataPtr(c.Status)
+	args["name"] = llx.StringDataPtr(c.ClusterName)
+	args["pendingTasksCount"] = llx.IntData(int64(c.PendingTasksCount))
 	args["region"] = llx.StringData(region)
+	args["registeredContainerInstancesCount"] = llx.IntData(int64(c.RegisteredContainerInstancesCount))
+	args["runningTasksCount"] = llx.IntData(int64(c.RunningTasksCount))
+	args["status"] = llx.StringDataPtr(c.Status)
+	args["tags"] = llx.MapData(ecsTagsToMap(c.Tags), types.String)
 	return args, nil, nil
 }
 
@@ -410,20 +411,24 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 		mqlContainer, err := CreateResource(t.MqlRuntime, "aws.ecs.container",
 			map[string]*llx.RawData{
 				"arn":               llx.StringDataPtr(c.ContainerArn),
-				"name":              llx.StringData(name),
-				"status":            llx.StringDataPtr(c.LastStatus),
-				"publicIp":          llx.StringData(publicIp),
-				"logDriver":         llx.StringData(containerLogDriverMap[convert.ToValue(c.Name)]),
-				"image":             llx.StringData(convert.ToValue(c.Image)),
 				"clusterName":       llx.StringData(t.clusterName),
-				"taskDefinitionArn": llx.StringData(t.Arn.Data),
-				"region":            llx.StringData(t.region),
 				"command":           llx.ArrayData(cmds, types.Any),
-				"taskArn":           llx.StringData(t.Arn.Data),
-				"runtimeId":         llx.StringDataPtr(c.RuntimeId),
 				"containerName":     llx.StringDataPtr(c.Name),
+				"cpuUnits":          llx.StringDataPtr(c.Cpu),
+				"image":             llx.StringData(convert.ToValue(c.Image)),
+				"logDriver":         llx.StringData(containerLogDriverMap[convert.ToValue(c.Name)]),
+				"name":              llx.StringData(name),
 				"platformFamily":    llx.StringData(t.PlatformFamily.Data),
 				"platformVersion":   llx.StringData(t.PlatformVersion.Data),
+				"publicIp":          llx.StringData(publicIp),
+				"region":            llx.StringData(t.region),
+				"runtimeId":         llx.StringDataPtr(c.RuntimeId),
+				"status":            llx.StringDataPtr(c.LastStatus),
+				"taskArn":           llx.StringData(t.Arn.Data),
+				"taskDefinitionArn": llx.StringData(t.Arn.Data),
+				"memorySoftLimit":   llx.StringDataPtr(c.MemoryReservation),
+				"memoryHardLimit":   llx.StringDataPtr(c.Memory),
+				"reason":            llx.StringDataPtr(c.Reason),
 			})
 		if err != nil {
 			return nil, err
