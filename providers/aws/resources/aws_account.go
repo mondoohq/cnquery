@@ -44,7 +44,7 @@ func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := CreateResource(a.MqlRuntime, "aws.organization",
+	res, err := CreateResource(a.MqlRuntime, ResourceAwsOrganization,
 		map[string]*llx.RawData{
 			"arn":                llx.StringDataPtr(org.Organization.Arn),
 			"featureSet":         llx.StringData(string(org.Organization.FeatureSet)),
@@ -65,7 +65,7 @@ func (a *mqlAwsOrganization) accounts() ([]any, error) {
 	accounts := []any{}
 	for i := range orgAccounts.Accounts {
 		account := orgAccounts.Accounts[i]
-		res, err := CreateResource(a.MqlRuntime, "aws.account",
+		res, err := CreateResource(a.MqlRuntime, ResourceAwsAccount,
 			map[string]*llx.RawData{
 				"id": llx.StringDataPtr(account.Id),
 			})
@@ -179,7 +179,7 @@ func (a *mqlAwsAccount) alternateContacts() ([]any, error) {
 			var notFoundErr *types.ResourceNotFoundException
 			if errors.As(err, &notFoundErr) {
 				// Contact not configured - create resource with exists=false
-				contact, resErr := CreateResource(a.MqlRuntime, "aws.account.alternateContact",
+				contact, resErr := CreateResource(a.MqlRuntime, ResourceAwsAccountAlternateContact,
 					map[string]*llx.RawData{
 						"accountId":    llx.StringData(a.Id.Data),
 						"contactType":  llx.StringData(string(cType)),
@@ -200,7 +200,7 @@ func (a *mqlAwsAccount) alternateContacts() ([]any, error) {
 		}
 
 		// Contact is configured - create resource with data
-		contact, err := CreateResource(a.MqlRuntime, "aws.account.alternateContact",
+		contact, err := CreateResource(a.MqlRuntime, ResourceAwsAccountAlternateContact,
 			map[string]*llx.RawData{
 				"accountId":    llx.StringData(a.Id.Data),
 				"contactType":  llx.StringData(string(cType)),
@@ -283,7 +283,7 @@ func initAwsAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return args, nil, errors.New("no account id specified")
 	}
 	id := args["id"].Value.(string)
-	res, err := CreateResource(runtime, "aws.account",
+	res, err := CreateResource(runtime, ResourceAwsAccount,
 		map[string]*llx.RawData{
 			"id": llx.StringData(id),
 		})
