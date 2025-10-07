@@ -921,3 +921,14 @@ func TestMageiaDetector(t *testing.T) {
 	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
+
+func TestMXLinuxDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-mx.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "mx", di.Name, "os name should be identified")
+	assert.Equal(t, "MX 23.2 Libretto", di.Title, "os title should be identified")
+	assert.Equal(t, "23.2", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}
