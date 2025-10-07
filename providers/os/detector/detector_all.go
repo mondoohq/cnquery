@@ -612,6 +612,28 @@ var mageia = &PlatformResolver{
 	},
 }
 
+var mxlinux = &PlatformResolver{
+	Name:     "mxlinux",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		osrd := NewOSReleaseDetector(conn)
+		lsb, err := osrd.lsbconfig()
+		// we're not on mx if we can't read lsb
+		if err != nil {
+			return false, nil
+		}
+
+		if len(lsb["DISTRIB_ID"]) > 0 && strings.ToLower(lsb["DISTRIB_ID"]) == "mx" {
+			pf.Name = "mx"
+			pf.Version = lsb["DISTRIB_RELEASE"]
+			pf.Title = lsb["DISTRIB_DESCRIPTION"]
+			return true, nil
+		}
+
+		return false, nil
+	},
+}
+
 var openwrt = &PlatformResolver{
 	Name:     "openwrt",
 	IsFamily: false,
@@ -917,7 +939,7 @@ var redhatFamily = &PlatformResolver{
 var debianFamily = &PlatformResolver{
 	Name:     "debian",
 	IsFamily: true,
-	Children: []*PlatformResolver{debian, ubuntu, raspbian, kali, linuxmint, popos, elementary},
+	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},

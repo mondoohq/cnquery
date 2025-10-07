@@ -1,0 +1,30 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.1.0-18-amd64"
+
+[files."/etc/os-release"]
+content = """
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+NAME="Debian GNU/Linux"
+VERSION_ID="12"
+VERSION="12 (bookworm)"
+VERSION_CODENAME=bookworm
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+"""
+
+[files."/etc/lsb-release"]
+content = """
+PRETTY_NAME="MX 23.2 Libretto"
+DISTRIB_ID=MX
+DISTRIB_RELEASE=23.2
+DISTRIB_CODENAME="Libretto"
+DISTRIB_DESCRIPTION="MX 23.2 Libretto"
+"""
