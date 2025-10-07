@@ -717,6 +717,7 @@ aws.iam {
   virtualMfaDevices() []aws.iam.virtualmfadevice
   // List of server certificates stored in IAM
   serverCertificates() []dict
+  // List of IAM instance profiles in the account
   instanceProfiles() []aws.iam.instanceProfile
   // List of SAML 2.0 identity providers configured in IAM
   samlProviders() []aws.iam.samlProvider
