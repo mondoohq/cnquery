@@ -969,7 +969,7 @@ docker.image {
   id string
   // Image size in kilobytes
   size int
-  // Virtual image size in kilobytes
+  // Virtual image size in kilobytes. Deprecated; use size instead
   virtualsize int
   // Tag key value pairs
   tags []string
