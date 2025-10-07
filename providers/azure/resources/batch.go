@@ -320,10 +320,12 @@ func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubs
 	}
 
 	propertiesData := llx.NilData
-	deploymentConfigurationData := llx.NilData
-	virtualMachineConfigurationData := llx.NilData
-	vmSizeData := llx.NilData
-	provisioningStateData := llx.NilData
+	var (
+		deploymentConfigurationData     = llx.NilData
+		virtualMachineConfigurationData = llx.NilData
+		vmSizeData                      = llx.NilData
+		provisioningStateData           = llx.NilData
+	)
 
 	if pool.Properties != nil {
 		if dict, err := convert.JsonToDict(pool.Properties); err != nil {
