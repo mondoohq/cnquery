@@ -1,7 +1,7 @@
 // copyright: 2019, Dominik Richter and Christoph Hartmann
 // author: Dominik Richter
 // author: Christoph Hartmann
-package lr
+package lrcore
 
 import (
 	"bytes"
@@ -279,7 +279,7 @@ func TestParseLR(t *testing.T) {
 
 	for i := range files {
 		lrPath := files[i]
-		absPath := "../../../providers/" + lrPath
+		absPath := "../../../../providers/" + lrPath
 
 		t.Run(lrPath, func(t *testing.T) {
 			hasImports := false
@@ -317,4 +317,48 @@ func TestParseLR(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetFieldPaths(t *testing.T) {
+	res := &Resource{
+		ID: "name",
+		Body: &ResourceDef{
+			Fields: []*Field{
+				{BasicField: &BasicField{ID: "field1", Type: Type{SimpleType: &SimpleType{"string"}}}},
+				{BasicField: &BasicField{ID: "field2", Type: Type{SimpleType: &SimpleType{"int"}}}},
+				{Embeddable: &Embeddable{Type: "os.any"}},
+				{Init: &Init{Args: []TypedArg{{ID: "arg1", Type: Type{SimpleType: &SimpleType{"string"}}}}}},
+			},
+		},
+	}
+	paths := res.GetFieldPaths()
+	assert.Equal(t, []string{"name.field1", "name.field2"}, paths)
+}
+
+func TestGetDuplicates(t *testing.T) {
+	res1 := &Resource{
+		ID: "res1",
+		Body: &ResourceDef{
+			Fields: []*Field{
+				{BasicField: &BasicField{ID: "res2", Type: Type{SimpleType: &SimpleType{"resource"}}}},
+				{BasicField: &BasicField{ID: "field2", Type: Type{SimpleType: &SimpleType{"int"}}}},
+				{Embeddable: &Embeddable{Type: "os.any"}},
+				{Init: &Init{Args: []TypedArg{{ID: "arg1", Type: Type{SimpleType: &SimpleType{"string"}}}}}},
+			},
+		},
+	}
+	res2 := &Resource{
+		ID: "res1.res2",
+		Body: &ResourceDef{
+			Fields: []*Field{
+				{BasicField: &BasicField{ID: "value", Type: Type{SimpleType: &SimpleType{"string"}}}},
+			},
+		},
+	}
+	lr := &LR{
+		Resources: []*Resource{res1, res2},
+	}
+
+	dups := lr.GetDuplicates()
+	assert.Equal(t, []string{"res1.res2"}, dups)
 }

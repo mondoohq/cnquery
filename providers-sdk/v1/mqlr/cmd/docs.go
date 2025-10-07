@@ -15,8 +15,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr/docs"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
 	"sigs.k8s.io/yaml"
 )
 
@@ -48,7 +47,7 @@ var docsYamlCmd = &cobra.Command{
 			return
 		}
 
-		res, err := lr.Parse(string(raw))
+		res, err := lrcore.Parse(string(raw))
 		if err != nil {
 			log.Error().Msg(err.Error())
 			return
@@ -69,18 +68,18 @@ var docsYamlCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("invalid argument for `version`")
 		}
 
-		d := docs.LrDocs{
-			Resources: map[string]*docs.LrDocsEntry{},
+		d := lrcore.LrDocs{
+			Resources: map[string]*lrcore.LrDocsEntry{},
 		}
 
-		fields := map[string][]*lr.BasicField{}
+		fields := map[string][]*lrcore.BasicField{}
 		isPrivate := map[string]bool{}
 		for i := range res.Resources {
 			id := res.Resources[i].ID
 			isPrivate[id] = res.Resources[i].IsPrivate
 			d.Resources[id] = nil
 			if res.Resources[i].Body != nil {
-				basicFields := []*lr.BasicField{}
+				basicFields := []*lrcore.BasicField{}
 				for _, f := range res.Resources[i].Body.Fields {
 					if f.BasicField != nil {
 						basicFields = append(basicFields, f.BasicField)
@@ -103,7 +102,7 @@ var docsYamlCmd = &cobra.Command{
 
 		// if an file was provided, we check if the file exist and merge existing content with the new resources
 		// to ensure that existing documentation stays available
-		var existingData docs.LrDocs
+		var existingData lrcore.LrDocs
 		_, err = os.Stat(filepath)
 		if err == nil {
 			log.Info().Msg("load existing data")
@@ -150,7 +149,7 @@ var docsYamlCmd = &cobra.Command{
 			}
 		}
 
-		header, err := lr.LicenseHeader(headerTpl, lr.LicenseHeaderOptions{LineStarter: "#"})
+		header, err := lrcore.LicenseHeader(headerTpl, lrcore.LicenseHeaderOptions{LineStarter: "#"})
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not generate license header")
 		}
@@ -186,10 +185,10 @@ var platformMapping = map[string][]string{
 	"terraform.plan":  {"terraform-plan"},
 }
 
-func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.LrDocsEntry {
+func ensureDefaults(id string, entry *lrcore.LrDocsEntry, version string) *lrcore.LrDocsEntry {
 	for _, k := range platformMappingKeys {
 		if entry == nil {
-			entry = &docs.LrDocsEntry{}
+			entry = &lrcore.LrDocsEntry{}
 		}
 		if entry.MinMondooVersion == "" {
 			entry.MinMondooVersion = version
@@ -198,7 +197,7 @@ func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.Lr
 			entry.MinMondooVersion = version
 		}
 		if strings.HasPrefix(id, k) {
-			entry.Platform = &docs.LrDocsPlatform{
+			entry.Platform = &lrcore.LrDocsPlatform{
 				Name: platformMapping[k],
 			}
 		}
@@ -206,19 +205,19 @@ func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.Lr
 	return entry
 }
 
-func mergeFields(version string, entry *docs.LrDocsEntry, fields []*lr.BasicField) {
+func mergeFields(version string, entry *lrcore.LrDocsEntry, fields []*lrcore.BasicField) {
 	if entry == nil && len(fields) > 0 {
-		entry = &docs.LrDocsEntry{}
-		entry.Fields = map[string]*docs.LrDocsField{}
+		entry = &lrcore.LrDocsEntry{}
+		entry.Fields = map[string]*lrcore.LrDocsField{}
 	} else if entry == nil {
 		return
 	} else if entry.Fields == nil {
-		entry.Fields = map[string]*docs.LrDocsField{}
+		entry.Fields = map[string]*lrcore.LrDocsField{}
 	}
 	docFields := entry.Fields
 	for _, f := range fields {
 		if docFields[f.ID] == nil {
-			fDoc := &docs.LrDocsField{
+			fDoc := &lrcore.LrDocsField{
 				MinMondooVersion: version,
 			}
 			entry.Fields[f.ID] = fDoc
@@ -274,7 +273,7 @@ var docsJSONCmd = &cobra.Command{
 			log.Fatal().Err(err)
 		}
 
-		var lrDocsData docs.LrDocs
+		var lrDocsData lrcore.LrDocs
 		err = yaml.Unmarshal(raw, &lrDocsData)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not load yaml data")

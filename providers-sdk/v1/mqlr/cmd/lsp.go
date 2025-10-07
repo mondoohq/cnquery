@@ -18,7 +18,7 @@ import (
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/tliron/glsp/server"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/lr"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
 
 	// Must include a backend implementation for commonlog
@@ -34,7 +34,7 @@ type Document struct {
 	URI     protocol.DocumentUri
 	Content string
 	Version protocol.Integer
-	AST     *lr.LR
+	AST     *lrcore.LR
 	Errors  []protocol.Diagnostic
 	Schema  *resources.Schema // Cached schema to avoid repeated processing
 }
@@ -243,7 +243,7 @@ func (h *LRHandler) processDocument(uri protocol.DocumentUri, content string, ve
 	defer cancel()
 
 	done := make(chan bool, 1)
-	var ast *lr.LR
+	var ast *lrcore.LR
 	var err error
 
 	go func() {
@@ -254,7 +254,7 @@ func (h *LRHandler) processDocument(uri protocol.DocumentUri, content string, ve
 			}
 			done <- true
 		}()
-		ast, err = lr.Parse(content)
+		ast, err = lrcore.Parse(content)
 	}()
 
 	select {
@@ -315,7 +315,7 @@ func (h *LRHandler) processDocumentQuick(uri protocol.DocumentUri, content strin
 	defer cancel()
 
 	done := make(chan bool, 1)
-	var ast *lr.LR
+	var ast *lrcore.LR
 	var err error
 
 	go func() {
@@ -330,11 +330,11 @@ func (h *LRHandler) processDocumentQuick(uri protocol.DocumentUri, content strin
 		// Quick validation: if content is empty or only whitespace, don't parse
 		trimmed := strings.TrimSpace(content)
 		if trimmed == "" {
-			ast = &lr.LR{Resources: []*lr.Resource{}}
+			ast = &lrcore.LR{Resources: []*lrcore.Resource{}}
 			return
 		}
 
-		ast, err = lr.Parse(content)
+		ast, err = lrcore.Parse(content)
 	}()
 
 	select {
@@ -361,8 +361,8 @@ func (h *LRHandler) processDocumentQuick(uri protocol.DocumentUri, content strin
 				log.Debug().Str("uri", string(uri)).Msg("Preserved old AST after parse error")
 			} else {
 				// Create a minimal valid AST as absolute fallback
-				doc.AST = &lr.LR{
-					Resources: []*lr.Resource{},
+				doc.AST = &lrcore.LR{
+					Resources: []*lrcore.Resource{},
 					Options:   make(map[string]string),
 				}
 				log.Debug().Str("uri", string(uri)).Msg("Created minimal AST after parse error")
@@ -380,7 +380,7 @@ func (h *LRHandler) processDocumentQuick(uri protocol.DocumentUri, content strin
 			doc.AST = oldDoc.AST
 		} else {
 			// Create a minimal empty AST as fallback
-			doc.AST = &lr.LR{Resources: []*lr.Resource{}}
+			doc.AST = &lrcore.LR{Resources: []*lrcore.Resource{}}
 		}
 
 		// Add a transient warning that will disappear on successful parse
@@ -450,7 +450,7 @@ func (h *LRHandler) extractPositionFromError(errorMsg, content string) (int, int
 }
 
 // extractSymbols extracts document symbols from the AST
-func (h *LRHandler) extractSymbols(ast *lr.LR) []string {
+func (h *LRHandler) extractSymbols(ast *lrcore.LR) []string {
 	var symbols []string
 
 	for _, resource := range ast.Resources {
@@ -469,7 +469,7 @@ func (h *LRHandler) extractSymbols(ast *lr.LR) []string {
 }
 
 // findSymbolAtPosition finds what symbol is at a given line/character position
-func (h *LRHandler) findSymbolAtPosition(ast *lr.LR, line, character int) string {
+func (h *LRHandler) findSymbolAtPosition(ast *lrcore.LR, line, character int) string {
 	// This is a simplified implementation
 	// In a real LSP, you'd need to track source positions in the AST
 
@@ -482,7 +482,7 @@ func (h *LRHandler) findSymbolAtPosition(ast *lr.LR, line, character int) string
 }
 
 // getTypeString converts a Type to a readable string representation
-func getTypeString(t lr.Type) string {
+func getTypeString(t lrcore.Type) string {
 	if t.SimpleType != nil {
 		return t.SimpleType.Type
 	}
@@ -1305,7 +1305,7 @@ func (h *LRHandler) findReferenceLocations(doc *Document, word string, includeDe
 }
 
 // createResourceHover creates hover content for a resource
-func (h *LRHandler) createResourceHover(resource *lr.Resource, ast *lr.LR) *protocol.Hover {
+func (h *LRHandler) createResourceHover(resource *lrcore.Resource, ast *lrcore.LR) *protocol.Hover {
 	// Safety checks
 	if resource == nil {
 		log.Debug().Msg("createResourceHover called with nil resource")
@@ -1356,7 +1356,7 @@ func (h *LRHandler) createResourceHover(resource *lr.Resource, ast *lr.LR) *prot
 }
 
 // createFieldHover creates hover content for a field or method
-func (h *LRHandler) createFieldHover(field *lr.BasicField, resource *lr.Resource, ast *lr.LR) *protocol.Hover {
+func (h *LRHandler) createFieldHover(field *lrcore.BasicField, resource *lrcore.Resource, ast *lrcore.LR) *protocol.Hover {
 	// Safety checks
 	if field == nil {
 		log.Debug().Msg("createFieldHover called with nil field")
@@ -1426,7 +1426,7 @@ func (h *LRHandler) createFieldHover(field *lr.BasicField, resource *lr.Resource
 }
 
 // getResourceInfo safely retrieves resource information with caching to avoid AST corruption
-func (h *LRHandler) getResourceInfo(resourceID string, ast *lr.LR) (*resources.ResourceInfo, bool) {
+func (h *LRHandler) getResourceInfo(resourceID string, ast *lrcore.LR) (*resources.ResourceInfo, bool) {
 	if ast == nil {
 		return nil, false
 	}
@@ -1452,7 +1452,7 @@ func (h *LRHandler) getResourceInfo(resourceID string, ast *lr.LR) (*resources.R
 	}
 
 	// Create a minimal copy with just the options we need
-	astCopy := &lr.LR{
+	astCopy := &lrcore.LR{
 		Comments:  ast.Comments,
 		Imports:   ast.Imports,
 		Options:   make(map[string]string),
@@ -1482,7 +1482,7 @@ func (h *LRHandler) getResourceInfo(resourceID string, ast *lr.LR) (*resources.R
 				err = fmt.Errorf("schema generation panic: %v", r)
 			}
 		}()
-		schema, err = lr.Schema(astCopy)
+		schema, err = lrcore.Schema(astCopy)
 	}()
 	if err != nil {
 		log.Debug().Err(err).Str("resourceID", resourceID).Msg("Failed to generate schema for resource info")

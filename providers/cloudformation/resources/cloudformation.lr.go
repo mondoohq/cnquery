@@ -14,12 +14,19 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceCloudformationTemplate string = "cloudformation.template"
+	ResourceCloudformationResource string = "cloudformation.resource"
+	ResourceCloudformationOutput   string = "cloudformation.output"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"cloudformation.template": {
-			Init: initCloudformationTemplate,
+			Init:   initCloudformationTemplate,
 			Create: createCloudformationTemplate,
 		},
 		"cloudformation.resource": {
@@ -51,7 +58,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -178,11 +185,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"cloudformation.template.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudformationTemplate).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudformationTemplate).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudformation.template.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudformationTemplate).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -228,9 +235,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudformation.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudformationResource).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudformationResource).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudformation.resource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudformationResource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -256,9 +263,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"cloudformation.output.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCloudformationOutput).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCloudformationOutput).__id, ok = v.Value.(string)
+		return
+	},
 	"cloudformation.output.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudformationOutput).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -270,13 +277,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[cloudformation] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[cloudformation] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[cloudformation] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[cloudformation] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -294,19 +301,19 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlCloudformationTemplate for the cloudformation.template resource
 type mqlCloudformationTemplate struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudformationTemplateInternal it will be used here
-	Version plugin.TValue[string]
-	Transform plugin.TValue[[]any]
+	Version     plugin.TValue[string]
+	Transform   plugin.TValue[[]any]
 	Description plugin.TValue[string]
-	Mappings plugin.TValue[map[string]any]
-	Globals plugin.TValue[map[string]any]
-	Parameters plugin.TValue[map[string]any]
-	Metadata plugin.TValue[map[string]any]
-	Conditions plugin.TValue[map[string]any]
-	Resources plugin.TValue[[]any]
-	Outputs plugin.TValue[[]any]
-	Types plugin.TValue[[]any]
+	Mappings    plugin.TValue[map[string]any]
+	Globals     plugin.TValue[map[string]any]
+	Parameters  plugin.TValue[map[string]any]
+	Metadata    plugin.TValue[map[string]any]
+	Conditions  plugin.TValue[map[string]any]
+	Resources   plugin.TValue[[]any]
+	Outputs     plugin.TValue[[]any]
+	Types       plugin.TValue[[]any]
 }
 
 // createCloudformationTemplate creates a new instance of this resource
@@ -321,7 +328,7 @@ func createCloudformationTemplate(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -429,14 +436,14 @@ func (c *mqlCloudformationTemplate) GetTypes() *plugin.TValue[[]any] {
 // mqlCloudformationResource for the cloudformation.resource resource
 type mqlCloudformationResource struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudformationResourceInternal it will be used here
-	Name plugin.TValue[string]
-	Type plugin.TValue[string]
-	Condition plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Condition     plugin.TValue[string]
 	Documentation plugin.TValue[string]
-	Attributes plugin.TValue[map[string]any]
-	Properties plugin.TValue[map[string]any]
+	Attributes    plugin.TValue[map[string]any]
+	Properties    plugin.TValue[map[string]any]
 }
 
 // createCloudformationResource creates a new instance of this resource
@@ -451,7 +458,7 @@ func createCloudformationResource(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -503,9 +510,9 @@ func (c *mqlCloudformationResource) GetProperties() *plugin.TValue[map[string]an
 // mqlCloudformationOutput for the cloudformation.output resource
 type mqlCloudformationOutput struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCloudformationOutputInternal it will be used here
-	Name plugin.TValue[string]
+	Name       plugin.TValue[string]
 	Properties plugin.TValue[map[string]any]
 }
 
@@ -521,7 +528,7 @@ func createCloudformationOutput(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

@@ -14,16 +14,36 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceTerraform                   string = "terraform"
+	ResourceTerraformResources          string = "terraform.resources"
+	ResourceTerraformFile               string = "terraform.file"
+	ResourceTerraformFileposition       string = "terraform.fileposition"
+	ResourceTerraformBlock              string = "terraform.block"
+	ResourceTerraformModule             string = "terraform.module"
+	ResourceTerraformSettings           string = "terraform.settings"
+	ResourceTerraformState              string = "terraform.state"
+	ResourceTerraformStateOutput        string = "terraform.state.output"
+	ResourceTerraformStateModule        string = "terraform.state.module"
+	ResourceTerraformStateResource      string = "terraform.state.resource"
+	ResourceTerraformPlan               string = "terraform.plan"
+	ResourceTerraformPlanConfiguration  string = "terraform.plan.configuration"
+	ResourceTerraformPlanVariable       string = "terraform.plan.variable"
+	ResourceTerraformPlanResourceChange string = "terraform.plan.resourceChange"
+	ResourceTerraformPlanProposedChange string = "terraform.plan.proposedChange"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"terraform": {
 			// to override args, implement: initTerraform(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTerraform,
 		},
 		"terraform.resources": {
-			Init: initTerraformResources,
+			Init:   initTerraformResources,
 			Create: createTerraformResources,
 		},
 		"terraform.file": {
@@ -35,7 +55,7 @@ func init() {
 			Create: createTerraformFileposition,
 		},
 		"terraform.block": {
-			Init: initTerraformBlock,
+			Init:   initTerraformBlock,
 			Create: createTerraformBlock,
 		},
 		"terraform.module": {
@@ -43,19 +63,19 @@ func init() {
 			Create: createTerraformModule,
 		},
 		"terraform.settings": {
-			Init: initTerraformSettings,
+			Init:   initTerraformSettings,
 			Create: createTerraformSettings,
 		},
 		"terraform.state": {
-			Init: initTerraformState,
+			Init:   initTerraformState,
 			Create: createTerraformState,
 		},
 		"terraform.state.output": {
-			Init: initTerraformStateOutput,
+			Init:   initTerraformStateOutput,
 			Create: createTerraformStateOutput,
 		},
 		"terraform.state.module": {
-			Init: initTerraformStateModule,
+			Init:   initTerraformStateModule,
 			Create: createTerraformStateModule,
 		},
 		"terraform.state.resource": {
@@ -63,7 +83,7 @@ func init() {
 			Create: createTerraformStateResource,
 		},
 		"terraform.plan": {
-			Init: initTerraformPlan,
+			Init:   initTerraformPlan,
 			Create: createTerraformPlan,
 		},
 		"terraform.plan.configuration": {
@@ -103,7 +123,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -425,11 +445,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"terraform.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraform).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraform).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraform).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -463,17 +483,17 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.resources.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformResources).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformResources).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.resources.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformResources).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"terraform.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformFile).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformFile).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.file.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformFile).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -483,9 +503,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.fileposition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformFileposition).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformFileposition).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.fileposition.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformFileposition).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -503,9 +523,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.block.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformBlock).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformBlock).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.block.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformBlock).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -547,9 +567,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformModule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformModule).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.module.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformModule).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -571,9 +591,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformSettings).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformSettings).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.settings.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformSettings).Block, ok = plugin.RawToTValue[*mqlTerraformBlock](v.Value, v.Error)
 		return
@@ -587,9 +607,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.state.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformState).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformState).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.state.formatVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformState).FormatVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -615,9 +635,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.state.output.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformStateOutput).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformStateOutput).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.state.output.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformStateOutput).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -635,9 +655,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.state.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformStateModule).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformStateModule).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.state.module.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformStateModule).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -651,9 +671,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.state.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformStateResource).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformStateResource).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.state.resource.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformStateResource).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -695,9 +715,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.plan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformPlan).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformPlan).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.plan.formatVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformPlan).FormatVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -723,9 +743,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.plan.configuration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformPlanConfiguration).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformPlanConfiguration).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.plan.configuration.providerConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformPlanConfiguration).ProviderConfig, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -735,9 +755,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.plan.variable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformPlanVariable).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformPlanVariable).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.plan.variable.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformPlanVariable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -747,9 +767,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.plan.resourceChange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformPlanResourceChange).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformPlanResourceChange).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.plan.resourceChange.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformPlanResourceChange).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -791,9 +811,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"terraform.plan.proposedChange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformPlanProposedChange).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformPlanProposedChange).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.plan.proposedChange.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformPlanProposedChange).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -829,13 +849,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[terraform] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[terraform] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[terraform] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[terraform] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -853,16 +873,16 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlTerraform for the terraform resource
 type mqlTerraform struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlTerraformInternal
-	Files plugin.TValue[[]any]
-	Tfvars plugin.TValue[any]
-	Modules plugin.TValue[[]any]
-	Blocks plugin.TValue[[]any]
-	Providers plugin.TValue[[]any]
+	Files       plugin.TValue[[]any]
+	Tfvars      plugin.TValue[any]
+	Modules     plugin.TValue[[]any]
+	Blocks      plugin.TValue[[]any]
+	Providers   plugin.TValue[[]any]
 	Datasources plugin.TValue[[]any]
-	Variables plugin.TValue[[]any]
-	Outputs plugin.TValue[[]any]
+	Variables   plugin.TValue[[]any]
+	Outputs     plugin.TValue[[]any]
 }
 
 // createTerraform creates a new instance of this resource
@@ -1018,7 +1038,7 @@ func (c *mqlTerraform) GetOutputs() *plugin.TValue[[]any] {
 // mqlTerraformResources for the terraform.resources resource
 type mqlTerraformResources struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformResourcesInternal it will be used here
 	List plugin.TValue[[]any]
 }
@@ -1074,9 +1094,9 @@ func (c *mqlTerraformResources) GetList() *plugin.TValue[[]any] {
 // mqlTerraformFile for the terraform.file resource
 type mqlTerraformFile struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformFileInternal it will be used here
-	Path plugin.TValue[string]
+	Path   plugin.TValue[string]
 	Blocks plugin.TValue[[]any]
 }
 
@@ -1092,7 +1112,7 @@ func createTerraformFile(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1140,12 +1160,12 @@ func (c *mqlTerraformFile) GetBlocks() *plugin.TValue[[]any] {
 // mqlTerraformFileposition for the terraform.fileposition resource
 type mqlTerraformFileposition struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformFilepositionInternal it will be used here
-	Path plugin.TValue[string]
-	Line plugin.TValue[int64]
+	Path   plugin.TValue[string]
+	Line   plugin.TValue[int64]
 	Column plugin.TValue[int64]
-	Byte plugin.TValue[int64]
+	Byte   plugin.TValue[int64]
 }
 
 // createTerraformFileposition creates a new instance of this resource
@@ -1160,7 +1180,7 @@ func createTerraformFileposition(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1204,18 +1224,18 @@ func (c *mqlTerraformFileposition) GetByte() *plugin.TValue[int64] {
 // mqlTerraformBlock for the terraform.block resource
 type mqlTerraformBlock struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlTerraformBlockInternal
-	Type plugin.TValue[string]
-	Labels plugin.TValue[[]any]
-	NameLabel plugin.TValue[string]
-	Start plugin.TValue[*mqlTerraformFileposition]
-	End plugin.TValue[*mqlTerraformFileposition]
-	Arguments plugin.TValue[any]
+	Type       plugin.TValue[string]
+	Labels     plugin.TValue[[]any]
+	NameLabel  plugin.TValue[string]
+	Start      plugin.TValue[*mqlTerraformFileposition]
+	End        plugin.TValue[*mqlTerraformFileposition]
+	Arguments  plugin.TValue[any]
 	Attributes plugin.TValue[any]
-	Blocks plugin.TValue[[]any]
-	Related plugin.TValue[[]any]
-	Snippet plugin.TValue[string]
+	Blocks     plugin.TValue[[]any]
+	Related    plugin.TValue[[]any]
+	Snippet    plugin.TValue[string]
 }
 
 // createTerraformBlock creates a new instance of this resource
@@ -1230,7 +1250,7 @@ func createTerraformBlock(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1328,13 +1348,13 @@ func (c *mqlTerraformBlock) GetSnippet() *plugin.TValue[string] {
 // mqlTerraformModule for the terraform.module resource
 type mqlTerraformModule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformModuleInternal it will be used here
-	Key plugin.TValue[string]
-	Source plugin.TValue[string]
+	Key     plugin.TValue[string]
+	Source  plugin.TValue[string]
 	Version plugin.TValue[string]
-	Dir plugin.TValue[string]
-	Block plugin.TValue[*mqlTerraformBlock]
+	Dir     plugin.TValue[string]
+	Block   plugin.TValue[*mqlTerraformBlock]
 }
 
 // createTerraformModule creates a new instance of this resource
@@ -1349,7 +1369,7 @@ func createTerraformModule(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1409,11 +1429,11 @@ func (c *mqlTerraformModule) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
 // mqlTerraformSettings for the terraform.settings resource
 type mqlTerraformSettings struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformSettingsInternal it will be used here
-	Block plugin.TValue[*mqlTerraformBlock]
+	Block             plugin.TValue[*mqlTerraformBlock]
 	RequiredProviders plugin.TValue[any]
-	Backend plugin.TValue[any]
+	Backend           plugin.TValue[any]
 }
 
 // createTerraformSettings creates a new instance of this resource
@@ -1463,14 +1483,14 @@ func (c *mqlTerraformSettings) GetBackend() *plugin.TValue[any] {
 // mqlTerraformState for the terraform.state resource
 type mqlTerraformState struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformStateInternal it will be used here
-	FormatVersion plugin.TValue[string]
+	FormatVersion    plugin.TValue[string]
 	TerraformVersion plugin.TValue[string]
-	Outputs plugin.TValue[[]any]
-	RootModule plugin.TValue[*mqlTerraformStateModule]
-	Modules plugin.TValue[[]any]
-	Resources plugin.TValue[[]any]
+	Outputs          plugin.TValue[[]any]
+	RootModule       plugin.TValue[*mqlTerraformStateModule]
+	Modules          plugin.TValue[[]any]
+	Resources        plugin.TValue[[]any]
 }
 
 // createTerraformState creates a new instance of this resource
@@ -1485,7 +1505,7 @@ func createTerraformState(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1585,12 +1605,12 @@ func (c *mqlTerraformState) GetResources() *plugin.TValue[[]any] {
 // mqlTerraformStateOutput for the terraform.state.output resource
 type mqlTerraformStateOutput struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlTerraformStateOutputInternal
 	Identifier plugin.TValue[string]
-	Sensitive plugin.TValue[bool]
-	Value plugin.TValue[any]
-	Type plugin.TValue[any]
+	Sensitive  plugin.TValue[bool]
+	Value      plugin.TValue[any]
+	Type       plugin.TValue[any]
 }
 
 // createTerraformStateOutput creates a new instance of this resource
@@ -1605,7 +1625,7 @@ func createTerraformStateOutput(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1653,10 +1673,10 @@ func (c *mqlTerraformStateOutput) GetType() *plugin.TValue[any] {
 // mqlTerraformStateModule for the terraform.state.module resource
 type mqlTerraformStateModule struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlTerraformStateModuleInternal
-	Address plugin.TValue[string]
-	Resources plugin.TValue[[]any]
+	Address      plugin.TValue[string]
+	Resources    plugin.TValue[[]any]
 	ChildModules plugin.TValue[[]any]
 }
 
@@ -1672,7 +1692,7 @@ func createTerraformStateModule(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1736,18 +1756,18 @@ func (c *mqlTerraformStateModule) GetChildModules() *plugin.TValue[[]any] {
 // mqlTerraformStateResource for the terraform.state.resource resource
 type mqlTerraformStateResource struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformStateResourceInternal it will be used here
-	Address plugin.TValue[string]
-	Mode plugin.TValue[string]
-	Type plugin.TValue[string]
-	Name plugin.TValue[string]
-	ProviderName plugin.TValue[string]
+	Address       plugin.TValue[string]
+	Mode          plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Name          plugin.TValue[string]
+	ProviderName  plugin.TValue[string]
 	SchemaVersion plugin.TValue[int64]
-	Values plugin.TValue[any]
-	DependsOn plugin.TValue[[]any]
-	Tainted plugin.TValue[bool]
-	DeposedKey plugin.TValue[string]
+	Values        plugin.TValue[any]
+	DependsOn     plugin.TValue[[]any]
+	Tainted       plugin.TValue[bool]
+	DeposedKey    plugin.TValue[string]
 }
 
 // createTerraformStateResource creates a new instance of this resource
@@ -1762,7 +1782,7 @@ func createTerraformStateResource(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1830,14 +1850,14 @@ func (c *mqlTerraformStateResource) GetDeposedKey() *plugin.TValue[string] {
 // mqlTerraformPlan for the terraform.plan resource
 type mqlTerraformPlan struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformPlanInternal it will be used here
-	FormatVersion plugin.TValue[string]
+	FormatVersion    plugin.TValue[string]
 	TerraformVersion plugin.TValue[string]
-	ResourceChanges plugin.TValue[[]any]
-	Variables plugin.TValue[[]any]
-	Applyable plugin.TValue[bool]
-	Errored plugin.TValue[bool]
+	ResourceChanges  plugin.TValue[[]any]
+	Variables        plugin.TValue[[]any]
+	Applyable        plugin.TValue[bool]
+	Errored          plugin.TValue[bool]
 }
 
 // createTerraformPlan creates a new instance of this resource
@@ -1852,7 +1872,7 @@ func createTerraformPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1916,10 +1936,10 @@ func (c *mqlTerraformPlan) GetErrored() *plugin.TValue[bool] {
 // mqlTerraformPlanConfiguration for the terraform.plan.configuration resource
 type mqlTerraformPlanConfiguration struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformPlanConfigurationInternal it will be used here
 	ProviderConfig plugin.TValue[[]any]
-	Resources plugin.TValue[[]any]
+	Resources      plugin.TValue[[]any]
 }
 
 // createTerraformPlanConfiguration creates a new instance of this resource
@@ -1934,7 +1954,7 @@ func createTerraformPlanConfiguration(runtime *plugin.Runtime, args map[string]*
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1974,9 +1994,9 @@ func (c *mqlTerraformPlanConfiguration) GetResources() *plugin.TValue[[]any] {
 // mqlTerraformPlanVariable for the terraform.plan.variable resource
 type mqlTerraformPlanVariable struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformPlanVariableInternal it will be used here
-	Name plugin.TValue[string]
+	Name  plugin.TValue[string]
 	Value plugin.TValue[any]
 }
 
@@ -1992,7 +2012,7 @@ func createTerraformPlanVariable(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2028,18 +2048,18 @@ func (c *mqlTerraformPlanVariable) GetValue() *plugin.TValue[any] {
 // mqlTerraformPlanResourceChange for the terraform.plan.resourceChange resource
 type mqlTerraformPlanResourceChange struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformPlanResourceChangeInternal it will be used here
-	Address plugin.TValue[string]
+	Address         plugin.TValue[string]
 	PreviousAddress plugin.TValue[string]
-	ModuleAddress plugin.TValue[string]
-	Mode plugin.TValue[string]
-	Type plugin.TValue[string]
-	Name plugin.TValue[string]
-	ProviderName plugin.TValue[string]
-	Deposed plugin.TValue[string]
-	Change plugin.TValue[*mqlTerraformPlanProposedChange]
-	ActionReason plugin.TValue[string]
+	ModuleAddress   plugin.TValue[string]
+	Mode            plugin.TValue[string]
+	Type            plugin.TValue[string]
+	Name            plugin.TValue[string]
+	ProviderName    plugin.TValue[string]
+	Deposed         plugin.TValue[string]
+	Change          plugin.TValue[*mqlTerraformPlanProposedChange]
+	ActionReason    plugin.TValue[string]
 }
 
 // createTerraformPlanResourceChange creates a new instance of this resource
@@ -2054,7 +2074,7 @@ func createTerraformPlanResourceChange(runtime *plugin.Runtime, args map[string]
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -2122,16 +2142,16 @@ func (c *mqlTerraformPlanResourceChange) GetActionReason() *plugin.TValue[string
 // mqlTerraformPlanProposedChange for the terraform.plan.proposedChange resource
 type mqlTerraformPlanProposedChange struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformPlanProposedChangeInternal it will be used here
-	Address plugin.TValue[string]
-	Actions plugin.TValue[[]any]
-	Before plugin.TValue[any]
-	After plugin.TValue[any]
-	AfterUnknown plugin.TValue[any]
+	Address         plugin.TValue[string]
+	Actions         plugin.TValue[[]any]
+	Before          plugin.TValue[any]
+	After           plugin.TValue[any]
+	AfterUnknown    plugin.TValue[any]
 	BeforeSensitive plugin.TValue[any]
-	AfterSensitive plugin.TValue[any]
-	ReplacePaths plugin.TValue[any]
+	AfterSensitive  plugin.TValue[any]
+	ReplacePaths    plugin.TValue[any]
 }
 
 // createTerraformPlanProposedChange creates a new instance of this resource
@@ -2146,7 +2166,7 @@ func createTerraformPlanProposedChange(runtime *plugin.Runtime, args map[string]
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

@@ -14,10 +14,18 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceAnsible        string = "ansible"
+	ResourceAnsiblePlay    string = "ansible.play"
+	ResourceAnsibleTask    string = "ansible.task"
+	ResourceAnsibleHandler string = "ansible.handler"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"ansible": {
 			// to override args, implement: initAnsible(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAnsible,
@@ -55,7 +63,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -221,19 +229,19 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"ansible.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAnsible).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAnsible).__id, ok = v.Value.(string)
+		return
+	},
 	"ansible.plays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsible).Plays, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ansible.play.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAnsiblePlay).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAnsiblePlay).__id, ok = v.Value.(string)
+		return
+	},
 	"ansible.play.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsiblePlay).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -295,9 +303,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ansible.task.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAnsibleTask).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAnsibleTask).__id, ok = v.Value.(string)
+		return
+	},
 	"ansible.task.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleTask).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -355,9 +363,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ansible.handler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAnsibleHandler).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlAnsibleHandler).__id, ok = v.Value.(string)
+		return
+	},
 	"ansible.handler.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleHandler).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -369,13 +377,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[ansible] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[ansible] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[ansible] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[ansible] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -393,7 +401,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlAnsible for the ansible resource
 type mqlAnsible struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAnsibleInternal it will be used here
 	Plays plugin.TValue[[]any]
 }
@@ -410,7 +418,7 @@ func createAnsible(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -454,23 +462,23 @@ func (c *mqlAnsible) GetPlays() *plugin.TValue[[]any] {
 // mqlAnsiblePlay for the ansible.play resource
 type mqlAnsiblePlay struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlAnsiblePlayInternal
-	Name plugin.TValue[string]
-	Hosts plugin.TValue[any]
-	RemoteUser plugin.TValue[string]
-	Become plugin.TValue[bool]
-	BecomeUser plugin.TValue[string]
-	BecomeMethod plugin.TValue[string]
-	BecomeFlags plugin.TValue[string]
-	Strategy plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Hosts             plugin.TValue[any]
+	RemoteUser        plugin.TValue[string]
+	Become            plugin.TValue[bool]
+	BecomeUser        plugin.TValue[string]
+	BecomeMethod      plugin.TValue[string]
+	BecomeFlags       plugin.TValue[string]
+	Strategy          plugin.TValue[string]
 	MaxFailPercentage plugin.TValue[int64]
 	IgnoreUnreachable plugin.TValue[bool]
-	AnyErrorsFatal plugin.TValue[bool]
-	Vars plugin.TValue[map[string]any]
-	Roles plugin.TValue[[]any]
-	Tasks plugin.TValue[[]any]
-	Handlers plugin.TValue[[]any]
+	AnyErrorsFatal    plugin.TValue[bool]
+	Vars              plugin.TValue[map[string]any]
+	Roles             plugin.TValue[[]any]
+	Tasks             plugin.TValue[[]any]
+	Handlers          plugin.TValue[[]any]
 }
 
 // createAnsiblePlay creates a new instance of this resource
@@ -485,7 +493,7 @@ func createAnsiblePlay(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -597,22 +605,22 @@ func (c *mqlAnsiblePlay) GetHandlers() *plugin.TValue[[]any] {
 // mqlAnsibleTask for the ansible.task resource
 type mqlAnsibleTask struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlAnsibleTaskInternal
-	Name plugin.TValue[string]
-	Action plugin.TValue[any]
-	Vars plugin.TValue[map[string]any]
-	Register plugin.TValue[string]
-	When plugin.TValue[string]
-	FailedWhen plugin.TValue[string]
-	ChangedWhen plugin.TValue[string]
-	Notify plugin.TValue[[]any]
-	ImportPlaybook plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Action          plugin.TValue[any]
+	Vars            plugin.TValue[map[string]any]
+	Register        plugin.TValue[string]
+	When            plugin.TValue[string]
+	FailedWhen      plugin.TValue[string]
+	ChangedWhen     plugin.TValue[string]
+	Notify          plugin.TValue[[]any]
+	ImportPlaybook  plugin.TValue[string]
 	IncludePlaybook plugin.TValue[string]
-	ImportTasks plugin.TValue[string]
-	IncludeTasks plugin.TValue[string]
-	Block plugin.TValue[[]any]
-	Rescue plugin.TValue[[]any]
+	ImportTasks     plugin.TValue[string]
+	IncludeTasks    plugin.TValue[string]
+	Block           plugin.TValue[[]any]
+	Rescue          plugin.TValue[[]any]
 }
 
 // createAnsibleTask creates a new instance of this resource
@@ -730,9 +738,9 @@ func (c *mqlAnsibleTask) GetRescue() *plugin.TValue[[]any] {
 // mqlAnsibleHandler for the ansible.handler resource
 type mqlAnsibleHandler struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlAnsibleHandlerInternal it will be used here
-	Name plugin.TValue[string]
+	Name   plugin.TValue[string]
 	Action plugin.TValue[any]
 }
 

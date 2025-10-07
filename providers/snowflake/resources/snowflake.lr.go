@@ -15,10 +15,27 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceSnowflake                    string = "snowflake"
+	ResourceSnowflakeAccount             string = "snowflake.account"
+	ResourceSnowflakeUser                string = "snowflake.user"
+	ResourceSnowflakeRole                string = "snowflake.role"
+	ResourceSnowflakeSecurityIntegration string = "snowflake.securityIntegration"
+	ResourceSnowflakePasswordPolicy      string = "snowflake.passwordPolicy"
+	ResourceSnowflakeNetworkPolicy       string = "snowflake.networkPolicy"
+	ResourceSnowflakeProcedure           string = "snowflake.procedure"
+	ResourceSnowflakeParameter           string = "snowflake.parameter"
+	ResourceSnowflakeStage               string = "snowflake.stage"
+	ResourceSnowflakeDatabase            string = "snowflake.database"
+	ResourceSnowflakeWarehouse           string = "snowflake.warehouse"
+	ResourceSnowflakeView                string = "snowflake.view"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"snowflake": {
 			// to override args, implement: initSnowflake(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSnowflake,
@@ -92,7 +109,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -651,19 +668,19 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"snowflake.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflake).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflake).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.currentRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflake).CurrentRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeAccount).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeAccount).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.account.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeAccount).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -717,9 +734,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeUser).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -805,9 +822,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeRole).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeRole).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -845,9 +862,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.securityIntegration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeSecurityIntegration).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeSecurityIntegration).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.securityIntegration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeSecurityIntegration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -873,9 +890,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.passwordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakePasswordPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakePasswordPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.passwordPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakePasswordPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -949,9 +966,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.networkPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeNetworkPolicy).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeNetworkPolicy).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.networkPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeNetworkPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -997,9 +1014,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.procedure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeProcedure).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeProcedure).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.procedure.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeProcedure).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1053,9 +1070,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeParameter).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeParameter).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.parameter.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeParameter).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1077,9 +1094,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.stage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeStage).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeStage).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.stage.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeStage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1141,9 +1158,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeDatabase).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeDatabase).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.database.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1193,9 +1210,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.warehouse.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeWarehouse).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeWarehouse).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.warehouse.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeWarehouse).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1305,9 +1322,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"snowflake.view.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSnowflakeView).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSnowflakeView).__id, ok = v.Value.(string)
+		return
+	},
 	"snowflake.view.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeView).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1359,13 +1376,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[snowflake] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[snowflake] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[snowflake] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[snowflake] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -1383,7 +1400,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlSnowflake for the snowflake resource
 type mqlSnowflake struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeInternal it will be used here
 	CurrentRole plugin.TValue[string]
 }
@@ -1400,7 +1417,7 @@ func createSnowflake(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1434,21 +1451,21 @@ func (c *mqlSnowflake) GetCurrentRole() *plugin.TValue[string] {
 // mqlSnowflakeAccount for the snowflake.account resource
 type mqlSnowflakeAccount struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeAccountInternal it will be used here
-	AccountId plugin.TValue[string]
-	Region plugin.TValue[string]
-	Url plugin.TValue[string]
-	Users plugin.TValue[[]any]
-	Roles plugin.TValue[[]any]
+	AccountId            plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Url                  plugin.TValue[string]
+	Users                plugin.TValue[[]any]
+	Roles                plugin.TValue[[]any]
 	SecurityIntegrations plugin.TValue[[]any]
-	PasswordPolicies plugin.TValue[[]any]
-	NetworkPolicies plugin.TValue[[]any]
-	Procedures plugin.TValue[[]any]
-	Parameters plugin.TValue[[]any]
-	Stages plugin.TValue[[]any]
-	Databases plugin.TValue[[]any]
-	Warehouses plugin.TValue[[]any]
+	PasswordPolicies     plugin.TValue[[]any]
+	NetworkPolicies      plugin.TValue[[]any]
+	Procedures           plugin.TValue[[]any]
+	Parameters           plugin.TValue[[]any]
+	Stages               plugin.TValue[[]any]
+	Databases            plugin.TValue[[]any]
+	Warehouses           plugin.TValue[[]any]
 }
 
 // createSnowflakeAccount creates a new instance of this resource
@@ -1463,7 +1480,7 @@ func createSnowflakeAccount(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1669,29 +1686,29 @@ func (c *mqlSnowflakeAccount) GetWarehouses() *plugin.TValue[[]any] {
 // mqlSnowflakeUser for the snowflake.user resource
 type mqlSnowflakeUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeUserInternal it will be used here
-	Name plugin.TValue[string]
-	Login plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	FirstName plugin.TValue[string]
-	LastName plugin.TValue[string]
-	Email plugin.TValue[string]
-	Comment plugin.TValue[string]
-	DefaultWarehouse plugin.TValue[string]
-	DefaultNamespace plugin.TValue[string]
-	DefaultRole plugin.TValue[string]
-	Disabled plugin.TValue[bool]
-	HasPassword plugin.TValue[bool]
-	HasRsaPublicKey plugin.TValue[bool]
+	Name               plugin.TValue[string]
+	Login              plugin.TValue[string]
+	DisplayName        plugin.TValue[string]
+	FirstName          plugin.TValue[string]
+	LastName           plugin.TValue[string]
+	Email              plugin.TValue[string]
+	Comment            plugin.TValue[string]
+	DefaultWarehouse   plugin.TValue[string]
+	DefaultNamespace   plugin.TValue[string]
+	DefaultRole        plugin.TValue[string]
+	Disabled           plugin.TValue[bool]
+	HasPassword        plugin.TValue[bool]
+	HasRsaPublicKey    plugin.TValue[bool]
 	MustChangePassword plugin.TValue[bool]
-	LastSuccessLogin plugin.TValue[*time.Time]
-	LockedUntil plugin.TValue[*time.Time]
-	CreatedAt plugin.TValue[*time.Time]
-	ExpiresAt plugin.TValue[*time.Time]
-	ExtAuthnDuo plugin.TValue[bool]
-	ExtAuthnUid plugin.TValue[string]
-	Parameters plugin.TValue[[]any]
+	LastSuccessLogin   plugin.TValue[*time.Time]
+	LockedUntil        plugin.TValue[*time.Time]
+	CreatedAt          plugin.TValue[*time.Time]
+	ExpiresAt          plugin.TValue[*time.Time]
+	ExtAuthnDuo        plugin.TValue[bool]
+	ExtAuthnUid        plugin.TValue[string]
+	Parameters         plugin.TValue[[]any]
 }
 
 // createSnowflakeUser creates a new instance of this resource
@@ -1825,17 +1842,17 @@ func (c *mqlSnowflakeUser) GetParameters() *plugin.TValue[[]any] {
 // mqlSnowflakeRole for the snowflake.role resource
 type mqlSnowflakeRole struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeRoleInternal it will be used here
-	Name plugin.TValue[string]
-	IsDefault plugin.TValue[bool]
-	IsCurrent plugin.TValue[bool]
-	IsInherited plugin.TValue[bool]
+	Name            plugin.TValue[string]
+	IsDefault       plugin.TValue[bool]
+	IsCurrent       plugin.TValue[bool]
+	IsInherited     plugin.TValue[bool]
 	AssignedToUsers plugin.TValue[int64]
-	GrantedToRoles plugin.TValue[int64]
-	GrantedRoles plugin.TValue[int64]
-	Owner plugin.TValue[string]
-	Comment plugin.TValue[string]
+	GrantedToRoles  plugin.TValue[int64]
+	GrantedRoles    plugin.TValue[int64]
+	Owner           plugin.TValue[string]
+	Comment         plugin.TValue[string]
 }
 
 // createSnowflakeRole creates a new instance of this resource
@@ -1909,13 +1926,13 @@ func (c *mqlSnowflakeRole) GetComment() *plugin.TValue[string] {
 // mqlSnowflakeSecurityIntegration for the snowflake.securityIntegration resource
 type mqlSnowflakeSecurityIntegration struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeSecurityIntegrationInternal it will be used here
-	Name plugin.TValue[string]
-	Type plugin.TValue[string]
-	Category plugin.TValue[string]
-	Comment plugin.TValue[string]
-	Enabled plugin.TValue[bool]
+	Name      plugin.TValue[string]
+	Type      plugin.TValue[string]
+	Category  plugin.TValue[string]
+	Comment   plugin.TValue[string]
+	Enabled   plugin.TValue[bool]
 	CreatedAt plugin.TValue[*time.Time]
 }
 
@@ -1978,26 +1995,26 @@ func (c *mqlSnowflakeSecurityIntegration) GetCreatedAt() *plugin.TValue[*time.Ti
 // mqlSnowflakePasswordPolicy for the snowflake.passwordPolicy resource
 type mqlSnowflakePasswordPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakePasswordPolicyInternal it will be used here
-	Name plugin.TValue[string]
-	DatabaseName plugin.TValue[string]
-	SchemaName plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Owner plugin.TValue[string]
-	Comment plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	PasswordMinLength plugin.TValue[int64]
-	PasswordMaxLength plugin.TValue[int64]
+	Name                      plugin.TValue[string]
+	DatabaseName              plugin.TValue[string]
+	SchemaName                plugin.TValue[string]
+	Kind                      plugin.TValue[string]
+	Owner                     plugin.TValue[string]
+	Comment                   plugin.TValue[string]
+	CreatedAt                 plugin.TValue[*time.Time]
+	PasswordMinLength         plugin.TValue[int64]
+	PasswordMaxLength         plugin.TValue[int64]
 	PasswordMinUpperCaseChars plugin.TValue[int64]
 	PasswordMinLowerCaseChars plugin.TValue[int64]
-	PasswordMinNumericChars plugin.TValue[int64]
-	PasswordMinSpecialChars plugin.TValue[int64]
-	PasswordMinAgeDays plugin.TValue[int64]
-	PasswordMaxAgeDays plugin.TValue[int64]
-	PasswordMaxRetries plugin.TValue[int64]
-	PasswordLockoutTimeMins plugin.TValue[int64]
-	PasswordHistory plugin.TValue[int64]
+	PasswordMinNumericChars   plugin.TValue[int64]
+	PasswordMinSpecialChars   plugin.TValue[int64]
+	PasswordMinAgeDays        plugin.TValue[int64]
+	PasswordMaxAgeDays        plugin.TValue[int64]
+	PasswordMaxRetries        plugin.TValue[int64]
+	PasswordLockoutTimeMins   plugin.TValue[int64]
+	PasswordHistory           plugin.TValue[int64]
 }
 
 // createSnowflakePasswordPolicy creates a new instance of this resource
@@ -2129,19 +2146,19 @@ func (c *mqlSnowflakePasswordPolicy) GetPasswordHistory() *plugin.TValue[int64] 
 // mqlSnowflakeNetworkPolicy for the snowflake.networkPolicy resource
 type mqlSnowflakeNetworkPolicy struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	mqlSnowflakeNetworkPolicyInternal
-	Name plugin.TValue[string]
-	Comment plugin.TValue[string]
-	EntriesInAllowedIpList plugin.TValue[int64]
-	EntriesInBlockedIpList plugin.TValue[int64]
+	Name                         plugin.TValue[string]
+	Comment                      plugin.TValue[string]
+	EntriesInAllowedIpList       plugin.TValue[int64]
+	EntriesInBlockedIpList       plugin.TValue[int64]
 	EntriesInAllowedNetworkRules plugin.TValue[int64]
 	EntriesInBlockedNetworkRules plugin.TValue[int64]
-	AllowedIpList plugin.TValue[[]any]
-	BlockedIpList plugin.TValue[[]any]
-	AllowedNetworkRules plugin.TValue[[]any]
-	BlockedNetworkRules plugin.TValue[[]any]
-	CreatedAt plugin.TValue[*time.Time]
+	AllowedIpList                plugin.TValue[[]any]
+	BlockedIpList                plugin.TValue[[]any]
+	AllowedNetworkRules          plugin.TValue[[]any]
+	BlockedNetworkRules          plugin.TValue[[]any]
+	CreatedAt                    plugin.TValue[*time.Time]
 }
 
 // createSnowflakeNetworkPolicy creates a new instance of this resource
@@ -2231,21 +2248,21 @@ func (c *mqlSnowflakeNetworkPolicy) GetCreatedAt() *plugin.TValue[*time.Time] {
 // mqlSnowflakeProcedure for the snowflake.procedure resource
 type mqlSnowflakeProcedure struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeProcedureInternal it will be used here
-	Name plugin.TValue[string]
-	Description plugin.TValue[string]
-	SchemaName plugin.TValue[string]
-	IsBuiltin plugin.TValue[bool]
-	IsAggregate plugin.TValue[bool]
-	IsAnsi plugin.TValue[bool]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	SchemaName           plugin.TValue[string]
+	IsBuiltin            plugin.TValue[bool]
+	IsAggregate          plugin.TValue[bool]
+	IsAnsi               plugin.TValue[bool]
 	MinNumberOfArguments plugin.TValue[int64]
 	MaxNumberOfArguments plugin.TValue[int64]
-	Arguments plugin.TValue[string]
-	CatalogName plugin.TValue[string]
-	IsTableFunction plugin.TValue[bool]
-	ValidForClustering plugin.TValue[bool]
-	IsSecure plugin.TValue[bool]
+	Arguments            plugin.TValue[string]
+	CatalogName          plugin.TValue[string]
+	IsTableFunction      plugin.TValue[bool]
+	ValidForClustering   plugin.TValue[bool]
+	IsSecure             plugin.TValue[bool]
 }
 
 // createSnowflakeProcedure creates a new instance of this resource
@@ -2335,13 +2352,13 @@ func (c *mqlSnowflakeProcedure) GetIsSecure() *plugin.TValue[bool] {
 // mqlSnowflakeParameter for the snowflake.parameter resource
 type mqlSnowflakeParameter struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeParameterInternal it will be used here
-	Key plugin.TValue[string]
-	Value plugin.TValue[string]
-	Description plugin.TValue[string]
+	Key          plugin.TValue[string]
+	Value        plugin.TValue[string]
+	Description  plugin.TValue[string]
 	DefaultValue plugin.TValue[string]
-	Level plugin.TValue[string]
+	Level        plugin.TValue[string]
 }
 
 // createSnowflakeParameter creates a new instance of this resource
@@ -2399,22 +2416,22 @@ func (c *mqlSnowflakeParameter) GetLevel() *plugin.TValue[string] {
 // mqlSnowflakeStage for the snowflake.stage resource
 type mqlSnowflakeStage struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeStageInternal it will be used here
-	Name plugin.TValue[string]
-	DatabaseName plugin.TValue[string]
-	SchemaName plugin.TValue[string]
-	Owner plugin.TValue[string]
-	Comment plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	HasCredentials plugin.TValue[bool]
+	Name             plugin.TValue[string]
+	DatabaseName     plugin.TValue[string]
+	SchemaName       plugin.TValue[string]
+	Owner            plugin.TValue[string]
+	Comment          plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	HasCredentials   plugin.TValue[bool]
 	HasEncryptionKey plugin.TValue[bool]
-	Url plugin.TValue[string]
-	Type plugin.TValue[string]
-	Cloud plugin.TValue[string]
+	Url              plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Cloud            plugin.TValue[string]
 	StoreIntegration plugin.TValue[string]
-	Endpoint plugin.TValue[string]
-	OwnerRoleType plugin.TValue[string]
+	Endpoint         plugin.TValue[string]
+	OwnerRoleType    plugin.TValue[string]
 	DirectoryEnabled plugin.TValue[bool]
 }
 
@@ -2513,20 +2530,20 @@ func (c *mqlSnowflakeStage) GetDirectoryEnabled() *plugin.TValue[bool] {
 // mqlSnowflakeDatabase for the snowflake.database resource
 type mqlSnowflakeDatabase struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeDatabaseInternal it will be used here
-	Name plugin.TValue[string]
-	IsDefault plugin.TValue[bool]
-	IsCurrent plugin.TValue[bool]
-	Origin plugin.TValue[string]
-	Owner plugin.TValue[string]
-	Comment plugin.TValue[string]
-	Options plugin.TValue[string]
+	Name          plugin.TValue[string]
+	IsDefault     plugin.TValue[bool]
+	IsCurrent     plugin.TValue[bool]
+	Origin        plugin.TValue[string]
+	Owner         plugin.TValue[string]
+	Comment       plugin.TValue[string]
+	Options       plugin.TValue[string]
 	RetentionTime plugin.TValue[int64]
 	ResourceGroup plugin.TValue[string]
-	Transient plugin.TValue[bool]
-	CreatedAt plugin.TValue[*time.Time]
-	DroppedAt plugin.TValue[*time.Time]
+	Transient     plugin.TValue[bool]
+	CreatedAt     plugin.TValue[*time.Time]
+	DroppedAt     plugin.TValue[*time.Time]
 }
 
 // createSnowflakeDatabase creates a new instance of this resource
@@ -2612,35 +2629,35 @@ func (c *mqlSnowflakeDatabase) GetDroppedAt() *plugin.TValue[*time.Time] {
 // mqlSnowflakeWarehouse for the snowflake.warehouse resource
 type mqlSnowflakeWarehouse struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeWarehouseInternal it will be used here
-	Name plugin.TValue[string]
-	State plugin.TValue[string]
-	Type plugin.TValue[string]
-	Size plugin.TValue[string]
-	MinClusterCount plugin.TValue[int64]
-	MaxClusterCount plugin.TValue[int64]
-	StartedClusterCount plugin.TValue[int64]
-	Running plugin.TValue[int64]
-	Queued plugin.TValue[int64]
-	IsDefault plugin.TValue[bool]
-	IsCurrent plugin.TValue[bool]
-	AutoSuspend plugin.TValue[int64]
-	AutoResume plugin.TValue[bool]
-	Available plugin.TValue[float64]
-	Provisioning plugin.TValue[float64]
-	Quiescing plugin.TValue[float64]
-	Other plugin.TValue[float64]
-	Owner plugin.TValue[string]
-	Comment plugin.TValue[string]
-	EnableQueryAcceleration plugin.TValue[bool]
+	Name                            plugin.TValue[string]
+	State                           plugin.TValue[string]
+	Type                            plugin.TValue[string]
+	Size                            plugin.TValue[string]
+	MinClusterCount                 plugin.TValue[int64]
+	MaxClusterCount                 plugin.TValue[int64]
+	StartedClusterCount             plugin.TValue[int64]
+	Running                         plugin.TValue[int64]
+	Queued                          plugin.TValue[int64]
+	IsDefault                       plugin.TValue[bool]
+	IsCurrent                       plugin.TValue[bool]
+	AutoSuspend                     plugin.TValue[int64]
+	AutoResume                      plugin.TValue[bool]
+	Available                       plugin.TValue[float64]
+	Provisioning                    plugin.TValue[float64]
+	Quiescing                       plugin.TValue[float64]
+	Other                           plugin.TValue[float64]
+	Owner                           plugin.TValue[string]
+	Comment                         plugin.TValue[string]
+	EnableQueryAcceleration         plugin.TValue[bool]
 	QueryAccelerationMaxScaleFactor plugin.TValue[int64]
-	ResourceMonitor plugin.TValue[string]
-	ScalingPolicy plugin.TValue[string]
-	OwnerRoleType plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	ResumedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
+	ResourceMonitor                 plugin.TValue[string]
+	ScalingPolicy                   plugin.TValue[string]
+	OwnerRoleType                   plugin.TValue[string]
+	CreatedAt                       plugin.TValue[*time.Time]
+	ResumedAt                       plugin.TValue[*time.Time]
+	UpdatedAt                       plugin.TValue[*time.Time]
 }
 
 // createSnowflakeWarehouse creates a new instance of this resource
@@ -2786,19 +2803,19 @@ func (c *mqlSnowflakeWarehouse) GetUpdatedAt() *plugin.TValue[*time.Time] {
 // mqlSnowflakeView for the snowflake.view resource
 type mqlSnowflakeView struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSnowflakeViewInternal it will be used here
-	Name plugin.TValue[string]
-	Kind plugin.TValue[string]
-	Reserved plugin.TValue[string]
-	DatabaseName plugin.TValue[string]
-	SchemaName plugin.TValue[string]
-	Owner plugin.TValue[string]
-	Comment plugin.TValue[string]
-	Text plugin.TValue[string]
-	IsSecure plugin.TValue[bool]
+	Name           plugin.TValue[string]
+	Kind           plugin.TValue[string]
+	Reserved       plugin.TValue[string]
+	DatabaseName   plugin.TValue[string]
+	SchemaName     plugin.TValue[string]
+	Owner          plugin.TValue[string]
+	Comment        plugin.TValue[string]
+	Text           plugin.TValue[string]
+	IsSecure       plugin.TValue[bool]
 	IsMaterialized plugin.TValue[bool]
-	OwnerRoleType plugin.TValue[string]
+	OwnerRoleType  plugin.TValue[string]
 	ChangeTracking plugin.TValue[string]
 }
 

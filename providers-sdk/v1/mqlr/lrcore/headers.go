@@ -1,4 +1,4 @@
-package lr
+package lrcore
 
 import (
 	"strings"

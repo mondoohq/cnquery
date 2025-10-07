@@ -15,20 +15,27 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceTailscale       string = "tailscale"
+	ResourceTailscaleDevice string = "tailscale.device"
+	ResourceTailscaleUser   string = "tailscale.user"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"tailscale": {
-			Init: initTailscale,
+			Init:   initTailscale,
 			Create: createTailscale,
 		},
 		"tailscale.device": {
-			Init: initTailscaleDevice,
+			Init:   initTailscaleDevice,
 			Create: createTailscaleDevice,
 		},
 		"tailscale.user": {
-			Init: initTailscaleUser,
+			Init:   initTailscaleUser,
 			Create: createTailscaleUser,
 		},
 	}
@@ -52,7 +59,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -227,11 +234,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"tailscale.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTailscale).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTailscale).__id, ok = v.Value.(string)
+		return
+	},
 	"tailscale.tailnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTailscale).Tailnet, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -249,9 +256,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"tailscale.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTailscaleDevice).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTailscaleDevice).__id, ok = v.Value.(string)
+		return
+	},
 	"tailscale.device.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTailscaleDevice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -333,9 +340,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"tailscale.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTailscaleUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTailscaleUser).__id, ok = v.Value.(string)
+		return
+	},
 	"tailscale.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTailscaleUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -383,13 +390,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[tailscale] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[tailscale] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[tailscale] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[tailscale] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -407,11 +414,11 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlTailscale for the tailscale resource
 type mqlTailscale struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTailscaleInternal it will be used here
-	Tailnet plugin.TValue[string]
-	Devices plugin.TValue[[]any]
-	Users plugin.TValue[[]any]
+	Tailnet     plugin.TValue[string]
+	Devices     plugin.TValue[[]any]
+	Users       plugin.TValue[[]any]
 	Nameservers plugin.TValue[[]any]
 }
 
@@ -427,7 +434,7 @@ func createTailscale(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -497,28 +504,28 @@ func (c *mqlTailscale) GetNameservers() *plugin.TValue[[]any] {
 // mqlTailscaleDevice for the tailscale.device resource
 type mqlTailscaleDevice struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTailscaleDeviceInternal it will be used here
-	Id plugin.TValue[string]
-	Hostname plugin.TValue[string]
-	Os plugin.TValue[string]
-	Name plugin.TValue[string]
-	User plugin.TValue[string]
-	Tags plugin.TValue[[]any]
-	Addresses plugin.TValue[[]any]
-	ClientVersion plugin.TValue[string]
-	MachineKey plugin.TValue[string]
-	NodeKey plugin.TValue[string]
-	TailnetLockError plugin.TValue[string]
-	TailnetLockKey plugin.TValue[string]
+	Id                        plugin.TValue[string]
+	Hostname                  plugin.TValue[string]
+	Os                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	User                      plugin.TValue[string]
+	Tags                      plugin.TValue[[]any]
+	Addresses                 plugin.TValue[[]any]
+	ClientVersion             plugin.TValue[string]
+	MachineKey                plugin.TValue[string]
+	NodeKey                   plugin.TValue[string]
+	TailnetLockError          plugin.TValue[string]
+	TailnetLockKey            plugin.TValue[string]
 	BlocksIncomingConnections plugin.TValue[bool]
-	Authorized plugin.TValue[bool]
-	IsExternal plugin.TValue[bool]
-	KeyExpiryDisabled plugin.TValue[bool]
-	UpdateAvailable plugin.TValue[bool]
-	CreatedAt plugin.TValue[*time.Time]
-	ExpiresAt plugin.TValue[*time.Time]
-	LastSeenAt plugin.TValue[*time.Time]
+	Authorized                plugin.TValue[bool]
+	IsExternal                plugin.TValue[bool]
+	KeyExpiryDisabled         plugin.TValue[bool]
+	UpdateAvailable           plugin.TValue[bool]
+	CreatedAt                 plugin.TValue[*time.Time]
+	ExpiresAt                 plugin.TValue[*time.Time]
+	LastSeenAt                plugin.TValue[*time.Time]
 }
 
 // createTailscaleDevice creates a new instance of this resource
@@ -533,7 +540,7 @@ func createTailscaleDevice(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -641,19 +648,19 @@ func (c *mqlTailscaleDevice) GetLastSeenAt() *plugin.TValue[*time.Time] {
 // mqlTailscaleUser for the tailscale.user resource
 type mqlTailscaleUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTailscaleUserInternal it will be used here
-	Id plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	LoginName plugin.TValue[string]
+	Id            plugin.TValue[string]
+	DisplayName   plugin.TValue[string]
+	LoginName     plugin.TValue[string]
 	ProfilePicUrl plugin.TValue[string]
-	TailnetId plugin.TValue[string]
-	Type plugin.TValue[string]
-	Role plugin.TValue[string]
-	Status plugin.TValue[string]
-	DeviceCount plugin.TValue[int64]
-	CreatedAt plugin.TValue[*time.Time]
-	LastSeenAt plugin.TValue[*time.Time]
+	TailnetId     plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Role          plugin.TValue[string]
+	Status        plugin.TValue[string]
+	DeviceCount   plugin.TValue[int64]
+	CreatedAt     plugin.TValue[*time.Time]
+	LastSeenAt    plugin.TValue[*time.Time]
 }
 
 // createTailscaleUser creates a new instance of this resource
@@ -668,7 +675,7 @@ func createTailscaleUser(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

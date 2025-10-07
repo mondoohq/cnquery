@@ -14,10 +14,16 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceIpmi        string = "ipmi"
+	ResourceIpmiChassis string = "ipmi.chassis"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"ipmi": {
 			// to override args, implement: initIpmi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createIpmi,
@@ -47,7 +53,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -129,11 +135,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"ipmi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlIpmi).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlIpmi).__id, ok = v.Value.(string)
+		return
+	},
 	"ipmi.deviceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIpmi).DeviceID, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -143,9 +149,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ipmi.chassis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlIpmiChassis).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlIpmiChassis).__id, ok = v.Value.(string)
+		return
+	},
 	"ipmi.chassis.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIpmiChassis).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -157,13 +163,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[ipmi] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[ipmi] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[ipmi] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[ipmi] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -181,10 +187,10 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlIpmi for the ipmi resource
 type mqlIpmi struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlIpmiInternal it will be used here
 	DeviceID plugin.TValue[any]
-	Guid plugin.TValue[string]
+	Guid     plugin.TValue[string]
 }
 
 // createIpmi creates a new instance of this resource
@@ -199,7 +205,7 @@ func createIpmi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -239,9 +245,9 @@ func (c *mqlIpmi) GetGuid() *plugin.TValue[string] {
 // mqlIpmiChassis for the ipmi.chassis resource
 type mqlIpmiChassis struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlIpmiChassisInternal it will be used here
-	Status plugin.TValue[any]
+	Status            plugin.TValue[any]
 	SystemBootOptions plugin.TValue[any]
 }
 
@@ -257,7 +263,7 @@ func createIpmiChassis(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}

@@ -93,7 +93,10 @@ var multilineStringFields = []string{
 	// GCP
 	"instance/service-accounts/*/scopes",
 	"instance/attributes/ssh-keys",
+	"instance/attributes/sshKeys",
 	"instance/attributes/startup-script",
+	"instance/attributes/shutdown-script",
+	"instance/attributes/user-data",
 }
 
 // isMultilineString checks if a path should be treated as a raw multiline string.

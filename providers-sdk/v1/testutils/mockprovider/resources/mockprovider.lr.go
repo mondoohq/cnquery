@@ -14,10 +14,19 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// The MQL type names exposed as public consts for ease of reference.
+const (
+	ResourceMuser        string = "muser"
+	ResourceMgroup       string = "mgroup"
+	ResourceMos          string = "mos"
+	ResourceCustomGroups string = "customGroups"
+	ResourceEmptyGroups  string = "emptyGroups"
+)
+
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"muser": {
 			// to override args, implement: initMuser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMuser,
@@ -59,7 +68,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -165,11 +174,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"muser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMuser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMuser).__id, ok = v.Value.(string)
+		return
+	},
 	"muser.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMuser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -199,25 +208,25 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"mgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMgroup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMgroup).__id, ok = v.Value.(string)
+		return
+	},
 	"mgroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMgroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMos).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlMos).__id, ok = v.Value.(string)
+		return
+	},
 	"mos.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMos).Groups, ok = plugin.RawToTValue[*mqlCustomGroups](v.Value, v.Error)
 		return
 	},
 	"customGroups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlCustomGroups).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlCustomGroups).__id, ok = v.Value.(string)
+		return
+	},
 	"customGroups.length": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCustomGroups).Length, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -227,9 +236,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"emptyGroups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlEmptyGroups).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlEmptyGroups).__id, ok = v.Value.(string)
+		return
+	},
 	"emptyGroups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEmptyGroups).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -237,13 +246,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[mockprovider] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[mockprovider] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[mockprovider] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[mockprovider] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -261,15 +270,15 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlMuser for the muser resource
 type mqlMuser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMuserInternal it will be used here
-	Name plugin.TValue[string]
-	Group plugin.TValue[*mqlMgroup]
-	Nullgroup plugin.TValue[*mqlMgroup]
+	Name       plugin.TValue[string]
+	Group      plugin.TValue[*mqlMgroup]
+	Nullgroup  plugin.TValue[*mqlMgroup]
 	Nullstring plugin.TValue[string]
-	Groups plugin.TValue[[]any]
-	Dict plugin.TValue[any]
-	Error plugin.TValue[string]
+	Groups     plugin.TValue[[]any]
+	Dict       plugin.TValue[any]
+	Error      plugin.TValue[string]
 }
 
 // createMuser creates a new instance of this resource
@@ -284,7 +293,7 @@ func createMuser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -382,7 +391,7 @@ func (c *mqlMuser) GetError() *plugin.TValue[string] {
 // mqlMgroup for the mgroup resource
 type mqlMgroup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMgroupInternal it will be used here
 	Name plugin.TValue[string]
 }
@@ -399,7 +408,7 @@ func createMgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -431,7 +440,7 @@ func (c *mqlMgroup) GetName() *plugin.TValue[string] {
 // mqlMos for the mos resource
 type mqlMos struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlMosInternal it will be used here
 	Groups plugin.TValue[*mqlCustomGroups]
 }
@@ -487,10 +496,10 @@ func (c *mqlMos) GetGroups() *plugin.TValue[*mqlCustomGroups] {
 // mqlCustomGroups for the customGroups resource
 type mqlCustomGroups struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlCustomGroupsInternal it will be used here
 	Length plugin.TValue[int64]
-	List plugin.TValue[[]any]
+	List   plugin.TValue[[]any]
 }
 
 // createCustomGroups creates a new instance of this resource
@@ -550,7 +559,7 @@ func (c *mqlCustomGroups) GetList() *plugin.TValue[[]any] {
 // mqlEmptyGroups for the emptyGroups resource
 type mqlEmptyGroups struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlEmptyGroupsInternal it will be used here
 	List plugin.TValue[[]any]
 }

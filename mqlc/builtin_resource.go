@@ -646,7 +646,11 @@ func compileResourceCmpEmpty(c *compiler, typ types.Type, ref uint64, id string,
 			Function: &llx.Function{
 				Type:    string(types.Bool),
 				Binding: ref,
-				Args:    []*llx.Primitive{},
+				Args: []*llx.Primitive{
+					{
+						Type: string(types.Empty),
+					},
+				},
 			},
 		})
 		checksum := c.Result.CodeV2.Checksums[c.tailRef()]
@@ -666,7 +670,11 @@ func compileResourceCmpEmpty(c *compiler, typ types.Type, ref uint64, id string,
 		Function: &llx.Function{
 			Type:    string(types.Bool),
 			Binding: listRef,
-			Args:    []*llx.Primitive{},
+			Args: []*llx.Primitive{
+				{
+					Type: string(types.Empty),
+				},
+			},
 		},
 	})
 
