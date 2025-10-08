@@ -932,3 +932,14 @@ func TestMXLinuxDetector(t *testing.T) {
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
+
+func ZorinLinuxDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-zorin.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "zorin", di.Name, "os name should be identified")
+	assert.Equal(t, "Zorin OS 16", di.Title, "os title should be identified")
+	assert.Equal(t, "16", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}

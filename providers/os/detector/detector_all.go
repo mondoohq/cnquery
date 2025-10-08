@@ -168,6 +168,17 @@ var ubuntu = &PlatformResolver{
 	},
 }
 
+var zorin = &PlatformResolver{
+	Name:     "zorin",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "zorin" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var raspbian = &PlatformResolver{
 	Name:     "raspbian",
 	IsFamily: false,
@@ -939,7 +950,7 @@ var redhatFamily = &PlatformResolver{
 var debianFamily = &PlatformResolver{
 	Name:     "debian",
 	IsFamily: true,
-	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary},
+	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},
