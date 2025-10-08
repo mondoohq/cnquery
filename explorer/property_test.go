@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/v12"
 	"go.mondoo.com/cnquery/v12/mqlc"
 	"go.mondoo.com/cnquery/v12/providers"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func TestProperty_RefreshMrn(t *testing.T) {
@@ -39,6 +40,21 @@ func TestProperty_MustNotBeEmpty(t *testing.T) {
 	_, err := in.RefreshChecksumAndType(conf)
 
 	assert.Error(t, err)
+}
+
+func TestProperty_AllowedOnlyType(t *testing.T) {
+	in := &Property{
+		Uid:  "uid1",
+		Type: string(types.String),
+	}
+
+	schema := providers.DefaultRuntime().Schema()
+	conf := mqlc.NewConfig(schema, cnquery.DefaultFeatures)
+	cb, err := in.RefreshChecksumAndType(conf)
+
+	assert.Nil(t, cb)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, in.Checksum)
 }
 
 func TestProperty_MustCompile(t *testing.T) {
