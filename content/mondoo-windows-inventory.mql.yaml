@@ -77,7 +77,7 @@ packs:
         mql: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
       - uid: mondoo-windows-interface-configuration
         title: Network interfaces
-        mql: windows.computerInfo['CsNetworkAdapters']
+        mql: network.interfaces{*}
       - uid: mondoo-windows-computer-info
         title: Windows Computer/ System information
         mql: windows.computerInfo

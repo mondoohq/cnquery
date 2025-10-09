@@ -102,8 +102,7 @@ packs:
         mql: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
       - uid: mondoo-macos-interface-configuration
         title: Network interface configuration
-        filters: mondoo.capabilities.contains("run-command")
-        mql: command("ifconfig").stdout
+        mql: network.interfaces{*}
       - uid: mondoo-macos-sshd-interface-configuration
         title: sshd configuration
         mql: sshd.config.params
