@@ -2947,7 +2947,6 @@ resources:
       deprecated: {}
       endOfLifeDate: {}
       hidden: {}
-      isDefault: {}
       majorVersion: {}
       minorVersion: {}
       name: {}

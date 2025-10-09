@@ -61,7 +61,7 @@ type AzureWebAppStackRuntime struct {
 	MinorVersion  string    `json:"minorVersion,omitempty"`
 	IsDeprecated  bool      `json:"isDeprecated,omitempty"`
 	IsHidden      bool      `json:"isHidden,omitempty"`
-	IsDefault     bool      `json:"isDefault,omitempty"`
+	AutoUpdate    bool      `json:"autoUpdate,omitempty"`
 	EndOfLifeDate time.Time `json:"endOfLifeDate,omitempty"`
 }
 
@@ -105,7 +105,7 @@ type runtimeStackDescriptor struct {
 	Name         string
 	MinorVersion string
 	ID           string
-	IsDefault    bool
+	AutoUpdate   bool
 	IsDeprecated bool
 }
 
@@ -134,8 +134,8 @@ func runtimeStackDescriptorFromMap(values map[string]any) *runtimeStackDescripto
 	if id, ok := values["id"].(string); ok {
 		descriptor.ID = id
 	}
-	if isDefault, ok := values["isDefault"].(bool); ok {
-		descriptor.IsDefault = isDefault
+	if autoUpdate, ok := values["autoUpdate"].(bool); ok {
+		descriptor.AutoUpdate = autoUpdate
 	}
 	if isDeprecated, ok := values["isDeprecated"].(bool); ok {
 		descriptor.IsDeprecated = isDeprecated
@@ -148,17 +148,27 @@ func runtimeStackDescriptorFromResource(runtime *mqlAzureSubscriptionWebServiceA
 	if runtime == nil {
 		return descriptor
 	}
+	var runtimeName string
 	if name, ok := stringFromTValue(&runtime.Name); ok {
+		runtimeName = name
 		descriptor.Name = strings.ToLower(name)
 	}
 	if minor, ok := stringFromTValue(&runtime.MinorVersion); ok {
 		descriptor.MinorVersion = strings.ToLower(minor)
 	}
-	if id, ok := stringFromTValue(&runtime.RuntimeVersion); ok {
+	subscriptionID := ""
+	if runtime.MqlRuntime != nil {
+		if conn, ok := runtime.MqlRuntime.Connection.(*connection.AzureConnection); ok {
+			subscriptionID = conn.SubId()
+		}
+	}
+	if subscriptionID != "" && runtimeName != "" {
+		descriptor.ID = fmt.Sprintf("%s/%s", subscriptionID, runtimeName)
+	} else if id, ok := stringFromTValue(&runtime.RuntimeVersion); ok {
 		descriptor.ID = id
 	}
-	if isDefault, ok := boolFromTValue(&runtime.IsDefault); ok {
-		descriptor.IsDefault = isDefault
+	if autoUpdate, ok := boolFromTValue(&runtime.AutoUpdate); ok {
+		descriptor.AutoUpdate = autoUpdate
 	}
 	if isDeprecated, ok := boolFromTValue(&runtime.Deprecated); ok {
 		descriptor.IsDeprecated = isDeprecated
@@ -276,7 +286,7 @@ func computeWebAppStack(runtime *plugin.Runtime, config *mqlAzureSubscriptionWeb
 	}
 
 	if match != nil {
-		runtimeInfo.IsDefault = match.IsDefault
+		runtimeInfo.AutoUpdate = match.AutoUpdate
 		runtimeInfo.IsDeprecated = match.IsDeprecated
 	} else {
 		if len(runtimeInfo.MinorVersion) > 0 {

@@ -2021,8 +2021,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appRuntimeStack.minorVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetMinorVersion()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.appRuntimeStack.isDefault": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetIsDefault()).ToDataRes(types.Bool)
+	"azure.subscription.webService.appRuntimeStack.autoUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetAutoUpdate()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.webService.appRuntimeStack.deprecated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetDeprecated()).ToDataRes(types.Bool)
@@ -5354,8 +5354,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).MinorVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.appRuntimeStack.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.webService.appRuntimeStack.autoUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).AutoUpdate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appRuntimeStack.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12773,7 +12773,7 @@ type mqlAzureSubscriptionWebServiceAppRuntimeStack struct {
 	RuntimeVersion plugin.TValue[string]
 	MajorVersion   plugin.TValue[string]
 	MinorVersion   plugin.TValue[string]
-	IsDefault      plugin.TValue[bool]
+	AutoUpdate     plugin.TValue[bool]
 	Deprecated     plugin.TValue[bool]
 	Hidden         plugin.TValue[bool]
 	EndOfLifeDate  plugin.TValue[*time.Time]
@@ -12831,8 +12831,8 @@ func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetMinorVersion() *plugi
 	return &c.MinorVersion
 }
 
-func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetIsDefault() *plugin.TValue[bool] {
-	return &c.IsDefault
+func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetAutoUpdate() *plugin.TValue[bool] {
+	return &c.AutoUpdate
 }
 
 func (c *mqlAzureSubscriptionWebServiceAppRuntimeStack) GetDeprecated() *plugin.TValue[bool] {
