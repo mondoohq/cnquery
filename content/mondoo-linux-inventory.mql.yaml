@@ -96,9 +96,7 @@ packs:
         mql: services.where(running == true) { name running enabled masked type }
       - uid: mondoo-linux-interface-configuration
         title: Network interface configuration
-        filters: mondoo.capabilities.contains("run-command")
-        mql: |
-          parse.json(content: command('ip -j a').stdout).params
+        mql: network.interfaces{*}
       - uid: mondoo-sshd-interface-configuration
         title: sshd configuration
         filters: package('openssh-server').installed || package('openssh').installed
