@@ -234,6 +234,17 @@ var elementary = &PlatformResolver{
 	},
 }
 
+var steamos = &PlatformResolver{
+	Name:     "steamos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "steamos" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 // rhel PlatformResolver only detects redhat and no derivatives
 var rhel = &PlatformResolver{
 	Name:     "redhat",
@@ -968,7 +979,7 @@ var suseFamily = &PlatformResolver{
 var archFamily = &PlatformResolver{
 	Name:     "arch",
 	IsFamily: true,
-	Children: []*PlatformResolver{arch, manjaro},
+	Children: []*PlatformResolver{arch, manjaro, steamos},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// if the file exists, we are on arch or one of its derivatives
 		f, err := conn.FileSystem().Open("/etc/arch-release")

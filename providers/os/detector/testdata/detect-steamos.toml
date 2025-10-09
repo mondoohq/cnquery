@@ -1,0 +1,30 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.11.11-valve24-2-neptune-611-gfd0dd251480d"
+
+[files."/etc/arch-release"]
+content = ""
+
+[files."/etc/os-release"]
+content = """
+NAME="SteamOS"
+PRETTY_NAME="SteamOS"
+VERSION_CODENAME=holo
+ID=steamos
+ID_LIKE=arch
+ANSI_COLOR="1;35"
+HOME_URL="https://www.steampowered.com/"
+DOCUMENTATION_URL="https://support.steampowered.com/"
+SUPPORT_URL="https://support.steampowered.com/"
+BUG_REPORT_URL="https://support.steampowered.com/"
+LOGO=steamos
+VARIANT_ID=steamdeck
+VERSION_ID=3.7.16
+BUILD_ID=20250929.1
+STEAMOS_DEFAULT_UPDATE_BRANCH=stable
+"""
