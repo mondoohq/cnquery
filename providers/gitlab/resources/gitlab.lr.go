@@ -179,6 +179,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.group.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetProjects()).ToDataRes(types.Array(types.Resource("gitlab.project")))
 	},
+	"gitlab.group.allowedEmailDomainsList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetAllowedEmailDomainsList()).ToDataRes(types.String)
+	},
 	"gitlab.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetId()).ToDataRes(types.Int)
 	},
@@ -283,6 +286,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.groupRunnersEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetGroupRunnersEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.removeSourceBranchAfterMerge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetRemoveSourceBranchAfterMerge()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.lfsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetLfsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.autocloseReferencedIssues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetAutocloseReferencedIssues()).ToDataRes(types.Bool)
 	},
 	"gitlab.project.approvalRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalRule).GetId()).ToDataRes(types.Int)
@@ -421,6 +433,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.group.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.allowedEmailDomainsList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).AllowedEmailDomainsList, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -565,6 +581,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.groupRunnersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).GroupRunnersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.removeSourceBranchAfterMerge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).RemoveSourceBranchAfterMerge, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.lfsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).LfsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.autocloseReferencedIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).AutocloseReferencedIssues, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.approvalRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -732,6 +760,7 @@ type mqlGitlabGroup struct {
 	EmailsDisabled                 plugin.TValue[bool]
 	MentionsDisabled               plugin.TValue[bool]
 	Projects                       plugin.TValue[[]any]
+	AllowedEmailDomainsList        plugin.TValue[string]
 }
 
 // createGitlabGroup creates a new instance of this resource
@@ -831,6 +860,10 @@ func (c *mqlGitlabGroup) GetProjects() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGitlabGroup) GetAllowedEmailDomainsList() *plugin.TValue[string] {
+	return &c.AllowedEmailDomainsList
+}
+
 // mqlGitlabProject for the gitlab.project resource
 type mqlGitlabProject struct {
 	MqlRuntime *plugin.Runtime
@@ -871,6 +904,9 @@ type mqlGitlabProject struct {
 	EmptyRepo                                 plugin.TValue[bool]
 	SharedRunnersEnabled                      plugin.TValue[bool]
 	GroupRunnersEnabled                       plugin.TValue[bool]
+	RemoveSourceBranchAfterMerge              plugin.TValue[bool]
+	LfsEnabled                                plugin.TValue[bool]
+	AutocloseReferencedIssues                 plugin.TValue[bool]
 }
 
 // createGitlabProject creates a new instance of this resource
@@ -1122,6 +1158,18 @@ func (c *mqlGitlabProject) GetSharedRunnersEnabled() *plugin.TValue[bool] {
 
 func (c *mqlGitlabProject) GetGroupRunnersEnabled() *plugin.TValue[bool] {
 	return &c.GroupRunnersEnabled
+}
+
+func (c *mqlGitlabProject) GetRemoveSourceBranchAfterMerge() *plugin.TValue[bool] {
+	return &c.RemoveSourceBranchAfterMerge
+}
+
+func (c *mqlGitlabProject) GetLfsEnabled() *plugin.TValue[bool] {
+	return &c.LfsEnabled
+}
+
+func (c *mqlGitlabProject) GetAutocloseReferencedIssues() *plugin.TValue[bool] {
+	return &c.AutocloseReferencedIssues
 }
 
 // mqlGitlabProjectApprovalRule for the gitlab.project.approvalRule resource
