@@ -1,0 +1,23 @@
+resources:
+  sshd:
+    fields: {}
+    min_mondoo_version: 5.15.0
+  sshd.config:
+    fields:
+      blocks:
+        min_mondoo_version: latest
+      ciphers: {}
+      content: {}
+      file: {}
+      files:
+        min_mondoo_version: latest
+      hostkeys: {}
+      kexs: {}
+      macs: {}
+      params: {}
+      permitRootLogin:
+        min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
+      title: Check that the SSH banner is sourced from /etc/ssh/sshd-banner

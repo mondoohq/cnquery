@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sort"
 	"strings"
 	"text/template"
 
@@ -59,74 +58,6 @@ var docsYamlCmd = &cobra.Command{
 	},
 }
 
-// required to be before more detail platform to ensure the right mapping
-var platformMappingKeys = []string{
-	"aws", "gcp", "k8s", "azure", "azurerm", "arista", "equinix", "ms365", "msgraph", "vsphere", "esxi", "terraform", "terraform.state", "terraform.plan",
-}
-
-var platformMapping = map[string][]string{
-	"aws":             {"aws"},
-	"gcp":             {"gcp"},
-	"k8s":             {"kubernetes"},
-	"azure":           {"azure"},
-	"azurerm":         {"azure"},
-	"arista":          {"arista-eos"},
-	"equinix":         {"equinix"},
-	"ms365":           {"microsoft365"},
-	"msgraph":         {"microsoft365"},
-	"vsphere":         {"vmware-esxi", "vmware-vsphere"},
-	"esxi":            {"vmware-esxi", "vmware-vsphere"},
-	"terraform":       {"terraform-hcl"},
-	"terraform.state": {"terraform-state"},
-	"terraform.plan":  {"terraform-plan"},
-}
-
-func ensureDefaults(id string, entry *lrcore.LrDocsEntry, version string) *lrcore.LrDocsEntry {
-	for _, k := range platformMappingKeys {
-		if entry == nil {
-			entry = &lrcore.LrDocsEntry{}
-		}
-		if entry.MinMondooVersion == "" {
-			entry.MinMondooVersion = version
-		} else if entry.MinMondooVersion == defaultVersionField && version != defaultVersionField {
-			// Update to specified version if previously set to default
-			entry.MinMondooVersion = version
-		}
-		if strings.HasPrefix(id, k) {
-			entry.Platform = &lrcore.LrDocsPlatform{
-				Name: platformMapping[k],
-			}
-		}
-	}
-	return entry
-}
-
-func mergeFields(version string, entry *lrcore.LrDocsEntry, fields []*lrcore.BasicField) {
-	if entry == nil && len(fields) > 0 {
-		entry = &lrcore.LrDocsEntry{}
-		entry.Fields = map[string]*lrcore.LrDocsField{}
-	} else if entry == nil {
-		return
-	} else if entry.Fields == nil {
-		entry.Fields = map[string]*lrcore.LrDocsField{}
-	}
-	docFields := entry.Fields
-	for _, f := range fields {
-		if docFields[f.ID] == nil {
-			fDoc := &lrcore.LrDocsField{
-				MinMondooVersion: version,
-			}
-			entry.Fields[f.ID] = fDoc
-		} else if entry.Fields[f.ID].MinMondooVersion == defaultVersionField && version != defaultVersionField {
-			entry.Fields[f.ID].MinMondooVersion = version
-		}
-		// Scrub field version if same as resource
-		if entry.Fields[f.ID].MinMondooVersion == entry.MinMondooVersion {
-			entry.Fields[f.ID].MinMondooVersion = ""
-		}
-	}
-}
-
 var docsJsonCmd = &cobra.Command{
 	Use:   "json",
 	Short: "convert yaml docs manifest into json",
@@ -157,43 +88,6 @@ func runDocsYamlCmd(lrFile string, headerFile string, version string, docsFilePa
 		return
 	}
 
-	// to ensure we generate the same markdown, we sort the resources first
-	sort.SliceStable(res.Resources, func(i, j int) bool {
-		return res.Resources[i].ID < res.Resources[j].ID
-	})
-
-	d := lrcore.LrDocs{
-		Resources: map[string]*lrcore.LrDocsEntry{},
-	}
-
-	fields := map[string][]*lrcore.BasicField{}
-	isPrivate := map[string]bool{}
-	for i := range res.Resources {
-		id := res.Resources[i].ID
-		isPrivate[id] = res.Resources[i].IsPrivate
-		d.Resources[id] = nil
-		if res.Resources[i].Body != nil {
-			basicFields := []*lrcore.BasicField{}
-			for _, f := range res.Resources[i].Body.Fields {
-				if f.BasicField != nil {
-					basicFields = append(basicFields, f.BasicField)
-				}
-			}
-			fields[id] = basicFields
-		}
-	}
-
-	// default behaviour is to output the result on cli
-	if docsFilePath == "" {
-		data, err := yaml.Marshal(d)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not marshal docs")
-		}
-
-		fmt.Println(string(data))
-		return
-	}
-
 	// if an file was provided, we check if the file exist and merge existing content with the new resources
 	// to ensure that existing documentation stays available
 	var existingData lrcore.LrDocs
@@ -208,28 +102,28 @@ func runDocsYamlCmd(lrFile string, headerFile string, version string, docsFilePa
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not load yaml data")
 		}
-
-		log.Info().Msg("merge content")
-		for k := range existingData.Resources {
-			v := existingData.Resources[k]
-			d.Resources[k] = v
-		}
 	}
 
-	// ensure default values and fields are set
-	for k := range d.Resources {
-		d.Resources[k] = ensureDefaults(k, d.Resources[k], version)
-		mergeFields(version, d.Resources[k], fields[k])
-		// Merge in other doc fields from core.lr
-		d.Resources[k].IsPrivate = isPrivate[k]
+	docs, err := res.GenerateDocs(version, defaultVersionField, existingData)
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not generate docs")
+	}
+	// default behaviour is to output the result on cli
+	if docsFilePath == "" {
+		data, err := yaml.Marshal(docs)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not marshal docs")
+		}
+
+		fmt.Println(string(data))
+		return
 	}
 
 	// generate content
-	data, err := yaml.Marshal(d)
+	data, err := yaml.Marshal(docs)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not marshal docs")
 	}
-
 	// add license header
 	var headerTpl *template.Template
 	if headerFile != "" {
