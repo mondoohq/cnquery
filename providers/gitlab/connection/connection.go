@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
@@ -48,7 +48,7 @@ func NewGitLabConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 			if cred.Type == vault.CredentialType_password {
 				token = string(cred.Secret)
 			} else {
-				log.Warn().Str("credential-type", cred.Type.String()).Msg("unsupported credential type for GitHub provider")
+				log.Warn().Str("credential-type", cred.Type.String()).Msg("unsupported credential type for GitLab provider")
 			}
 		}
 	}
