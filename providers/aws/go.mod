@@ -15,13 +15,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.35.6
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.59.3
-	github.com/aws/aws-sdk-go-v2/service/backup v1.47.7
+	github.com/aws/aws-sdk-go-v2/service/backup v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.54.4
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.53.6
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.58.2
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.67.5
-	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.34.5
+	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.58.2
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.7
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.51.0
@@ -43,9 +43,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.77.6
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.45.3
-	github.com/aws/aws-sdk-go-v2/service/rds v1.108.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.108.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.3
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.4
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.66.2
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.215.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.39.6
@@ -65,8 +65,8 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/afero v1.15.0
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/cnquery/v12 v12.3.0
-	golang.org/x/exp v0.0.0-20251002181428-27f1f14c8bb9
+	go.mondoo.com/cnquery/v12 v12.4.0
+	golang.org/x/exp v0.0.0-20251009144603-d2f985daa21b
 	k8s.io/client-go v0.34.1
 )
 
@@ -108,7 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.32.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.8.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.11.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.9 // indirect
@@ -268,16 +268,16 @@ require (
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	go.uber.org/mock v0.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
-	golang.org/x/crypto v0.42.0 // indirect
-	golang.org/x/mod v0.28.0 // indirect
-	golang.org/x/net v0.44.0 // indirect
+	golang.org/x/crypto v0.43.0 // indirect
+	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/oauth2 v0.31.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/term v0.35.0 // indirect
-	golang.org/x/text v0.29.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/term v0.36.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/time v0.13.0 // indirect
-	golang.org/x/tools v0.37.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.248.0 // indirect
 	google.golang.org/genproto v0.0.0-20250826171959-ef028d996bc1 // indirect
