@@ -557,10 +557,14 @@ func RawDataArgsToResultArgs(args map[string]*llx.RawData) (map[string]*llx.Resu
 }
 
 func getAssetIdForRecording(asset *inventory.Asset) string {
-	id := asset.Mrn
-	if id == "" && len(asset.PlatformIds) > 0 {
-		id = asset.PlatformIds[0]
+	if asset.Mrn != "" {
+		return asset.Mrn
 	}
 
-	return id
+	slices.Sort(asset.PlatformIds)
+	if len(asset.PlatformIds) > 0 {
+		return asset.PlatformIds[0]
+	}
+
+	return ""
 }
