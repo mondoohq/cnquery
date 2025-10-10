@@ -8,6 +8,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func init() {
+	rootCmd.AddCommand(generateCmd)
+	generateCmd.Flags().String("dist", "", "folder for output LR and docs generation")
+	generateCmd.MarkFlagRequired("dist") // nolint:errcheck
+	generateCmd.Flags().String("docs-file", "", "path to the docs file")
+	generateCmd.MarkFlagRequired("docs-file") // nolint:errcheck
+}
+
 var generateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "generates Go code and documentation from an LR schema file",
@@ -38,12 +46,4 @@ var generateCmd = &cobra.Command{
 		runDocsYamlCmd(lrFile, headerFile, defaultVersionField, docsFile)
 		runDocsJsonCmd(docsFile, dist)
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(generateCmd)
-	generateCmd.Flags().String("dist", "", "folder for output LR and docs generation")
-	generateCmd.MarkFlagRequired("dist")
-	generateCmd.Flags().String("docs-file", "", "path to the docs file")
-	generateCmd.MarkFlagRequired("docs-file")
 }
