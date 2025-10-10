@@ -41,7 +41,8 @@ func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["requireTwoFactorAuthentication"] = llx.BoolData(grp.RequireTwoFactorAuth)
 	args["preventForkingOutsideGroup"] = llx.BoolData(grp.PreventForkingOutsideGroup)
 	args["mentionsDisabled"] = llx.BoolData(grp.MentionsDisabled)
-	args["emailsDisabled"] = llx.BoolData(grp.EmailsDisabled)
+	args["emailsDisabled"] = llx.BoolData(!grp.EmailsEnabled)
+	args["allowedEmailDomainsList"] = llx.StringData(grp.AllowedEmailDomainsList)
 
 	return args, nil, nil
 }
@@ -77,34 +78,37 @@ func (g *mqlGitlabGroup) projects() ([]any, error) {
 
 func getGitlabProjectArgs(prj *gitlab.Project) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
-		"id":                          llx.IntData(int64(prj.ID)),
-		"name":                        llx.StringData(prj.Name),
-		"fullName":                    llx.StringData(prj.NameWithNamespace),
 		"allowMergeOnSkippedPipeline": llx.BoolData(prj.AllowMergeOnSkippedPipeline),
 		"archived":                    llx.BoolData(prj.Archived),
+		"autocloseReferencedIssues":   llx.BoolData(prj.AutocloseReferencedIssues),
 		"autoDevopsEnabled":           llx.BoolData(prj.AutoDevopsEnabled),
 		"containerRegistryEnabled":    llx.BoolData(prj.ContainerRegistryEnabled),
 		"createdAt":                   llx.TimeDataPtr(prj.CreatedAt),
 		"defaultBranch":               llx.StringData(prj.DefaultBranch),
 		"description":                 llx.StringData(prj.Description),
 		"emailsDisabled":              llx.BoolData(!prj.EmailsEnabled),
+		"emptyRepo":                   llx.BoolData(prj.EmptyRepo),
+		"fullName":                    llx.StringData(prj.NameWithNamespace),
+		"groupRunnersEnabled":         llx.BoolData(prj.GroupRunnersEnabled),
+		"id":                          llx.IntData(int64(prj.ID)),
 		"issuesEnabled":               llx.BoolData(prj.IssuesEnabled),
+		"jobsEnabled":                 llx.BoolData(prj.JobsEnabled),
+		"lfsEnabled":                  llx.BoolData(prj.LFSEnabled),
 		"mergeRequestsEnabled":        llx.BoolData(prj.MergeRequestsEnabled),
 		"mirror":                      llx.BoolData(prj.Mirror),
+		"name":                        llx.StringData(prj.Name),
 		"onlyAllowMergeIfAllDiscussionsAreResolved": llx.BoolData(prj.OnlyAllowMergeIfAllDiscussionsAreResolved),
 		"onlyAllowMergeIfPipelineSucceeds":          llx.BoolData(prj.OnlyAllowMergeIfPipelineSucceeds),
 		"packagesEnabled":                           llx.BoolData(prj.PackagesEnabled),
 		"path":                                      llx.StringData(prj.Path),
+		"removeSourceBranchAfterMerge":              llx.BoolData(prj.RemoveSourceBranchAfterMerge),
 		"requirementsEnabled":                       llx.BoolData(prj.RequirementsEnabled),
 		"serviceDeskEnabled":                        llx.BoolData(prj.ServiceDeskEnabled),
+		"sharedRunnersEnabled":                      llx.BoolData(prj.SharedRunnersEnabled),
 		"snippetsEnabled":                           llx.BoolData(prj.SnippetsEnabled),
 		"visibility":                                llx.StringData(string(prj.Visibility)),
 		"webURL":                                    llx.StringData(prj.WebURL),
 		"wikiEnabled":                               llx.BoolData(prj.WikiEnabled),
-		"jobsEnabled":                               llx.BoolData(prj.JobsEnabled),
-		"emptyRepo":                                 llx.BoolData(prj.EmptyRepo),
-		"sharedRunnersEnabled":                      llx.BoolData(prj.SharedRunnersEnabled),
-		"groupRunnersEnabled":                       llx.BoolData(prj.GroupRunnersEnabled),
 	}
 }
 
