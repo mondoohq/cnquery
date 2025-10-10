@@ -72,7 +72,7 @@ const (
 	// status: new, we still need to fix a few more tests
 	FailIfNoEntryPoints Feature = 12
 
-	// 
+	//
 	// start:  v12.x
 	// status: new
 	UploadResultsV2 Feature = 13
@@ -83,19 +83,19 @@ const (
 )
 
 var FeaturesValue = map[string]Feature{
-	"MassQueries": MassQueries,
-	"PiperCode": PiperCode,
-	"BoolAssertions": BoolAssertions,
-	"K8sNodeDiscovery": K8sNodeDiscovery,
-	"MQLAssetContext": MQLAssetContext,
-	"ErrorsAsFailures": ErrorsAsFailures,
-	"StoreResourcesData": StoreResourcesData,
-	"FineGrainedAssets": FineGrainedAssets,
-	"SerialNumberAsID": SerialNumberAsID,
+	"MassQueries":          MassQueries,
+	"PiperCode":            PiperCode,
+	"BoolAssertions":       BoolAssertions,
+	"K8sNodeDiscovery":     K8sNodeDiscovery,
+	"MQLAssetContext":      MQLAssetContext,
+	"ErrorsAsFailures":     ErrorsAsFailures,
+	"StoreResourcesData":   StoreResourcesData,
+	"FineGrainedAssets":    FineGrainedAssets,
+	"SerialNumberAsID":     SerialNumberAsID,
 	"ForceShellCompletion": ForceShellCompletion,
-	"ResourceContext": ResourceContext,
-	"FailIfNoEntryPoints": FailIfNoEntryPoints,
-	"UploadResultsV2": UploadResultsV2,
+	"ResourceContext":      ResourceContext,
+	"FailIfNoEntryPoints":  FailIfNoEntryPoints,
+	"UploadResultsV2":      UploadResultsV2,
 }
 
 // DefaultFeatures are a set of default flags that are active
