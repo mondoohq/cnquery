@@ -1,0 +1,21 @@
+sshd {}
+
+sshd.config {
+  init(path? string)
+  file() file
+  files(file) []file
+  content(file) string
+  params(file) map[string]string
+  blocks(file) []sshd.config.matchBlock
+  ciphers(params) []string
+  macs(params) []string
+  kexs(params) []string
+  hostkeys(params) []string
+  permitRootLogin(params) []string
+}
+
+auditd.config {
+  init(path? string)
+  file() file
+  params(file) map[string]string
+}
