@@ -966,3 +966,15 @@ func TestAzureLinuxDetector(t *testing.T) {
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
+
+func TestDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-flatcar.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "flatcar", di.Name, "os name should be identified")
+	assert.Equal(t, "Flatcar Container Linux by Kinvolk", di.Title, "os title should be identified")
+	assert.Equal(t, "4459.0.0", di.Version, "os version should be identified")
+	assert.Equal(t, "2025-09-12-2110", di.Build, "os build should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
