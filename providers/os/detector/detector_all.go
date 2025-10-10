@@ -125,16 +125,13 @@ var azurelinux = &PlatformResolver{
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		if pf.Name == "azurelinux" {
-			// Microsoft includes the version in the title, which we do not want
-			pf.Title = "Microsoft Azure Linux"
-
 			osrd := NewOSReleaseDetector(conn)
 			osr, err := osrd.osrelease()
 			if err != nil {
 				// can't parse os-release, but we know it is azurelinux
 				return true, nil
 			}
-
+			pf.Title = osr["NAME"]
 			pf.Build = osr["VERSION"]
 			return true, nil
 		}
