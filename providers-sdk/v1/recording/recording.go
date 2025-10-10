@@ -320,22 +320,15 @@ func (r *recording) finalize() {
 }
 
 func (r *recording) getExistingAsset(asset *inventory.Asset) *Asset {
-	if asset.Mrn != "" || asset.Id != "" {
-		for _, existing := range r.Assets {
-			id := existing.Asset.ID
-			if id == "" {
-				continue
-			}
-			if id == asset.Mrn {
+	for _, existing := range r.Assets {
+		id := existing.Asset.ID
+		if id == asset.Mrn {
+			return existing
+		}
+
+		for _, pidExisting := range existing.Asset.PlatformIDs {
+			if slices.Contains(asset.PlatformIds, pidExisting) {
 				return existing
-			}
-			if id == asset.Id {
-				return existing
-			}
-			for _, pidExisting := range existing.Asset.PlatformIDs {
-				if slices.Contains(asset.PlatformIds, pidExisting) {
-					return existing
-				}
 			}
 		}
 	}
@@ -350,7 +343,7 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	}
 	id := getAssetIdForRecording(asset)
 	if id == "" {
-		log.Debug().Msg("cannot store asset in recording, asset has no id or mrn")
+		log.Debug().Msg("cannot store asset in recording, asset has no mrn or platform ids")
 		return
 	}
 	recordingAsset := r.getExistingAsset(asset)
@@ -564,9 +557,14 @@ func RawDataArgsToResultArgs(args map[string]*llx.RawData) (map[string]*llx.Resu
 }
 
 func getAssetIdForRecording(asset *inventory.Asset) string {
-	id := asset.Mrn
-	if id == "" {
-		id = asset.Id
+	if asset.Mrn != "" {
+		return asset.Mrn
 	}
-	return id
+
+	slices.Sort(asset.PlatformIds)
+	if len(asset.PlatformIds) > 0 {
+		return asset.PlatformIds[0]
+	}
+
+	return ""
 }
