@@ -24,6 +24,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go/format"
 	"os"
 	"strconv"
 	"strings"
@@ -170,7 +171,12 @@ var AvailableFeatures = %ss{
 	out.WriteString("}\n")
 
 	if outPath != "" {
-		err := os.WriteFile(outPath, []byte(out.String()), 0o644)
+		fmtGoData, err := format.Source([]byte(out.String()))
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "failed to format go code: "+err.Error())
+			os.Exit(1)
+		}
+		err = os.WriteFile(outPath, fmtGoData, 0o644)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "failed to write go code to "+outPath+": "+err.Error())
 			os.Exit(1)
