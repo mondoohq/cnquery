@@ -127,12 +127,10 @@ var azurelinux = &PlatformResolver{
 		if pf.Name == "azurelinux" {
 			osrd := NewOSReleaseDetector(conn)
 			osr, err := osrd.osrelease()
-			if err != nil {
-				// can't parse os-release, but we know it is azurelinux
-				return true, nil
+			if err == nil {
+				pf.Title = osr["NAME"]
+				pf.Build = osr["VERSION"]
 			}
-			pf.Title = osr["NAME"]
-			pf.Build = osr["VERSION"]
 			return true, nil
 		}
 		return false, nil
@@ -146,11 +144,9 @@ var flatcar = &PlatformResolver{
 		if pf.Name == "flatcar" {
 			osrd := NewOSReleaseDetector(conn)
 			osr, err := osrd.osrelease()
-			if err != nil {
-				// can't parse os-release, but we know it is flatcar
-				return true, nil
+			if err == nil {
+				pf.Title = osr["NAME"]
 			}
-			pf.Title = osr["NAME"]
 			return true, nil
 		}
 		return false, nil
