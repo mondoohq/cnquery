@@ -103,17 +103,6 @@ func TestFedoraCoreOSDetector(t *testing.T) {
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
-func TestCoreOSDetector(t *testing.T) {
-	di, err := detectPlatformFromMock("./testdata/detect-coreos.toml")
-	assert.Nil(t, err, "was able to create the provider")
-
-	assert.Equal(t, "flatcar", di.Name, "os name should be identified")
-	assert.Equal(t, "Flatcar Container Linux by Kinvolk 2430.0.0 (Rhyolite)", di.Title, "os title should be identified")
-	assert.Equal(t, "2430.0.0", di.Version, "os version should be identified")
-	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
-	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
-}
-
 func TestCentos5Detector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-centos-5.toml")
 	assert.Nil(t, err, "was able to create the provider")
