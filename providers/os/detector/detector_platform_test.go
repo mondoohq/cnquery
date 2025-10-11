@@ -967,7 +967,7 @@ func TestAzureLinuxDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
-func TestDetector(t *testing.T) {
+func TestDetectorFlatcar(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-flatcar.toml")
 	assert.Nil(t, err, "was able to create the provider")
 
