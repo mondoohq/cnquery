@@ -120,6 +120,25 @@ var manjaro = &PlatformResolver{
 	},
 }
 
+var azurelinux = &PlatformResolver{
+	Name:     "azurelinux",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "azurelinux" {
+			osrd := NewOSReleaseDetector(conn)
+			osr, err := osrd.osrelease()
+			if err != nil {
+				// can't parse os-release, but we know it is azurelinux
+				return true, nil
+			}
+			pf.Title = osr["NAME"]
+			pf.Build = osr["VERSION"]
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var debian = &PlatformResolver{
 	Name:     "debian",
 	IsFamily: false,
@@ -1021,7 +1040,7 @@ var eulerFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_LINUX,
 	IsFamily: true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, plcnext, mageia, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, plcnext, mageia, azurelinux, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)
