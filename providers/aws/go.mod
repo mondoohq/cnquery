@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.59.3
 	github.com/aws/aws-sdk-go-v2/service/backup v1.48.0
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.54.4
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.53.6
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.58.2
@@ -40,10 +40,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.47.7
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/kms v1.45.6
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.77.6
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.78.0
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.45.3
-	github.com/aws/aws-sdk-go-v2/service/rds v1.108.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.108.2
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.4
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.66.2
@@ -56,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.6
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.5
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.67.7
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.68.0
 	github.com/aws/smithy-go v1.23.0
 	github.com/cockroachdb/errors v1.12.0
 	github.com/google/uuid v1.6.0
