@@ -437,8 +437,8 @@ func TestOpenSuseLeap15Detector(t *testing.T) {
 	assert.Nil(t, err, "was able to create the provider")
 
 	assert.Equal(t, "opensuse-leap", di.Name, "os name should be identified")
-	assert.Equal(t, "openSUSE Leap 15.0", di.Title, "os title should be identified")
-	assert.Equal(t, "15.0", di.Version, "os version should be identified")
+	assert.Equal(t, "openSUSE Leap 15.6", di.Title, "os title should be identified")
+	assert.Equal(t, "15.6", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
 }
@@ -449,7 +449,7 @@ func TestOpenSuseTumbleweedDetector(t *testing.T) {
 
 	assert.Equal(t, "opensuse-tumbleweed", di.Name, "os name should be identified")
 	assert.Equal(t, "openSUSE Tumbleweed", di.Title, "os title should be identified")
-	assert.Equal(t, "20200305", di.Version, "os version should be identified")
+	assert.Equal(t, "20251007", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
 }
