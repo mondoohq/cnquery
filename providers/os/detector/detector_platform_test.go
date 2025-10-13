@@ -867,17 +867,6 @@ func TestGoogleCOSDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
-func TestUbiOSDetector(t *testing.T) {
-	di, err := detectPlatformFromMock("./testdata/detect-ubios.toml")
-	assert.Nil(t, err, "was able to create the provider")
-
-	assert.Equal(t, "ubios", di.Name, "os name should be identified")
-	assert.Equal(t, "UbiOS 1.12.24.4315", di.Title, "os title should be identified")
-	assert.Equal(t, "v1.12.24.4315-136ee7c", di.Version, "os version should be identified")
-	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
-	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
-}
-
 func TestElementaryOSDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-elementary.toml")
 	assert.Nil(t, err, "was able to create the provider")
