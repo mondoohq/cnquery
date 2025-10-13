@@ -77,6 +77,7 @@ const (
 	ResourceAuditdRuleControl      string = "auditd.rule.control"
 	ResourceAuditdRuleFile         string = "auditd.rule.file"
 	ResourceAuditdRuleSyscall      string = "auditd.rule.syscall"
+	ResourceJournaldConfig         string = "journald.config"
 	ResourceService                string = "service"
 	ResourceServices               string = "services"
 	ResourceKernel                 string = "kernel"
@@ -394,6 +395,10 @@ func init() {
 		"auditd.rule.syscall": {
 			// to override args, implement: initAuditdRuleSyscall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAuditdRuleSyscall,
+		},
+		"journald.config": {
+			Init:   initJournaldConfig,
+			Create: createJournaldConfig,
 		},
 		"service": {
 			Init:   initService,
@@ -1578,6 +1583,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"auditd.rule.syscall.keyname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdRuleSyscall).GetKeyname()).ToDataRes(types.String)
+	},
+	"journald.config.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJournaldConfig).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"journald.config.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJournaldConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"service.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlService).GetName()).ToDataRes(types.String)
@@ -4060,6 +4071,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"auditd.rule.syscall.keyname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdRuleSyscall).Keyname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"journald.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"journald.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"journald.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfig).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10788,6 +10811,79 @@ func (c *mqlAuditdRuleSyscall) GetFields() *plugin.TValue[[]any] {
 
 func (c *mqlAuditdRuleSyscall) GetKeyname() *plugin.TValue[string] {
 	return &c.Keyname
+}
+
+// mqlJournaldConfig for the journald.config resource
+type mqlJournaldConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJournaldConfigInternal
+	File   plugin.TValue[*mqlFile]
+	Params plugin.TValue[map[string]any]
+}
+
+// createJournaldConfig creates a new instance of this resource
+func createJournaldConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJournaldConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("journald.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJournaldConfig) MqlName() string {
+	return "journald.config"
+}
+
+func (c *mqlJournaldConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJournaldConfig) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("journald.config", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlJournaldConfig) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
 }
 
 // mqlService for the service resource
