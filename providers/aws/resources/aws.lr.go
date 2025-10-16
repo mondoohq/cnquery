@@ -3947,6 +3947,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticache.cluster.snapshotRetentionLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetSnapshotRetentionLimit()).ToDataRes(types.Int)
 	},
+	"aws.elasticache.cluster.snapshotWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetSnapshotWindow()).ToDataRes(types.Time)
+	},
 	"aws.elasticache.cluster.transitEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetTransitEncryptionEnabled()).ToDataRes(types.Bool)
 	},
@@ -9903,6 +9906,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elasticache.cluster.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheCluster).SnapshotRetentionLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.snapshotWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).SnapshotWindow, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.transitEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24495,6 +24502,7 @@ type mqlAwsElasticacheCluster struct {
 	Region                    plugin.TValue[string]
 	SecurityGroups            plugin.TValue[[]any]
 	SnapshotRetentionLimit    plugin.TValue[int64]
+	SnapshotWindow            plugin.TValue[*time.Time]
 	TransitEncryptionEnabled  plugin.TValue[bool]
 	TransitEncryptionMode     plugin.TValue[string]
 }
@@ -24641,6 +24649,10 @@ func (c *mqlAwsElasticacheCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 
 func (c *mqlAwsElasticacheCluster) GetSnapshotRetentionLimit() *plugin.TValue[int64] {
 	return &c.SnapshotRetentionLimit
+}
+
+func (c *mqlAwsElasticacheCluster) GetSnapshotWindow() *plugin.TValue[*time.Time] {
+	return &c.SnapshotWindow
 }
 
 func (c *mqlAwsElasticacheCluster) GetTransitEncryptionEnabled() *plugin.TValue[bool] {
