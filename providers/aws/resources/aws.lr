@@ -2596,7 +2596,7 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   // Number of days ElastiCache retains automatic cluster snapshots before deleting them
   snapshotRetentionLimit int
   // The daily time range (in UTC) during which ElastiCache begins taking a daily snapshot of your shard.
-  snapshotWindow time
+  snapshotWindow string
   // Whether in-transit encryption is enabled
   transitEncryptionEnabled bool
   // Whether migrating clients to use in-transit encryption (with no downtime) is allowed

@@ -4123,7 +4123,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsElasticacheCluster).GetSnapshotRetentionLimit()).ToDataRes(types.Int)
 	},
 	"aws.elasticache.cluster.snapshotWindow": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElasticacheCluster).GetSnapshotWindow()).ToDataRes(types.Time)
+		return (r.(*mqlAwsElasticacheCluster).GetSnapshotWindow()).ToDataRes(types.String)
 	},
 	"aws.elasticache.cluster.transitEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetTransitEncryptionEnabled()).ToDataRes(types.Bool)
@@ -10304,7 +10304,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.elasticache.cluster.snapshotWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElasticacheCluster).SnapshotWindow, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		r.(*mqlAwsElasticacheCluster).SnapshotWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.transitEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25447,7 +25447,7 @@ type mqlAwsElasticacheCluster struct {
 	Region                    plugin.TValue[string]
 	SecurityGroups            plugin.TValue[[]any]
 	SnapshotRetentionLimit    plugin.TValue[int64]
-	SnapshotWindow            plugin.TValue[*time.Time]
+	SnapshotWindow            plugin.TValue[string]
 	TransitEncryptionEnabled  plugin.TValue[bool]
 	TransitEncryptionMode     plugin.TValue[string]
 }
@@ -25596,7 +25596,7 @@ func (c *mqlAwsElasticacheCluster) GetSnapshotRetentionLimit() *plugin.TValue[in
 	return &c.SnapshotRetentionLimit
 }
 
-func (c *mqlAwsElasticacheCluster) GetSnapshotWindow() *plugin.TValue[*time.Time] {
+func (c *mqlAwsElasticacheCluster) GetSnapshotWindow() *plugin.TValue[string] {
 	return &c.SnapshotWindow
 }
 
