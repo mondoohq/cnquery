@@ -5,8 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticache_types "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -21,23 +19,6 @@ import (
 
 func (a *mqlAwsElasticache) id() (string, error) {
 	return "aws.elasticache", nil
-}
-
-// parseSnapshotWindow parses the SnapshotWindow string (format "HH:MM") into a time.Time
-func parseSnapshotWindow(snapshotWindow *string) (*time.Time, error) {
-	if snapshotWindow == nil {
-		return nil, nil
-	}
-	
-	// AWS SnapshotWindow format is "HH:MM" (e.g., "03:00")
-	layout := "15:04"
-	parsed, err := time.Parse(layout, *snapshotWindow)
-	if err != nil {
-		log.Error().Err(err).Str("snapshotWindow", *snapshotWindow).Msg("could not parse snapshot window time")
-		return nil, errors.New("failed to parse snapshot window time: " + err.Error())
-	}
-	
-	return &parsed, nil
 }
 
 func (a *mqlAwsElasticache) cacheClusters() ([]any, error) {
@@ -135,12 +116,6 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 		sgs = append(sgs, NewSecurityGroupArn(region, accountID, convert.ToValue(sg.SecurityGroupId)))
 	}
 
-	// Parse SnapshotWindow from string to time.Time
-	snapshotWindowTime, err := parseSnapshotWindow(cluster.SnapshotWindow)
-	if err != nil {
-		return nil, err
-	}
-
 	resource, err := CreateResource(runtime, "aws.elasticache.cluster",
 		map[string]*llx.RawData{
 			"__id":                      llx.StringDataPtr(cluster.ARN),
@@ -168,7 +143,7 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 			"preferredAvailabilityZone": llx.StringDataPtr(cluster.PreferredAvailabilityZone),
 			"region":                    llx.StringData(region),
 			"snapshotRetentionLimit":    llx.IntDataDefault(cluster.SnapshotRetentionLimit, 0),
-			"snapshotWindow":            llx.TimeDataPtr(snapshotWindowTime),
+			"snapshotWindow":            llx.StringDataPtr(cluster.SnapshotWindow),
 			"transitEncryptionEnabled":  llx.BoolDataPtr(cluster.TransitEncryptionEnabled),
 			"transitEncryptionMode":     llx.StringData(string(cluster.TransitEncryptionMode)),
 		})
