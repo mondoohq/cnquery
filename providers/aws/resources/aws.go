@@ -70,6 +70,27 @@ func Is400AccessDeniedError(err error) bool {
 	return false
 }
 
+// IsMacieNotEnabledError checks if the error indicates Macie is not enabled in the region
+func IsMacieNotEnabledError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var respErr *http.ResponseError
+	if errors.As(err, &respErr) {
+		// Macie returns 401 status code with AccessDeniedException when not enabled
+		if respErr.HTTPStatusCode() == 401 && strings.Contains(respErr.Error(), "AccessDeniedException: Macie is not enabled") {
+			return true
+		}
+		// Also catch general access denied cases for Macie
+		if (respErr.HTTPStatusCode() == 400 || respErr.HTTPStatusCode() == 401 || respErr.HTTPStatusCode() == 403) &&
+			(strings.Contains(respErr.Error(), "AccessDeniedException") || strings.Contains(respErr.Error(), "AccessDenied")) {
+			return true
+		}
+	}
+	return false
+}
+
 func Is400InstanceNotFoundError(err error) bool {
 	var respErr *http.ResponseError
 	if errors.As(err, &respErr) {

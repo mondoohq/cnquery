@@ -57,13 +57,13 @@ func (a *mqlAwsMacie) getSessions(conn *connection.AwsConnection) []*jobpool.Job
 
 			session, err := svc.GetMacieSession(ctx, &macie2.GetMacieSessionInput{})
 			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+				if IsMacieNotEnabledError(err) {
+					log.Debug().Str("region", region).Msg("Macie is not enabled in region")
 					return res, nil
 				}
 				var notFoundErr *types.ResourceNotFoundException
 				if errors.As(err, &notFoundErr) {
-					return nil, nil
+					return res, nil
 				}
 				return nil, err
 			}
@@ -135,8 +135,8 @@ func (a *mqlAwsMacie) getClassificationJobs(conn *connection.AwsConnection) []*j
 			for paginator.HasMorePages() {
 				jobs, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+					if IsMacieNotEnabledError(err) {
+						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
 						return res, nil
 					}
 					return nil, err
@@ -210,8 +210,8 @@ func (a *mqlAwsMacie) getFindings(conn *connection.AwsConnection) []*jobpool.Job
 			for paginator.HasMorePages() {
 				findings, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+					if IsMacieNotEnabledError(err) {
+						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
 						return res, nil
 					}
 					return nil, err
@@ -271,8 +271,8 @@ func (a *mqlAwsMacie) getCustomDataIdentifiers(conn *connection.AwsConnection) [
 			for paginator.HasMorePages() {
 				identifiers, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+					if IsMacieNotEnabledError(err) {
+						log.Debug().Str("region", region).Msg("Macie is not enabled in region")
 						return res, nil
 					}
 					return nil, err
@@ -495,6 +495,10 @@ func fetchMacieFindings(svc *macie2.Client, region string, findingIds []string, 
 			FindingIds: chunk,
 		})
 		if err != nil {
+			if IsMacieNotEnabledError(err) {
+				log.Debug().Str("region", region).Msg("Macie is not enabled in region")
+				return res, nil
+			}
 			return nil, err
 		}
 
