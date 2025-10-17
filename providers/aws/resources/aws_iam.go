@@ -1460,6 +1460,10 @@ type mqlAwsIamSamlProviderInternal struct {
 	details        *iam.GetSAMLProviderOutput
 }
 
+type mqlAwsIamOidcProviderInternal struct {
+	details *iam.GetOpenIDConnectProviderOutput
+}
+
 func (a *mqlAwsIam) samlProviders() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -1510,28 +1514,15 @@ func (a *mqlAwsIam) oidcProviders() ([]any, error) {
 		return nil, errors.Wrap(err, "could not gather aws iam oidc providers")
 	}
 
-	// For each OIDC provider, fetch detailed information
+	// Create resource with ARN only; details will be fetched on-demand
 	for _, provider := range listResp.OpenIDConnectProviderList {
 		if provider.Arn == nil {
 			continue
 		}
 
-		getResp, err := svc.GetOpenIDConnectProvider(ctx, &iam.GetOpenIDConnectProviderInput{
-			OpenIDConnectProviderArn: provider.Arn,
-		})
-		if err != nil {
-			log.Warn().Err(err).Str("arn", *provider.Arn).Msg("could not get oidc provider details")
-			continue
-		}
-
 		mqlOidcProvider, err := CreateResource(a.MqlRuntime, ResourceAwsIamOidcProvider,
 			map[string]*llx.RawData{
-				"arn":         llx.StringDataPtr(provider.Arn),
-				"url":         llx.StringDataPtr(getResp.Url),
-				"clientIds":   llx.ArrayData(convert.SliceAnyToInterface(getResp.ClientIDList), types.String),
-				"thumbprints": llx.ArrayData(convert.SliceAnyToInterface(getResp.ThumbprintList), types.String),
-				"createdAt":   llx.TimeDataPtr(getResp.CreateDate),
-				"tags":        llx.MapData(iamTagsToMap(getResp.Tags), types.String),
+				"arn": llx.StringDataPtr(provider.Arn),
 			})
 		if err != nil {
 			return nil, err
@@ -1607,6 +1598,78 @@ func (a *mqlAwsIamSamlProvider) tags() (map[string]any, error) {
 
 func (a *mqlAwsIamOidcProvider) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsIamOidcProvider) url() (string, error) {
+	details, err := a.fetchOidcProviderDetails()
+	if err != nil {
+		return "", err
+	}
+
+	return convert.ToValue(details.Url), nil
+}
+
+func (a *mqlAwsIamOidcProvider) clientIds() ([]any, error) {
+	details, err := a.fetchOidcProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return convert.SliceAnyToInterface(details.ClientIDList), nil
+}
+
+func (a *mqlAwsIamOidcProvider) thumbprints() ([]any, error) {
+	details, err := a.fetchOidcProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return convert.SliceAnyToInterface(details.ThumbprintList), nil
+}
+
+func (a *mqlAwsIamOidcProvider) createdAt() (*time.Time, error) {
+	details, err := a.fetchOidcProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return details.CreateDate, nil
+}
+
+func (a *mqlAwsIamOidcProvider) tags() (map[string]any, error) {
+	details, err := a.fetchOidcProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return iamTagsToMap(details.Tags), nil
+}
+
+func (a *mqlAwsIamOidcProvider) fetchOidcProviderDetails() (*iam.GetOpenIDConnectProviderOutput, error) {
+	if a.details != nil {
+		return a.details, nil
+	}
+
+	arnVal := a.Arn.Data
+	if arnVal == "" {
+		return nil, errors.New("arn is empty")
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	resp, err := svc.GetOpenIDConnectProvider(ctx, &iam.GetOpenIDConnectProviderInput{
+		OpenIDConnectProviderArn: &arnVal,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	a.details = resp
+
+	return resp, nil
 }
 
 func (a *mqlAwsIamSamlProvider) fetchSamlProviderDetails() (*iam.GetSAMLProviderOutput, error) {

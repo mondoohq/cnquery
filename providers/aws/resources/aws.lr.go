@@ -75,6 +75,8 @@ const (
 	ResourceAwsIamRole                                                       string = "aws.iam.role"
 	ResourceAwsIamGroup                                                      string = "aws.iam.group"
 	ResourceAwsIamVirtualmfadevice                                           string = "aws.iam.virtualmfadevice"
+	ResourceAwsIamSamlProvider                                               string = "aws.iam.samlProvider"
+	ResourceAwsIamOidcProvider                                               string = "aws.iam.oidcProvider"
 	ResourceAwsIamAccessAnalyzer                                             string = "aws.iam.accessAnalyzer"
 	ResourceAwsIamAccessanalyzerAnalyzer                                     string = "aws.iam.accessanalyzer.analyzer"
 	ResourceAwsIamAccessanalyzerFinding                                      string = "aws.iam.accessanalyzer.finding"
@@ -17741,7 +17743,7 @@ func (c *mqlAwsIamSamlProvider) GetTags() *plugin.TValue[map[string]any] {
 type mqlAwsIamOidcProvider struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIamOidcProviderInternal it will be used here
+	mqlAwsIamOidcProviderInternal
 	Arn         plugin.TValue[string]
 	Url         plugin.TValue[string]
 	ClientIds   plugin.TValue[[]any]
