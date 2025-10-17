@@ -1354,6 +1354,122 @@ private aws.guardduty.finding @defaults("title region severity") {
   updatedAt time
 }
 
+// Amazon Macie
+aws.macie {
+  // List of Macie sessions
+  sessions() []aws.macie.session
+  // List of classification jobs
+  classificationJobs() []aws.macie.classificationJob
+  // List of findings
+  findings() []aws.macie.finding
+  // List of custom data identifiers
+  customDataIdentifiers() []aws.macie.customDataIdentifier
+}
+
+// Amazon Macie session
+private aws.macie.session @defaults("arn region status") {
+  // ARN of the Macie session
+  arn string
+  // Region where Macie is enabled
+  region string
+  // Status of the Macie session: ENABLED or PAUSED
+  status string
+  // Date and time when the Macie session was created
+  createdAt time
+  // Date and time when the Macie session was last updated
+  updatedAt time
+  // Finding publishing frequency: FIFTEEN_MINUTES, ONE_HOUR, or SIX_HOURS
+  findingPublishingFrequency() string
+  // Service role ARN used by Macie
+  serviceRole() string
+  // Number of S3 buckets monitored by Macie
+  s3BucketCount() int
+}
+
+// Amazon Macie classification job
+private aws.macie.classificationJob @defaults("jobId name status region") {
+  // ARN of the classification job
+  arn string
+  // Unique ID of the job
+  jobId string
+  // Name of the job
+  name string
+  // Region where the job runs
+  region string
+  // Status of the job: RUNNING, PAUSED, CANCELLED, COMPLETE, IDLE, or USER_PAUSED
+  status string
+  // Type of job: ONE_TIME or SCHEDULED
+  jobType string
+  // Date and time when the job was created
+  createdAt time
+  // Date and time when the job was last run
+  lastRunTime() time
+  // Sampling percentage for the job
+  samplingPercentage() int
+  // Bucket definitions for the job
+  bucketDefinitions() []dict
+  // Schedule frequency for the job
+  scheduleFrequency() dict
+  // Statistics for the job
+  statistics() dict
+  // Tags for the job
+  tags() map[string]string
+}
+
+// Amazon Macie finding
+private aws.macie.finding @defaults("id arn region type severity") {
+  // Unique ID of the finding
+  id string
+  // ARN of the finding
+  arn string
+  // Region where the finding was discovered
+  region string
+  // Account ID where the finding was discovered
+  accountId string
+  // Type of the finding
+  type string
+  // Severity details of the finding
+  severity dict
+  // Category of the finding: CLASSIFICATION or POLICY
+  category string
+  // Whether the finding is archived
+  archived bool
+  // Count of occurrences for this finding
+  count int
+  // Date and time when the finding was created
+  createdAt time
+  // Date and time when the finding was last updated
+  updatedAt time
+  // Title of the finding
+  title string
+  // Description of the finding
+  description string
+  // Classification details for the finding
+  classificationDetails() dict
+  // Resources affected by the finding
+  resourcesAffected() dict
+}
+
+// Amazon Macie custom data identifier
+private aws.macie.customDataIdentifier @defaults("id name") {
+  // Unique ID of the custom data identifier
+  id string
+  // ARN of the custom data identifier
+  arn string
+  // Name of the custom data identifier
+  name string
+  // Description of the custom data identifier
+  description() string
+  // Regular expression pattern for the identifier
+  regex() string
+  // Keywords for the identifier
+  keywords() []string
+  // Date and time when the identifier was created
+  createdAt time
+  // Tags for the identifier
+  tags() map[string]string
+}
+
 // AWS Security Hub
 aws.securityhub {
   // List of Security Hubs in the account
