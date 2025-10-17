@@ -119,6 +119,27 @@ func (a *mqlAwsKmsKey) keyRotationEnabled() (bool, error) {
 	return key.KeyRotationEnabled, nil
 }
 
+func (a *mqlAwsKmsKey) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	keyArn := a.Arn.Data
+
+	svc := conn.Kms(a.Region.Data)
+	ctx := context.Background()
+
+	tags, err := svc.ListResourceTags(ctx, &kms.ListResourceTagsInput{KeyId: &keyArn})
+	if err != nil {
+		return nil, err
+	}
+
+	res := map[string]any{}
+	for i := range tags.Tags {
+		tag := tags.Tags[i]
+		res[convert.ToValue(tag.TagKey)] = convert.ToValue(tag.TagValue)
+	}
+
+	return res, nil
+}
+
 func (a *mqlAwsKmsKey) id() (string, error) {
 	return a.Arn.Data, nil
 }

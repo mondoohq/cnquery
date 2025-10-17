@@ -725,6 +725,8 @@ private aws.kms.key @defaults("id region metadata.Description") {
   keyRotationEnabled() bool
   // Metadata for the key
   metadata() dict
+  // Tags for the KMS key
+  tags() map[string]string
 }
 
 
