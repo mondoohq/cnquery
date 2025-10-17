@@ -3,7 +3,6 @@
 
 resources:
   azure:
-    fields: {}
     min_mondoo_version: latest
     platform:
       name:
