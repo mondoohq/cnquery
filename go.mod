@@ -1,7 +1,5 @@
 module go.mondoo.com/cnquery/v12
 
-replace go.mondoo.com/cnquery/v12/providers/aws => ./providers/aws
-
 go 1.25
 
 require (
@@ -86,7 +84,6 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/ulikunitz/xz v0.5.15
-	go.mondoo.com/cnquery/v12/providers/aws v0.0.0
 	go.mondoo.com/ranger-rpc v0.7.0
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	golang.org/x/crypto v0.43.0
@@ -299,53 +296,6 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.53.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.44.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/account v1.28.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/acm v1.37.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.35.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.40.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.59.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/backup v1.48.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.55.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.53.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.51.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.58.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.67.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.34.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.58.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.51.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.65.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/efs v1.40.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/eks v1.74.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.50.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.50.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.37.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/emr v1.54.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.64.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.47.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.11.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/kms v1.45.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.78.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/neptune v1.42.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.45.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.108.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.59.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.66.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.215.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.64.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sns v1.38.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.16.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.68.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.3.2 // indirect
 	github.com/charmbracelet/x/ansi v0.10.1 // indirect

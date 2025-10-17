@@ -10,20 +10,10 @@ import (
 	_ "embed"
 	// osconf "go.mondoo.com/cnquery/v12/providers/os/config"
 	// os "go.mondoo.com/cnquery/v12/providers/os/provider"
-	awsconf "go.mondoo.com/cnquery/v12/providers/aws/config"
-	aws "go.mondoo.com/cnquery/v12/providers/aws/provider"
-	networkconf "go.mondoo.com/cnquery/v12/providers/network/config"
-	network "go.mondoo.com/cnquery/v12/providers/network/provider"
 )
 
 // //go:embed os/resources/os.resources.json
 // var osInfo []byte
-
-//go:embed aws.resources.json
-var awsInfo []byte
-
-//go:embed network.resources.json
-var networkInfo []byte
 
 func init() {
 	// builtinProviders[osconf.Config.ID] = &builtinProvider{
@@ -36,27 +26,5 @@ func init() {
 	// 	},
 	// 	Config: &osconf.Config,
 	// }
-
-	builtinProviders[awsconf.Config.ID] = &builtinProvider{
-		Runtime: &RunningProvider{
-			Name:     awsconf.Config.Name,
-			ID:       awsconf.Config.ID,
-			Plugin:   aws.Init(),
-			Schema:   MustLoadSchema("aws", awsInfo),
-			isClosed: false,
-		},
-		Config: &awsconf.Config,
-	}
-
-	builtinProviders[networkconf.Config.ID] = &builtinProvider{
-		Runtime: &RunningProvider{
-			Name:     networkconf.Config.Name,
-			ID:       networkconf.Config.ID,
-			Plugin:   network.Init(),
-			Schema:   MustLoadSchema("network", networkInfo),
-			isClosed: false,
-		},
-		Config: &networkconf.Config,
-	}
 
 }
