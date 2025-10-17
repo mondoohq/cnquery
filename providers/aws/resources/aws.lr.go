@@ -17720,23 +17720,33 @@ func (c *mqlAwsIamSamlProvider) GetArn() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsIamSamlProvider) GetName() *plugin.TValue[string] {
-	return &c.Name
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
 }
 
 func (c *mqlAwsIamSamlProvider) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
 }
 
 func (c *mqlAwsIamSamlProvider) GetValidUntil() *plugin.TValue[*time.Time] {
-	return &c.ValidUntil
+	return plugin.GetOrCompute[*time.Time](&c.ValidUntil, func() (*time.Time, error) {
+		return c.validUntil()
+	})
 }
 
 func (c *mqlAwsIamSamlProvider) GetMetadataDocument() *plugin.TValue[string] {
-	return &c.MetadataDocument
+	return plugin.GetOrCompute[string](&c.MetadataDocument, func() (string, error) {
+		return c.metadataDocument()
+	})
 }
 
 func (c *mqlAwsIamSamlProvider) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsIamOidcProvider for the aws.iam.oidcProvider resource
@@ -17794,23 +17804,33 @@ func (c *mqlAwsIamOidcProvider) GetArn() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsIamOidcProvider) GetUrl() *plugin.TValue[string] {
-	return &c.Url
+	return plugin.GetOrCompute[string](&c.Url, func() (string, error) {
+		return c.url()
+	})
 }
 
 func (c *mqlAwsIamOidcProvider) GetClientIds() *plugin.TValue[[]any] {
-	return &c.ClientIds
+	return plugin.GetOrCompute[[]any](&c.ClientIds, func() ([]any, error) {
+		return c.clientIds()
+	})
 }
 
 func (c *mqlAwsIamOidcProvider) GetThumbprints() *plugin.TValue[[]any] {
-	return &c.Thumbprints
+	return plugin.GetOrCompute[[]any](&c.Thumbprints, func() ([]any, error) {
+		return c.thumbprints()
+	})
 }
 
 func (c *mqlAwsIamOidcProvider) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
 }
 
 func (c *mqlAwsIamOidcProvider) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsIamAccessAnalyzer for the aws.iam.accessAnalyzer resource
