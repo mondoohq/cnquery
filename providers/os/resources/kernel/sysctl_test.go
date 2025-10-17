@@ -41,7 +41,7 @@ func TestSysctlMacos(t *testing.T) {
 }
 
 func TestSysctlFreebsd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{})
+	mock, err := mock.New(0, "./testdata/freebsd14.toml", &inventory.Asset{})
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("sysctl -a")
