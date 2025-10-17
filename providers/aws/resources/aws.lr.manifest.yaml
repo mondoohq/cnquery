@@ -2433,6 +2433,88 @@ resources:
     platform:
       name:
       - aws
+  aws.macie:
+    fields:
+      classificationJobs: {}
+      customDataIdentifiers: {}
+      findings: {}
+      sessions: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.macie.classificationJob:
+    fields:
+      arn: {}
+      bucketDefinitions: {}
+      createdAt: {}
+      jobId: {}
+      jobType: {}
+      lastRunTime: {}
+      name: {}
+      region: {}
+      samplingPercentage: {}
+      scheduleFrequency: {}
+      statistics: {}
+      status: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.macie.customDataIdentifier:
+    fields:
+      arn: {}
+      createdAt: {}
+      description: {}
+      id: {}
+      keywords: {}
+      name: {}
+      regex: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.macie.finding:
+    fields:
+      accountId: {}
+      archived: {}
+      arn: {}
+      category: {}
+      classificationDetails: {}
+      count: {}
+      createdAt: {}
+      description: {}
+      id: {}
+      region: {}
+      resourcesAffected: {}
+      severity: {}
+      title: {}
+      type: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.macie.session:
+    fields:
+      arn: {}
+      createdAt: {}
+      findingPublishingFrequency: {}
+      region: {}
+      s3BucketCount: {}
+      serviceRole: {}
+      status: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.neptune:
     fields:
       clusters: {}

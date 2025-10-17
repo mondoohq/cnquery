@@ -41,6 +41,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/kms v1.45.6
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.78.0
+	github.com/aws/aws-sdk-go-v2/service/macie2 v1.49.6
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.45.3
 	github.com/aws/aws-sdk-go-v2/service/rds v1.108.2
