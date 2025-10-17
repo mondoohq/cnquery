@@ -143,6 +143,7 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 			"preferredAvailabilityZone": llx.StringDataPtr(cluster.PreferredAvailabilityZone),
 			"region":                    llx.StringData(region),
 			"snapshotRetentionLimit":    llx.IntDataDefault(cluster.SnapshotRetentionLimit, 0),
+			"snapshotWindow":            llx.StringDataPtr(cluster.SnapshotWindow),
 			"transitEncryptionEnabled":  llx.BoolDataPtr(cluster.TransitEncryptionEnabled),
 			"transitEncryptionMode":     llx.StringData(string(cluster.TransitEncryptionMode)),
 		})

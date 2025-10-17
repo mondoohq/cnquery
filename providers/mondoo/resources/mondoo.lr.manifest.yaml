@@ -3,7 +3,6 @@
 
 resources:
   mondoo:
-    fields: {}
     min_mondoo_version: 9.0.0
   mondoo.agent:
     fields:

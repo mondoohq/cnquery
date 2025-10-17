@@ -28,9 +28,9 @@ const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAsse
 var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 65, 81, 99, 116, 132, 152, 167, 186, 201}
 
 func (i Feature) String() string {
-	i -= 1
-	if i >= Feature(len(_Feature_index)-1) {
-		return "Feature(" + strconv.FormatInt(int64(i+1), 10) + ")"
+	idx := int(i) - 1
+	if i < 1 || idx >= len(_Feature_index)-1 {
+		return "Feature(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _Feature_name[_Feature_index[i]:_Feature_index[i+1]]
+	return _Feature_name[_Feature_index[idx]:_Feature_index[idx+1]]
 }
