@@ -2396,6 +2396,8 @@ resources:
       keyRotationEnabled: {}
       metadata: {}
       region: {}
+      tags:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -3784,7 +3786,6 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.ratebasedstatement:
-    fields: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
