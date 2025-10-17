@@ -69,7 +69,7 @@ func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Comm
 	}
 
 	flags := pflag.NewFlagSet("set", pflag.ContinueOnError)
-	flags.ParseErrorsWhitelist.UnknownFlags = true
+	flags.ParseErrorsAllowlist.UnknownFlags = true
 	flags.Bool("auto-update", autoUpdate, "")
 	flags.BoolP("help", "h", false, "")
 
@@ -322,6 +322,14 @@ func attachFlag(flagset *pflag.FlagSet, flag plugin.Flag) {
 func attachFlags(flagset *pflag.FlagSet, flags []plugin.Flag) {
 	for i := range flags {
 		attachFlag(flagset, flags[i])
+	}
+}
+
+func markFlagsRequired(cmd *cobra.Command, flags []plugin.Flag) {
+	for _, f := range flags {
+		if f.Option&plugin.FlagOption_Required != 0 {
+			cmd.MarkFlagRequired(f.Long) // nolint:errcheck
+		}
 	}
 }
 
@@ -582,6 +590,8 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 	}
 
 	attachFlags(cmd.Flags(), allFlags)
+	// mark all required flags
+	markFlagsRequired(cmd, allFlags)
 }
 
 func json2T[T any](s string, empty T) T {
