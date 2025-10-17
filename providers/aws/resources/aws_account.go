@@ -47,6 +47,7 @@ func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
 	res, err := CreateResource(a.MqlRuntime, ResourceAwsOrganization,
 		map[string]*llx.RawData{
 			"arn":                llx.StringDataPtr(org.Organization.Arn),
+			"id":                 llx.StringDataPtr(org.Organization.Id),
 			"featureSet":         llx.StringData(string(org.Organization.FeatureSet)),
 			"masterAccountId":    llx.StringDataPtr(org.Organization.MasterAccountId),
 			"masterAccountEmail": llx.StringDataPtr(org.Organization.MasterAccountEmail),
