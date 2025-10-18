@@ -1,0 +1,45 @@
+[commands."uname -s"]
+stdout = "OpenBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "7.7"
+
+[commands."uname -v"]
+stdout = "GENERIC.MP#625"
+
+[commands."sysctl -a"]
+stdout = """kern.ostype=OpenBSD
+kern.osrelease=7.7
+kern.osrevision=202504
+kern.version=OpenBSD 7.7 (GENERIC.MP) #625: Sun Apr 13 08:30:20 MDT 2025
+    deraadt@amd64.openbsd.org:/usr/src/sys/arch/amd64/compile/GENERIC.MP
+kern.maxvnodes=12280
+kern.maxproc=1310
+kern.maxfiles=7030
+kern.argmax=524288
+kern.securelevel=1
+kern.hostname=openbsd77..
+kern.hostid=0
+kern.clockrate=tick = 10000, hz = 100, profhz = 1000, stathz = 100
+kern.posix1version=200809
+kern.ngroups=16
+kern.job_control=1
+kern.saved_ids=1
+kern.boottime=Sat Oct 18 04:31:00 2025
+kern.domainname=
+kern.maxpartitions=16
+kern.rawpartition=2
+kern.maxthread=2620
+kern.nthreads=62
+kern.osversion=GENERIC.MP#625
+kern.somaxconn=128
+kern.sominconn=80
+kern.nosuidcoredump=1
+kern.fsync=1
+kern.sysvmsg=1
+kern.sysvsem=1
+kern.sysvshm=1
+"""

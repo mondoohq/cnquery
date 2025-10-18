@@ -53,3 +53,17 @@ func TestSysctlFreebsd(t *testing.T) {
 	assert.Equal(t, 20, len(entries))
 	assert.Equal(t, "1", entries["security.bsd.unprivileged_mlock"])
 }
+
+func TestSysctlOpenBSD(t *testing.T) {
+	mock, err := mock.New(0, "./testdata/openbsd77.toml", &inventory.Asset{})
+	require.NoError(t, err)
+
+	c, err := mock.RunCommand("sysctl -a")
+	require.NoError(t, err)
+
+	entries, err := ParseSysctl(c.Stdout, "=")
+	require.NoError(t, err)
+
+	assert.Equal(t, 29, len(entries))
+	assert.Equal(t, "OpenBSD", entries["kern.ostype"])
+}
