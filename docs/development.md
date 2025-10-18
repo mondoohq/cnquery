@@ -6,32 +6,34 @@
 
 Before building from source, be sure to install:
 
-- [Go 1.22.0+](https://golang.org/dl/)
+- [Go 1.25.0+](https://golang.org/dl/)
 - [Protocol Buffers v21+](https://github.com/protocolbuffers/protobuf/releases)
 
-On macOS systems with Homebrew, run: `brew install go@1.22 protobuf`
+On macOS systems with Homebrew, run: `brew install go@1.25 protobuf`
 
 ## Install from source
 
-1. Verify that you have Go 1.22+ installed:
+1. Verify that you have Go 1.25+ installed:
 
-   ```
-   $ go version
+   ```bash
+   go version
    ```
 
-If `go` is not installed or an older version exists, follow instructions
-on [the Go website](https://golang.org/doc/install).
+If `go` is not installed or an older version exists, follow instructions on [the Go website](https://golang.org/doc/install).
 
 2. Clone this repository:
 
-   ```sh
-   $ git clone https://github.com/mondoohq/cnquery.git
-   $ cd cnquery
+   ```bash
+   git clone https://github.com/mondoohq/cnquery.git
+   cd cnquery
    ```
 
 3. Build and install on Unix-like systems:
 
-   ```sh
+   ```bash
+   # Build the pre-req tools
+   make prep/tools
+
    # Build all providers
    make providers
 
@@ -183,8 +185,8 @@ to use the latest updates from the different repos without having to commit and 
 
 Here is a sample config for `go.work` in the root folder of `cnquery` and `cnspec`:
 
-```
-go 1.22
+```go
+go 1.25
 
 use (
    ./cnquery
