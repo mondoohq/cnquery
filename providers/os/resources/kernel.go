@@ -23,12 +23,12 @@ func initKernel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	platform := conn.Asset().Platform
 
 	supported := false
-	if platform.IsFamily("linux") || platform.IsFamily("darwin") || platform.Name == "freebsd" || platform.Name == "aix" {
+	if platform.IsFamily("linux") || platform.IsFamily("darwin") || platform.IsFamily("bsd") || platform.Name == "aix" {
 		supported = true
 	}
 
 	if !supported {
-		return nil, nil, errors.New("kernel resource is only supported for unix platforms")
+		return nil, nil, errors.New("kernel resource is only supported on linux, darwin, bsd, and aix platforms")
 	}
 
 	return args, nil, nil
