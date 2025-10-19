@@ -52,18 +52,18 @@ func TestLinuxProcModulesParser(t *testing.T) {
 }
 
 func TestKldstatParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{})
+	mock, err := mock.New(0, "./testdata/freebsd14.toml", &inventory.Asset{})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("kldstat")
 	require.NoError(t, err)
 
 	entries := ParseKldstat(f.Stdout)
-	assert.Equal(t, 4, len(entries))
+	assert.Equal(t, 6, len(entries))
 
 	expected := &KernelModule{
 		Name:   "smbus.ko",
-		Size:   "a30",
+		Size:   "2178",
 		UsedBy: "1",
 	}
 	found := findModule(entries, "smbus.ko")

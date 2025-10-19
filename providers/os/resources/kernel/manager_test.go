@@ -108,7 +108,7 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/freebsd14.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "freebsd",
 			Family: []string{"unix"},
@@ -121,7 +121,11 @@ func TestManagerFreebsd(t *testing.T) {
 	mounts, err := mm.Modules()
 	require.NoError(t, err)
 
-	assert.Equal(t, 4, len(mounts))
+	assert.Equal(t, 6, len(mounts))
+
+	info, err := mm.Info()
+	require.NoError(t, err)
+	assert.Equal(t, "FreeBSD 14.3-RELEASE releng/14.3-n271432-8c9ce319fef7 GENERIC", info.Version)
 }
 
 func TestManagerAIX(t *testing.T) {
