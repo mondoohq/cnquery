@@ -529,9 +529,9 @@ func compileArrayFlat(c *compiler, typ types.Type, ref uint64, id string, call *
 
 func compileArrayJoin(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	switch typ.Child() {
-	case types.String, types.Dict:
+	case types.String, types.Dict, types.Float, types.Int, types.Bool, types.Nil, types.Regex, types.Version, types.Time, types.Score, types.IP, types.Unset:
 	default:
-		return types.Nil, errors.New("can only call join() on arrays that have strings in them")
+		return types.Nil, errors.New("can only call join() on arrays with elements that can be turned into strings")
 	}
 
 	var args []*llx.Primitive = nil

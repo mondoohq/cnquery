@@ -528,13 +528,17 @@ func arrayReverse(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 func arrayJoin(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+		return &RawData{Type: types.String, Error: bind.Error}, 0, nil
 	}
 
 	list, ok := bind.Value.([]any)
 	// this should not happen at this point
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("incorrect type, no array data found")}, 0, nil
+	}
+
+	if len(list) == 0 {
+		return StringData(""), 0, nil
 	}
 
 	var sep string
@@ -549,16 +553,17 @@ func arrayJoin(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		}
 	}
 
+	typHint := types.Any
+	if chunk.Type().IsArray() {
+		typHint = chunk.Type().Child()
+	}
+
 	var res strings.Builder
 	for i := range list {
-		s, ok := list[i].(string)
-		if !ok {
-			return nil, 0, errors.New("failed to join() elements, must be strings")
-		}
 		if sep != "" && i > 0 {
 			res.WriteString(sep)
 		}
-		res.WriteString(s)
+		res.WriteString(StringifyValue(list[i], typHint))
 	}
 
 	return &RawData{Type: types.String, Value: res.String()}, 0, nil
