@@ -526,3 +526,35 @@ func compileArrayFlat(c *compiler, typ types.Type, ref uint64, id string, call *
 	})
 	return typ, nil
 }
+
+func compileArrayJoin(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	switch typ.Child() {
+	case types.String, types.Dict:
+	default:
+		return types.Nil, errors.New("can only call join() on arrays that have strings in them")
+	}
+
+	var args []*llx.Primitive = nil
+	if call != nil {
+		if len(call.Function) > 1 {
+			return types.Nil, errors.New("called join() with too many arguments, at most one supported")
+		}
+		prim, err := callArgTypeIs(c, call, id, "separator", 0, types.String, types.Dict)
+		if err != nil {
+			return types.Nil, err
+		}
+		args = []*llx.Primitive{prim}
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type:    string(typ),
+			Binding: ref,
+			Args:    args,
+		},
+	})
+
+	return types.String, nil
+}

@@ -472,6 +472,10 @@ func TestString_Methods(t *testing.T) {
 			Expectation: []any{"hello", "world"},
 		},
 		{
+			Code:        "'1.2.3.4'.split('.').reverse.join(':')",
+			Expectation: "4:3:2:1",
+		},
+		{
 			Code:        "'he\nll\no'.lines",
 			Expectation: []any{"he", "ll", "o"},
 		},
@@ -573,6 +577,14 @@ func TestArray(t *testing.T) {
 		{
 			Code:        "[1,2,3]",
 			Expectation: []any{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[1,2,3].length",
+			Expectation: int64(3),
+		},
+		{
+			Code:        "[1,2,3].reverse",
+			Expectation: []any{int64(3), int64(2), int64(1)},
 		},
 		{
 			Code:        "return [1,2,3]",

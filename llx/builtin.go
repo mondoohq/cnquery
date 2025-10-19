@@ -633,6 +633,8 @@ func init() {
 			"$one":                     {f: arrayOneV2},
 			"map":                      {f: arrayMapV2},
 			"flat":                     {f: arrayFlat},
+			"reverse":                  {f: arrayReverse},
+			"join":                     {f: arrayJoin},
 			"duplicates":               {f: arrayDuplicatesV2},
 			"fieldDuplicates":          {f: arrayFieldDuplicatesV2},
 			"unique":                   {f: arrayUniqueV2},

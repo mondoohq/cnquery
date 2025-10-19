@@ -209,6 +209,8 @@ func init() {
 			"none":         {compile: compileArrayNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"map":          {compile: compileArrayMap, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"flat":         {compile: compileArrayFlat, signature: FunctionSignature{}},
+			"reverse":      {typHandler: &sameType, signature: FunctionSignature{}},
+			"join":         {compile: compileArrayJoin, signature: FunctionSignature{Args: []types.Type{types.String}}},
 		},
 		types.MapLike: {
 			"[]":       {typHandler: &childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
