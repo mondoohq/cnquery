@@ -6,6 +6,7 @@ atlassian
 auditlog
 Auths
 autoaccept
+autoclose
 autoprovisioned
 backupconfiguration
 backupsetting
@@ -59,6 +60,7 @@ jira
 jsonbody
 kqueue
 labelmatchstatement
+lfs
 liveanalytics
 loggingservice
 manageddevice

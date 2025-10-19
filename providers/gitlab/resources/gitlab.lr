@@ -30,6 +30,8 @@ gitlab.group @defaults("name visibility webURL") {
   mentionsDisabled bool
   // List of all projects that belong to the group
   projects() []gitlab.project
+  // List of allowed email domains for the group
+  allowedEmailDomainsList string
 }
 
 // GitLab project
@@ -104,6 +106,12 @@ gitlab.project @defaults("fullName visibility webURL") {
   sharedRunnersEnabled bool
   // Whether the project is enabled for group runners
   groupRunnersEnabled bool
+  // Whether the merge request source brand is removed after merge
+  removeSourceBranchAfterMerge bool
+  // Whether the project has LFS enabled
+  lfsEnabled bool
+  // Whether the project has autoclose referenced issues enabled
+  autocloseReferencedIssues bool
 }
 
 // GitLab project approval rule
