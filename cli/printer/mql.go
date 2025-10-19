@@ -776,25 +776,8 @@ func (print *Printer) data(typ types.Type, data any, checksum string, indent str
 		}
 		return print.Secondary(fmt.Sprintf("/%s/", data))
 	case types.Time:
-		if data == nil {
-			return print.Secondary("null")
-		}
-		time := data.(*time.Time)
-		if time == nil {
-			return print.Secondary("null")
-		}
+		return print.Secondary(llx.StringifyValue(data, types.Time))
 
-		if *time == llx.NeverPastTime || *time == llx.NeverFutureTime {
-			return print.Secondary("Never")
-		}
-
-		if time.Unix() > 0 {
-			return print.Secondary(time.String())
-		}
-
-		durationStr := llx.TimeToDurationString(*time)
-
-		return print.Secondary(durationStr)
 	case types.Dict:
 		return print.dict(typ, data, indent, cache)
 
