@@ -153,8 +153,8 @@ func (a *mqlAwsKmsKey) aliases() ([]string, error) {
 	}
 
 	aliases := make([]string, 0, len(resp.Aliases))
-	for _, a := range resp.Aliases {
-		aliases = append(aliases, *a.AliasName)
+	for i, a := range resp.Aliases {
+		aliases[i] = *a.AliasName
 	}
 
 	return aliases, nil
