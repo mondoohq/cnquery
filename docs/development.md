@@ -64,7 +64,7 @@ If you make update to a provider's lr file, you can generate go files for that p
 make providers/mqlr
 ./mqlr generate providers/aws/resources/aws.lr --docs-file providers/aws/resources/aws.lr.manifest.yaml --dist providers/aws/resources
 ```
-
+To quickly install the changed provider plugin run `make providers/build/aws && make providers/install/aws`.
 ## Debug providers
 
 `cnquery` uses a plugin mechanism. Each provider has its own go modules. This ensures that dependencies are only used on
