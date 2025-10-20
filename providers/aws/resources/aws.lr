@@ -18,7 +18,7 @@ aws @defaults("account.id") {
 }
 
 // AWS Account
-aws.account @defaults("id") {
+aws.account @defaults("id aliases.first organization.id") {
   // Account ID
   id string
   // Account aliases
@@ -66,7 +66,7 @@ private aws.account.alternateContact @defaults("contactType name emailAddress") 
 }
 
 // AWS Organization resource
-aws.organization @defaults("arn masterAccountEmail") {
+aws.organization @defaults("id masterAccountEmail") {
   // ARN of the organization
   arn string
   // Functionality available to org: ALL or CONSOLIDATED_BILLING
@@ -77,6 +77,8 @@ aws.organization @defaults("arn masterAccountEmail") {
   masterAccountEmail string
   // List of accounts that belong to the organization, if available to the caller
   accounts() []aws.account
+  // Organization ID
+  id string
 }
 
 // Amazon Virtual Private Cloud (VPC)

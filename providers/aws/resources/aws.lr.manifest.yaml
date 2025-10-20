@@ -2634,6 +2634,8 @@ resources:
         min_mondoo_version: 9.0.0
       arn: {}
       featureSet: {}
+      id:
+        min_mondoo_version: 9.0.0
       masterAccountEmail: {}
       masterAccountId: {}
     min_mondoo_version: 6.11.0

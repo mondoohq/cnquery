@@ -1192,6 +1192,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.organization.accounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganization).GetAccounts()).ToDataRes(types.Array(types.Resource("aws.account")))
 	},
+	"aws.organization.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganization).GetId()).ToDataRes(types.String)
+	},
 	"aws.vpc.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetArn()).ToDataRes(types.String)
 	},
@@ -5879,6 +5882,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.organization.accounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOrganization).Accounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.organization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13104,6 +13111,7 @@ type mqlAwsOrganization struct {
 	MasterAccountId    plugin.TValue[string]
 	MasterAccountEmail plugin.TValue[string]
 	Accounts           plugin.TValue[[]any]
+	Id                 plugin.TValue[string]
 }
 
 // createAwsOrganization creates a new instance of this resource
@@ -13168,6 +13176,10 @@ func (c *mqlAwsOrganization) GetAccounts() *plugin.TValue[[]any] {
 
 		return c.accounts()
 	})
+}
+
+func (c *mqlAwsOrganization) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 // mqlAwsVpc for the aws.vpc resource

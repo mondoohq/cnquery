@@ -4,6 +4,8 @@
 resources:
   gitlab.group:
     fields:
+      allowedEmailDomainsList:
+        min_mondoo_version: 9.0.0
       createdAt:
         min_mondoo_version: 9.0.0
       description: {}
@@ -34,6 +36,8 @@ resources:
         min_mondoo_version: 9.0.0
       autoDevopsEnabled:
         min_mondoo_version: 9.0.0
+      autocloseReferencedIssues:
+        min_mondoo_version: 9.0.0
       containerRegistryEnabled:
         min_mondoo_version: 9.0.0
       createdAt:
@@ -54,6 +58,8 @@ resources:
         min_mondoo_version: 9.0.0
       jobsEnabled:
         min_mondoo_version: 9.0.0
+      lfsEnabled:
+        min_mondoo_version: 9.0.0
       mergeMethod:
         min_mondoo_version: 9.0.0
       mergeRequestsEnabled:
@@ -73,6 +79,8 @@ resources:
       projectMembers:
         min_mondoo_version: 9.0.0
       protectedBranches:
+        min_mondoo_version: 9.0.0
+      removeSourceBranchAfterMerge:
         min_mondoo_version: 9.0.0
       requirementsEnabled:
         min_mondoo_version: 9.0.0

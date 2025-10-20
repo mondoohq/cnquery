@@ -421,6 +421,11 @@ resources:
       source: {}
       target: {}
     min_mondoo_version: 5.15.0
+  journald.config:
+    fields:
+      file: {}
+      params: {}
+    min_mondoo_version: 9.0.0
   kernel:
     fields:
       info: {}

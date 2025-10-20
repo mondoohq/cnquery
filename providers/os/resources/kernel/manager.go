@@ -208,11 +208,23 @@ type FreebsdKernelManager struct {
 }
 
 func (s *FreebsdKernelManager) Name() string {
-	return "Freebsd Kernel Manager"
+	return "FreeBSD Kernel Manager"
 }
 
 func (s *FreebsdKernelManager) Info() (KernelInfo, error) {
-	return KernelInfo{}, nil
+	// Use `uname -v` to get the kernel version
+	cmd, err := s.conn.RunCommand("uname -v")
+	if err != nil {
+		return KernelInfo{}, errors.Wrap(err, "could not read kernel version")
+	}
+	version, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return KernelInfo{}, errors.Wrap(err, "could not read kernel version")
+	}
+
+	return KernelInfo{
+		Version: strings.TrimSpace(string(version)),
+	}, nil
 }
 
 func (s *FreebsdKernelManager) Parameters() (map[string]string, error) {

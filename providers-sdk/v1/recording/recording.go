@@ -15,13 +15,14 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/types"
 	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/cnquery/v12/utils/syncx"
 )
 
 type recording struct {
 	Assets []*Asset `json:"assets"`
 	Path   string   `json:"-"`
 	// assets is used for fast connection to asset lookup
-	assets          map[uint32]*Asset `json:"-"`
+	assets          syncx.Map[*Asset] `json:"-"`
 	prettyPrintJSON bool              `json:"-"`
 	// this mode is used when we use the recording layer for data,
 	// but not for storing it on disk
@@ -94,7 +95,7 @@ func (n *readOnly) EnsureAsset(asset *inventory.Asset, provider string, connecti
 	// we are severely lacking connection IDs.
 	existing := n.getExistingAsset(asset)
 	if existing != nil {
-		n.assets[connectionID] = existing
+		n.assets.Set(fmt.Sprintf("%d", connectionID), existing)
 	}
 }
 
@@ -142,7 +143,7 @@ func NewWithFile(path string, opts RecordingOptions) (llx.Recording, error) {
 				Path:            path,
 				prettyPrintJSON: opts.PrettyPrintJSON,
 				doNotSave:       opts.DoNotSave,
-				assets:          map[uint32]*Asset{},
+				assets:          syncx.Map[*Asset]{},
 			}
 			res.refreshCache() // only for initialization
 			return res, nil
@@ -203,7 +204,7 @@ func (r *recording) Save() error {
 }
 
 func (r *recording) refreshCache() {
-	r.assets = make(map[uint32]*Asset, len(r.Assets))
+	r.assets = syncx.Map[*Asset]{}
 	for i := range r.Assets {
 		asset := r.Assets[i]
 		asset.RefreshCache()
@@ -213,7 +214,7 @@ func (r *recording) refreshCache() {
 			// initially load this object, so we won't know yet which asset belongs
 			// to which connection.
 			if conn.Id != 0 {
-				r.assets[conn.Id] = asset
+				r.assets.Set(fmt.Sprintf("%d", conn.Id), asset)
 			}
 		}
 	}
@@ -379,11 +380,11 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 		Connector:  conf.Type,
 		Id:         conf.Id,
 	}
-	r.assets[connectionID] = recordingAsset
+	r.assets.Set(fmt.Sprintf("%d", conf.Id), recordingAsset)
 }
 
 func (r *recording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
-	asset, ok := r.assets[connectionID]
+	asset, ok := r.assets.Get(fmt.Sprintf("%d", connectionID))
 	if !ok {
 		return
 	}
@@ -404,7 +405,7 @@ func (r *recording) AddData(connectionID uint32, resource string, id string, fie
 }
 
 func (r *recording) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
-	asset, ok := r.assets[connectionID]
+	asset, ok := r.assets.Get(fmt.Sprintf("%d", connectionID))
 	if !ok {
 		return nil, false
 	}
@@ -427,7 +428,7 @@ func (r *recording) GetData(connectionID uint32, resource string, id string, fie
 }
 
 func (r *recording) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
-	asset, ok := r.assets[connectionID]
+	asset, ok := r.assets.Get(fmt.Sprintf("%d", connectionID))
 	if !ok {
 		return nil, false
 	}
@@ -475,7 +476,7 @@ func (r *recording) GetAssetRecordings() []*Asset {
 }
 
 func (r *recording) SetAssetRecording(id uint32, reco *Asset) {
-	r.assets[id] = reco
+	r.assets.Set(fmt.Sprintf("%d", id), reco)
 }
 
 // This method makes sure the asset metadata is always included in the data

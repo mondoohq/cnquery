@@ -491,6 +491,10 @@ func TestString_Methods(t *testing.T) {
 			Code:        "'23'.inRange(1,23)",
 			Expectation: true,
 		},
+		{
+			Code:        "'1.2.3.4'.split('.').reverse.join(':')",
+			Expectation: "4:3:2:1",
+		},
 	})
 }
 
@@ -573,6 +577,14 @@ func TestArray(t *testing.T) {
 		{
 			Code:        "[1,2,3]",
 			Expectation: []any{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[1,2,3].length",
+			Expectation: int64(3),
+		},
+		{
+			Code:        "[1,2,3].reverse",
+			Expectation: []any{int64(3), int64(2), int64(1)},
 		},
 		{
 			Code:        "return [1,2,3]",
@@ -728,6 +740,51 @@ func TestArray(t *testing.T) {
 			Code:        "[3,1,3,4,2] - [3,4,5]",
 			Expectation: []any{int64(1), int64(2)},
 		},
+	})
+
+	t.Run("join()", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        "[].join('---')",
+				Expectation: "",
+			},
+			{
+				Code:        "['no','rm','al'].join('')",
+				Expectation: "normal",
+			},
+			{
+				Code:        "[1,2,3].join('-')",
+				Expectation: "1-2-3",
+			},
+			{
+				Code:        "[1.2,3.4].join('+')",
+				Expectation: "1.2+3.4",
+			},
+			{
+				Code:        "[null,null].join('^')",
+				Expectation: "null^null",
+			},
+			{
+				Code:        "[true, false].join('&&&')",
+				Expectation: "true&&&false",
+			},
+			{
+				Code:        "[/yo/,/re/].join('+')",
+				Expectation: "/yo/+/re/",
+			},
+			{
+				Code:        "[version('1.0'), version('2.3')].join(', ')",
+				Expectation: "v1.0, v2.3",
+			},
+			{
+				Code:        "[Never, Never].join(' ')",
+				Expectation: "Never Never",
+			},
+			{
+				Code:        "[ip('1.2.3.4/24'), ip('::')].join('\t')",
+				Expectation: "1.2.3.4/24\t::",
+			},
+		})
 	})
 }
 

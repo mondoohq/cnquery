@@ -7,6 +7,7 @@ import (
 	"errors"
 	"math/rand"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/cnquery/v12/types"
 	"go.mondoo.com/cnquery/v12/utils/multierr"
@@ -504,6 +505,68 @@ func arrayFlat(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	}
 
 	return &RawData{Type: types.Array(typ), Value: res}, 0, nil
+}
+
+func arrayReverse(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+	}
+
+	list, ok := bind.Value.([]any)
+	// this should not happen at this point
+	if !ok {
+		return &RawData{Type: bind.Type, Error: errors.New("incorrect type, no array data found")}, 0, nil
+	}
+
+	res := make([]any, len(list))
+	for i := range list {
+		res[len(res)-1-i] = list[i]
+	}
+
+	return &RawData{Type: bind.Type, Value: res}, 0, nil
+}
+
+func arrayJoin(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.String, Error: bind.Error}, 0, nil
+	}
+
+	list, ok := bind.Value.([]any)
+	// this should not happen at this point
+	if !ok {
+		return &RawData{Type: bind.Type, Error: errors.New("incorrect type, no array data found")}, 0, nil
+	}
+
+	if len(list) == 0 {
+		return StringData(""), 0, nil
+	}
+
+	var sep string
+	if len(chunk.Function.Args) == 1 {
+		item, rref, err := e.resolveValue(chunk.Function.Args[0], ref)
+		if err != nil || rref > 0 {
+			return nil, rref, err
+		}
+		sep, ok = item.Value.(string)
+		if !ok {
+			return nil, rref, errors.New("separator provided to join() must be a string")
+		}
+	}
+
+	typHint := types.Any
+	if chunk.Type().IsArray() {
+		typHint = chunk.Type().Child()
+	}
+
+	var res strings.Builder
+	for i := range list {
+		if sep != "" && i > 0 {
+			res.WriteString(sep)
+		}
+		res.WriteString(StringifyValue(list[i], typHint))
+	}
+
+	return &RawData{Type: types.String, Value: res.String()}, 0, nil
 }
 
 // Take an array and separate it into a list of unique entries and another
