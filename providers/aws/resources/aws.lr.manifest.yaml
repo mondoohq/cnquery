@@ -1744,6 +1744,8 @@ resources:
       region: {}
       securityGroups: {}
       snapshotRetentionLimit: {}
+      snapshotWindow:
+        min_mondoo_version: 9.0.0
       transitEncryptionEnabled: {}
       transitEncryptionMode: {}
     is_private: true
