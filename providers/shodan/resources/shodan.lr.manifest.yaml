@@ -3,6 +3,7 @@
 
 resources:
   shodan:
+    fields: {}
     min_mondoo_version: 9.0.0
   shodan.apiPlan:
     fields:

@@ -52,6 +52,7 @@ resources:
       version: {}
     min_mondoo_version: 5.15.0
   parse:
+    fields: {}
     min_mondoo_version: 5.15.0
   product:
     fields:
