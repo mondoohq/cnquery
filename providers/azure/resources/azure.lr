@@ -2205,3 +2205,7 @@ private azure.subscription.iotService {
   // List of IoT hubs in the subscription
   hubs() []dict
 }
+
+private azure.subscription.cache.redis {
+  
+}
