@@ -137,6 +137,7 @@ func (m *Config) CloneVT() *Config {
 	}
 	r := new(Config)
 	r.Backend = m.Backend
+	r.Kind = m.Kind
 	r.Host = m.Host
 	r.Port = m.Port
 	r.Path = m.Path
@@ -239,6 +240,7 @@ func (m *Platform) CloneVT() *Platform {
 	r.Build = m.Build
 	r.Version = m.Version
 	r.Kind = m.Kind
+	r.DeprecatedV8Kind = m.DeprecatedV8Kind
 	r.Runtime = m.Runtime
 	if rhs := m.Family; rhs != nil {
 		tmpContainer := make([]string, len(rhs))
@@ -890,6 +892,13 @@ func (m *Config) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xca
 	}
+	if m.Kind != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Kind))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xc0
+	}
 	if len(m.Options) > 0 {
 		for k := range m.Options {
 			v := m.Options[k]
@@ -1196,6 +1205,13 @@ func (m *Platform) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0xaa
+	}
+	if m.DeprecatedV8Kind != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.DeprecatedV8Kind))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xa0
 	}
 	if len(m.TechnologyUrlSegments) > 0 {
 		for iNdEx := len(m.TechnologyUrlSegments) - 1; iNdEx >= 0; iNdEx-- {
@@ -1914,6 +1930,9 @@ func (m *Config) SizeVT() (n int) {
 			n += mapEntrySize + 2 + protohelpers.SizeOfVarint(uint64(mapEntrySize))
 		}
 	}
+	if m.Kind != 0 {
+		n += 2 + protohelpers.SizeOfVarint(uint64(m.Kind))
+	}
 	l = len(m.Runtime)
 	if l > 0 {
 		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
@@ -2035,6 +2054,9 @@ func (m *Platform) SizeVT() (n int) {
 			l = len(s)
 			n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 		}
+	}
+	if m.DeprecatedV8Kind != 0 {
+		n += 2 + protohelpers.SizeOfVarint(uint64(m.DeprecatedV8Kind))
 	}
 	l = len(m.Runtime)
 	if l > 0 {
@@ -3928,6 +3950,25 @@ func (m *Config) UnmarshalVT(dAtA []byte) error {
 			}
 			m.Options[mapkey] = mapvalue
 			iNdEx = postIndex
+		case 24:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Kind", wireType)
+			}
+			m.Kind = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Kind |= DeprecatedV8_Kind(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		case 25:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Runtime", wireType)
@@ -4802,6 +4843,25 @@ func (m *Platform) UnmarshalVT(dAtA []byte) error {
 			}
 			m.TechnologyUrlSegments = append(m.TechnologyUrlSegments, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
+		case 20:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeprecatedV8Kind", wireType)
+			}
+			m.DeprecatedV8Kind = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DeprecatedV8Kind |= DeprecatedV8_Kind(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		case 21:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Runtime", wireType)
