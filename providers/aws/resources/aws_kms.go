@@ -140,7 +140,7 @@ func (a *mqlAwsKmsKey) tags() (map[string]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsKmsKey) aliases() ([]string, error) {
+func (a *mqlAwsKmsKey) aliases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyArn := a.Arn.Data
 
@@ -152,9 +152,9 @@ func (a *mqlAwsKmsKey) aliases() ([]string, error) {
 		return nil, err
 	}
 
-	aliases := make([]string, 0, len(resp.Aliases))
-	for i, a := range resp.Aliases {
-		aliases[i] = *a.AliasName
+	aliases := []any{}
+	for _, a := range resp.Aliases {
+		aliases = append(aliases, *a.AliasName)
 	}
 
 	return aliases, nil
