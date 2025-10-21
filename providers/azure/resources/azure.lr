@@ -2212,10 +2212,10 @@ private azure.subscription.cacheService @defaults("subscriptionId") {
   // Subscription identifier
   subscriptionId string
   // List of redis caches
-  caches() []azure.subscription.cacheService.redis
+  redis() []azure.subscription.cache.redis
 }
 
-private azure.subscription.cacheService.redis @defaults("id hostName") {
+private azure.subscription.cache.redis @defaults("id hostName") {
   // ID of the Redis cache
   id string
   // Name of the Redis cache

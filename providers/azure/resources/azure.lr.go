@@ -131,7 +131,7 @@ const (
 	ResourceAzureSubscriptionPolicyAssignment                                          string = "azure.subscription.policy.assignment"
 	ResourceAzureSubscriptionIotService                                                string = "azure.subscription.iotService"
 	ResourceAzureSubscriptionCacheService                                              string = "azure.subscription.cacheService"
-	ResourceAzureSubscriptionCacheServiceRedis                                         string = "azure.subscription.cacheService.redis"
+	ResourceAzureSubscriptionCacheRedis                                                string = "azure.subscription.cache.redis"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -594,9 +594,9 @@ func init() {
 			Init:   initAzureSubscriptionCacheService,
 			Create: createAzureSubscriptionCacheService,
 		},
-		"azure.subscription.cacheService.redis": {
-			// to override args, implement: initAzureSubscriptionCacheServiceRedis(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAzureSubscriptionCacheServiceRedis,
+		"azure.subscription.cache.redis": {
+			// to override args, implement: initAzureSubscriptionCacheRedis(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCacheRedis,
 		},
 	}
 }
@@ -3330,29 +3330,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cacheService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheService).GetSubscriptionId()).ToDataRes(types.String)
 	},
-	"azure.subscription.cacheService.caches": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheService).GetCaches()).ToDataRes(types.Array(types.Resource("azure.subscription.cacheService.redis")))
+	"azure.subscription.cacheService.redis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheService).GetRedis()).ToDataRes(types.Array(types.Resource("azure.subscription.cache.redis")))
 	},
-	"azure.subscription.cacheService.redis.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheServiceRedis).GetId()).ToDataRes(types.String)
+	"azure.subscription.cache.redis.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheRedis).GetId()).ToDataRes(types.String)
 	},
-	"azure.subscription.cacheService.redis.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheServiceRedis).GetName()).ToDataRes(types.String)
+	"azure.subscription.cache.redis.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheRedis).GetName()).ToDataRes(types.String)
 	},
-	"azure.subscription.cacheService.redis.location": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheServiceRedis).GetLocation()).ToDataRes(types.String)
+	"azure.subscription.cache.redis.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheRedis).GetLocation()).ToDataRes(types.String)
 	},
-	"azure.subscription.cacheService.redis.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheServiceRedis).GetType()).ToDataRes(types.String)
+	"azure.subscription.cache.redis.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheRedis).GetType()).ToDataRes(types.String)
 	},
-	"azure.subscription.cacheService.redis.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheServiceRedis).GetProperties()).ToDataRes(types.Dict)
+	"azure.subscription.cache.redis.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheRedis).GetProperties()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.cacheService.redis.enableNonSslPort": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheServiceRedis).GetEnableNonSslPort()).ToDataRes(types.Bool)
+	"azure.subscription.cache.redis.enableNonSslPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheRedis).GetEnableNonSslPort()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.cacheService.redis.hostName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheServiceRedis).GetHostName()).ToDataRes(types.String)
+	"azure.subscription.cache.redis.hostName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheRedis).GetHostName()).ToDataRes(types.String)
 	},
 }
 
@@ -7358,40 +7358,40 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCacheService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cacheService.caches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheService).Caches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.cacheService.redis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheService).Redis, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cacheService.redis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedis).__id, ok = v.Value.(string)
+	"azure.subscription.cache.redis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheRedis).__id, ok = v.Value.(string)
 		return
 	},
-	"azure.subscription.cacheService.redis.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedis).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cache.redis.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheRedis).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cacheService.redis.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedis).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cache.redis.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheRedis).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cacheService.redis.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedis).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cache.redis.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheRedis).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cacheService.redis.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedis).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cache.redis.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheRedis).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cacheService.redis.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedis).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+	"azure.subscription.cache.redis.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheRedis).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cacheService.redis.enableNonSslPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedis).EnableNonSslPort, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.cache.redis.enableNonSslPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheRedis).EnableNonSslPort, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cacheService.redis.hostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedis).HostName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cache.redis.hostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheRedis).HostName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -18488,7 +18488,7 @@ type mqlAzureSubscriptionCacheService struct {
 	__id       string
 	// optional: if you define mqlAzureSubscriptionCacheServiceInternal it will be used here
 	SubscriptionId plugin.TValue[string]
-	Caches         plugin.TValue[[]any]
+	Redis          plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCacheService creates a new instance of this resource
@@ -18527,10 +18527,10 @@ func (c *mqlAzureSubscriptionCacheService) GetSubscriptionId() *plugin.TValue[st
 	return &c.SubscriptionId
 }
 
-func (c *mqlAzureSubscriptionCacheService) GetCaches() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Caches, func() ([]any, error) {
+func (c *mqlAzureSubscriptionCacheService) GetRedis() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Redis, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cacheService", c.__id, "caches")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cacheService", c.__id, "redis")
 			if err != nil {
 				return nil, err
 			}
@@ -18539,15 +18539,15 @@ func (c *mqlAzureSubscriptionCacheService) GetCaches() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.caches()
+		return c.redis()
 	})
 }
 
-// mqlAzureSubscriptionCacheServiceRedis for the azure.subscription.cacheService.redis resource
-type mqlAzureSubscriptionCacheServiceRedis struct {
+// mqlAzureSubscriptionCacheRedis for the azure.subscription.cache.redis resource
+type mqlAzureSubscriptionCacheRedis struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionCacheServiceRedisInternal it will be used here
+	// optional: if you define mqlAzureSubscriptionCacheRedisInternal it will be used here
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
 	Location         plugin.TValue[string]
@@ -18557,9 +18557,9 @@ type mqlAzureSubscriptionCacheServiceRedis struct {
 	HostName         plugin.TValue[string]
 }
 
-// createAzureSubscriptionCacheServiceRedis creates a new instance of this resource
-func createAzureSubscriptionCacheServiceRedis(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAzureSubscriptionCacheServiceRedis{
+// createAzureSubscriptionCacheRedis creates a new instance of this resource
+func createAzureSubscriptionCacheRedis(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCacheRedis{
 		MqlRuntime: runtime,
 	}
 
@@ -18571,7 +18571,7 @@ func createAzureSubscriptionCacheServiceRedis(runtime *plugin.Runtime, args map[
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("azure.subscription.cacheService.redis", res.__id)
+		args, err = runtime.ResourceFromRecording("azure.subscription.cache.redis", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -18581,38 +18581,38 @@ func createAzureSubscriptionCacheServiceRedis(runtime *plugin.Runtime, args map[
 	return res, nil
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedis) MqlName() string {
-	return "azure.subscription.cacheService.redis"
+func (c *mqlAzureSubscriptionCacheRedis) MqlName() string {
+	return "azure.subscription.cache.redis"
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedis) MqlID() string {
+func (c *mqlAzureSubscriptionCacheRedis) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedis) GetId() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCacheRedis) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedis) GetName() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCacheRedis) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedis) GetLocation() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCacheRedis) GetLocation() *plugin.TValue[string] {
 	return &c.Location
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedis) GetType() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCacheRedis) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedis) GetProperties() *plugin.TValue[any] {
+func (c *mqlAzureSubscriptionCacheRedis) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedis) GetEnableNonSslPort() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionCacheRedis) GetEnableNonSslPort() *plugin.TValue[bool] {
 	return &c.EnableNonSslPort
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedis) GetHostName() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCacheRedis) GetHostName() *plugin.TValue[string] {
 	return &c.HostName
 }

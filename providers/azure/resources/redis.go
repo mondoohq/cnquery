@@ -28,7 +28,7 @@ func initAzureSubscriptionCacheService(runtime *plugin.Runtime, args map[string]
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionCacheService) caches() ([]any, error) {
+func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -50,32 +50,27 @@ func (a *mqlAzureSubscriptionCacheService) caches() ([]any, error) {
 			return nil, err
 		}
 		for _, cache := range page.Value {
+			fmt.Println("cache", cache)
+			fmt.Println(cache == nil)
+			if cache == nil {
+				continue
+			}
 			properties, err := convert.JsonToDict(cache)
 			if err != nil {
 				return nil, err
 			}
 
-			var hostName *string
-			enableNonSslPort := false // default to false TODO: check other implementations how it's done
-
-			if cache.Properties != nil {
-				hostName = cache.Properties.HostName
-				if cache.Properties.EnableNonSSLPort != nil {
-					enableNonSslPort = *cache.Properties.EnableNonSSLPort
-				}
-			}
-
 			cacheData, err := CreateResource(
 				a.MqlRuntime,
-				"azure.subscription.cacheService.redis",
+				"azure.subscription.cache.redis",
 				map[string]*llx.RawData{
 					"id":               llx.StringDataPtr(cache.ID),
 					"name":             llx.StringDataPtr(cache.Name),
 					"type":             llx.StringDataPtr(cache.Type),
 					"location":         llx.StringDataPtr(cache.Location),
 					"properties":       llx.DictData(properties),
-					"hostName":         llx.StringDataPtr(hostName),
-					"enableNonSslPort": llx.BoolData(enableNonSslPort),
+					"hostName":         llx.StringDataPtr(cache.Properties.HostName),
+					"enableNonSslPort": llx.BoolDataPtr(cache.Properties.EnableNonSSLPort),
 				},
 			)
 			if err != nil {
