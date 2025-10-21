@@ -2393,6 +2393,8 @@ resources:
       desc: |
         The `aws.kms.key` resource provides fields for assessing the configuration of individual KMS keys. For usage, read the `aws.kms` resource documentation.
     fields:
+      aliases:
+        min_mondoo_version: 9.0.0
       arn: {}
       id: {}
       keyRotationEnabled: {}

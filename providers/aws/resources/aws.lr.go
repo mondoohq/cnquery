@@ -1899,6 +1899,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.kms.key.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetAliases()).ToDataRes(types.Array(types.String))
+	},
 	"aws.iam.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
 	},
@@ -6965,6 +6968,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.kms.key.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsKey).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16317,6 +16324,7 @@ type mqlAwsKmsKey struct {
 	KeyRotationEnabled plugin.TValue[bool]
 	Metadata           plugin.TValue[any]
 	Tags               plugin.TValue[map[string]any]
+	Aliases            plugin.TValue[[]any]
 }
 
 // createAwsKmsKey creates a new instance of this resource
@@ -16383,6 +16391,12 @@ func (c *mqlAwsKmsKey) GetMetadata() *plugin.TValue[any] {
 func (c *mqlAwsKmsKey) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetAliases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aliases, func() ([]any, error) {
+		return c.aliases()
 	})
 }
 
