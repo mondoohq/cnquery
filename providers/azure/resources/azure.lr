@@ -68,6 +68,8 @@ azure.subscription @defaults ("name") {
   policy azure.subscription.policy
   // IoT resources in the subscription
   iot() azure.subscription.iotService
+  // Cache resources in the subscription
+  cache() azure.subscription.cacheService
 }
 
 // Azure function
@@ -2206,6 +2208,16 @@ private azure.subscription.iotService {
   hubs() []dict
 }
 
+private azure.subscription.cacheService {
+  // Subscription identifier
+  subscriptionId string
+  // List of redis caches
+  caches() []azure.subscription.cache.redis
+}
+
 private azure.subscription.cache.redis {
-  
+  // Specifies whether the non-ssl Redis server port (6379) is enabled
+  enableNonSslPort bool
+  // Redis host name
+  hostName string
 }

@@ -3,7 +3,6 @@
 
 resources:
   azure:
-    fields: {}
     min_mondoo_version: latest
     platform:
       name:
@@ -17,6 +16,8 @@ resources:
       aks: {}
       authorizationSource: {}
       batch:
+        min_mondoo_version: 9.0.0
+      cache:
         min_mondoo_version: 9.0.0
       cloudDefender: {}
       compute: {}
@@ -409,6 +410,32 @@ resources:
       type: {}
       virtualMachineConfiguration: {}
       vmSize: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.cache:
+    fields:
+      redisCaches: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.cache.redis:
+    fields:
+      enableNonSslPort: {}
+      hostName: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.cacheService:
+    fields:
+      caches: {}
+      redisCaches: {}
+      subscriptionId: {}
+    is_private: true
     min_mondoo_version: 9.0.0
     platform:
       name:
