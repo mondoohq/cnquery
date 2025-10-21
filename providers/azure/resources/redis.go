@@ -50,8 +50,6 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 			return nil, err
 		}
 		for _, cache := range page.Value {
-			fmt.Println("cache", cache)
-			fmt.Println(cache == nil)
 			if cache == nil {
 				continue
 			}
