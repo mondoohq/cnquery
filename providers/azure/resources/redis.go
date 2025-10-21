@@ -55,15 +55,27 @@ func (a *mqlAzureSubscriptionCacheService) caches() ([]any, error) {
 				return nil, err
 			}
 
+			var hostName *string
+			enableNonSslPort := false // default to false TODO: check other implementations how it's done
+
+			if cache.Properties != nil {
+				hostName = cache.Properties.HostName
+				if cache.Properties.EnableNonSSLPort != nil {
+					enableNonSslPort = *cache.Properties.EnableNonSSLPort
+				}
+			}
+
 			cacheData, err := CreateResource(
 				a.MqlRuntime,
-				"azure.subscription.cache.redis",
+				"azure.subscription.cacheService.redis",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(cache.ID),
-					"name":       llx.StringDataPtr(cache.ID),
-					"type":       llx.StringDataPtr(cache.Type),
-					"location":   llx.StringDataPtr(cache.Location),
-					"properties": llx.DictData(properties),
+					"id":               llx.StringDataPtr(cache.ID),
+					"name":             llx.StringDataPtr(cache.Name),
+					"type":             llx.StringDataPtr(cache.Type),
+					"location":         llx.StringDataPtr(cache.Location),
+					"properties":       llx.DictData(properties),
+					"hostName":         llx.StringDataPtr(hostName),
+					"enableNonSslPort": llx.BoolData(enableNonSslPort),
 				},
 			)
 			if err != nil {

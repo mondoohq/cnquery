@@ -425,7 +425,6 @@ resources:
     fields:
       enableNonSslPort: {}
       hostName: {}
-    is_private: true
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -435,6 +434,20 @@ resources:
       caches: {}
       redisCaches: {}
       subscriptionId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.cacheService.redis:
+    fields:
+      enableNonSslPort: {}
+      hostName: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      type: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

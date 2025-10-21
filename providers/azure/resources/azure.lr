@@ -2208,14 +2208,24 @@ private azure.subscription.iotService {
   hubs() []dict
 }
 
-private azure.subscription.cacheService {
+private azure.subscription.cacheService @defaults("subscriptionId") {
   // Subscription identifier
   subscriptionId string
   // List of redis caches
-  caches() []azure.subscription.cache.redis
+  caches() []azure.subscription.cacheService.redis
 }
 
-private azure.subscription.cache.redis {
+private azure.subscription.cacheService.redis @defaults("id hostName") {
+  // ID of the Redis cache
+  id string
+  // Name of the Redis cache
+  name string
+  // Location of the Redis cache
+  location string
+  // Type of the Redis cache
+  type string
+  // Properties of the Redis cache
+  properties dict
   // Specifies whether the non-ssl Redis server port (6379) is enabled
   enableNonSslPort bool
   // Redis host name
