@@ -431,7 +431,6 @@ resources:
       properties: {}
       tags: {}
       type: {}
-    is_private: true
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -470,6 +469,21 @@ resources:
       name: {}
       properties: {}
       type: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.cacheService.redisInstance:
+    fields:
+      enableNonSslPort: {}
+      hostName: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      publicNetworkAccess: {}
+      type: {}
+    is_private: true
     min_mondoo_version: 9.0.0
     platform:
       name:

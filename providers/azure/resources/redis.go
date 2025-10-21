@@ -58,17 +58,24 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 				return nil, err
 			}
 
+			var publicNetworkAccess *string
+			if cache.Properties.PublicNetworkAccess != nil {
+				val := string(*cache.Properties.PublicNetworkAccess)
+				publicNetworkAccess = &val
+			}
+
 			cacheData, err := CreateResource(
 				a.MqlRuntime,
-				"azure.subscription.cache.redis",
+				"azure.subscription.cacheService.redisInstance",
 				map[string]*llx.RawData{
-					"id":               llx.StringDataPtr(cache.ID),
-					"name":             llx.StringDataPtr(cache.Name),
-					"type":             llx.StringDataPtr(cache.Type),
-					"location":         llx.StringDataPtr(cache.Location),
-					"properties":       llx.DictData(properties),
-					"hostName":         llx.StringDataPtr(cache.Properties.HostName),
-					"enableNonSslPort": llx.BoolDataPtr(cache.Properties.EnableNonSSLPort),
+					"id":                  llx.StringDataPtr(cache.ID),
+					"name":                llx.StringDataPtr(cache.Name),
+					"type":                llx.StringDataPtr(cache.Type),
+					"location":            llx.StringDataPtr(cache.Location),
+					"properties":          llx.DictData(properties),
+					"hostName":            llx.StringDataPtr(cache.Properties.HostName),
+					"enableNonSslPort":    llx.BoolDataPtr(cache.Properties.EnableNonSSLPort),
+					"publicNetworkAccess": llx.StringDataPtr(publicNetworkAccess),
 				},
 			)
 			if err != nil {

@@ -2212,10 +2212,10 @@ private azure.subscription.cacheService @defaults("subscriptionId") {
   // Subscription identifier
   subscriptionId string
   // List of redis caches
-  redis() []azure.subscription.cache.redis
+  redis() []azure.subscription.cacheService.redisInstance
 }
 
-private azure.subscription.cache.redis @defaults("id hostName") {
+private azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   // ID of the Redis cache
   id string
   // Name of the Redis cache
@@ -2230,4 +2230,6 @@ private azure.subscription.cache.redis @defaults("id hostName") {
   enableNonSslPort bool
   // Redis host name
   hostName string
+  // publicNetworkAccess possible values are "Enabled" and "Disabled"
+  publicNetworkAccess string
 }
