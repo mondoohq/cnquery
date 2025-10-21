@@ -1899,6 +1899,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.kms.key.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetAliases()).ToDataRes(types.Array(types.String))
+	},
 	"aws.iam.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
 	},
@@ -4121,6 +4124,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elasticache.cluster.snapshotRetentionLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetSnapshotRetentionLimit()).ToDataRes(types.Int)
+	},
+	"aws.elasticache.cluster.snapshotWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetSnapshotWindow()).ToDataRes(types.String)
 	},
 	"aws.elasticache.cluster.transitEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetTransitEncryptionEnabled()).ToDataRes(types.Bool)
@@ -6962,6 +6968,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.kms.key.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsKey).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10298,6 +10308,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elasticache.cluster.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheCluster).SnapshotRetentionLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.snapshotWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).SnapshotWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.transitEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16310,6 +16324,7 @@ type mqlAwsKmsKey struct {
 	KeyRotationEnabled plugin.TValue[bool]
 	Metadata           plugin.TValue[any]
 	Tags               plugin.TValue[map[string]any]
+	Aliases            plugin.TValue[[]any]
 }
 
 // createAwsKmsKey creates a new instance of this resource
@@ -16376,6 +16391,12 @@ func (c *mqlAwsKmsKey) GetMetadata() *plugin.TValue[any] {
 func (c *mqlAwsKmsKey) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetAliases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aliases, func() ([]any, error) {
+		return c.aliases()
 	})
 }
 
@@ -25440,6 +25461,7 @@ type mqlAwsElasticacheCluster struct {
 	Region                    plugin.TValue[string]
 	SecurityGroups            plugin.TValue[[]any]
 	SnapshotRetentionLimit    plugin.TValue[int64]
+	SnapshotWindow            plugin.TValue[string]
 	TransitEncryptionEnabled  plugin.TValue[bool]
 	TransitEncryptionMode     plugin.TValue[string]
 }
@@ -25586,6 +25608,10 @@ func (c *mqlAwsElasticacheCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 
 func (c *mqlAwsElasticacheCluster) GetSnapshotRetentionLimit() *plugin.TValue[int64] {
 	return &c.SnapshotRetentionLimit
+}
+
+func (c *mqlAwsElasticacheCluster) GetSnapshotWindow() *plugin.TValue[string] {
+	return &c.SnapshotWindow
 }
 
 func (c *mqlAwsElasticacheCluster) GetTransitEncryptionEnabled() *plugin.TValue[bool] {

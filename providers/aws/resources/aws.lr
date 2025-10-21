@@ -729,6 +729,8 @@ private aws.kms.key @defaults("id region metadata.Description") {
   metadata() dict
   // Tags for the KMS key
   tags() map[string]string
+  // Aliases for the KMS key
+  aliases() []string
 }
 
 
@@ -2595,6 +2597,8 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   securityGroups() []aws.ec2.securitygroup
   // Number of days ElastiCache retains automatic cluster snapshots before deleting them
   snapshotRetentionLimit int
+  // The daily time range (in UTC) during which ElastiCache begins taking a daily snapshot of your shard.
+  snapshotWindow string
   // Whether in-transit encryption is enabled
   transitEncryptionEnabled bool
   // Whether migrating clients to use in-transit encryption (with no downtime) is allowed
