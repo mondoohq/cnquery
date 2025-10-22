@@ -252,3 +252,14 @@ func (a *mqlAzureSubscription) iot() (*mqlAzureSubscriptionIotService, error) {
 	iotSvc := svc.(*mqlAzureSubscriptionIotService)
 	return iotSvc, nil
 }
+
+func (a *mqlAzureSubscription) cache() (*mqlAzureSubscriptionCacheService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionCacheService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	cacheSvc := svc.(*mqlAzureSubscriptionCacheService)
+	return cacheSvc, nil
+}

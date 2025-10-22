@@ -68,6 +68,8 @@ azure.subscription @defaults ("name") {
   policy azure.subscription.policy
   // IoT resources in the subscription
   iot() azure.subscription.iotService
+  // Cache resources in the subscription
+  cache() azure.subscription.cacheService
 }
 
 // Azure function
@@ -2204,4 +2206,46 @@ private azure.subscription.iotService {
   subscriptionId string
   // List of IoT hubs in the subscription
   hubs() []dict
+}
+
+private azure.subscription.cacheService @defaults("subscriptionId") {
+  // Subscription identifier
+  subscriptionId string
+  // List of redis caches
+  redis() []azure.subscription.cacheService.redisInstance
+}
+
+private azure.subscription.cacheService.redisInstance @defaults("id hostName") {
+  // ID of the Redis cache
+  id string
+  // Name of the Redis cache
+  name string
+  // Location of the Redis cache
+  location string
+  // Type of the Redis cache
+  type string
+  // Properties of the Redis cache
+  properties dict
+  // Specifies whether the non-ssl Redis server port (6379) is enabled
+  enableNonSslPort bool
+  // Redis host name
+  hostName string
+  // publicNetworkAccess possible values are "Enabled" and "Disabled"
+  publicNetworkAccess string
+  // Redis port (non-SSL)
+  port int
+  // Redis SSL port
+  sslPort int
+  // Provisioning state with possible values Creating, Deleting, Failed, Succeeded, Updating
+  provisioningState string
+  // Redis version
+  redisVersion string
+  // Number of replicas per master
+  replicasPerMaster int
+  // Number of replicas per primary
+  replicasPerPrimary int
+  // SKU information for the Redis cache
+  sku dict
+  // Tags of redis cache
+  tags dict
 }
