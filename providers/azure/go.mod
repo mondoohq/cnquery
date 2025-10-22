@@ -41,6 +41,8 @@ require (
 	go.mondoo.com/cnquery/v12 v12.5.1
 )
 
+require github.com/stretchr/objx v0.5.2 // indirect
+
 require (
 	cel.dev/expr v0.24.0 // indirect
 	cloud.google.com/go v0.121.6 // indirect
