@@ -63,18 +63,18 @@ func (m *mockRedisClient) NewListBySubscriptionPager(options *armredis.ClientLis
 	return args.Get(0).(*runtime.Pager[armredis.ClientListBySubscriptionResponse])
 }
 
-// MockPager mocks the Azure pager
-type MockPager struct {
+// mockPager mocks the Azure pager
+type mockPager struct {
 	mock.Mock
 	pages []armredis.ClientListBySubscriptionResponse
 }
 
-func (m *MockPager) More() bool {
+func (m *mockPager) More() bool {
 	args := m.Called()
 	return args.Bool(0)
 }
 
-func (m *MockPager) NextPage(ctx context.Context) (armredis.ClientListBySubscriptionResponse, error) {
+func (m *mockPager) NextPage(ctx context.Context) (armredis.ClientListBySubscriptionResponse, error) {
 	args := m.Called(ctx)
 	return args.Get(0).(armredis.ClientListBySubscriptionResponse), args.Error(1)
 }
@@ -145,7 +145,7 @@ func TestAzureSubscriptionCacheServiceRedis(t *testing.T) {
 	}
 
 	// Create mock pager
-	mockPager := &MockPager{}
+	mockPager := &mockPager{}
 	mockPager.On("More").Return(true).Once()
 	mockPager.On("More").Return(false).Once()
 	mockPager.On("NextPage", mock.Anything).Return(mockResponse, nil).Once()
