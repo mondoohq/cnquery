@@ -2236,7 +2236,7 @@ private azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   port int
   // Redis SSL port
   sslPort int
-  // Provisioning state of the Redis cache
+  // Provisioning state with possible values Creating, Deleting, Failed, Succeeded, Updating
   provisioningState string
   // Redis version
   redisVersion string

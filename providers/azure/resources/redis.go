@@ -63,13 +63,13 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-
+			// publicNetworkAccess is an enum with possible values: Enabled, Disabled
 			var publicNetworkAccess *string
 			if cache.Properties.PublicNetworkAccess != nil {
 				val := string(*cache.Properties.PublicNetworkAccess)
 				publicNetworkAccess = &val
 			}
-
+			// provisioningState is an enum with possible values: Creating, Deleting, Failed, Succeeded, Updating
 			var provisioningState *string
 			if cache.Properties.ProvisioningState != nil {
 				val := string(*cache.Properties.ProvisioningState)
