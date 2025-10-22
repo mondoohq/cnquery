@@ -2557,10 +2557,10 @@ func timeSecondsV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
-	if *t == NeverPastTime {
+	if t.Equal(NeverPastTime) {
 		return MinIntPrimitive.RawData(), 0, nil
 	}
-	if *t == NeverFutureTime {
+	if t.Equal(NeverFutureTime) {
 		return MaxIntPrimitive.RawData(), 0, nil
 	}
 
@@ -2574,10 +2574,10 @@ func timeMinutesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
-	if *t == NeverPastTime {
+	if t.Equal(NeverPastTime) {
 		return MinIntPrimitive.RawData(), 0, nil
 	}
-	if *t == NeverFutureTime {
+	if t.Equal(NeverFutureTime) {
 		return MaxIntPrimitive.RawData(), 0, nil
 	}
 
@@ -2591,10 +2591,10 @@ func timeHoursV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
-	if *t == NeverPastTime {
+	if t.Equal(NeverPastTime) {
 		return MinIntPrimitive.RawData(), 0, nil
 	}
-	if *t == NeverFutureTime {
+	if t.Equal(NeverFutureTime) {
 		return MaxIntPrimitive.RawData(), 0, nil
 	}
 
@@ -2608,10 +2608,10 @@ func timeDaysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
-	if *t == NeverPastTime {
+	if t.Equal(NeverPastTime) {
 		return MinIntPrimitive.RawData(), 0, nil
 	}
-	if *t == NeverFutureTime {
+	if t.Equal(NeverFutureTime) {
 		return MaxIntPrimitive.RawData(), 0, nil
 	}
 
