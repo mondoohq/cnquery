@@ -13,52 +13,52 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockAzureConnection implements the AzureConnection interface for testing
-type MockAzureConnection struct {
+// mockAzureConnection implements the AzureConnection interface for testing
+type mockAzureConnection struct {
 	subscriptionID string
 	token          string
 }
 
-func (m *MockAzureConnection) ID() uint32 {
+func (m *mockAzureConnection) ID() uint32 {
 	return 1
 }
 
-func (m *MockAzureConnection) Name() string {
+func (m *mockAzureConnection) Name() string {
 	return "mock-azure-connection"
 }
 
-func (m *MockAzureConnection) SubId() string {
+func (m *mockAzureConnection) SubId() string {
 	return m.subscriptionID
 }
 
-func (m *MockAzureConnection) Token() string {
+func (m *mockAzureConnection) Token() string {
 	return m.token
 }
 
-func (m *MockAzureConnection) ClientOptions() interface{} {
+func (m *mockAzureConnection) ClientOptions() interface{} {
 	return nil
 }
 
-func (m *MockAzureConnection) ParentID() uint32 {
+func (m *mockAzureConnection) ParentID() uint32 {
 	return 0
 }
 
 // MockRedisClientFactory mocks the Azure Redis client factory
-type MockRedisClientFactory struct {
+type mockRedisClientFactory struct {
 	mock.Mock
 }
 
-func (m *MockRedisClientFactory) NewClient() *armredis.Client {
+func (m *mockRedisClientFactory) NewClient() *armredis.Client {
 	args := m.Called()
 	return args.Get(0).(*armredis.Client)
 }
 
 // MockRedisClient mocks the Azure Redis client
-type MockRedisClient struct {
+type mockRedisClient struct {
 	mock.Mock
 }
 
-func (m *MockRedisClient) NewListBySubscriptionPager(options *armredis.ClientListBySubscriptionOptions) *runtime.Pager[armredis.ClientListBySubscriptionResponse] {
+func (m *mockRedisClient) NewListBySubscriptionPager(options *armredis.ClientListBySubscriptionOptions) *runtime.Pager[armredis.ClientListBySubscriptionResponse] {
 	args := m.Called(options)
 	return args.Get(0).(*runtime.Pager[armredis.ClientListBySubscriptionResponse])
 }
@@ -151,11 +151,11 @@ func TestAzureSubscriptionCacheServiceRedis(t *testing.T) {
 	mockPager.On("NextPage", mock.Anything).Return(mockResponse, nil).Once()
 
 	// Create mock client
-	mockClient := &MockRedisClient{}
+	mockClient := &mockRedisClient{}
 	mockClient.On("NewListBySubscriptionPager", mock.Anything).Return(mockPager)
 
 	// Create mock client factory
-	mockFactory := &MockRedisClientFactory{}
+	mockFactory := &mockRedisClientFactory{}
 	mockFactory.On("NewClient").Return(mockClient)
 
 	// Test the data conversion logic
