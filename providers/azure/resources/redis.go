@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/azure/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func initAzureSubscriptionCacheService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -58,10 +59,21 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 				return nil, err
 			}
 
+			sku, err := convert.JsonToDict(cache.Properties.SKU)
+			if err != nil {
+				return nil, err
+			}
+
 			var publicNetworkAccess *string
 			if cache.Properties.PublicNetworkAccess != nil {
 				val := string(*cache.Properties.PublicNetworkAccess)
 				publicNetworkAccess = &val
+			}
+
+			var provisioningState *string
+			if cache.Properties.ProvisioningState != nil {
+				val := string(*cache.Properties.ProvisioningState)
+				provisioningState = &val
 			}
 
 			cacheData, err := CreateResource(
@@ -76,6 +88,14 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 					"hostName":            llx.StringDataPtr(cache.Properties.HostName),
 					"enableNonSslPort":    llx.BoolDataPtr(cache.Properties.EnableNonSSLPort),
 					"publicNetworkAccess": llx.StringDataPtr(publicNetworkAccess),
+					"port":                llx.IntDataPtr(cache.Properties.Port),
+					"sslPort":             llx.IntDataPtr(cache.Properties.SSLPort),
+					"provisioningState":   llx.StringDataPtr(provisioningState),
+					"redisVersion":        llx.StringDataPtr(cache.Properties.RedisVersion),
+					"replicasPerMaster":   llx.IntDataPtr(cache.Properties.ReplicasPerMaster),
+					"replicasPerPrimary":  llx.IntDataPtr(cache.Properties.ReplicasPerPrimary),
+					"sku":                 llx.DictData(sku),
+					"tags":                llx.MapData(convert.PtrMapStrToInterface(cache.Tags), types.String),
 				},
 			)
 			if err != nil {

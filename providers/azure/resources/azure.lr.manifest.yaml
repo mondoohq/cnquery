@@ -480,8 +480,16 @@ resources:
       id: {}
       location: {}
       name: {}
+      port: {}
       properties: {}
+      provisioningState: {}
       publicNetworkAccess: {}
+      redisVersion: {}
+      replicasPerMaster: {}
+      replicasPerPrimary: {}
+      sku: {}
+      sslPort: {}
+      tags: {}
       type: {}
     is_private: true
     min_mondoo_version: 9.0.0

@@ -3357,6 +3357,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cacheService.redisInstance.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetPublicNetworkAccess()).ToDataRes(types.String)
 	},
+	"azure.subscription.cacheService.redisInstance.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cacheService.redisInstance.sslPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetSslPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cacheService.redisInstance.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.redisVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetRedisVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.replicasPerMaster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetReplicasPerMaster()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cacheService.redisInstance.replicasPerPrimary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetReplicasPerPrimary()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cacheService.redisInstance.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetSku()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cacheService.redisInstance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetTags()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -7399,6 +7423,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cacheService.redisInstance.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.sslPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).SslPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.redisVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).RedisVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.replicasPerMaster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).ReplicasPerMaster, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.replicasPerPrimary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).ReplicasPerPrimary, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).Tags, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 }
@@ -18563,6 +18619,14 @@ type mqlAzureSubscriptionCacheServiceRedisInstance struct {
 	EnableNonSslPort    plugin.TValue[bool]
 	HostName            plugin.TValue[string]
 	PublicNetworkAccess plugin.TValue[string]
+	Port                plugin.TValue[int64]
+	SslPort             plugin.TValue[int64]
+	ProvisioningState   plugin.TValue[string]
+	RedisVersion        plugin.TValue[string]
+	ReplicasPerMaster   plugin.TValue[int64]
+	ReplicasPerPrimary  plugin.TValue[int64]
+	Sku                 plugin.TValue[any]
+	Tags                plugin.TValue[any]
 }
 
 // createAzureSubscriptionCacheServiceRedisInstance creates a new instance of this resource
@@ -18627,4 +18691,36 @@ func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetHostName() *plugin.TV
 
 func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetPublicNetworkAccess() *plugin.TValue[string] {
 	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetSslPort() *plugin.TValue[int64] {
+	return &c.SslPort
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetRedisVersion() *plugin.TValue[string] {
+	return &c.RedisVersion
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetReplicasPerMaster() *plugin.TValue[int64] {
+	return &c.ReplicasPerMaster
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetReplicasPerPrimary() *plugin.TValue[int64] {
+	return &c.ReplicasPerPrimary
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetSku() *plugin.TValue[any] {
+	return &c.Sku
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetTags() *plugin.TValue[any] {
+	return &c.Tags
 }

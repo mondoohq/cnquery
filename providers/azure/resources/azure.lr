@@ -2232,4 +2232,20 @@ private azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   hostName string
   // publicNetworkAccess possible values are "Enabled" and "Disabled"
   publicNetworkAccess string
+  // Redis port (non-SSL)
+  port int
+  // Redis SSL port
+  sslPort int
+  // Provisioning state of the Redis cache
+  provisioningState string
+  // Redis version
+  redisVersion string
+  // Number of replicas per master
+  replicasPerMaster int
+  // Number of replicas per primary
+  replicasPerPrimary int
+  // SKU information for the Redis cache
+  sku dict
+  // Tags of redis cache
+  tags dict
 }
