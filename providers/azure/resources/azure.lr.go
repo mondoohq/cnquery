@@ -2090,6 +2090,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appsite.scm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetScm()).ToDataRes(types.Resource("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"))
 	},
+	"azure.subscription.webService.appsite.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Dict))
+	},
 	"azure.subscription.webService.appslot.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetId()).ToDataRes(types.String)
 	},
@@ -5448,6 +5451,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appsite.scm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).Scm, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appslot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12852,25 +12859,26 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionWebServiceAppsiteInternal it will be used here
-	Id                     plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Kind                   plugin.TValue[string]
-	Location               plugin.TValue[string]
-	Type                   plugin.TValue[string]
-	Tags                   plugin.TValue[map[string]any]
-	Properties             plugin.TValue[any]
-	Identity               plugin.TValue[any]
-	Slots                  plugin.TValue[[]any]
-	Configuration          plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
-	AuthenticationSettings plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
-	Metadata               plugin.TValue[any]
-	ApplicationSettings    plugin.TValue[any]
-	ConnectionSettings     plugin.TValue[any]
-	Stack                  plugin.TValue[any]
-	DiagnosticSettings     plugin.TValue[[]any]
-	Functions              plugin.TValue[[]any]
-	Ftp                    plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
-	Scm                    plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Kind                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	Properties                 plugin.TValue[any]
+	Identity                   plugin.TValue[any]
+	Slots                      plugin.TValue[[]any]
+	Configuration              plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
+	AuthenticationSettings     plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
+	Metadata                   plugin.TValue[any]
+	ApplicationSettings        plugin.TValue[any]
+	ConnectionSettings         plugin.TValue[any]
+	Stack                      plugin.TValue[any]
+	DiagnosticSettings         plugin.TValue[[]any]
+	Functions                  plugin.TValue[[]any]
+	Ftp                        plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	Scm                        plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	PrivateEndpointConnections plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionWebServiceAppsite creates a new instance of this resource
@@ -13075,6 +13083,12 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetScm() *plugin.TValue[*mqlAzur
 		}
 
 		return c.scm()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		return c.privateEndpointConnections()
 	})
 }
 

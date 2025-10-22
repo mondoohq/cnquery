@@ -1179,6 +1179,8 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   ftp() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
   // SCM publishing method policies
   scm() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
+  // Private endpoint connections for the web app site
+  privateEndpointConnections() []dict
 }
 
 // Azure Web app deployment slot

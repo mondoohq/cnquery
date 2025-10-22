@@ -3,7 +3,6 @@
 
 resources:
   azure:
-    fields: {}
     min_mondoo_version: latest
     platform:
       name:
@@ -2975,6 +2974,8 @@ resources:
       location: {}
       metadata: {}
       name: {}
+      privateEndpointConnections:
+        min_mondoo_version: 9.0.0
       properties: {}
       scm:
         min_mondoo_version: 9.0.0

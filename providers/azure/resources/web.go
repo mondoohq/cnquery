@@ -1213,3 +1213,46 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) applicationSettings() (any, erro
 
 	return res, nil
 }
+
+func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	site, err := resourceID.Component("sites")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewGetPrivateEndpointConnectionListPager(resourceID.ResourceGroup, site, &web.WebAppsClientGetPrivateEndpointConnectionListOptions{})
+	res := []any{}
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			dict, err := convert.JsonToDict(entry)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, dict)
+		}
+	}
+
+	return res, nil
+}
