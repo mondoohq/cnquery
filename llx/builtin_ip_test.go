@@ -22,7 +22,6 @@ func TestParseIPv4WithDottedMask(t *testing.T) {
 			mask: "",
 			expected: RawIP{
 				IP:              net.ParseIP("192.168.1.1"),
-				Version:         4,
 				PrefixLength:    24, // default mask
 				HasPrefixLength: false,
 			},
@@ -32,7 +31,6 @@ func TestParseIPv4WithDottedMask(t *testing.T) {
 			mask: "1.2.3",
 			expected: RawIP{
 				IP:              net.ParseIP("192.168.1.1"),
-				Version:         4,
 				PrefixLength:    24, // default mask
 				HasPrefixLength: false,
 			},
@@ -42,7 +40,6 @@ func TestParseIPv4WithDottedMask(t *testing.T) {
 			mask: "255.0.255.0",
 			expected: RawIP{
 				IP:              net.ParseIP("192.168.1.1"),
-				Version:         4,
 				PrefixLength:    24, // default mask
 				HasPrefixLength: false,
 			},
@@ -52,7 +49,6 @@ func TestParseIPv4WithDottedMask(t *testing.T) {
 			mask: "350.450.555.678",
 			expected: RawIP{
 				IP:              net.ParseIP("192.168.1.1"),
-				Version:         4,
 				PrefixLength:    24, // default mask
 				HasPrefixLength: false,
 			},
@@ -62,7 +58,6 @@ func TestParseIPv4WithDottedMask(t *testing.T) {
 			mask: "0.0.0.0",
 			expected: RawIP{
 				IP:              net.ParseIP("192.168.1.1"),
-				Version:         4,
 				PrefixLength:    0,
 				HasPrefixLength: true,
 			},
@@ -72,7 +67,6 @@ func TestParseIPv4WithDottedMask(t *testing.T) {
 			mask: "255.0.0.0",
 			expected: RawIP{
 				IP:              net.ParseIP("192.168.1.1"),
-				Version:         4,
 				PrefixLength:    8,
 				HasPrefixLength: true,
 			},
