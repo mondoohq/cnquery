@@ -1183,6 +1183,7 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
 }
 
+// privateEndpointConnection allow Azure services o be accessed over a private IP address in a virtual network
 private azure.subscription.privateEndpointConnection @defaults("id name type") {
   // Private endpoint connection ID
   id string
@@ -1202,6 +1203,7 @@ private azure.subscription.privateEndpointConnection @defaults("id name type") {
   properties dict
 }
 
+// connection state for a private endpoint connection
 private azure.subscription.privateEndpointConnection.connectionState @defaults("status") {
   // Required actions for the private link service connection
   actionsRequired string
