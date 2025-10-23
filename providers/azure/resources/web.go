@@ -1300,7 +1300,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionWebService) environments() ([]any, error) {
+func (a *mqlAzureSubscriptionWebService) hostingEnvironments() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -1376,7 +1376,7 @@ func (a *mqlAzureSubscriptionWebService) environments() ([]any, error) {
 						"type":   llx.StringDataPtr(props.VirtualNetwork.Type),
 						"subnet": llx.StringDataPtr(props.VirtualNetwork.Subnet),
 					}
-					vnRes, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.environment.virtualNetwork", vnArgs)
+					vnRes, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.hostingEnvironment.virtualNetwork", vnArgs)
 					if err != nil {
 						return nil, err
 					}
@@ -1397,7 +1397,7 @@ func (a *mqlAzureSubscriptionWebService) environments() ([]any, error) {
 				args["clusterSettings"] = llx.ArrayData(items, types.Dict)
 			}
 
-			mqlRes, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.environment", args)
+			mqlRes, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.hostingEnvironment", args)
 			if err != nil {
 				return nil, err
 			}

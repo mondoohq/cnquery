@@ -3044,6 +3044,8 @@ resources:
       availableRuntimes: {}
       environments:
         min_mondoo_version: 9.0.0
+      hostingEnvironments:
+        min_mondoo_version: 9.0.0
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
@@ -3201,7 +3203,6 @@ resources:
       userWhitelistedIpRanges: {}
       virtualNetwork: {}
       zoneRedundant: {}
-    is_private: true
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -3244,7 +3245,6 @@ resources:
       name: {}
       subnet: {}
       type: {}
-    is_private: true
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -3255,6 +3255,47 @@ resources:
       kind: {}
       name: {}
       properties: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.webService.hostingEnvironment:
+    fields:
+      clusterSettings: {}
+      dedicatedHostCount: {}
+      dnsSuffix: {}
+      frontEndScaleFactor: {}
+      hasLinuxWorkers: {}
+      id: {}
+      internalLoadBalancingMode: {}
+      ipsslAddressCount: {}
+      kind: {}
+      location: {}
+      maximumNumberOfMachines: {}
+      multiRoleCount: {}
+      multiSize: {}
+      name: {}
+      properties: {}
+      provisioningState: {}
+      status: {}
+      suspended: {}
+      tags: {}
+      type: {}
+      userWhitelistedIpRanges: {}
+      virtualNetwork: {}
+      zoneRedundant: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.webService.hostingEnvironment.virtualNetwork:
+    fields:
+      id: {}
+      name: {}
+      subnet: {}
       type: {}
     is_private: true
     min_mondoo_version: 9.0.0

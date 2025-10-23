@@ -80,8 +80,8 @@ const (
 	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies       string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
 	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                             string = "azure.subscription.webService.appsiteauthsettings"
 	ResourceAzureSubscriptionWebServiceAppsiteconfig                                   string = "azure.subscription.webService.appsiteconfig"
-	ResourceAzureSubscriptionWebServiceEnvironment                                     string = "azure.subscription.webService.environment"
-	ResourceAzureSubscriptionWebServiceEnvironmentVirtualNetwork                       string = "azure.subscription.webService.environment.virtualNetwork"
+	ResourceAzureSubscriptionWebServiceHostingEnvironment                              string = "azure.subscription.webService.hostingEnvironment"
+	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
 	ResourceAzureSubscriptionSqlService                                                string = "azure.subscription.sqlService"
 	ResourceAzureSubscriptionSqlServiceServer                                          string = "azure.subscription.sqlService.server"
 	ResourceAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings           string = "azure.subscription.sqlService.server.vulnerabilityassessmentsettings"
@@ -394,13 +394,13 @@ func init() {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsiteconfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceAppsiteconfig,
 		},
-		"azure.subscription.webService.environment": {
-			// to override args, implement: initAzureSubscriptionWebServiceEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAzureSubscriptionWebServiceEnvironment,
+		"azure.subscription.webService.hostingEnvironment": {
+			// to override args, implement: initAzureSubscriptionWebServiceHostingEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceHostingEnvironment,
 		},
-		"azure.subscription.webService.environment.virtualNetwork": {
-			// to override args, implement: initAzureSubscriptionWebServiceEnvironmentVirtualNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAzureSubscriptionWebServiceEnvironmentVirtualNetwork,
+		"azure.subscription.webService.hostingEnvironment.virtualNetwork": {
+			// to override args, implement: initAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork,
 		},
 		"azure.subscription.sqlService": {
 			Init:   initAzureSubscriptionSqlService,
@@ -2039,8 +2039,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.availableRuntimes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebService).GetAvailableRuntimes()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appRuntimeStack")))
 	},
-	"azure.subscription.webService.environments": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebService).GetEnvironments()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.environment")))
+	"azure.subscription.webService.hostingEnvironments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebService).GetHostingEnvironments()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.hostingEnvironment")))
 	},
 	"azure.subscription.webService.appRuntimeStack.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetName()).ToDataRes(types.String)
@@ -2261,86 +2261,86 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appsiteconfig.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetProperties()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.webService.environment.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetId()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetId()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetName()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetName()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetType()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetType()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.kind": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetKind()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetKind()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.location": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetLocation()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetLocation()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.tags": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	"azure.subscription.webService.hostingEnvironment.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"azure.subscription.webService.environment.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetProperties()).ToDataRes(types.Dict)
+	"azure.subscription.webService.hostingEnvironment.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetProperties()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.webService.environment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetProvisioningState()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetProvisioningState()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.status": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetStatus()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetStatus()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.suspended": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetSuspended()).ToDataRes(types.Bool)
+	"azure.subscription.webService.hostingEnvironment.suspended": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetSuspended()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.webService.environment.dnsSuffix": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetDnsSuffix()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.dnsSuffix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetDnsSuffix()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.maximumNumberOfMachines": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetMaximumNumberOfMachines()).ToDataRes(types.Int)
+	"azure.subscription.webService.hostingEnvironment.maximumNumberOfMachines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetMaximumNumberOfMachines()).ToDataRes(types.Int)
 	},
-	"azure.subscription.webService.environment.multiSize": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetMultiSize()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.multiSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetMultiSize()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.multiRoleCount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetMultiRoleCount()).ToDataRes(types.Int)
+	"azure.subscription.webService.hostingEnvironment.multiRoleCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetMultiRoleCount()).ToDataRes(types.Int)
 	},
-	"azure.subscription.webService.environment.frontEndScaleFactor": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetFrontEndScaleFactor()).ToDataRes(types.Int)
+	"azure.subscription.webService.hostingEnvironment.frontEndScaleFactor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetFrontEndScaleFactor()).ToDataRes(types.Int)
 	},
-	"azure.subscription.webService.environment.ipsslAddressCount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetIpsslAddressCount()).ToDataRes(types.Int)
+	"azure.subscription.webService.hostingEnvironment.ipsslAddressCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetIpsslAddressCount()).ToDataRes(types.Int)
 	},
-	"azure.subscription.webService.environment.hasLinuxWorkers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetHasLinuxWorkers()).ToDataRes(types.Bool)
+	"azure.subscription.webService.hostingEnvironment.hasLinuxWorkers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetHasLinuxWorkers()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.webService.environment.dedicatedHostCount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetDedicatedHostCount()).ToDataRes(types.Int)
+	"azure.subscription.webService.hostingEnvironment.dedicatedHostCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetDedicatedHostCount()).ToDataRes(types.Int)
 	},
-	"azure.subscription.webService.environment.zoneRedundant": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetZoneRedundant()).ToDataRes(types.Bool)
+	"azure.subscription.webService.hostingEnvironment.zoneRedundant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetZoneRedundant()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.webService.environment.internalLoadBalancingMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetInternalLoadBalancingMode()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.internalLoadBalancingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetInternalLoadBalancingMode()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.userWhitelistedIpRanges": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetUserWhitelistedIpRanges()).ToDataRes(types.Array(types.String))
+	"azure.subscription.webService.hostingEnvironment.userWhitelistedIpRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetUserWhitelistedIpRanges()).ToDataRes(types.Array(types.String))
 	},
-	"azure.subscription.webService.environment.virtualNetwork": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetVirtualNetwork()).ToDataRes(types.Resource("azure.subscription.webService.environment.virtualNetwork"))
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetVirtualNetwork()).ToDataRes(types.Resource("azure.subscription.webService.hostingEnvironment.virtualNetwork"))
 	},
-	"azure.subscription.webService.environment.clusterSettings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironment).GetClusterSettings()).ToDataRes(types.Array(types.Dict))
+	"azure.subscription.webService.hostingEnvironment.clusterSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetClusterSettings()).ToDataRes(types.Array(types.Dict))
 	},
-	"azure.subscription.webService.environment.virtualNetwork.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork).GetId()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).GetId()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.virtualNetwork.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork).GetName()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).GetName()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.virtualNetwork.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork).GetType()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).GetType()).ToDataRes(types.String)
 	},
-	"azure.subscription.webService.environment.virtualNetwork.subnet": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork).GetSubnet()).ToDataRes(types.String)
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).GetSubnet()).ToDataRes(types.String)
 	},
 	"azure.subscription.sqlService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlService).GetSubscriptionId()).ToDataRes(types.String)
@@ -5541,8 +5541,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebService).AvailableRuntimes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebService).Environments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebService).HostingEnvironments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appRuntimeStack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5869,120 +5869,120 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).__id, ok = v.Value.(string)
+	"azure.subscription.webService.hostingEnvironment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).__id, ok = v.Value.(string)
 		return
 	},
-	"azure.subscription.webService.environment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.suspended": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).Suspended, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.suspended": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).Suspended, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.dnsSuffix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).DnsSuffix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.dnsSuffix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).DnsSuffix, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.maximumNumberOfMachines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).MaximumNumberOfMachines, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.maximumNumberOfMachines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).MaximumNumberOfMachines, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.multiSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).MultiSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.multiSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).MultiSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.multiRoleCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).MultiRoleCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.multiRoleCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).MultiRoleCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.frontEndScaleFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).FrontEndScaleFactor, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.frontEndScaleFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).FrontEndScaleFactor, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.ipsslAddressCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).IpsslAddressCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.ipsslAddressCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).IpsslAddressCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.hasLinuxWorkers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).HasLinuxWorkers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.hasLinuxWorkers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).HasLinuxWorkers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.dedicatedHostCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).DedicatedHostCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.dedicatedHostCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).DedicatedHostCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.zoneRedundant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).ZoneRedundant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.zoneRedundant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).ZoneRedundant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.internalLoadBalancingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).InternalLoadBalancingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.internalLoadBalancingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).InternalLoadBalancingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.userWhitelistedIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).UserWhitelistedIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.userWhitelistedIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).UserWhitelistedIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.virtualNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).VirtualNetwork, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).VirtualNetwork, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.clusterSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironment).ClusterSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.clusterSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).ClusterSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.virtualNetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork).__id, ok = v.Value.(string)
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).__id, ok = v.Value.(string)
 		return
 	},
-	"azure.subscription.webService.environment.virtualNetwork.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.virtualNetwork.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.virtualNetwork.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.environment.virtualNetwork.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork).Subnet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.webService.hostingEnvironment.virtualNetwork.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).Subnet, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sqlService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13169,10 +13169,10 @@ type mqlAzureSubscriptionWebService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionWebServiceInternal it will be used here
-	SubscriptionId    plugin.TValue[string]
-	Apps              plugin.TValue[[]any]
-	AvailableRuntimes plugin.TValue[[]any]
-	Environments      plugin.TValue[[]any]
+	SubscriptionId      plugin.TValue[string]
+	Apps                plugin.TValue[[]any]
+	AvailableRuntimes   plugin.TValue[[]any]
+	HostingEnvironments plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionWebService creates a new instance of this resource
@@ -13248,10 +13248,10 @@ func (c *mqlAzureSubscriptionWebService) GetAvailableRuntimes() *plugin.TValue[[
 	})
 }
 
-func (c *mqlAzureSubscriptionWebService) GetEnvironments() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Environments, func() ([]any, error) {
+func (c *mqlAzureSubscriptionWebService) GetHostingEnvironments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostingEnvironments, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService", c.__id, "environments")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService", c.__id, "hostingEnvironments")
 			if err != nil {
 				return nil, err
 			}
@@ -13260,7 +13260,7 @@ func (c *mqlAzureSubscriptionWebService) GetEnvironments() *plugin.TValue[[]any]
 			}
 		}
 
-		return c.environments()
+		return c.hostingEnvironments()
 	})
 }
 
@@ -14162,11 +14162,11 @@ func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetProperties() *plugin.TV
 	return &c.Properties
 }
 
-// mqlAzureSubscriptionWebServiceEnvironment for the azure.subscription.webService.environment resource
-type mqlAzureSubscriptionWebServiceEnvironment struct {
+// mqlAzureSubscriptionWebServiceHostingEnvironment for the azure.subscription.webService.hostingEnvironment resource
+type mqlAzureSubscriptionWebServiceHostingEnvironment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionWebServiceEnvironmentInternal it will be used here
+	// optional: if you define mqlAzureSubscriptionWebServiceHostingEnvironmentInternal it will be used here
 	Id                        plugin.TValue[string]
 	Name                      plugin.TValue[string]
 	Type                      plugin.TValue[string]
@@ -14188,13 +14188,13 @@ type mqlAzureSubscriptionWebServiceEnvironment struct {
 	ZoneRedundant             plugin.TValue[bool]
 	InternalLoadBalancingMode plugin.TValue[string]
 	UserWhitelistedIpRanges   plugin.TValue[[]any]
-	VirtualNetwork            plugin.TValue[*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork]
+	VirtualNetwork            plugin.TValue[*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork]
 	ClusterSettings           plugin.TValue[[]any]
 }
 
-// createAzureSubscriptionWebServiceEnvironment creates a new instance of this resource
-func createAzureSubscriptionWebServiceEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAzureSubscriptionWebServiceEnvironment{
+// createAzureSubscriptionWebServiceHostingEnvironment creates a new instance of this resource
+func createAzureSubscriptionWebServiceHostingEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceHostingEnvironment{
 		MqlRuntime: runtime,
 	}
 
@@ -14206,7 +14206,7 @@ func createAzureSubscriptionWebServiceEnvironment(runtime *plugin.Runtime, args 
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("azure.subscription.webService.environment", res.__id)
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.hostingEnvironment", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -14216,120 +14216,120 @@ func createAzureSubscriptionWebServiceEnvironment(runtime *plugin.Runtime, args 
 	return res, nil
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) MqlName() string {
-	return "azure.subscription.webService.environment"
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) MqlName() string {
+	return "azure.subscription.webService.hostingEnvironment"
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) MqlID() string {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetId() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetName() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetType() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetKind() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetKind() *plugin.TValue[string] {
 	return &c.Kind
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetLocation() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetLocation() *plugin.TValue[string] {
 	return &c.Location
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetTags() *plugin.TValue[map[string]any] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetProperties() *plugin.TValue[any] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetProvisioningState() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetProvisioningState() *plugin.TValue[string] {
 	return &c.ProvisioningState
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetStatus() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetSuspended() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetSuspended() *plugin.TValue[bool] {
 	return &c.Suspended
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetDnsSuffix() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetDnsSuffix() *plugin.TValue[string] {
 	return &c.DnsSuffix
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetMaximumNumberOfMachines() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetMaximumNumberOfMachines() *plugin.TValue[int64] {
 	return &c.MaximumNumberOfMachines
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetMultiSize() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetMultiSize() *plugin.TValue[string] {
 	return &c.MultiSize
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetMultiRoleCount() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetMultiRoleCount() *plugin.TValue[int64] {
 	return &c.MultiRoleCount
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetFrontEndScaleFactor() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetFrontEndScaleFactor() *plugin.TValue[int64] {
 	return &c.FrontEndScaleFactor
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetIpsslAddressCount() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetIpsslAddressCount() *plugin.TValue[int64] {
 	return &c.IpsslAddressCount
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetHasLinuxWorkers() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetHasLinuxWorkers() *plugin.TValue[bool] {
 	return &c.HasLinuxWorkers
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetDedicatedHostCount() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetDedicatedHostCount() *plugin.TValue[int64] {
 	return &c.DedicatedHostCount
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetZoneRedundant() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetZoneRedundant() *plugin.TValue[bool] {
 	return &c.ZoneRedundant
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetInternalLoadBalancingMode() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetInternalLoadBalancingMode() *plugin.TValue[string] {
 	return &c.InternalLoadBalancingMode
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetUserWhitelistedIpRanges() *plugin.TValue[[]any] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetUserWhitelistedIpRanges() *plugin.TValue[[]any] {
 	return &c.UserWhitelistedIpRanges
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetVirtualNetwork() *plugin.TValue[*mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetVirtualNetwork() *plugin.TValue[*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork] {
 	return &c.VirtualNetwork
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironment) GetClusterSettings() *plugin.TValue[[]any] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironment) GetClusterSettings() *plugin.TValue[[]any] {
 	return &c.ClusterSettings
 }
 
-// mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork for the azure.subscription.webService.environment.virtualNetwork resource
-type mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork struct {
+// mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork for the azure.subscription.webService.hostingEnvironment.virtualNetwork resource
+type mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionWebServiceEnvironmentVirtualNetworkInternal it will be used here
+	// optional: if you define mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetworkInternal it will be used here
 	Id     plugin.TValue[string]
 	Name   plugin.TValue[string]
 	Type   plugin.TValue[string]
 	Subnet plugin.TValue[string]
 }
 
-// createAzureSubscriptionWebServiceEnvironmentVirtualNetwork creates a new instance of this resource
-func createAzureSubscriptionWebServiceEnvironmentVirtualNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork{
+// createAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork creates a new instance of this resource
+func createAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork{
 		MqlRuntime: runtime,
 	}
 
@@ -14341,7 +14341,7 @@ func createAzureSubscriptionWebServiceEnvironmentVirtualNetwork(runtime *plugin.
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("azure.subscription.webService.environment.virtualNetwork", res.__id)
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.hostingEnvironment.virtualNetwork", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -14351,27 +14351,27 @@ func createAzureSubscriptionWebServiceEnvironmentVirtualNetwork(runtime *plugin.
 	return res, nil
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork) MqlName() string {
-	return "azure.subscription.webService.environment.virtualNetwork"
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork) MqlName() string {
+	return "azure.subscription.webService.hostingEnvironment.virtualNetwork"
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork) MqlID() string {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork) GetId() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork) GetName() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork) GetType() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlAzureSubscriptionWebServiceEnvironmentVirtualNetwork) GetSubnet() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork) GetSubnet() *plugin.TValue[string] {
 	return &c.Subnet
 }
 

@@ -1118,7 +1118,7 @@ private azure.subscription.webService {
   // Available runtimes
   availableRuntimes() []azure.subscription.webService.appRuntimeStack
   // List of hosting environments
-  environments() []azure.subscription.webService.environment
+  hostingEnvironments() []azure.subscription.webService.hostingEnvironment
 }
 
 // Azure Web App runtime stack
@@ -1300,7 +1300,7 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
 }
 
 // Azure App Service Hosting Environment
-private azure.subscription.webService.environment @defaults("id name") {
+private azure.subscription.webService.hostingEnvironment @defaults("id name") {
   // environment ID
   id string
   // environment name
@@ -1341,16 +1341,16 @@ private azure.subscription.webService.environment @defaults("id name") {
   zoneRedundant bool
   // Specifies which endpoints to serve internally in the Virtual Network
   internalLoadBalancingMode string
-  // User added IP ranges to whitelist on ASE db
+  // User added IP ranges to allow
   userWhitelistedIpRanges []string
   // Description of the Virtual Network
-  virtualNetwork azure.subscription.webService.environment.virtualNetwork
+  virtualNetwork azure.subscription.webService.hostingEnvironment.virtualNetwork
   // Custom settings for changing the behavior of the App Service Environment
   clusterSettings []dict
 }
 
 // Virtual network configuration for an App Service Environment
-private azure.subscription.webService.environment.virtualNetwork @defaults("id name") {
+private azure.subscription.webService.hostingEnvironment.virtualNetwork @defaults("id name") {
   // Resource ID of the Virtual Network
   id string
   // Name of the Virtual Network
