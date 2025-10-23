@@ -1246,11 +1246,54 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			dict, err := convert.JsonToDict(entry)
+			if entry == nil {
+				continue
+			}
+
+			privateEndpoint := map[string]*llx.RawData{
+				"id":   llx.StringDataPtr(entry.ID),
+				"name": llx.StringDataPtr(entry.Name),
+				"type": llx.StringDataPtr(entry.Type),
+			}
+
+			if entry.Properties != nil {
+				props := entry.Properties
+				propsMap, err := convert.JsonToDict(props)
+				if err != nil {
+					return nil, err
+				}
+
+				privateEndpoint["properties"] = llx.DictData(propsMap)
+
+				if len(props.IPAddresses) > 0 {
+					privateEndpoint["ipAddresses"] = llx.ArrayData(convert.SliceStrPtrToInterface(props.IPAddresses), types.String)
+				}
+				if props.PrivateEndpoint != nil {
+					privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+				}
+				if props.PrivateLinkServiceConnectionState != nil {
+					stateArgs := map[string]*llx.RawData{
+						"actionsRequired": llx.StringDataPtr(props.PrivateLinkServiceConnectionState.ActionsRequired),
+						"description":     llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description),
+						"status":          llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Status),
+					}
+					stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+					if err != nil {
+						return nil, err
+					}
+					privateEndpoint["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
+				}
+				if props.ProvisioningState != nil {
+					privateEndpoint["provisioningState"] = llx.StringData(string(*props.ProvisioningState))
+				}
+			}
+
+			mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, privateEndpoint)
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, dict)
+
+			res = append(res, mqlRes)
 		}
 	}
 

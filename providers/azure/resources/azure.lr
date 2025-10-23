@@ -1180,7 +1180,35 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   // SCM publishing method policies
   scm() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
   // Private endpoint connections for the web app site
-  privateEndpointConnections() []dict
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
+}
+
+private azure.subscription.privateEndpointConnection @defaults("id name type") {
+  // Private endpoint connection ID
+  id string
+  // Private endpoint connection name
+  name string
+  // Private endpoint connection type
+  type string
+  // Private endpoint connection IP addresses
+  ipAddresses []string
+  // ID of the associated private endpoint
+  privateEndpointId string
+  // Private link service connection state details
+  privateLinkServiceConnectionState azure.subscription.privateEndpointConnection.connectionState
+  // Provisioning state of the private endpoint connection
+  provisioningState string
+  // privateEndpointConnection properties
+  properties dict
+}
+
+private azure.subscription.privateEndpointConnection.connectionState @defaults("status") {
+  // Required actions for the private link service connection
+  actionsRequired string
+  // Description of the private link service connection state
+  description string
+  // Status of the private link service connection
+  status string
 }
 
 // Azure Web app deployment slot
