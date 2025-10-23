@@ -5,6 +5,7 @@ package llx
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -17,6 +18,27 @@ type RawIP struct {
 	Version         uint8 // 4 and 6, 0 == unset
 	HasPrefixLength bool
 	PrefixLength    int // -1 = unset
+}
+
+// ParseIPv4WithDottedMask accepts an IPv4 address without an explicit mask (e.g. /24) and a separate dotted
+// mask in decimal notation (e.g. 255.255.255.0). The subnet mask should be in canonical form and have
+// leading 1s followed by 0s, (e.g. 255.255.255.0 => 11111111.11111111.11111111.00000000).
+// If the mask is invalid or not in canonical form, it drops the mask and falls back to the default IP parsing.
+func ParseIPv4WithDottedMask(s string, m string) RawIP {
+	maskIP := net.ParseIP(m).To4()
+	if len(maskIP) != 4 {
+		// mask is not a valid ipv4, fall back to default parsing
+		return ParseIP(s)
+	}
+	mask := net.IPv4Mask(maskIP[0], maskIP[1], maskIP[2], maskIP[3])
+	prefixSize, bits := mask.Size()
+
+	if bits == 0 {
+		// mask is not in canonical form, fall back to default parsing
+		return ParseIP(s)
+	}
+
+	return ParseIP(fmt.Sprintf("%s/%d", s, prefixSize))
 }
 
 func ParseIP(s string) RawIP {
