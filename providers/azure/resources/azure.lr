@@ -134,7 +134,7 @@ private azure.subscription.resource @defaults("id name location") {
   changedTime time
 }
 
-// Azure compute
+// Azure Compute
 private azure.subscription.computeService {
   // Subscription identifier
   subscriptionId string
@@ -144,7 +144,7 @@ private azure.subscription.computeService {
   disks() []azure.subscription.computeService.disk
 }
 
-// Azure compute virtual machine
+// Azure Compute virtual machine
 azure.subscription.computeService.vm @defaults("name location properties.hardwareProfile.vmSize properties.storageProfile.osDisk.osType") {
   // VM ID
   id string
@@ -174,7 +174,7 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   publicIpAddresses() []azure.subscription.networkService.ipAddress
 }
 
-// Azure disk resource
+// Azure compute disk resource
 azure.subscription.computeService.disk @defaults("name location properties.osType properties.diskSizeGB properties.diskState") {
   // Disk resource ID
   id string
@@ -1108,7 +1108,6 @@ private azure.subscription.storageService.account.container @defaults("id name")
   properties dict
 }
 
-
 // Azure Web
 private azure.subscription.webService {
   // Subscription identifier
@@ -1185,7 +1184,7 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
 }
 
-// privateEndpointConnection allow Azure services o be accessed over a private IP address in a virtual network
+// Azure private endpoint connection
 private azure.subscription.privateEndpointConnection @defaults("id name type") {
   // Private endpoint connection ID
   id string
@@ -2240,6 +2239,7 @@ private azure.subscription.iotService {
   hubs() []dict
 }
 
+// Azure Cache for Redis
 private azure.subscription.cacheService @defaults("subscriptionId") {
   // Subscription identifier
   subscriptionId string
@@ -2247,6 +2247,7 @@ private azure.subscription.cacheService @defaults("subscriptionId") {
   redis() []azure.subscription.cacheService.redisInstance
 }
 
+// Azure Cache for Redis instance
 private azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   // ID of the Redis cache
   id string
