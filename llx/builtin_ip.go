@@ -30,6 +30,7 @@ func ParseIPv4WithDottedMask(s string, m string) RawIP {
 		// mask is not a valid ipv4, fall back to default parsing
 		return ParseIP(s)
 	}
+
 	mask := net.IPv4Mask(maskIP[0], maskIP[1], maskIP[2], maskIP[3])
 	prefixSize, bits := mask.Size()
 
