@@ -11,6 +11,122 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestParseIPv4WithDottedMask(t *testing.T) {
+	tests := []struct {
+		ip       string
+		mask     string
+		expected RawIP
+	}{
+		{
+			ip:   "192.168.1.1",
+			mask: "",
+			expected: RawIP{
+				IP:              net.ParseIP("192.168.1.1"),
+				Version:         4,
+				PrefixLength:    24, // default mask
+				HasPrefixLength: false,
+			},
+		},
+		{
+			ip:   "192.168.1.1",
+			mask: "1.2.3",
+			expected: RawIP{
+				IP:              net.ParseIP("192.168.1.1"),
+				Version:         4,
+				PrefixLength:    24, // default mask
+				HasPrefixLength: false,
+			},
+		},
+		{
+			ip:   "192.168.1.1",
+			mask: "255.0.255.0",
+			expected: RawIP{
+				IP:              net.ParseIP("192.168.1.1"),
+				Version:         4,
+				PrefixLength:    24, // default mask
+				HasPrefixLength: false,
+			},
+		},
+		{
+			ip:   "192.168.1.1",
+			mask: "350.450.555.678",
+			expected: RawIP{
+				IP:              net.ParseIP("192.168.1.1"),
+				Version:         4,
+				PrefixLength:    24, // default mask
+				HasPrefixLength: false,
+			},
+		},
+		{
+			ip:   "192.168.1.1",
+			mask: "0.0.0.0",
+			expected: RawIP{
+				IP:              net.ParseIP("192.168.1.1"),
+				Version:         4,
+				PrefixLength:    0,
+				HasPrefixLength: true,
+			},
+		},
+		{
+			ip:   "192.168.1.1",
+			mask: "255.0.0.0",
+			expected: RawIP{
+				IP:              net.ParseIP("192.168.1.1"),
+				Version:         4,
+				PrefixLength:    8,
+				HasPrefixLength: true,
+			},
+		},
+		{
+			ip:   "192.168.1.1",
+			mask: "255.255.0.0",
+			expected: RawIP{
+				IP:              net.ParseIP("192.168.1.1"),
+				Version:         4,
+				PrefixLength:    16,
+				HasPrefixLength: true,
+			},
+		},
+		{
+			ip:   "192.168.1.1",
+			mask: "255.255.255.0",
+			expected: RawIP{
+				IP:              net.ParseIP("192.168.1.1"),
+				Version:         4,
+				PrefixLength:    24,
+				HasPrefixLength: true,
+			},
+		},
+		{
+			ip:   "192.168.1.1",
+			mask: "255.255.255.255",
+			expected: RawIP{
+				IP:              net.ParseIP("192.168.1.1"),
+				Version:         4,
+				PrefixLength:    32,
+				HasPrefixLength: true,
+			},
+		},
+		{
+			ip:   "192.168.1.1",
+			mask: "255.255.240.0",
+			expected: RawIP{
+				IP:              net.ParseIP("192.168.1.1"),
+				Version:         4,
+				PrefixLength:    20,
+				HasPrefixLength: true,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%s/%s", tt.ip, tt.mask), func(t *testing.T) {
+			result := ParseIPv4WithDottedMask(tt.ip, tt.mask)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func TestCreateMask(t *testing.T) {
 	tests := []struct {
 		mask     int
