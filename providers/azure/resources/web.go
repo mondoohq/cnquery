@@ -1115,7 +1115,7 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) scm() (*mqlAzureSubscriptionWebS
 }
 
 func (a *mqlAzureSubscriptionWebServiceFunction) id() (string, error) {
-	return a.id()
+	return a.Id.Data, nil
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppsite) connectionSettings() (any, error) {
@@ -1289,6 +1289,115 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]
 			}
 
 			mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, privateEndpoint)
+			if err != nil {
+				return nil, err
+			}
+
+			res = append(res, mqlRes)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionWebService) environments() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.GetSubscriptionId().Data
+
+	client, err := web.NewEnvironmentsClient(id, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(&web.EnvironmentsClientListOptions{})
+	res := []any{}
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+
+			args := map[string]*llx.RawData{
+				"id":       llx.StringDataPtr(entry.ID),
+				"name":     llx.StringDataPtr(entry.Name),
+				"type":     llx.StringDataPtr(entry.Type),
+				"kind":     llx.StringDataPtr(entry.Kind),
+				"location": llx.StringDataPtr(entry.Location),
+				"tags":     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+			}
+
+			if entry.Properties != nil {
+				props := entry.Properties
+
+				// Convert properties to dict
+				propsDict, err := convert.JsonToDict(props)
+				if err != nil {
+					return nil, err
+				}
+				args["properties"] = llx.DictData(propsDict)
+
+				args["dnsSuffix"] = llx.StringDataPtr(props.DNSSuffix)
+				args["multiSize"] = llx.StringDataPtr(props.MultiSize)
+				args["suspended"] = llx.BoolDataPtr(props.Suspended)
+				args["hasLinuxWorkers"] = llx.BoolDataPtr(props.HasLinuxWorkers)
+				args["zoneRedundant"] = llx.BoolDataPtr(props.ZoneRedundant)
+				args["userWhitelistedIpRanges"] = llx.ArrayData(convert.SliceStrPtrToInterface(props.UserWhitelistedIPRanges), types.String)
+
+				// Handle enum fields (need to convert to string)
+				if props.Status != nil {
+					args["status"] = llx.StringData(string(*props.Status))
+				}
+				if props.InternalLoadBalancingMode != nil {
+					args["internalLoadBalancingMode"] = llx.StringData(string(*props.InternalLoadBalancingMode))
+				}
+				if props.ProvisioningState != nil {
+					args["provisioningState"] = llx.StringData(string(*props.ProvisioningState))
+				}
+				args["maximumNumberOfMachines"] = llx.IntDataPtr(props.MaximumNumberOfMachines)
+				args["multiRoleCount"] = llx.IntDataPtr(props.MultiRoleCount)
+
+				args["frontEndScaleFactor"] = llx.IntDataPtr(props.FrontEndScaleFactor)
+				args["ipsslAddressCount"] = llx.IntDataPtr(props.IpsslAddressCount)
+				args["dedicatedHostCount"] = llx.IntDataPtr(props.DedicatedHostCount)
+
+				if props.VirtualNetwork != nil {
+					vnArgs := map[string]*llx.RawData{
+						"id":     llx.StringDataPtr(props.VirtualNetwork.ID),
+						"name":   llx.StringDataPtr(props.VirtualNetwork.Name),
+						"type":   llx.StringDataPtr(props.VirtualNetwork.Type),
+						"subnet": llx.StringDataPtr(props.VirtualNetwork.Subnet),
+					}
+					vnRes, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.environment.virtualNetwork", vnArgs)
+					if err != nil {
+						return nil, err
+					}
+					args["virtualNetwork"] = llx.ResourceData(vnRes, vnRes.MqlName())
+				}
+
+				items := []any{}
+				for _, setting := range props.ClusterSettings {
+					if setting == nil {
+						continue
+					}
+					dict, err := convert.JsonToDict(setting)
+					if err != nil {
+						return nil, err
+					}
+					items = append(items, dict)
+				}
+				args["clusterSettings"] = llx.ArrayData(items, types.Dict)
+			}
+
+			mqlRes, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.environment", args)
 			if err != nil {
 				return nil, err
 			}

@@ -1117,6 +1117,8 @@ private azure.subscription.webService {
   apps() []azure.subscription.webService.appsite
   // Available runtimes
   availableRuntimes() []azure.subscription.webService.appRuntimeStack
+  // List of hosting environments
+  environments() []azure.subscription.webService.environment
 }
 
 // Azure Web App runtime stack
@@ -1295,6 +1297,68 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
   type string
   // Appsite config properties
   properties dict
+}
+
+// Azure App Service Hosting Environment
+private azure.subscription.webService.environment @defaults("id name") {
+  // environment ID
+  id string
+  // environment name
+  name string
+  // environment type
+  type string
+  // Kind of resource (e.g., "app,linux,container")
+  kind string
+  // environment location
+  location string
+  // environment tags
+  tags map[string]string
+  // environment properties
+  properties dict
+  // Provisioning state of the environment
+  provisioningState string
+  // status of the environment
+  status string
+  // true if the environment is suspended
+  suspended bool
+  // DNS suffix of the environment
+  dnsSuffix string
+  // Maximum number of VMs in the environment
+  maximumNumberOfMachines int
+  // Front-end VM size (e.g., "Standard_D2d_v4", "Medium", "Large")
+  multiSize string
+  // Number of front-end instances
+  multiRoleCount int
+  // Scale factor for front-ends
+  frontEndScaleFactor int
+  // Number of IP SSL addresses reserved for the App Service Environment
+  ipsslAddressCount int
+  // Whether the App Service Environment has Linux workers
+  hasLinuxWorkers bool
+  // Dedicated Host Count
+  dedicatedHostCount int
+  // Whether the App Service Environment is zone-redundant
+  zoneRedundant bool
+  // Specifies which endpoints to serve internally in the Virtual Network
+  internalLoadBalancingMode string
+  // User added IP ranges to whitelist on ASE db
+  userWhitelistedIpRanges []string
+  // Description of the Virtual Network
+  virtualNetwork azure.subscription.webService.environment.virtualNetwork
+  // Custom settings for changing the behavior of the App Service Environment
+  clusterSettings []dict
+}
+
+// Virtual network configuration for an App Service Environment
+private azure.subscription.webService.environment.virtualNetwork @defaults("id name") {
+  // Resource ID of the Virtual Network
+  id string
+  // Name of the Virtual Network
+  name string
+  // Resource type of the Virtual Network
+  type string
+  // Subnet within the Virtual Network
+  subnet string
 }
 
 // Azure SQL

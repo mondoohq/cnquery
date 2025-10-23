@@ -3042,6 +3042,8 @@ resources:
     fields:
       apps: {}
       availableRuntimes: {}
+      environments:
+        min_mondoo_version: 9.0.0
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
@@ -3164,6 +3166,83 @@ resources:
       scm: {}
       stack: {}
       tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.webService.environment:
+    fields:
+      clusterSettings: {}
+      customDnsSuffixConfiguration: {}
+      dedicatedHostCount: {}
+      dnsSuffix: {}
+      frontEndScaleFactor: {}
+      hasLinuxWorkers: {}
+      id: {}
+      internalLoadBalancingMode: {}
+      ipsslAddressCount: {}
+      kind: {}
+      location: {}
+      maximumNumberOfMachines: {}
+      multiRoleCount: {}
+      multiSize: {}
+      name: {}
+      networkingConfiguration: {}
+      properties: {}
+      provisioningState: {}
+      status: {}
+      suspended: {}
+      tags: {}
+      type: {}
+      upgradeAvailability: {}
+      upgradePreference: {}
+      userWhitelistedIpRanges: {}
+      virtualNetwork: {}
+      zoneRedundant: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.webService.environment.customDnsSuffixConfiguration:
+    fields:
+      certificateUrl: {}
+      dnsSuffix: {}
+      id: {}
+      keyVaultReferenceIdentity: {}
+      kind: {}
+      name: {}
+      properties: {}
+      provisioningDetails: {}
+      provisioningState: {}
+      type: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.webService.environment.networkingConfiguration:
+    fields:
+      allowNewPrivateEndpointConnections: {}
+      externalInboundIpAddresses: {}
+      ftpEnabled: {}
+      id: {}
+      inboundIpAddressOverride: {}
+      internalInboundIpAddresses: {}
+      linuxOutboundIpAddresses: {}
+      properties: {}
+      remoteDebugEnabled: {}
+      windowsOutboundIpAddresses: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.webService.environment.virtualNetwork:
+    fields:
+      id: {}
+      name: {}
+      subnet: {}
       type: {}
     is_private: true
     min_mondoo_version: 9.0.0
