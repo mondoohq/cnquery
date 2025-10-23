@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseDottedMask(t *testing.T) {
+func TestParseIPv4WithDottedMask(t *testing.T) {
 	tests := []struct {
 		ip       string
 		mask     string
