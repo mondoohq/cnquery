@@ -74,6 +74,8 @@ const (
 	ResourceAzureSubscriptionWebService                                                string = "azure.subscription.webService"
 	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                 string = "azure.subscription.webService.appRuntimeStack"
 	ResourceAzureSubscriptionWebServiceAppsite                                         string = "azure.subscription.webService.appsite"
+	ResourceAzureSubscriptionPrivateEndpointConnection                                 string = "azure.subscription.privateEndpointConnection"
+	ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState                  string = "azure.subscription.privateEndpointConnection.connectionState"
 	ResourceAzureSubscriptionWebServiceAppslot                                         string = "azure.subscription.webService.appslot"
 	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies       string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
 	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                             string = "azure.subscription.webService.appsiteauthsettings"
@@ -365,6 +367,14 @@ func init() {
 		"azure.subscription.webService.appsite": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceAppsite,
+		},
+		"azure.subscription.privateEndpointConnection": {
+			// to override args, implement: initAzureSubscriptionPrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionPrivateEndpointConnection,
+		},
+		"azure.subscription.privateEndpointConnection.connectionState": {
+			// to override args, implement: initAzureSubscriptionPrivateEndpointConnectionConnectionState(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionPrivateEndpointConnectionConnectionState,
 		},
 		"azure.subscription.webService.appslot": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppslot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2102,6 +2112,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.appsite.scm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetScm()).ToDataRes(types.Resource("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"))
+	},
+	"azure.subscription.webService.appsite.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
+	"azure.subscription.privateEndpointConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.privateEndpointConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.privateEndpointConnection.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.privateEndpointConnection.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.privateEndpointConnection.privateEndpointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetPrivateEndpointId()).ToDataRes(types.String)
+	},
+	"azure.subscription.privateEndpointConnection.privateLinkServiceConnectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetPrivateLinkServiceConnectionState()).ToDataRes(types.Resource("azure.subscription.privateEndpointConnection.connectionState"))
+	},
+	"azure.subscription.privateEndpointConnection.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.privateEndpointConnection.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.privateEndpointConnection.connectionState.actionsRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState).GetActionsRequired()).ToDataRes(types.String)
+	},
+	"azure.subscription.privateEndpointConnection.connectionState.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.privateEndpointConnection.connectionState.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState).GetStatus()).ToDataRes(types.String)
 	},
 	"azure.subscription.webService.appslot.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetId()).ToDataRes(types.String)
@@ -5519,6 +5565,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appsite.scm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).Scm, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnection).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnection).IpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.privateEndpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnection).PrivateEndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.privateLinkServiceConnectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnection).PrivateLinkServiceConnectionState, ok = plugin.RawToTValue[*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnection).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnection).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.connectionState.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.connectionState.actionsRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState).ActionsRequired, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.connectionState.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.connectionState.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appslot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13020,25 +13122,26 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionWebServiceAppsiteInternal it will be used here
-	Id                     plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Kind                   plugin.TValue[string]
-	Location               plugin.TValue[string]
-	Type                   plugin.TValue[string]
-	Tags                   plugin.TValue[map[string]any]
-	Properties             plugin.TValue[any]
-	Identity               plugin.TValue[any]
-	Slots                  plugin.TValue[[]any]
-	Configuration          plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
-	AuthenticationSettings plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
-	Metadata               plugin.TValue[any]
-	ApplicationSettings    plugin.TValue[any]
-	ConnectionSettings     plugin.TValue[any]
-	Stack                  plugin.TValue[any]
-	DiagnosticSettings     plugin.TValue[[]any]
-	Functions              plugin.TValue[[]any]
-	Ftp                    plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
-	Scm                    plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Kind                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	Properties                 plugin.TValue[any]
+	Identity                   plugin.TValue[any]
+	Slots                      plugin.TValue[[]any]
+	Configuration              plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
+	AuthenticationSettings     plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
+	Metadata                   plugin.TValue[any]
+	ApplicationSettings        plugin.TValue[any]
+	ConnectionSettings         plugin.TValue[any]
+	Stack                      plugin.TValue[any]
+	DiagnosticSettings         plugin.TValue[[]any]
+	Functions                  plugin.TValue[[]any]
+	Ftp                        plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	Scm                        plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	PrivateEndpointConnections plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionWebServiceAppsite creates a new instance of this resource
@@ -13244,6 +13347,155 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetScm() *plugin.TValue[*mqlAzur
 
 		return c.scm()
 	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
+}
+
+// mqlAzureSubscriptionPrivateEndpointConnection for the azure.subscription.privateEndpointConnection resource
+type mqlAzureSubscriptionPrivateEndpointConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionPrivateEndpointConnectionInternal it will be used here
+	Id                                plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	Type                              plugin.TValue[string]
+	IpAddresses                       plugin.TValue[[]any]
+	PrivateEndpointId                 plugin.TValue[string]
+	PrivateLinkServiceConnectionState plugin.TValue[*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState]
+	ProvisioningState                 plugin.TValue[string]
+	Properties                        plugin.TValue[any]
+}
+
+// createAzureSubscriptionPrivateEndpointConnection creates a new instance of this resource
+func createAzureSubscriptionPrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionPrivateEndpointConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.privateEndpointConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) MqlName() string {
+	return "azure.subscription.privateEndpointConnection"
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetIpAddresses() *plugin.TValue[[]any] {
+	return &c.IpAddresses
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetPrivateEndpointId() *plugin.TValue[string] {
+	return &c.PrivateEndpointId
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetPrivateLinkServiceConnectionState() *plugin.TValue[*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState] {
+	return &c.PrivateLinkServiceConnectionState
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+// mqlAzureSubscriptionPrivateEndpointConnectionConnectionState for the azure.subscription.privateEndpointConnection.connectionState resource
+type mqlAzureSubscriptionPrivateEndpointConnectionConnectionState struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionPrivateEndpointConnectionConnectionStateInternal it will be used here
+	ActionsRequired plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Status          plugin.TValue[string]
+}
+
+// createAzureSubscriptionPrivateEndpointConnectionConnectionState creates a new instance of this resource
+func createAzureSubscriptionPrivateEndpointConnectionConnectionState(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionPrivateEndpointConnectionConnectionState{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.privateEndpointConnection.connectionState", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnectionConnectionState) MqlName() string {
+	return "azure.subscription.privateEndpointConnection.connectionState"
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnectionConnectionState) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnectionConnectionState) GetActionsRequired() *plugin.TValue[string] {
+	return &c.ActionsRequired
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnectionConnectionState) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnectionConnectionState) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlAzureSubscriptionWebServiceAppslot for the azure.subscription.webService.appslot resource

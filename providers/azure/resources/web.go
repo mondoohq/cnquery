@@ -1213,3 +1213,89 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) applicationSettings() (any, erro
 
 	return res, nil
 }
+
+func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	site, err := resourceID.Component("sites")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewGetPrivateEndpointConnectionListPager(resourceID.ResourceGroup, site, &web.WebAppsClientGetPrivateEndpointConnectionListOptions{})
+	res := []any{}
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+
+			privateEndpoint := map[string]*llx.RawData{
+				"id":   llx.StringDataPtr(entry.ID),
+				"name": llx.StringDataPtr(entry.Name),
+				"type": llx.StringDataPtr(entry.Type),
+			}
+
+			if entry.Properties != nil {
+				props := entry.Properties
+				propsMap, err := convert.JsonToDict(props)
+				if err != nil {
+					return nil, err
+				}
+
+				privateEndpoint["properties"] = llx.DictData(propsMap)
+
+				if len(props.IPAddresses) > 0 {
+					privateEndpoint["ipAddresses"] = llx.ArrayData(convert.SliceStrPtrToInterface(props.IPAddresses), types.String)
+				}
+				if props.PrivateEndpoint != nil {
+					privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+				}
+				if props.PrivateLinkServiceConnectionState != nil {
+					stateArgs := map[string]*llx.RawData{
+						"actionsRequired": llx.StringDataPtr(props.PrivateLinkServiceConnectionState.ActionsRequired),
+						"description":     llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description),
+						"status":          llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Status),
+					}
+					stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+					if err != nil {
+						return nil, err
+					}
+					privateEndpoint["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
+				}
+				if props.ProvisioningState != nil {
+					privateEndpoint["provisioningState"] = llx.StringData(string(*props.ProvisioningState))
+				}
+			}
+
+			mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, privateEndpoint)
+			if err != nil {
+				return nil, err
+			}
+
+			res = append(res, mqlRes)
+		}
+	}
+
+	return res, nil
+}

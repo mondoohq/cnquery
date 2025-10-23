@@ -2322,6 +2322,33 @@ resources:
     refs:
     - title: Azure Database for PostgreSQL - Flexible Server documentation
       url: https://learn.microsoft.com/en-us/azure/postgresql/
+  azure.subscription.privateEndpointConnection:
+    fields:
+      id: {}
+      ipAddresses: {}
+      name: {}
+      privateEndpointId: {}
+      privateLinkServiceConnectionState: {}
+      properties:
+        min_mondoo_version: 9.0.0
+      provisioningState: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.privateEndpointConnection.connectionState:
+    fields:
+      actionsRequired: {}
+      description: {}
+      id: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
   azure.subscription.resource:
     fields:
       changedTime: {}
@@ -3058,6 +3085,8 @@ resources:
       location: {}
       metadata: {}
       name: {}
+      privateEndpointConnections:
+        min_mondoo_version: 9.0.0
       properties: {}
       scm:
         min_mondoo_version: 9.0.0
