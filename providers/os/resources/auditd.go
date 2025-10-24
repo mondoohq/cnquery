@@ -190,41 +190,64 @@ func initAuditdRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 }
 
 func (s *mqlAuditdRules) id() (string, error) {
-	return s.Path.Data, nil
+	// Include both path and source in the ID to ensure different source parameters
+	// create separate resource instances
+	return s.Path.Data + "\x00" + s.Source.Data, nil
 }
 
 func (s *mqlAuditdRules) path() (string, error) {
 	return defaultAuditdRules, nil
 }
 
-func (s *mqlAuditdRules) source() (string, error) {
-	// This is only called when source field is not already set
-	// The init function should set the source field, so this is a fallback
-	return defaultSource, nil
-}
-
 // loadBothSources loads and merges rules from both filesystem and runtime
+// When source="both", this implements intelligent fallback:
+// - On live systems (with run-command capability): loads both and requires logical AND
+// - On non-live systems (no capability): gracefully falls back to filesystem only
+// - If auditctl command doesn't exist: gracefully falls back to filesystem only
 func (s *mqlAuditdRules) loadBothSources(path string) error {
 	var fsErr, rtErr error
 
 	// Load filesystem rules
 	fsErr = s.loadFilesystemRules(path)
 
-	// Load runtime rules
-	rtErr = s.loadRuntimeRules()
+	// Check if runtime is even available
+	hasRuntime := s.hasRunCommandCapability()
 
-	// Logical AND: both must succeed
-	if fsErr != nil && rtErr != nil {
-		return fmt.Errorf("failed to load audit rules from both filesystem and runtime: [filesystem: %v, runtime: %v]", fsErr, rtErr)
-	}
-	if fsErr != nil {
-		return fmt.Errorf("failed to load audit rules from filesystem: %w", fsErr)
-	}
-	if rtErr != nil {
-		return fmt.Errorf("failed to load audit rules from runtime: %w", rtErr)
+	if hasRuntime {
+		// Load runtime rules
+		rtErr = s.loadRuntimeRules()
+
+		// Check if runtime error is "command not found" - if so, treat as not available
+		isCommandNotFound := rtErr != nil && (strings.Contains(rtErr.Error(), "command not found") ||
+			strings.Contains(rtErr.Error(), "executable file not found"))
+
+		if isCommandNotFound {
+			// auditctl not installed - fall back to filesystem only
+			if fsErr != nil {
+				return fmt.Errorf("failed to load audit rules from filesystem: %w", fsErr)
+			}
+			return nil
+		}
+
+		// Logical AND: both must succeed on live systems (unless command doesn't exist)
+		if fsErr != nil && rtErr != nil {
+			return fmt.Errorf("failed to load audit rules from both filesystem and runtime: [filesystem: %v, runtime: %v]", fsErr, rtErr)
+		}
+		if fsErr != nil {
+			return fmt.Errorf("failed to load audit rules from filesystem: %w", fsErr)
+		}
+		if rtErr != nil {
+			return fmt.Errorf("failed to load audit rules from runtime: %w", rtErr)
+		}
+	} else {
+		// Non-live system: only filesystem rules (current behavior)
+		// This maintains backward compatibility
+		if fsErr != nil {
+			return fmt.Errorf("failed to load audit rules from filesystem: %w", fsErr)
+		}
 	}
 
-	// Both succeeded - rules are loaded in separate storage
+	// Rules are loaded in separate storage
 	return nil
 }
 
@@ -489,12 +512,17 @@ func (s *mqlAuditdRules) getRuntimeRules(ruleType string) []any {
 
 // mergeRules merges rules from both sources (union for set-based comparison)
 // For strict mode with logical AND, both sources must have successfully loaded
-// and we return the intersection or flag differences as appropriate
+// On non-live systems (no runtime capability), returns only filesystem rules
 func (s *mqlAuditdRules) mergeRules(ruleType string) []any {
 	fsRules := s.getFilesystemRules(ruleType)
 	rtRules := s.getRuntimeRules(ruleType)
 
-	// Simple union for now - just combine both lists
+	// If no runtime rules (non-live system), return only filesystem rules
+	if len(rtRules) == 0 {
+		return fsRules
+	}
+
+	// If both sources have rules, merge them (union for now)
 	// The user can query separately if they want to see differences
 	result := make([]any, 0, len(fsRules)+len(rtRules))
 	result = append(result, fsRules...)

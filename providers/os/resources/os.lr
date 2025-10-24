@@ -765,7 +765,7 @@ auditd.rules {
   // - "both": Check both filesystem and runtime rules (logical AND on live systems)
   // - "filesystem": Only check filesystem rules from /etc/audit/rules.d/
   // - "runtime": Only check runtime rules from auditctl -l (requires run-command capability)
-  source() string
+  source string
   // all controls for auditd
   controls(path, source) []auditd.rule.control
   // all file rules

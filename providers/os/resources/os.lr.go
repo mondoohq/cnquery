@@ -10538,9 +10538,7 @@ func (c *mqlAuditdRules) GetPath() *plugin.TValue[string] {
 }
 
 func (c *mqlAuditdRules) GetSource() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Source, func() (string, error) {
-		return c.source()
-	})
+	return &c.Source
 }
 
 func (c *mqlAuditdRules) GetControls() *plugin.TValue[[]any] {
