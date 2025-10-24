@@ -1376,7 +1376,7 @@ func (a *mqlAzureSubscriptionWebService) hostingEnvironments() ([]any, error) {
 						"type":   llx.StringDataPtr(props.VirtualNetwork.Type),
 						"subnet": llx.StringDataPtr(props.VirtualNetwork.Subnet),
 					}
-					vnRes, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.hostingEnvironment.virtualNetwork", vnArgs)
+					vnRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork, vnArgs)
 					if err != nil {
 						return nil, err
 					}
@@ -1397,7 +1397,7 @@ func (a *mqlAzureSubscriptionWebService) hostingEnvironments() ([]any, error) {
 				args["clusterSettings"] = llx.ArrayData(items, types.Dict)
 			}
 
-			mqlRes, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.hostingEnvironment", args)
+			mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceHostingEnvironment, args)
 			if err != nil {
 				return nil, err
 			}
