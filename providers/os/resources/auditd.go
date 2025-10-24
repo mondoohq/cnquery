@@ -196,8 +196,15 @@ func (s *mqlAuditdRules) syscalls(path string) ([]any, error) {
 	return data.Syscalls, nil
 }
 
-// getAuditRuleData delegates to connection's audit rule provider
+// getAuditRuleData loads filesystem rules and optionally merges with runtime via provider
 func (s *mqlAuditdRules) getAuditRuleData(path string) (*shared.AuditRuleData, error) {
+	// First, load filesystem rules using existing helpers
+	filesystemData, err := s.loadFilesystemRules(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get connection provider
 	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
 	if !ok {
 		return nil, fmt.Errorf("connection does not implement shared.Connection interface")
@@ -208,11 +215,62 @@ func (s *mqlAuditdRules) getAuditRuleData(path string) (*shared.AuditRuleData, e
 		return nil, fmt.Errorf("connection does not provide audit rule provider")
 	}
 
-	// Inject parser function into provider if not already set
+	// Inject parser function into provider
 	provider.SetParser(s.parseAuditRules)
 
-	// Get rules from provider (handles dual-source logic internally)
-	return provider.GetRules(path)
+	// Let provider merge with runtime data if on live system
+	return provider.GetRules(filesystemData)
+}
+
+// loadFilesystemRules loads rules from filesystem using MQL resource helpers
+func (s *mqlAuditdRules) loadFilesystemRules(path string) (*shared.AuditRuleData, error) {
+	if path == "" {
+		return nil, errors.New("the path must be non-empty to parse auditd rules")
+	}
+
+	files, err := getSortedPathFiles(s.MqlRuntime, path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize result data
+	data := &shared.AuditRuleData{
+		Controls: make([]interface{}, 0),
+		Files:    make([]interface{}, 0),
+		Syscalls: make([]interface{}, 0),
+	}
+
+	var parseErrors multierr.Errors
+	for i := range files {
+		file := files[i].(*mqlFile)
+
+		bn := file.GetBasename()
+		if !matchesExtension(bn.Data, ".rules") {
+			continue
+		}
+
+		content := file.GetContent()
+		if content.Error != nil {
+			return nil, content.Error
+		}
+
+		// Parse directly into data structure
+		s.parseInto(content.Data, &data.Controls, &data.Files, &data.Syscalls, &parseErrors)
+	}
+
+	if len(parseErrors.Errors) > 0 {
+		return nil, parseErrors.Deduplicate()
+	}
+
+	return data, nil
+}
+
+// matchesExtension checks if filename ends with extension
+func matchesExtension(filename, ext string) bool {
+	if len(filename) < len(ext) {
+		return false
+	}
+	return filename[len(filename)-len(ext):] == ext
 }
 
 // parseAuditRules is the parser function injected into the connection provider

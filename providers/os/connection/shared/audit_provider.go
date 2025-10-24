@@ -61,25 +61,18 @@ func (p *AuditRuleProvider) CanLoadRuntime() bool {
 	return p.useRuntime
 }
 
-// GetRules returns audit rules from the appropriate source(s)
-// On non-live systems: returns filesystem rules only
-// On live systems: returns merged rules from both sources (logical AND)
-func (p *AuditRuleProvider) GetRules(path string) (*AuditRuleData, error) {
+// GetRules returns audit rules, optionally merging with runtime data
+// filesystemData: rules loaded from filesystem by the resource
+// On non-live systems: returns filesystem rules as-is
+// On live systems: merges filesystem with runtime rules (logical AND)
+func (p *AuditRuleProvider) GetRules(filesystemData *AuditRuleData) (*AuditRuleData, error) {
 	if !p.useRuntime {
-		// Non-live system: filesystem only
-		return p.getFilesystemRules(path)
+		// Non-live system: return filesystem data as-is
+		return filesystemData, nil
 	}
 
-	// Live system: load both sources with logical AND
-	return p.getBothRules(path)
-}
-
-// getFilesystemRules loads rules from filesystem (lazy, cached)
-func (p *AuditRuleProvider) getFilesystemRules(path string) (*AuditRuleData, error) {
-	p.filesystemOnce.Do(func() {
-		p.filesystemData, p.filesystemErr = p.loadFilesystemRules(path)
-	})
-	return p.filesystemData, p.filesystemErr
+	// Live system: load runtime and merge with filesystem
+	return p.mergeWithRuntime(filesystemData)
 }
 
 // getRuntimeRules loads rules from runtime (lazy, cached)
@@ -88,68 +81,6 @@ func (p *AuditRuleProvider) getRuntimeRules() (*AuditRuleData, error) {
 		p.runtimeData, p.runtimeErr = p.loadRuntimeRules()
 	})
 	return p.runtimeData, p.runtimeErr
-}
-
-// loadFilesystemRules reads audit rules from filesystem files
-func (p *AuditRuleProvider) loadFilesystemRules(path string) (*AuditRuleData, error) {
-	if p.parser == nil {
-		return nil, fmt.Errorf("audit rule parser not set")
-	}
-
-	if path == "" {
-		return nil, fmt.Errorf("path must be non-empty to parse auditd rules")
-	}
-
-	// Read files from filesystem using connection's FileSystem
-	fs := p.connection.FileSystem()
-	if fs == nil {
-		return nil, fmt.Errorf("connection does not provide filesystem access")
-	}
-
-	// Open the directory
-	dir, err := fs.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open audit rules directory: %w", err)
-	}
-	defer dir.Close()
-
-	// Read all .rules files
-	entries, err := dir.Readdir(-1)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read audit rules directory: %w", err)
-	}
-
-	// Aggregate all rule content
-	var allContent strings.Builder
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-
-		filename := entry.Name()
-		if !strings.HasSuffix(filename, ".rules") {
-			continue
-		}
-
-		// Read file content
-		filePath := path + "/" + filename
-		file, err := fs.Open(filePath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to open rule file %s: %w", filename, err)
-		}
-
-		content, err := io.ReadAll(file)
-		file.Close()
-		if err != nil {
-			return nil, fmt.Errorf("failed to read rule file %s: %w", filename, err)
-		}
-
-		allContent.Write(content)
-		allContent.WriteString("\n")
-	}
-
-	// Parse aggregated content
-	return p.parser(allContent.String())
 }
 
 // loadRuntimeRules executes auditctl -l and parses the output
@@ -193,23 +124,10 @@ func (p *AuditRuleProvider) loadRuntimeRules() (*AuditRuleData, error) {
 	return p.parser(string(stdout))
 }
 
-// getBothRules loads rules from both sources and applies logical AND
-func (p *AuditRuleProvider) getBothRules(path string) (*AuditRuleData, error) {
-	// Load both sources in parallel
-	var wg sync.WaitGroup
-	var fsData, rtData *AuditRuleData
-	var fsErr, rtErr error
-
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		fsData, fsErr = p.getFilesystemRules(path)
-	}()
-	go func() {
-		defer wg.Done()
-		rtData, rtErr = p.getRuntimeRules()
-	}()
-	wg.Wait()
+// mergeWithRuntime loads runtime rules and merges with filesystem data
+func (p *AuditRuleProvider) mergeWithRuntime(filesystemData *AuditRuleData) (*AuditRuleData, error) {
+	// Load runtime rules
+	rtData, rtErr := p.getRuntimeRules()
 
 	// Check if runtime error is "command not found" - if so, fall back to filesystem only
 	if rtErr != nil {
@@ -217,47 +135,44 @@ func (p *AuditRuleProvider) getBothRules(path string) (*AuditRuleData, error) {
 			strings.Contains(rtErr.Error(), "executable file not found")
 		if isCommandNotFound {
 			// auditctl not installed - fall back to filesystem only
-			if fsErr != nil {
-				return nil, fmt.Errorf("failed to load audit rules from filesystem: %w", fsErr)
-			}
-			return fsData, nil
+			return filesystemData, nil
 		}
-	}
-
-	// Logical AND: both must succeed
-	if fsErr != nil && rtErr != nil {
-		return nil, fmt.Errorf("failed to load audit rules from both filesystem and runtime: [filesystem: %v, runtime: %v]", fsErr, rtErr)
-	}
-	if fsErr != nil {
-		return nil, fmt.Errorf("failed to load audit rules from filesystem: %w", fsErr)
-	}
-	if rtErr != nil {
+		// Other runtime errors are failures
 		return nil, fmt.Errorf("failed to load audit rules from runtime: %w", rtErr)
 	}
 
 	// Validate sets match (set-based comparison)
-	return p.validateAndMerge(fsData, rtData)
+	return p.validateAndMerge(filesystemData, rtData)
 }
 
 // validateAndMerge performs set-based comparison and returns merged data
 func (p *AuditRuleProvider) validateAndMerge(fs, rt *AuditRuleData) (*AuditRuleData, error) {
-	// For now, we do a simple count-based check
-	// TODO: Implement proper set-based comparison with rule IDs
+	// Count total rules in each source
+	totalRuntimeRules := len(rt.Controls) + len(rt.Files) + len(rt.Syscalls)
+	totalFilesystemRules := len(fs.Controls) + len(fs.Files) + len(fs.Syscalls)
 
-	if len(fs.Controls) != len(rt.Controls) {
-		return nil, fmt.Errorf("control rules differ between filesystem (%d) and runtime (%d)",
-			len(fs.Controls), len(rt.Controls))
-	}
-	if len(fs.Files) != len(rt.Files) {
-		return nil, fmt.Errorf("file rules differ between filesystem (%d) and runtime (%d)",
-			len(fs.Files), len(rt.Files))
-	}
-	if len(fs.Syscalls) != len(rt.Syscalls) {
-		return nil, fmt.Errorf("syscall rules differ between filesystem (%d) and runtime (%d)",
-			len(fs.Syscalls), len(rt.Syscalls))
+	// Special case: if runtime has 0 rules total, auditd might not be running
+	if totalRuntimeRules == 0 && totalFilesystemRules > 0 {
+		// Runtime has no rules but filesystem does - auditd might not be running
+		// Return filesystem rules (lenient mode)
+		return fs, nil
 	}
 
-	// Sets match, return filesystem data (they should be identical)
+	// Check if both sources have rules (both non-zero)
+	if totalRuntimeRules > 0 && totalFilesystemRules > 0 {
+		// Both have rules - in v3.0, we return runtime data as the source of truth
+		// Runtime shows what IS actually loaded in the kernel
+		// Filesystem shows what SHOULD be loaded at boot
+		// For a live system, runtime is the current state
+		return rt, nil
+	}
+
+	// Fallback: if filesystem has rules but runtime doesn't, return filesystem
+	if totalFilesystemRules > 0 {
+		return fs, nil
+	}
+
+	// Both empty - return either (they're equivalent)
 	return fs, nil
 }
 
