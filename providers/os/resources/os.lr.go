@@ -377,7 +377,7 @@ func init() {
 			Create: createAuditdConfig,
 		},
 		"auditd.rules": {
-			// to override args, implement: initAuditdRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAuditdRules,
 			Create: createAuditdRules,
 		},
 		"auditd.rule": {
@@ -1544,6 +1544,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"auditd.rules.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdRules).GetPath()).ToDataRes(types.String)
+	},
+	"auditd.rules.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRules).GetSource()).ToDataRes(types.String)
 	},
 	"auditd.rules.controls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdRules).GetControls()).ToDataRes(types.Array(types.Resource("auditd.rule.control")))
@@ -4003,6 +4006,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"auditd.rules.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdRules).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rules.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRules).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"auditd.rules.controls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10481,6 +10488,7 @@ type mqlAuditdRules struct {
 	__id       string
 	mqlAuditdRulesInternal
 	Path     plugin.TValue[string]
+	Source   plugin.TValue[string]
 	Controls plugin.TValue[[]any]
 	Files    plugin.TValue[[]any]
 	Syscalls plugin.TValue[[]any]
@@ -10529,6 +10537,12 @@ func (c *mqlAuditdRules) GetPath() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAuditdRules) GetSource() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Source, func() (string, error) {
+		return c.source()
+	})
+}
+
 func (c *mqlAuditdRules) GetControls() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Controls, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -10546,7 +10560,12 @@ func (c *mqlAuditdRules) GetControls() *plugin.TValue[[]any] {
 			return nil, vargPath.Error
 		}
 
-		return c.controls(vargPath.Data)
+		vargSource := c.GetSource()
+		if vargSource.Error != nil {
+			return nil, vargSource.Error
+		}
+
+		return c.controls(vargPath.Data, vargSource.Data)
 	})
 }
 
@@ -10567,7 +10586,12 @@ func (c *mqlAuditdRules) GetFiles() *plugin.TValue[[]any] {
 			return nil, vargPath.Error
 		}
 
-		return c.files(vargPath.Data)
+		vargSource := c.GetSource()
+		if vargSource.Error != nil {
+			return nil, vargSource.Error
+		}
+
+		return c.files(vargPath.Data, vargSource.Data)
 	})
 }
 
@@ -10588,7 +10612,12 @@ func (c *mqlAuditdRules) GetSyscalls() *plugin.TValue[[]any] {
 			return nil, vargPath.Error
 		}
 
-		return c.syscalls(vargPath.Data)
+		vargSource := c.GetSource()
+		if vargSource.Error != nil {
+			return nil, vargSource.Error
+		}
+
+		return c.syscalls(vargPath.Data, vargSource.Data)
 	})
 }
 

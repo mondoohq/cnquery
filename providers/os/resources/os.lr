@@ -756,15 +756,22 @@ auditd.config {
 
 // auditd (Linux Audit Daemon) rules aggregated on disk
 // via /etc/audit/audit.rules by default
+// On live systems, this resource can query both filesystem rules and runtime rules from the kernel
 auditd.rules {
+  init(source? string)
   // path to folder to look up rules
   path() string
+  // source of rules: "filesystem", "runtime", or "both" (default: "both")
+  // - "both": Check both filesystem and runtime rules (logical AND on live systems)
+  // - "filesystem": Only check filesystem rules from /etc/audit/rules.d/
+  // - "runtime": Only check runtime rules from auditctl -l (requires run-command capability)
+  source() string
   // all controls for auditd
-  controls(path) []auditd.rule.control
+  controls(path, source) []auditd.rule.control
   // all file rules
-  files(path) []auditd.rule.file
+  files(path, source) []auditd.rule.file
   // all syscall rules
-  syscalls(path) []auditd.rule.syscall
+  syscalls(path, source) []auditd.rule.syscall
 }
 
 // auditd (Linux Audit Daemon) rule

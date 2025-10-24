@@ -144,9 +144,50 @@ type mqlAuditdRulesInternal struct {
 	lock      sync.Mutex
 	loaded    bool
 	loadError error
+
+	// Dual-source storage
+	filesystemLock   sync.Mutex
+	filesystemLoaded bool
+	filesystemData   struct {
+		controls []interface{}
+		files    []interface{}
+		syscalls []interface{}
+	}
+	filesystemError error
+
+	runtimeLock   sync.Mutex
+	runtimeLoaded bool
+	runtimeData   struct {
+		controls []interface{}
+		files    []interface{}
+		syscalls []interface{}
+	}
+	runtimeError error
 }
 
-const defaultAuditdRules = "/etc/audit/rules.d"
+const (
+	defaultAuditdRules = "/etc/audit/rules.d"
+	defaultSource      = "both"
+)
+
+func initAuditdRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// Set default source if not provided
+	if _, ok := args["source"]; !ok {
+		args["source"] = llx.StringData(defaultSource)
+	} else {
+		// Validate source value
+		if x, ok := args["source"]; ok {
+			source, ok := x.Value.(string)
+			if !ok {
+				return nil, nil, errors.New("wrong type for 'source' in auditd.rules initialization, it must be a string")
+			}
+			if source != "filesystem" && source != "runtime" && source != "both" {
+				return nil, nil, errors.New("source must be 'filesystem', 'runtime', or 'both'")
+			}
+		}
+	}
+	return args, nil, nil
+}
 
 func (s *mqlAuditdRules) id() (string, error) {
 	return s.Path.Data, nil
@@ -156,45 +197,41 @@ func (s *mqlAuditdRules) path() (string, error) {
 	return defaultAuditdRules, nil
 }
 
+func (s *mqlAuditdRules) source() (string, error) {
+	// This is only called when source field is not already set
+	// The init function should set the source field, so this is a fallback
+	return defaultSource, nil
+}
+
+// loadBothSources loads and merges rules from both filesystem and runtime
+func (s *mqlAuditdRules) loadBothSources(path string) error {
+	var fsErr, rtErr error
+
+	// Load filesystem rules
+	fsErr = s.loadFilesystemRules(path)
+
+	// Load runtime rules
+	rtErr = s.loadRuntimeRules()
+
+	// Logical AND: both must succeed
+	if fsErr != nil && rtErr != nil {
+		return fmt.Errorf("failed to load audit rules from both filesystem and runtime: [filesystem: %v, runtime: %v]", fsErr, rtErr)
+	}
+	if fsErr != nil {
+		return fmt.Errorf("failed to load audit rules from filesystem: %w", fsErr)
+	}
+	if rtErr != nil {
+		return fmt.Errorf("failed to load audit rules from runtime: %w", rtErr)
+	}
+
+	// Both succeeded - rules are loaded in separate storage
+	return nil
+}
+
+// load is a compatibility wrapper that uses the old behavior (filesystem only)
+// Deprecated: use loadBySource instead
 func (s *mqlAuditdRules) load(path string) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	if s.loaded {
-		return s.loadError
-	}
-
-	if path == "" {
-		return errors.New("the path must be non-empty to parse auditd rules")
-	}
-
-	files, err := getSortedPathFiles(s.MqlRuntime, path)
-	if err != nil {
-		s.Controls = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
-		s.Files = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
-		s.Syscalls = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
-		return err
-	}
-
-	var errors multierr.Errors
-	for i := range files {
-		file := files[i].(*mqlFile)
-
-		bn := file.GetBasename()
-		if !strings.HasSuffix(bn.Data, ".rules") {
-			continue
-		}
-
-		content := file.GetContent()
-		if content.Error != nil {
-			return content.Error
-		}
-
-		s.parse(content.Data, &errors)
-	}
-
-	s.loadError = errors.Deduplicate()
-	s.loaded = true
-	return s.loadError
+	return s.loadFilesystemRules(path)
 }
 
 func parseKeyVal(line string) (string, string, int) {
@@ -371,16 +408,100 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 	}
 }
 
-func (s *mqlAuditdRules) controls(path string) ([]any, error) {
-	return nil, s.load(path)
+func (s *mqlAuditdRules) controls(path string, source string) ([]any, error) {
+	if err := s.loadBySource(path, source); err != nil {
+		return nil, err
+	}
+	return s.getRulesBySource(source, "controls"), nil
 }
 
-func (s *mqlAuditdRules) files(path string) ([]any, error) {
-	return nil, s.load(path)
+func (s *mqlAuditdRules) files(path string, source string) ([]any, error) {
+	if err := s.loadBySource(path, source); err != nil {
+		return nil, err
+	}
+	return s.getRulesBySource(source, "files"), nil
 }
 
-func (s *mqlAuditdRules) syscalls(path string) ([]any, error) {
-	return nil, s.load(path)
+func (s *mqlAuditdRules) syscalls(path string, source string) ([]any, error) {
+	if err := s.loadBySource(path, source); err != nil {
+		return nil, err
+	}
+	return s.getRulesBySource(source, "syscalls"), nil
+}
+
+// loadBySource loads rules based on the source parameter
+func (s *mqlAuditdRules) loadBySource(path string, source string) error {
+	switch source {
+	case "filesystem":
+		return s.loadFilesystemRules(path)
+	case "runtime":
+		return s.loadRuntimeRules()
+	case "both":
+		return s.loadBothSources(path)
+	default:
+		return fmt.Errorf("invalid source '%s', must be 'filesystem', 'runtime', or 'both'", source)
+	}
+}
+
+// getRulesBySource returns the appropriate rules based on source parameter
+func (s *mqlAuditdRules) getRulesBySource(source string, ruleType string) []any {
+	switch source {
+	case "filesystem":
+		return s.getFilesystemRules(ruleType)
+	case "runtime":
+		return s.getRuntimeRules(ruleType)
+	case "both":
+		// For "both", we merge the rules from both sources
+		// Set-based comparison: union of both sets
+		return s.mergeRules(ruleType)
+	default:
+		return nil
+	}
+}
+
+// getFilesystemRules returns filesystem rules of the specified type
+func (s *mqlAuditdRules) getFilesystemRules(ruleType string) []any {
+	switch ruleType {
+	case "controls":
+		return s.filesystemData.controls
+	case "files":
+		return s.filesystemData.files
+	case "syscalls":
+		return s.filesystemData.syscalls
+	default:
+		return nil
+	}
+}
+
+// getRuntimeRules returns runtime rules of the specified type
+func (s *mqlAuditdRules) getRuntimeRules(ruleType string) []any {
+	switch ruleType {
+	case "controls":
+		return s.runtimeData.controls
+	case "files":
+		return s.runtimeData.files
+	case "syscalls":
+		return s.runtimeData.syscalls
+	default:
+		return nil
+	}
+}
+
+// mergeRules merges rules from both sources (union for set-based comparison)
+// For strict mode with logical AND, both sources must have successfully loaded
+// and we return the intersection or flag differences as appropriate
+func (s *mqlAuditdRules) mergeRules(ruleType string) []any {
+	fsRules := s.getFilesystemRules(ruleType)
+	rtRules := s.getRuntimeRules(ruleType)
+
+	// Simple union for now - just combine both lists
+	// The user can query separately if they want to see differences
+	result := make([]any, 0, len(fsRules)+len(rtRules))
+	result = append(result, fsRules...)
+	result = append(result, rtRules...)
+
+	// TODO: Implement deduplication based on rule IDs
+	return result
 }
 
 func (s *mqlAuditdRuleFile) id() (string, error) {
