@@ -13,6 +13,8 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
+var _ llx.Recording = &Upstream{}
+
 type Upstream struct {
 	ctx            context.Context
 	service        ResourcesExplorer
@@ -149,6 +151,10 @@ func (n *Upstream) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecord
 
 func (n *Upstream) GetAssetRecordings() []llx.Recording {
 	return nil
+}
+
+func (n *Upstream) GetAssets() []*inventory.Asset {
+	return []*inventory.Asset{n.asset}
 }
 
 func (n *Upstream) Save() error {
