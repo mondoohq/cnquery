@@ -20,6 +20,7 @@ Available Commands:
   filesystem  Scan a mounted file system target
   local       Scan your local system
   mock        Scan a recording file without an active connection
+  recording        Scan read recording file from disk
   sbom        Scan read SBOM file on disk
   ssh         Scan a remote system via SSH
   vagrant     Scan a Vagrant host

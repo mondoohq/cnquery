@@ -264,7 +264,7 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 	if x, ok := builtinProviders[id]; ok {
 		// We don't warn for core providers, which are the only providers
 		// built into the binary (for now).
-		if id != BuiltinCoreID && id != mockProvider.ID && id != sbomProvider.ID {
+		if id != BuiltinCoreID && id != mockProvider.ID && id != sbomProvider.ID && id != recordingProviderInstance.ID {
 			log.Warn().Msg("using builtin provider for " + x.Config.Name)
 		}
 		if id == mockProvider.ID {
@@ -275,6 +275,7 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 			mp := x.Runtime.Plugin.(*sbomProviderService)
 			mp.Init(x.Runtime)
 		}
+
 		c.schema.Add(id, x.Runtime.Schema)
 		return x.Runtime, nil
 	}

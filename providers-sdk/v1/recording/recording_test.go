@@ -425,3 +425,124 @@ func TestAddAndGetData(t *testing.T) {
 		assert.Equal(t, "my-bucket", data3.Value)
 	})
 }
+
+func TestScopeToAsset(t *testing.T) {
+	t.Run("returns scoped recording when asset exists by mrn", func(t *testing.T) {
+		asset1 := &Asset{
+			Asset: &inventory.Asset{
+				Mrn:  "//example.com/asset/1",
+				Name: "first-asset",
+			},
+			connections: map[string]*connection{},
+			resources:   map[string]*Resource{},
+		}
+		asset2 := &Asset{
+			Asset: &inventory.Asset{
+				Mrn:  "//example.com/asset/2",
+				Name: "second-asset",
+			},
+			connections: map[string]*connection{},
+			resources:   map[string]*Resource{},
+		}
+
+		r := &recording{
+			Assets: []*Asset{asset1, asset2},
+		}
+		r.refreshCache()
+
+		// Scope to asset1 using its mrn
+		scopedRec, err := r.ScopeToAsset(&inventory.Asset{Mrn: "//example.com/asset/1"})
+		require.NoError(t, err)
+		require.NotNil(t, scopedRec)
+
+		// Verify the scoped recording only contains asset1
+		scopedRecording, ok := scopedRec.(*recording)
+		require.True(t, ok)
+		assert.Equal(t, 1, len(scopedRecording.Assets))
+		assert.Equal(t, "first-asset", scopedRecording.Assets[0].Asset.Name)
+	})
+
+	t.Run("returns scoped recording when asset exists by platform id", func(t *testing.T) {
+		asset1 := &Asset{
+			Asset: &inventory.Asset{
+				Id:          "asset-1",
+				Name:        "first-asset",
+				PlatformIds: []string{"platform-id-1", "platform-id-2"},
+			},
+			connections: map[string]*connection{},
+			resources:   map[string]*Resource{},
+		}
+		asset2 := &Asset{
+			Asset: &inventory.Asset{
+				Id:          "asset-2",
+				Name:        "second-asset",
+				PlatformIds: []string{"platform-id-3"},
+			},
+			connections: map[string]*connection{},
+			resources:   map[string]*Resource{},
+		}
+
+		r := &recording{
+			Assets: []*Asset{asset1, asset2},
+		}
+		r.refreshCache()
+
+		// Scope to asset1 using one of its platform ids
+		scopedRec, err := r.ScopeToAsset(&inventory.Asset{PlatformIds: []string{"platform-id-2"}})
+		require.NoError(t, err)
+		require.NotNil(t, scopedRec)
+
+		// Verify the scoped recording only contains asset1
+		scopedRecording, ok := scopedRec.(*recording)
+		require.True(t, ok)
+		assert.Equal(t, 1, len(scopedRecording.Assets))
+		assert.Equal(t, "first-asset", scopedRecording.Assets[0].Asset.Name)
+	})
+
+	t.Run("returns error when asset does not exist", func(t *testing.T) {
+		asset1 := &Asset{
+			Asset: &inventory.Asset{
+				Id:          "asset-1",
+				Mrn:         "//example.com/asset/1",
+				Name:        "first-asset",
+				PlatformIds: []string{"platform-id-1"},
+			},
+			connections: map[string]*connection{},
+			resources:   map[string]*Resource{},
+		}
+
+		r := &recording{
+			Assets: []*Asset{asset1},
+		}
+		r.refreshCache()
+
+		// Try to scope to a non-existent asset
+		scopedRec, err := r.ScopeToAsset(&inventory.Asset{Mrn: "//example.com/asset/non-existent"})
+		require.Error(t, err)
+		assert.Nil(t, scopedRec)
+		assert.Equal(t, "asset not part of recording", err.Error())
+	})
+
+	t.Run("returns error when no matching platform ids", func(t *testing.T) {
+		asset1 := &Asset{
+			Asset: &inventory.Asset{
+				Id:          "asset-1",
+				Name:        "first-asset",
+				PlatformIds: []string{"platform-id-1"},
+			},
+			connections: map[string]*connection{},
+			resources:   map[string]*Resource{},
+		}
+
+		r := &recording{
+			Assets: []*Asset{asset1},
+		}
+		r.refreshCache()
+
+		// Try to scope to an asset with non-matching platform ids
+		scopedRec, err := r.ScopeToAsset(&inventory.Asset{PlatformIds: []string{"non-existent-platform-id"}})
+		require.Error(t, err)
+		assert.Nil(t, scopedRec)
+		assert.Equal(t, "asset not part of recording", err.Error())
+	})
+}

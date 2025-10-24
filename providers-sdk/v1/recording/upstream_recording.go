@@ -14,6 +14,8 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
+var _ llx.Recording = &Upstream{}
+
 type Upstream struct {
 	ctx            context.Context
 	service        resources.ResourcesExplorer
@@ -152,8 +154,19 @@ func (n *Upstream) GetAssetRecordings() []llx.Recording {
 	return nil
 }
 
+func (n *Upstream) GetAssets() []*inventory.Asset {
+	return []*inventory.Asset{n.asset}
+}
+
 func (n *Upstream) Save() error {
 	// No need to save anything with upstream recordings for now. We will make
 	// use of this once we use AddData with upstream.
 	return nil
+}
+
+func (n *Upstream) ScopeToAsset(asset *inventory.Asset) (llx.Recording, error) {
+	if n.asset.Mrn != asset.Mrn {
+		return nil, errors.New("asset not part of recording")
+	}
+	return n, nil
 }

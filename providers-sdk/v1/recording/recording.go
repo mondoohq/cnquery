@@ -18,6 +18,8 @@ import (
 	"go.mondoo.com/cnquery/v12/utils/syncx"
 )
 
+var _ llx.Recording = &recording{}
+
 type recording struct {
 	Assets []*Asset `json:"assets"`
 	Path   string   `json:"-"`
@@ -27,15 +29,6 @@ type recording struct {
 	// this mode is used when we use the recording layer for data,
 	// but not for storing it on disk
 	doNotSave bool `json:"-"`
-}
-
-func NewAssetRecording(asset *inventory.Asset) *Asset {
-	return &Asset{
-		Asset:       asset,
-		connections: map[string]*connection{},
-		resources:   map[string]*Resource{},
-		IdsLookup:   map[string]string{},
-	}
 }
 
 // Creates a recording that holds only the specified asset
@@ -54,29 +47,17 @@ func FromAsset(asset *inventory.Asset) (*recording, error) {
 	return r, nil
 }
 
+func FromAssetRecording(assetRec *Asset) (*recording, error) {
+	r := &recording{
+		Assets: []*Asset{assetRec},
+	}
+
+	return r, nil
+}
+
 // ReadOnly converts the recording into a read-only recording
 func (r *recording) ReadOnly() *readOnly {
 	return &readOnly{r}
-}
-
-type readOnly struct {
-	*recording
-}
-
-func (n *readOnly) Save() error {
-	return nil
-}
-
-func (n *readOnly) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
-	// For read-only recordings we are still loading from file, so that means
-	// we are severely lacking connection IDs.
-	existing := n.getExistingAsset(asset)
-	if existing != nil {
-		n.assets.Set(fmt.Sprintf("%d", connectionID), existing)
-	}
-}
-
-func (n *readOnly) AddData(req llx.AddDataReq) {
 }
 
 type RecordingOptions struct {
@@ -286,7 +267,7 @@ func tryReconnect(typ types.Type, v any, resource *Resource) (any, error) {
 func reconnectResource(v any, resource *Resource) (any, error) {
 	vals, ok := v.(map[string]any)
 	if !ok {
-		return nil, errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect reference")
+		return nil, fmt.Errorf("error in recording: resource '%s' (ID:%s) has incorrect reference %T type", resource.Resource, resource.ID, v)
 	}
 	name, ok := vals["Name"].(string)
 	if !ok {
@@ -314,8 +295,11 @@ func (r *recording) finalize() {
 
 func (r *recording) getExistingAsset(asset *inventory.Asset) *Asset {
 	for _, existing := range r.Assets {
-		id := existing.Asset.Id
-		if id == asset.Mrn {
+		if asset.Id != "" && existing.Asset.Id == asset.Id {
+			return existing
+		}
+
+		if asset.Mrn != "" && existing.Asset.Mrn == asset.Mrn {
 			return existing
 		}
 
@@ -469,6 +453,14 @@ func (r *recording) GetAssetRecordings() []*Asset {
 	return r.Assets
 }
 
+func (r *recording) GetAssets() []*inventory.Asset {
+	assets := make([]*inventory.Asset, len(r.Assets))
+	for i := range r.Assets {
+		assets[i] = r.Assets[i].Asset
+	}
+	return assets
+}
+
 func (r *recording) SetAssetRecording(id uint32, reco *Asset) {
 	r.assets.Set(fmt.Sprintf("%d", id), reco)
 }
@@ -541,4 +533,17 @@ func getAssetIdForRecording(asset *inventory.Asset) string {
 	}
 
 	return ""
+}
+
+func (r *recording) ScopeToAsset(asset *inventory.Asset) (llx.Recording, error) {
+	a := r.getExistingAsset(asset)
+	if a == nil {
+		return nil, errors.New("asset not part of recording")
+	}
+
+	newRec := &recording{
+		Assets: []*Asset{a},
+	}
+	newRec.refreshCache()
+	return newRec, nil
 }
