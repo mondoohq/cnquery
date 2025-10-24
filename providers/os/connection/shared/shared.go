@@ -66,6 +66,7 @@ type Connection interface {
 	Asset() *inventory.Asset
 	UpdateAsset(asset *inventory.Asset)
 	Capabilities() Capabilities
+	AuditRuleProvider() *AuditRuleProvider
 }
 
 type ConnectionWithOSFamily interface {

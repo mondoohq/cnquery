@@ -46,8 +46,9 @@ type Connection struct {
 	conf  *inventory.Config
 	asset *inventory.Asset
 
-	fs   afero.Fs
-	Sudo *inventory.Sudo
+	fs            afero.Fs
+	Sudo          *inventory.Sudo
+	auditProvider *shared.AuditRuleProvider
 
 	serverVersion    string
 	UseScpFilesystem bool
@@ -136,6 +137,13 @@ func (p *Connection) UpdateAsset(asset *inventory.Asset) {
 
 func (p *Connection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_RunCommand
+}
+
+func (p *Connection) AuditRuleProvider() *shared.AuditRuleProvider {
+	if p.auditProvider == nil {
+		p.auditProvider = shared.NewAuditRuleProvider(p)
+	}
+	return p.auditProvider
 }
 
 func (c *Connection) RunCommand(command string) (*shared.Command, error) {

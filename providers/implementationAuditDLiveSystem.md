@@ -2,7 +2,7 @@
 
 ## Status: Implementation Complete - Minor Test Compatibility Issues
 **Started**: 2025-10-24
-**Completed**: 2025-10-24
+**Completed**: 2025-10-24  
 **Current Phase**: Phase 1 Complete, Phase 2 In Progress
 
 ---
@@ -294,7 +294,7 @@ auditd.rules.files  # Default: checks both if available
 
 ✅ **Use Case 4**: Detect drift between sources
 ```mql
-auditd.rules(source: "filesystem").files.length !=
+auditd.rules(source: "filesystem").files.length != 
 auditd.rules(source: "runtime").files.length
 ```
 
@@ -321,18 +321,18 @@ The accessor methods (`controls()`, `files()`, `syscalls()`) were loading data i
        if err := s.loadBySource(path, source); err != nil {
            return nil, err
        }
-
+       
        // Populate the TValue field that the auto-generated code expects
        rules := s.getRulesBySource(source, "files")
        s.Files.Data = rules
        s.Files.State = plugin.StateIsSet
-
+       
        return rules, nil
    }
    ```
 
 3. **Refactored loading methods**:
-   - `loadFilesystemRules()` and `loadRuntimeRules()` now use `parseIntoSlices()`
+   - `loadFilesystemRules()` and `loadRuntimeRules()` now use `parseIntoSlices()` 
    - Data is stored in `filesystemData`/`runtimeData` structures
    - Accessor methods merge and populate TValue fields on demand
 
@@ -356,3 +356,4 @@ auditd.rules { files }
 auditd.rules(source: "filesystem") {*}
 auditd.rules(source: "runtime") {*}  # On live system with auditd
 ```
+
