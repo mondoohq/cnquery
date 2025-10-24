@@ -496,6 +496,20 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
+	"virustotal": {
+		Provider: &plugin.Provider{
+			Name:            "virustotal",
+			ID:              "go.mondoo.com/cnquery/v12/providers/virustotal",
+			ConnectionTypes: []string{"virustotal"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "virustotal",
+					Use:   "virustotal",
+					Short: "a VirusTotal API account",
+				},
+			},
+		},
+	},
 	"vsphere": {
 		Provider: &plugin.Provider{
 			Name:            "vsphere",

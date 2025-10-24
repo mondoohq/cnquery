@@ -1,0 +1,52 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  virustotal:
+    min_mondoo_version: 9.0.0
+  virustotal.domain:
+    fields:
+      categories: {}
+      lastAnalysisDate: {}
+      lastAnalysisStats: {}
+      name: {}
+      reputation: {}
+    min_mondoo_version: 9.0.0
+  virustotal.file:
+    fields:
+      detections: {}
+      hash: {}
+      lastAnalysisDate: {}
+      lastAnalysisStats: {}
+      path: {}
+    min_mondoo_version: 9.0.0
+  virustotal.hash:
+    fields:
+      detections: {}
+      hash: {}
+      lastAnalysisDate: {}
+      lastAnalysisStats: {}
+    min_mondoo_version: 9.0.0
+  virustotal.ip:
+    fields:
+      address: {}
+      asOwner: {}
+      country: {}
+      lastAnalysisDate: {}
+      lastAnalysisStats: {}
+      network: {}
+      reputation: {}
+    min_mondoo_version: 9.0.0
+  virustotal.scan:
+    fields:
+      analysisId: {}
+      detections: {}
+      hash: {}
+      lastAnalysisDate: {}
+      lastAnalysisStats: {}
+      parameters: {}
+      path: {}
+      scanType: {}
+      status: {}
+      url: {}
+    min_mondoo_version: 9.0.0

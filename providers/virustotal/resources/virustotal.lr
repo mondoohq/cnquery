@@ -1,0 +1,70 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/cnquery/v12/providers/virustotal"
+option go_package = "go.mondoo.com/cnquery/v12/providers/virustotal/resources"
+
+// VirusTotal threat intelligence provider root
+virustotal {}
+
+// VirusTotal domain intelligence
+virustotal.domain @defaults("name") {
+  init(name string)
+  // Domain name
+  name string
+  // VirusTotal reputation score
+  reputation() int
+  // Categorisation returned by vendors
+  categories() map[string]string
+  // Summary of last scan verdicts
+  lastAnalysisStats() map[string]int
+  // Timestamp of the last analysis
+  lastAnalysisDate() time
+}
+
+// VirusTotal IP intelligence
+virustotal.ip @defaults("address") {
+  init(address string)
+  // IP address
+  address string
+  // VirusTotal reputation score
+  reputation() int
+  // Country reported by VirusTotal
+  country() string
+  // Autonomous system owner
+  asOwner() string
+  // Network CIDR
+  network() string
+  // Summary of last scan verdicts
+  lastAnalysisStats() map[string]int
+  // Timestamp of the last analysis
+  lastAnalysisDate() time
+}
+
+// VirusTotal file intelligence for a local file
+virustotal.file @defaults("path") {
+  init(path string)
+  // File path on the local system
+  path string
+  // SHA256 hash of the file
+  hash() string
+  // Number of malicious or suspicious detections
+  detections() int
+  // Summary of last scan verdicts
+  lastAnalysisStats() map[string]int
+  // Timestamp of the last analysis
+  lastAnalysisDate() time
+}
+
+// VirusTotal hash intelligence
+virustotal.hash @defaults("hash") {
+  init(hash string)
+  // File hash (SHA256 preferred)
+  hash string
+  // Number of malicious or suspicious detections
+  detections() int
+  // Summary of last scan verdicts
+  lastAnalysisStats() map[string]int
+  // Timestamp of the last analysis
+  lastAnalysisDate() time
+}

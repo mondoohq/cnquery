@@ -223,6 +223,7 @@ providers/build: \
 	providers/build/mondoo \
 	providers/build/cloudflare \
 	providers/build/nmap \
+	providers/build/virustotal \
 	providers/build/tailscale
 
 .PHONY: providers/install
@@ -256,6 +257,7 @@ providers/install: \
 	providers/install/mondoo \
 	providers/install/cloudflare \
 	providers/install/nmap \
+	providers/install/virustotal \
 	providers/install/tailscale
 
 providers/build/mock: providers/lr
@@ -409,6 +411,11 @@ providers/build/tailscale: providers/lr
 providers/install/tailscale:
 	@$(call installProvider, providers/tailscale)
 
+providers/build/virustotal: providers/lr
+	@$(call buildProvider, providers/virustotal)
+providers/install/virustotal:
+	@$(call installProvider, providers/virustotal)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
@@ -438,6 +445,7 @@ providers/dist:
 	@$(call buildProviderDist, providers/mondoo)
 	@$(call buildProviderDist, providers/nmap)
 	@$(call buildProviderDist, providers/tailscale)
+	@$(call buildProviderDist, providers/virustotal)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -468,6 +476,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/mondoo)
 	@$(call bundleProvider, providers/nmap)
 	@$(call bundleProvider, providers/tailscale)
+	@$(call bundleProvider, providers/virustotal)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -499,6 +508,7 @@ providers/test:
 	@$(call testGoModProvider, providers/mondoo)
 	@$(call testGoModProvider, providers/nmap)
 	@$(call testGoModProvider, providers/tailscale)
+	@$(call testGoModProvider, providers/virustotal)
 
 lr/test:
 	go test ./providers-sdk/v1/mqlr/...
@@ -662,6 +672,12 @@ lr/docs/markdown: providers/lr
 		--description "The VMware vSphere resource pack lets you use MQL to query and assess the security of your VMware vSphere hosts and services." \
 		--docs-file providers/vsphere/resources/vsphere.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/vsphere-pack
+	./lr markdown providers/virustotal/resources/virustotal.lr \
+		--pack-name "VirusTotal" \
+		--description "The VirusTotal resource pack lets you use MQL to query and assess
+		--docs-file providers/virustotal/resources/virustotal.lr.manifest.yaml \
+		the security of files and URLs via the VirusTotal service." \
+		--output ../docs/docs/mql/resources/virustotal-pack
 
 lr/docs/stats:
 	@echo "Please remember to re-run before using this:"
