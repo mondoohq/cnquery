@@ -300,3 +300,59 @@ auditd.rules(source: "runtime").files.length
 
 All core functionality works as designed and specified in the requirements document.
 
+---
+
+## Issue Fix: TValue Field Population (2025-10-24)
+
+### Problem Reported
+User reported that `auditd.rules {*}` showed empty arrays for `files`, `controls`, and `syscalls`, even though querying `auditd.rules.files` directly returned data.
+
+### Root Cause
+The accessor methods (`controls()`, `files()`, `syscalls()`) were loading data into internal storage structures (`filesystemData`, `runtimeData`) but not populating the auto-generated TValue fields (`s.Controls.Data`, `s.Files.Data`, `s.Syscalls.Data`) that the MQL engine reads when using `{*}` syntax.
+
+### Solution Implemented
+1. **Added `parseIntoSlices()` helper** in `auditd_runtime.go`:
+   - Allows parsing directly into separate storage without affecting TValue fields
+   - Temporarily swaps TValue fields during parsing then restores them
+
+2. **Updated accessor methods** to populate TValue fields:
+   ```go
+   func (s *mqlAuditdRules) files(path string, source string) ([]any, error) {
+       if err := s.loadBySource(path, source); err != nil {
+           return nil, err
+       }
+
+       // Populate the TValue field that the auto-generated code expects
+       rules := s.getRulesBySource(source, "files")
+       s.Files.Data = rules
+       s.Files.State = plugin.StateIsSet
+
+       return rules, nil
+   }
+   ```
+
+3. **Refactored loading methods**:
+   - `loadFilesystemRules()` and `loadRuntimeRules()` now use `parseIntoSlices()`
+   - Data is stored in `filesystemData`/`runtimeData` structures
+   - Accessor methods merge and populate TValue fields on demand
+
+### Verification
+- ✅ Rebuilt provider successfully
+- ✅ All tests pass
+- ✅ Ready for user testing in real environment with audit rules
+
+### Testing Instructions for User
+Test with these queries to verify the fix:
+
+```mql
+# Should now show populated arrays (not empty)
+auditd.rules {*}
+
+# Verify files are accessible both ways
+auditd.rules.files
+auditd.rules { files }
+
+# Test different sources
+auditd.rules(source: "filesystem") {*}
+auditd.rules(source: "runtime") {*}  # On live system with auditd
+```

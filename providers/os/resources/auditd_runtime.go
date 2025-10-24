@@ -70,19 +70,18 @@ func (s *mqlAuditdRules) loadRuntimeRules() error {
 		return s.runtimeError
 	}
 
-	// Parse the output (reuse existing parser)
+	// Initialize empty slices for parsing
+	s.runtimeData.controls = make([]interface{}, 0)
+	s.runtimeData.files = make([]interface{}, 0)
+	s.runtimeData.syscalls = make([]interface{}, 0)
+
+	// Parse the output directly into runtime storage
 	var errors multierr.Errors
-	s.parse(string(stdout), &errors)
-
-	// Store the parsed data in runtime storage
-	s.runtimeData.controls = s.Controls.Data
-	s.runtimeData.files = s.Files.Data
-	s.runtimeData.syscalls = s.Syscalls.Data
-
-	// Reset the main storage (we'll merge later based on source)
-	s.Controls.Data = nil
-	s.Files.Data = nil
-	s.Syscalls.Data = nil
+	parseIntoSlices(s, string(stdout),
+		&s.runtimeData.controls,
+		&s.runtimeData.files,
+		&s.runtimeData.syscalls,
+		&errors)
 
 	if len(errors.Errors) > 0 {
 		s.runtimeError = fmt.Errorf("failed to parse runtime audit rules: %w", errors.Deduplicate())
@@ -113,6 +112,11 @@ func (s *mqlAuditdRules) loadFilesystemRules(path string) error {
 		return s.filesystemError
 	}
 
+	// Initialize empty slices for parsing
+	s.filesystemData.controls = make([]interface{}, 0)
+	s.filesystemData.files = make([]interface{}, 0)
+	s.filesystemData.syscalls = make([]interface{}, 0)
+
 	var parseErrors multierr.Errors
 	for i := range files {
 		file := files[i].(*mqlFile)
@@ -128,18 +132,13 @@ func (s *mqlAuditdRules) loadFilesystemRules(path string) error {
 			return s.filesystemError
 		}
 
-		s.parse(content.Data, &parseErrors)
+		// Parse directly into filesystem storage
+		parseIntoSlices(s, content.Data,
+			&s.filesystemData.controls,
+			&s.filesystemData.files,
+			&s.filesystemData.syscalls,
+			&parseErrors)
 	}
-
-	// Store the parsed data in filesystem storage
-	s.filesystemData.controls = s.Controls.Data
-	s.filesystemData.files = s.Files.Data
-	s.filesystemData.syscalls = s.Syscalls.Data
-
-	// Reset the main storage (we'll merge later based on source)
-	s.Controls.Data = nil
-	s.Files.Data = nil
-	s.Syscalls.Data = nil
 
 	s.filesystemError = parseErrors.Deduplicate()
 	return s.filesystemError
@@ -151,4 +150,30 @@ func matchesExtension(filename, ext string) bool {
 		return false
 	}
 	return filename[len(filename)-len(ext):] == ext
+}
+
+// parseIntoSlices parses audit rule content into provided slices
+// This is a wrapper around the existing parse() method that directs output to custom slices
+func parseIntoSlices(s *mqlAuditdRules, content string, controls, files, syscalls *[]interface{}, errors *multierr.Errors) {
+	// Temporarily swap the TValue fields with our target slices
+	oldControls := s.Controls.Data
+	oldFiles := s.Files.Data
+	oldSyscalls := s.Syscalls.Data
+
+	s.Controls.Data = *controls
+	s.Files.Data = *files
+	s.Syscalls.Data = *syscalls
+
+	// Call the existing parse method
+	s.parse(content, errors)
+
+	// Extract the results
+	*controls = s.Controls.Data
+	*files = s.Files.Data
+	*syscalls = s.Syscalls.Data
+
+	// Restore original values
+	s.Controls.Data = oldControls
+	s.Files.Data = oldFiles
+	s.Syscalls.Data = oldSyscalls
 }

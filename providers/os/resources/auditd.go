@@ -435,21 +435,39 @@ func (s *mqlAuditdRules) controls(path string, source string) ([]any, error) {
 	if err := s.loadBySource(path, source); err != nil {
 		return nil, err
 	}
-	return s.getRulesBySource(source, "controls"), nil
+
+	// Populate the TValue field that the auto-generated code expects
+	rules := s.getRulesBySource(source, "controls")
+	s.Controls.Data = rules
+	s.Controls.State = plugin.StateIsSet
+
+	return rules, nil
 }
 
 func (s *mqlAuditdRules) files(path string, source string) ([]any, error) {
 	if err := s.loadBySource(path, source); err != nil {
 		return nil, err
 	}
-	return s.getRulesBySource(source, "files"), nil
+
+	// Populate the TValue field that the auto-generated code expects
+	rules := s.getRulesBySource(source, "files")
+	s.Files.Data = rules
+	s.Files.State = plugin.StateIsSet
+
+	return rules, nil
 }
 
 func (s *mqlAuditdRules) syscalls(path string, source string) ([]any, error) {
 	if err := s.loadBySource(path, source); err != nil {
 		return nil, err
 	}
-	return s.getRulesBySource(source, "syscalls"), nil
+
+	// Populate the TValue field that the auto-generated code expects
+	rules := s.getRulesBySource(source, "syscalls")
+	s.Syscalls.Data = rules
+	s.Syscalls.State = plugin.StateIsSet
+
+	return rules, nil
 }
 
 // loadBySource loads rules based on the source parameter
