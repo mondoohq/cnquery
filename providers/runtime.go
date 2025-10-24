@@ -642,6 +642,12 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		return provider, info, provider.ConnectionError
 	}
 
+	staticProvider, ok := r.Provider.Instance.Plugin.(plugin.StaticProvider)
+	if ok {
+		log.Debug().Str("provider", staticProvider.StaticName()).Msg("using static provider for resource field")
+		return r.Provider, info, r.Provider.ConnectionError
+	}
+
 	providerConn := r.Provider.Instance.ID
 	crossProviderList := []string{
 		"go.mondoo.com/cnquery/providers/core",
@@ -750,6 +756,12 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 		if s := fieldsPerProvider[id]; s != nil {
 			fieldInfo = s
 		}
+	}
+
+	staticProvider, ok := r.Provider.Instance.Plugin.(plugin.StaticProvider)
+	if ok {
+		log.Debug().Str("provider", staticProvider.StaticName()).Msg("using static provider for resource field")
+		return r.Provider, resourceInfo, fieldInfo, r.Provider.ConnectionError
 	}
 
 	if provider := r.providers[fieldInfo.Provider]; provider != nil {

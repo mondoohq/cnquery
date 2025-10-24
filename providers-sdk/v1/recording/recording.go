@@ -407,10 +407,12 @@ func (r *recording) AddData(connectionID uint32, resource string, id string, fie
 func (r *recording) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
 	asset, ok := r.assets.Get(fmt.Sprintf("%d", connectionID))
 	if !ok {
-		return nil, false
+		if len(r.Assets) > 0 {
+			asset = r.Assets[0]
+		}
 	}
-
-	obj, exist := asset.resources[resource+"\x00"+id]
+	rId := resource + "\x00" + id
+	obj, exist := asset.resources[rId]
 	if !exist {
 		return nil, false
 	}
