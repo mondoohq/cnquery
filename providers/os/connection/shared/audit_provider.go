@@ -145,45 +145,67 @@ func (p *AuditRuleProvider) mergeWithRuntime(filesystemData *AuditRuleData) (*Au
 	return p.validateAndMerge(filesystemData, rtData)
 }
 
-// validateAndMerge performs set-based comparison and returns merged data
+// validateAndMerge performs STRICT set-based comparison (v4.0)
+// Both sources must match exactly - any divergence is a FAILED state
 func (p *AuditRuleProvider) validateAndMerge(fs, rt *AuditRuleData) (*AuditRuleData, error) {
-	// Count total rules in each source
-	totalRuntimeRules := len(rt.Controls) + len(rt.Files) + len(rt.Syscalls)
-	totalFilesystemRules := len(fs.Controls) + len(fs.Files) + len(fs.Syscalls)
+	// STRICT VALIDATION: Compare actual rule content as sets (not just counts)
 
-	// Special case: if runtime has 0 rules total, auditd might not be running
-	if totalRuntimeRules == 0 && totalFilesystemRules > 0 {
-		// Runtime has no rules but filesystem does - auditd might not be running
-		// Return filesystem rules (lenient mode)
-		return fs, nil
+	// Check controls match (set-based comparison)
+	if !rulesMatchAsSet(fs.Controls, rt.Controls) {
+		return nil, fmt.Errorf("control rules differ between filesystem and runtime (configuration drift detected)")
 	}
 
-	// Check if both sources have rules (both non-zero)
-	if totalRuntimeRules > 0 && totalFilesystemRules > 0 {
-		// Both have rules - in v3.0, we return runtime data as the source of truth
-		// Runtime shows what IS actually loaded in the kernel
-		// Filesystem shows what SHOULD be loaded at boot
-		// For a live system, runtime is the current state
-		return rt, nil
+	// Check files match (set-based comparison)
+	if !rulesMatchAsSet(fs.Files, rt.Files) {
+		return nil, fmt.Errorf("file rules differ between filesystem and runtime (configuration drift detected)")
 	}
 
-	// Fallback: if filesystem has rules but runtime doesn't, return filesystem
-	if totalFilesystemRules > 0 {
-		return fs, nil
+	// Check syscalls match (set-based comparison)
+	if !rulesMatchAsSet(fs.Syscalls, rt.Syscalls) {
+		return nil, fmt.Errorf("syscall rules differ between filesystem and runtime (configuration drift detected)")
 	}
 
-	// Both empty - return either (they're equivalent)
-	return fs, nil
+	// Both sources match - return runtime data as it's the current state
+	// (Runtime is the authoritative source when both match)
+	return rt, nil
 }
 
-// rulesMatch performs set-based comparison of rules (order-agnostic)
-// TODO: Implement proper set comparison using rule IDs
-func rulesMatch(a, b []interface{}) bool {
+// rulesMatchAsSet performs set-based comparison of rules (order-agnostic)
+// Compares actual rule content, not just counts
+func rulesMatchAsSet(a, b []interface{}) bool {
+	// Length must match first
 	if len(a) != len(b) {
 		return false
 	}
 
-	// For now, just check lengths
-	// In production, we'd convert to sets and compare
+	// Both empty is a match
+	if len(a) == 0 {
+		return true
+	}
+
+	// Convert to sets and compare
+	setA := makeRuleSet(a)
+	setB := makeRuleSet(b)
+
+	// Check all elements in A exist in B (and vice versa due to length check)
+	for rule := range setA {
+		if !setB[rule] {
+			return false
+		}
+	}
+
 	return true
+}
+
+// makeRuleSet converts a slice of rules into a set (map) for comparison
+// We convert each rule to a string representation for set membership testing
+func makeRuleSet(rules []interface{}) map[string]bool {
+	set := make(map[string]bool, len(rules))
+	for _, rule := range rules {
+		// Convert rule to string representation
+		// This works because our rules are either strings or have string representations
+		ruleStr := fmt.Sprintf("%v", rule)
+		set[ruleStr] = true
+	}
+	return set
 }

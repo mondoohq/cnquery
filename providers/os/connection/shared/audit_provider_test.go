@@ -4,8 +4,11 @@
 package shared_test
 
 import (
+	"bytes"
+	"fmt"
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
@@ -13,8 +16,8 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
-// TestAuditRuleProvider_FilesystemOnly tests filesystem-only behavior on non-live systems
-func TestAuditRuleProvider_FilesystemOnly(t *testing.T) {
+// TC-1: Non-Live System - Filesystem Only
+func TestAuditRuleProvider_TC1_NonLive_FilesystemOnly(t *testing.T) {
 	// Create mock connection WITHOUT run-command capability
 	conn, err := mock.New(0, "", &inventory.Asset{})
 	require.NoError(t, err)
@@ -27,88 +30,240 @@ func TestAuditRuleProvider_FilesystemOnly(t *testing.T) {
 
 	// Provider should not attempt runtime loading
 	assert.False(t, provider.CanLoadRuntime(), "Provider should not support runtime on non-live systems")
-}
 
-// TestAuditRuleProvider_DualSource tests dual-source behavior on live systems
-func TestAuditRuleProvider_DualSource(t *testing.T) {
-	// Create mock connection WITH run-command capability
-	conn, err := mock.New(0, "", &inventory.Asset{})
-	require.NoError(t, err)
-
-	provider := shared.NewAuditRuleProvider(conn)
-	require.NotNil(t, provider)
-
-	// Provider should support runtime loading
-	assert.True(t, provider.CanLoadRuntime(), "Provider should support runtime on live systems")
-}
-
-// TestAuditRuleProvider_GetRules_FilesystemSuccess tests successful filesystem rule loading
-func TestAuditRuleProvider_GetRules_FilesystemSuccess(t *testing.T) {
-	// Create filesystem data
+	// Filesystem data should pass through unchanged
 	fsData := &shared.AuditRuleData{
-		Controls: []interface{}{},
-		Files:    []interface{}{"rule1", "rule2"},
+		Controls: []interface{}{"control1"},
+		Files:    []interface{}{"file1", "file2"},
+		Syscalls: []interface{}{"syscall1"},
+	}
+
+	result, err := provider.GetRules(fsData)
+	require.NoError(t, err)
+	assert.Equal(t, fsData, result, "Should return filesystem data unchanged on non-live")
+}
+
+// TC-2: Live System - Perfect Match (same count and content)
+func TestAuditRuleProvider_TC2_Live_PerfectMatch(t *testing.T) {
+	// Mock data with matching rules
+	fsData := &shared.AuditRuleData{
+		Controls: []interface{}{"control1", "control2"},
+		Files:    []interface{}{"file1", "file2", "file3"},
 		Syscalls: []interface{}{},
 	}
 
-	conn, err := mock.New(0, "", &inventory.Asset{})
-	require.NoError(t, err)
-	mockConn := &mockConnectionNoRunCommand{Connection: conn}
+	rtData := &shared.AuditRuleData{
+		Controls: []interface{}{"control1", "control2"},    // Same rules
+		Files:    []interface{}{"file1", "file2", "file3"}, // Same rules
+		Syscalls: []interface{}{},
+	}
 
-	provider := shared.NewAuditRuleProvider(mockConn)
-	data, err := provider.GetRules(fsData)
+	conn := &mockConnectionWithRuntime{
+		runtimeData: rtData,
+		runtimeErr:  nil,
+	}
 
-	require.NoError(t, err)
-	assert.Equal(t, fsData, data, "Should return filesystem data unchanged on non-live")
-	assert.Equal(t, 2, len(data.Files), "Should have file rules")
+	provider := shared.NewAuditRuleProvider(conn)
+	provider.SetParser(createMockParser(rtData, nil))
+
+	result, err := provider.GetRules(fsData)
+	require.NoError(t, err, "Should PASS when both sources match")
+	assert.NotNil(t, result)
 }
 
-// TestAuditRuleProvider_GetRules_RuntimeSuccess tests successful runtime rule loading and merging
-func TestAuditRuleProvider_GetRules_RuntimeSuccess(t *testing.T) {
-	t.Skip("Skipping - requires mock connection with working auditctl command")
-	// This test would require a more complex mock setup
+// TC-3: Live System - Drift (Runtime Missing Rules)
+func TestAuditRuleProvider_TC3_Live_DriftRuntimeMissing(t *testing.T) {
+	// Filesystem has rules, runtime has 0 (configuration not loaded)
+	fsData := &shared.AuditRuleData{
+		Controls: []interface{}{"control1", "control2", "control3", "control4", "control5"},
+		Files:    []interface{}{},
+		Syscalls: []interface{}{},
+	}
+
+	rtData := &shared.AuditRuleData{
+		Controls: []interface{}{}, // Empty - drift!
+		Files:    []interface{}{},
+		Syscalls: []interface{}{},
+	}
+
+	conn := &mockConnectionWithRuntime{
+		runtimeData: rtData,
+		runtimeErr:  nil,
+	}
+
+	provider := shared.NewAuditRuleProvider(conn)
+	provider.SetParser(createMockParser(rtData, nil))
+
+	result, err := provider.GetRules(fsData)
+	assert.Error(t, err, "Should FAIL when runtime has fewer rules (drift)")
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "differ", "Error should mention drift/differ")
 }
 
-// TestAuditRuleProvider_GetRules_BothSourcesMatch tests logical AND when both sources match
-func TestAuditRuleProvider_GetRules_BothSourcesMatch(t *testing.T) {
-	t.Skip("Skipping - requires mock connection with working auditctl command")
-	// This test would require a more complex mock setup
+// TC-4: Live System - Drift (Extra Runtime Rules)
+func TestAuditRuleProvider_TC4_Live_DriftExtraRuntime(t *testing.T) {
+	// Filesystem has 10 rules, runtime has 12 (extra rules added)
+	fsData := &shared.AuditRuleData{
+		Controls: []interface{}{},
+		Files:    []interface{}{"f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10"},
+		Syscalls: []interface{}{},
+	}
+
+	rtData := &shared.AuditRuleData{
+		Controls: []interface{}{},
+		Files:    []interface{}{"f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12"}, // Extra rules
+		Syscalls: []interface{}{},
+	}
+
+	conn := &mockConnectionWithRuntime{
+		runtimeData: rtData,
+		runtimeErr:  nil,
+	}
+
+	provider := shared.NewAuditRuleProvider(conn)
+	provider.SetParser(createMockParser(rtData, nil))
+
+	result, err := provider.GetRules(fsData)
+	assert.Error(t, err, "Should FAIL when runtime has extra rules (drift)")
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "differ", "Error should mention drift/differ")
 }
 
-// TestAuditRuleProvider_GetRules_RuntimeMismatch tests FAILED state when runtime differs
-func TestAuditRuleProvider_GetRules_RuntimeMismatch(t *testing.T) {
-	t.Skip("Skipping - requires mock connection with working auditctl command")
-	// This test would require a more complex mock setup
+// TC-5: Live System - Runtime Error (Permission Denied)
+func TestAuditRuleProvider_TC5_Live_RuntimePermissionDenied(t *testing.T) {
+	fsData := &shared.AuditRuleData{
+		Controls: []interface{}{"control1"},
+		Files:    []interface{}{},
+		Syscalls: []interface{}{},
+	}
+
+	permErr := fmt.Errorf("auditctl command failed: You must be root to run this command")
+
+	conn := &mockConnectionWithRuntime{
+		runtimeData: nil,
+		runtimeErr:  permErr,
+	}
+
+	provider := shared.NewAuditRuleProvider(conn)
+	provider.SetParser(createMockParser(nil, permErr))
+
+	result, err := provider.GetRules(fsData)
+	assert.Error(t, err, "Should FAIL when runtime has permission error")
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "runtime", "Error should mention runtime failure")
 }
 
-// TestAuditRuleProvider_GetRules_FilesystemPassthrough tests that filesystem data passes through
-func TestAuditRuleProvider_GetRules_FilesystemPassthrough(t *testing.T) {
-	t.Skip("Skipping - test design needs update for new architecture")
-	// Filesystem loading is now done by the resource, not the provider
+// TC-6: Live System - Runtime Error (Command Not Found) - GRACEFUL FALLBACK
+func TestAuditRuleProvider_TC6_Live_RuntimeCommandNotFound(t *testing.T) {
+	fsData := &shared.AuditRuleData{
+		Controls: []interface{}{"control1"},
+		Files:    []interface{}{"file1"},
+		Syscalls: []interface{}{},
+	}
+
+	cmdNotFoundErr := fmt.Errorf("auditctl command not found: command not found")
+
+	conn := &mockConnectionWithRuntime{
+		runtimeData: nil,
+		runtimeErr:  cmdNotFoundErr,
+	}
+
+	provider := shared.NewAuditRuleProvider(conn)
+	provider.SetParser(createMockParser(nil, cmdNotFoundErr))
+
+	result, err := provider.GetRules(fsData)
+	require.NoError(t, err, "Should gracefully fallback to filesystem when auditctl not installed")
+	assert.Equal(t, fsData, result, "Should return filesystem data when command not found")
 }
 
-// TestAuditRuleProvider_GetRules_RuntimeFails tests FAILED state when runtime fails
-func TestAuditRuleProvider_GetRules_RuntimeFails(t *testing.T) {
-	t.Skip("Skipping - requires mock connection with failing auditctl command")
-	// This test would require a more complex mock setup
+// TC-7: Set-Based Comparison - Same Content Different Order
+func TestAuditRuleProvider_TC7_SetBased_DifferentOrder(t *testing.T) {
+	// Filesystem: [A, B, C]
+	// Runtime: [C, A, B] (same rules, different order)
+	fsData := &shared.AuditRuleData{
+		Controls: []interface{}{},
+		Files:    []interface{}{"ruleA", "ruleB", "ruleC"},
+		Syscalls: []interface{}{},
+	}
+
+	rtData := &shared.AuditRuleData{
+		Controls: []interface{}{},
+		Files:    []interface{}{"ruleC", "ruleA", "ruleB"}, // Different order
+		Syscalls: []interface{}{},
+	}
+
+	conn := &mockConnectionWithRuntime{
+		runtimeData: rtData,
+		runtimeErr:  nil,
+	}
+
+	provider := shared.NewAuditRuleProvider(conn)
+	provider.SetParser(createMockParser(rtData, nil))
+
+	result, err := provider.GetRules(fsData)
+	require.NoError(t, err, "Should PASS - order doesn't matter (set semantics)")
+	assert.NotNil(t, result)
 }
 
-// TestAuditRuleProvider_GetRules_BothFail tests FAILED state when both sources fail
-func TestAuditRuleProvider_GetRules_BothFail(t *testing.T) {
-	t.Skip("Skipping - test design needs update for new architecture")
-	// Filesystem loading is now done by the resource
+// TC-8: Set-Based Comparison - Different Content Same Count
+func TestAuditRuleProvider_TC8_SetBased_DifferentContent(t *testing.T) {
+	// Filesystem: 3 rules [A, B, C]
+	// Runtime: 3 rules [A, B, X] (different content)
+	fsData := &shared.AuditRuleData{
+		Controls: []interface{}{},
+		Files:    []interface{}{},
+		Syscalls: []interface{}{"syscallA", "syscallB", "syscallC"},
+	}
+
+	rtData := &shared.AuditRuleData{
+		Controls: []interface{}{},
+		Files:    []interface{}{},
+		Syscalls: []interface{}{"syscallA", "syscallB", "syscallX"}, // Different content
+	}
+
+	conn := &mockConnectionWithRuntime{
+		runtimeData: rtData,
+		runtimeErr:  nil,
+	}
+
+	provider := shared.NewAuditRuleProvider(conn)
+	provider.SetParser(createMockParser(rtData, nil))
+
+	result, err := provider.GetRules(fsData)
+	assert.Error(t, err, "Should FAIL - content differs even though count is same")
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "differ", "Error should mention drift")
 }
 
-// TestAuditRuleProvider_LazyLoading tests that runtime rules are loaded only once
-func TestAuditRuleProvider_LazyLoading(t *testing.T) {
-	t.Skip("Skipping - runtime lazy loading test needs live connection setup")
-	// Runtime loading is lazy, but testing requires proper mock setup
-}
+// TC-9: Both Empty
+func TestAuditRuleProvider_TC9_BothEmpty(t *testing.T) {
+	// Both filesystem and runtime have 0 rules (valid state)
+	fsData := &shared.AuditRuleData{
+		Controls: []interface{}{},
+		Files:    []interface{}{},
+		Syscalls: []interface{}{},
+	}
 
-// TestAuditRuleProvider_SetBasedComparison tests order-agnostic rule comparison
-func TestAuditRuleProvider_SetBasedComparison(t *testing.T) {
-	t.Skip("Skipping - set-based comparison test needs proper runtime mock")
-	// Set-based comparison would be tested with real runtime data
+	rtData := &shared.AuditRuleData{
+		Controls: []interface{}{},
+		Files:    []interface{}{},
+		Syscalls: []interface{}{},
+	}
+
+	conn := &mockConnectionWithRuntime{
+		runtimeData: rtData,
+		runtimeErr:  nil,
+	}
+
+	provider := shared.NewAuditRuleProvider(conn)
+	provider.SetParser(createMockParser(rtData, nil))
+
+	result, err := provider.GetRules(fsData)
+	require.NoError(t, err, "Should PASS - both empty is valid (no audit rules configured)")
+	assert.NotNil(t, result)
+	assert.Equal(t, 0, len(result.Controls))
+	assert.Equal(t, 0, len(result.Files))
+	assert.Equal(t, 0, len(result.Syscalls))
 }
 
 // Helper: Mock connection without run-command capability
@@ -120,195 +275,72 @@ func (m *mockConnectionNoRunCommand) Capabilities() shared.Capabilities {
 	return shared.Capability_File // Only file capability, no RunCommand
 }
 
-// Helper functions to create mock data
-func createMockFilesystemRules() *mock.TomlData {
-	return &mock.TomlData{
-		Files: map[string]*mock.MockFileData{
-			"/etc/audit/rules.d/audit.rules": {
-				Path: "/etc/audit/rules.d/audit.rules",
-				Content: `-w /etc/passwd -p wa -k passwd_changes
--w /etc/shadow -p wa -k shadow_changes
--a always,exit -F arch=b64 -S open -F key=file_access
-`,
-				StatData: mock.FileInfo{
-					Mode:  0o644,
-					IsDir: false,
-					Size:  150,
-				},
-			},
-		},
-		Commands: map[string]*mock.Command{},
-	}
+// Helper: Mock connection with run-command capability that returns test data
+type mockConnectionWithRuntime struct {
+	runtimeData *shared.AuditRuleData
+	runtimeErr  error
 }
 
-func createMockRuntimeRules() *mock.TomlData {
-	return &mock.TomlData{
-		Files: map[string]*mock.MockFileData{},
-		Commands: map[string]*mock.Command{
-			"auditctl -l": {
-				Command: "auditctl -l",
-				Stdout: `-w /etc/passwd -p wa -k passwd_changes
--w /etc/shadow -p wa -k shadow_changes
--a always,exit -F arch=b64 -S open -F key=file_access
-`,
-				Stderr:     "",
-				ExitStatus: 0,
-			},
-		},
+func (m *mockConnectionWithRuntime) RunCommand(cmd string) (*shared.Command, error) {
+	if m.runtimeErr != nil {
+		return &shared.Command{ExitStatus: 1}, m.runtimeErr
 	}
+	return &shared.Command{
+		ExitStatus: 0,
+		Stdout:     &bytes.Buffer{},
+	}, nil
 }
 
-func createMockMatchingRules() *mock.TomlData {
-	rules := `-w /etc/passwd -p wa -k passwd_changes
--w /etc/shadow -p wa -k shadow_changes
-`
-	return &mock.TomlData{
-		Files: map[string]*mock.MockFileData{
-			"/etc/audit/rules.d/audit.rules": {
-				Path:    "/etc/audit/rules.d/audit.rules",
-				Content: rules,
-				StatData: mock.FileInfo{
-					Mode:  0o644,
-					IsDir: false,
-					Size:  int64(len(rules)),
-				},
-			},
-		},
-		Commands: map[string]*mock.Command{
-			"auditctl -l": {
-				Command:    "auditctl -l",
-				Stdout:     rules,
-				Stderr:     "",
-				ExitStatus: 0,
-			},
-		},
-	}
+func (m *mockConnectionWithRuntime) Capabilities() shared.Capabilities {
+	return shared.Capability_RunCommand | shared.Capability_File
 }
 
-func createMockMismatchedRules() *mock.TomlData {
-	return &mock.TomlData{
-		Files: map[string]*mock.MockFileData{
-			"/etc/audit/rules.d/audit.rules": {
-				Path:    "/etc/audit/rules.d/audit.rules",
-				Content: `-w /etc/passwd -p wa -k passwd_changes`,
-				StatData: mock.FileInfo{
-					Mode:  0o644,
-					IsDir: false,
-					Size:  50,
-				},
-			},
-		},
-		Commands: map[string]*mock.Command{
-			"auditctl -l": {
-				Command:    "auditctl -l",
-				Stdout:     `-w /etc/shadow -p wa -k shadow_changes`, // Different rule
-				Stderr:     "",
-				ExitStatus: 0,
-			},
-		},
-	}
+func (m *mockConnectionWithRuntime) FileInfo(path string) (shared.FileInfoDetails, error) {
+	return shared.FileInfoDetails{}, nil
 }
 
-func createMockWithFilesystemError() *mock.TomlData {
-	return &mock.TomlData{
-		Files: map[string]*mock.MockFileData{
-			// No files = error reading filesystem
-		},
-		Commands: map[string]*mock.Command{
-			"auditctl -l": {
-				Command:    "auditctl -l",
-				Stdout:     `-w /etc/passwd -p wa -k passwd_changes`,
-				Stderr:     "",
-				ExitStatus: 0,
-			},
-		},
-	}
+func (m *mockConnectionWithRuntime) FileSystem() afero.Fs {
+	return afero.NewMemMapFs()
 }
 
-func createMockWithRuntimeError() *mock.TomlData {
-	return &mock.TomlData{
-		Files: map[string]*mock.MockFileData{
-			"/etc/audit/rules.d/audit.rules": {
-				Path:    "/etc/audit/rules.d/audit.rules",
-				Content: `-w /etc/passwd -p wa -k passwd_changes`,
-				StatData: mock.FileInfo{
-					Mode:  0o644,
-					IsDir: false,
-					Size:  50,
-				},
-			},
-		},
-		Commands: map[string]*mock.Command{
-			"auditctl -l": {
-				Command:    "auditctl -l",
-				Stdout:     "",
-				Stderr:     "You must be root to run this command",
-				ExitStatus: 1,
-			},
-		},
-	}
+func (m *mockConnectionWithRuntime) Name() string {
+	return "mock-runtime"
 }
 
-func createMockWithBothErrors() *mock.TomlData {
-	return &mock.TomlData{
-		Files: map[string]*mock.MockFileData{
-			// No files
-		},
-		Commands: map[string]*mock.Command{
-			"auditctl -l": {
-				Command:    "auditctl -l",
-				Stdout:     "",
-				Stderr:     "Command failed",
-				ExitStatus: 1,
-			},
-		},
-	}
+func (m *mockConnectionWithRuntime) Type() shared.ConnectionType {
+	return shared.Type_Local
 }
 
-func createMockDifferentOrderRules() *mock.TomlData {
-	fsRules := `-w /etc/passwd -p wa -k passwd_changes
--w /etc/shadow -p wa -k shadow_changes
-`
-	rtRules := `-w /etc/shadow -p wa -k shadow_changes
--w /etc/passwd -p wa -k passwd_changes
-` // Same rules, different order
-
-	return &mock.TomlData{
-		Files: map[string]*mock.MockFileData{
-			"/etc/audit/rules.d/audit.rules": {
-				Path:    "/etc/audit/rules.d/audit.rules",
-				Content: fsRules,
-				StatData: mock.FileInfo{
-					Mode:  0o644,
-					IsDir: false,
-					Size:  int64(len(fsRules)),
-				},
-			},
-		},
-		Commands: map[string]*mock.Command{
-			"auditctl -l": {
-				Command:    "auditctl -l",
-				Stdout:     rtRules,
-				Stderr:     "",
-				ExitStatus: 0,
-			},
-		},
-	}
+func (m *mockConnectionWithRuntime) Asset() *inventory.Asset {
+	return &inventory.Asset{}
 }
 
-func createMockWithData(t *testing.T, data *mock.TomlData, hasRunCommand bool) shared.Connection {
-	// Create mock connection with provided data
-	conn, err := mock.New(0, "", &inventory.Asset{})
-	require.NoError(t, err)
+func (m *mockConnectionWithRuntime) UpdateAsset(asset *inventory.Asset) {}
 
-	// Inject mock data
-	// Note: This is a simplified approach. In real implementation,
-	// we'd need to create the mock connection properly with data
-	// For now, this is a placeholder for the test structure
+func (m *mockConnectionWithRuntime) AuditRuleProvider() *shared.AuditRuleProvider {
+	return nil // Will be created by test
+}
 
-	if !hasRunCommand {
-		return &mockConnectionNoRunCommand{Connection: conn}
+func (m *mockConnectionWithRuntime) Close() {}
+
+func (m *mockConnectionWithRuntime) Identifier() (string, error) {
+	return "mock-runtime", nil
+}
+
+func (m *mockConnectionWithRuntime) ParentID() uint32 {
+	return 0
+}
+
+func (m *mockConnectionWithRuntime) ID() uint32 {
+	return 1
+}
+
+// Helper function to create a mock parser that returns provided data
+func createMockParser(data *shared.AuditRuleData, err error) shared.AuditRuleParser {
+	return func(content string) (*shared.AuditRuleData, error) {
+		if err != nil {
+			return nil, err
+		}
+		return data, nil
 	}
-
-	return conn
 }
