@@ -50,8 +50,9 @@ type ContainerConnection struct {
 		Labels map[string]string
 	}
 
-	kind    string
-	runtime string
+	kind          string
+	runtime       string
+	auditProvider *shared.AuditRuleProvider
 }
 
 func NewContainerConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*ContainerConnection, error) {
@@ -129,6 +130,13 @@ func (c *ContainerConnection) ContainerId() string {
 
 func (c *ContainerConnection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_RunCommand
+}
+
+func (c *ContainerConnection) AuditRuleProvider() *shared.AuditRuleProvider {
+	if c.auditProvider == nil {
+		c.auditProvider = shared.NewAuditRuleProvider(c)
+	}
+	return c.auditProvider
 }
 
 func (c *ContainerConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
