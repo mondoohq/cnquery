@@ -252,6 +252,8 @@ type DefaultUserRolePermissions struct {
 	AllowedToCreateTenants *bool `json:"allowedToCreateTenants"`
 	// List of permission grant policies assigned.
 	PermissionGrantPoliciesAssigned []string `json:"permissionGrantPoliciesAssigned"`
+	// Indicates whether the registered owners of a device can read their own BitLocker recovery keys with default user role.
+	AllowedToReadBitlockerKeysForOwnedDevice *bool `json:"allowedToReadBitlockerKeysForOwnedDevice"`
 }
 
 func newDefaultUserRolePermissions(a models.DefaultUserRolePermissionsable) *DefaultUserRolePermissions {
@@ -259,11 +261,12 @@ func newDefaultUserRolePermissions(a models.DefaultUserRolePermissionsable) *Def
 		return nil
 	}
 	return &DefaultUserRolePermissions{
-		AllowedToCreateApps:             a.GetAllowedToCreateApps(),
-		AllowedToCreateSecurityGroups:   a.GetAllowedToCreateSecurityGroups(),
-		AllowedToReadOtherUsers:         a.GetAllowedToReadOtherUsers(),
-		AllowedToCreateTenants:          a.GetAllowedToCreateTenants(),
-		PermissionGrantPoliciesAssigned: a.GetPermissionGrantPoliciesAssigned(),
+		AllowedToCreateApps:                      a.GetAllowedToCreateApps(),
+		AllowedToCreateSecurityGroups:            a.GetAllowedToCreateSecurityGroups(),
+		AllowedToReadOtherUsers:                  a.GetAllowedToReadOtherUsers(),
+		AllowedToCreateTenants:                   a.GetAllowedToCreateTenants(),
+		PermissionGrantPoliciesAssigned:          a.GetPermissionGrantPoliciesAssigned(),
+		AllowedToReadBitlockerKeysForOwnedDevice: a.GetAllowedToReadBitlockerKeysForOwnedDevice(),
 	}
 }
 
