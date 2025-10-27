@@ -19,6 +19,7 @@ func (a *mqlMicrosoft) settings() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	ctx := context.Background()
 	settings, err := graphClient.GroupSettings().Get(ctx, &groupsettings.GroupSettingsRequestBuilderGetRequestConfiguration{})
 	if err != nil {

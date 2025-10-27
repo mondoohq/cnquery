@@ -193,6 +193,7 @@ func newSetting(p models.GroupSettingable) GroupSetting {
 }
 
 // structs for AuthorizationPolicy
+
 type Entity struct {
 	Id *string `json:"id"`
 }
