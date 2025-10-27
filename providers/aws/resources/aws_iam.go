@@ -28,7 +28,7 @@ import (
 )
 
 func (a *mqlAwsIam) id() (string, error) {
-	return "aws.iam", nil
+	return ResourceAwsIam, nil
 }
 
 func (a *mqlAwsIam) serverCertificates() ([]any, error) {
@@ -127,7 +127,7 @@ func (a *mqlAwsIam) credentialReport() ([]any, error) {
 
 	res := []any{}
 	for i := range entries {
-		userEntry, err := CreateResource(a.MqlRuntime, "aws.iam.usercredentialreportentry",
+		userEntry, err := CreateResource(a.MqlRuntime, ResourceAwsIamUsercredentialreportentry,
 			map[string]*llx.RawData{"properties": llx.MapData(entries[i], types.String)},
 		)
 		if err != nil {
@@ -279,7 +279,7 @@ func (a *mqlAwsIam) createInstanceProfile(instanceProfile *iamtypes.InstanceProf
 	if instanceProfile == nil {
 		return nil, errors.New("no instance profile provided")
 	}
-	res, err := CreateResource(a.MqlRuntime, "aws.iam.instanceProfile",
+	res, err := CreateResource(a.MqlRuntime, ResourceAwsIamInstanceProfile,
 		map[string]*llx.RawData{
 			"arn":                 llx.StringDataPtr(instanceProfile.Arn),
 			"createdAt":           llx.TimeDataPtr(instanceProfile.CreateDate),
@@ -307,7 +307,7 @@ type mqlAwsIamInstanceProfileInternal struct {
 func (a *mqlAwsIamInstanceProfile) iamRoles() ([]any, error) {
 	res := []any{}
 	for _, role := range a.rolesCache {
-		roleRes, err := NewResource(a.MqlRuntime, "aws.iam.role", map[string]*llx.RawData{
+		roleRes, err := NewResource(a.MqlRuntime, ResourceAwsIamRole, map[string]*llx.RawData{
 			"arn": llx.StringDataPtr(role.Arn),
 		})
 		if err != nil {
@@ -324,7 +324,7 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 		return nil, errors.New("no iam user provided")
 	}
 
-	return CreateResource(a.MqlRuntime, "aws.iam.user",
+	return CreateResource(a.MqlRuntime, ResourceAwsIamUser,
 		map[string]*llx.RawData{
 			"arn":              llx.StringDataPtr(usr.Arn),
 			"id":               llx.StringDataPtr(usr.UserId),
@@ -359,7 +359,7 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]any, error) {
 			"enableDate":   llx.TimeDataPtr(device.EnableDate),
 		}
 
-		mqlAwsIamMfaDevice, err := CreateResource(a.MqlRuntime, "aws.iam.virtualmfadevice", args)
+		mqlAwsIamMfaDevice, err := CreateResource(a.MqlRuntime, ResourceAwsIamVirtualmfadevice, args)
 		if err != nil {
 			return nil, err
 		}
@@ -376,7 +376,7 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]any, error) {
 
 func (a *mqlAwsIamVirtualmfadevice) user() (*mqlAwsIamUser, error) {
 	if a.cacheUserArn != nil && a.cacheUserName != nil {
-		awsIamUser, err := NewResource(a.MqlRuntime, "aws.iam.user", map[string]*llx.RawData{
+		awsIamUser, err := NewResource(a.MqlRuntime, ResourceAwsIamUser, map[string]*llx.RawData{
 			"arn":  llx.StringDataPtr(a.cacheUserArn),
 			"name": llx.StringDataPtr(a.cacheUserName),
 		})
@@ -400,7 +400,7 @@ func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]any, error) {
 		policy := policies[i]
 		// NOTE: here we have all the information about the policy already
 		// therefore we pass the information in, so that MQL does not have to resolve it again
-		mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, "aws.iam.policy",
+		mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicy,
 			map[string]*llx.RawData{
 				"arn":             llx.StringDataPtr(policy.Arn),
 				"policyId":        llx.StringDataPtr(policy.PolicyId),
@@ -498,7 +498,7 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 				}
 			}
 
-			mqlAwsIamRole, err := CreateResource(a.MqlRuntime, "aws.iam.role",
+			mqlAwsIamRole, err := CreateResource(a.MqlRuntime, ResourceAwsIamRole,
 				map[string]*llx.RawData{
 					"arn":                      llx.StringDataPtr(role.Arn),
 					"id":                       llx.StringDataPtr(role.RoleId),
@@ -535,7 +535,7 @@ func (a *mqlAwsIam) groups() ([]any, error) {
 		}
 
 		for _, group := range groupsResp.Groups {
-			mqlAwsIamGroup, err := NewResource(a.MqlRuntime, "aws.iam.group",
+			mqlAwsIamGroup, err := NewResource(a.MqlRuntime, ResourceAwsIamGroup,
 				map[string]*llx.RawData{
 					"arn":  llx.StringDataPtr(group.Arn),
 					"name": llx.StringDataPtr(group.GroupName),
@@ -731,7 +731,7 @@ func (a *mqlAwsIamUsercredentialreportentry) user() (*mqlAwsIamUser, error) {
 		return nil, errors.New("root user does not exist")
 	}
 
-	mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.user",
+	mqlUser, err := NewResource(a.MqlRuntime, ResourceAwsIamUser,
 		map[string]*llx.RawData{
 			"name": llx.StringData(props["user"].(string)),
 		},
@@ -877,7 +877,7 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]any, error) {
 		}
 
 		for _, attachedPolicy := range userAttachedPolicies.AttachedPolicies {
-			mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, "aws.iam.policy",
+			mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicy,
 				// this isn't correct for the id, this is the name. we need to remove "id" from the policy type.
 				// it is creating a conflict bc we cannot make it optional, as it then bumps up against the internal id
 				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn), "id": llx.StringDataPtr(attachedPolicy.PolicyArn)})
@@ -1058,7 +1058,7 @@ func (a *mqlAwsIamPolicy) attachedUsers() ([]any, error) {
 	}
 	res := []any{}
 	for _, usr := range entities.PolicyUsers {
-		mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.user",
+		mqlUser, err := NewResource(a.MqlRuntime, ResourceAwsIamUser,
 			map[string]*llx.RawData{
 				"name": llx.StringDataPtr(usr.UserName),
 			})
@@ -1080,7 +1080,7 @@ func (a *mqlAwsIamPolicy) attachedRoles() ([]any, error) {
 
 	res := []any{}
 	for _, role := range entities.PolicyRoles {
-		mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		mqlUser, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
 			map[string]*llx.RawData{"name": llx.StringDataPtr(role.RoleName)},
 		)
 		if err != nil {
@@ -1104,7 +1104,7 @@ func (a *mqlAwsIamPolicy) attachedGroups() ([]any, error) {
 	for i := range entities.PolicyGroups {
 		group := entities.PolicyGroups[i]
 
-		mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.group",
+		mqlUser, err := NewResource(a.MqlRuntime, ResourceAwsIamGroup,
 			map[string]*llx.RawData{
 				"name": llx.StringDataPtr(group.GroupName),
 			})
@@ -1133,7 +1133,7 @@ func (a *mqlAwsIamPolicy) defaultVersion() (*mqlAwsIamPolicyversion, error) {
 	for i := range policyVersions.Versions {
 		policyversion := policyVersions.Versions[i]
 		if policyversion.IsDefaultVersion {
-			mqlAwsIamPolicyVersion, err := CreateResource(a.MqlRuntime, "aws.iam.policyversion",
+			mqlAwsIamPolicyVersion, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicyversion,
 				map[string]*llx.RawData{
 					"arn":              llx.StringData(arn),
 					"versionId":        llx.StringDataPtr(policyversion.VersionId),
@@ -1166,7 +1166,7 @@ func (a *mqlAwsIamPolicy) versions() ([]any, error) {
 	for i := range policyVersions.Versions {
 		policyversion := policyVersions.Versions[i]
 
-		mqlAwsIamPolicyVersion, err := CreateResource(a.MqlRuntime, "aws.iam.policyversion",
+		mqlAwsIamPolicyVersion, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicyversion,
 			map[string]*llx.RawData{
 				"arn":              llx.StringData(arn),
 				"versionId":        llx.StringDataPtr(policyversion.VersionId),
@@ -1391,7 +1391,7 @@ func (a *mqlAwsIamUser) loginProfile() (*mqlAwsIamLoginProfile, error) {
 		return nil, errors.New("login profile doesn't have a createDate")
 	}
 
-	o, err := CreateResource(a.MqlRuntime, "aws.iam.loginProfile", map[string]*llx.RawData{
+	o, err := CreateResource(a.MqlRuntime, ResourceAwsIamLoginProfile, map[string]*llx.RawData{
 		"createdAt": llx.TimeData(*date),
 	})
 	if err != nil {
@@ -1441,7 +1441,7 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 		}
 
 		ip := resp.InstanceProfile
-		res, err := CreateResource(runtime, "aws.iam.instanceProfile", map[string]*llx.RawData{
+		res, err := CreateResource(runtime, ResourceAwsIamInstanceProfile, map[string]*llx.RawData{
 			"arn":                 llx.StringDataPtr(ip.Arn),
 			"createdAt":           llx.TimeDataPtr(ip.CreateDate),
 			"instanceProfileId":   llx.StringDataPtr(ip.InstanceProfileId),
@@ -1452,4 +1452,255 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, res, nil
 	}
 	return args, nil, nil
+}
+
+type mqlAwsIamSamlProviderInternal struct {
+	listCreateDate *time.Time
+	listValidUntil *time.Time
+	details        *iam.GetSAMLProviderOutput
+}
+
+type mqlAwsIamOidcProviderInternal struct {
+	details *iam.GetOpenIDConnectProviderOutput
+}
+
+func (a *mqlAwsIam) samlProviders() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	res := []any{}
+	// List all SAML providers
+	listResp, err := svc.ListSAMLProviders(ctx, &iam.ListSAMLProvidersInput{})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not gather aws iam saml providers")
+	}
+
+	// For each SAML provider, fetch detailed information
+	for _, provider := range listResp.SAMLProviderList {
+		if provider.Arn == nil {
+			continue
+		}
+
+		mqlSamlProvider, err := CreateResource(a.MqlRuntime, ResourceAwsIamSamlProvider,
+			map[string]*llx.RawData{
+				"arn": llx.StringDataPtr(provider.Arn),
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		samlProvider := mqlSamlProvider.(*mqlAwsIamSamlProvider)
+		samlProvider.listCreateDate = provider.CreateDate
+		samlProvider.listValidUntil = provider.ValidUntil
+
+		res = append(res, mqlSamlProvider)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsIam) oidcProviders() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	res := []any{}
+	// List all OIDC providers
+	listResp, err := svc.ListOpenIDConnectProviders(ctx, &iam.ListOpenIDConnectProvidersInput{})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not gather aws iam oidc providers")
+	}
+
+	// Create resource with ARN only; details will be fetched on-demand
+	for _, provider := range listResp.OpenIDConnectProviderList {
+		if provider.Arn == nil {
+			continue
+		}
+
+		mqlOidcProvider, err := CreateResource(a.MqlRuntime, ResourceAwsIamOidcProvider,
+			map[string]*llx.RawData{
+				"arn": llx.StringDataPtr(provider.Arn),
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, mqlOidcProvider)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsIamSamlProvider) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsIamSamlProvider) name() (string, error) {
+	arnVal := a.Arn.Data
+	if arnVal == "" {
+		return "", errors.New("arn is empty")
+	}
+
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimPrefix(parsed.Resource, "saml-provider/"), nil
+}
+
+func (a *mqlAwsIamSamlProvider) createdAt() (*time.Time, error) {
+	if a.listCreateDate != nil {
+		return a.listCreateDate, nil
+	}
+
+	details, err := a.fetchSamlProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return details.CreateDate, nil
+}
+
+func (a *mqlAwsIamSamlProvider) validUntil() (*time.Time, error) {
+	if a.listValidUntil != nil {
+		return a.listValidUntil, nil
+	}
+
+	details, err := a.fetchSamlProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return details.ValidUntil, nil
+}
+
+func (a *mqlAwsIamSamlProvider) metadataDocument() (string, error) {
+	details, err := a.fetchSamlProviderDetails()
+	if err != nil {
+		return "", err
+	}
+
+	return convert.ToValue(details.SAMLMetadataDocument), nil
+}
+
+func (a *mqlAwsIamSamlProvider) tags() (map[string]any, error) {
+	details, err := a.fetchSamlProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return iamTagsToMap(details.Tags), nil
+}
+
+func (a *mqlAwsIamOidcProvider) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsIamOidcProvider) url() (string, error) {
+	details, err := a.fetchOidcProviderDetails()
+	if err != nil {
+		return "", err
+	}
+
+	return convert.ToValue(details.Url), nil
+}
+
+func (a *mqlAwsIamOidcProvider) clientIds() ([]any, error) {
+	details, err := a.fetchOidcProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return convert.SliceAnyToInterface(details.ClientIDList), nil
+}
+
+func (a *mqlAwsIamOidcProvider) thumbprints() ([]any, error) {
+	details, err := a.fetchOidcProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return convert.SliceAnyToInterface(details.ThumbprintList), nil
+}
+
+func (a *mqlAwsIamOidcProvider) createdAt() (*time.Time, error) {
+	details, err := a.fetchOidcProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return details.CreateDate, nil
+}
+
+func (a *mqlAwsIamOidcProvider) tags() (map[string]any, error) {
+	details, err := a.fetchOidcProviderDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	return iamTagsToMap(details.Tags), nil
+}
+
+func (a *mqlAwsIamOidcProvider) fetchOidcProviderDetails() (*iam.GetOpenIDConnectProviderOutput, error) {
+	if a.details != nil {
+		return a.details, nil
+	}
+
+	arnVal := a.Arn.Data
+	if arnVal == "" {
+		return nil, errors.New("arn is empty")
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	resp, err := svc.GetOpenIDConnectProvider(ctx, &iam.GetOpenIDConnectProviderInput{
+		OpenIDConnectProviderArn: &arnVal,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	a.details = resp
+
+	return resp, nil
+}
+
+func (a *mqlAwsIamSamlProvider) fetchSamlProviderDetails() (*iam.GetSAMLProviderOutput, error) {
+	if a.details != nil {
+		return a.details, nil
+	}
+
+	arnVal := a.Arn.Data
+	if arnVal == "" {
+		return nil, errors.New("arn is empty")
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	resp, err := svc.GetSAMLProvider(ctx, &iam.GetSAMLProviderInput{
+		SAMLProviderArn: &arnVal,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	a.details = resp
+	if a.listCreateDate == nil {
+		a.listCreateDate = resp.CreateDate
+	}
+	if a.listValidUntil == nil {
+		a.listValidUntil = resp.ValidUntil
+	}
+
+	return resp, nil
 }
