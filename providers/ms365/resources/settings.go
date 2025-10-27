@@ -31,13 +31,11 @@ func (a *mqlMicrosoft) settings() ([]any, error) {
 		settingValues := make([]any, 0, len(setting.GetValues()))
 
 		for _, val := range setting.GetValues() {
-			name := val.GetName()
-			value := val.GetValue()
 			settingValueResource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftSettingValue,
 				map[string]*llx.RawData{
-					// "__id":  llx.StringData(*name + "|" + *value),
-					"name":  llx.StringDataPtr(name),
-					"value": llx.StringDataPtr(value),
+					"__id":  llx.StringDataPtr(val.GetName()),
+					"name":  llx.StringDataPtr(val.GetName()),
+					"value": llx.StringDataPtr(val.GetValue()),
 				})
 			if err != nil {
 				return nil, err
