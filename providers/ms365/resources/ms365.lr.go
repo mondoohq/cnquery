@@ -631,7 +631,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoft).GetRoles()).ToDataRes(types.Resource("microsoft.roles"))
 	},
 	"microsoft.settings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoft).GetSettings()).ToDataRes(types.Array(types.Resource("microsoft.setting")))
+		return (r.(*mqlMicrosoft).GetSettings()).ToDataRes(types.Dict)
+	},
+	"microsoft.groupSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoft).GetGroupSettings()).ToDataRes(types.Array(types.Resource("microsoft.setting")))
 	},
 	"microsoft.tenantDomainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetTenantDomainName()).ToDataRes(types.String)
@@ -2558,7 +2561,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"microsoft.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoft).Settings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*mqlMicrosoft).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.groupSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoft).GroupSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenantDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5491,7 +5498,8 @@ type mqlMicrosoft struct {
 	Serviceprincipals      plugin.TValue[[]any]
 	EnterpriseApplications plugin.TValue[[]any]
 	Roles                  plugin.TValue[*mqlMicrosoftRoles]
-	Settings               plugin.TValue[[]any]
+	Settings               plugin.TValue[any]
+	GroupSettings          plugin.TValue[[]any]
 	TenantDomainName       plugin.TValue[string]
 	IdentityAndAccess      plugin.TValue[*mqlMicrosoftIdentityAndAccess]
 	AccessReviews          plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviews]
@@ -5673,10 +5681,16 @@ func (c *mqlMicrosoft) GetRoles() *plugin.TValue[*mqlMicrosoftRoles] {
 	})
 }
 
-func (c *mqlMicrosoft) GetSettings() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Settings, func() ([]any, error) {
+func (c *mqlMicrosoft) GetSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
+		return c.settings()
+	})
+}
+
+func (c *mqlMicrosoft) GetGroupSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GroupSettings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "settings")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "groupSettings")
 			if err != nil {
 				return nil, err
 			}
@@ -5685,7 +5699,7 @@ func (c *mqlMicrosoft) GetSettings() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.settings()
+		return c.groupSettings()
 	})
 }
 

@@ -26,8 +26,10 @@ microsoft {
   enterpriseApplications() []microsoft.serviceprincipal
   // List of roles
   roles() microsoft.roles
+  // Deprecated: use groupSettings instead
+  settings() dict
   // Microsoft 365 settings
-  settings() []microsoft.setting
+  groupSettings() []microsoft.setting
   // The connected tenant's default domain name
   tenantDomainName() string
   // Identity and Access policies
