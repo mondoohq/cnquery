@@ -630,9 +630,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetRoles()).ToDataRes(types.Resource("microsoft.roles"))
 	},
-	"microsoft.settings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoft).GetSettings()).ToDataRes(types.Dict)
-	},
 	"microsoft.groupSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetGroupSettings()).ToDataRes(types.Array(types.Resource("microsoft.setting")))
 	},
@@ -2558,10 +2555,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).Roles, ok = plugin.RawToTValue[*mqlMicrosoftRoles](v.Value, v.Error)
-		return
-	},
-	"microsoft.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoft).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"microsoft.groupSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5498,7 +5491,6 @@ type mqlMicrosoft struct {
 	Serviceprincipals      plugin.TValue[[]any]
 	EnterpriseApplications plugin.TValue[[]any]
 	Roles                  plugin.TValue[*mqlMicrosoftRoles]
-	Settings               plugin.TValue[any]
 	GroupSettings          plugin.TValue[[]any]
 	TenantDomainName       plugin.TValue[string]
 	IdentityAndAccess      plugin.TValue[*mqlMicrosoftIdentityAndAccess]
@@ -5678,12 +5670,6 @@ func (c *mqlMicrosoft) GetRoles() *plugin.TValue[*mqlMicrosoftRoles] {
 		}
 
 		return c.roles()
-	})
-}
-
-func (c *mqlMicrosoft) GetSettings() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
-		return c.settings()
 	})
 }
 

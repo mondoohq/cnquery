@@ -8,25 +8,9 @@ import (
 
 	"github.com/microsoftgraph/msgraph-sdk-go/groupsettings"
 	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v12/types"
 )
-
-func (a *mqlMicrosoft) settings() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	settings, err := graphClient.GroupSettings().Get(ctx, &groupsettings.GroupSettingsRequestBuilderGetRequestConfiguration{})
-	if err != nil {
-		return nil, transformError(err)
-	}
-	return convert.JsonToDictSlice(newSettings(settings.GetValue()))
-}
 
 func (a *mqlMicrosoft) groupSettings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
