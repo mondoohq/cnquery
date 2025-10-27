@@ -27,7 +27,7 @@ microsoft {
   // List of roles
   roles() microsoft.roles
   // Microsoft 365 settings
-  settings() dict
+  settings() []microsoft.setting
   // The connected tenant's default domain name
   tenantDomainName() string
   // Identity and Access policies
@@ -88,6 +88,24 @@ microsoft.groups {
   []microsoft.group
   // Total number of Microsoft groups
   length() int
+}
+
+// Microsoft 365 group setting
+microsoft.setting  @defaults("displayName values") {
+  // Display name of the setting
+  displayName string
+  // Template ID of the setting
+  templateId string
+  // Setting values
+  values []microsoft.settingValue
+}
+
+// Microsoft 365 group setting value
+microsoft.settingValue  @defaults("name value") {
+  // Name of the setting value
+  name string
+  // Value of the setting
+  value string
 }
 
 // List of Microsoft Entra ID application registrations
