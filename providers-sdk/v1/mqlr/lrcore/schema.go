@@ -5,6 +5,8 @@ package lrcore
 
 import (
 	"errors"
+	"maps"
+	"slices"
 	"strings"
 
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
@@ -60,10 +62,17 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		}
 	}
 
+	sorted := slices.SortedFunc(maps.Keys(res.Resources), func(a, b string) int {
+		aDepth := strings.Count(a, ".")
+		bDepth := strings.Count(b, ".")
+		return aDepth - bDepth
+	})
+
 	// In this block we finalize the schema. This means:
 	// 1: create implicit resources (eg: sshd.config => create sshd)
 	// 2: create implicit fields (eg: sshd.config => sshd { config: {..} })
-	for name, v := range res.Resources {
+	for _, name := range sorted {
+		v := res.Resources[name]
 		if !strings.Contains(name, ".") {
 			continue
 		}
@@ -113,7 +122,6 @@ func Schema(ast *LR) (*resources.Schema, error) {
 			if !isPrivate {
 				child.Fields[basename].IsPrivate = false
 			}
-
 			fieldInfo = child
 		}
 	}
