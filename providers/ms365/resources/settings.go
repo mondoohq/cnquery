@@ -28,7 +28,7 @@ func (a *mqlMicrosoft) settings() ([]any, error) {
 	// Use microsoft.setting resource to create the settings as we loop over settings.getValue()
 	settingsList := []any{}
 	for _, setting := range settings.GetValue() {
-		values := make([]any, 0, len(setting.GetValues()))
+		settingValues := make([]any, 0, len(setting.GetValues()))
 
 		for _, val := range setting.GetValues() {
 			name := val.GetName()
@@ -42,7 +42,7 @@ func (a *mqlMicrosoft) settings() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			values = append(values, settingValueResource)
+			settingValues = append(settingValues, settingValueResource)
 		}
 
 		// Copy the values to avoid pointer reuse
@@ -61,7 +61,7 @@ func (a *mqlMicrosoft) settings() ([]any, error) {
 				"__id":        llx.StringData(mqlId),
 				"displayName": llx.StringDataPtr(displayName),
 				"templateId":  llx.StringDataPtr(templateId),
-				"values":      llx.ArrayData(llx.TArr2Raw(values), types.Resource(ResourceMicrosoftSettingValue)),
+				"values":      llx.ArrayData(llx.TArr2Raw(settingValues), types.Resource(ResourceMicrosoftSettingValue)),
 			})
 		if err != nil {
 			return nil, err
