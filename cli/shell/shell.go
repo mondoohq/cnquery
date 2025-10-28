@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"sync"
 
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/mitchellh/go-homedir"
@@ -74,7 +73,6 @@ type Shell struct {
 	MaxLines    int
 
 	completer       *Completer
-	alreadyPrinted  *sync.Map
 	out             io.Writer
 	features        cnquery.Features
 	onCloseHandler  func()
@@ -85,16 +83,15 @@ type Shell struct {
 
 // New creates a new Shell
 func New(runtime llx.Runtime, opts ...ShellOption) (*Shell, error) {
-	res := Shell{
-		alreadyPrinted: &sync.Map{},
-		out:            os.Stdout,
-		features:       cnquery.DefaultFeatures,
-		MaxLines:       1024,
-		Runtime:        runtime,
+	res := &Shell{
+		out:      os.Stdout,
+		features: cnquery.DefaultFeatures,
+		MaxLines: 1024,
+		Runtime:  runtime,
 	}
 
-	for i := range opts {
-		opts[i](&res)
+	for _, opt := range opts {
+		opt(res)
 	}
 
 	if res.Theme == nil {
@@ -108,7 +105,7 @@ func New(runtime llx.Runtime, opts ...ShellOption) (*Shell, error) {
 		return res.query
 	})
 
-	return &res, nil
+	return res, nil
 }
 
 func (s *Shell) printWelcome() {
@@ -117,22 +114,6 @@ func (s *Shell) printWelcome() {
 	}
 
 	fmt.Fprintln(s.out, s.Theme.Welcome)
-}
-
-func (s *Shell) print(msg string) {
-	if msg == "" {
-		return
-	}
-
-	if _, ok := s.alreadyPrinted.Load(msg); !ok {
-		s.alreadyPrinted.Store(msg, struct{}{})
-		fmt.Fprintln(s.out, msg)
-	}
-}
-
-// reset the cache that deduplicates messages on the shell
-func (s *Shell) resetPrintCache() {
-	s.alreadyPrinted = &sync.Map{}
 }
 
 // RunInteractive starts a REPL loop
@@ -173,12 +154,6 @@ func (s *Shell) RunInteractive(cmd string) {
 		prompt.OptionScrollbarBGColor(s.Theme.PromptColors.ScrollbarBGColor),
 		prompt.OptionScrollbarThumbColor(s.Theme.PromptColors.ScrollbarThumbColor),
 		prompt.OptionAddKeyBind(
-			prompt.KeyBind{
-				Key: prompt.ControlC,
-				Fn: func(buf *prompt.Buffer) {
-					s.print("")
-				},
-			},
 			prompt.KeyBind{
 				Key: prompt.ControlD,
 				Fn: func(buf *prompt.Buffer) {
@@ -310,8 +285,6 @@ func (s *Shell) Close() {
 
 // RunOnce executes the query and returns results
 func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult, error) {
-	s.resetPrintCache()
-
 	code, err := mqlc.Compile(cmd, nil, mqlc.NewConfig(s.Runtime.Schema(), s.features))
 	if err != nil {
 		fmt.Fprintln(s.out, s.Theme.Error("failed to compile: "+err.Error()))
