@@ -26,20 +26,70 @@ var lcmSettingsLock sync.Mutex
 const lcmSettingsScript = `
 $ErrorActionPreference = "Stop"
 
-# Try to fetch LCM settings from Azure AD internal API
-# This requires O365Essentials module or proper authentication headers
+# Fetch LCM settings from Azure AD internal API
+# This mimics the O365Essentials Get-O365AzureGroupExpiration function
 $Uri = 'https://main.iam.ad.ext.azure.com/api/Directories/LcmSettings'
-$headers = @{
-    "Authorization" = "Bearer %s"
-    "Content-Type" = "application/json"
+
+# Try using O365Essentials module if available, otherwise fall back to direct call
+try {
+    # Check if O365Essentials module is available
+    if (Get-Module -ListAvailable -Name O365Essentials) {
+        Import-Module O365Essentials -Force
+        
+        # Build headers as dictionary (like the original function expects)
+        $Headers = @{
+            "Authorization" = "Bearer %s"
+        }
+        
+        $Output = Invoke-O365Admin -Uri $Uri -Headers $Headers -Method Get
+        
+        if ($Output) {
+            [PSCustomObject]@{
+                groupIdsToMonitorExpirations = if ($Output.groupIdsToMonitorExpirations) { $Output.groupIdsToMonitorExpirations } else { @() }
+                expiresAfterInDays = $Output.expiresAfterInDays
+                groupLifetimeCustomValueInDays = $Output.groupLifetimeCustomValueInDays
+                managedGroupTypes = $Output.managedGroupTypes
+                adminNotificationEmails = $Output.adminNotificationEmails
+                policyIdentifier = $Output.policyIdentifier
+            } | ConvertTo-Json -Depth 10
+            exit 0
+        }
+    }
+} catch {
+    Write-Host "O365Essentials not available or failed: $($_.Exception.Message)" -ForegroundColor Yellow
 }
 
+# Fallback to direct REST call if O365Essentials not available
 try {
-    $response = Invoke-RestMethod -Uri $Uri -Method Get -Headers $headers -UseBasicParsing
-    ConvertTo-Json -Depth 10 -InputObject $response
+    $headers = @{
+        "Authorization" = "Bearer %s"
+        "Content-Type" = "application/json"
+    }
+    
+    Write-Host "Calling: $Uri" -ForegroundColor Cyan
+    Write-Host "Headers: $($headers.Keys -join ', ')" -ForegroundColor Cyan
+    
+    try {
+        $response = Invoke-RestMethod -Uri $Uri -Method Get -Headers $headers -UseBasicParsing -ErrorAction Stop
+        Write-Host "Success: Got response" -ForegroundColor Green
+        ConvertTo-Json -Depth 10 -InputObject $response
+    } catch {
+        $statusCode = $_.Exception.Response.StatusCode.value__
+        $statusDescription = $_.Exception.Response.StatusDescription
+        Write-Host "HTTP Error: Status $statusCode - $statusDescription" -ForegroundColor Red
+        Write-Host "Error details: $($_.Exception.Message)" -ForegroundColor Red
+        
+        # Try to read error response
+        $reader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
+        $errorBody = $reader.ReadToEnd()
+        Write-Host "Response body: $errorBody" -ForegroundColor Red
+        
+        # Throw to be caught by outer catch
+        throw $_
+    }
 } catch {
-    # If we get 401, the API might not be accessible with these credentials
-    # Return an empty object to indicate no groups are monitored
+    Write-Host "All methods failed, returning empty object" -ForegroundColor Yellow
+    # Return empty object if API is not accessible
     [PSCustomObject]@{
         groupIdsToMonitorExpirations = @()
         expiresAfterInDays = 0
@@ -119,12 +169,12 @@ func fetchGroupIdsToMonitorExpirations(runtime *plugin.Runtime) ([]string, error
 
 	conn := runtime.Connection.(*connection.Ms365Connection)
 
-	// Get access token for Microsoft Graph API
+	// Get access token - try Outlook scope like security_exchange.go uses
 	token := conn.Token()
 	ctx := context.Background()
 
 	accessToken, err := token.GetToken(ctx, policy.TokenRequestOptions{
-		Scopes: []string{"https://graph.microsoft.com/.default"},
+		Scopes: []string{"https://outlook.office.com/.default"},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get access token: %w", err)

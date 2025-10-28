@@ -756,7 +756,7 @@ private microsoft.group @defaults("id displayName") {
 }
 
 // Microsoft group lifecycle policy
-private microsoft.groupLifecyclePolicy @defaults("groupLifetimeInDays managedGroupTypes alternateNotificationEmails") {
+private microsoft.groupLifecyclePolicy @defaults("groupLifetimeInDays managedGroupTypes alternateNotificationEmails groupIdsToMonitorExpirations") {
   // Policy ID
   id string
   // Number of days before a group expires and is automatically deleted
