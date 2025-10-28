@@ -83,10 +83,10 @@ func (s ProviderLookup) String() string {
 		res = append(res, "provider="+s.ProviderName)
 	}
 	if s.ConnName != "" {
-		res = append(res, "name="+s.ConnName)
+		res = append(res, "conn name="+s.ConnName)
 	}
 	if s.ConnType != "" {
-		res = append(res, "name="+s.ConnType)
+		res = append(res, "conn type="+s.ConnType)
 	}
 	return strings.Join(res, " ")
 }
