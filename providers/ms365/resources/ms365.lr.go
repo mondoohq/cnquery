@@ -67,6 +67,7 @@ const (
 	ResourceMicrosoftUserAuthenticationMethods                                                           string = "microsoft.user.authenticationMethods"
 	ResourceMicrosoftUserAuthenticationMethodsUserRegistrationDetails                                    string = "microsoft.user.authenticationMethods.userRegistrationDetails"
 	ResourceMicrosoftGroup                                                                               string = "microsoft.group"
+	ResourceMicrosoftGroupOwner                                                                          string = "microsoft.group.owner"
 	ResourceMicrosoftGroupLifecyclePolicy                                                                string = "microsoft.groupLifecyclePolicy"
 	ResourceMicrosoftDevices                                                                             string = "microsoft.devices"
 	ResourceMicrosoftDevice                                                                              string = "microsoft.device"
@@ -320,6 +321,10 @@ func init() {
 		"microsoft.group": {
 			// to override args, implement: initMicrosoftGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftGroup,
+		},
+		"microsoft.group.owner": {
+			// to override args, implement: initMicrosoftGroupOwner(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftGroupOwner,
 		},
 		"microsoft.groupLifecyclePolicy": {
 			// to override args, implement: initMicrosoftGroupLifecyclePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1403,6 +1408,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.group.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetMembers()).ToDataRes(types.Array(types.Resource("microsoft.user")))
 	},
+	"microsoft.group.owners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetOwners()).ToDataRes(types.Array(types.Resource("microsoft.group.owner")))
+	},
 	"microsoft.group.groupTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetGroupTypes()).ToDataRes(types.Array(types.String))
 	},
@@ -1411,6 +1419,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.group.membershipRuleProcessingState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetMembershipRuleProcessingState()).ToDataRes(types.String)
+	},
+	"microsoft.group.owner.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroupOwner).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.group.owner.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroupOwner).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.group.owner.ownerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroupOwner).GetOwnerType()).ToDataRes(types.String)
+	},
+	"microsoft.group.owner.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroupOwner).GetUser()).ToDataRes(types.Resource("microsoft.user"))
+	},
+	"microsoft.group.owner.servicePrincipal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroupOwner).GetServicePrincipal()).ToDataRes(types.Resource("microsoft.serviceprincipal"))
 	},
 	"microsoft.groupLifecyclePolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroupLifecyclePolicy).GetId()).ToDataRes(types.String)
@@ -3772,6 +3795,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.group.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).Owners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.group.groupTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroup).GroupTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3782,6 +3809,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.group.membershipRuleProcessingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroup).MembershipRuleProcessingState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.owner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupOwner).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.group.owner.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupOwner).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.owner.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupOwner).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.owner.ownerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupOwner).OwnerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.owner.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupOwner).User, ok = plugin.RawToTValue[*mqlMicrosoftUser](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.owner.servicePrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupOwner).ServicePrincipal, ok = plugin.RawToTValue[*mqlMicrosoftServiceprincipal](v.Value, v.Error)
 		return
 	},
 	"microsoft.groupLifecyclePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9131,6 +9182,7 @@ type mqlMicrosoftGroup struct {
 	Mail                          plugin.TValue[string]
 	Visibility                    plugin.TValue[string]
 	Members                       plugin.TValue[[]any]
+	Owners                        plugin.TValue[[]any]
 	GroupTypes                    plugin.TValue[[]any]
 	MembershipRule                plugin.TValue[string]
 	MembershipRuleProcessingState plugin.TValue[string]
@@ -9217,6 +9269,22 @@ func (c *mqlMicrosoftGroup) GetMembers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlMicrosoftGroup) GetOwners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Owners, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.group", c.__id, "owners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.owners()
+	})
+}
+
 func (c *mqlMicrosoftGroup) GetGroupTypes() *plugin.TValue[[]any] {
 	return &c.GroupTypes
 }
@@ -9227,6 +9295,94 @@ func (c *mqlMicrosoftGroup) GetMembershipRule() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftGroup) GetMembershipRuleProcessingState() *plugin.TValue[string] {
 	return &c.MembershipRuleProcessingState
+}
+
+// mqlMicrosoftGroupOwner for the microsoft.group.owner resource
+type mqlMicrosoftGroupOwner struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftGroupOwnerInternal it will be used here
+	Id               plugin.TValue[string]
+	DisplayName      plugin.TValue[string]
+	OwnerType        plugin.TValue[string]
+	User             plugin.TValue[*mqlMicrosoftUser]
+	ServicePrincipal plugin.TValue[*mqlMicrosoftServiceprincipal]
+}
+
+// createMicrosoftGroupOwner creates a new instance of this resource
+func createMicrosoftGroupOwner(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftGroupOwner{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.group.owner", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftGroupOwner) MqlName() string {
+	return "microsoft.group.owner"
+}
+
+func (c *mqlMicrosoftGroupOwner) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftGroupOwner) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftGroupOwner) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftGroupOwner) GetOwnerType() *plugin.TValue[string] {
+	return &c.OwnerType
+}
+
+func (c *mqlMicrosoftGroupOwner) GetUser() *plugin.TValue[*mqlMicrosoftUser] {
+	return plugin.GetOrCompute[*mqlMicrosoftUser](&c.User, func() (*mqlMicrosoftUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.group.owner", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlMicrosoftGroupOwner) GetServicePrincipal() *plugin.TValue[*mqlMicrosoftServiceprincipal] {
+	return plugin.GetOrCompute[*mqlMicrosoftServiceprincipal](&c.ServicePrincipal, func() (*mqlMicrosoftServiceprincipal, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.group.owner", c.__id, "servicePrincipal")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftServiceprincipal), nil
+			}
+		}
+
+		return c.servicePrincipal()
+	})
 }
 
 // mqlMicrosoftGroupLifecyclePolicy for the microsoft.groupLifecyclePolicy resource

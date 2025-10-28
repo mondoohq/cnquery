@@ -144,6 +144,95 @@ func (a *mqlMicrosoftGroups) list() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlMicrosoftGroup) owners() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	groupId := a.Id.Data
+	ctx := context.Background()
+
+	ownersResp, err := graphClient.Groups().
+		ByGroupId(groupId).
+		Owners().
+		Get(ctx, &groups.ItemOwnersRequestBuilderGetRequestConfiguration{})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	var owners []any
+	for _, owner := range ownersResp.GetValue() {
+		if owner.GetId() == nil {
+			continue
+		}
+
+		var displayName *string
+
+		if owner.GetOdataType() != nil {
+			switch *owner.GetOdataType() {
+			case "#microsoft.graph.user":
+				if user, ok := owner.(models.Userable); ok {
+					displayName = user.GetDisplayName()
+				}
+			case "#microsoft.graph.servicePrincipal":
+				if sp, ok := owner.(models.ServicePrincipalable); ok {
+					displayName = sp.GetDisplayName()
+				}
+			}
+		}
+
+		ownerResource, err := CreateResource(a.MqlRuntime, "microsoft.group.owner",
+			map[string]*llx.RawData{
+				"__id":        llx.StringDataPtr(owner.GetId()),
+				"id":          llx.StringDataPtr(owner.GetId()),
+				"displayName": llx.StringDataPtr(displayName),
+				"ownerType":   llx.StringDataPtr(owner.GetOdataType()),
+			})
+		if err != nil {
+			return nil, err
+		}
+		owners = append(owners, ownerResource)
+	}
+
+	return owners, nil
+}
+
+func (a *mqlMicrosoftGroupOwner) user() (*mqlMicrosoftUser, error) {
+	ownerType := a.OwnerType.Data
+	if ownerType != "user" {
+		return nil, nil
+	}
+
+	userId := a.Id.Data
+	userResource, err := a.MqlRuntime.NewResource(a.MqlRuntime, "microsoft.user",
+		map[string]*llx.RawData{
+			"id": llx.StringData(userId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return userResource.(*mqlMicrosoftUser), nil
+}
+
+func (a *mqlMicrosoftGroupOwner) servicePrincipal() (*mqlMicrosoftServiceprincipal, error) {
+	ownerType := a.OwnerType.Data
+	if ownerType != "servicePrincipal" {
+		return nil, nil
+	}
+
+	spId := a.Id.Data
+	spResource, err := a.MqlRuntime.NewResource(a.MqlRuntime, "microsoft.serviceprincipal",
+		map[string]*llx.RawData{
+			"id": llx.StringData(spId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return spResource.(*mqlMicrosoftServiceprincipal), nil
+}
+
 func (a *mqlMicrosoftGroups) length() (int64, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
