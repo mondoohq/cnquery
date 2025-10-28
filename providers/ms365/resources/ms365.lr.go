@@ -22,6 +22,8 @@ const (
 	ResourceMicrosoftIdentityAndAccessAccessReviewDefinition                                             string = "microsoft.identityAndAccess.accessReviewDefinition"
 	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings                 string = "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"
 	ResourceMicrosoftGroups                                                                              string = "microsoft.groups"
+	ResourceMicrosoftSetting                                                                             string = "microsoft.setting"
+	ResourceMicrosoftSettingValue                                                                        string = "microsoft.settingValue"
 	ResourceMicrosoftApplications                                                                        string = "microsoft.applications"
 	ResourceMicrosoftTenant                                                                              string = "microsoft.tenant"
 	ResourceMicrosoftTenantSettings                                                                      string = "microsoft.tenantSettings"
@@ -140,6 +142,14 @@ func init() {
 		"microsoft.groups": {
 			Init:   initMicrosoftGroups,
 			Create: createMicrosoftGroups,
+		},
+		"microsoft.setting": {
+			// to override args, implement: initMicrosoftSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSetting,
+		},
+		"microsoft.settingValue": {
+			// to override args, implement: initMicrosoftSettingValue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSettingValue,
 		},
 		"microsoft.applications": {
 			// to override args, implement: initMicrosoftApplications(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -623,6 +633,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetSettings()).ToDataRes(types.Dict)
 	},
+	"microsoft.groupSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoft).GetGroupSettings()).ToDataRes(types.Array(types.Resource("microsoft.setting")))
+	},
 	"microsoft.tenantDomainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetTenantDomainName()).ToDataRes(types.String)
 	},
@@ -688,6 +701,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.groups.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroups).GetList()).ToDataRes(types.Array(types.Resource("microsoft.group")))
+	},
+	"microsoft.setting.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSetting).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.setting.templateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSetting).GetTemplateId()).ToDataRes(types.String)
+	},
+	"microsoft.setting.values": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSetting).GetValues()).ToDataRes(types.Array(types.Resource("microsoft.settingValue")))
+	},
+	"microsoft.settingValue.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSettingValue).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.settingValue.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSettingValue).GetValue()).ToDataRes(types.String)
 	},
 	"microsoft.applications.length": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplications).GetLength()).ToDataRes(types.Int)
@@ -2536,6 +2564,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoft).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"microsoft.groupSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoft).GroupSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.tenantDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).TenantDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2638,6 +2670,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.groups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroups).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.setting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.setting.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSetting).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.setting.templateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSetting).TemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.setting.values": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSetting).Values, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.settingValue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSettingValue).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.settingValue.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSettingValue).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.settingValue.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSettingValue).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.applications.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5439,6 +5499,7 @@ type mqlMicrosoft struct {
 	EnterpriseApplications plugin.TValue[[]any]
 	Roles                  plugin.TValue[*mqlMicrosoftRoles]
 	Settings               plugin.TValue[any]
+	GroupSettings          plugin.TValue[[]any]
 	TenantDomainName       plugin.TValue[string]
 	IdentityAndAccess      plugin.TValue[*mqlMicrosoftIdentityAndAccess]
 	AccessReviews          plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviews]
@@ -5623,6 +5684,22 @@ func (c *mqlMicrosoft) GetRoles() *plugin.TValue[*mqlMicrosoftRoles] {
 func (c *mqlMicrosoft) GetSettings() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
 		return c.settings()
+	})
+}
+
+func (c *mqlMicrosoft) GetGroupSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GroupSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "groupSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groupSettings()
 	})
 }
 
@@ -5939,6 +6016,109 @@ func (c *mqlMicrosoftGroups) GetList() *plugin.TValue[[]any] {
 
 		return c.list()
 	})
+}
+
+// mqlMicrosoftSetting for the microsoft.setting resource
+type mqlMicrosoftSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftSettingInternal it will be used here
+	DisplayName plugin.TValue[string]
+	TemplateId  plugin.TValue[string]
+	Values      plugin.TValue[[]any]
+}
+
+// createMicrosoftSetting creates a new instance of this resource
+func createMicrosoftSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.setting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSetting) MqlName() string {
+	return "microsoft.setting"
+}
+
+func (c *mqlMicrosoftSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSetting) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftSetting) GetTemplateId() *plugin.TValue[string] {
+	return &c.TemplateId
+}
+
+func (c *mqlMicrosoftSetting) GetValues() *plugin.TValue[[]any] {
+	return &c.Values
+}
+
+// mqlMicrosoftSettingValue for the microsoft.settingValue resource
+type mqlMicrosoftSettingValue struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftSettingValueInternal it will be used here
+	Name  plugin.TValue[string]
+	Value plugin.TValue[string]
+}
+
+// createMicrosoftSettingValue creates a new instance of this resource
+func createMicrosoftSettingValue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSettingValue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.settingValue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSettingValue) MqlName() string {
+	return "microsoft.settingValue"
+}
+
+func (c *mqlMicrosoftSettingValue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSettingValue) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftSettingValue) GetValue() *plugin.TValue[string] {
+	return &c.Value
 }
 
 // mqlMicrosoftApplications for the microsoft.applications resource

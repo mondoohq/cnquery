@@ -9,6 +9,7 @@ resources:
       domains: {}
       enterpriseApplications: {}
       groupLifecyclePolicies: {}
+      groupSettings: {}
       groups: {}
       identityAndAccess: {}
       organizations: {}
@@ -697,6 +698,17 @@ resources:
       id: {}
       type: {}
     is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.setting:
+    fields:
+      displayName: {}
+      templateId: {}
+      values: {}
+    min_mondoo_version: 9.0.0
+  microsoft.settingValue:
+    fields:
+      name: {}
+      value: {}
     min_mondoo_version: 9.0.0
   microsoft.tenant:
     fields:
