@@ -21,10 +21,11 @@ import (
 
 type LocalConnection struct {
 	plugin.Connection
-	shell []string
-	fs    afero.Fs
-	Sudo  *inventory.Sudo
-	asset *inventory.Asset
+	shell         []string
+	fs            afero.Fs
+	Sudo          *inventory.Sudo
+	asset         *inventory.Asset
+	auditProvider *shared.AuditRuleProvider
 }
 
 func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) *LocalConnection {
@@ -66,6 +67,13 @@ func (p *LocalConnection) UpdateAsset(asset *inventory.Asset) {
 
 func (p *LocalConnection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_RunCommand
+}
+
+func (p *LocalConnection) AuditRuleProvider() *shared.AuditRuleProvider {
+	if p.auditProvider == nil {
+		p.auditProvider = shared.NewAuditRuleProvider(p)
+	}
+	return p.auditProvider
 }
 
 func (p *LocalConnection) RunCommand(command string) (*shared.Command, error) {
