@@ -21,8 +21,9 @@ const _Severity_name = "UnknownNoneLowMediumHighCritical"
 var _Severity_index = [...]uint8{0, 7, 11, 14, 20, 24, 32}
 
 func (i Severity) String() string {
-	if i < 0 || i >= Severity(len(_Severity_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_Severity_index)-1 {
 		return "Severity(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _Severity_name[_Severity_index[i]:_Severity_index[i+1]]
+	return _Severity_name[_Severity_index[idx]:_Severity_index[idx+1]]
 }
