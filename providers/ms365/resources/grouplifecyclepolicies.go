@@ -62,8 +62,15 @@ try {
 # Fallback to direct REST call if O365Essentials not available
 try {
     $headers = @{
-        "Authorization" = "Bearer %s"
-        "Content-Type" = "application/json"
+        "Authorization"          = "Bearer %s"
+        "Content-Type"           = "application/json"
+        "x-ms-client-request-id" = (New-Guid).Guid
+        "x-ms-session-id"        = "12345678910111213141516"
+        "Sec-Fetch-Dest"         = "empty"
+        "Sec-Fetch-Mode"         = "cors"
+        "Accept"                 = "*/*"
+        "x-requested-with"       = "XMLHttpRequest"
+        "user-agent"             = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
     
     Write-Host "Calling: $Uri" -ForegroundColor Cyan
@@ -169,19 +176,20 @@ func fetchGroupIdsToMonitorExpirations(runtime *plugin.Runtime) ([]string, error
 
 	conn := runtime.Connection.(*connection.Ms365Connection)
 
-	// Get access token - try Outlook scope like security_exchange.go uses
+	// Get access token for Azure Portal API (required for main.iam.ad.ext.azure.com)
 	token := conn.Token()
 	ctx := context.Background()
 
+	// Try with Azure Management scope (what the internal API needs)
 	accessToken, err := token.GetToken(ctx, policy.TokenRequestOptions{
-		Scopes: []string{"https://outlook.office.com/.default"},
+		Scopes: []string{"https://management.azure.com/.default"},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get access token: %w", err)
 	}
 
 	// Execute PowerShell script
-	fmtScript := fmt.Sprintf(lcmSettingsScript, accessToken.Token)
+	fmtScript := fmt.Sprintf(lcmSettingsScript, accessToken.Token, accessToken.Token)
 	res, err := conn.CheckAndRunPowershellScript(fmtScript)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run PowerShell script: %w", err)
@@ -189,7 +197,9 @@ func fetchGroupIdsToMonitorExpirations(runtime *plugin.Runtime) ([]string, error
 
 	if res.ExitStatus != 0 {
 		data, _ := io.ReadAll(res.Stderr)
-		return nil, fmt.Errorf("PowerShell script failed (exit code %d): %s", res.ExitStatus, string(data))
+		stderrStr := string(data)
+		logger.DebugDumpJSON("lcm-settings-stderr", []byte(stderrStr))
+		return nil, fmt.Errorf("PowerShell script failed (exit code %d): %s", res.ExitStatus, stderrStr)
 	}
 
 	data, err := io.ReadAll(res.Stdout)
