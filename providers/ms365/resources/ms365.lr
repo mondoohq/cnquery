@@ -765,6 +765,8 @@ private microsoft.groupLifecyclePolicy @defaults("groupLifetimeInDays managedGro
   managedGroupTypes string
   // List of email addresses to send notifications for groups without owners
   alternateNotificationEmails string
+  // List of group IDs to monitor for expiration
+  groupIdsToMonitorExpirations []string
 }
 
 // List of Microsoft Entra devices

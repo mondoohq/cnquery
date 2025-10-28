@@ -410,6 +410,7 @@ resources:
   microsoft.groupLifecyclePolicy:
     fields:
       alternateNotificationEmails: {}
+      groupIdsToMonitorExpirations: {}
       groupLifetimeInDays: {}
       id: {}
       managedGroupTypes: {}

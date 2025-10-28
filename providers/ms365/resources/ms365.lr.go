@@ -1424,6 +1424,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.groupLifecyclePolicy.alternateNotificationEmails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroupLifecyclePolicy).GetAlternateNotificationEmails()).ToDataRes(types.String)
 	},
+	"microsoft.groupLifecyclePolicy.groupIdsToMonitorExpirations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroupLifecyclePolicy).GetGroupIdsToMonitorExpirations()).ToDataRes(types.Array(types.String))
+	},
 	"microsoft.devices.filter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevices).GetFilter()).ToDataRes(types.String)
 	},
@@ -3802,6 +3805,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.groupLifecyclePolicy.alternateNotificationEmails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroupLifecyclePolicy).AlternateNotificationEmails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.groupLifecyclePolicy.groupIdsToMonitorExpirations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroupLifecyclePolicy).GroupIdsToMonitorExpirations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.devices.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9234,10 +9241,11 @@ type mqlMicrosoftGroupLifecyclePolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftGroupLifecyclePolicyInternal it will be used here
-	Id                          plugin.TValue[string]
-	GroupLifetimeInDays         plugin.TValue[int64]
-	ManagedGroupTypes           plugin.TValue[string]
-	AlternateNotificationEmails plugin.TValue[string]
+	Id                           plugin.TValue[string]
+	GroupLifetimeInDays          plugin.TValue[int64]
+	ManagedGroupTypes            plugin.TValue[string]
+	AlternateNotificationEmails  plugin.TValue[string]
+	GroupIdsToMonitorExpirations plugin.TValue[[]any]
 }
 
 // createMicrosoftGroupLifecyclePolicy creates a new instance of this resource
@@ -9286,6 +9294,10 @@ func (c *mqlMicrosoftGroupLifecyclePolicy) GetManagedGroupTypes() *plugin.TValue
 
 func (c *mqlMicrosoftGroupLifecyclePolicy) GetAlternateNotificationEmails() *plugin.TValue[string] {
 	return &c.AlternateNotificationEmails
+}
+
+func (c *mqlMicrosoftGroupLifecyclePolicy) GetGroupIdsToMonitorExpirations() *plugin.TValue[[]any] {
+	return &c.GroupIdsToMonitorExpirations
 }
 
 // mqlMicrosoftDevices for the microsoft.devices resource
