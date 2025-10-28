@@ -206,7 +206,7 @@ func (a *mqlMicrosoftGroupOwner) user() (*mqlMicrosoftUser, error) {
 	}
 
 	userId := a.Id.Data
-	userResource, err := a.MqlRuntime.NewResource(a.MqlRuntime, "microsoft.user",
+	userResource, err := a.MqlRuntime.NewResource(a.MqlRuntime, ResourceMicrosoftUser,
 		map[string]*llx.RawData{
 			"id": llx.StringData(userId),
 		})
@@ -223,7 +223,7 @@ func (a *mqlMicrosoftGroupOwner) servicePrincipal() (*mqlMicrosoftServiceprincip
 	}
 
 	spId := a.Id.Data
-	spResource, err := a.MqlRuntime.NewResource(a.MqlRuntime, "microsoft.serviceprincipal",
+	spResource, err := a.MqlRuntime.NewResource(a.MqlRuntime, ResourceMicrosoftServiceprincipal,
 		map[string]*llx.RawData{
 			"id": llx.StringData(spId),
 		})
