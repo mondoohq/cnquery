@@ -767,12 +767,28 @@ private microsoft.group @defaults("id displayName") {
   visibility string
   // List of group members
   members() []microsoft.user
+  // List of group owners
+  owners() []microsoft.group.owner
   // Group types indicating the membership and classification of the group
   groupTypes []string
   // Membership rule used for dynamic group membership
   membershipRule string
   // State of the processing for the dynamic membership rule
   membershipRuleProcessingState string
+}
+
+// Group owner (can be a user or service principal)
+private microsoft.group.owner @defaults("id displayName ownerType") {
+  // The unique identifier for the owner
+  id string
+  // The owner's display name
+  displayName string
+  // The type of owner: "user" or "servicePrincipal"
+  ownerType string
+  // The owner as a user (if ownerType is "user")
+  user() microsoft.user
+  // The owner as a service principal (if ownerType is "servicePrincipal")
+  servicePrincipal() microsoft.serviceprincipal
 }
 
 // Microsoft group lifecycle policy

@@ -404,8 +404,18 @@ resources:
       members: {}
       membershipRule: {}
       membershipRuleProcessingState: {}
+      owners: {}
       securityEnabled: {}
       visibility: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.group.owner:
+    fields:
+      displayName: {}
+      id: {}
+      ownerType: {}
+      servicePrincipal: {}
+      user: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.groupLifecyclePolicy:
