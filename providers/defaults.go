@@ -481,7 +481,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"vcd": {
 		Provider: &plugin.Provider{
 			Name:            "vcd",
@@ -532,7 +531,7 @@ var DefaultProviders Providers = map[string]*Provider{
 		Provider: &plugin.Provider{
 			Name:            "networkdevices",
 			ID:              "go.mondoo.com/cnquery/providers/networkdevices",
-			ConnectionTypes: []string{"networkdevices"},
+			ConnectionTypes: []string{"nd-ssh", "ciscocatalyst"},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "ciscocatalyst",
