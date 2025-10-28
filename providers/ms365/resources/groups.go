@@ -183,7 +183,7 @@ func (a *mqlMicrosoftGroup) owners() ([]any, error) {
 			}
 		}
 
-		ownerResource, err := CreateResource(a.MqlRuntime, "microsoft.group.owner",
+		ownerResource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftGroupOwner,
 			map[string]*llx.RawData{
 				"__id":        llx.StringDataPtr(owner.GetId()),
 				"id":          llx.StringDataPtr(owner.GetId()),
