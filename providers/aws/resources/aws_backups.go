@@ -73,11 +73,14 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 				mqlGroup, err := CreateResource(a.MqlRuntime, "aws.backup.vault",
 					map[string]*llx.RawData{
 						"arn":              llx.StringDataPtr(v.BackupVaultArn),
-						"name":             llx.StringDataPtr(v.BackupVaultName),
 						"createdAt":        llx.TimeDataPtr(v.CreationDate),
-						"region":           llx.StringData(region),
-						"locked":           llx.BoolDataPtr(v.Locked),
 						"encryptionKeyArn": llx.StringDataPtr(v.EncryptionKeyArn),
+						"locked":           llx.BoolDataPtr(v.Locked),
+						"lockedAt":         llx.TimeDataPtr(v.LockDate),
+						"maxRetentionDays": llx.IntDataPtr(v.MaxRetentionDays),
+						"minRetentionDays": llx.IntDataPtr(v.MinRetentionDays),
+						"name":             llx.StringDataPtr(v.BackupVaultName),
+						"region":           llx.StringData(region),
 					})
 				if err != nil {
 					return nil, err
@@ -120,14 +123,15 @@ func (a *mqlAwsBackupVault) recoveryPoints() ([]any, error) {
 			mqlRP, err := CreateResource(a.MqlRuntime, "aws.backup.vaultRecoveryPoint",
 				map[string]*llx.RawData{
 					"arn":              llx.StringDataPtr(rp.RecoveryPointArn),
-					"resourceType":     llx.StringDataPtr(rp.ResourceType),
-					"createdBy":        llx.MapData(createdBy, types.String),
-					"iamRoleArn":       llx.StringDataPtr(rp.IamRoleArn),
-					"status":           llx.StringData(string(rp.Status)),
-					"creationDate":     llx.TimeDataPtr(rp.CreationDate),
 					"completionDate":   llx.TimeDataPtr(rp.CompletionDate),
+					"createdAt":        llx.TimeDataPtr(rp.CreationDate),
+					"createdBy":        llx.MapData(createdBy, types.String),
+					"creationDate":     llx.TimeDataPtr(rp.CreationDate),
 					"encryptionKeyArn": llx.StringDataPtr(rp.EncryptionKeyArn),
+					"iamRoleArn":       llx.StringDataPtr(rp.IamRoleArn),
 					"isEncrypted":      llx.BoolData(rp.IsEncrypted),
+					"resourceType":     llx.StringDataPtr(rp.ResourceType),
+					"status":           llx.StringData(string(rp.Status)),
 				})
 			if err != nil {
 				return nil, err
