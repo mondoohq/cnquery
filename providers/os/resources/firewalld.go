@@ -1174,7 +1174,7 @@ func createFirewalldRuleResource(runtime *plugin.Runtime, zoneName string, idx i
 	var sourceRes plugin.Resource
 	var err error
 	if rule.Source.HasValue || rule.Source.HasNot {
-		sourceRes, err = createRuleEndpointResource(runtime, zoneName, ruleID, "source", rule.Source)
+		sourceRes, err = createRuleEndpointResource(runtime, ruleID, "source", rule.Source)
 		if err != nil {
 			return nil, err
 		}
@@ -1182,7 +1182,7 @@ func createFirewalldRuleResource(runtime *plugin.Runtime, zoneName string, idx i
 
 	var destRes plugin.Resource
 	if rule.Dest.HasValue || rule.Dest.HasNot {
-		destRes, err = createRuleEndpointResource(runtime, zoneName, ruleID, "destination", rule.Dest)
+		destRes, err = createRuleEndpointResource(runtime, ruleID, "destination", rule.Dest)
 		if err != nil {
 			return nil, err
 		}
@@ -1250,8 +1250,8 @@ func createFirewalldRuleResource(runtime *plugin.Runtime, zoneName string, idx i
 	return ruleRes.(*mqlFirewalldRule), nil
 }
 
-func createRuleEndpointResource(runtime *plugin.Runtime, zoneName, ruleID, label string, ep parsedRuleEndpoint) (plugin.Resource, error) {
-	endpointID := fmt.Sprintf("%s/%s/%s", zoneName, ruleID, label)
+func createRuleEndpointResource(runtime *plugin.Runtime, ruleID, label string, ep parsedRuleEndpoint) (plugin.Resource, error) {
+	endpointID := fmt.Sprintf("%s/%s", ruleID, label)
 
 	args := map[string]*llx.RawData{
 		"__id":    llx.StringData(endpointID),
@@ -1299,10 +1299,11 @@ func stringArrayData(values []string) *llx.RawData {
 func stringsToAny(values []string) []any {
 	res := make([]any, 0, len(values))
 	for _, v := range values {
-		if strings.TrimSpace(v) == "" {
+		trimmed := strings.TrimSpace(v)
+		if trimmed == "" {
 			continue
 		}
-		res = append(res, strings.TrimSpace(v))
+		res = append(res, trimmed)
 	}
 	return res
 }
