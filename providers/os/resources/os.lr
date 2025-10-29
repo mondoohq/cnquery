@@ -312,6 +312,8 @@ os.linux {
   iptables() iptables
   // iptables firewall for IPv6
   ip6tables() ip6tables
+  // firewalld zones and rich rules
+  firewalld() firewalld
   // /etc/fstab entries
   fstab() fstab
 }
@@ -1052,6 +1054,92 @@ iptables.entry {
   options string
   // Input or output, which is used to create the ID
   chain string
+}
+
+// firewalld configuration and rules
+firewalld {
+  // Default zone for new connections
+  defaultZone string
+  // Zones that are currently active
+  activeZones []string
+  // All firewalld zones including their configuration
+  zones() []firewalld.zone
+}
+
+firewalld.zone {
+  // Zone name
+  name string
+  // Zone target (default policy)
+  target string
+  // Indicates if the zone is currently active
+  active bool
+  // Network interfaces assigned to the zone
+  interfaces []string
+  // Source addresses assigned to the zone
+  sources []string
+  // Services allowed in the zone
+  services []string
+  // Ports allowed in the zone
+  ports []string
+  // Protocols allowed in the zone
+  protocols []string
+  // Whether masquerading is enabled for the zone
+  masquerade bool
+  // Forward ports configured in the zone
+  forwardPorts []string
+  // Source ports configured in the zone
+  sourcePorts []string
+  // ICMP blocks configured in the zone
+  icmpBlocks []string
+  // Whether ICMP block inversion is enabled
+  icmpBlockInversion bool
+  // Rich rules defined for the zone
+  richRules() []firewalld.rule
+  // Raw firewalld output for the zone
+  raw string
+}
+
+firewalld.rule {
+  // Raw rich rule line
+  raw string
+  // Rule family (ipv4/ipv6)
+  family string
+  // Rule priority
+  priority int
+  // Source selector for the rule
+  source firewalld.ruleEndpoint
+  // Destination selector for the rule
+  destination firewalld.ruleEndpoint
+  // Service referenced in the rule
+  service string
+  // Port referenced in the rule
+  port string
+  // Log prefix configured for the rule
+  logPrefix string
+  // Log level configured for the rule
+  logLevel string
+  // Final action of the rule (accept/drop/reject/etc)
+  action string
+}
+
+firewalld.ruleEndpoint {
+  // Address specified in the rule
+  address string
+  // IP set referenced in the rule
+  ipset string
+  // MAC address referenced in the rule
+  mac string
+  // Inverted selector values
+  not firewalld.ruleEndpointQualifier
+}
+
+firewalld.ruleEndpointQualifier {
+  // Address specified in the rule
+  address string
+  // IP set referenced in the rule
+  ipset string
+  // MAC address referenced in the rule
+  mac string
 }
 
 fstab @defaults("path") {

@@ -17,139 +17,144 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset                  string = "asset"
-	ResourceAssetEol               string = "asset.eol"
-	ResourceMondooEol              string = "mondoo.eol"
-	ResourcePlatformEol            string = "platform.eol"
-	ResourcePlatform               string = "platform"
-	ResourceVulnmgmt               string = "vulnmgmt"
-	ResourceVulnCve                string = "vuln.cve"
-	ResourceVulnAdvisory           string = "vuln.advisory"
-	ResourceVulnPackage            string = "vuln.package"
-	ResourcePlatformAdvisories     string = "platform.advisories"
-	ResourcePlatformCves           string = "platform.cves"
-	ResourceAuditCvss              string = "audit.cvss"
-	ResourceAuditAdvisory          string = "audit.advisory"
-	ResourceAuditCve               string = "audit.cve"
-	ResourceMachine                string = "machine"
-	ResourceMachineBios            string = "machine.bios"
-	ResourceMachineSystem          string = "machine.system"
-	ResourceMachineBaseboard       string = "machine.baseboard"
-	ResourceMachineChassis         string = "machine.chassis"
-	ResourceOs                     string = "os"
-	ResourceOsUpdate               string = "os.update"
-	ResourceOsBase                 string = "os.base"
-	ResourceOsUnix                 string = "os.unix"
-	ResourceOsLinux                string = "os.linux"
-	ResourceOsRootCertificates     string = "os.rootCertificates"
-	ResourceCommand                string = "command"
-	ResourcePowershell             string = "powershell"
-	ResourceFile                   string = "file"
-	ResourceFileContext            string = "file.context"
-	ResourceFilePermissions        string = "file.permissions"
-	ResourceFiles                  string = "files"
-	ResourceFilesFind              string = "files.find"
-	ResourceParseIni               string = "parse.ini"
-	ResourceParseJson              string = "parse.json"
-	ResourceParseXml               string = "parse.xml"
-	ResourceParsePlist             string = "parse.plist"
-	ResourceParseYaml              string = "parse.yaml"
-	ResourceParseCertificates      string = "parse.certificates"
-	ResourceParseOpenpgp           string = "parse.openpgp"
-	ResourceUser                   string = "user"
-	ResourcePrivatekey             string = "privatekey"
-	ResourceUsers                  string = "users"
-	ResourceAuthorizedkeys         string = "authorizedkeys"
-	ResourceAuthorizedkeysEntry    string = "authorizedkeys.entry"
-	ResourceGroup                  string = "group"
-	ResourceGroups                 string = "groups"
-	ResourcePackage                string = "package"
-	ResourcePkgFileInfo            string = "pkgFileInfo"
-	ResourcePackages               string = "packages"
-	ResourcePamConf                string = "pam.conf"
-	ResourcePamConfServiceEntry    string = "pam.conf.serviceEntry"
-	ResourceSshd                   string = "sshd"
-	ResourceSshdConfig             string = "sshd.config"
-	ResourceSshdConfigMatchBlock   string = "sshd.config.matchBlock"
-	ResourceAuditdConfig           string = "auditd.config"
-	ResourceAuditdRules            string = "auditd.rules"
-	ResourceAuditdRule             string = "auditd.rule"
-	ResourceAuditdRuleControl      string = "auditd.rule.control"
-	ResourceAuditdRuleFile         string = "auditd.rule.file"
-	ResourceAuditdRuleSyscall      string = "auditd.rule.syscall"
-	ResourceJournaldConfig         string = "journald.config"
-	ResourceService                string = "service"
-	ResourceServices               string = "services"
-	ResourceKernel                 string = "kernel"
-	ResourceKernelModule           string = "kernel.module"
-	ResourceDocker                 string = "docker"
-	ResourceDockerFile             string = "docker.file"
-	ResourceDockerFileStage        string = "docker.file.stage"
-	ResourceDockerFileUser         string = "docker.file.user"
-	ResourceDockerFileExpose       string = "docker.file.expose"
-	ResourceDockerFileFrom         string = "docker.file.from"
-	ResourceDockerFileRun          string = "docker.file.run"
-	ResourceDockerFileAdd          string = "docker.file.add"
-	ResourceDockerFileCopy         string = "docker.file.copy"
-	ResourceDockerImage            string = "docker.image"
-	ResourceDockerContainer        string = "docker.container"
-	ResourceIptables               string = "iptables"
-	ResourceIp6tables              string = "ip6tables"
-	ResourceIptablesEntry          string = "iptables.entry"
-	ResourceFstab                  string = "fstab"
-	ResourceFstabEntry             string = "fstab.entry"
-	ResourceProcess                string = "process"
-	ResourceProcesses              string = "processes"
-	ResourcePort                   string = "port"
-	ResourcePorts                  string = "ports"
-	ResourceAuditpol               string = "auditpol"
-	ResourceAuditpolEntry          string = "auditpol.entry"
-	ResourceSecpol                 string = "secpol"
-	ResourceNtpConf                string = "ntp.conf"
-	ResourceRsyslogConf            string = "rsyslog.conf"
-	ResourceLogindefs              string = "logindefs"
-	ResourceLsblk                  string = "lsblk"
-	ResourceLsblkEntry             string = "lsblk.entry"
-	ResourceMount                  string = "mount"
-	ResourceMountPoint             string = "mount.point"
-	ResourceShadow                 string = "shadow"
-	ResourceShadowEntry            string = "shadow.entry"
-	ResourceYum                    string = "yum"
-	ResourceYumRepo                string = "yum.repo"
-	ResourceRegistrykey            string = "registrykey"
-	ResourceRegistrykeyProperty    string = "registrykey.property"
-	ResourceContainerImage         string = "container.image"
-	ResourceContainerRepository    string = "container.repository"
-	ResourceKubelet                string = "kubelet"
-	ResourcePython                 string = "python"
-	ResourcePythonPackage          string = "python.package"
-	ResourceNpmPackages            string = "npm.packages"
-	ResourceNpmPackage             string = "npm.package"
-	ResourceMacos                  string = "macos"
-	ResourceMacosAlf               string = "macos.alf"
-	ResourceMacosTimemachine       string = "macos.timemachine"
-	ResourceMacosSystemsetup       string = "macos.systemsetup"
-	ResourceWindows                string = "windows"
-	ResourceMacosSystemExtension   string = "macos.systemExtension"
-	ResourceWindowsHotfix          string = "windows.hotfix"
-	ResourceWindowsFeature         string = "windows.feature"
-	ResourceWindowsServerFeature   string = "windows.serverFeature"
-	ResourceWindowsOptionalFeature string = "windows.optionalFeature"
-	ResourceWindowsFirewall        string = "windows.firewall"
-	ResourceWindowsFirewallProfile string = "windows.firewall.profile"
-	ResourceWindowsFirewallRule    string = "windows.firewall.rule"
-	ResourceWindowsBitlocker       string = "windows.bitlocker"
-	ResourceWindowsBitlockerVolume string = "windows.bitlocker.volume"
-	ResourceWindowsSecurity        string = "windows.security"
-	ResourceWindowsSecurityProduct string = "windows.security.product"
-	ResourceWindowsSecurityHealth  string = "windows.security.health"
-	ResourceCloud                  string = "cloud"
-	ResourceCloudInstance          string = "cloudInstance"
-	ResourceIpAddress              string = "ipAddress"
-	ResourceNetwork                string = "network"
-	ResourceNetworkInterface       string = "networkInterface"
-	ResourceUsb                    string = "usb"
-	ResourceUsbDevice              string = "usb.device"
+	ResourceAsset                          string = "asset"
+	ResourceAssetEol                       string = "asset.eol"
+	ResourceMondooEol                      string = "mondoo.eol"
+	ResourcePlatformEol                    string = "platform.eol"
+	ResourcePlatform                       string = "platform"
+	ResourceVulnmgmt                       string = "vulnmgmt"
+	ResourceVulnCve                        string = "vuln.cve"
+	ResourceVulnAdvisory                   string = "vuln.advisory"
+	ResourceVulnPackage                    string = "vuln.package"
+	ResourcePlatformAdvisories             string = "platform.advisories"
+	ResourcePlatformCves                   string = "platform.cves"
+	ResourceAuditCvss                      string = "audit.cvss"
+	ResourceAuditAdvisory                  string = "audit.advisory"
+	ResourceAuditCve                       string = "audit.cve"
+	ResourceMachine                        string = "machine"
+	ResourceMachineBios                    string = "machine.bios"
+	ResourceMachineSystem                  string = "machine.system"
+	ResourceMachineBaseboard               string = "machine.baseboard"
+	ResourceMachineChassis                 string = "machine.chassis"
+	ResourceOs                             string = "os"
+	ResourceOsUpdate                       string = "os.update"
+	ResourceOsBase                         string = "os.base"
+	ResourceOsUnix                         string = "os.unix"
+	ResourceOsLinux                        string = "os.linux"
+	ResourceOsRootCertificates             string = "os.rootCertificates"
+	ResourceCommand                        string = "command"
+	ResourcePowershell                     string = "powershell"
+	ResourceFile                           string = "file"
+	ResourceFileContext                    string = "file.context"
+	ResourceFilePermissions                string = "file.permissions"
+	ResourceFiles                          string = "files"
+	ResourceFilesFind                      string = "files.find"
+	ResourceParseIni                       string = "parse.ini"
+	ResourceParseJson                      string = "parse.json"
+	ResourceParseXml                       string = "parse.xml"
+	ResourceParsePlist                     string = "parse.plist"
+	ResourceParseYaml                      string = "parse.yaml"
+	ResourceParseCertificates              string = "parse.certificates"
+	ResourceParseOpenpgp                   string = "parse.openpgp"
+	ResourceUser                           string = "user"
+	ResourcePrivatekey                     string = "privatekey"
+	ResourceUsers                          string = "users"
+	ResourceAuthorizedkeys                 string = "authorizedkeys"
+	ResourceAuthorizedkeysEntry            string = "authorizedkeys.entry"
+	ResourceGroup                          string = "group"
+	ResourceGroups                         string = "groups"
+	ResourcePackage                        string = "package"
+	ResourcePkgFileInfo                    string = "pkgFileInfo"
+	ResourcePackages                       string = "packages"
+	ResourcePamConf                        string = "pam.conf"
+	ResourcePamConfServiceEntry            string = "pam.conf.serviceEntry"
+	ResourceSshd                           string = "sshd"
+	ResourceSshdConfig                     string = "sshd.config"
+	ResourceSshdConfigMatchBlock           string = "sshd.config.matchBlock"
+	ResourceAuditdConfig                   string = "auditd.config"
+	ResourceAuditdRules                    string = "auditd.rules"
+	ResourceAuditdRule                     string = "auditd.rule"
+	ResourceAuditdRuleControl              string = "auditd.rule.control"
+	ResourceAuditdRuleFile                 string = "auditd.rule.file"
+	ResourceAuditdRuleSyscall              string = "auditd.rule.syscall"
+	ResourceJournaldConfig                 string = "journald.config"
+	ResourceService                        string = "service"
+	ResourceServices                       string = "services"
+	ResourceKernel                         string = "kernel"
+	ResourceKernelModule                   string = "kernel.module"
+	ResourceDocker                         string = "docker"
+	ResourceDockerFile                     string = "docker.file"
+	ResourceDockerFileStage                string = "docker.file.stage"
+	ResourceDockerFileUser                 string = "docker.file.user"
+	ResourceDockerFileExpose               string = "docker.file.expose"
+	ResourceDockerFileFrom                 string = "docker.file.from"
+	ResourceDockerFileRun                  string = "docker.file.run"
+	ResourceDockerFileAdd                  string = "docker.file.add"
+	ResourceDockerFileCopy                 string = "docker.file.copy"
+	ResourceDockerImage                    string = "docker.image"
+	ResourceDockerContainer                string = "docker.container"
+	ResourceIptables                       string = "iptables"
+	ResourceIp6tables                      string = "ip6tables"
+	ResourceIptablesEntry                  string = "iptables.entry"
+	ResourceFirewalld                      string = "firewalld"
+	ResourceFirewalldZone                  string = "firewalld.zone"
+	ResourceFirewalldRule                  string = "firewalld.rule"
+	ResourceFirewalldRuleEndpoint          string = "firewalld.ruleEndpoint"
+	ResourceFirewalldRuleEndpointQualifier string = "firewalld.ruleEndpointQualifier"
+	ResourceFstab                          string = "fstab"
+	ResourceFstabEntry                     string = "fstab.entry"
+	ResourceProcess                        string = "process"
+	ResourceProcesses                      string = "processes"
+	ResourcePort                           string = "port"
+	ResourcePorts                          string = "ports"
+	ResourceAuditpol                       string = "auditpol"
+	ResourceAuditpolEntry                  string = "auditpol.entry"
+	ResourceSecpol                         string = "secpol"
+	ResourceNtpConf                        string = "ntp.conf"
+	ResourceRsyslogConf                    string = "rsyslog.conf"
+	ResourceLogindefs                      string = "logindefs"
+	ResourceLsblk                          string = "lsblk"
+	ResourceLsblkEntry                     string = "lsblk.entry"
+	ResourceMount                          string = "mount"
+	ResourceMountPoint                     string = "mount.point"
+	ResourceShadow                         string = "shadow"
+	ResourceShadowEntry                    string = "shadow.entry"
+	ResourceYum                            string = "yum"
+	ResourceYumRepo                        string = "yum.repo"
+	ResourceRegistrykey                    string = "registrykey"
+	ResourceRegistrykeyProperty            string = "registrykey.property"
+	ResourceContainerImage                 string = "container.image"
+	ResourceContainerRepository            string = "container.repository"
+	ResourceKubelet                        string = "kubelet"
+	ResourcePython                         string = "python"
+	ResourcePythonPackage                  string = "python.package"
+	ResourceNpmPackages                    string = "npm.packages"
+	ResourceNpmPackage                     string = "npm.package"
+	ResourceMacos                          string = "macos"
+	ResourceMacosAlf                       string = "macos.alf"
+	ResourceMacosTimemachine               string = "macos.timemachine"
+	ResourceMacosSystemsetup               string = "macos.systemsetup"
+	ResourceWindows                        string = "windows"
+	ResourceMacosSystemExtension           string = "macos.systemExtension"
+	ResourceWindowsHotfix                  string = "windows.hotfix"
+	ResourceWindowsFeature                 string = "windows.feature"
+	ResourceWindowsServerFeature           string = "windows.serverFeature"
+	ResourceWindowsOptionalFeature         string = "windows.optionalFeature"
+	ResourceWindowsFirewall                string = "windows.firewall"
+	ResourceWindowsFirewallProfile         string = "windows.firewall.profile"
+	ResourceWindowsFirewallRule            string = "windows.firewall.rule"
+	ResourceWindowsBitlocker               string = "windows.bitlocker"
+	ResourceWindowsBitlockerVolume         string = "windows.bitlocker.volume"
+	ResourceWindowsSecurity                string = "windows.security"
+	ResourceWindowsSecurityProduct         string = "windows.security.product"
+	ResourceWindowsSecurityHealth          string = "windows.security.health"
+	ResourceCloud                          string = "cloud"
+	ResourceCloudInstance                  string = "cloudInstance"
+	ResourceIpAddress                      string = "ipAddress"
+	ResourceNetwork                        string = "network"
+	ResourceNetworkInterface               string = "networkInterface"
+	ResourceUsb                            string = "usb"
+	ResourceUsbDevice                      string = "usb.device"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -471,6 +476,26 @@ func init() {
 		"iptables.entry": {
 			// to override args, implement: initIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createIptablesEntry,
+		},
+		"firewalld": {
+			// to override args, implement: initFirewalld(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirewalld,
+		},
+		"firewalld.zone": {
+			// to override args, implement: initFirewalldZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirewalldZone,
+		},
+		"firewalld.rule": {
+			// to override args, implement: initFirewalldRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirewalldRule,
+		},
+		"firewalld.ruleEndpoint": {
+			// to override args, implement: initFirewalldRuleEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirewalldRuleEndpoint,
+		},
+		"firewalld.ruleEndpointQualifier": {
+			// to override args, implement: initFirewalldRuleEndpointQualifier(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirewalldRuleEndpointQualifier,
 		},
 		"fstab": {
 			Init:   initFstab,
@@ -1082,6 +1107,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"os.linux.ip6tables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetIp6tables()).ToDataRes(types.Resource("ip6tables"))
+	},
+	"os.linux.firewalld": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetFirewalld()).ToDataRes(types.Resource("firewalld"))
 	},
 	"os.linux.fstab": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetFstab()).ToDataRes(types.Resource("fstab"))
@@ -1832,6 +1860,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"iptables.entry.chain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptablesEntry).GetChain()).ToDataRes(types.String)
+	},
+	"firewalld.defaultZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalld).GetDefaultZone()).ToDataRes(types.String)
+	},
+	"firewalld.activeZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalld).GetActiveZones()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalld).GetZones()).ToDataRes(types.Array(types.Resource("firewalld.zone")))
+	},
+	"firewalld.zone.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetName()).ToDataRes(types.String)
+	},
+	"firewalld.zone.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetTarget()).ToDataRes(types.String)
+	},
+	"firewalld.zone.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetActive()).ToDataRes(types.Bool)
+	},
+	"firewalld.zone.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetInterfaces()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.sources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetSources()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetServices()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetPorts()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.masquerade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetMasquerade()).ToDataRes(types.Bool)
+	},
+	"firewalld.zone.forwardPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetForwardPorts()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.sourcePorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetSourcePorts()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.icmpBlocks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetIcmpBlocks()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.icmpBlockInversion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetIcmpBlockInversion()).ToDataRes(types.Bool)
+	},
+	"firewalld.zone.richRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetRichRules()).ToDataRes(types.Array(types.Resource("firewalld.rule")))
+	},
+	"firewalld.zone.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetRaw()).ToDataRes(types.String)
+	},
+	"firewalld.rule.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRule).GetRaw()).ToDataRes(types.String)
+	},
+	"firewalld.rule.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRule).GetFamily()).ToDataRes(types.String)
+	},
+	"firewalld.rule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"firewalld.rule.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRule).GetSource()).ToDataRes(types.Resource("firewalld.ruleEndpoint"))
+	},
+	"firewalld.rule.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRule).GetDestination()).ToDataRes(types.Resource("firewalld.ruleEndpoint"))
+	},
+	"firewalld.rule.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRule).GetService()).ToDataRes(types.String)
+	},
+	"firewalld.rule.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRule).GetPort()).ToDataRes(types.String)
+	},
+	"firewalld.rule.logPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRule).GetLogPrefix()).ToDataRes(types.String)
+	},
+	"firewalld.rule.logLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRule).GetLogLevel()).ToDataRes(types.String)
+	},
+	"firewalld.rule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRule).GetAction()).ToDataRes(types.String)
+	},
+	"firewalld.ruleEndpoint.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRuleEndpoint).GetAddress()).ToDataRes(types.String)
+	},
+	"firewalld.ruleEndpoint.ipset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRuleEndpoint).GetIpset()).ToDataRes(types.String)
+	},
+	"firewalld.ruleEndpoint.mac": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRuleEndpoint).GetMac()).ToDataRes(types.String)
+	},
+	"firewalld.ruleEndpoint.not": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRuleEndpoint).GetNot()).ToDataRes(types.Resource("firewalld.ruleEndpointQualifier"))
+	},
+	"firewalld.ruleEndpointQualifier.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRuleEndpointQualifier).GetAddress()).ToDataRes(types.String)
+	},
+	"firewalld.ruleEndpointQualifier.ipset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRuleEndpointQualifier).GetIpset()).ToDataRes(types.String)
+	},
+	"firewalld.ruleEndpointQualifier.mac": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRuleEndpointQualifier).GetMac()).ToDataRes(types.String)
 	},
 	"fstab.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFstab).GetPath()).ToDataRes(types.String)
@@ -3264,6 +3397,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOsLinux).Ip6tables, ok = plugin.RawToTValue[*mqlIp6tables](v.Value, v.Error)
 		return
 	},
+	"os.linux.firewalld": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Firewalld, ok = plugin.RawToTValue[*mqlFirewalld](v.Value, v.Error)
+		return
+	},
 	"os.linux.fstab": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsLinux).Fstab, ok = plugin.RawToTValue[*mqlFstab](v.Value, v.Error)
 		return
@@ -4482,6 +4619,166 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"iptables.entry.chain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIptablesEntry).Chain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalld).__id, ok = v.Value.(string)
+		return
+	},
+	"firewalld.defaultZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalld).DefaultZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.activeZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalld).ActiveZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalld).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).__id, ok = v.Value.(string)
+		return
+	},
+	"firewalld.zone.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.sources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Sources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Protocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.masquerade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Masquerade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.forwardPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).ForwardPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.sourcePorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).SourcePorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.icmpBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).IcmpBlocks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.icmpBlockInversion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).IcmpBlockInversion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.richRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).RichRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).__id, ok = v.Value.(string)
+		return
+	},
+	"firewalld.rule.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.rule.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.rule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"firewalld.rule.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).Source, ok = plugin.RawToTValue[*mqlFirewalldRuleEndpoint](v.Value, v.Error)
+		return
+	},
+	"firewalld.rule.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).Destination, ok = plugin.RawToTValue[*mqlFirewalldRuleEndpoint](v.Value, v.Error)
+		return
+	},
+	"firewalld.rule.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.rule.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).Port, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.rule.logPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).LogPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.rule.logLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).LogLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.ruleEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRuleEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"firewalld.ruleEndpoint.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRuleEndpoint).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.ruleEndpoint.ipset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRuleEndpoint).Ipset, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.ruleEndpoint.mac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRuleEndpoint).Mac, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.ruleEndpoint.not": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRuleEndpoint).Not, ok = plugin.RawToTValue[*mqlFirewalldRuleEndpointQualifier](v.Value, v.Error)
+		return
+	},
+	"firewalld.ruleEndpointQualifier.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRuleEndpointQualifier).__id, ok = v.Value.(string)
+		return
+	},
+	"firewalld.ruleEndpointQualifier.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRuleEndpointQualifier).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.ruleEndpointQualifier.ipset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRuleEndpointQualifier).Ipset, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.ruleEndpointQualifier.mac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRuleEndpointQualifier).Mac, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"fstab.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7620,6 +7917,7 @@ type mqlOsLinux struct {
 	Unix      plugin.TValue[*mqlOsUnix]
 	Iptables  plugin.TValue[*mqlIptables]
 	Ip6tables plugin.TValue[*mqlIp6tables]
+	Firewalld plugin.TValue[*mqlFirewalld]
 	Fstab     plugin.TValue[*mqlFstab]
 }
 
@@ -7705,6 +8003,22 @@ func (c *mqlOsLinux) GetIp6tables() *plugin.TValue[*mqlIp6tables] {
 		}
 
 		return c.ip6tables()
+	})
+}
+
+func (c *mqlOsLinux) GetFirewalld() *plugin.TValue[*mqlFirewalld] {
+	return plugin.GetOrCompute[*mqlFirewalld](&c.Firewalld, func() (*mqlFirewalld, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "firewalld")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFirewalld), nil
+			}
+		}
+
+		return c.firewalld()
 	})
 }
 
@@ -12180,6 +12494,400 @@ func (c *mqlIptablesEntry) GetOptions() *plugin.TValue[string] {
 
 func (c *mqlIptablesEntry) GetChain() *plugin.TValue[string] {
 	return &c.Chain
+}
+
+// mqlFirewalld for the firewalld resource
+type mqlFirewalld struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirewalldInternal it will be used here
+	DefaultZone plugin.TValue[string]
+	ActiveZones plugin.TValue[[]any]
+	Zones       plugin.TValue[[]any]
+}
+
+// createFirewalld creates a new instance of this resource
+func createFirewalld(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirewalld{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firewalld", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirewalld) MqlName() string {
+	return "firewalld"
+}
+
+func (c *mqlFirewalld) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirewalld) GetDefaultZone() *plugin.TValue[string] {
+	return &c.DefaultZone
+}
+
+func (c *mqlFirewalld) GetActiveZones() *plugin.TValue[[]any] {
+	return &c.ActiveZones
+}
+
+func (c *mqlFirewalld) GetZones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Zones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("firewalld", c.__id, "zones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.zones()
+	})
+}
+
+// mqlFirewalldZone for the firewalld.zone resource
+type mqlFirewalldZone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirewalldZoneInternal it will be used here
+	Name               plugin.TValue[string]
+	Target             plugin.TValue[string]
+	Active             plugin.TValue[bool]
+	Interfaces         plugin.TValue[[]any]
+	Sources            plugin.TValue[[]any]
+	Services           plugin.TValue[[]any]
+	Ports              plugin.TValue[[]any]
+	Protocols          plugin.TValue[[]any]
+	Masquerade         plugin.TValue[bool]
+	ForwardPorts       plugin.TValue[[]any]
+	SourcePorts        plugin.TValue[[]any]
+	IcmpBlocks         plugin.TValue[[]any]
+	IcmpBlockInversion plugin.TValue[bool]
+	RichRules          plugin.TValue[[]any]
+	Raw                plugin.TValue[string]
+}
+
+// createFirewalldZone creates a new instance of this resource
+func createFirewalldZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirewalldZone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firewalld.zone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirewalldZone) MqlName() string {
+	return "firewalld.zone"
+}
+
+func (c *mqlFirewalldZone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirewalldZone) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlFirewalldZone) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlFirewalldZone) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlFirewalldZone) GetInterfaces() *plugin.TValue[[]any] {
+	return &c.Interfaces
+}
+
+func (c *mqlFirewalldZone) GetSources() *plugin.TValue[[]any] {
+	return &c.Sources
+}
+
+func (c *mqlFirewalldZone) GetServices() *plugin.TValue[[]any] {
+	return &c.Services
+}
+
+func (c *mqlFirewalldZone) GetPorts() *plugin.TValue[[]any] {
+	return &c.Ports
+}
+
+func (c *mqlFirewalldZone) GetProtocols() *plugin.TValue[[]any] {
+	return &c.Protocols
+}
+
+func (c *mqlFirewalldZone) GetMasquerade() *plugin.TValue[bool] {
+	return &c.Masquerade
+}
+
+func (c *mqlFirewalldZone) GetForwardPorts() *plugin.TValue[[]any] {
+	return &c.ForwardPorts
+}
+
+func (c *mqlFirewalldZone) GetSourcePorts() *plugin.TValue[[]any] {
+	return &c.SourcePorts
+}
+
+func (c *mqlFirewalldZone) GetIcmpBlocks() *plugin.TValue[[]any] {
+	return &c.IcmpBlocks
+}
+
+func (c *mqlFirewalldZone) GetIcmpBlockInversion() *plugin.TValue[bool] {
+	return &c.IcmpBlockInversion
+}
+
+func (c *mqlFirewalldZone) GetRichRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RichRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("firewalld.zone", c.__id, "richRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.richRules()
+	})
+}
+
+func (c *mqlFirewalldZone) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlFirewalldRule for the firewalld.rule resource
+type mqlFirewalldRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirewalldRuleInternal it will be used here
+	Raw         plugin.TValue[string]
+	Family      plugin.TValue[string]
+	Priority    plugin.TValue[int64]
+	Source      plugin.TValue[*mqlFirewalldRuleEndpoint]
+	Destination plugin.TValue[*mqlFirewalldRuleEndpoint]
+	Service     plugin.TValue[string]
+	Port        plugin.TValue[string]
+	LogPrefix   plugin.TValue[string]
+	LogLevel    plugin.TValue[string]
+	Action      plugin.TValue[string]
+}
+
+// createFirewalldRule creates a new instance of this resource
+func createFirewalldRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirewalldRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firewalld.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirewalldRule) MqlName() string {
+	return "firewalld.rule"
+}
+
+func (c *mqlFirewalldRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirewalldRule) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+func (c *mqlFirewalldRule) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlFirewalldRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlFirewalldRule) GetSource() *plugin.TValue[*mqlFirewalldRuleEndpoint] {
+	return &c.Source
+}
+
+func (c *mqlFirewalldRule) GetDestination() *plugin.TValue[*mqlFirewalldRuleEndpoint] {
+	return &c.Destination
+}
+
+func (c *mqlFirewalldRule) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlFirewalldRule) GetPort() *plugin.TValue[string] {
+	return &c.Port
+}
+
+func (c *mqlFirewalldRule) GetLogPrefix() *plugin.TValue[string] {
+	return &c.LogPrefix
+}
+
+func (c *mqlFirewalldRule) GetLogLevel() *plugin.TValue[string] {
+	return &c.LogLevel
+}
+
+func (c *mqlFirewalldRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+// mqlFirewalldRuleEndpoint for the firewalld.ruleEndpoint resource
+type mqlFirewalldRuleEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirewalldRuleEndpointInternal it will be used here
+	Address plugin.TValue[string]
+	Ipset   plugin.TValue[string]
+	Mac     plugin.TValue[string]
+	Not     plugin.TValue[*mqlFirewalldRuleEndpointQualifier]
+}
+
+// createFirewalldRuleEndpoint creates a new instance of this resource
+func createFirewalldRuleEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirewalldRuleEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firewalld.ruleEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirewalldRuleEndpoint) MqlName() string {
+	return "firewalld.ruleEndpoint"
+}
+
+func (c *mqlFirewalldRuleEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirewalldRuleEndpoint) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlFirewalldRuleEndpoint) GetIpset() *plugin.TValue[string] {
+	return &c.Ipset
+}
+
+func (c *mqlFirewalldRuleEndpoint) GetMac() *plugin.TValue[string] {
+	return &c.Mac
+}
+
+func (c *mqlFirewalldRuleEndpoint) GetNot() *plugin.TValue[*mqlFirewalldRuleEndpointQualifier] {
+	return &c.Not
+}
+
+// mqlFirewalldRuleEndpointQualifier for the firewalld.ruleEndpointQualifier resource
+type mqlFirewalldRuleEndpointQualifier struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirewalldRuleEndpointQualifierInternal it will be used here
+	Address plugin.TValue[string]
+	Ipset   plugin.TValue[string]
+	Mac     plugin.TValue[string]
+}
+
+// createFirewalldRuleEndpointQualifier creates a new instance of this resource
+func createFirewalldRuleEndpointQualifier(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirewalldRuleEndpointQualifier{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firewalld.ruleEndpointQualifier", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirewalldRuleEndpointQualifier) MqlName() string {
+	return "firewalld.ruleEndpointQualifier"
+}
+
+func (c *mqlFirewalldRuleEndpointQualifier) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirewalldRuleEndpointQualifier) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlFirewalldRuleEndpointQualifier) GetIpset() *plugin.TValue[string] {
+	return &c.Ipset
+}
+
+func (c *mqlFirewalldRuleEndpointQualifier) GetMac() *plugin.TValue[string] {
+	return &c.Mac
 }
 
 // mqlFstab for the fstab resource
