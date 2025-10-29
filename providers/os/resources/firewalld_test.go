@@ -29,6 +29,76 @@ func TestParseRichRule(t *testing.T) {
 	require.Equal(t, "127.0.0.1", rule.Dest.Not.Address)
 }
 
+func TestFirewalldZonesFromConfig(t *testing.T) {
+	conn := newFakeConnection(nil)
+
+	require.NoError(t, conn.fs.MkdirAll("/etc/firewalld/zones", 0o755))
+	require.NoError(t, afero.WriteFile(conn.fs, "/etc/firewalld/firewalld.conf", []byte(`# firewalld config file
+DefaultZone=public
+`), 0o644))
+
+	publicZone := `<?xml version="1.0" encoding="utf-8"?>
+<zone target="default">
+  <interface name="eth0"/>
+  <service name="ssh"/>
+  <service name="dhcpv6-client"/>
+  <port protocol="tcp" port="8080"/>
+  <rule family="ipv4">
+    <source address="127.0.0.1"/>
+    <destination invert="yes" address="127.0.0.1"/>
+    <drop/>
+  </rule>
+</zone>
+`
+
+	trustedZone := `<?xml version="1.0" encoding="utf-8"?>
+<zone target="ACCEPT">
+  <masquerade/>
+  <source address="192.168.1.0/24"/>
+  <icmp-block name="echo-request"/>
+</zone>
+`
+
+	require.NoError(t, afero.WriteFile(conn.fs, "/etc/firewalld/zones/public.xml", []byte(publicZone), 0o644))
+	require.NoError(t, afero.WriteFile(conn.fs, "/etc/firewalld/zones/trusted.xml", []byte(trustedZone), 0o644))
+
+	runtime := plugin.NewRuntime(conn, nil, false, CreateResource, NewResource, GetData, SetData, nil)
+
+	_, err := loadFirewalldFromConfig(runtime)
+	require.NoError(t, err)
+
+	res, err := CreateResource(runtime, "firewalld", map[string]*llx.RawData{})
+	require.NoError(t, err)
+
+	firewalld := res.(*mqlFirewalld)
+	zones, err := firewalld.zones()
+	require.NoError(t, err)
+	require.Len(t, zones, 2)
+
+	require.Equal(t, plugin.StateIsSet, firewalld.DefaultZone.State)
+	require.Equal(t, "public", firewalld.DefaultZone.Data)
+	require.Equal(t, plugin.StateIsSet, firewalld.ActiveZones.State)
+	require.ElementsMatch(t, []any{"public", "trusted"}, firewalld.ActiveZones.Data)
+
+	public := findZoneByName(t, zones, "public")
+	require.True(t, public.Active.Data)
+	require.Equal(t, []any{"eth0"}, public.Interfaces.Data)
+	require.Len(t, public.RichRules.Data, 1)
+
+	rule := public.RichRules.Data[0].(*mqlFirewalldRule)
+	require.Equal(t, "ipv4", rule.Family.Data)
+	require.Equal(t, "drop", rule.Action.Data)
+	require.NotNil(t, rule.Destination.Data)
+	require.NotNil(t, rule.Destination.Data.Not.Data)
+	require.Equal(t, "127.0.0.1", rule.Destination.Data.Not.Data.Address.Data)
+
+	trusted := findZoneByName(t, zones, "trusted")
+	require.True(t, trusted.Active.Data)
+	require.True(t, trusted.Masquerade.Data)
+	require.Equal(t, []any{"192.168.1.0/24"}, trusted.Sources.Data)
+	require.Equal(t, []any{"echo-request"}, trusted.IcmpBlocks.Data)
+}
+
 func TestFirewalldZones(t *testing.T) {
 	conn := newFakeConnection(map[string]commandResult{
 		"firewall-cmd --get-default-zone": {stdout: "public\n", exitStatus: 0},

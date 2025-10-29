@@ -12500,7 +12500,7 @@ func (c *mqlIptablesEntry) GetChain() *plugin.TValue[string] {
 type mqlFirewalld struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFirewalldInternal it will be used here
+	mqlFirewalldInternal
 	DefaultZone plugin.TValue[string]
 	ActiveZones plugin.TValue[[]any]
 	Zones       plugin.TValue[[]any]
