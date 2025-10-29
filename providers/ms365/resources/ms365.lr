@@ -1481,7 +1481,7 @@ ms365.exchangeonline {
   malwareFilterPolicy() []dict
   // List of hosted outbound spam filter policies
   hostedOutboundSpamFilterPolicy() []dict
-  // List of hosted inbound spam filter policies (Anti-spam Inbound settings)
+  // List of hosted spam filter policies
   hostedContentFilterPolicy() []dict
   // Transport rules
   transportRule() []dict
