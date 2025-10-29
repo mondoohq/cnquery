@@ -1071,7 +1071,7 @@ firewalld.zone {
   name string
   // Zone target (default policy)
   target string
-  // Indicates if the zone is currently active
+  // If the zone is currently active
   active bool
   // Network interfaces assigned to the zone
   interfaces []string
