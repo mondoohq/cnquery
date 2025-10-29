@@ -209,6 +209,21 @@ func TestLabels(t *testing.T) {
 				},
 			},
 		},
+		{
+			`
+			x = {"foo": "bar"}
+			y = "foo"
+			x[y] == "bar"
+			`,
+			&llx.Labels{
+				Labels: map[string]string{
+					"4OG3DaYfFbOlsn12IDd6agxfAm7nHDDYRfwGehCPOnJuv/XDtzJQevRswKHu2x2Ajce/XUx7bEMIeRdv0CVbxg==": "x[y] == \"bar\"",
+					"ESblt/NRDVk2IAipI7In+KIhVXWeIAoBQ6CJXvfLE9klBwRQhU+18b2zr9ObaUrWYnl8UdtMrGWCHnVcjzQ5tg==": "y",
+					"lXrsqrPWwS9C5nHl9rNtZSPxlKe4DSETNk2VIJVY1BajScbBSBX1YxmagbdpH3fmdzicv5eYVnJMrQm1HVeSBw==": "x[y]",
+					"mavQSLTkn3SiZumTQYLExutOalL7hQPhOGlZKf79X79YEdHf2ryS6Tr68ro3fKjRKL6o+1Sw9CqJTUUmzzRboA==": "x",
+				},
+			},
+		},
 	}
 
 	for i := range tests {
