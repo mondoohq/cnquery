@@ -15,127 +15,131 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// ResourceName is a type-safe alias for resource name constants.
+// This ensures only constants from this file can be used, not string literals.
+type ResourceName string
+
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAzure                                                                      string = "azure"
-	ResourceAzureSubscription                                                          string = "azure.subscription"
-	ResourceAzureSubscriptionWebServiceFunction                                        string = "azure.subscription.webService.function"
-	ResourceAzureSubscriptionResourcegroup                                             string = "azure.subscription.resourcegroup"
-	ResourceAzureSubscriptionResource                                                  string = "azure.subscription.resource"
-	ResourceAzureSubscriptionComputeService                                            string = "azure.subscription.computeService"
-	ResourceAzureSubscriptionComputeServiceVm                                          string = "azure.subscription.computeService.vm"
-	ResourceAzureSubscriptionComputeServiceDisk                                        string = "azure.subscription.computeService.disk"
-	ResourceAzureSubscriptionBatchService                                              string = "azure.subscription.batchService"
-	ResourceAzureSubscriptionBatchServiceAccount                                       string = "azure.subscription.batchService.account"
-	ResourceAzureSubscriptionBatchServiceAccountPool                                   string = "azure.subscription.batchService.account.pool"
-	ResourceAzureSubscriptionNetworkService                                            string = "azure.subscription.networkService"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                       string = "azure.subscription.networkService.virtualNetworkGateway"
-	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                            string = "azure.subscription.networkService.appSecurityGroup"
-	ResourceAzureSubscriptionNetworkServiceFirewall                                    string = "azure.subscription.networkService.firewall"
-	ResourceAzureSubscriptionNetworkServiceFirewallIpConfig                            string = "azure.subscription.networkService.firewall.ipConfig"
-	ResourceAzureSubscriptionNetworkServiceFirewallNetworkRule                         string = "azure.subscription.networkService.firewall.networkRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallApplicationRule                     string = "azure.subscription.networkService.firewall.applicationRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallNatRule                             string = "azure.subscription.networkService.firewall.natRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallPolicy                              string = "azure.subscription.networkService.firewallPolicy"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig               string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection             string = "azure.subscription.networkService.virtualNetworkGateway.connection"
-	ResourceAzureSubscriptionNetworkServiceBgpSettings                                 string = "azure.subscription.networkService.bgpSettings"
-	ResourceAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress string = "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress"
-	ResourceAzureSubscriptionNetworkServiceNatGateway                                  string = "azure.subscription.networkService.natGateway"
-	ResourceAzureSubscriptionNetworkServiceSubnet                                      string = "azure.subscription.networkService.subnet"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetwork                              string = "azure.subscription.networkService.virtualNetwork"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions                   string = "azure.subscription.networkService.virtualNetwork.dhcpOptions"
-	ResourceAzureSubscriptionNetworkServiceLoadBalancer                                string = "azure.subscription.networkService.loadBalancer"
-	ResourceAzureSubscriptionNetworkServiceProbe                                       string = "azure.subscription.networkService.probe"
-	ResourceAzureSubscriptionNetworkServiceBackendAddressPool                          string = "azure.subscription.networkService.backendAddressPool"
-	ResourceAzureSubscriptionNetworkServiceInboundNatPool                              string = "azure.subscription.networkService.inboundNatPool"
-	ResourceAzureSubscriptionNetworkServiceInboundNatRule                              string = "azure.subscription.networkService.inboundNatRule"
-	ResourceAzureSubscriptionNetworkServiceFrontendIpConfig                            string = "azure.subscription.networkService.frontendIpConfig"
-	ResourceAzureSubscriptionNetworkServiceLoadBalancerRule                            string = "azure.subscription.networkService.loadBalancerRule"
-	ResourceAzureSubscriptionNetworkServiceOutboundRule                                string = "azure.subscription.networkService.outboundRule"
-	ResourceAzureSubscriptionNetworkServiceInterface                                   string = "azure.subscription.networkService.interface"
-	ResourceAzureSubscriptionNetworkServiceIpAddress                                   string = "azure.subscription.networkService.ipAddress"
-	ResourceAzureSubscriptionNetworkServiceBastionHost                                 string = "azure.subscription.networkService.bastionHost"
-	ResourceAzureSubscriptionNetworkServiceSecurityGroup                               string = "azure.subscription.networkService.securityGroup"
-	ResourceAzureSubscriptionNetworkServiceSecurityrule                                string = "azure.subscription.networkService.securityrule"
-	ResourceAzureSubscriptionNetworkServiceWatcher                                     string = "azure.subscription.networkService.watcher"
-	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                              string = "azure.subscription.networkService.watcher.flowlog"
-	ResourceAzureSubscriptionNetworkServiceApplicationGateway                          string = "azure.subscription.networkService.applicationGateway"
-	ResourceAzureSubscriptionNetworkServiceWafConfig                                   string = "azure.subscription.networkService.wafConfig"
-	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                   string = "azure.subscription.networkService.applicationFirewallPolicy"
-	ResourceAzureSubscriptionStorageService                                            string = "azure.subscription.storageService"
-	ResourceAzureSubscriptionStorageServiceAccount                                     string = "azure.subscription.storageService.account"
-	ResourceAzureSubscriptionStorageServiceAccountDataProtection                       string = "azure.subscription.storageService.account.dataProtection"
-	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                    string = "azure.subscription.storageService.account.service.properties"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics             string = "azure.subscription.storageService.account.service.properties.metrics"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy     string = "azure.subscription.storageService.account.service.properties.retentionPolicy"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging             string = "azure.subscription.storageService.account.service.properties.logging"
-	ResourceAzureSubscriptionStorageServiceAccountContainer                            string = "azure.subscription.storageService.account.container"
-	ResourceAzureSubscriptionWebService                                                string = "azure.subscription.webService"
-	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                 string = "azure.subscription.webService.appRuntimeStack"
-	ResourceAzureSubscriptionWebServiceAppsite                                         string = "azure.subscription.webService.appsite"
-	ResourceAzureSubscriptionPrivateEndpointConnection                                 string = "azure.subscription.privateEndpointConnection"
-	ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState                  string = "azure.subscription.privateEndpointConnection.connectionState"
-	ResourceAzureSubscriptionWebServiceAppslot                                         string = "azure.subscription.webService.appslot"
-	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies       string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
-	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                             string = "azure.subscription.webService.appsiteauthsettings"
-	ResourceAzureSubscriptionWebServiceAppsiteconfig                                   string = "azure.subscription.webService.appsiteconfig"
-	ResourceAzureSubscriptionWebServiceHostingEnvironment                              string = "azure.subscription.webService.hostingEnvironment"
-	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
-	ResourceAzureSubscriptionSqlService                                                string = "azure.subscription.sqlService"
-	ResourceAzureSubscriptionSqlServiceServer                                          string = "azure.subscription.sqlService.server"
-	ResourceAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings           string = "azure.subscription.sqlService.server.vulnerabilityassessmentsettings"
-	ResourceAzureSubscriptionSqlServiceServerAdministrator                             string = "azure.subscription.sqlService.server.administrator"
-	ResourceAzureSubscriptionSqlServiceDatabase                                        string = "azure.subscription.sqlService.database"
-	ResourceAzureSubscriptionSqlServiceDatabaseusage                                   string = "azure.subscription.sqlService.databaseusage"
-	ResourceAzureSubscriptionPostgreSqlService                                         string = "azure.subscription.postgreSqlService"
-	ResourceAzureSubscriptionPostgreSqlServiceFlexibleServer                           string = "azure.subscription.postgreSqlService.flexibleServer"
-	ResourceAzureSubscriptionPostgreSqlServiceServer                                   string = "azure.subscription.postgreSqlService.server"
-	ResourceAzureSubscriptionPostgreSqlServiceDatabase                                 string = "azure.subscription.postgreSqlService.database"
-	ResourceAzureSubscriptionSqlServiceConfiguration                                   string = "azure.subscription.sqlService.configuration"
-	ResourceAzureSubscriptionSqlServiceFirewallrule                                    string = "azure.subscription.sqlService.firewallrule"
-	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                              string = "azure.subscription.sqlService.virtualNetworkRule"
-	ResourceAzureSubscriptionMySqlService                                              string = "azure.subscription.mySqlService"
-	ResourceAzureSubscriptionMySqlServiceServer                                        string = "azure.subscription.mySqlService.server"
-	ResourceAzureSubscriptionMySqlServiceDatabase                                      string = "azure.subscription.mySqlService.database"
-	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                string = "azure.subscription.mySqlService.flexibleServer"
-	ResourceAzureSubscriptionMariaDbService                                            string = "azure.subscription.mariaDbService"
-	ResourceAzureSubscriptionMariaDbServiceServer                                      string = "azure.subscription.mariaDbService.server"
-	ResourceAzureSubscriptionMariaDbServiceDatabase                                    string = "azure.subscription.mariaDbService.database"
-	ResourceAzureSubscriptionCosmosDbService                                           string = "azure.subscription.cosmosDbService"
-	ResourceAzureSubscriptionCosmosDbServiceAccount                                    string = "azure.subscription.cosmosDbService.account"
-	ResourceAzureSubscriptionKeyVaultService                                           string = "azure.subscription.keyVaultService"
-	ResourceAzureSubscriptionKeyVaultServiceVault                                      string = "azure.subscription.keyVaultService.vault"
-	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                            string = "azure.subscription.keyVaultService.key.autorotation"
-	ResourceAzureSubscriptionKeyVaultServiceKey                                        string = "azure.subscription.keyVaultService.key"
-	ResourceAzureSubscriptionKeyVaultServiceCertificate                                string = "azure.subscription.keyVaultService.certificate"
-	ResourceAzureSubscriptionKeyVaultServiceSecret                                     string = "azure.subscription.keyVaultService.secret"
-	ResourceAzureSubscriptionMonitorService                                            string = "azure.subscription.monitorService"
-	ResourceAzureSubscriptionMonitorServiceActivityLog                                 string = "azure.subscription.monitorService.activityLog"
-	ResourceAzureSubscriptionMonitorServiceApplicationInsight                          string = "azure.subscription.monitorService.applicationInsight"
-	ResourceAzureSubscriptionMonitorServiceActivityLogAlert                            string = "azure.subscription.monitorService.activityLog.alert"
-	ResourceAzureSubscriptionMonitorServiceLogprofile                                  string = "azure.subscription.monitorService.logprofile"
-	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                           string = "azure.subscription.monitorService.diagnosticsetting"
-	ResourceAzureSubscriptionCloudDefenderService                                      string = "azure.subscription.cloudDefenderService"
-	ResourceAzureSubscriptionCloudDefenderServiceSettings                              string = "azure.subscription.cloudDefenderService.settings"
-	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                       string = "azure.subscription.cloudDefenderService.securityContact"
-	ResourceAzureSubscriptionAuthorizationService                                      string = "azure.subscription.authorizationService"
-	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                        string = "azure.subscription.authorizationService.roleDefinition"
-	ResourceAzureSubscriptionAuthorizationServiceRoleDefinitionPermission              string = "azure.subscription.authorizationService.roleDefinition.permission"
-	ResourceAzureSubscriptionAuthorizationServiceRoleAssignment                        string = "azure.subscription.authorizationService.roleAssignment"
-	ResourceAzureSubscriptionManagedIdentity                                           string = "azure.subscription.managedIdentity"
-	ResourceAzureSubscriptionAksService                                                string = "azure.subscription.aksService"
-	ResourceAzureSubscriptionAksServiceCluster                                         string = "azure.subscription.aksService.cluster"
-	ResourceAzureSubscriptionAdvisorService                                            string = "azure.subscription.advisorService"
-	ResourceAzureSubscriptionAdvisorServiceRecommendation                              string = "azure.subscription.advisorService.recommendation"
-	ResourceAzureSubscriptionAdvisorServiceScore                                       string = "azure.subscription.advisorService.score"
-	ResourceAzureSubscriptionAdvisorServiceTimeSeries                                  string = "azure.subscription.advisorService.timeSeries"
-	ResourceAzureSubscriptionAdvisorServiceSecurityScore                               string = "azure.subscription.advisorService.securityScore"
-	ResourceAzureSubscriptionPolicy                                                    string = "azure.subscription.policy"
-	ResourceAzureSubscriptionPolicyAssignment                                          string = "azure.subscription.policy.assignment"
-	ResourceAzureSubscriptionIotService                                                string = "azure.subscription.iotService"
-	ResourceAzureSubscriptionCacheService                                              string = "azure.subscription.cacheService"
-	ResourceAzureSubscriptionCacheServiceRedisInstance                                 string = "azure.subscription.cacheService.redisInstance"
+	ResourceAzure                                                                      ResourceName = ResourceName("azure")
+	ResourceAzureSubscription                                                          ResourceName = ResourceName("azure.subscription")
+	ResourceAzureSubscriptionWebServiceFunction                                        ResourceName = ResourceName("azure.subscription.webService.function")
+	ResourceAzureSubscriptionResourcegroup                                             ResourceName = ResourceName("azure.subscription.resourcegroup")
+	ResourceAzureSubscriptionResource                                                  ResourceName = ResourceName("azure.subscription.resource")
+	ResourceAzureSubscriptionComputeService                                            ResourceName = ResourceName("azure.subscription.computeService")
+	ResourceAzureSubscriptionComputeServiceVm                                          ResourceName = ResourceName("azure.subscription.computeService.vm")
+	ResourceAzureSubscriptionComputeServiceDisk                                        ResourceName = ResourceName("azure.subscription.computeService.disk")
+	ResourceAzureSubscriptionBatchService                                              ResourceName = ResourceName("azure.subscription.batchService")
+	ResourceAzureSubscriptionBatchServiceAccount                                       ResourceName = ResourceName("azure.subscription.batchService.account")
+	ResourceAzureSubscriptionBatchServiceAccountPool                                   ResourceName = ResourceName("azure.subscription.batchService.account.pool")
+	ResourceAzureSubscriptionNetworkService                                            ResourceName = ResourceName("azure.subscription.networkService")
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                       ResourceName = ResourceName("azure.subscription.networkService.virtualNetworkGateway")
+	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                            ResourceName = ResourceName("azure.subscription.networkService.appSecurityGroup")
+	ResourceAzureSubscriptionNetworkServiceFirewall                                    ResourceName = ResourceName("azure.subscription.networkService.firewall")
+	ResourceAzureSubscriptionNetworkServiceFirewallIpConfig                            ResourceName = ResourceName("azure.subscription.networkService.firewall.ipConfig")
+	ResourceAzureSubscriptionNetworkServiceFirewallNetworkRule                         ResourceName = ResourceName("azure.subscription.networkService.firewall.networkRule")
+	ResourceAzureSubscriptionNetworkServiceFirewallApplicationRule                     ResourceName = ResourceName("azure.subscription.networkService.firewall.applicationRule")
+	ResourceAzureSubscriptionNetworkServiceFirewallNatRule                             ResourceName = ResourceName("azure.subscription.networkService.firewall.natRule")
+	ResourceAzureSubscriptionNetworkServiceFirewallPolicy                              ResourceName = ResourceName("azure.subscription.networkService.firewallPolicy")
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig               ResourceName = ResourceName("azure.subscription.networkService.virtualNetworkGateway.ipConfig")
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection             ResourceName = ResourceName("azure.subscription.networkService.virtualNetworkGateway.connection")
+	ResourceAzureSubscriptionNetworkServiceBgpSettings                                 ResourceName = ResourceName("azure.subscription.networkService.bgpSettings")
+	ResourceAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress ResourceName = ResourceName("azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress")
+	ResourceAzureSubscriptionNetworkServiceNatGateway                                  ResourceName = ResourceName("azure.subscription.networkService.natGateway")
+	ResourceAzureSubscriptionNetworkServiceSubnet                                      ResourceName = ResourceName("azure.subscription.networkService.subnet")
+	ResourceAzureSubscriptionNetworkServiceVirtualNetwork                              ResourceName = ResourceName("azure.subscription.networkService.virtualNetwork")
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions                   ResourceName = ResourceName("azure.subscription.networkService.virtualNetwork.dhcpOptions")
+	ResourceAzureSubscriptionNetworkServiceLoadBalancer                                ResourceName = ResourceName("azure.subscription.networkService.loadBalancer")
+	ResourceAzureSubscriptionNetworkServiceProbe                                       ResourceName = ResourceName("azure.subscription.networkService.probe")
+	ResourceAzureSubscriptionNetworkServiceBackendAddressPool                          ResourceName = ResourceName("azure.subscription.networkService.backendAddressPool")
+	ResourceAzureSubscriptionNetworkServiceInboundNatPool                              ResourceName = ResourceName("azure.subscription.networkService.inboundNatPool")
+	ResourceAzureSubscriptionNetworkServiceInboundNatRule                              ResourceName = ResourceName("azure.subscription.networkService.inboundNatRule")
+	ResourceAzureSubscriptionNetworkServiceFrontendIpConfig                            ResourceName = ResourceName("azure.subscription.networkService.frontendIpConfig")
+	ResourceAzureSubscriptionNetworkServiceLoadBalancerRule                            ResourceName = ResourceName("azure.subscription.networkService.loadBalancerRule")
+	ResourceAzureSubscriptionNetworkServiceOutboundRule                                ResourceName = ResourceName("azure.subscription.networkService.outboundRule")
+	ResourceAzureSubscriptionNetworkServiceInterface                                   ResourceName = ResourceName("azure.subscription.networkService.interface")
+	ResourceAzureSubscriptionNetworkServiceIpAddress                                   ResourceName = ResourceName("azure.subscription.networkService.ipAddress")
+	ResourceAzureSubscriptionNetworkServiceBastionHost                                 ResourceName = ResourceName("azure.subscription.networkService.bastionHost")
+	ResourceAzureSubscriptionNetworkServiceSecurityGroup                               ResourceName = ResourceName("azure.subscription.networkService.securityGroup")
+	ResourceAzureSubscriptionNetworkServiceSecurityrule                                ResourceName = ResourceName("azure.subscription.networkService.securityrule")
+	ResourceAzureSubscriptionNetworkServiceWatcher                                     ResourceName = ResourceName("azure.subscription.networkService.watcher")
+	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                              ResourceName = ResourceName("azure.subscription.networkService.watcher.flowlog")
+	ResourceAzureSubscriptionNetworkServiceApplicationGateway                          ResourceName = ResourceName("azure.subscription.networkService.applicationGateway")
+	ResourceAzureSubscriptionNetworkServiceWafConfig                                   ResourceName = ResourceName("azure.subscription.networkService.wafConfig")
+	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                   ResourceName = ResourceName("azure.subscription.networkService.applicationFirewallPolicy")
+	ResourceAzureSubscriptionStorageService                                            ResourceName = ResourceName("azure.subscription.storageService")
+	ResourceAzureSubscriptionStorageServiceAccount                                     ResourceName = ResourceName("azure.subscription.storageService.account")
+	ResourceAzureSubscriptionStorageServiceAccountDataProtection                       ResourceName = ResourceName("azure.subscription.storageService.account.dataProtection")
+	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                    ResourceName = ResourceName("azure.subscription.storageService.account.service.properties")
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics             ResourceName = ResourceName("azure.subscription.storageService.account.service.properties.metrics")
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy     ResourceName = ResourceName("azure.subscription.storageService.account.service.properties.retentionPolicy")
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging             ResourceName = ResourceName("azure.subscription.storageService.account.service.properties.logging")
+	ResourceAzureSubscriptionStorageServiceAccountContainer                            ResourceName = ResourceName("azure.subscription.storageService.account.container")
+	ResourceAzureSubscriptionWebService                                                ResourceName = ResourceName("azure.subscription.webService")
+	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                 ResourceName = ResourceName("azure.subscription.webService.appRuntimeStack")
+	ResourceAzureSubscriptionWebServiceAppsite                                         ResourceName = ResourceName("azure.subscription.webService.appsite")
+	ResourceAzureSubscriptionPrivateEndpointConnection                                 ResourceName = ResourceName("azure.subscription.privateEndpointConnection")
+	ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState                  ResourceName = ResourceName("azure.subscription.privateEndpointConnection.connectionState")
+	ResourceAzureSubscriptionWebServiceAppslot                                         ResourceName = ResourceName("azure.subscription.webService.appslot")
+	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies       ResourceName = ResourceName("azure.subscription.webService.appsite.basicPublishingCredentialsPolicies")
+	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                             ResourceName = ResourceName("azure.subscription.webService.appsiteauthsettings")
+	ResourceAzureSubscriptionWebServiceAppsiteconfig                                   ResourceName = ResourceName("azure.subscription.webService.appsiteconfig")
+	ResourceAzureSubscriptionWebServiceHostingEnvironment                              ResourceName = ResourceName("azure.subscription.webService.hostingEnvironment")
+	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                ResourceName = ResourceName("azure.subscription.webService.hostingEnvironment.virtualNetwork")
+	ResourceAzureSubscriptionSqlService                                                ResourceName = ResourceName("azure.subscription.sqlService")
+	ResourceAzureSubscriptionSqlServiceServer                                          ResourceName = ResourceName("azure.subscription.sqlService.server")
+	ResourceAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings           ResourceName = ResourceName("azure.subscription.sqlService.server.vulnerabilityassessmentsettings")
+	ResourceAzureSubscriptionSqlServiceServerAdministrator                             ResourceName = ResourceName("azure.subscription.sqlService.server.administrator")
+	ResourceAzureSubscriptionSqlServiceDatabase                                        ResourceName = ResourceName("azure.subscription.sqlService.database")
+	ResourceAzureSubscriptionSqlServiceDatabaseusage                                   ResourceName = ResourceName("azure.subscription.sqlService.databaseusage")
+	ResourceAzureSubscriptionPostgreSqlService                                         ResourceName = ResourceName("azure.subscription.postgreSqlService")
+	ResourceAzureSubscriptionPostgreSqlServiceFlexibleServer                           ResourceName = ResourceName("azure.subscription.postgreSqlService.flexibleServer")
+	ResourceAzureSubscriptionPostgreSqlServiceServer                                   ResourceName = ResourceName("azure.subscription.postgreSqlService.server")
+	ResourceAzureSubscriptionPostgreSqlServiceDatabase                                 ResourceName = ResourceName("azure.subscription.postgreSqlService.database")
+	ResourceAzureSubscriptionSqlServiceConfiguration                                   ResourceName = ResourceName("azure.subscription.sqlService.configuration")
+	ResourceAzureSubscriptionSqlServiceFirewallrule                                    ResourceName = ResourceName("azure.subscription.sqlService.firewallrule")
+	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                              ResourceName = ResourceName("azure.subscription.sqlService.virtualNetworkRule")
+	ResourceAzureSubscriptionMySqlService                                              ResourceName = ResourceName("azure.subscription.mySqlService")
+	ResourceAzureSubscriptionMySqlServiceServer                                        ResourceName = ResourceName("azure.subscription.mySqlService.server")
+	ResourceAzureSubscriptionMySqlServiceDatabase                                      ResourceName = ResourceName("azure.subscription.mySqlService.database")
+	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                ResourceName = ResourceName("azure.subscription.mySqlService.flexibleServer")
+	ResourceAzureSubscriptionMariaDbService                                            ResourceName = ResourceName("azure.subscription.mariaDbService")
+	ResourceAzureSubscriptionMariaDbServiceServer                                      ResourceName = ResourceName("azure.subscription.mariaDbService.server")
+	ResourceAzureSubscriptionMariaDbServiceDatabase                                    ResourceName = ResourceName("azure.subscription.mariaDbService.database")
+	ResourceAzureSubscriptionCosmosDbService                                           ResourceName = ResourceName("azure.subscription.cosmosDbService")
+	ResourceAzureSubscriptionCosmosDbServiceAccount                                    ResourceName = ResourceName("azure.subscription.cosmosDbService.account")
+	ResourceAzureSubscriptionKeyVaultService                                           ResourceName = ResourceName("azure.subscription.keyVaultService")
+	ResourceAzureSubscriptionKeyVaultServiceVault                                      ResourceName = ResourceName("azure.subscription.keyVaultService.vault")
+	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                            ResourceName = ResourceName("azure.subscription.keyVaultService.key.autorotation")
+	ResourceAzureSubscriptionKeyVaultServiceKey                                        ResourceName = ResourceName("azure.subscription.keyVaultService.key")
+	ResourceAzureSubscriptionKeyVaultServiceCertificate                                ResourceName = ResourceName("azure.subscription.keyVaultService.certificate")
+	ResourceAzureSubscriptionKeyVaultServiceSecret                                     ResourceName = ResourceName("azure.subscription.keyVaultService.secret")
+	ResourceAzureSubscriptionMonitorService                                            ResourceName = ResourceName("azure.subscription.monitorService")
+	ResourceAzureSubscriptionMonitorServiceActivityLog                                 ResourceName = ResourceName("azure.subscription.monitorService.activityLog")
+	ResourceAzureSubscriptionMonitorServiceApplicationInsight                          ResourceName = ResourceName("azure.subscription.monitorService.applicationInsight")
+	ResourceAzureSubscriptionMonitorServiceActivityLogAlert                            ResourceName = ResourceName("azure.subscription.monitorService.activityLog.alert")
+	ResourceAzureSubscriptionMonitorServiceLogprofile                                  ResourceName = ResourceName("azure.subscription.monitorService.logprofile")
+	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                           ResourceName = ResourceName("azure.subscription.monitorService.diagnosticsetting")
+	ResourceAzureSubscriptionCloudDefenderService                                      ResourceName = ResourceName("azure.subscription.cloudDefenderService")
+	ResourceAzureSubscriptionCloudDefenderServiceSettings                              ResourceName = ResourceName("azure.subscription.cloudDefenderService.settings")
+	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                       ResourceName = ResourceName("azure.subscription.cloudDefenderService.securityContact")
+	ResourceAzureSubscriptionAuthorizationService                                      ResourceName = ResourceName("azure.subscription.authorizationService")
+	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                        ResourceName = ResourceName("azure.subscription.authorizationService.roleDefinition")
+	ResourceAzureSubscriptionAuthorizationServiceRoleDefinitionPermission              ResourceName = ResourceName("azure.subscription.authorizationService.roleDefinition.permission")
+	ResourceAzureSubscriptionAuthorizationServiceRoleAssignment                        ResourceName = ResourceName("azure.subscription.authorizationService.roleAssignment")
+	ResourceAzureSubscriptionManagedIdentity                                           ResourceName = ResourceName("azure.subscription.managedIdentity")
+	ResourceAzureSubscriptionAksService                                                ResourceName = ResourceName("azure.subscription.aksService")
+	ResourceAzureSubscriptionAksServiceCluster                                         ResourceName = ResourceName("azure.subscription.aksService.cluster")
+	ResourceAzureSubscriptionAdvisorService                                            ResourceName = ResourceName("azure.subscription.advisorService")
+	ResourceAzureSubscriptionAdvisorServiceRecommendation                              ResourceName = ResourceName("azure.subscription.advisorService.recommendation")
+	ResourceAzureSubscriptionAdvisorServiceScore                                       ResourceName = ResourceName("azure.subscription.advisorService.score")
+	ResourceAzureSubscriptionAdvisorServiceTimeSeries                                  ResourceName = ResourceName("azure.subscription.advisorService.timeSeries")
+	ResourceAzureSubscriptionAdvisorServiceSecurityScore                               ResourceName = ResourceName("azure.subscription.advisorService.securityScore")
+	ResourceAzureSubscriptionPolicy                                                    ResourceName = ResourceName("azure.subscription.policy")
+	ResourceAzureSubscriptionPolicyAssignment                                          ResourceName = ResourceName("azure.subscription.policy.assignment")
+	ResourceAzureSubscriptionIotService                                                ResourceName = ResourceName("azure.subscription.iotService")
+	ResourceAzureSubscriptionCacheService                                              ResourceName = ResourceName("azure.subscription.cacheService")
+	ResourceAzureSubscriptionCacheServiceRedisInstance                                 ResourceName = ResourceName("azure.subscription.cacheService.redisInstance")
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -624,10 +628,11 @@ func init() {
 // NewResource is used by the runtime of this plugin to create new resources.
 // Its arguments may be provided by users. This function is generally not
 // used by initializing resources from recordings or from lists.
-func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
-	f, ok := resourceFactories[name]
+func NewResource(runtime *plugin.Runtime, name ResourceName, args map[string]*llx.RawData) (plugin.Resource, error) {
+	resourceName := string(name)
+	f, ok := resourceFactories[resourceName]
 	if !ok {
-		return nil, errors.New("cannot find resource " + name + " in this provider")
+		return nil, errors.New("cannot find resource " + string(name) + " in this provider")
 	}
 
 	if f.Init != nil {
@@ -639,9 +644,9 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", resourceName)
 			}
-			id := name + "\x00" + mqlId
+			id := resourceName + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
 				return x, nil
 			}
@@ -659,9 +664,9 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 
 	mqlId := res.MqlID()
 	if mqlId == "" {
-		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", resourceName)
 	}
-	id := name + "\x00" + mqlId
+	id := resourceName + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
@@ -673,10 +678,11 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 // CreateResource is used by the runtime of this plugin to create resources.
 // Its arguments must be complete and pre-processed. This method is used
 // for initializing resources from recordings or from lists.
-func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
-	f, ok := resourceFactories[name]
+func CreateResource(runtime *plugin.Runtime, name ResourceName, args map[string]*llx.RawData) (plugin.Resource, error) {
+	resourceName := string(name)
+	f, ok := resourceFactories[resourceName]
 	if !ok {
-		return nil, errors.New("cannot find resource " + name + " in this provider")
+		return nil, errors.New("cannot find resource " + resourceName + " in this provider")
 	}
 
 	res, err := f.Create(runtime, args)
@@ -686,9 +692,9 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 
 	mqlId := res.MqlID()
 	if mqlId == "" {
-		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", resourceName)
 	}
-	id := name + "\x00" + mqlId
+	id := resourceName + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}

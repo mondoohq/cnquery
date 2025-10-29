@@ -125,6 +125,10 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/types"%s
 )
+
+// ResourceName is a type-safe alias for resource name constants.
+// This ensures only constants from this file can be used, not string literals.
+type ResourceName string
 `
 
 func (b *goBuilder) createTypeNameConstsBlock(r []*Resource) string {
@@ -139,7 +143,7 @@ const (
 	var consts []string
 	for _, resource := range r {
 		constTypeName := resource.constTypeName(b)
-		consts = append(consts, fmt.Sprintf("%s string = \"%s\"", constTypeName, resource.ID))
+		consts = append(consts, fmt.Sprintf("%s ResourceName = ResourceName(\"%s\")", constTypeName, resource.ID))
 	}
 
 	return fmt.Sprintf(constBlock, strings.Join(consts, "\n\t"))
@@ -175,10 +179,11 @@ func init() {
 // NewResource is used by the runtime of this plugin to create new resources.
 // Its arguments may be provided by users. This function is generally not
 // used by initializing resources from recordings or from lists.
-func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
-	f, ok := resourceFactories[name]
+func NewResource(runtime *plugin.Runtime, name ResourceName, args map[string]*llx.RawData) (plugin.Resource, error) {
+	resourceName := string(name)
+	f, ok := resourceFactories[resourceName]
 	if !ok {
-		return nil, errors.New("cannot find resource " + name + " in this provider")
+		return nil, errors.New("cannot find resource " + string(name) + " in this provider")
 	}
 
 	if f.Init != nil {
@@ -190,9 +195,9 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", resourceName)
 			}
-			id := name + "\x00" + mqlId
+			id := resourceName + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
 				return x, nil
 			}
@@ -210,9 +215,9 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 
 	mqlId := res.MqlID()
 	if mqlId == "" {
-		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", resourceName)
 	}
-	id := name + "\x00" + mqlId
+	id := resourceName + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
@@ -224,10 +229,11 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 // CreateResource is used by the runtime of this plugin to create resources.
 // Its arguments must be complete and pre-processed. This method is used
 // for initializing resources from recordings or from lists.
-func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
-	f, ok := resourceFactories[name]
+func CreateResource(runtime *plugin.Runtime, name ResourceName, args map[string]*llx.RawData) (plugin.Resource, error) {
+	resourceName := string(name)
+	f, ok := resourceFactories[resourceName]
 	if !ok {
-		return nil, errors.New("cannot find resource " + name + " in this provider")
+		return nil, errors.New("cannot find resource " + resourceName + " in this provider")
 	}
 
 	res, err := f.Create(runtime, args)
@@ -237,9 +243,9 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 
 	mqlId := res.MqlID()
 	if mqlId == "" {
-		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", resourceName)
 	}
-	id := name + "\x00" + mqlId
+	id := resourceName + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}

@@ -15,109 +15,113 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// ResourceName is a type-safe alias for resource name constants.
+// This ensures only constants from this file can be used, not string literals.
+type ResourceName string
+
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceMicrosoft                                                                                    string = "microsoft"
-	ResourceMicrosoftIdentityAndAccessAccessReviews                                                      string = "microsoft.identityAndAccess.accessReviews"
-	ResourceMicrosoftIdentityAndAccessAccessReviewDefinition                                             string = "microsoft.identityAndAccess.accessReviewDefinition"
-	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings                 string = "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"
-	ResourceMicrosoftGroups                                                                              string = "microsoft.groups"
-	ResourceMicrosoftSetting                                                                             string = "microsoft.setting"
-	ResourceMicrosoftSettingValue                                                                        string = "microsoft.settingValue"
-	ResourceMicrosoftApplications                                                                        string = "microsoft.applications"
-	ResourceMicrosoftTenant                                                                              string = "microsoft.tenant"
-	ResourceMicrosoftTenantSettings                                                                      string = "microsoft.tenantSettings"
-	ResourceMicrosoftTenantFormsSettings                                                                 string = "microsoft.tenantFormsSettings"
-	ResourceMicrosoftUsers                                                                               string = "microsoft.users"
-	ResourceMicrosoftIdentityAndAccess                                                                   string = "microsoft.identityAndAccess"
-	ResourceMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance                                    string = "microsoft.identityAndAccess.roleEligibilityScheduleInstance"
-	ResourceMicrosoftIdentityAndAccessPolicy                                                             string = "microsoft.identityAndAccess.policy"
-	ResourceMicrosoftIdentityAndAccessPolicyRule                                                         string = "microsoft.identityAndAccess.policy.rule"
-	ResourceMicrosoftIdentityAndAccessPolicyRuleTarget                                                   string = "microsoft.identityAndAccess.policy.ruleTarget"
-	ResourceMicrosoftIdentityAndAccessIdentityAndSignIn                                                  string = "microsoft.identityAndAccess.identityAndSignIn"
-	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPolicies                                          string = "microsoft.identityAndAccess.identityAndSignIn.policies"
-	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy string = "microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy"
-	ResourceMicrosoftUserAssignedLicense                                                                 string = "microsoft.user.assignedLicense"
-	ResourceMicrosoftUserLicenseDetail                                                                   string = "microsoft.user.licenseDetail"
-	ResourceMicrosoftUserLicenseDetailServicePlanInfo                                                    string = "microsoft.user.licenseDetail.servicePlanInfo"
-	ResourceMicrosoftConditionalAccess                                                                   string = "microsoft.conditionalAccess"
-	ResourceMicrosoftConditionalAccessAuthenticationMethodsPolicy                                        string = "microsoft.conditionalAccess.authenticationMethodsPolicy"
-	ResourceMicrosoftConditionalAccessAuthenticationMethodConfiguration                                  string = "microsoft.conditionalAccess.authenticationMethodConfiguration"
-	ResourceMicrosoftConditionalAccessNamedLocations                                                     string = "microsoft.conditionalAccess.namedLocations"
-	ResourceMicrosoftConditionalAccessPolicy                                                             string = "microsoft.conditionalAccess.policy"
-	ResourceMicrosoftConditionalAccessPolicyConditions                                                   string = "microsoft.conditionalAccess.policy.conditions"
-	ResourceMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows                                string = "microsoft.conditionalAccess.policy.conditions.authenticationFlows"
-	ResourceMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength                          string = "microsoft.conditionalAccess.policy.grantControls.authenticationStrength"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsSignInFrequency                               string = "microsoft.conditionalAccess.policy.sessionControls.signInFrequency"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity                              string = "microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser                             string = "microsoft.conditionalAccess.policy.sessionControls.persistentBrowser"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions               string = "microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions"
-	ResourceMicrosoftConditionalAccessPolicyConditionsClientApplications                                 string = "microsoft.conditionalAccess.policy.conditions.clientApplications"
-	ResourceMicrosoftConditionalAccessPolicyConditionsPlatforms                                          string = "microsoft.conditionalAccess.policy.conditions.platforms"
-	ResourceMicrosoftConditionalAccessPolicyConditionsApplications                                       string = "microsoft.conditionalAccess.policy.conditions.applications"
-	ResourceMicrosoftConditionalAccessPolicyConditionsUsers                                              string = "microsoft.conditionalAccess.policy.conditions.users"
-	ResourceMicrosoftConditionalAccessPolicyConditionsLocations                                          string = "microsoft.conditionalAccess.policy.conditions.locations"
-	ResourceMicrosoftConditionalAccessPolicyGrantControls                                                string = "microsoft.conditionalAccess.policy.grantControls"
-	ResourceMicrosoftConditionalAccessPolicySessionControls                                              string = "microsoft.conditionalAccess.policy.sessionControls"
-	ResourceMicrosoftConditionalAccessIpNamedLocation                                                    string = "microsoft.conditionalAccess.ipNamedLocation"
-	ResourceMicrosoftConditionalAccessCountryNamedLocation                                               string = "microsoft.conditionalAccess.countryNamedLocation"
-	ResourceMicrosoftUser                                                                                string = "microsoft.user"
-	ResourceMicrosoftUserAuthenticationRequirements                                                      string = "microsoft.user.authenticationRequirements"
-	ResourceMicrosoftUserAuditlog                                                                        string = "microsoft.user.auditlog"
-	ResourceMicrosoftUserIdentity                                                                        string = "microsoft.user.identity"
-	ResourceMicrosoftUserSignin                                                                          string = "microsoft.user.signin"
-	ResourceMicrosoftUserAuthenticationMethods                                                           string = "microsoft.user.authenticationMethods"
-	ResourceMicrosoftUserAuthenticationMethodsUserRegistrationDetails                                    string = "microsoft.user.authenticationMethods.userRegistrationDetails"
-	ResourceMicrosoftGroup                                                                               string = "microsoft.group"
-	ResourceMicrosoftGroupOwner                                                                          string = "microsoft.group.owner"
-	ResourceMicrosoftGroupLifecyclePolicy                                                                string = "microsoft.groupLifecyclePolicy"
-	ResourceMicrosoftDevices                                                                             string = "microsoft.devices"
-	ResourceMicrosoftDevice                                                                              string = "microsoft.device"
-	ResourceMicrosoftDomain                                                                              string = "microsoft.domain"
-	ResourceMicrosoftDomaindnsrecord                                                                     string = "microsoft.domaindnsrecord"
-	ResourceMicrosoftApplication                                                                         string = "microsoft.application"
-	ResourceMicrosoftApplicationRole                                                                     string = "microsoft.application.role"
-	ResourceMicrosoftKeyCredential                                                                       string = "microsoft.keyCredential"
-	ResourceMicrosoftPasswordCredential                                                                  string = "microsoft.passwordCredential"
-	ResourceMicrosoftServiceprincipal                                                                    string = "microsoft.serviceprincipal"
-	ResourceMicrosoftServiceprincipalAssignment                                                          string = "microsoft.serviceprincipal.assignment"
-	ResourceMicrosoftApplicationPermission                                                               string = "microsoft.application.permission"
-	ResourceMicrosoftSecurity                                                                            string = "microsoft.security"
-	ResourceMicrosoftSecuritySecurityscore                                                               string = "microsoft.security.securityscore"
-	ResourceMicrosoftSecurityRiskyUser                                                                   string = "microsoft.security.riskyUser"
-	ResourceMicrosoftSecurityExchange                                                                    string = "microsoft.security.exchange"
-	ResourceMicrosoftSecurityExchangeAntispam                                                            string = "microsoft.security.exchange.antispam"
-	ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy                                string = "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy"
-	ResourceMicrosoftPolicies                                                                            string = "microsoft.policies"
-	ResourceMicrosoftPoliciesExternalIdentitiesPolicy                                                    string = "microsoft.policies.externalIdentitiesPolicy"
-	ResourceMicrosoftPoliciesActivityBasedTimeoutPolicy                                                  string = "microsoft.policies.activityBasedTimeoutPolicy"
-	ResourceMicrosoftAdminConsentRequestPolicy                                                           string = "microsoft.adminConsentRequestPolicy"
-	ResourceMicrosoftGraphAccessReviewReviewerScope                                                      string = "microsoft.graph.accessReviewReviewerScope"
-	ResourceMicrosoftPoliciesAuthenticationMethodsPolicy                                                 string = "microsoft.policies.authenticationMethodsPolicy"
-	ResourceMicrosoftPoliciesAuthenticationMethodConfiguration                                           string = "microsoft.policies.authenticationMethodConfiguration"
-	ResourceMicrosoftRoles                                                                               string = "microsoft.roles"
-	ResourceMicrosoftRolemanagement                                                                      string = "microsoft.rolemanagement"
-	ResourceMicrosoftRolemanagementRoledefinition                                                        string = "microsoft.rolemanagement.roledefinition"
-	ResourceMicrosoftRolemanagementRoleassignment                                                        string = "microsoft.rolemanagement.roleassignment"
-	ResourceMicrosoftDevicemanagement                                                                    string = "microsoft.devicemanagement"
-	ResourceMicrosoftDevicemanagementDeviceEnrollmentConfiguration                                       string = "microsoft.devicemanagement.deviceEnrollmentConfiguration"
-	ResourceMicrosoftDevicemanagementManageddevice                                                       string = "microsoft.devicemanagement.manageddevice"
-	ResourceMicrosoftDevicemanagementDeviceconfiguration                                                 string = "microsoft.devicemanagement.deviceconfiguration"
-	ResourceMicrosoftDevicemanagementDevicecompliancepolicy                                              string = "microsoft.devicemanagement.devicecompliancepolicy"
-	ResourceMs365Exchangeonline                                                                          string = "ms365.exchangeonline"
-	ResourceMs365ExchangeonlineMailboxAuditBypassAssociation                                             string = "ms365.exchangeonlineMailboxAuditBypassAssociation"
-	ResourceMs365ExchangeonlineSecurityAndCompliance                                                     string = "ms365.exchangeonline.securityAndCompliance"
-	ResourceMs365ExchangeonlineTeamsProtectionPolicy                                                     string = "ms365.exchangeonline.teamsProtectionPolicy"
-	ResourceMs365ExchangeonlineReportSubmissionPolicy                                                    string = "ms365.exchangeonline.reportSubmissionPolicy"
-	ResourceMs365ExchangeonlineExternalSender                                                            string = "ms365.exchangeonline.externalSender"
-	ResourceMs365ExchangeonlineExoMailbox                                                                string = "ms365.exchangeonline.exoMailbox"
-	ResourceMs365ExchangeonlineMailbox                                                                   string = "ms365.exchangeonline.mailbox"
-	ResourceMs365Sharepointonline                                                                        string = "ms365.sharepointonline"
-	ResourceMs365SharepointonlineSite                                                                    string = "ms365.sharepointonline.site"
-	ResourceMs365Teams                                                                                   string = "ms365.teams"
-	ResourceMs365TeamsTenantFederationConfig                                                             string = "ms365.teams.tenantFederationConfig"
-	ResourceMs365TeamsTeamsMeetingPolicyConfig                                                           string = "ms365.teams.teamsMeetingPolicyConfig"
-	ResourceMs365TeamsTeamsMessagingPolicyConfig                                                         string = "ms365.teams.teamsMessagingPolicyConfig"
+	ResourceMicrosoft                                                                                    ResourceName = ResourceName("microsoft")
+	ResourceMicrosoftIdentityAndAccessAccessReviews                                                      ResourceName = ResourceName("microsoft.identityAndAccess.accessReviews")
+	ResourceMicrosoftIdentityAndAccessAccessReviewDefinition                                             ResourceName = ResourceName("microsoft.identityAndAccess.accessReviewDefinition")
+	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings                 ResourceName = ResourceName("microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings")
+	ResourceMicrosoftGroups                                                                              ResourceName = ResourceName("microsoft.groups")
+	ResourceMicrosoftSetting                                                                             ResourceName = ResourceName("microsoft.setting")
+	ResourceMicrosoftSettingValue                                                                        ResourceName = ResourceName("microsoft.settingValue")
+	ResourceMicrosoftApplications                                                                        ResourceName = ResourceName("microsoft.applications")
+	ResourceMicrosoftTenant                                                                              ResourceName = ResourceName("microsoft.tenant")
+	ResourceMicrosoftTenantSettings                                                                      ResourceName = ResourceName("microsoft.tenantSettings")
+	ResourceMicrosoftTenantFormsSettings                                                                 ResourceName = ResourceName("microsoft.tenantFormsSettings")
+	ResourceMicrosoftUsers                                                                               ResourceName = ResourceName("microsoft.users")
+	ResourceMicrosoftIdentityAndAccess                                                                   ResourceName = ResourceName("microsoft.identityAndAccess")
+	ResourceMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance                                    ResourceName = ResourceName("microsoft.identityAndAccess.roleEligibilityScheduleInstance")
+	ResourceMicrosoftIdentityAndAccessPolicy                                                             ResourceName = ResourceName("microsoft.identityAndAccess.policy")
+	ResourceMicrosoftIdentityAndAccessPolicyRule                                                         ResourceName = ResourceName("microsoft.identityAndAccess.policy.rule")
+	ResourceMicrosoftIdentityAndAccessPolicyRuleTarget                                                   ResourceName = ResourceName("microsoft.identityAndAccess.policy.ruleTarget")
+	ResourceMicrosoftIdentityAndAccessIdentityAndSignIn                                                  ResourceName = ResourceName("microsoft.identityAndAccess.identityAndSignIn")
+	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPolicies                                          ResourceName = ResourceName("microsoft.identityAndAccess.identityAndSignIn.policies")
+	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy ResourceName = ResourceName("microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy")
+	ResourceMicrosoftUserAssignedLicense                                                                 ResourceName = ResourceName("microsoft.user.assignedLicense")
+	ResourceMicrosoftUserLicenseDetail                                                                   ResourceName = ResourceName("microsoft.user.licenseDetail")
+	ResourceMicrosoftUserLicenseDetailServicePlanInfo                                                    ResourceName = ResourceName("microsoft.user.licenseDetail.servicePlanInfo")
+	ResourceMicrosoftConditionalAccess                                                                   ResourceName = ResourceName("microsoft.conditionalAccess")
+	ResourceMicrosoftConditionalAccessAuthenticationMethodsPolicy                                        ResourceName = ResourceName("microsoft.conditionalAccess.authenticationMethodsPolicy")
+	ResourceMicrosoftConditionalAccessAuthenticationMethodConfiguration                                  ResourceName = ResourceName("microsoft.conditionalAccess.authenticationMethodConfiguration")
+	ResourceMicrosoftConditionalAccessNamedLocations                                                     ResourceName = ResourceName("microsoft.conditionalAccess.namedLocations")
+	ResourceMicrosoftConditionalAccessPolicy                                                             ResourceName = ResourceName("microsoft.conditionalAccess.policy")
+	ResourceMicrosoftConditionalAccessPolicyConditions                                                   ResourceName = ResourceName("microsoft.conditionalAccess.policy.conditions")
+	ResourceMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows                                ResourceName = ResourceName("microsoft.conditionalAccess.policy.conditions.authenticationFlows")
+	ResourceMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength                          ResourceName = ResourceName("microsoft.conditionalAccess.policy.grantControls.authenticationStrength")
+	ResourceMicrosoftConditionalAccessPolicySessionControlsSignInFrequency                               ResourceName = ResourceName("microsoft.conditionalAccess.policy.sessionControls.signInFrequency")
+	ResourceMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity                              ResourceName = ResourceName("microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity")
+	ResourceMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser                             ResourceName = ResourceName("microsoft.conditionalAccess.policy.sessionControls.persistentBrowser")
+	ResourceMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions               ResourceName = ResourceName("microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions")
+	ResourceMicrosoftConditionalAccessPolicyConditionsClientApplications                                 ResourceName = ResourceName("microsoft.conditionalAccess.policy.conditions.clientApplications")
+	ResourceMicrosoftConditionalAccessPolicyConditionsPlatforms                                          ResourceName = ResourceName("microsoft.conditionalAccess.policy.conditions.platforms")
+	ResourceMicrosoftConditionalAccessPolicyConditionsApplications                                       ResourceName = ResourceName("microsoft.conditionalAccess.policy.conditions.applications")
+	ResourceMicrosoftConditionalAccessPolicyConditionsUsers                                              ResourceName = ResourceName("microsoft.conditionalAccess.policy.conditions.users")
+	ResourceMicrosoftConditionalAccessPolicyConditionsLocations                                          ResourceName = ResourceName("microsoft.conditionalAccess.policy.conditions.locations")
+	ResourceMicrosoftConditionalAccessPolicyGrantControls                                                ResourceName = ResourceName("microsoft.conditionalAccess.policy.grantControls")
+	ResourceMicrosoftConditionalAccessPolicySessionControls                                              ResourceName = ResourceName("microsoft.conditionalAccess.policy.sessionControls")
+	ResourceMicrosoftConditionalAccessIpNamedLocation                                                    ResourceName = ResourceName("microsoft.conditionalAccess.ipNamedLocation")
+	ResourceMicrosoftConditionalAccessCountryNamedLocation                                               ResourceName = ResourceName("microsoft.conditionalAccess.countryNamedLocation")
+	ResourceMicrosoftUser                                                                                ResourceName = ResourceName("microsoft.user")
+	ResourceMicrosoftUserAuthenticationRequirements                                                      ResourceName = ResourceName("microsoft.user.authenticationRequirements")
+	ResourceMicrosoftUserAuditlog                                                                        ResourceName = ResourceName("microsoft.user.auditlog")
+	ResourceMicrosoftUserIdentity                                                                        ResourceName = ResourceName("microsoft.user.identity")
+	ResourceMicrosoftUserSignin                                                                          ResourceName = ResourceName("microsoft.user.signin")
+	ResourceMicrosoftUserAuthenticationMethods                                                           ResourceName = ResourceName("microsoft.user.authenticationMethods")
+	ResourceMicrosoftUserAuthenticationMethodsUserRegistrationDetails                                    ResourceName = ResourceName("microsoft.user.authenticationMethods.userRegistrationDetails")
+	ResourceMicrosoftGroup                                                                               ResourceName = ResourceName("microsoft.group")
+	ResourceMicrosoftGroupOwner                                                                          ResourceName = ResourceName("microsoft.group.owner")
+	ResourceMicrosoftGroupLifecyclePolicy                                                                ResourceName = ResourceName("microsoft.groupLifecyclePolicy")
+	ResourceMicrosoftDevices                                                                             ResourceName = ResourceName("microsoft.devices")
+	ResourceMicrosoftDevice                                                                              ResourceName = ResourceName("microsoft.device")
+	ResourceMicrosoftDomain                                                                              ResourceName = ResourceName("microsoft.domain")
+	ResourceMicrosoftDomaindnsrecord                                                                     ResourceName = ResourceName("microsoft.domaindnsrecord")
+	ResourceMicrosoftApplication                                                                         ResourceName = ResourceName("microsoft.application")
+	ResourceMicrosoftApplicationRole                                                                     ResourceName = ResourceName("microsoft.application.role")
+	ResourceMicrosoftKeyCredential                                                                       ResourceName = ResourceName("microsoft.keyCredential")
+	ResourceMicrosoftPasswordCredential                                                                  ResourceName = ResourceName("microsoft.passwordCredential")
+	ResourceMicrosoftServiceprincipal                                                                    ResourceName = ResourceName("microsoft.serviceprincipal")
+	ResourceMicrosoftServiceprincipalAssignment                                                          ResourceName = ResourceName("microsoft.serviceprincipal.assignment")
+	ResourceMicrosoftApplicationPermission                                                               ResourceName = ResourceName("microsoft.application.permission")
+	ResourceMicrosoftSecurity                                                                            ResourceName = ResourceName("microsoft.security")
+	ResourceMicrosoftSecuritySecurityscore                                                               ResourceName = ResourceName("microsoft.security.securityscore")
+	ResourceMicrosoftSecurityRiskyUser                                                                   ResourceName = ResourceName("microsoft.security.riskyUser")
+	ResourceMicrosoftSecurityExchange                                                                    ResourceName = ResourceName("microsoft.security.exchange")
+	ResourceMicrosoftSecurityExchangeAntispam                                                            ResourceName = ResourceName("microsoft.security.exchange.antispam")
+	ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy                                ResourceName = ResourceName("microsoft.security.exchange.antispam.hostedConnectionFilterPolicy")
+	ResourceMicrosoftPolicies                                                                            ResourceName = ResourceName("microsoft.policies")
+	ResourceMicrosoftPoliciesExternalIdentitiesPolicy                                                    ResourceName = ResourceName("microsoft.policies.externalIdentitiesPolicy")
+	ResourceMicrosoftPoliciesActivityBasedTimeoutPolicy                                                  ResourceName = ResourceName("microsoft.policies.activityBasedTimeoutPolicy")
+	ResourceMicrosoftAdminConsentRequestPolicy                                                           ResourceName = ResourceName("microsoft.adminConsentRequestPolicy")
+	ResourceMicrosoftGraphAccessReviewReviewerScope                                                      ResourceName = ResourceName("microsoft.graph.accessReviewReviewerScope")
+	ResourceMicrosoftPoliciesAuthenticationMethodsPolicy                                                 ResourceName = ResourceName("microsoft.policies.authenticationMethodsPolicy")
+	ResourceMicrosoftPoliciesAuthenticationMethodConfiguration                                           ResourceName = ResourceName("microsoft.policies.authenticationMethodConfiguration")
+	ResourceMicrosoftRoles                                                                               ResourceName = ResourceName("microsoft.roles")
+	ResourceMicrosoftRolemanagement                                                                      ResourceName = ResourceName("microsoft.rolemanagement")
+	ResourceMicrosoftRolemanagementRoledefinition                                                        ResourceName = ResourceName("microsoft.rolemanagement.roledefinition")
+	ResourceMicrosoftRolemanagementRoleassignment                                                        ResourceName = ResourceName("microsoft.rolemanagement.roleassignment")
+	ResourceMicrosoftDevicemanagement                                                                    ResourceName = ResourceName("microsoft.devicemanagement")
+	ResourceMicrosoftDevicemanagementDeviceEnrollmentConfiguration                                       ResourceName = ResourceName("microsoft.devicemanagement.deviceEnrollmentConfiguration")
+	ResourceMicrosoftDevicemanagementManageddevice                                                       ResourceName = ResourceName("microsoft.devicemanagement.manageddevice")
+	ResourceMicrosoftDevicemanagementDeviceconfiguration                                                 ResourceName = ResourceName("microsoft.devicemanagement.deviceconfiguration")
+	ResourceMicrosoftDevicemanagementDevicecompliancepolicy                                              ResourceName = ResourceName("microsoft.devicemanagement.devicecompliancepolicy")
+	ResourceMs365Exchangeonline                                                                          ResourceName = ResourceName("ms365.exchangeonline")
+	ResourceMs365ExchangeonlineMailboxAuditBypassAssociation                                             ResourceName = ResourceName("ms365.exchangeonlineMailboxAuditBypassAssociation")
+	ResourceMs365ExchangeonlineSecurityAndCompliance                                                     ResourceName = ResourceName("ms365.exchangeonline.securityAndCompliance")
+	ResourceMs365ExchangeonlineTeamsProtectionPolicy                                                     ResourceName = ResourceName("ms365.exchangeonline.teamsProtectionPolicy")
+	ResourceMs365ExchangeonlineReportSubmissionPolicy                                                    ResourceName = ResourceName("ms365.exchangeonline.reportSubmissionPolicy")
+	ResourceMs365ExchangeonlineExternalSender                                                            ResourceName = ResourceName("ms365.exchangeonline.externalSender")
+	ResourceMs365ExchangeonlineExoMailbox                                                                ResourceName = ResourceName("ms365.exchangeonline.exoMailbox")
+	ResourceMs365ExchangeonlineMailbox                                                                   ResourceName = ResourceName("ms365.exchangeonline.mailbox")
+	ResourceMs365Sharepointonline                                                                        ResourceName = ResourceName("ms365.sharepointonline")
+	ResourceMs365SharepointonlineSite                                                                    ResourceName = ResourceName("ms365.sharepointonline.site")
+	ResourceMs365Teams                                                                                   ResourceName = ResourceName("ms365.teams")
+	ResourceMs365TeamsTenantFederationConfig                                                             ResourceName = ResourceName("ms365.teams.tenantFederationConfig")
+	ResourceMs365TeamsTeamsMeetingPolicyConfig                                                           ResourceName = ResourceName("ms365.teams.teamsMeetingPolicyConfig")
+	ResourceMs365TeamsTeamsMessagingPolicyConfig                                                         ResourceName = ResourceName("ms365.teams.teamsMessagingPolicyConfig")
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -534,10 +538,11 @@ func init() {
 // NewResource is used by the runtime of this plugin to create new resources.
 // Its arguments may be provided by users. This function is generally not
 // used by initializing resources from recordings or from lists.
-func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
-	f, ok := resourceFactories[name]
+func NewResource(runtime *plugin.Runtime, name ResourceName, args map[string]*llx.RawData) (plugin.Resource, error) {
+	resourceName := string(name)
+	f, ok := resourceFactories[resourceName]
 	if !ok {
-		return nil, errors.New("cannot find resource " + name + " in this provider")
+		return nil, errors.New("cannot find resource " + string(name) + " in this provider")
 	}
 
 	if f.Init != nil {
@@ -549,9 +554,9 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", resourceName)
 			}
-			id := name + "\x00" + mqlId
+			id := resourceName + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
 				return x, nil
 			}
@@ -569,9 +574,9 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 
 	mqlId := res.MqlID()
 	if mqlId == "" {
-		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", resourceName)
 	}
-	id := name + "\x00" + mqlId
+	id := resourceName + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
@@ -583,10 +588,11 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 // CreateResource is used by the runtime of this plugin to create resources.
 // Its arguments must be complete and pre-processed. This method is used
 // for initializing resources from recordings or from lists.
-func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
-	f, ok := resourceFactories[name]
+func CreateResource(runtime *plugin.Runtime, name ResourceName, args map[string]*llx.RawData) (plugin.Resource, error) {
+	resourceName := string(name)
+	f, ok := resourceFactories[resourceName]
 	if !ok {
-		return nil, errors.New("cannot find resource " + name + " in this provider")
+		return nil, errors.New("cannot find resource " + resourceName + " in this provider")
 	}
 
 	res, err := f.Create(runtime, args)
@@ -596,9 +602,9 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 
 	mqlId := res.MqlID()
 	if mqlId == "" {
-		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", resourceName)
 	}
-	id := name + "\x00" + mqlId
+	id := resourceName + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
