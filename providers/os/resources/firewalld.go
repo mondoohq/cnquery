@@ -982,10 +982,11 @@ func parseRichRule(line string) parsedFirewalldRule {
 		case "limit":
 			continue
 		case "not":
-			if section == "source" {
+			switch section {
+			case "source":
 				inNot = true
 				rule.Source.HasNot = true
-			} else if section == "destination" {
+			case "destination":
 				inNot = true
 				rule.Dest.HasNot = true
 			}
