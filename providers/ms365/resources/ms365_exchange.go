@@ -368,7 +368,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	malwareFilterPolicy, malwareFilterPolicyErr := convert.JsonToDictSlice(report.MalwareFilterPolicy)
 	r.MalwareFilterPolicy = plugin.TValue[[]any]{Data: malwareFilterPolicy, State: plugin.StateIsSet, Error: malwareFilterPolicyErr}
 
-	hostedOutboundSpamFilterPolicy, hostedOutboundSpamFilterPolicyErr := convert.JsonToDictSlice(report.HostedContentFilterPolicy)
+	hostedOutboundSpamFilterPolicy, hostedOutboundSpamFilterPolicyErr := convert.JsonToDictSlice(report.HostedOutboundSpamFilterPolicy)
 	r.HostedOutboundSpamFilterPolicy = plugin.TValue[[]any]{Data: hostedOutboundSpamFilterPolicy, State: plugin.StateIsSet, Error: hostedOutboundSpamFilterPolicyErr}
 
 	hostedContentFilterPolicy, hostedContentFilterPolicyErr := convert.JsonToDictSlice(report.HostedContentFilterPolicy)
