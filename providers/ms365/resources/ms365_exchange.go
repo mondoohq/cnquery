@@ -55,6 +55,7 @@ $MailboxAuditBypassAssociation = (Get-MailboxAuditBypassAssociation -ResultSize 
 
 $MalwareFilterPolicy = (Get-MalwareFilterPolicy)
 $HostedOutboundSpamFilterPolicy = (Get-HostedOutboundSpamFilterPolicy)
+$HostedContentFilterPolicy = (Get-HostedContentFilterPolicy)
 $TransportRule = (Get-TransportRule)
 $RemoteDomain = (Get-RemoteDomain Default)
 $SafeLinksPolicy = (Get-SafeLinksPolicy)
@@ -79,6 +80,7 @@ $TransportConfig = (Get-TransportConfig)
 $exchangeOnline = New-Object PSObject
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MalwareFilterPolicy -Value @($MalwareFilterPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name HostedOutboundSpamFilterPolicy -Value @($HostedOutboundSpamFilterPolicy)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name HostedContentFilterPolicy -Value @($HostedContentFilterPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TransportRule -Value @($TransportRule)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name RemoteDomain -Value  @($RemoteDomain)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SafeLinksPolicy -Value @($SafeLinksPolicy)
@@ -109,6 +111,7 @@ ConvertTo-Json -Depth 4 $exchangeOnline
 type ExchangeOnlineReport struct {
 	MalwareFilterPolicy            []any             `json:"MalwareFilterPolicy"`
 	HostedOutboundSpamFilterPolicy []any             `json:"HostedOutboundSpamFilterPolicy"`
+	HostedContentFilterPolicy      []any             `json:"HostedContentFilterPolicy"`
 	TransportRule                  []any             `json:"TransportRule"`
 	RemoteDomain                   []any             `json:"RemoteDomain"`
 	SafeLinksPolicy                []any             `json:"SafeLinksPolicy"`
@@ -392,6 +395,9 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	hostedOutboundSpamFilterPolicy, hostedOutboundSpamFilterPolicyErr := convert.JsonToDictSlice(report.HostedOutboundSpamFilterPolicy)
 	r.HostedOutboundSpamFilterPolicy = plugin.TValue[[]any]{Data: hostedOutboundSpamFilterPolicy, State: plugin.StateIsSet, Error: hostedOutboundSpamFilterPolicyErr}
 
+	hostedContentFilterPolicy, hostedContentFilterPolicyErr := convert.JsonToDictSlice(report.HostedContentFilterPolicy)
+	r.HostedContentFilterPolicy = plugin.TValue[[]any]{Data: hostedContentFilterPolicy, State: plugin.StateIsSet, Error: hostedContentFilterPolicyErr}
+
 	transportRule, transportRuleErr := convert.JsonToDictSlice(report.TransportRule)
 	r.TransportRule = plugin.TValue[[]any]{Data: transportRule, State: plugin.StateIsSet, Error: transportRuleErr}
 
@@ -521,6 +527,10 @@ func (r *mqlMs365Exchangeonline) malwareFilterPolicy() ([]any, error) {
 }
 
 func (r *mqlMs365Exchangeonline) hostedOutboundSpamFilterPolicy() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) hostedContentFilterPolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 

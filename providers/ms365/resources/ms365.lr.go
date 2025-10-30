@@ -2285,6 +2285,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetHostedOutboundSpamFilterPolicy()).ToDataRes(types.Array(types.Dict))
 	},
+	"ms365.exchangeonline.hostedContentFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetHostedContentFilterPolicy()).ToDataRes(types.Array(types.Dict))
+	},
 	"ms365.exchangeonline.transportRule": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetTransportRule()).ToDataRes(types.Array(types.Dict))
 	},
@@ -5165,6 +5168,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Exchangeonline).HostedOutboundSpamFilterPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.hostedContentFilterPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).HostedContentFilterPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.transportRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12675,6 +12682,7 @@ type mqlMs365Exchangeonline struct {
 	mqlMs365ExchangeonlineInternal
 	MalwareFilterPolicy            plugin.TValue[[]any]
 	HostedOutboundSpamFilterPolicy plugin.TValue[[]any]
+	HostedContentFilterPolicy      plugin.TValue[[]any]
 	TransportRule                  plugin.TValue[[]any]
 	RemoteDomain                   plugin.TValue[[]any]
 	SafeLinksPolicy                plugin.TValue[[]any]
@@ -12741,6 +12749,12 @@ func (c *mqlMs365Exchangeonline) GetMalwareFilterPolicy() *plugin.TValue[[]any] 
 func (c *mqlMs365Exchangeonline) GetHostedOutboundSpamFilterPolicy() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.HostedOutboundSpamFilterPolicy, func() ([]any, error) {
 		return c.hostedOutboundSpamFilterPolicy()
+	})
+}
+
+func (c *mqlMs365Exchangeonline) GetHostedContentFilterPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostedContentFilterPolicy, func() ([]any, error) {
+		return c.hostedContentFilterPolicy()
 	})
 }
 
