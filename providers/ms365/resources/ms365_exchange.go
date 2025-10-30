@@ -201,7 +201,7 @@ type ReportSubmissionPolicy struct {
 	NotificationFooterMessage                   string   `json:"NotificationFooterMessage"`
 	JunkReviewResultMessage                     string   `json:"JunkReviewResultMessage"`
 	NotJunkReviewResultMessage                  string   `json:"NotJunkReviewResultMessage"`
-	NotificationSenderAddress                   string   `json:"NotificationSenderAddress"`
+	NotificationSenderAddress                   []string `json:"NotificationSenderAddress"`
 	EnableCustomNotificationSender              bool     `json:"EnableCustomNotificationSender"`
 	EnableOrganizationBranding                  bool     `json:"EnableOrganizationBranding"`
 	DisableQuarantineReportingOption            bool     `json:"DisableQuarantineReportingOption"`
@@ -285,7 +285,7 @@ func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubm
 				"notificationFooterMessage":                   llx.StringData(t.NotificationFooterMessage),
 				"junkReviewResultMessage":                     llx.StringData(t.JunkReviewResultMessage),
 				"notJunkReviewResultMessage":                  llx.StringData(t.NotJunkReviewResultMessage),
-				"notificationSenderAddress":                   llx.StringData(t.NotificationSenderAddress),
+				"notificationSenderAddress":                   llx.ArrayData(llx.TArr2Raw(t.NotificationSenderAddress), types.String),
 				"enableCustomNotificationSender":              llx.BoolData(t.EnableCustomNotificationSender),
 				"enableOrganizationBranding":                  llx.BoolData(t.EnableOrganizationBranding),
 				"disableQuarantineReportingOption":            llx.BoolData(t.DisableQuarantineReportingOption),

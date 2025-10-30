@@ -1586,7 +1586,7 @@ private ms365.exchangeonline.reportSubmissionPolicy {
   // Custom message shown for not junk review result
   notJunkReviewResultMessage string
   // Sender address for notifications
-  notificationSenderAddress string
+  notificationSenderAddress []string
   // Whether to use a custom notification sender
   enableCustomNotificationSender bool
   // Whether to use organization branding in notifications
