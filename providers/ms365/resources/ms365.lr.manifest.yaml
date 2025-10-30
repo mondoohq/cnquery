@@ -906,7 +906,6 @@ resources:
       dkimSigningConfig: {}
       externalInOutlook: {}
       hostedOutboundSpamFilterPolicy: {}
-      journalRule: {}
       journalRules: {}
       mailbox: {}
       mailboxAuditBypassAssociation: {}
