@@ -351,6 +351,12 @@ resources:
       createdAt: {}
       encryptionKeyArn: {}
       locked: {}
+      lockedAt:
+        min_mondoo_version: 9.0.0
+      maxRetentionDays:
+        min_mondoo_version: 9.0.0
+      minRetentionDays:
+        min_mondoo_version: 9.0.0
       name: {}
       recoveryPoints: {}
       region: {}
@@ -363,6 +369,8 @@ resources:
     fields:
       arn: {}
       completionDate: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdBy: {}
       creationDate: {}
       encryptionKeyArn: {}
