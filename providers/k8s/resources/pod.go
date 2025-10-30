@@ -108,6 +108,32 @@ func (k *mqlK8sPod) containers() ([]any, error) {
 	return getContainers(pod, &pod.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
 
+func (k *mqlK8sPod) containerStatuses() ([]any, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+
+	resp := []any{}
+	for _, c := range pod.Status.ContainerStatuses {
+		args := map[string]*llx.RawData{
+			"__id":         llx.StringData(string(pod.GetUID()) + "-containerstatus-" + c.Name),
+			"name":         llx.StringData(c.Name),
+			"ready":        llx.BoolData(c.Ready),
+			"restartCount": llx.IntData(int64(c.RestartCount)),
+			"image":        llx.StringData(c.Image),
+			"imageId":      llx.StringData(c.ImageID),
+			"containerId":  llx.StringData(c.ContainerID),
+		}
+		mqlContainer, err := CreateResource(k.MqlRuntime, ResourceK8sContainerStatus, args)
+		if err != nil {
+			return nil, err
+		}
+		resp = append(resp, mqlContainer)
+	}
+	return resp, nil
+}
+
 func (k *mqlK8sPod) annotations() (map[string]any, error) {
 	pod, err := k.getPod()
 	if err != nil {
