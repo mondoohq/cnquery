@@ -50,7 +50,6 @@ resources:
       params: {}
     min_mondoo_version: 9.0.0
   auditd.rule:
-    fields: {}
     is_private: true
     min_mondoo_version: 9.0.0
   auditd.rule.control:
@@ -285,6 +284,8 @@ resources:
     fields:
       id: {}
       labels: {}
+      repoDigests:
+        min_mondoo_version: 9.0.0
       size: {}
       tags: {}
       virtualsize: {}
@@ -343,7 +344,6 @@ resources:
     is_private: true
     min_mondoo_version: 5.15.0
   files:
-    fields: {}
     min_mondoo_version: latest
   files.find:
     fields:
@@ -474,7 +474,6 @@ resources:
       uuid: {}
     min_mondoo_version: 5.15.0
   machine:
-    fields: {}
     min_mondoo_version: 5.15.0
   machine.baseboard:
     fields:
@@ -1002,7 +1001,6 @@ resources:
       warndays: {}
     min_mondoo_version: 5.15.0
   sshd:
-    fields: {}
     min_mondoo_version: 5.15.0
   sshd.config:
     fields:

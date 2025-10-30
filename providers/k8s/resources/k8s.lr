@@ -155,6 +155,8 @@ private k8s.pod @defaults("namespace name created"){
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Container statuses
+  containerStatuses() []k8s.containerStatus
   // Node the pod runs on
   node() k8s.node
 }
@@ -375,6 +377,22 @@ private k8s.container @defaults("name") {
   env dict
   // envFrom settings
   envFrom dict
+}
+
+// Kubernetes container status
+private k8s.containerStatus @defaults("name") {
+  // Name of the container
+  name string
+  // Whether the container is currently passing its readiness check
+  ready bool
+  // The amount of times the container has been restarted
+  restartCount int
+  // Name of the container image that the container is running
+  image string
+  // The image ID of the container's image
+  imageId string
+  // The ID of the container in the format '<type>://<container_id>'
+  containerId string
 }
 
 // Kubernetes init container

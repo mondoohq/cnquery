@@ -826,7 +826,7 @@ func (a *mqlMicrosoftUser) authenticationRequirements() (*mqlMicrosoftUserAuthen
 		return nil, transformError(err)
 	}
 
-	mqlAuthRequirements, err := CreateResource(a.MqlRuntime, "microsoft.userAuthenticationRequirements",
+	mqlAuthRequirements, err := CreateResource(a.MqlRuntime, ResourceMicrosoftUserAuthenticationRequirements,
 		map[string]*llx.RawData{
 			"__id":            llx.StringData(userID),
 			"perUserMfaState": llx.StringData(authRequirements.GetPerUserMfaState().String()),

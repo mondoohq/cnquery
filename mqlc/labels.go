@@ -80,6 +80,14 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema resources.ResourcesSche
 			} else {
 				label = "[" + idx.(string) + "]"
 			}
+		case types.Ref:
+			// try to resolve the ref to a label
+			ref := idx.(uint64)
+			argLabel, err := createLabel(res, ref, schema)
+			if err != nil {
+				return "", err
+			}
+			label = "[" + argLabel + "]"
 		default:
 			panic("cannot label array index of type " + arg.Type.Label())
 		}
