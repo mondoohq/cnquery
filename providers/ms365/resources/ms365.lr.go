@@ -2401,6 +2401,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.reportSubmissionPolicy.reportChatMessageToCustomizedAddressEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetReportChatMessageToCustomizedAddressEnabled()).ToDataRes(types.Bool)
 	},
+	"ms365.exchangeonline.reportSubmissionPolicy.enableReportToMicrosoft": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetEnableReportToMicrosoft()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.preSubmitMessageEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetPreSubmitMessageEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.postSubmitMessageEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetPostSubmitMessageEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.enableThirdPartyAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetEnableThirdPartyAddress()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.phishingReviewResultMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetPhishingReviewResultMessage()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.notificationFooterMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetNotificationFooterMessage()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.junkReviewResultMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetJunkReviewResultMessage()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.notJunkReviewResultMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetNotJunkReviewResultMessage()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.notificationSenderAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetNotificationSenderAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.enableCustomNotificationSender": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetEnableCustomNotificationSender()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.enableOrganizationBranding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetEnableOrganizationBranding()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.disableQuarantineReportingOption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetDisableQuarantineReportingOption()).ToDataRes(types.Bool)
+	},
 	"ms365.exchangeonline.journalRule.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineJournalRule).GetName()).ToDataRes(types.String)
 	},
@@ -5313,6 +5349,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.reportSubmissionPolicy.reportChatMessageToCustomizedAddressEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportChatMessageToCustomizedAddressEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.enableReportToMicrosoft": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).EnableReportToMicrosoft, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.preSubmitMessageEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).PreSubmitMessageEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.postSubmitMessageEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).PostSubmitMessageEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.enableThirdPartyAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).EnableThirdPartyAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.phishingReviewResultMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).PhishingReviewResultMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.notificationFooterMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).NotificationFooterMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.junkReviewResultMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).JunkReviewResultMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.notJunkReviewResultMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).NotJunkReviewResultMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.notificationSenderAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).NotificationSenderAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.enableCustomNotificationSender": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).EnableCustomNotificationSender, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.enableOrganizationBranding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).EnableOrganizationBranding, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.reportSubmissionPolicy.disableQuarantineReportingOption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).DisableQuarantineReportingOption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.journalRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13162,6 +13246,54 @@ func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportChatMessageEnabl
 
 func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportChatMessageToCustomizedAddressEnabled() *plugin.TValue[bool] {
 	return &c.ReportChatMessageToCustomizedAddressEnabled
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetEnableReportToMicrosoft() *plugin.TValue[bool] {
+	return &c.EnableReportToMicrosoft
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetPreSubmitMessageEnabled() *plugin.TValue[bool] {
+	return &c.PreSubmitMessageEnabled
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetPostSubmitMessageEnabled() *plugin.TValue[bool] {
+	return &c.PostSubmitMessageEnabled
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetEnableThirdPartyAddress() *plugin.TValue[bool] {
+	return &c.EnableThirdPartyAddress
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetPhishingReviewResultMessage() *plugin.TValue[string] {
+	return &c.PhishingReviewResultMessage
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetNotificationFooterMessage() *plugin.TValue[string] {
+	return &c.NotificationFooterMessage
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetJunkReviewResultMessage() *plugin.TValue[string] {
+	return &c.JunkReviewResultMessage
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetNotJunkReviewResultMessage() *plugin.TValue[string] {
+	return &c.NotJunkReviewResultMessage
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetNotificationSenderAddresses() *plugin.TValue[[]any] {
+	return &c.NotificationSenderAddresses
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetEnableCustomNotificationSender() *plugin.TValue[bool] {
+	return &c.EnableCustomNotificationSender
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetEnableOrganizationBranding() *plugin.TValue[bool] {
+	return &c.EnableOrganizationBranding
+}
+
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetDisableQuarantineReportingOption() *plugin.TValue[bool] {
+	return &c.DisableQuarantineReportingOption
 }
 
 // mqlMs365ExchangeonlineJournalRule for the ms365.exchangeonline.journalRule resource
