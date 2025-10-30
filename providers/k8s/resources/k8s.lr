@@ -391,7 +391,7 @@ private k8s.containerStatus @defaults("name") {
   image string
   // The image ID of the container's image
   imageId string
-  // The ID of the container in the format '<type>://<container_id>'
+  // The ID of the container in the format '\<type\>://\<container_id\>'
   containerId string
 }
 
@@ -888,5 +888,5 @@ private k8s.app {
   // Name of the higher-level application
   partOf string
   // Components
-  components []string 
+  components []string
 }
