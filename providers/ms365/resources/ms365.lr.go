@@ -109,6 +109,7 @@ const (
 	ResourceMs365ExchangeonlineSecurityAndCompliance                                                     string = "ms365.exchangeonline.securityAndCompliance"
 	ResourceMs365ExchangeonlineTeamsProtectionPolicy                                                     string = "ms365.exchangeonline.teamsProtectionPolicy"
 	ResourceMs365ExchangeonlineReportSubmissionPolicy                                                    string = "ms365.exchangeonline.reportSubmissionPolicy"
+	ResourceMs365ExchangeonlineJournalRule                                                               string = "ms365.exchangeonline.journalRule"
 	ResourceMs365ExchangeonlineExternalSender                                                            string = "ms365.exchangeonline.externalSender"
 	ResourceMs365ExchangeonlineExoMailbox                                                                string = "ms365.exchangeonline.exoMailbox"
 	ResourceMs365ExchangeonlineMailbox                                                                   string = "ms365.exchangeonline.mailbox"
@@ -491,6 +492,10 @@ func init() {
 		"ms365.exchangeonline.reportSubmissionPolicy": {
 			// to override args, implement: initMs365ExchangeonlineReportSubmissionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365ExchangeonlineReportSubmissionPolicy,
+		},
+		"ms365.exchangeonline.journalRule": {
+			// to override args, implement: initMs365ExchangeonlineJournalRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineJournalRule,
 		},
 		"ms365.exchangeonline.externalSender": {
 			// to override args, implement: initMs365ExchangeonlineExternalSender(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2342,6 +2347,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.reportSubmissionPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetReportSubmissionPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.reportSubmissionPolicy")))
 	},
+	"ms365.exchangeonline.journalRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetJournalRules()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.journalRule")))
+	},
 	"ms365.exchangeonline.mailboxesWithAudit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMailboxesWithAudit()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.mailbox")))
 	},
@@ -2392,6 +2400,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.reportSubmissionPolicy.reportChatMessageToCustomizedAddressEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetReportChatMessageToCustomizedAddressEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.journalRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineJournalRule).GetName()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.journalRule.journalEmailAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineJournalRule).GetJournalEmailAddress()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.journalRule.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineJournalRule).GetScope()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.journalRule.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineJournalRule).GetEnabled()).ToDataRes(types.Bool)
 	},
 	"ms365.exchangeonline.externalSender.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineExternalSender).GetIdentity()).ToDataRes(types.String)
@@ -5207,6 +5227,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365Exchangeonline).ReportSubmissionPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ms365.exchangeonline.journalRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).JournalRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ms365.exchangeonline.mailboxesWithAudit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Exchangeonline).MailboxesWithAudit, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -5289,6 +5313,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.reportSubmissionPolicy.reportChatMessageToCustomizedAddressEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).ReportChatMessageToCustomizedAddressEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.journalRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineJournalRule).__id, ok = v.Value.(string)
+		return
+	},
+	"ms365.exchangeonline.journalRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineJournalRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.journalRule.journalEmailAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineJournalRule).JournalEmailAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.journalRule.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineJournalRule).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.journalRule.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineJournalRule).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.externalSender.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12610,6 +12654,7 @@ type mqlMs365Exchangeonline struct {
 	SharedMailboxes                plugin.TValue[[]any]
 	TeamsProtectionPolicies        plugin.TValue[[]any]
 	ReportSubmissionPolicies       plugin.TValue[[]any]
+	JournalRules                   plugin.TValue[[]any]
 	MailboxesWithAudit             plugin.TValue[[]any]
 	TransportConfig                plugin.TValue[any]
 	SecurityAndCompliance          plugin.TValue[*mqlMs365ExchangeonlineSecurityAndCompliance]
@@ -12811,6 +12856,22 @@ func (c *mqlMs365Exchangeonline) GetReportSubmissionPolicies() *plugin.TValue[[]
 		}
 
 		return c.reportSubmissionPolicies()
+	})
+}
+
+func (c *mqlMs365Exchangeonline) GetJournalRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.JournalRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline", c.__id, "journalRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.journalRules()
 	})
 }
 
@@ -13089,6 +13150,65 @@ func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportChatMessageEnabl
 
 func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetReportChatMessageToCustomizedAddressEnabled() *plugin.TValue[bool] {
 	return &c.ReportChatMessageToCustomizedAddressEnabled
+}
+
+// mqlMs365ExchangeonlineJournalRule for the ms365.exchangeonline.journalRule resource
+type mqlMs365ExchangeonlineJournalRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMs365ExchangeonlineJournalRuleInternal it will be used here
+	Name                plugin.TValue[string]
+	JournalEmailAddress plugin.TValue[string]
+	Scope               plugin.TValue[string]
+	Enabled             plugin.TValue[bool]
+}
+
+// createMs365ExchangeonlineJournalRule creates a new instance of this resource
+func createMs365ExchangeonlineJournalRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineJournalRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.journalRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365ExchangeonlineJournalRule) MqlName() string {
+	return "ms365.exchangeonline.journalRule"
+}
+
+func (c *mqlMs365ExchangeonlineJournalRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365ExchangeonlineJournalRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMs365ExchangeonlineJournalRule) GetJournalEmailAddress() *plugin.TValue[string] {
+	return &c.JournalEmailAddress
+}
+
+func (c *mqlMs365ExchangeonlineJournalRule) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlMs365ExchangeonlineJournalRule) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
 }
 
 // mqlMs365ExchangeonlineExternalSender for the ms365.exchangeonline.externalSender resource

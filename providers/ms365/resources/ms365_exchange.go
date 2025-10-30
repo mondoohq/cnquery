@@ -66,6 +66,7 @@ $DkimSigningConfig = (Get-DkimSigningConfig)
 $OwaMailboxPolicy = (Get-OwaMailboxPolicy)
 $AdminAuditLogConfig = (Get-AdminAuditLogConfig)
 $PhishFilterPolicy = (Get-PhishFilterPolicy)
+$JournalRule = (Get-JournalRule)
 $Mailbox = (Get-Mailbox -ResultSize Unlimited | Select-Object Identity, DisplayName, PrimarySmtpAddress, RecipientTypeDetails, AuditEnabled, AuditAdmin, AuditDelegate, AuditOwner, AuditLogAgeLimit)
 $AtpPolicyForO365 = (Get-AtpPolicyForO365)
 $SharingPolicy = (Get-SharingPolicy)
@@ -90,6 +91,7 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name DkimSigni
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name OwaMailboxPolicy -Value @($OwaMailboxPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AdminAuditLogConfig -Value $AdminAuditLogConfig
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name PhishFilterPolicy -Value @($PhishFilterPolicy)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name JournalRule -Value @($JournalRule)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name Mailbox -Value @($Mailbox)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AtpPolicyForO365 -Value @($AtpPolicyForO365)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SharingPolicy -Value @($SharingPolicy)
@@ -107,22 +109,23 @@ ConvertTo-Json -Depth 4 $exchangeOnline
 `
 
 type ExchangeOnlineReport struct {
-	MalwareFilterPolicy            []any     `json:"MalwareFilterPolicy"`
-	HostedOutboundSpamFilterPolicy []any     `json:"HostedOutboundSpamFilterPolicy"`
-	TransportRule                  []any     `json:"TransportRule"`
-	RemoteDomain                   []any     `json:"RemoteDomain"`
-	SafeLinksPolicy                []any     `json:"SafeLinksPolicy"`
-	SafeAttachmentPolicy           []any     `json:"SafeAttachmentPolicy"`
-	OrganizationConfig             any       `json:"OrganizationConfig"`
-	AuthenticationPolicy           any       `json:"AuthenticationPolicy"`
-	AntiPhishPolicy                []any     `json:"AntiPhishPolicy"`
-	DkimSigningConfig              any       `json:"DkimSigningConfig"`
-	OwaMailboxPolicy               any       `json:"OwaMailboxPolicy"`
-	AdminAuditLogConfig            any       `json:"AdminAuditLogConfig"`
-	PhishFilterPolicy              []any     `json:"PhishFilterPolicy"`
-	AtpPolicyForO365               []any     `json:"AtpPolicyForO365"`
-	SharingPolicy                  []any     `json:"SharingPolicy"`
-	RoleAssignmentPolicy           []any     `json:"RoleAssignmentPolicy"`
+	MalwareFilterPolicy            []any             `json:"MalwareFilterPolicy"`
+	HostedOutboundSpamFilterPolicy []any             `json:"HostedOutboundSpamFilterPolicy"`
+	TransportRule                  []any             `json:"TransportRule"`
+	RemoteDomain                   []any             `json:"RemoteDomain"`
+	SafeLinksPolicy                []any             `json:"SafeLinksPolicy"`
+	SafeAttachmentPolicy           []any             `json:"SafeAttachmentPolicy"`
+	OrganizationConfig             any               `json:"OrganizationConfig"`
+	AuthenticationPolicy           any               `json:"AuthenticationPolicy"`
+	AntiPhishPolicy                []any             `json:"AntiPhishPolicy"`
+	DkimSigningConfig              any               `json:"DkimSigningConfig"`
+	OwaMailboxPolicy               any               `json:"OwaMailboxPolicy"`
+	AdminAuditLogConfig            any               `json:"AdminAuditLogConfig"`
+	PhishFilterPolicy              []any             `json:"PhishFilterPolicy"`
+	JournalRules                   []JournalRule     `json:"JournalRule"`
+	AtpPolicyForO365               []any             `json:"AtpPolicyForO365"`
+	SharingPolicy                  []any             `json:"SharingPolicy"`
+	RoleAssignmentPolicy           []any             `json:"RoleAssignmentPolicy"`
 	ExternalInOutlook              []*ExternalSender `json:"ExternalInOutlook"`
 	// note: this only contains shared mailboxes
 	ExoMailbox             []*ExoMailbox             `json:"ExoMailbox"`
@@ -193,6 +196,13 @@ type ReportSubmissionPolicy struct {
 	ReportPhishAddresses                        []string `json:"ReportPhishAddresses"`
 	ReportChatMessageEnabled                    bool     `json:"ReportChatMessageEnabled"`
 	ReportChatMessageToCustomizedAddressEnabled bool     `json:"ReportChatMessageToCustomizedAddressEnabled"`
+}
+
+type JournalRule struct {
+	Name                string `json:"Name"`
+	JournalEmailAddress string `json:"JournalEmailAddress"`
+	Scope               string `json:"Scope"`
+	Enabled             bool   `json:"Enabled"`
 }
 
 type TransportConfig struct {
@@ -270,6 +280,24 @@ func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubm
 			return nil, err
 		}
 		result = append(result, policy)
+	}
+	return result, nil
+}
+
+func convertJournalRules(r *mqlMs365Exchangeonline, data []JournalRule) ([]any, error) {
+	var result []any
+	for _, jr := range data {
+		mql, err := CreateResource(r.MqlRuntime, ResourceMs365ExchangeonlineJournalRule,
+			map[string]*llx.RawData{
+				"name":                llx.StringData(jr.Name),
+				"journalEmailAddress": llx.StringData(jr.JournalEmailAddress),
+				"scope":               llx.StringData(jr.Scope),
+				"enabled":             llx.BoolData(jr.Enabled),
+			})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, mql)
 	}
 	return result, nil
 }
@@ -462,6 +490,14 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		r.TeamsProtectionPolicies = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
+	// Journal Rules
+	if report.JournalRules != nil {
+		journalRules, journalRulesErr := convertJournalRules(r, report.JournalRules)
+		r.JournalRules = plugin.TValue[[]any]{Data: journalRules, State: plugin.StateIsSet, Error: journalRulesErr}
+	} else {
+		r.JournalRules = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+
 	// Related to ReportSubmissionPolicy
 	if report.ReportSubmissionPolicy != nil {
 		reportSubmissionPolicies, reportSubmissionPolicyErr := convertReportSubmissionPolicy(r, report.ReportSubmissionPolicy)
@@ -505,6 +541,10 @@ func (r *mqlMs365Exchangeonline) transportRule() ([]any, error) {
 }
 
 func (r *mqlMs365Exchangeonline) remoteDomain() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) journalRules() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 

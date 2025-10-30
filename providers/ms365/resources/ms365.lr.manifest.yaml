@@ -906,6 +906,8 @@ resources:
       dkimSigningConfig: {}
       externalInOutlook: {}
       hostedOutboundSpamFilterPolicy: {}
+      journalRule: {}
+      journalRules: {}
       mailbox: {}
       mailboxAuditBypassAssociation: {}
       mailboxesWithAudit: {}
@@ -943,6 +945,17 @@ resources:
       allowList: {}
       enabled: {}
       identity: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - microsoft365
+  ms365.exchangeonline.journalRule:
+    fields:
+      enabled: {}
+      journalEmailAddress: {}
+      name: {}
+      scope: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

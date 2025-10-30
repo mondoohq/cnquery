@@ -1519,6 +1519,8 @@ ms365.exchangeonline {
   teamsProtectionPolicies() []ms365.exchangeonline.teamsProtectionPolicy
   // List of report submission policies
   reportSubmissionPolicies() []ms365.exchangeonline.reportSubmissionPolicy
+  // List of journal rules
+  journalRules() []ms365.exchangeonline.journalRule
   // List of mailboxes with audit settings
   mailboxesWithAudit() []ms365.exchangeonline.mailbox
   // Transport configuration settings
@@ -1569,6 +1571,18 @@ private ms365.exchangeonline.reportSubmissionPolicy {
   reportChatMessageEnabled bool
   // Whether to report chat messages to a customized address
   reportChatMessageToCustomizedAddressEnabled bool
+}
+
+// Journal Rule
+private ms365.exchangeonline.journalRule @defaults("name enabled journalEmailAddress scope") {
+  // Rule name
+  name string
+  // Journal recipient email address
+  journalEmailAddress string
+  // Rule scope
+  scope string
+  // Whether the rule is enabled
+  enabled bool
 }
 
 // Microsoft 365 Exchange Online External Sender
