@@ -2417,8 +2417,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.reportSubmissionPolicy.notJunkReviewResultMessage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetNotJunkReviewResultMessage()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.reportSubmissionPolicy.notificationSenderAddress": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetNotificationSenderAddress()).ToDataRes(types.Array(types.String))
+	"ms365.exchangeonline.reportSubmissionPolicy.notificationSenderAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetNotificationSenderAddresses()).ToDataRes(types.Array(types.String))
 	},
 	"ms365.exchangeonline.reportSubmissionPolicy.enableCustomNotificationSender": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).GetEnableCustomNotificationSender()).ToDataRes(types.Bool)
@@ -5359,8 +5359,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).NotJunkReviewResultMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.reportSubmissionPolicy.notificationSenderAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).NotificationSenderAddress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"ms365.exchangeonline.reportSubmissionPolicy.notificationSenderAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineReportSubmissionPolicy).NotificationSenderAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.reportSubmissionPolicy.enableCustomNotificationSender": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13117,7 +13117,7 @@ type mqlMs365ExchangeonlineReportSubmissionPolicy struct {
 	NotificationFooterMessage                   plugin.TValue[string]
 	JunkReviewResultMessage                     plugin.TValue[string]
 	NotJunkReviewResultMessage                  plugin.TValue[string]
-	NotificationSenderAddress                   plugin.TValue[[]any]
+	NotificationSenderAddresses                 plugin.TValue[[]any]
 	EnableCustomNotificationSender              plugin.TValue[bool]
 	EnableOrganizationBranding                  plugin.TValue[bool]
 	DisableQuarantineReportingOption            plugin.TValue[bool]
@@ -13219,8 +13219,8 @@ func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetNotJunkReviewResultMes
 	return &c.NotJunkReviewResultMessage
 }
 
-func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetNotificationSenderAddress() *plugin.TValue[[]any] {
-	return &c.NotificationSenderAddress
+func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetNotificationSenderAddresses() *plugin.TValue[[]any] {
+	return &c.NotificationSenderAddresses
 }
 
 func (c *mqlMs365ExchangeonlineReportSubmissionPolicy) GetEnableCustomNotificationSender() *plugin.TValue[bool] {

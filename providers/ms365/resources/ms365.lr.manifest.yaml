@@ -976,7 +976,7 @@ resources:
       junkReviewResultMessage: {}
       notJunkReviewResultMessage: {}
       notificationFooterMessage: {}
-      notificationSenderAddress: {}
+      notificationSenderAddresses: {}
       phishingReviewResultMessage: {}
       postSubmitMessageEnabled: {}
       preSubmitMessageEnabled: {}
