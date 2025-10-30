@@ -980,6 +980,8 @@ docker.image {
   size int
   // Virtual image size in kilobytes. Deprecated; use size instead
   virtualsize int
+  // Repo digests
+  repoDigests []string
   // Tag key value pairs
   tags []string
   // Labels key value pairs
