@@ -2323,6 +2323,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.phishFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetPhishFilterPolicy()).ToDataRes(types.Array(types.Dict))
 	},
+	"ms365.exchangeonline.quarantinePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetQuarantinePolicy()).ToDataRes(types.Array(types.Dict))
+	},
 	"ms365.exchangeonline.mailbox": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMailbox()).ToDataRes(types.Array(types.Dict))
 	},
@@ -5229,6 +5232,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.phishFilterPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Exchangeonline).PhishFilterPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.quarantinePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).QuarantinePolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.mailbox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12730,6 +12737,7 @@ type mqlMs365Exchangeonline struct {
 	OwaMailboxPolicy               plugin.TValue[[]any]
 	AdminAuditLogConfig            plugin.TValue[any]
 	PhishFilterPolicy              plugin.TValue[[]any]
+	QuarantinePolicy               plugin.TValue[[]any]
 	Mailbox                        plugin.TValue[[]any]
 	AtpPolicyForO365               plugin.TValue[[]any]
 	SharingPolicy                  plugin.TValue[[]any]
@@ -12852,6 +12860,12 @@ func (c *mqlMs365Exchangeonline) GetAdminAuditLogConfig() *plugin.TValue[any] {
 func (c *mqlMs365Exchangeonline) GetPhishFilterPolicy() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.PhishFilterPolicy, func() ([]any, error) {
 		return c.phishFilterPolicy()
+	})
+}
+
+func (c *mqlMs365Exchangeonline) GetQuarantinePolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.QuarantinePolicy, func() ([]any, error) {
+		return c.quarantinePolicy()
 	})
 }
 

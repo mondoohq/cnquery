@@ -1503,6 +1503,8 @@ ms365.exchangeonline {
   adminAuditLogConfig() dict
   // List of phishing filter policies
   phishFilterPolicy() []dict
+  // List of quarantine policies
+  quarantinePolicy() []dict
   // List of mailboxes
   mailbox() []dict
   // List of APT policies for Office 365

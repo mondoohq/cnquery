@@ -66,6 +66,7 @@ $DkimSigningConfig = (Get-DkimSigningConfig)
 $OwaMailboxPolicy = (Get-OwaMailboxPolicy)
 $AdminAuditLogConfig = (Get-AdminAuditLogConfig)
 $PhishFilterPolicy = (Get-PhishFilterPolicy)
+$QuarantinePolicy = (Get-QuarantinePolicy)
 $JournalRule = (Get-JournalRule)
 $Mailbox = (Get-Mailbox -ResultSize Unlimited | Select-Object Identity, DisplayName, PrimarySmtpAddress, RecipientTypeDetails, AuditEnabled, AuditAdmin, AuditDelegate, AuditOwner, AuditLogAgeLimit)
 $AtpPolicyForO365 = (Get-AtpPolicyForO365)
@@ -91,6 +92,7 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name DkimSigni
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name OwaMailboxPolicy -Value @($OwaMailboxPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AdminAuditLogConfig -Value $AdminAuditLogConfig
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name PhishFilterPolicy -Value @($PhishFilterPolicy)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name QuarantinePolicy -Value @($QuarantinePolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name JournalRule -Value @($JournalRule)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name Mailbox -Value @($Mailbox)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AtpPolicyForO365 -Value @($AtpPolicyForO365)
@@ -122,6 +124,7 @@ type ExchangeOnlineReport struct {
 	OwaMailboxPolicy               any               `json:"OwaMailboxPolicy"`
 	AdminAuditLogConfig            any               `json:"AdminAuditLogConfig"`
 	PhishFilterPolicy              []any             `json:"PhishFilterPolicy"`
+	QuarantinePolicy               []any             `json:"QuarantinePolicy"`
 	JournalRules                   []JournalRule     `json:"JournalRule"`
 	AtpPolicyForO365               []any             `json:"AtpPolicyForO365"`
 	SharingPolicy                  []any             `json:"SharingPolicy"`
@@ -453,6 +456,9 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	phishFilterPolicy, phishFilterPolicyErr := convert.JsonToDictSlice(report.PhishFilterPolicy)
 	r.PhishFilterPolicy = plugin.TValue[[]any]{Data: phishFilterPolicy, State: plugin.StateIsSet, Error: phishFilterPolicyErr}
 
+	quarantinePolicy, quarantinePolicyErr := convert.JsonToDictSlice(report.QuarantinePolicy)
+	r.QuarantinePolicy = plugin.TValue[[]any]{Data: quarantinePolicy, State: plugin.StateIsSet, Error: quarantinePolicyErr}
+
 	mailbox, mailboxErr := convert.JsonToDictSlice(report.Mailbox)
 	r.Mailbox = plugin.TValue[[]any]{Data: mailbox, State: plugin.StateIsSet, Error: mailboxErr}
 
@@ -565,6 +571,10 @@ func (r *mqlMs365Exchangeonline) transportRule() ([]any, error) {
 }
 
 func (r *mqlMs365Exchangeonline) remoteDomain() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) quarantinePolicy() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 

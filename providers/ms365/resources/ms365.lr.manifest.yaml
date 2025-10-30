@@ -914,6 +914,7 @@ resources:
       organizationConfig: {}
       owaMailboxPolicy: {}
       phishFilterPolicy: {}
+      quarantinePolicy: {}
       remoteDomain: {}
       reportSubmissionPolicies: {}
       roleAssignmentPolicy: {}
