@@ -43,6 +43,7 @@ func (p *mqlDocker) images() ([]any, error) {
 			"id":          llx.StringData(dImg.ID),
 			"size":        llx.IntData(dImg.Size),
 			"virtualsize": llx.IntData(dImg.VirtualSize),
+			"repoDigests": llx.ArrayData(llx.TArr2Raw(dImg.RepoDigests), types.String),
 			"labels":      llx.MapData(labels, types.String),
 			"tags":        llx.ArrayData(tags, types.String),
 		})
