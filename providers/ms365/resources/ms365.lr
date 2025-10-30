@@ -1569,6 +1569,30 @@ private ms365.exchangeonline.reportSubmissionPolicy {
   reportChatMessageEnabled bool
   // Whether to report chat messages to a customized address
   reportChatMessageToCustomizedAddressEnabled bool
+  // Whether to send reports to Microsoft
+  enableReportToMicrosoft bool
+  // Whether to show a message before submission
+  preSubmitMessageEnabled bool
+  // Whether to show a message after submission
+  postSubmitMessageEnabled bool
+  // Whether to enable third-party reporting address
+  enableThirdPartyAddress bool
+  // Custom message shown for phishing review result
+  phishingReviewResultMessage string
+  // Footer message for notifications
+  notificationFooterMessage string
+  // Custom message shown for junk review result
+  junkReviewResultMessage string
+  // Custom message shown for not junk review result
+  notJunkReviewResultMessage string
+  // Sender addresses for notifications
+  notificationSenderAddresses []string
+  // Whether to use a custom notification sender
+  enableCustomNotificationSender bool
+  // Whether to use organization branding in notifications
+  enableOrganizationBranding bool
+  // Disable the quarantine reporting option
+  disableQuarantineReportingOption bool
 }
 
 // Microsoft 365 Exchange Online External Sender

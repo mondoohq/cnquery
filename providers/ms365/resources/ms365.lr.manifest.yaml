@@ -968,6 +968,18 @@ resources:
       - microsoft365
   ms365.exchangeonline.reportSubmissionPolicy:
     fields:
+      disableQuarantineReportingOption: {}
+      enableCustomNotificationSender: {}
+      enableOrganizationBranding: {}
+      enableReportToMicrosoft: {}
+      enableThirdPartyAddress: {}
+      junkReviewResultMessage: {}
+      notJunkReviewResultMessage: {}
+      notificationFooterMessage: {}
+      notificationSenderAddresses: {}
+      phishingReviewResultMessage: {}
+      postSubmitMessageEnabled: {}
+      preSubmitMessageEnabled: {}
       reportChatMessageEnabled: {}
       reportChatMessageToCustomizedAddressEnabled: {}
       reportJunkAddresses: {}
