@@ -13086,6 +13086,18 @@ type mqlMs365ExchangeonlineReportSubmissionPolicy struct {
 	ReportPhishAddresses                        plugin.TValue[[]any]
 	ReportChatMessageEnabled                    plugin.TValue[bool]
 	ReportChatMessageToCustomizedAddressEnabled plugin.TValue[bool]
+	EnableReportToMicrosoft                     plugin.TValue[bool]
+	PreSubmitMessageEnabled                     plugin.TValue[bool]
+	PostSubmitMessageEnabled                    plugin.TValue[bool]
+	EnableThirdPartyAddress                     plugin.TValue[bool]
+	PhishingReviewResultMessage                 plugin.TValue[string]
+	NotificationFooterMessage                   plugin.TValue[string]
+	JunkReviewResultMessage                     plugin.TValue[string]
+	NotJunkReviewResultMessage                  plugin.TValue[string]
+	NotificationSenderAddresses                 plugin.TValue[[]any]
+	EnableCustomNotificationSender              plugin.TValue[bool]
+	EnableOrganizationBranding                  plugin.TValue[bool]
+	DisableQuarantineReportingOption            plugin.TValue[bool]
 }
 
 // createMs365ExchangeonlineReportSubmissionPolicy creates a new instance of this resource

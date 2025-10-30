@@ -196,6 +196,18 @@ type ReportSubmissionPolicy struct {
 	ReportPhishAddresses                        []string `json:"ReportPhishAddresses"`
 	ReportChatMessageEnabled                    bool     `json:"ReportChatMessageEnabled"`
 	ReportChatMessageToCustomizedAddressEnabled bool     `json:"ReportChatMessageToCustomizedAddressEnabled"`
+	EnableReportToMicrosoft                     bool     `json:"EnableReportToMicrosoft"`
+	PreSubmitMessageEnabled                     bool     `json:"PreSubmitMessageEnabled"`
+	PostSubmitMessageEnabled                    bool     `json:"PostSubmitMessageEnabled"`
+	EnableThirdPartyAddress                     bool     `json:"EnableThirdPartyAddress"`
+	PhishingReviewResultMessage                 string   `json:"PhishingReviewResultMessage"`
+	NotificationFooterMessage                   string   `json:"NotificationFooterMessage"`
+	JunkReviewResultMessage                     string   `json:"JunkReviewResultMessage"`
+	NotJunkReviewResultMessage                  string   `json:"NotJunkReviewResultMessage"`
+	NotificationSenderAddress                   []string `json:"NotificationSenderAddress"`
+	EnableCustomNotificationSender              bool     `json:"EnableCustomNotificationSender"`
+	EnableOrganizationBranding                  bool     `json:"EnableOrganizationBranding"`
+	DisableQuarantineReportingOption            bool     `json:"DisableQuarantineReportingOption"`
 }
 
 type JournalRule struct {
@@ -275,6 +287,18 @@ func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubm
 				"reportPhishAddresses":                        llx.ArrayData(llx.TArr2Raw(t.ReportPhishAddresses), types.Any),
 				"reportChatMessageEnabled":                    llx.BoolData(t.ReportChatMessageEnabled),
 				"reportChatMessageToCustomizedAddressEnabled": llx.BoolData(t.ReportChatMessageToCustomizedAddressEnabled),
+				"enableReportToMicrosoft":                     llx.BoolData(t.EnableReportToMicrosoft),
+				"preSubmitMessageEnabled":                     llx.BoolData(t.PreSubmitMessageEnabled),
+				"postSubmitMessageEnabled":                    llx.BoolData(t.PostSubmitMessageEnabled),
+				"enableThirdPartyAddress":                     llx.BoolData(t.EnableThirdPartyAddress),
+				"phishingReviewResultMessage":                 llx.StringData(t.PhishingReviewResultMessage),
+				"notificationFooterMessage":                   llx.StringData(t.NotificationFooterMessage),
+				"junkReviewResultMessage":                     llx.StringData(t.JunkReviewResultMessage),
+				"notJunkReviewResultMessage":                  llx.StringData(t.NotJunkReviewResultMessage),
+				"notificationSenderAddresses":                 llx.ArrayData(llx.TArr2Raw(t.NotificationSenderAddress), types.String),
+				"enableCustomNotificationSender":              llx.BoolData(t.EnableCustomNotificationSender),
+				"enableOrganizationBranding":                  llx.BoolData(t.EnableOrganizationBranding),
+				"disableQuarantineReportingOption":            llx.BoolData(t.DisableQuarantineReportingOption),
 			})
 		if err != nil {
 			return nil, err
