@@ -1505,6 +1505,12 @@ ms365.exchangeonline {
   adminAuditLogConfig() dict
   // List of phishing filter policies
   phishFilterPolicy() []dict
+  // List of quarantine policies
+  quarantinePolicy() []dict
+  // List of mailbox plans
+  mailboxPlans() []ms365.exchangeonline.mailboxPlan
+  // List of retention policies
+  retentionPolicies() []ms365.exchangeonline.retentionPolicy
   // List of mailboxes
   mailbox() []dict
   // List of APT policies for Office 365
@@ -1521,6 +1527,8 @@ ms365.exchangeonline {
   teamsProtectionPolicies() []ms365.exchangeonline.teamsProtectionPolicy
   // List of report submission policies
   reportSubmissionPolicies() []ms365.exchangeonline.reportSubmissionPolicy
+  // List of journal rules
+  journalRules() []ms365.exchangeonline.journalRule
   // List of mailboxes with audit settings
   mailboxesWithAudit() []ms365.exchangeonline.mailbox
   // Transport configuration settings
@@ -1595,6 +1603,18 @@ private ms365.exchangeonline.reportSubmissionPolicy {
   enableOrganizationBranding bool
   // Disable the quarantine reporting option
   disableQuarantineReportingOption bool
+}
+
+// Journal Rule
+private ms365.exchangeonline.journalRule @defaults("name enabled journalEmailAddress scope") {
+  // Rule name
+  name string
+  // Journal recipient email address
+  journalEmailAddress string
+  // Rule scope
+  scope string
+  // Whether the rule is enabled
+  enabled bool
 }
 
 // Microsoft 365 Exchange Online External Sender
@@ -1723,4 +1743,28 @@ private ms365.teams.teamsMeetingPolicyConfig {
 private ms365.teams.teamsMessagingPolicyConfig {
   // Whether users can report security concerns
   allowSecurityEndUserReporting bool
+}
+
+// Mailbox Plan
+private ms365.exchangeonline.mailboxPlan @defaults("name alias prohibitSendQuota maxSendSize maxReceiveSize") {
+  // Plan name
+  name string
+  // Plan alias
+  alias string
+  // Prohibit send quota
+  prohibitSendQuota string
+  // Maximum send size
+  maxSendSize string
+  // Maximum receive size
+  maxReceiveSize string
+}
+
+// Retention Policy
+private ms365.exchangeonline.retentionPolicy @defaults("name retentionPolicyTagLinks retentionId") {
+  // Policy name
+  name string
+  // Retention policy tag links
+  retentionPolicyTagLinks []string
+  // Retention ID
+  retentionId string
 }
