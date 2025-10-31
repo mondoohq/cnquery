@@ -918,6 +918,7 @@ resources:
       quarantinePolicy: {}
       remoteDomain: {}
       reportSubmissionPolicies: {}
+      retentionPolicies: {}
       roleAssignmentPolicy: {}
       safeAttachmentPolicy: {}
       safeLinksPolicy: {}
@@ -1014,6 +1015,16 @@ resources:
       reportNotJunkToCustomizedAddress: {}
       reportPhishAddresses: {}
       reportPhishToCustomizedAddress: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - microsoft365
+  ms365.exchangeonline.retentionPolicy:
+    fields:
+      name: {}
+      retentionId: {}
+      retentionPolicyTagLinks: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

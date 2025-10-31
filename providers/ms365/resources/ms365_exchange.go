@@ -69,6 +69,7 @@ $PhishFilterPolicy = (Get-PhishFilterPolicy)
 $QuarantinePolicy = (Get-QuarantinePolicy)
 $JournalRule = (Get-JournalRule)
 $MailboxPlan = (Get-MailboxPlan)
+$RetentionPolicy = (Get-RetentionPolicy)
 $Mailbox = (Get-Mailbox -ResultSize Unlimited | Select-Object Identity, DisplayName, PrimarySmtpAddress, RecipientTypeDetails, AuditEnabled, AuditAdmin, AuditDelegate, AuditOwner, AuditLogAgeLimit)
 $AtpPolicyForO365 = (Get-AtpPolicyForO365)
 $SharingPolicy = (Get-SharingPolicy)
@@ -96,6 +97,7 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name PhishFilt
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name QuarantinePolicy -Value @($QuarantinePolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name JournalRule -Value @($JournalRule)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MailboxPlan -Value @($MailboxPlan)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name RetentionPolicy -Value @($RetentionPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name Mailbox -Value @($Mailbox)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AtpPolicyForO365 -Value @($AtpPolicyForO365)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SharingPolicy -Value @($SharingPolicy)
@@ -129,6 +131,7 @@ type ExchangeOnlineReport struct {
 	QuarantinePolicy               []any             `json:"QuarantinePolicy"`
 	JournalRules                   []JournalRule     `json:"JournalRule"`
 	MailboxPlans                   []MailboxPlan     `json:"MailboxPlan"`
+	RetentionPolicies              []RetentionPolicy `json:"RetentionPolicy"`
 	AtpPolicyForO365               []any             `json:"AtpPolicyForO365"`
 	SharingPolicy                  []any             `json:"SharingPolicy"`
 	RoleAssignmentPolicy           []any             `json:"RoleAssignmentPolicy"`
@@ -229,6 +232,12 @@ type MailboxPlan struct {
 	ProhibitSendQuota string `json:"ProhibitSendQuota"`
 	MaxSendSize       string `json:"MaxSendSize"`
 	MaxReceiveSize    string `json:"MaxReceiveSize"`
+}
+
+type RetentionPolicy struct {
+	Name                    string   `json:"Name"`
+	RetentionPolicyTagLinks []string `json:"RetentionPolicyTagLinks"`
+	RetentionId             string   `json:"RetentionId"`
 }
 
 type TransportConfig struct {
@@ -352,6 +361,24 @@ func convertMailboxPlans(r *mqlMs365Exchangeonline, data []MailboxPlan) ([]any, 
 				"prohibitSendQuota": llx.StringData(mp.ProhibitSendQuota),
 				"maxSendSize":       llx.StringData(mp.MaxSendSize),
 				"maxReceiveSize":    llx.StringData(mp.MaxReceiveSize),
+			})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, mql)
+	}
+	return result, nil
+}
+
+func convertRetentionPolicies(r *mqlMs365Exchangeonline, data []RetentionPolicy) ([]any, error) {
+	var result []any
+	for _, rp := range data {
+		mql, err := CreateResource(r.MqlRuntime, ResourceMs365ExchangeonlineRetentionPolicy,
+			map[string]*llx.RawData{
+				"__id":                    llx.StringData("retentionPolicy-" + rp.Name),
+				"name":                    llx.StringData(rp.Name),
+				"retentionPolicyTagLinks": llx.ArrayData(llx.TArr2Raw(rp.RetentionPolicyTagLinks), types.String),
+				"retentionId":             llx.StringData(rp.RetentionId),
 			})
 		if err != nil {
 			return nil, err
@@ -568,6 +595,14 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		r.MailboxPlans = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
+	// Retention Policies
+	if report.RetentionPolicies != nil {
+		retentionPolicies, retentionPoliciesErr := convertRetentionPolicies(r, report.RetentionPolicies)
+		r.RetentionPolicies = plugin.TValue[[]any]{Data: retentionPolicies, State: plugin.StateIsSet, Error: retentionPoliciesErr}
+	} else {
+		r.RetentionPolicies = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+
 	// Related to ReportSubmissionPolicy
 	if report.ReportSubmissionPolicy != nil {
 		reportSubmissionPolicies, reportSubmissionPolicyErr := convertReportSubmissionPolicy(r, report.ReportSubmissionPolicy)
@@ -623,6 +658,10 @@ func (r *mqlMs365Exchangeonline) journalRules() ([]any, error) {
 }
 
 func (r *mqlMs365Exchangeonline) mailboxPlans() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) retentionPolicies() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 

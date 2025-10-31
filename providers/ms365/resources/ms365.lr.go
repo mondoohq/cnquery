@@ -120,6 +120,7 @@ const (
 	ResourceMs365TeamsTeamsMeetingPolicyConfig                                                           string = "ms365.teams.teamsMeetingPolicyConfig"
 	ResourceMs365TeamsTeamsMessagingPolicyConfig                                                         string = "ms365.teams.teamsMessagingPolicyConfig"
 	ResourceMs365ExchangeonlineMailboxPlan                                                               string = "ms365.exchangeonline.mailboxPlan"
+	ResourceMs365ExchangeonlineRetentionPolicy                                                           string = "ms365.exchangeonline.retentionPolicy"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -537,6 +538,10 @@ func init() {
 		"ms365.exchangeonline.mailboxPlan": {
 			// to override args, implement: initMs365ExchangeonlineMailboxPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365ExchangeonlineMailboxPlan,
+		},
+		"ms365.exchangeonline.retentionPolicy": {
+			// to override args, implement: initMs365ExchangeonlineRetentionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineRetentionPolicy,
 		},
 	}
 }
@@ -2334,6 +2339,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.mailboxPlans": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMailboxPlans()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.mailboxPlan")))
 	},
+	"ms365.exchangeonline.retentionPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetRetentionPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.retentionPolicy")))
+	},
 	"ms365.exchangeonline.mailbox": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMailbox()).ToDataRes(types.Array(types.Dict))
 	},
@@ -2612,6 +2620,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.mailboxPlan.maxReceiveSize": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineMailboxPlan).GetMaxReceiveSize()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.retentionPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRetentionPolicy).GetName()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.retentionPolicy.retentionPolicyTagLinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRetentionPolicy).GetRetentionPolicyTagLinks()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.retentionPolicy.retentionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRetentionPolicy).GetRetentionId()).ToDataRes(types.String)
 	},
 }
 
@@ -5265,6 +5282,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365Exchangeonline).MailboxPlans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ms365.exchangeonline.retentionPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).RetentionPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ms365.exchangeonline.mailbox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Exchangeonline).Mailbox, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -5695,6 +5716,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.mailboxPlan.maxReceiveSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineMailboxPlan).MaxReceiveSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.retentionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRetentionPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"ms365.exchangeonline.retentionPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRetentionPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.retentionPolicy.retentionPolicyTagLinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRetentionPolicy).RetentionPolicyTagLinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.retentionPolicy.retentionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRetentionPolicy).RetentionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -12790,6 +12827,7 @@ type mqlMs365Exchangeonline struct {
 	PhishFilterPolicy              plugin.TValue[[]any]
 	QuarantinePolicy               plugin.TValue[[]any]
 	MailboxPlans                   plugin.TValue[[]any]
+	RetentionPolicies              plugin.TValue[[]any]
 	Mailbox                        plugin.TValue[[]any]
 	AtpPolicyForO365               plugin.TValue[[]any]
 	SharingPolicy                  plugin.TValue[[]any]
@@ -12934,6 +12972,22 @@ func (c *mqlMs365Exchangeonline) GetMailboxPlans() *plugin.TValue[[]any] {
 		}
 
 		return c.mailboxPlans()
+	})
+}
+
+func (c *mqlMs365Exchangeonline) GetRetentionPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RetentionPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline", c.__id, "retentionPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.retentionPolicies()
 	})
 }
 
@@ -14163,4 +14217,58 @@ func (c *mqlMs365ExchangeonlineMailboxPlan) GetMaxSendSize() *plugin.TValue[stri
 
 func (c *mqlMs365ExchangeonlineMailboxPlan) GetMaxReceiveSize() *plugin.TValue[string] {
 	return &c.MaxReceiveSize
+}
+
+// mqlMs365ExchangeonlineRetentionPolicy for the ms365.exchangeonline.retentionPolicy resource
+type mqlMs365ExchangeonlineRetentionPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMs365ExchangeonlineRetentionPolicyInternal it will be used here
+	Name                    plugin.TValue[string]
+	RetentionPolicyTagLinks plugin.TValue[[]any]
+	RetentionId             plugin.TValue[string]
+}
+
+// createMs365ExchangeonlineRetentionPolicy creates a new instance of this resource
+func createMs365ExchangeonlineRetentionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineRetentionPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.retentionPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365ExchangeonlineRetentionPolicy) MqlName() string {
+	return "ms365.exchangeonline.retentionPolicy"
+}
+
+func (c *mqlMs365ExchangeonlineRetentionPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365ExchangeonlineRetentionPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMs365ExchangeonlineRetentionPolicy) GetRetentionPolicyTagLinks() *plugin.TValue[[]any] {
+	return &c.RetentionPolicyTagLinks
+}
+
+func (c *mqlMs365ExchangeonlineRetentionPolicy) GetRetentionId() *plugin.TValue[string] {
+	return &c.RetentionId
 }

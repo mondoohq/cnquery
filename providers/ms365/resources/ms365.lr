@@ -1507,6 +1507,8 @@ ms365.exchangeonline {
   quarantinePolicy() []dict
   // List of mailbox plans
   mailboxPlans() []ms365.exchangeonline.mailboxPlan
+  // List of retention policies
+  retentionPolicies() []ms365.exchangeonline.retentionPolicy
   // List of mailboxes
   mailbox() []dict
   // List of APT policies for Office 365
@@ -1753,4 +1755,14 @@ private ms365.exchangeonline.mailboxPlan @defaults("name alias prohibitSendQuota
   maxSendSize string
   // Maximum receive size
   maxReceiveSize string
+}
+
+// Retention Policy
+private ms365.exchangeonline.retentionPolicy @defaults("name retentionPolicyTagLinks retentionId") {
+  // Policy name
+  name string
+  // Retention policy tag links
+  retentionPolicyTagLinks []string
+  // Retention ID
+  retentionId string
 }
