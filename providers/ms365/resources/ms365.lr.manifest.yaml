@@ -905,6 +905,7 @@ resources:
       authenticationPolicy: {}
       dkimSigningConfig: {}
       externalInOutlook: {}
+      hostedContentFilterPolicy: {}
       hostedOutboundSpamFilterPolicy: {}
       journalRules: {}
       mailbox: {}

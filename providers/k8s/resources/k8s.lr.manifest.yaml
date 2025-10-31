@@ -185,6 +185,19 @@ resources:
     platform:
       name:
       - kubernetes
+  k8s.containerStatus:
+    fields:
+      containerId: {}
+      image: {}
+      imageId: {}
+      name: {}
+      ready: {}
+      restartCount: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - kubernetes
   k8s.cronjob:
     fields:
       annotations:
@@ -534,6 +547,8 @@ resources:
     fields:
       annotations: {}
       apiVersion: {}
+      containerStatuses:
+        min_mondoo_version: 9.0.0
       containers: {}
       created: {}
       ephemeralContainers:
