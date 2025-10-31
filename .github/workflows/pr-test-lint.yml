@@ -60,7 +60,8 @@ jobs:
           version: latest
 
   go-test:
-    runs-on: self-hosted
+    runs-on:
+      group: Default
     timeout-minutes: 120
     steps:
       - name: Checkout code
@@ -96,7 +97,8 @@ jobs:
           path: '*.xml'
 
   go-test-integration:
-    runs-on: self-hosted
+    runs-on:
+      group: Default
     timeout-minutes: 120
     steps:
       - name: Checkout code
