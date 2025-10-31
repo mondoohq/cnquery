@@ -73,7 +73,7 @@ func (a *mqlMicrosoft) groupSettings() ([]any, error) {
 				"__id":        llx.StringData(mqlId),
 				"displayName": llx.StringDataPtr(displayName),
 				"templateId":  llx.StringDataPtr(templateId),
-				"values":      llx.ArrayData(llx.TArr2Raw(settingValues), types.Resource(ResourceMicrosoftSettingValue)),
+				"values":      llx.ArrayData(llx.TArr2Raw(settingValues), types.Resource(string(ResourceMicrosoftSettingValue))),
 			})
 		if err != nil {
 			return nil, err
