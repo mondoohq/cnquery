@@ -24,6 +24,7 @@ func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 	args := chunk.Function.Args
 
+	var key string
 	// TODO: all this needs to go into the compile phase
 	if len(args) < 1 {
 		return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
@@ -32,12 +33,25 @@ func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
 	}
 	t := types.Type(args[0].Type)
-	if t != types.String {
+	switch t {
+	case types.Ref:
+		// resolve ref
+		argRaw, rref, err := e.resolveValue(args[0], ref)
+		if err != nil || rref > 0 {
+			return nil, rref, err
+		}
+		t = argRaw.Type
+		if t != types.String {
+			return nil, 0, errors.New("Called [] with wrong type " + t.Label())
+		}
+		key = argRaw.Value.(string)
+	case types.String:
+		key = string(args[0].Value)
+	default:
 		return nil, 0, errors.New("Called [] with wrong type " + t.Label())
 	}
 	// ^^ TODO
 
-	key := string(args[0].Value)
 	childType := bind.Type.Child()
 
 	if bind.Value == nil {
