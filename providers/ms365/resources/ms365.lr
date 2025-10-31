@@ -1215,6 +1215,8 @@ microsoft.policies {
   activityBasedTimeoutPolicies() []microsoft.policies.activityBasedTimeoutPolicy
   // Tenant-wide policy that controls whether external users can leave a tenant
   externalIdentitiesPolicy() microsoft.policies.externalIdentitiesPolicy
+  // Default configuration of cross-tenant access policy
+  crossTenantAccessPolicies() microsoft.policies.crossTenantAccessPolicyConfigurationDefault
 }
 
 // Tenant-wide policy that controls whether external users can leave a tenant via self-service controls
@@ -1293,6 +1295,78 @@ private microsoft.policies.authenticationMethodConfiguration @defaults("state") 
   state string
   // Groups of users that are excluded from a policy.
   excludeTargets []dict
+}
+
+// Default configuration of cross-tenant access policy
+private microsoft.policies.crossTenantAccessPolicyConfigurationDefault @defaults("isServiceDefault") {
+  // True if the default configuration is inherited from the service default. False if the default configuration has been customized.
+  isServiceDefault bool
+  // Determines the default configuration for automatic user consent settings. Controls whether users consent automatically to apps on behalf of users in other tenants.
+  automaticUserConsentSettings() microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings
+  // Defines your default configuration for users from other organizations accessing your resources via Microsoft Entra B2B collaboration.
+  b2bCollaborationInbound() microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting
+  // Defines your default configuration for users in your organization going outbound to access other organizations via Microsoft Entra B2B collaboration.
+  b2bCollaborationOutbound() microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting
+  // Defines your default configuration for users from other organizations accessing your resources via Azure AD B2B direct connect.
+  b2bDirectConnectInbound() microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting
+  // Defines your default configuration for users in your organization going outbound to access other organizations via Azure AD B2B direct connect.
+  b2bDirectConnectOutbound() microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting
+  // Specifies the default configuration for invitation redemption for external users in your organization.
+  invitationRedemptionIdentityProviderConfiguration() microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration
+  // Defines whether MFA, compliant devices, and hybrid Azure AD joined devices from external tenants are accepted.
+  inboundTrust() microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust
+  // Defines the default configuration for tenant restrictions settings.
+  tenantRestrictions() microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting
+}
+
+// Automatic user consent settings for cross-tenant access policy
+private microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings @defaults("inboundAllowed outboundAllowed") {
+  // Indicates whether automatic consent for inbound collaboration is enabled.
+  inboundAllowed bool
+  // Indicates whether automatic consent for outbound collaboration is enabled.
+  outboundAllowed bool
+}
+
+// B2B setting for cross-tenant access policy (used for collaboration, direct connect, and tenant restrictions)
+private microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting @defaults("usersAndGroups applications") {
+  // Defines the default configuration for users and groups.
+  usersAndGroups() microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups
+  // Defines the default configuration for applications.
+  applications() microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups
+}
+
+// Users and groups configuration for B2B settings
+private microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups @defaults("accessType targets") {
+  // The type of access. Possible values are: blocked, allowed.
+  accessType string
+  // The targets of the policy configuration.
+  targets []microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target
+}
+
+// Target for B2B setting configuration
+private microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target @defaults("target targetType") {
+  // The unique identifier for the target.
+  target string
+  // The type of target. Possible values are: user, application.
+  targetType string
+}
+
+// Inbound trust settings for cross-tenant access policy
+private microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust @defaults("isMfaAccepted isCompliantDeviceAccepted isHybridAzureADJoinedDeviceAccepted") {
+  // If true, MFA from external tenants is accepted.
+  isMfaAccepted bool
+  // If true, compliant devices from external tenants are accepted.
+  isCompliantDeviceAccepted bool
+  // If true, hybrid Azure AD joined devices from external tenants are accepted.
+  isHybridAzureADJoinedDeviceAccepted bool
+}
+
+// Invitation redemption identity provider configuration
+private microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration @defaults("fallbackIdentityProvider primaryIdentityProviderPrecedenceOrder") {
+  // Specifies an identity provider for invitations when no precedence order is provided.
+  fallbackIdentityProvider string
+  // Specifies the precedence order for identity providers.
+  primaryIdentityProviderPrecedenceOrder []string
 }
 
 // List of Microsoft Entra role definitions with optional filters

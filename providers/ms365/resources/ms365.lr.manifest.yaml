@@ -555,6 +555,7 @@ resources:
       authenticationMethodsPolicy: {}
       authorizationPolicy: {}
       consentPolicySettings: {}
+      crossTenantAccessPolicies: {}
       externalIdentitiesPolicy: {}
       identitySecurityDefaultsEnforcementPolicy: {}
       permissionGrantPolicies: {}
@@ -581,6 +582,56 @@ resources:
       id: {}
       lastModifiedDateTime: {}
       policyVersion: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.policies.crossTenantAccessPolicyConfigurationDefault:
+    fields:
+      automaticUserConsentSettings: {}
+      b2bCollaborationInbound: {}
+      b2bCollaborationOutbound: {}
+      b2bDirectConnectInbound: {}
+      b2bDirectConnectOutbound: {}
+      inboundTrust: {}
+      invitationRedemptionIdentityProviderConfiguration: {}
+      isServiceDefault: {}
+      tenantRestrictions: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings:
+    fields:
+      inboundAllowed: {}
+      outboundAllowed: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting:
+    fields:
+      applications: {}
+      usersAndGroups: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target:
+    fields:
+      target: {}
+      targetType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups:
+    fields:
+      accessType: {}
+      targets: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust:
+    fields:
+      isCompliantDeviceAccepted: {}
+      isHybridAzureADJoinedDeviceAccepted: {}
+      isMfaAccepted: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration:
+    fields:
+      fallbackIdentityProvider: {}
+      primaryIdentityProviderPrecedenceOrder: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.policies.externalIdentitiesPolicy:
