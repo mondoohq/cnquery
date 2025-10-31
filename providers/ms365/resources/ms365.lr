@@ -1505,6 +1505,8 @@ ms365.exchangeonline {
   phishFilterPolicy() []dict
   // List of quarantine policies
   quarantinePolicy() []dict
+  // List of mailbox plans
+  mailboxPlans() []ms365.exchangeonline.mailboxPlan
   // List of mailboxes
   mailbox() []dict
   // List of APT policies for Office 365
@@ -1737,4 +1739,18 @@ private ms365.teams.teamsMeetingPolicyConfig {
 private ms365.teams.teamsMessagingPolicyConfig {
   // Whether users can report security concerns
   allowSecurityEndUserReporting bool
+}
+
+// Mailbox Plan
+private ms365.exchangeonline.mailboxPlan @defaults("name alias prohibitSendQuota maxSendSize maxReceiveSize") {
+  // Plan name
+  name string
+  // Plan alias
+  alias string
+  // Prohibit send quota
+  prohibitSendQuota string
+  // Maximum send size
+  maxSendSize string
+  // Maximum receive size
+  maxReceiveSize string
 }

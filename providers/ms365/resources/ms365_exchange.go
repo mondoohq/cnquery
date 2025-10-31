@@ -68,6 +68,7 @@ $AdminAuditLogConfig = (Get-AdminAuditLogConfig)
 $PhishFilterPolicy = (Get-PhishFilterPolicy)
 $QuarantinePolicy = (Get-QuarantinePolicy)
 $JournalRule = (Get-JournalRule)
+$MailboxPlan = (Get-MailboxPlan)
 $Mailbox = (Get-Mailbox -ResultSize Unlimited | Select-Object Identity, DisplayName, PrimarySmtpAddress, RecipientTypeDetails, AuditEnabled, AuditAdmin, AuditDelegate, AuditOwner, AuditLogAgeLimit)
 $AtpPolicyForO365 = (Get-AtpPolicyForO365)
 $SharingPolicy = (Get-SharingPolicy)
@@ -94,6 +95,7 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AdminAudi
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name PhishFilterPolicy -Value @($PhishFilterPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name QuarantinePolicy -Value @($QuarantinePolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name JournalRule -Value @($JournalRule)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MailboxPlan -Value @($MailboxPlan)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name Mailbox -Value @($Mailbox)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AtpPolicyForO365 -Value @($AtpPolicyForO365)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SharingPolicy -Value @($SharingPolicy)
@@ -126,6 +128,7 @@ type ExchangeOnlineReport struct {
 	PhishFilterPolicy              []any             `json:"PhishFilterPolicy"`
 	QuarantinePolicy               []any             `json:"QuarantinePolicy"`
 	JournalRules                   []JournalRule     `json:"JournalRule"`
+	MailboxPlans                   []MailboxPlan     `json:"MailboxPlan"`
 	AtpPolicyForO365               []any             `json:"AtpPolicyForO365"`
 	SharingPolicy                  []any             `json:"SharingPolicy"`
 	RoleAssignmentPolicy           []any             `json:"RoleAssignmentPolicy"`
@@ -218,6 +221,14 @@ type JournalRule struct {
 	JournalEmailAddress string `json:"JournalEmailAddress"`
 	Scope               string `json:"Scope"`
 	Enabled             bool   `json:"Enabled"`
+}
+
+type MailboxPlan struct {
+	Name              string `json:"Name"`
+	Alias             string `json:"Alias"`
+	ProhibitSendQuota string `json:"ProhibitSendQuota"`
+	MaxSendSize       string `json:"MaxSendSize"`
+	MaxReceiveSize    string `json:"MaxReceiveSize"`
 }
 
 type TransportConfig struct {
@@ -320,6 +331,25 @@ func convertJournalRules(r *mqlMs365Exchangeonline, data []JournalRule) ([]any, 
 				"journalEmailAddress": llx.StringData(jr.JournalEmailAddress),
 				"scope":               llx.StringData(jr.Scope),
 				"enabled":             llx.BoolData(jr.Enabled),
+			})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, mql)
+	}
+	return result, nil
+}
+
+func convertMailboxPlans(r *mqlMs365Exchangeonline, data []MailboxPlan) ([]any, error) {
+	var result []any
+	for _, mp := range data {
+		mql, err := CreateResource(r.MqlRuntime, ResourceMs365ExchangeonlineMailboxPlan,
+			map[string]*llx.RawData{
+				"name":              llx.StringData(mp.Name),
+				"alias":             llx.StringData(mp.Alias),
+				"prohibitSendQuota": llx.StringData(mp.ProhibitSendQuota),
+				"maxSendSize":       llx.StringData(mp.MaxSendSize),
+				"maxReceiveSize":    llx.StringData(mp.MaxReceiveSize),
 			})
 		if err != nil {
 			return nil, err
@@ -528,6 +558,14 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		r.JournalRules = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
+	// Mailbox Plans
+	if report.MailboxPlans != nil {
+		mailboxPlans, mailboxPlansErr := convertMailboxPlans(r, report.MailboxPlans)
+		r.MailboxPlans = plugin.TValue[[]any]{Data: mailboxPlans, State: plugin.StateIsSet, Error: mailboxPlansErr}
+	} else {
+		r.MailboxPlans = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+
 	// Related to ReportSubmissionPolicy
 	if report.ReportSubmissionPolicy != nil {
 		reportSubmissionPolicies, reportSubmissionPolicyErr := convertReportSubmissionPolicy(r, report.ReportSubmissionPolicy)
@@ -579,6 +617,10 @@ func (r *mqlMs365Exchangeonline) quarantinePolicy() ([]any, error) {
 }
 
 func (r *mqlMs365Exchangeonline) journalRules() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) mailboxPlans() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 

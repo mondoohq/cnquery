@@ -909,6 +909,7 @@ resources:
       journalRules: {}
       mailbox: {}
       mailboxAuditBypassAssociation: {}
+      mailboxPlans: {}
       mailboxesWithAudit: {}
       malwareFilterPolicy: {}
       organizationConfig: {}
@@ -974,6 +975,18 @@ resources:
       name: {}
       primarySmtpAddress: {}
       recipientTypeDetails: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - microsoft365
+  ms365.exchangeonline.mailboxPlan:
+    fields:
+      alias: {}
+      maxReceiveSize: {}
+      maxSendSize: {}
+      name: {}
+      prohibitSendQuota: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

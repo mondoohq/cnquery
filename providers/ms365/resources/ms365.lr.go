@@ -119,6 +119,7 @@ const (
 	ResourceMs365TeamsTenantFederationConfig                                                             string = "ms365.teams.tenantFederationConfig"
 	ResourceMs365TeamsTeamsMeetingPolicyConfig                                                           string = "ms365.teams.teamsMeetingPolicyConfig"
 	ResourceMs365TeamsTeamsMessagingPolicyConfig                                                         string = "ms365.teams.teamsMessagingPolicyConfig"
+	ResourceMs365ExchangeonlineMailboxPlan                                                               string = "ms365.exchangeonline.mailboxPlan"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -532,6 +533,10 @@ func init() {
 		"ms365.teams.teamsMessagingPolicyConfig": {
 			// to override args, implement: initMs365TeamsTeamsMessagingPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365TeamsTeamsMessagingPolicyConfig,
+		},
+		"ms365.exchangeonline.mailboxPlan": {
+			// to override args, implement: initMs365ExchangeonlineMailboxPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineMailboxPlan,
 		},
 	}
 }
@@ -2326,6 +2331,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.quarantinePolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetQuarantinePolicy()).ToDataRes(types.Array(types.Dict))
 	},
+	"ms365.exchangeonline.mailboxPlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetMailboxPlans()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.mailboxPlan")))
+	},
 	"ms365.exchangeonline.mailbox": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMailbox()).ToDataRes(types.Array(types.Dict))
 	},
@@ -2589,6 +2597,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetAllowSecurityEndUserReporting()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.mailboxPlan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMailboxPlan).GetName()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.mailboxPlan.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMailboxPlan).GetAlias()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.mailboxPlan.prohibitSendQuota": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMailboxPlan).GetProhibitSendQuota()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.mailboxPlan.maxSendSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMailboxPlan).GetMaxSendSize()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.mailboxPlan.maxReceiveSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMailboxPlan).GetMaxReceiveSize()).ToDataRes(types.String)
 	},
 }
 
@@ -5238,6 +5261,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365Exchangeonline).QuarantinePolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ms365.exchangeonline.mailboxPlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).MailboxPlans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ms365.exchangeonline.mailbox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Exchangeonline).Mailbox, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -5644,6 +5671,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).AllowSecurityEndUserReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.mailboxPlan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMailboxPlan).__id, ok = v.Value.(string)
+		return
+	},
+	"ms365.exchangeonline.mailboxPlan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMailboxPlan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.mailboxPlan.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMailboxPlan).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.mailboxPlan.prohibitSendQuota": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMailboxPlan).ProhibitSendQuota, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.mailboxPlan.maxSendSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMailboxPlan).MaxSendSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.mailboxPlan.maxReceiveSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMailboxPlan).MaxReceiveSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -12738,6 +12789,7 @@ type mqlMs365Exchangeonline struct {
 	AdminAuditLogConfig            plugin.TValue[any]
 	PhishFilterPolicy              plugin.TValue[[]any]
 	QuarantinePolicy               plugin.TValue[[]any]
+	MailboxPlans                   plugin.TValue[[]any]
 	Mailbox                        plugin.TValue[[]any]
 	AtpPolicyForO365               plugin.TValue[[]any]
 	SharingPolicy                  plugin.TValue[[]any]
@@ -12866,6 +12918,22 @@ func (c *mqlMs365Exchangeonline) GetPhishFilterPolicy() *plugin.TValue[[]any] {
 func (c *mqlMs365Exchangeonline) GetQuarantinePolicy() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.QuarantinePolicy, func() ([]any, error) {
 		return c.quarantinePolicy()
+	})
+}
+
+func (c *mqlMs365Exchangeonline) GetMailboxPlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MailboxPlans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline", c.__id, "mailboxPlans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mailboxPlans()
 	})
 }
 
@@ -14031,4 +14099,68 @@ func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) MqlID() string {
 
 func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetAllowSecurityEndUserReporting() *plugin.TValue[bool] {
 	return &c.AllowSecurityEndUserReporting
+}
+
+// mqlMs365ExchangeonlineMailboxPlan for the ms365.exchangeonline.mailboxPlan resource
+type mqlMs365ExchangeonlineMailboxPlan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMs365ExchangeonlineMailboxPlanInternal it will be used here
+	Name              plugin.TValue[string]
+	Alias             plugin.TValue[string]
+	ProhibitSendQuota plugin.TValue[string]
+	MaxSendSize       plugin.TValue[string]
+	MaxReceiveSize    plugin.TValue[string]
+}
+
+// createMs365ExchangeonlineMailboxPlan creates a new instance of this resource
+func createMs365ExchangeonlineMailboxPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineMailboxPlan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.mailboxPlan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365ExchangeonlineMailboxPlan) MqlName() string {
+	return "ms365.exchangeonline.mailboxPlan"
+}
+
+func (c *mqlMs365ExchangeonlineMailboxPlan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365ExchangeonlineMailboxPlan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMs365ExchangeonlineMailboxPlan) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlMs365ExchangeonlineMailboxPlan) GetProhibitSendQuota() *plugin.TValue[string] {
+	return &c.ProhibitSendQuota
+}
+
+func (c *mqlMs365ExchangeonlineMailboxPlan) GetMaxSendSize() *plugin.TValue[string] {
+	return &c.MaxSendSize
+}
+
+func (c *mqlMs365ExchangeonlineMailboxPlan) GetMaxReceiveSize() *plugin.TValue[string] {
+	return &c.MaxReceiveSize
 }
