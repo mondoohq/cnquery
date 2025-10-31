@@ -327,6 +327,7 @@ func convertJournalRules(r *mqlMs365Exchangeonline, data []JournalRule) ([]any, 
 	for _, jr := range data {
 		mql, err := CreateResource(r.MqlRuntime, ResourceMs365ExchangeonlineJournalRule,
 			map[string]*llx.RawData{
+				"__id":                llx.StringData(jr.Name),
 				"name":                llx.StringData(jr.Name),
 				"journalEmailAddress": llx.StringData(jr.JournalEmailAddress),
 				"scope":               llx.StringData(jr.Scope),
@@ -345,6 +346,7 @@ func convertMailboxPlans(r *mqlMs365Exchangeonline, data []MailboxPlan) ([]any, 
 	for _, mp := range data {
 		mql, err := CreateResource(r.MqlRuntime, ResourceMs365ExchangeonlineMailboxPlan,
 			map[string]*llx.RawData{
+				"__id":              llx.StringData(mp.Name),
 				"name":              llx.StringData(mp.Name),
 				"alias":             llx.StringData(mp.Alias),
 				"prohibitSendQuota": llx.StringData(mp.ProhibitSendQuota),
