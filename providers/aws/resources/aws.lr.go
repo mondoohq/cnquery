@@ -3399,8 +3399,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.backup.vault.locked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVault).GetLocked()).ToDataRes(types.Bool)
 	},
+	"aws.backup.vault.lockedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetLockedAt()).ToDataRes(types.Time)
+	},
 	"aws.backup.vault.encryptionKeyArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVault).GetEncryptionKeyArn()).ToDataRes(types.String)
+	},
+	"aws.backup.vault.maxRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetMaxRetentionDays()).ToDataRes(types.Int)
+	},
+	"aws.backup.vault.minRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetMinRetentionDays()).ToDataRes(types.Int)
 	},
 	"aws.backup.vaultRecoveryPoint.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetArn()).ToDataRes(types.String)
@@ -3416,6 +3425,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.backup.vaultRecoveryPoint.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.backup.vaultRecoveryPoint.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.backup.vaultRecoveryPoint.creationDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetCreationDate()).ToDataRes(types.Time)
@@ -9266,8 +9278,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBackupVault).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.backup.vault.lockedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).LockedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.backup.vault.encryptionKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVault).EncryptionKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.maxRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).MaxRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.minRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).MinRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.backup.vaultRecoveryPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9292,6 +9316,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.backup.vaultRecoveryPoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVaultRecoveryPoint).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.backup.vaultRecoveryPoint.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23117,7 +23145,10 @@ type mqlAwsBackupVault struct {
 	Region           plugin.TValue[string]
 	CreatedAt        plugin.TValue[*time.Time]
 	Locked           plugin.TValue[bool]
+	LockedAt         plugin.TValue[*time.Time]
 	EncryptionKeyArn plugin.TValue[string]
+	MaxRetentionDays plugin.TValue[int64]
+	MinRetentionDays plugin.TValue[int64]
 }
 
 // createAwsBackupVault creates a new instance of this resource
@@ -23193,8 +23224,20 @@ func (c *mqlAwsBackupVault) GetLocked() *plugin.TValue[bool] {
 	return &c.Locked
 }
 
+func (c *mqlAwsBackupVault) GetLockedAt() *plugin.TValue[*time.Time] {
+	return &c.LockedAt
+}
+
 func (c *mqlAwsBackupVault) GetEncryptionKeyArn() *plugin.TValue[string] {
 	return &c.EncryptionKeyArn
+}
+
+func (c *mqlAwsBackupVault) GetMaxRetentionDays() *plugin.TValue[int64] {
+	return &c.MaxRetentionDays
+}
+
+func (c *mqlAwsBackupVault) GetMinRetentionDays() *plugin.TValue[int64] {
+	return &c.MinRetentionDays
 }
 
 // mqlAwsBackupVaultRecoveryPoint for the aws.backup.vaultRecoveryPoint resource
@@ -23207,6 +23250,7 @@ type mqlAwsBackupVaultRecoveryPoint struct {
 	CreatedBy        plugin.TValue[any]
 	IamRoleArn       plugin.TValue[string]
 	Status           plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
 	CreationDate     plugin.TValue[*time.Time]
 	CompletionDate   plugin.TValue[*time.Time]
 	EncryptionKeyArn plugin.TValue[string]
@@ -23268,6 +23312,10 @@ func (c *mqlAwsBackupVaultRecoveryPoint) GetIamRoleArn() *plugin.TValue[string] 
 
 func (c *mqlAwsBackupVaultRecoveryPoint) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsBackupVaultRecoveryPoint) GetCreationDate() *plugin.TValue[*time.Time] {

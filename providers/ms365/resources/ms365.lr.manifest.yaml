@@ -905,16 +905,21 @@ resources:
       authenticationPolicy: {}
       dkimSigningConfig: {}
       externalInOutlook: {}
+      hostedContentFilterPolicy: {}
       hostedOutboundSpamFilterPolicy: {}
+      journalRules: {}
       mailbox: {}
       mailboxAuditBypassAssociation: {}
+      mailboxPlans: {}
       mailboxesWithAudit: {}
       malwareFilterPolicy: {}
       organizationConfig: {}
       owaMailboxPolicy: {}
       phishFilterPolicy: {}
+      quarantinePolicy: {}
       remoteDomain: {}
       reportSubmissionPolicies: {}
+      retentionPolicies: {}
       roleAssignmentPolicy: {}
       safeAttachmentPolicy: {}
       safeLinksPolicy: {}
@@ -948,6 +953,17 @@ resources:
     platform:
       name:
       - microsoft365
+  ms365.exchangeonline.journalRule:
+    fields:
+      enabled: {}
+      journalEmailAddress: {}
+      name: {}
+      scope: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - microsoft365
   ms365.exchangeonline.mailbox:
     fields:
       auditAdmin: {}
@@ -966,8 +982,32 @@ resources:
     platform:
       name:
       - microsoft365
+  ms365.exchangeonline.mailboxPlan:
+    fields:
+      alias: {}
+      maxReceiveSize: {}
+      maxSendSize: {}
+      name: {}
+      prohibitSendQuota: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - microsoft365
   ms365.exchangeonline.reportSubmissionPolicy:
     fields:
+      disableQuarantineReportingOption: {}
+      enableCustomNotificationSender: {}
+      enableOrganizationBranding: {}
+      enableReportToMicrosoft: {}
+      enableThirdPartyAddress: {}
+      junkReviewResultMessage: {}
+      notJunkReviewResultMessage: {}
+      notificationFooterMessage: {}
+      notificationSenderAddresses: {}
+      phishingReviewResultMessage: {}
+      postSubmitMessageEnabled: {}
+      preSubmitMessageEnabled: {}
       reportChatMessageEnabled: {}
       reportChatMessageToCustomizedAddressEnabled: {}
       reportJunkAddresses: {}
@@ -976,6 +1016,16 @@ resources:
       reportNotJunkToCustomizedAddress: {}
       reportPhishAddresses: {}
       reportPhishToCustomizedAddress: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - microsoft365
+  ms365.exchangeonline.retentionPolicy:
+    fields:
+      name: {}
+      retentionId: {}
+      retentionPolicyTagLinks: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

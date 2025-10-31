@@ -55,6 +55,7 @@ $MailboxAuditBypassAssociation = (Get-MailboxAuditBypassAssociation -ResultSize 
 
 $MalwareFilterPolicy = (Get-MalwareFilterPolicy)
 $HostedOutboundSpamFilterPolicy = (Get-HostedOutboundSpamFilterPolicy)
+$HostedContentFilterPolicy = (Get-HostedContentFilterPolicy)
 $TransportRule = (Get-TransportRule)
 $RemoteDomain = (Get-RemoteDomain Default)
 $SafeLinksPolicy = (Get-SafeLinksPolicy)
@@ -66,6 +67,10 @@ $DkimSigningConfig = (Get-DkimSigningConfig)
 $OwaMailboxPolicy = (Get-OwaMailboxPolicy)
 $AdminAuditLogConfig = (Get-AdminAuditLogConfig)
 $PhishFilterPolicy = (Get-PhishFilterPolicy)
+$QuarantinePolicy = (Get-QuarantinePolicy)
+$JournalRule = (Get-JournalRule)
+$MailboxPlan = (Get-MailboxPlan)
+$RetentionPolicy = (Get-RetentionPolicy)
 $Mailbox = (Get-Mailbox -ResultSize Unlimited | Select-Object Identity, DisplayName, PrimarySmtpAddress, RecipientTypeDetails, AuditEnabled, AuditAdmin, AuditDelegate, AuditOwner, AuditLogAgeLimit)
 $AtpPolicyForO365 = (Get-AtpPolicyForO365)
 $SharingPolicy = (Get-SharingPolicy)
@@ -79,6 +84,7 @@ $TransportConfig = (Get-TransportConfig)
 $exchangeOnline = New-Object PSObject
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MalwareFilterPolicy -Value @($MalwareFilterPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name HostedOutboundSpamFilterPolicy -Value @($HostedOutboundSpamFilterPolicy)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name HostedContentFilterPolicy -Value @($HostedContentFilterPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TransportRule -Value @($TransportRule)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name RemoteDomain -Value  @($RemoteDomain)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SafeLinksPolicy -Value @($SafeLinksPolicy)
@@ -90,6 +96,10 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name DkimSigni
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name OwaMailboxPolicy -Value @($OwaMailboxPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AdminAuditLogConfig -Value $AdminAuditLogConfig
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name PhishFilterPolicy -Value @($PhishFilterPolicy)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name QuarantinePolicy -Value @($QuarantinePolicy)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name JournalRule -Value @($JournalRule)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MailboxPlan -Value @($MailboxPlan)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name RetentionPolicy -Value @($RetentionPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name Mailbox -Value @($Mailbox)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AtpPolicyForO365 -Value @($AtpPolicyForO365)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SharingPolicy -Value @($SharingPolicy)
@@ -107,22 +117,27 @@ ConvertTo-Json -Depth 4 $exchangeOnline
 `
 
 type ExchangeOnlineReport struct {
-	MalwareFilterPolicy            []any     `json:"MalwareFilterPolicy"`
-	HostedOutboundSpamFilterPolicy []any     `json:"HostedOutboundSpamFilterPolicy"`
-	TransportRule                  []any     `json:"TransportRule"`
-	RemoteDomain                   []any     `json:"RemoteDomain"`
-	SafeLinksPolicy                []any     `json:"SafeLinksPolicy"`
-	SafeAttachmentPolicy           []any     `json:"SafeAttachmentPolicy"`
-	OrganizationConfig             any       `json:"OrganizationConfig"`
-	AuthenticationPolicy           any       `json:"AuthenticationPolicy"`
-	AntiPhishPolicy                []any     `json:"AntiPhishPolicy"`
-	DkimSigningConfig              any       `json:"DkimSigningConfig"`
-	OwaMailboxPolicy               any       `json:"OwaMailboxPolicy"`
-	AdminAuditLogConfig            any       `json:"AdminAuditLogConfig"`
-	PhishFilterPolicy              []any     `json:"PhishFilterPolicy"`
-	AtpPolicyForO365               []any     `json:"AtpPolicyForO365"`
-	SharingPolicy                  []any     `json:"SharingPolicy"`
-	RoleAssignmentPolicy           []any     `json:"RoleAssignmentPolicy"`
+	MalwareFilterPolicy            []any             `json:"MalwareFilterPolicy"`
+	HostedOutboundSpamFilterPolicy []any             `json:"HostedOutboundSpamFilterPolicy"`
+	HostedContentFilterPolicy      []any             `json:"HostedContentFilterPolicy"`
+	TransportRule                  []any             `json:"TransportRule"`
+	RemoteDomain                   []any             `json:"RemoteDomain"`
+	SafeLinksPolicy                []any             `json:"SafeLinksPolicy"`
+	SafeAttachmentPolicy           []any             `json:"SafeAttachmentPolicy"`
+	OrganizationConfig             any               `json:"OrganizationConfig"`
+	AuthenticationPolicy           any               `json:"AuthenticationPolicy"`
+	AntiPhishPolicy                []any             `json:"AntiPhishPolicy"`
+	DkimSigningConfig              any               `json:"DkimSigningConfig"`
+	OwaMailboxPolicy               any               `json:"OwaMailboxPolicy"`
+	AdminAuditLogConfig            any               `json:"AdminAuditLogConfig"`
+	PhishFilterPolicy              []any             `json:"PhishFilterPolicy"`
+	QuarantinePolicy               []any             `json:"QuarantinePolicy"`
+	JournalRules                   []JournalRule     `json:"JournalRule"`
+	MailboxPlans                   []MailboxPlan     `json:"MailboxPlan"`
+	RetentionPolicies              []RetentionPolicy `json:"RetentionPolicy"`
+	AtpPolicyForO365               []any             `json:"AtpPolicyForO365"`
+	SharingPolicy                  []any             `json:"SharingPolicy"`
+	RoleAssignmentPolicy           []any             `json:"RoleAssignmentPolicy"`
 	ExternalInOutlook              []*ExternalSender `json:"ExternalInOutlook"`
 	// note: this only contains shared mailboxes
 	ExoMailbox             []*ExoMailbox             `json:"ExoMailbox"`
@@ -193,6 +208,39 @@ type ReportSubmissionPolicy struct {
 	ReportPhishAddresses                        []string `json:"ReportPhishAddresses"`
 	ReportChatMessageEnabled                    bool     `json:"ReportChatMessageEnabled"`
 	ReportChatMessageToCustomizedAddressEnabled bool     `json:"ReportChatMessageToCustomizedAddressEnabled"`
+	EnableReportToMicrosoft                     bool     `json:"EnableReportToMicrosoft"`
+	PreSubmitMessageEnabled                     bool     `json:"PreSubmitMessageEnabled"`
+	PostSubmitMessageEnabled                    bool     `json:"PostSubmitMessageEnabled"`
+	EnableThirdPartyAddress                     bool     `json:"EnableThirdPartyAddress"`
+	PhishingReviewResultMessage                 string   `json:"PhishingReviewResultMessage"`
+	NotificationFooterMessage                   string   `json:"NotificationFooterMessage"`
+	JunkReviewResultMessage                     string   `json:"JunkReviewResultMessage"`
+	NotJunkReviewResultMessage                  string   `json:"NotJunkReviewResultMessage"`
+	NotificationSenderAddress                   []string `json:"NotificationSenderAddress"`
+	EnableCustomNotificationSender              bool     `json:"EnableCustomNotificationSender"`
+	EnableOrganizationBranding                  bool     `json:"EnableOrganizationBranding"`
+	DisableQuarantineReportingOption            bool     `json:"DisableQuarantineReportingOption"`
+}
+
+type JournalRule struct {
+	Name                string `json:"Name"`
+	JournalEmailAddress string `json:"JournalEmailAddress"`
+	Scope               string `json:"Scope"`
+	Enabled             bool   `json:"Enabled"`
+}
+
+type MailboxPlan struct {
+	Name              string `json:"Name"`
+	Alias             string `json:"Alias"`
+	ProhibitSendQuota string `json:"ProhibitSendQuota"`
+	MaxSendSize       string `json:"MaxSendSize"`
+	MaxReceiveSize    string `json:"MaxReceiveSize"`
+}
+
+type RetentionPolicy struct {
+	Name                    string   `json:"Name"`
+	RetentionPolicyTagLinks []string `json:"RetentionPolicyTagLinks"`
+	RetentionId             string   `json:"RetentionId"`
 }
 
 type TransportConfig struct {
@@ -265,11 +313,80 @@ func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubm
 				"reportPhishAddresses":                        llx.ArrayData(llx.TArr2Raw(t.ReportPhishAddresses), types.Any),
 				"reportChatMessageEnabled":                    llx.BoolData(t.ReportChatMessageEnabled),
 				"reportChatMessageToCustomizedAddressEnabled": llx.BoolData(t.ReportChatMessageToCustomizedAddressEnabled),
+				"enableReportToMicrosoft":                     llx.BoolData(t.EnableReportToMicrosoft),
+				"preSubmitMessageEnabled":                     llx.BoolData(t.PreSubmitMessageEnabled),
+				"postSubmitMessageEnabled":                    llx.BoolData(t.PostSubmitMessageEnabled),
+				"enableThirdPartyAddress":                     llx.BoolData(t.EnableThirdPartyAddress),
+				"phishingReviewResultMessage":                 llx.StringData(t.PhishingReviewResultMessage),
+				"notificationFooterMessage":                   llx.StringData(t.NotificationFooterMessage),
+				"junkReviewResultMessage":                     llx.StringData(t.JunkReviewResultMessage),
+				"notJunkReviewResultMessage":                  llx.StringData(t.NotJunkReviewResultMessage),
+				"notificationSenderAddresses":                 llx.ArrayData(llx.TArr2Raw(t.NotificationSenderAddress), types.String),
+				"enableCustomNotificationSender":              llx.BoolData(t.EnableCustomNotificationSender),
+				"enableOrganizationBranding":                  llx.BoolData(t.EnableOrganizationBranding),
+				"disableQuarantineReportingOption":            llx.BoolData(t.DisableQuarantineReportingOption),
 			})
 		if err != nil {
 			return nil, err
 		}
 		result = append(result, policy)
+	}
+	return result, nil
+}
+
+func convertJournalRules(r *mqlMs365Exchangeonline, data []JournalRule) ([]any, error) {
+	var result []any
+	for _, jr := range data {
+		mql, err := CreateResource(r.MqlRuntime, ResourceMs365ExchangeonlineJournalRule,
+			map[string]*llx.RawData{
+				"__id":                llx.StringData("journalRule-" + jr.Name),
+				"name":                llx.StringData(jr.Name),
+				"journalEmailAddress": llx.StringData(jr.JournalEmailAddress),
+				"scope":               llx.StringData(jr.Scope),
+				"enabled":             llx.BoolData(jr.Enabled),
+			})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, mql)
+	}
+	return result, nil
+}
+
+func convertMailboxPlans(r *mqlMs365Exchangeonline, data []MailboxPlan) ([]any, error) {
+	var result []any
+	for _, mp := range data {
+		mql, err := CreateResource(r.MqlRuntime, ResourceMs365ExchangeonlineMailboxPlan,
+			map[string]*llx.RawData{
+				"__id":              llx.StringData("mailboxPlan-" + mp.Name),
+				"name":              llx.StringData(mp.Name),
+				"alias":             llx.StringData(mp.Alias),
+				"prohibitSendQuota": llx.StringData(mp.ProhibitSendQuota),
+				"maxSendSize":       llx.StringData(mp.MaxSendSize),
+				"maxReceiveSize":    llx.StringData(mp.MaxReceiveSize),
+			})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, mql)
+	}
+	return result, nil
+}
+
+func convertRetentionPolicies(r *mqlMs365Exchangeonline, data []RetentionPolicy) ([]any, error) {
+	var result []any
+	for _, rp := range data {
+		mql, err := CreateResource(r.MqlRuntime, ResourceMs365ExchangeonlineRetentionPolicy,
+			map[string]*llx.RawData{
+				"__id":                    llx.StringData("retentionPolicy-" + rp.Name),
+				"name":                    llx.StringData(rp.Name),
+				"retentionPolicyTagLinks": llx.ArrayData(llx.TArr2Raw(rp.RetentionPolicyTagLinks), types.String),
+				"retentionId":             llx.StringData(rp.RetentionId),
+			})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, mql)
 	}
 	return result, nil
 }
@@ -368,6 +485,9 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	hostedOutboundSpamFilterPolicy, hostedOutboundSpamFilterPolicyErr := convert.JsonToDictSlice(report.HostedOutboundSpamFilterPolicy)
 	r.HostedOutboundSpamFilterPolicy = plugin.TValue[[]any]{Data: hostedOutboundSpamFilterPolicy, State: plugin.StateIsSet, Error: hostedOutboundSpamFilterPolicyErr}
 
+	hostedContentFilterPolicy, hostedContentFilterPolicyErr := convert.JsonToDictSlice(report.HostedContentFilterPolicy)
+	r.HostedContentFilterPolicy = plugin.TValue[[]any]{Data: hostedContentFilterPolicy, State: plugin.StateIsSet, Error: hostedContentFilterPolicyErr}
+
 	transportRule, transportRuleErr := convert.JsonToDictSlice(report.TransportRule)
 	r.TransportRule = plugin.TValue[[]any]{Data: transportRule, State: plugin.StateIsSet, Error: transportRuleErr}
 
@@ -400,6 +520,9 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 	phishFilterPolicy, phishFilterPolicyErr := convert.JsonToDictSlice(report.PhishFilterPolicy)
 	r.PhishFilterPolicy = plugin.TValue[[]any]{Data: phishFilterPolicy, State: plugin.StateIsSet, Error: phishFilterPolicyErr}
+
+	quarantinePolicy, quarantinePolicyErr := convert.JsonToDictSlice(report.QuarantinePolicy)
+	r.QuarantinePolicy = plugin.TValue[[]any]{Data: quarantinePolicy, State: plugin.StateIsSet, Error: quarantinePolicyErr}
 
 	mailbox, mailboxErr := convert.JsonToDictSlice(report.Mailbox)
 	r.Mailbox = plugin.TValue[[]any]{Data: mailbox, State: plugin.StateIsSet, Error: mailboxErr}
@@ -462,6 +585,30 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		r.TeamsProtectionPolicies = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
+	// Journal Rules
+	if report.JournalRules != nil {
+		journalRules, journalRulesErr := convertJournalRules(r, report.JournalRules)
+		r.JournalRules = plugin.TValue[[]any]{Data: journalRules, State: plugin.StateIsSet, Error: journalRulesErr}
+	} else {
+		r.JournalRules = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+
+	// Mailbox Plans
+	if report.MailboxPlans != nil {
+		mailboxPlans, mailboxPlansErr := convertMailboxPlans(r, report.MailboxPlans)
+		r.MailboxPlans = plugin.TValue[[]any]{Data: mailboxPlans, State: plugin.StateIsSet, Error: mailboxPlansErr}
+	} else {
+		r.MailboxPlans = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+
+	// Retention Policies
+	if report.RetentionPolicies != nil {
+		retentionPolicies, retentionPoliciesErr := convertRetentionPolicies(r, report.RetentionPolicies)
+		r.RetentionPolicies = plugin.TValue[[]any]{Data: retentionPolicies, State: plugin.StateIsSet, Error: retentionPoliciesErr}
+	} else {
+		r.RetentionPolicies = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+
 	// Related to ReportSubmissionPolicy
 	if report.ReportSubmissionPolicy != nil {
 		reportSubmissionPolicies, reportSubmissionPolicyErr := convertReportSubmissionPolicy(r, report.ReportSubmissionPolicy)
@@ -500,11 +647,31 @@ func (r *mqlMs365Exchangeonline) hostedOutboundSpamFilterPolicy() ([]any, error)
 	return nil, r.getExchangeReport()
 }
 
+func (r *mqlMs365Exchangeonline) hostedContentFilterPolicy() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
 func (r *mqlMs365Exchangeonline) transportRule() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 
 func (r *mqlMs365Exchangeonline) remoteDomain() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) quarantinePolicy() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) journalRules() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) mailboxPlans() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) retentionPolicies() ([]any, error) {
 	return nil, r.getExchangeReport()
 }
 

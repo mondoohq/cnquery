@@ -202,7 +202,7 @@ func (a *mqlMicrosoftGroup) owners() ([]any, error) {
 func (a *mqlMicrosoftGroupOwner) user() (*mqlMicrosoftUser, error) {
 	ownerType := a.OwnerType.Data
 	if ownerType != "user" {
-		return nil, nil
+		return nil, errors.New("owner type is not a user")
 	}
 
 	userId := a.Id.Data
@@ -219,7 +219,7 @@ func (a *mqlMicrosoftGroupOwner) user() (*mqlMicrosoftUser, error) {
 func (a *mqlMicrosoftGroupOwner) servicePrincipal() (*mqlMicrosoftServiceprincipal, error) {
 	ownerType := a.OwnerType.Data
 	if ownerType != "servicePrincipal" {
-		return nil, nil
+		return nil, errors.New("owner type is not a service principal")
 	}
 
 	spId := a.Id.Data

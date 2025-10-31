@@ -513,3 +513,18 @@ func TestResource_Empty_Panic_Issue6017(t *testing.T) {
 		},
 	})
 }
+
+func TestMapRefLookup(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code: `
+				x = {"foo": "bar"}
+				y = "foo"; z = y;
+				x[z] == "bar"
+			`,
+			ResultIndex: 2,
+			Expectation: true,
+		},
+	})
+}

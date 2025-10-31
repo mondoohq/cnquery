@@ -29,6 +29,7 @@ const (
 	ResourceK8sJob                                     string = "k8s.job"
 	ResourceK8sCronjob                                 string = "k8s.cronjob"
 	ResourceK8sContainer                               string = "k8s.container"
+	ResourceK8sContainerStatus                         string = "k8s.containerStatus"
 	ResourceK8sInitContainer                           string = "k8s.initContainer"
 	ResourceK8sEphemeralContainer                      string = "k8s.ephemeralContainer"
 	ResourceK8sSecret                                  string = "k8s.secret"
@@ -106,6 +107,10 @@ func init() {
 		"k8s.container": {
 			// to override args, implement: initK8sContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sContainer,
+		},
+		"k8s.containerStatus": {
+			// to override args, implement: initK8sContainerStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sContainerStatus,
 		},
 		"k8s.initContainer": {
 			// to override args, implement: initK8sInitContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -478,6 +483,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
 	},
+	"k8s.pod.containerStatuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetContainerStatuses()).ToDataRes(types.Array(types.Resource("k8s.containerStatus")))
+	},
 	"k8s.pod.node": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetNode()).ToDataRes(types.Resource("k8s.node"))
 	},
@@ -765,6 +773,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.container.envFrom": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetEnvFrom()).ToDataRes(types.Dict)
+	},
+	"k8s.containerStatus.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainerStatus).GetName()).ToDataRes(types.String)
+	},
+	"k8s.containerStatus.ready": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainerStatus).GetReady()).ToDataRes(types.Bool)
+	},
+	"k8s.containerStatus.restartCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainerStatus).GetRestartCount()).ToDataRes(types.Int)
+	},
+	"k8s.containerStatus.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainerStatus).GetImage()).ToDataRes(types.String)
+	},
+	"k8s.containerStatus.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainerStatus).GetImageId()).ToDataRes(types.String)
+	},
+	"k8s.containerStatus.containerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainerStatus).GetContainerId()).ToDataRes(types.String)
 	},
 	"k8s.initContainer.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sInitContainer).GetUid()).ToDataRes(types.String)
@@ -1658,6 +1684,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.pod.containerStatuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ContainerStatuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.pod.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).Node, ok = plugin.RawToTValue[*mqlK8sNode](v.Value, v.Error)
 		return
@@ -2068,6 +2098,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.container.envFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sContainer).EnvFrom, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.containerStatus.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainerStatus).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.containerStatus.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainerStatus).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.containerStatus.ready": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainerStatus).Ready, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.containerStatus.restartCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainerStatus).RestartCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.containerStatus.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainerStatus).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.containerStatus.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainerStatus).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.containerStatus.containerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainerStatus).ContainerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"k8s.initContainer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3719,6 +3777,7 @@ type mqlK8sPod struct {
 	EphemeralContainers plugin.TValue[[]any]
 	InitContainers      plugin.TValue[[]any]
 	Containers          plugin.TValue[[]any]
+	ContainerStatuses   plugin.TValue[[]any]
 	Node                plugin.TValue[*mqlK8sNode]
 }
 
@@ -3860,6 +3919,22 @@ func (c *mqlK8sPod) GetContainers() *plugin.TValue[[]any] {
 		}
 
 		return c.containers()
+	})
+}
+
+func (c *mqlK8sPod) GetContainerStatuses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerStatuses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "containerStatuses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containerStatuses()
 	})
 }
 
@@ -4864,6 +4939,75 @@ func (c *mqlK8sContainer) GetEnv() *plugin.TValue[any] {
 
 func (c *mqlK8sContainer) GetEnvFrom() *plugin.TValue[any] {
 	return &c.EnvFrom
+}
+
+// mqlK8sContainerStatus for the k8s.containerStatus resource
+type mqlK8sContainerStatus struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sContainerStatusInternal it will be used here
+	Name         plugin.TValue[string]
+	Ready        plugin.TValue[bool]
+	RestartCount plugin.TValue[int64]
+	Image        plugin.TValue[string]
+	ImageId      plugin.TValue[string]
+	ContainerId  plugin.TValue[string]
+}
+
+// createK8sContainerStatus creates a new instance of this resource
+func createK8sContainerStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sContainerStatus{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.containerStatus", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sContainerStatus) MqlName() string {
+	return "k8s.containerStatus"
+}
+
+func (c *mqlK8sContainerStatus) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sContainerStatus) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sContainerStatus) GetReady() *plugin.TValue[bool] {
+	return &c.Ready
+}
+
+func (c *mqlK8sContainerStatus) GetRestartCount() *plugin.TValue[int64] {
+	return &c.RestartCount
+}
+
+func (c *mqlK8sContainerStatus) GetImage() *plugin.TValue[string] {
+	return &c.Image
+}
+
+func (c *mqlK8sContainerStatus) GetImageId() *plugin.TValue[string] {
+	return &c.ImageId
+}
+
+func (c *mqlK8sContainerStatus) GetContainerId() *plugin.TValue[string] {
+	return &c.ContainerId
 }
 
 // mqlK8sInitContainer for the k8s.initContainer resource

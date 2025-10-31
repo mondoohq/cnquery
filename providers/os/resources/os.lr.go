@@ -1746,6 +1746,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.image.virtualsize": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerImage).GetVirtualsize()).ToDataRes(types.Int)
 	},
+	"docker.image.repoDigests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerImage).GetRepoDigests()).ToDataRes(types.Array(types.String))
+	},
 	"docker.image.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerImage).GetTags()).ToDataRes(types.Array(types.String))
 	},
@@ -4347,6 +4350,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.image.virtualsize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerImage).Virtualsize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"docker.image.repoDigests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerImage).RepoDigests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"docker.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11751,6 +11758,7 @@ type mqlDockerImage struct {
 	Id          plugin.TValue[string]
 	Size        plugin.TValue[int64]
 	Virtualsize plugin.TValue[int64]
+	RepoDigests plugin.TValue[[]any]
 	Tags        plugin.TValue[[]any]
 	Labels      plugin.TValue[map[string]any]
 }
@@ -11802,6 +11810,10 @@ func (c *mqlDockerImage) GetSize() *plugin.TValue[int64] {
 
 func (c *mqlDockerImage) GetVirtualsize() *plugin.TValue[int64] {
 	return &c.Virtualsize
+}
+
+func (c *mqlDockerImage) GetRepoDigests() *plugin.TValue[[]any] {
+	return &c.RepoDigests
 }
 
 func (c *mqlDockerImage) GetTags() *plugin.TValue[[]any] {

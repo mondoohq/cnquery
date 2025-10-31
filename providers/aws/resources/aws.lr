@@ -2038,8 +2038,14 @@ private aws.backup.vault @defaults("name region") {
   createdAt time
   // Whether the backup is locked
   locked bool
+  // Date when the backup was locked
+  lockedAt time
   // ARN of the encryption key
   encryptionKeyArn string
+  // The maximum retention period that the vault retains its recovery points
+  maxRetentionDays int
+  // The minimum retention period that the vault retains its recovery points
+  minRetentionDays int
 }
 
 // AWS Backup vault recovery point
@@ -2055,6 +2061,8 @@ private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate sta
   // Status of the recovery point
   status string
   // Date the recovery point was created
+  createdAt time
+  // Deprecated (use `createdAt` instead)
   creationDate time
   // Date the recovery point completed
   completionDate time
