@@ -183,7 +183,7 @@ func NewResource(runtime *plugin.Runtime, name ResourceName, args map[string]*ll
 	resourceName := string(name)
 	f, ok := resourceFactories[resourceName]
 	if !ok {
-		return nil, errors.New("cannot find resource " + string(name) + " in this provider")
+		return nil, errors.New("cannot find resource " + resourceName + " in this provider")
 	}
 
 	if f.Init != nil {

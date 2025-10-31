@@ -113,7 +113,7 @@ const (
 	ResourceMs365ExchangeonlineSecurityAndCompliance                                                     ResourceName = ResourceName("ms365.exchangeonline.securityAndCompliance")
 	ResourceMs365ExchangeonlineTeamsProtectionPolicy                                                     ResourceName = ResourceName("ms365.exchangeonline.teamsProtectionPolicy")
 	ResourceMs365ExchangeonlineReportSubmissionPolicy                                                    ResourceName = ResourceName("ms365.exchangeonline.reportSubmissionPolicy")
-	ResourceMs365ExchangeonlineJournalRule                                                               string       = "ms365.exchangeonline.journalRule"
+	ResourceMs365ExchangeonlineJournalRule                                                               ResourceName = ResourceName("ms365.exchangeonline.journalRule")
 	ResourceMs365ExchangeonlineExternalSender                                                            ResourceName = ResourceName("ms365.exchangeonline.externalSender")
 	ResourceMs365ExchangeonlineExoMailbox                                                                ResourceName = ResourceName("ms365.exchangeonline.exoMailbox")
 	ResourceMs365ExchangeonlineMailbox                                                                   ResourceName = ResourceName("ms365.exchangeonline.mailbox")
@@ -123,8 +123,8 @@ const (
 	ResourceMs365TeamsTenantFederationConfig                                                             ResourceName = ResourceName("ms365.teams.tenantFederationConfig")
 	ResourceMs365TeamsTeamsMeetingPolicyConfig                                                           ResourceName = ResourceName("ms365.teams.teamsMeetingPolicyConfig")
 	ResourceMs365TeamsTeamsMessagingPolicyConfig                                                         ResourceName = ResourceName("ms365.teams.teamsMessagingPolicyConfig")
-	ResourceMs365ExchangeonlineMailboxPlan                                                               string       = "ms365.exchangeonline.mailboxPlan"
-	ResourceMs365ExchangeonlineRetentionPolicy                                                           string       = "ms365.exchangeonline.retentionPolicy"
+	ResourceMs365ExchangeonlineMailboxPlan                                                               ResourceName = ResourceName("ms365.exchangeonline.mailboxPlan")
+	ResourceMs365ExchangeonlineRetentionPolicy                                                           ResourceName = ResourceName("ms365.exchangeonline.retentionPolicy")
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -557,7 +557,7 @@ func NewResource(runtime *plugin.Runtime, name ResourceName, args map[string]*ll
 	resourceName := string(name)
 	f, ok := resourceFactories[resourceName]
 	if !ok {
-		return nil, errors.New("cannot find resource " + string(name) + " in this provider")
+		return nil, errors.New("cannot find resource " + resourceName + " in this provider")
 	}
 
 	if f.Init != nil {

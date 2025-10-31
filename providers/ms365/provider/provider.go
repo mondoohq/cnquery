@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 
+	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
@@ -135,8 +136,12 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			conn,
 			callback,
 			req.HasRecording,
-			resources.CreateResource,
-			resources.NewResource,
+			func(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
+				return resources.CreateResource(runtime, resources.ResourceName(name), args)
+			},
+			func(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
+				return resources.NewResource(runtime, resources.ResourceName(name), args)
+			},
 			resources.GetData,
 			resources.SetData,
 			upstream), nil
