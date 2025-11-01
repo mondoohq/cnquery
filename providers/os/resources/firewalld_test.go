@@ -4,17 +4,14 @@
 package resources
 
 import (
-	"bytes"
-	"errors"
 	"os"
 	"testing"
 
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/mock"
 )
 
 func TestParseRichRule(t *testing.T) {
@@ -31,20 +28,43 @@ func TestParseRichRule(t *testing.T) {
 }
 
 func TestFirewalldZonesFromConfig(t *testing.T) {
-	conn := newFakeConnection(nil)
-
-	require.NoError(t, conn.fs.MkdirAll("/etc/firewalld/zones", 0o755))
-	require.NoError(t, afero.WriteFile(conn.fs, "/etc/firewalld/firewalld.conf", []byte(`# firewalld config file
-DefaultZone=public
-`), 0o644))
 
 	publicZone, err := os.ReadFile("./firewalld/testdata/public.xml")
 	require.NoError(t, err)
 	trustedZone, err := os.ReadFile("./firewalld/testdata/trusted.xml")
 	require.NoError(t, err)
 
-	require.NoError(t, afero.WriteFile(conn.fs, "/etc/firewalld/zones/public.xml", []byte(publicZone), 0o644))
-	require.NoError(t, afero.WriteFile(conn.fs, "/etc/firewalld/zones/trusted.xml", []byte(trustedZone), 0o644))
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/etc/firewalld/firewalld.conf": {
+				Data: []byte(`# firewalld config file
+DefaultZone=public
+`),
+				StatData: mock.FileInfo{
+					Mode: 0o644,
+				},
+			},
+			"/etc/firewalld/zones": {
+				StatData: mock.FileInfo{
+					Mode:  0o755,
+					IsDir: true,
+				},
+			},
+			"/etc/firewalld/zones/public.xml": {
+				Data: publicZone,
+				StatData: mock.FileInfo{
+					Mode: 0o644,
+				},
+			},
+			"/etc/firewalld/zones/trusted.xml": {
+				Data: trustedZone,
+				StatData: mock.FileInfo{
+					Mode: 0o644,
+				},
+			},
+		},
+	}))
+	require.NoError(t, err)
 
 	runtime := plugin.NewRuntime(conn, nil, false, CreateResource, NewResource, GetData, SetData, nil)
 
@@ -84,12 +104,13 @@ DefaultZone=public
 }
 
 func TestFirewalldZones(t *testing.T) {
-	conn := newFakeConnection(map[string]commandResult{
-		"firewall-cmd --get-default-zone": {stdout: "public\n", exitStatus: 0},
-		"firewall-cmd --get-active-zones": {stdout: "public\n  interfaces: eth0\n", exitStatus: 0},
-		"firewall-cmd --get-zones":        {stdout: "public trusted\n", exitStatus: 0},
-		"firewall-cmd --zone=public --list-all": {
-			stdout: `public (active)
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			"firewall-cmd --get-default-zone": {Stdout: "public\n", ExitStatus: 0},
+			"firewall-cmd --get-active-zones": {Stdout: "public\n  interfaces: eth0\n", ExitStatus: 0},
+			"firewall-cmd --get-zones":        {Stdout: "public trusted\n", ExitStatus: 0},
+			"firewall-cmd --zone=public --list-all": {
+				Stdout: `public (active)
   target: default
   icmp-block-inversion: no
   interfaces: eth0
@@ -103,16 +124,16 @@ func TestFirewalldZones(t *testing.T) {
   icmp-blocks:
   rich rules:
 `,
-			exitStatus: 0,
-		},
-		"firewall-cmd --zone=public --list-rich-rules": {
-			stdout: `rule family="ipv4" source address="127.0.0.1" destination not address="127.0.0.1" drop
+				ExitStatus: 0,
+			},
+			"firewall-cmd --zone=public --list-rich-rules": {
+				Stdout: `rule family="ipv4" source address="127.0.0.1" destination not address="127.0.0.1" drop
 rule family="ipv6" source address="::1" destination not address="::1" drop
 `,
-			exitStatus: 0,
-		},
-		"firewall-cmd --zone=trusted --list-all": {
-			stdout: `trusted
+				ExitStatus: 0,
+			},
+			"firewall-cmd --zone=trusted --list-all": {
+				Stdout: `trusted
   target: ACCEPT
   icmp-block-inversion: no
   interfaces:
@@ -126,10 +147,12 @@ rule family="ipv6" source address="::1" destination not address="::1" drop
   icmp-blocks: echo-request
   rich rules:
 `,
-			exitStatus: 0,
+				ExitStatus: 0,
+			},
+			"firewall-cmd --zone=trusted --list-rich-rules": {Stdout: "\n", ExitStatus: 0},
 		},
-		"firewall-cmd --zone=trusted --list-rich-rules": {stdout: "\n", exitStatus: 0},
-	})
+	}))
+	require.NoError(t, err)
 
 	runtime := plugin.NewRuntime(conn, nil, false, CreateResource, NewResource, GetData, SetData, nil)
 
@@ -181,81 +204,4 @@ func findZoneByName(t *testing.T, zones []any, name string) *mqlFirewalldZone {
 	}
 	t.Fatalf("zone %q not found", name)
 	return nil
-}
-
-type commandResult struct {
-	stdout     string
-	stderr     string
-	exitStatus int
-}
-
-type fakeConnection struct {
-	id       uint32
-	asset    *inventory.Asset
-	commands map[string]commandResult
-	fs       afero.Fs
-}
-
-func newFakeConnection(commands map[string]commandResult) *fakeConnection {
-	return &fakeConnection{
-		id:       1,
-		asset:    &inventory.Asset{},
-		commands: commands,
-		fs:       afero.NewMemMapFs(),
-	}
-}
-
-func (c *fakeConnection) ID() uint32 {
-	return c.id
-}
-
-func (c *fakeConnection) ParentID() uint32 {
-	return 0
-}
-
-func (c *fakeConnection) RunCommand(command string) (*shared.Command, error) {
-	res, ok := c.commands[command]
-	if !ok {
-		return &shared.Command{
-			Command:    command,
-			Stdout:     bytes.NewBuffer(nil),
-			Stderr:     bytes.NewBufferString("command not found"),
-			ExitStatus: 127,
-		}, nil
-	}
-
-	return &shared.Command{
-		Command:    command,
-		Stdout:     bytes.NewBufferString(res.stdout),
-		Stderr:     bytes.NewBufferString(res.stderr),
-		ExitStatus: res.exitStatus,
-	}, nil
-}
-
-func (c *fakeConnection) FileInfo(string) (shared.FileInfoDetails, error) {
-	return shared.FileInfoDetails{}, errors.New("not implemented")
-}
-
-func (c *fakeConnection) FileSystem() afero.Fs {
-	return c.fs
-}
-
-func (c *fakeConnection) Name() string {
-	return "fake"
-}
-
-func (c *fakeConnection) Type() shared.ConnectionType {
-	return shared.Type_Local
-}
-
-func (c *fakeConnection) Asset() *inventory.Asset {
-	return c.asset
-}
-
-func (c *fakeConnection) UpdateAsset(asset *inventory.Asset) {
-	c.asset = asset
-}
-
-func (c *fakeConnection) Capabilities() shared.Capabilities {
-	return shared.Capability_RunCommand
 }
