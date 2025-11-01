@@ -124,11 +124,6 @@ func New(id uint32, asset *inventory.Asset, opts ...Option) (*Connection, error)
 			return nil, errors.New("could not decode toml: " + err.Error())
 		}
 
-		// just for sanitization, make sure the path is set correctly
-		for path, f := range res.data.Files {
-			f.Path = path
-		}
-
 		log.Debug().Int("commands", len(res.data.Commands)).Int("files", len(res.data.Files)).Msg("mock> loaded data successfully")
 
 		for k := range res.data.Commands {
@@ -149,6 +144,11 @@ func New(id uint32, asset *inventory.Asset, opts ...Option) (*Connection, error)
 		for path, fileData := range cfg.tomlData.Files {
 			res.data.Files[path] = fileData
 		}
+	}
+
+	// just for sanitization, make sure the path is set correctly
+	for path, f := range res.data.Files {
+		f.Path = path
 	}
 
 	return res, nil
