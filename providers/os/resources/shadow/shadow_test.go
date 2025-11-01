@@ -15,7 +15,7 @@ import (
 )
 
 func TestParseShadow(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/debian.toml"))
 	require.NoError(t, err)
 
 	f, err := mock.FileSystem().Open("/etc/shadow")

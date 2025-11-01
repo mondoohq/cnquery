@@ -17,11 +17,11 @@ import (
 )
 
 func TestLinuxPSProcessParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/debian.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,11 +49,11 @@ func TestLinuxPSProcessParser(t *testing.T) {
 }
 
 func TestOSxPSProcessParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/osx.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,11 +77,11 @@ func TestOSxPSProcessParser(t *testing.T) {
 }
 
 func TestUnixPSProcessParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/freebsd12.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,12 +105,12 @@ func TestUnixPSProcessParser(t *testing.T) {
 }
 
 func TestAixPSProcessParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/aix72.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "aix",
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/aix72.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}

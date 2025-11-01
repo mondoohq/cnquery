@@ -13,7 +13,7 @@ import (
 )
 
 func detectPlatformFromMock(filepath string) (*inventory.Platform, error) {
-	mockConn, err := mock.New(0, filepath, &inventory.Asset{})
+	mockConn, err := mock.New(0, &inventory.Asset{}, mock.WithPath(filepath))
 	if err != nil {
 		return nil, err
 	}

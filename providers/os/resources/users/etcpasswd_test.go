@@ -14,7 +14,7 @@ import (
 )
 
 func TestParseLinuxEtcPasswd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/debian.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestParseLinuxEtcPasswd(t *testing.T) {
 }
 
 func TestParseFreebsdLinuxEtcPasswd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/freebsd12.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,11 +62,11 @@ func TestParseFreebsdLinuxEtcPasswd(t *testing.T) {
 }
 
 func TestParseLinuxGetentPasswd(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/oraclelinux_getent_passwd.toml", &inventory.Asset{
+	conn, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"os", "unix", "linux", "redhat"},
 		},
-	})
+	}, mock.WithPath("./testdata/oraclelinux_getent_passwd.toml"))
 	require.NoError(t, err)
 	m, err := users.ResolveManager(conn)
 	require.Nil(t, err)

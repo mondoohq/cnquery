@@ -19,7 +19,7 @@ import (
 
 func TestLinuxStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux.toml")
-	p, err := mock.New(0, filepath, &inventory.Asset{})
+	p, err := mock.New(0, &inventory.Asset{}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	statHelper := New(p)
@@ -46,7 +46,7 @@ func TestLinuxStatCmd(t *testing.T) {
 
 func TestOpenbsdStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/openbsd.toml")
-	p, err := mock.New(0, filepath, &inventory.Asset{})
+	p, err := mock.New(0, &inventory.Asset{}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	statHelper := New(p)
@@ -66,7 +66,7 @@ func TestOpenbsdStatCmd(t *testing.T) {
 
 func TestAixStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/aix.toml")
-	p, err := mock.New(0, filepath, &inventory.Asset{})
+	p, err := mock.New(0, &inventory.Asset{}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	statHelper := New(p)

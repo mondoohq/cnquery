@@ -13,7 +13,7 @@ import (
 )
 
 func TestParseProcCpuX64(t *testing.T) {
-	trans, err := mock.New(0, "./testdata/cpu-info-x64.toml", &inventory.Asset{})
+	trans, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/cpu-info-x64.toml"))
 	require.NoError(t, err)
 
 	f, err := trans.FileSystem().Open("/proc/cpuinfo")
@@ -71,7 +71,7 @@ func TestParseProcCpuX64(t *testing.T) {
 }
 
 func TestParseProcCpuArm(t *testing.T) {
-	trans, err := mock.New(0, "./testdata/cpu-info-aarch64.toml", &inventory.Asset{})
+	trans, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/cpu-info-aarch64.toml"))
 	require.NoError(t, err)
 
 	f, err := trans.FileSystem().Open("/proc/cpuinfo")
