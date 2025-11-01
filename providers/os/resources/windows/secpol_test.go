@@ -14,7 +14,7 @@ import (
 )
 
 func TestParseSecpol(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/secpol.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/secpol.toml"))
 	require.NoError(t, err)
 
 	encoded := powershell.Encode(SecpolScript)

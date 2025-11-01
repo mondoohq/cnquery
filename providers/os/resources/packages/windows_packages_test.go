@@ -54,11 +54,11 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 }
 
 func TestWindowsAppxPackagesParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/windows_2019.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"windows"},
 		},
-	})
+	}, mock.WithPath("./testdata/windows_2019.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,11 +122,11 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 }
 
 func TestWindowsHotFixParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/windows_2019.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"windows"},
 		},
-	})
+	}, mock.WithPath("./testdata/windows_2019.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}

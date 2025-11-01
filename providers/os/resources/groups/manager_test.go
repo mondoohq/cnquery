@@ -14,11 +14,11 @@ import (
 )
 
 func TestManagerDebian(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix", "linux", "debian"},
 		},
-	})
+	}, mock.WithPath("./testdata/debian.toml"))
 	require.NoError(t, err)
 
 	mm, err := groups.ResolveManager(mock)
@@ -36,11 +36,11 @@ func TestManagerDebian(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"darwin"},
 		},
-	})
+	}, mock.WithPath("./testdata/osx.toml"))
 	require.NoError(t, err)
 
 	mm, err := groups.ResolveManager(mock)
@@ -58,11 +58,11 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix", "bsd"},
 		},
-	})
+	}, mock.WithPath("./testdata/freebsd12.toml"))
 	require.NoError(t, err)
 
 	mm, err := groups.ResolveManager(mock)
@@ -80,11 +80,11 @@ func TestManagerFreebsd(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/windows.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"windows"},
 		},
-	})
+	}, mock.WithPath("./testdata/windows.toml"))
 	require.NoError(t, err)
 
 	mm, err := groups.ResolveManager(mock)

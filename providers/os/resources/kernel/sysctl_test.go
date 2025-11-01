@@ -13,7 +13,7 @@ import (
 )
 
 func TestSysctlDebian(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/debian.toml"))
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("/sbin/sysctl -a")
@@ -27,7 +27,7 @@ func TestSysctlDebian(t *testing.T) {
 }
 
 func TestSysctlMacos(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/osx.toml"))
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("sysctl -a")
@@ -41,7 +41,7 @@ func TestSysctlMacos(t *testing.T) {
 }
 
 func TestSysctlFreebsd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd14.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/freebsd14.toml"))
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("sysctl -a")

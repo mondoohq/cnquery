@@ -14,7 +14,7 @@ import (
 )
 
 func TestParseProcessStatus(t *testing.T) {
-	trans, err := mock.New(0, "./testdata/process-pid1.toml", &inventory.Asset{})
+	trans, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/process-pid1.toml"))
 	require.NoError(t, err)
 
 	f, err := trans.FileSystem().Open("/proc/1/status")
@@ -29,7 +29,7 @@ func TestParseProcessStatus(t *testing.T) {
 }
 
 func TestParseProcessCmdline(t *testing.T) {
-	trans, err := mock.New(0, "./testdata/process-pid1.toml", &inventory.Asset{})
+	trans, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/process-pid1.toml"))
 	require.NoError(t, err)
 
 	f, err := trans.FileSystem().Open("/proc/1/cmdline")

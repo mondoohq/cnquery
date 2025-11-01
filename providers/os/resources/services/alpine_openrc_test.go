@@ -13,11 +13,11 @@ import (
 )
 
 func TestManagerAlpineImage(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/alpine-image.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "alpine",
 		},
-	})
+	}, mock.WithPath("./testdata/alpine-image.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
@@ -45,11 +45,11 @@ func TestManagerAlpineImage(t *testing.T) {
 }
 
 func TestManagerAlpineContainer(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/alpine-container.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "alpine",
 		},
-	})
+	}, mock.WithPath("./testdata/alpine-container.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
