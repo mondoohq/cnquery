@@ -6,6 +6,7 @@ package resources
 import (
 	"bytes"
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -37,34 +38,17 @@ func TestFirewalldZonesFromConfig(t *testing.T) {
 DefaultZone=public
 `), 0o644))
 
-	publicZone := `<?xml version="1.0" encoding="utf-8"?>
-<zone target="default">
-  <interface name="eth0"/>
-  <service name="ssh"/>
-  <service name="dhcpv6-client"/>
-  <port protocol="tcp" port="8080"/>
-  <rule family="ipv4">
-    <source address="127.0.0.1"/>
-    <destination invert="yes" address="127.0.0.1"/>
-    <drop/>
-  </rule>
-</zone>
-`
-
-	trustedZone := `<?xml version="1.0" encoding="utf-8"?>
-<zone target="ACCEPT">
-  <masquerade/>
-  <source address="192.168.1.0/24"/>
-  <icmp-block name="echo-request"/>
-</zone>
-`
+	publicZone, err := os.ReadFile("./firewalld/testdata/public.xml")
+	require.NoError(t, err)
+	trustedZone, err := os.ReadFile("./firewalld/testdata/trusted.xml")
+	require.NoError(t, err)
 
 	require.NoError(t, afero.WriteFile(conn.fs, "/etc/firewalld/zones/public.xml", []byte(publicZone), 0o644))
 	require.NoError(t, afero.WriteFile(conn.fs, "/etc/firewalld/zones/trusted.xml", []byte(trustedZone), 0o644))
 
 	runtime := plugin.NewRuntime(conn, nil, false, CreateResource, NewResource, GetData, SetData, nil)
 
-	_, err := loadFirewalldFromConfig(runtime)
+	_, err = loadFirewalldFromConfig(runtime)
 	require.NoError(t, err)
 
 	res, err := CreateResource(runtime, "firewalld", map[string]*llx.RawData{})

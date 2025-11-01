@@ -18,6 +18,7 @@ import (
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/firewalld"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/parsers"
 	"go.mondoo.com/cnquery/v12/types"
 )
@@ -52,87 +53,6 @@ type firewalldZoneFile struct {
 	Name    string
 	Path    string
 	Content string
-}
-
-type firewalldZoneXML struct {
-	XMLName            xml.Name                  `xml:"zone"`
-	Target             string                    `xml:"target,attr"`
-	Masquerade         *struct{}                 `xml:"masquerade"`
-	IcmpBlockInversion *struct{}                 `xml:"icmp-block-inversion"`
-	Interfaces         []firewalldInterfaceXML   `xml:"interface"`
-	Sources            []firewalldSourceXML      `xml:"source"`
-	Services           []firewalldNameXML        `xml:"service"`
-	Ports              []firewalldPortXML        `xml:"port"`
-	Protocols          []firewalldProtocolXML    `xml:"protocol"`
-	ForwardPorts       []firewalldForwardPortXML `xml:"forward-port"`
-	SourcePorts        []firewalldPortXML        `xml:"source-port"`
-	IcmpBlocks         []firewalldNameXML        `xml:"icmp-block"`
-	Rules              []firewalldRuleXML        `xml:"rule"`
-	Raw                string                    `xml:",innerxml"`
-}
-
-type firewalldInterfaceXML struct {
-	Name string `xml:"name,attr"`
-}
-
-type firewalldSourceXML struct {
-	Address string `xml:"address,attr"`
-}
-
-type firewalldNameXML struct {
-	Name string `xml:"name,attr"`
-}
-
-type firewalldPortXML struct {
-	Port     string `xml:"port,attr"`
-	Protocol string `xml:"protocol,attr"`
-}
-
-type firewalldProtocolXML struct {
-	Value string `xml:"value,attr"`
-}
-
-type firewalldForwardPortXML struct {
-	Port     string `xml:"port,attr"`
-	Protocol string `xml:"protocol,attr"`
-	ToPort   string `xml:"to-port,attr"`
-	ToAddr   string `xml:"to-addr,attr"`
-}
-
-type firewalldRuleXML struct {
-	Family   string                    `xml:"family,attr"`
-	Priority string                    `xml:"priority,attr"`
-	Source   *firewalldRuleEndpointXML `xml:"source"`
-	Dest     *firewalldRuleEndpointXML `xml:"destination"`
-	Service  *firewalldNameXML         `xml:"service"`
-	Port     *firewalldPortXML         `xml:"port"`
-	Log      *firewalldRuleLogXML      `xml:"log"`
-	Accept   *struct{}                 `xml:"accept"`
-	Reject   *firewalldRuleRejectXML   `xml:"reject"`
-	Drop     *struct{}                 `xml:"drop"`
-	Masq     *struct{}                 `xml:"masquerade"`
-	Mark     *firewalldRuleMarkXML     `xml:"mark"`
-	InnerXML string                    `xml:",innerxml"`
-}
-
-type firewalldRuleEndpointXML struct {
-	Address string `xml:"address,attr"`
-	Ipset   string `xml:"ipset,attr"`
-	Mac     string `xml:"mac,attr"`
-	Invert  string `xml:"invert,attr"`
-}
-
-type firewalldRuleLogXML struct {
-	Prefix string `xml:"prefix,attr"`
-	Level  string `xml:"level,attr"`
-}
-
-type firewalldRuleRejectXML struct {
-	Type string `xml:"type,attr"`
-}
-
-type firewalldRuleMarkXML struct {
-	Set string `xml:"set,attr"`
 }
 
 func (f *mqlFirewalld) zones() ([]any, error) {
@@ -423,7 +343,7 @@ func collectZoneFilesFromFS(fs afero.Fs, dir string) ([]firewalldZoneFile, error
 }
 
 func parseFirewalldZoneFile(name string, file firewalldZoneFile) (firewalldZoneData, error) {
-	var zoneXML firewalldZoneXML
+	var zoneXML firewalld.Zone
 	if err := xml.Unmarshal([]byte(file.Content), &zoneXML); err != nil {
 		return firewalldZoneData{}, err
 	}
@@ -449,7 +369,8 @@ func parseFirewalldZoneFile(name string, file firewalldZoneFile) (firewalldZoneD
 
 	rules := make([]parsedFirewalldRule, 0, len(zoneXML.Rules))
 	for _, rule := range zoneXML.Rules {
-		ruleStr := buildRichRuleString(rule)
+		tokens := rule.ToTokens()
+		ruleStr := strings.Join(tokens, " ")
 		if strings.TrimSpace(ruleStr) == "" {
 			continue
 		}
@@ -462,7 +383,7 @@ func parseFirewalldZoneFile(name string, file firewalldZoneFile) (firewalldZoneD
 	}, nil
 }
 
-func interfacesToStrings(items []firewalldInterfaceXML) []string {
+func interfacesToStrings(items []firewalld.Interface) []string {
 	if len(items) == 0 {
 		return nil
 	}
@@ -476,7 +397,7 @@ func interfacesToStrings(items []firewalldInterfaceXML) []string {
 	return res
 }
 
-func sourcesToStrings(items []firewalldSourceXML) []string {
+func sourcesToStrings(items []firewalld.Source) []string {
 	if len(items) == 0 {
 		return nil
 	}
@@ -490,7 +411,7 @@ func sourcesToStrings(items []firewalldSourceXML) []string {
 	return res
 }
 
-func namesToStrings(items []firewalldNameXML) []string {
+func namesToStrings(items []firewalld.Name) []string {
 	if len(items) == 0 {
 		return nil
 	}
@@ -504,7 +425,7 @@ func namesToStrings(items []firewalldNameXML) []string {
 	return res
 }
 
-func portsToStrings(items []firewalldPortXML) []string {
+func portsToStrings(items []firewalld.Port) []string {
 	if len(items) == 0 {
 		return nil
 	}
@@ -524,7 +445,7 @@ func portsToStrings(items []firewalldPortXML) []string {
 	return res
 }
 
-func sourcePortsToStrings(items []firewalldPortXML) []string {
+func sourcePortsToStrings(items []firewalld.Port) []string {
 	if len(items) == 0 {
 		return nil
 	}
@@ -550,7 +471,7 @@ func sourcePortsToStrings(items []firewalldPortXML) []string {
 	return res
 }
 
-func forwardPortsToStrings(items []firewalldForwardPortXML) []string {
+func forwardPortsToStrings(items []firewalld.ForwardPort) []string {
 	if len(items) == 0 {
 		return nil
 	}
@@ -576,7 +497,7 @@ func forwardPortsToStrings(items []firewalldForwardPortXML) []string {
 	return res
 }
 
-func protocolsToStrings(items []firewalldProtocolXML) []string {
+func protocolsToStrings(items []firewalld.Protocol) []string {
 	if len(items) == 0 {
 		return nil
 	}
@@ -588,104 +509,6 @@ func protocolsToStrings(items []firewalldProtocolXML) []string {
 		}
 	}
 	return res
-}
-
-func buildRichRuleString(rule firewalldRuleXML) string {
-	tokens := []string{"rule"}
-
-	if v := strings.TrimSpace(rule.Family); v != "" {
-		tokens = append(tokens, fmt.Sprintf("family=\"%s\"", v))
-	}
-	if v := strings.TrimSpace(rule.Priority); v != "" {
-		tokens = append(tokens, fmt.Sprintf("priority=\"%s\"", v))
-	}
-
-	if rule.Source != nil {
-		if srcTokens := rule.Source.toTokens(); len(srcTokens) > 0 {
-			tokens = append(tokens, "source")
-			tokens = append(tokens, srcTokens...)
-		}
-	}
-	if rule.Dest != nil {
-		if dstTokens := rule.Dest.toTokens(); len(dstTokens) > 0 {
-			tokens = append(tokens, "destination")
-			tokens = append(tokens, dstTokens...)
-		}
-	}
-	if rule.Service != nil {
-		if v := strings.TrimSpace(rule.Service.Name); v != "" {
-			tokens = append(tokens, "service", fmt.Sprintf("name=\"%s\"", v))
-		}
-	}
-	if rule.Port != nil {
-		portTokens := []string{}
-		if v := strings.TrimSpace(rule.Port.Port); v != "" {
-			portTokens = append(portTokens, fmt.Sprintf("port=\"%s\"", v))
-		}
-		if v := strings.TrimSpace(rule.Port.Protocol); v != "" {
-			portTokens = append(portTokens, fmt.Sprintf("protocol=\"%s\"", v))
-		}
-		if len(portTokens) > 0 {
-			tokens = append(tokens, "port")
-			tokens = append(tokens, portTokens...)
-		}
-	}
-	if rule.Log != nil {
-		logTokens := []string{}
-		if v := strings.TrimSpace(rule.Log.Prefix); v != "" {
-			logTokens = append(logTokens, fmt.Sprintf("prefix=\"%s\"", v))
-		}
-		if v := strings.TrimSpace(rule.Log.Level); v != "" {
-			logTokens = append(logTokens, fmt.Sprintf("level=\"%s\"", v))
-		}
-		if len(logTokens) > 0 {
-			tokens = append(tokens, "log")
-			tokens = append(tokens, logTokens...)
-		}
-	}
-
-	switch {
-	case rule.Accept != nil:
-		tokens = append(tokens, "accept")
-	case rule.Drop != nil:
-		tokens = append(tokens, "drop")
-	case rule.Reject != nil:
-		tokens = append(tokens, "reject")
-		if v := strings.TrimSpace(rule.Reject.Type); v != "" {
-			tokens = append(tokens, fmt.Sprintf("type=\"%s\"", v))
-		}
-	case rule.Masq != nil:
-		tokens = append(tokens, "masquerade")
-	case rule.Mark != nil:
-		tokens = append(tokens, "mark")
-		if v := strings.TrimSpace(rule.Mark.Set); v != "" {
-			tokens = append(tokens, fmt.Sprintf("set=\"%s\"", v))
-		}
-	default:
-		return ""
-	}
-
-	return strings.Join(tokens, " ")
-}
-
-func (e *firewalldRuleEndpointXML) toTokens() []string {
-	if e == nil {
-		return nil
-	}
-	tokens := []string{}
-	if parseBool(e.Invert) {
-		tokens = append(tokens, "not")
-	}
-	if v := strings.TrimSpace(e.Address); v != "" {
-		tokens = append(tokens, fmt.Sprintf("address=\"%s\"", v))
-	}
-	if v := strings.TrimSpace(e.Ipset); v != "" {
-		tokens = append(tokens, fmt.Sprintf("ipset=\"%s\"", v))
-	}
-	if v := strings.TrimSpace(e.Mac); v != "" {
-		tokens = append(tokens, fmt.Sprintf("mac=\"%s\"", v))
-	}
-	return tokens
 }
 
 func loadFirewalldFromCommand(runtime *plugin.Runtime) (*firewalldData, error) {
@@ -860,7 +683,7 @@ func parseFirewalldZone(name, raw string) parsedFirewalldZone {
 		case "protocols":
 			zone.Protocols = splitList(value)
 		case "masquerade":
-			zone.Masquerade = parseBool(value)
+			zone.Masquerade = firewalld.ParseBool(value)
 		case "forward-ports":
 			zone.ForwardPorts = splitList(value)
 		case "source-ports":
@@ -868,7 +691,7 @@ func parseFirewalldZone(name, raw string) parsedFirewalldZone {
 		case "icmp-blocks":
 			zone.IcmpBlocks = splitList(value)
 		case "icmp-block-inversion":
-			zone.IcmpBlockInversion = parseBool(value)
+			zone.IcmpBlockInversion = firewalld.ParseBool(value)
 		}
 	}
 
@@ -888,15 +711,6 @@ func splitList(value string) []string {
 		}
 	}
 	return res
-}
-
-func parseBool(value string) bool {
-	switch strings.ToLower(strings.TrimSpace(value)) {
-	case "yes", "true", "on", "1":
-		return true
-	default:
-		return false
-	}
 }
 
 func parseRichRuleLines(raw string) []string {
