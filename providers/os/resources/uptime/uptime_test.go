@@ -14,11 +14,11 @@ import (
 )
 
 func TestUptimeOnLinux(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/linux.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/linux.toml"))
 	require.NoError(t, err)
 
 	ut, err := uptime.New(mock)
@@ -31,11 +31,11 @@ func TestUptimeOnLinux(t *testing.T) {
 
 func TestUptimeOnLinuxLcDecimalDe(t *testing.T) {
 	// LC_NUMERIC=de_DE.UTF-8 on Ubuntu 22.04
-	mock, err := mock.New(0, "./testdata/linux_de.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/linux_de.toml"))
 	require.NoError(t, err)
 
 	ut, err := uptime.New(mock)
@@ -47,11 +47,11 @@ func TestUptimeOnLinuxLcDecimalDe(t *testing.T) {
 }
 
 func TestUptimeOnFreebsd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/freebsd12.toml"))
 	require.NoError(t, err)
 
 	ut, err := uptime.New(mock)
@@ -64,11 +64,11 @@ func TestUptimeOnFreebsd(t *testing.T) {
 }
 
 func TestUptimeOnWindows(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/windows.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"windows"},
 		},
-	})
+	}, mock.WithPath("./testdata/windows.toml"))
 	require.NoError(t, err)
 
 	ut, err := uptime.New(mock)

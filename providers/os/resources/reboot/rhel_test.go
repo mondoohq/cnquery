@@ -15,12 +15,12 @@ import (
 
 func TestRhelKernelLatest(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/redhat_kernel_reboot.toml")
-	mock, err := mock.New(0, filepath, &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "redhat",
 			Family: []string{"linux", "redhat"},
 		},
-	})
+	}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	lb := RpmNewestKernel{conn: mock}
@@ -31,13 +31,13 @@ func TestRhelKernelLatest(t *testing.T) {
 
 func TestAmznContainerWithoutKernel(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/amzn_kernel_container.toml")
-	mock, err := mock.New(0, filepath, &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "amazonlinux",
 			Version: "2018.03",
 			Family:  []string{"linux"},
 		},
-	})
+	}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	lb := RpmNewestKernel{conn: mock}
@@ -49,13 +49,13 @@ func TestAmznContainerWithoutKernel(t *testing.T) {
 
 func TestAmznEc2Kernel(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/amzn_kernel_ec2.toml")
-	mock, err := mock.New(0, filepath, &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "amazonlinux",
 			Version: "2018.03",
 			Family:  []string{"linux"},
 		},
-	})
+	}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	lb := RpmNewestKernel{conn: mock}

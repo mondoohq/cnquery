@@ -14,7 +14,7 @@ import (
 )
 
 func TestParseAuditpol(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/auditpol.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/auditpol.toml"))
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("auditpol /get /category:* /r")

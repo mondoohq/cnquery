@@ -17,7 +17,7 @@ import (
 )
 
 func TestInterfacesDarwin(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/macos.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/macos.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -62,7 +62,7 @@ func TestInterfacesDarwin(t *testing.T) {
 }
 
 func TestInterfacesLinux(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/linux_ip_addr_show_cmd.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_ip_addr_show_cmd.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -109,7 +109,7 @@ func TestInterfacesLinux(t *testing.T) {
 }
 
 func TestInterfacesLinuxFallbackSysNetFilesystem(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/linux_sys_class_net_fs.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_sys_class_net_fs.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -140,7 +140,7 @@ func TestInterfacesLinuxFallbackSysNetFilesystem(t *testing.T) {
 }
 
 func TestInterfacesWindows(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/windows_get_net_ip_cmd.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_get_net_ip_cmd.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -196,7 +196,7 @@ func TestInterfacesWindows(t *testing.T) {
 
 func TestInterfacesWindowsFallbackIpconfigCmd(t *testing.T) {
 	// Note that ipconfig command doesn't have as much information as Get-NetIPAddress
-	conn, err := mock.New(0, "./testdata/windows_ipconfig.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_ipconfig.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

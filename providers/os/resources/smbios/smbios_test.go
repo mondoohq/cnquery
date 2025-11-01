@@ -86,7 +86,7 @@ func Test_WindowsSmbiosChassis_AdHoc(t *testing.T) {
 func TestManagerUnixFamily(t *testing.T) {
 	// special case where we detect a unix system other than darwin
 	// use centos and change the platform family
-	conn, err := mock.New(0, "./testdata/centos.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/centos.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -130,7 +130,7 @@ func TestManagerUnixFamily(t *testing.T) {
 }
 
 func TestManagerCentos(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/centos.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/centos.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -173,7 +173,7 @@ func TestManagerCentos(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/macos.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/macos.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -216,7 +216,7 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/windows.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -259,7 +259,7 @@ func TestManagerWindows(t *testing.T) {
 }
 
 func TestManagerAIX(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/aix.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/aix.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

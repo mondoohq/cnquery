@@ -16,7 +16,7 @@ import (
 )
 
 func TestHypervisorDarwinMachdepCpuFeatures(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/macos_machdep_cpu_features.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/macos_machdep_cpu_features.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -28,7 +28,7 @@ func TestHypervisorDarwinMachdepCpuFeatures(t *testing.T) {
 }
 
 func TestHypervisorDarwinKernHvVMMPresent(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/macos_apple_virtualization_like_tart.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/macos_apple_virtualization_like_tart.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -40,7 +40,7 @@ func TestHypervisorDarwinKernHvVMMPresent(t *testing.T) {
 }
 
 func TestHypervisorDarwinSystemProfiler(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/macos_system_profiler.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/macos_system_profiler.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -52,7 +52,7 @@ func TestHypervisorDarwinSystemProfiler(t *testing.T) {
 }
 
 func TestHypervisorWindowsWin32Manufacturer(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/windows_ciminstance_win32_computersystem_manufacturer.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_ciminstance_win32_computersystem_manufacturer.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -64,7 +64,7 @@ func TestHypervisorWindowsWin32Manufacturer(t *testing.T) {
 }
 
 func TestHypervisorWindowsWmicGetModel(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/windows_wmic_computersystem_get_model.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_wmic_computersystem_get_model.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -76,7 +76,7 @@ func TestHypervisorWindowsWmicGetModel(t *testing.T) {
 }
 
 func TestHypervisorWindowsServer2022SMBIOSBIOSVersion(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/windows_serer_2022_running_hyper_v.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_serer_2022_running_hyper_v.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -88,7 +88,7 @@ func TestHypervisorWindowsServer2022SMBIOSBIOSVersion(t *testing.T) {
 }
 
 func TestHypervisorLinuxDmidecode(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/linux_dmidecode.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_dmidecode.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -100,7 +100,7 @@ func TestHypervisorLinuxDmidecode(t *testing.T) {
 }
 
 func TestHypervisorLinuxSystemdDetectVirt(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/linux_systemd_detect_virt.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_systemd_detect_virt.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -112,7 +112,7 @@ func TestHypervisorLinuxSystemdDetectVirt(t *testing.T) {
 }
 
 func TestHypervisorLinuxDMIProductName(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/linux_dmi_product_name.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_dmi_product_name.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -124,7 +124,7 @@ func TestHypervisorLinuxDMIProductName(t *testing.T) {
 }
 
 func TestHypervisorLinuxOpenShiftVirtualization(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/linux_openshift_virtualization.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_openshift_virtualization.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

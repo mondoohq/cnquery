@@ -16,7 +16,7 @@ import (
 )
 
 func TestDetectLinuxInstance(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance_linux.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instance_linux.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -35,7 +35,7 @@ func TestDetectLinuxInstance(t *testing.T) {
 	)
 }
 func TestDetectLinuxInstanceWithoutVmtoolsd(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance_linux_no_vmtoolsd.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instance_linux_no_vmtoolsd.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -51,7 +51,7 @@ func TestDetectLinuxInstanceWithoutVmtoolsd(t *testing.T) {
 }
 
 func TestDetectWindowsInstance(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance_windows.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instance_windows.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -71,7 +71,7 @@ func TestDetectWindowsInstance(t *testing.T) {
 }
 
 func TestDetectWindowsInstanceWithoutVmtoolsd(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance_windows_no_vmtoolsd.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instance_windows_no_vmtoolsd.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -87,7 +87,7 @@ func TestDetectWindowsInstanceWithoutVmtoolsd(t *testing.T) {
 }
 
 func TestNoMatch(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/no_vmware_instance.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/no_vmware_instance.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

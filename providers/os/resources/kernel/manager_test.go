@@ -13,13 +13,13 @@ import (
 )
 
 func TestManagerDebian(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "debian",
 			Version: "8.0",
 			Family:  []string{"debian", "linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/debian.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
@@ -31,13 +31,13 @@ func TestManagerDebian(t *testing.T) {
 }
 
 func TestManagerCentos(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/centos7.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "centos",
 			Version: "6.10",
 			Family:  []string{"linux", "redhat"},
 		},
-	})
+	}, mock.WithPath("./testdata/centos7.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
@@ -57,13 +57,13 @@ func TestManagerCentos(t *testing.T) {
 }
 
 func TestManagerAmazonLinux1(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/amznlinux1.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "amazonlinux",
 			Version: "2018.03",
 			Family:  []string{"linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/amznlinux1.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
@@ -83,12 +83,12 @@ func TestManagerAmazonLinux1(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "macos",
 			Family: []string{"unix", "darwin"},
 		},
-	})
+	}, mock.WithPath("./testdata/osx.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
@@ -108,12 +108,12 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd14.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "freebsd",
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/freebsd14.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
@@ -129,12 +129,12 @@ func TestManagerFreebsd(t *testing.T) {
 }
 
 func TestManagerAIX(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/aix.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "aix",
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/aix.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)

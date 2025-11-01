@@ -15,7 +15,7 @@ import (
 )
 
 func TestCommandProviderLinux(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/metadata_linux.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/metadata_linux.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -30,7 +30,7 @@ func TestCommandProviderLinux(t *testing.T) {
 }
 
 func TestCommandProviderWindows(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/metadata_windows.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/metadata_windows.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
