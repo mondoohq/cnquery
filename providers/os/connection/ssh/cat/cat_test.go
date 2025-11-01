@@ -22,7 +22,7 @@ import (
 
 func TestCatFs(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/cat.toml")
-	p, err := mock.New(0, filepath, &inventory.Asset{})
+	p, err := mock.New(0, &inventory.Asset{}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	flags := map[string]*llx.Primitive{

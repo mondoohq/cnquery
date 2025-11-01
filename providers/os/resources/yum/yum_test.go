@@ -63,7 +63,7 @@ Repo-filename: /etc/yum.repos.d/CentOS-Media.repo
 }
 
 func TestYumRepoRhel7(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/yum_rhel7.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/yum_rhel7.toml"))
 	require.NoError(t, err)
 
 	cmd, err := mock.RunCommand(RhelYumRepoListCommand)
@@ -80,7 +80,7 @@ func TestYumRepoRhel7(t *testing.T) {
 }
 
 func TestYumRepoRhel8(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/yum_rhel8.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/yum_rhel8.toml"))
 	require.NoError(t, err)
 
 	cmd, err := mock.RunCommand(RhelYumRepoListCommand)

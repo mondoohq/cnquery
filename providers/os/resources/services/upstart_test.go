@@ -13,12 +13,12 @@ import (
 )
 
 func TestParseUpstartServicesRunning(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/ubuntu1404.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "ubuntu",
 			Family: []string{"linux", "ubuntu"},
 		},
-	})
+	}, mock.WithPath("./testdata/ubuntu1404.toml"))
 	require.NoError(t, err)
 
 	upstart := UpstartServiceManager{SysVServiceManager{conn: mock}}

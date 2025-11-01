@@ -15,12 +15,12 @@ import (
 
 func TestRebootOnUbuntu(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/ubuntu_reboot.toml")
-	mock, err := mock.New(0, filepath, &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "ubuntu",
 			Family: []string{"linux", "debian", "ubuntu"},
 		},
-	})
+	}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	lb, err := New(mock)
@@ -33,12 +33,12 @@ func TestRebootOnUbuntu(t *testing.T) {
 
 func TestRebootOnRhel(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/redhat_kernel_reboot.toml")
-	mock, err := mock.New(0, filepath, &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "redhat",
 			Family: []string{"linux", "redhat"},
 		},
-	})
+	}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	lb, err := New(mock)
@@ -52,12 +52,12 @@ func TestRebootOnRhel(t *testing.T) {
 
 func TestRebootOnWindows(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/windows_reboot.toml")
-	mock, err := mock.New(0, filepath, &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "windows",
 			Family: []string{"windows"},
 		},
-	})
+	}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	lb, err := New(mock)

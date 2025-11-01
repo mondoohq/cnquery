@@ -16,9 +16,9 @@ import (
 )
 
 func TestMountLinuxParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{Family: []string{"linux"}},
-	})
+	}, mock.WithPath("./testdata/debian.toml"))
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -43,9 +43,9 @@ func TestMountLinuxParser(t *testing.T) {
 }
 
 func TestMountMacosParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{Family: []string{"unix"}},
-	})
+	}, mock.WithPath("./testdata/osx.toml"))
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -71,9 +71,9 @@ func TestMountMacosParser(t *testing.T) {
 }
 
 func TestMountFreeBsdParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{Family: []string{"unix"}},
-	})
+	}, mock.WithPath("./testdata/freebsd12.toml"))
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -97,9 +97,9 @@ func TestMountFreeBsdParser(t *testing.T) {
 }
 
 func TestProcModulesParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{Family: []string{"linux"}},
-	})
+	}, mock.WithPath("./testdata/debian.toml"))
 	require.NoError(t, err)
 
 	f, err := mock.FileSystem().Open("/proc/mounts")

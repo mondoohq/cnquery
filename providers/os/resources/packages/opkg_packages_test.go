@@ -48,7 +48,7 @@ firewall - 2016-11-29-1`
 }
 
 func TestOpkgStatusParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/packages_opkg_statusfile.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/packages_opkg_statusfile.toml"))
 	require.NoError(t, err)
 	f, err := mock.FileSystem().Open("/usr/lib/opkg/status")
 	require.NoError(t, err)
@@ -72,11 +72,11 @@ func TestOpkgStatusParser(t *testing.T) {
 
 func TestOpkgManager(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/packages_opkg.toml")
-	conn, err := mock.New(0, filepath, &inventory.Asset{
+	conn, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "openwrt",
 		},
-	})
+	}, mock.WithPath(filepath))
 	require.NoError(t, err)
 
 	pms, err := packages.ResolveSystemPkgManagers(conn)

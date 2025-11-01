@@ -71,7 +71,28 @@ type Connection struct {
 	missing map[string]map[string]bool
 }
 
-func New(id uint32, path string, asset *inventory.Asset) (*Connection, error) {
+type mockConfigOptions struct {
+	path     string
+	tomlData *TomlData
+}
+
+type Option func(cfg *mockConfigOptions) error
+
+func WithPath(path string) func(cfg *mockConfigOptions) error {
+	return func(cfg *mockConfigOptions) error {
+		cfg.path = path
+		return nil
+	}
+}
+
+func WithData(data *TomlData) func(cfg *mockConfigOptions) error {
+	return func(cfg *mockConfigOptions) error {
+		cfg.tomlData = data
+		return nil
+	}
+}
+
+func New(id uint32, asset *inventory.Asset, opts ...Option) (*Connection, error) {
 	res := &Connection{
 		Connection: plugin.NewConnection(id, asset),
 		data:       &TomlData{},
@@ -82,34 +103,52 @@ func New(id uint32, path string, asset *inventory.Asset) (*Connection, error) {
 		},
 	}
 
-	if path == "" {
-		res.data.Commands = map[string]*Command{}
-		res.data.Files = map[string]*MockFileData{}
-		return res, nil
+	var cfg mockConfigOptions
+	for _, o := range opts {
+		if err := o(&cfg); err != nil {
+			return nil, err
+		}
 	}
 
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, errors.New("could not open: " + path)
+	res.data.Commands = map[string]*Command{}
+	res.data.Files = map[string]*MockFileData{}
+
+	// load provided toml data from file
+	if cfg.path != "" {
+		data, err := os.ReadFile(cfg.path)
+		if err != nil {
+			return nil, errors.New("could not open: " + cfg.path)
+		}
+
+		if _, err := toml.Decode(string(data), &res.data); err != nil {
+			return nil, errors.New("could not decode toml: " + err.Error())
+		}
+
+		// just for sanitization, make sure the path is set correctly
+		for path, f := range res.data.Files {
+			f.Path = path
+		}
+
+		log.Debug().Int("commands", len(res.data.Commands)).Int("files", len(res.data.Files)).Msg("mock> loaded data successfully")
+
+		for k := range res.data.Commands {
+			log.Trace().Str("cmd", k).Msg("load command")
+		}
+
+		for k := range res.data.Files {
+			log.Trace().Str("file", k).Msg("load file")
+		}
 	}
 
-	if _, err := toml.Decode(string(data), &res.data); err != nil {
-		return nil, errors.New("could not decode toml: " + err.Error())
-	}
-
-	// just for sanitization, make sure the path is set correctly
-	for path, f := range res.data.Files {
-		f.Path = path
-	}
-
-	log.Debug().Int("commands", len(res.data.Commands)).Int("files", len(res.data.Files)).Msg("mock> loaded data successfully")
-
-	for k := range res.data.Commands {
-		log.Trace().Str("cmd", k).Msg("load command")
-	}
-
-	for k := range res.data.Files {
-		log.Trace().Str("file", k).Msg("load file")
+	if cfg.tomlData != nil {
+		// merge commands
+		for cmd, cmdData := range cfg.tomlData.Commands {
+			res.data.Commands[cmd] = cmdData
+		}
+		// merge files
+		for path, fileData := range cfg.tomlData.Files {
+			res.data.Files[path] = fileData
+		}
 	}
 
 	return res, nil

@@ -13,12 +13,12 @@ import (
 )
 
 func TestParseSysvServices(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/amzn1.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "amazonlinux",
 			Family: []string{"linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/amzn1.toml"))
 	require.NoError(t, err)
 
 	sysv := SysVServiceManager{conn: mock}
@@ -28,12 +28,12 @@ func TestParseSysvServices(t *testing.T) {
 }
 
 func TestParseSysvServicesRunlevel(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/amzn1.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "amazonlinux",
 			Family: []string{"linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/amzn1.toml"))
 	require.NoError(t, err)
 
 	sysv := SysVServiceManager{conn: mock}
@@ -44,12 +44,12 @@ func TestParseSysvServicesRunlevel(t *testing.T) {
 }
 
 func TestParseSysvServicesRunning(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/amzn1.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "amazonlinux",
 			Family: []string{"linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/amzn1.toml"))
 	require.NoError(t, err)
 
 	sysv := SysVServiceManager{conn: mock}

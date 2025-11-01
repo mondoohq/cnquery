@@ -13,7 +13,7 @@ import (
 )
 
 func TestGuidWindows(t *testing.T) {
-	provider, err := mock.New(0, "./testdata/guid_windows.toml", &inventory.Asset{})
+	provider, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/guid_windows.toml"))
 	require.NoError(t, err)
 
 	lid := WinIdProvider{connection: provider}
