@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -344,8 +343,8 @@ func collectZoneFilesFromFS(fs afero.Fs, dir string) ([]firewalldZoneFile, error
 }
 
 func parseFirewalldZoneFile(name string, file firewalldZoneFile) (firewalldZoneData, error) {
-	var zoneXML firewalld.Zone
-	if err := xml.Unmarshal([]byte(file.Content), &zoneXML); err != nil {
+	zoneXML, err := firewalld.ParseZone([]byte(file.Content))
+	if err != nil {
 		return firewalldZoneData{}, err
 	}
 
