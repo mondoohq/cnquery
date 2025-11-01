@@ -13,12 +13,12 @@ import (
 )
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "macos",
 			Family: []string{"unix", "darwin"},
 		},
-	})
+	}, mock.WithPath("./testdata/osx.toml"))
 	require.NoError(t, err)
 
 	mm, err := services.ResolveManager(mock)
@@ -30,12 +30,12 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "freebsd",
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/freebsd12.toml"))
 	require.NoError(t, err)
 
 	mm, err := services.ResolveManager(mock)
@@ -47,12 +47,12 @@ func TestManagerFreebsd(t *testing.T) {
 }
 
 func TestManagerDragonflybsd5(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/dragonfly5.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "dragonflybsd",
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/dragonfly5.toml"))
 	require.NoError(t, err)
 
 	mm, err := services.ResolveManager(mock)
@@ -64,12 +64,12 @@ func TestManagerDragonflybsd5(t *testing.T) {
 }
 
 func TestManagerOpenBsd6(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/openbsd6.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "openbsd",
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/openbsd6.toml"))
 	require.NoError(t, err)
 
 	mm, err := services.ResolveManager(mock)
@@ -81,12 +81,12 @@ func TestManagerOpenBsd6(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/windows2019.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "windows",
 			Family: []string{"windows"},
 		},
-	})
+	}, mock.WithPath("./testdata/windows2019.toml"))
 	require.NoError(t, err)
 
 	mm, err := services.ResolveManager(mock)
@@ -98,13 +98,13 @@ func TestManagerWindows(t *testing.T) {
 }
 
 func TestManagerUbuntu2204(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/ubuntu2204.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "ubuntu",
 			Version: "22.04",
 			Family:  []string{"ubuntu", "linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/ubuntu2204.toml"))
 	require.NoError(t, err)
 
 	mm, err := services.ResolveManager(mock)
@@ -116,13 +116,13 @@ func TestManagerUbuntu2204(t *testing.T) {
 }
 
 func TestManagerPhoton(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/photon.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "photon",
 			Version: "8.1.10",
 			Family:  []string{"photon", "linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/photon.toml"))
 	require.NoError(t, err)
 
 	mm, err := services.ResolveManager(mock)

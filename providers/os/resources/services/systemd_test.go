@@ -45,12 +45,12 @@ Nov 03 06:51:44 mondoopad avahi-daemon[1219]: Registering new address record for
 }
 
 func TestParseServiceSystemDUnitFiles(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/ubuntu2204.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "ubuntu",
 			Family: []string{"ubuntu", "linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/ubuntu2204.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,12 +78,12 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 }
 
 func TestParseServiceSystemDUnitFilesPhoton(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/photon.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "photon",
 			Family: []string{"redhat", "linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/photon.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}

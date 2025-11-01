@@ -13,7 +13,7 @@ import (
 )
 
 func TestParseLinuxEtcGroups(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/debian.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestParseLinuxEtcGroups(t *testing.T) {
 }
 
 func TestParseFreebsd12EtcGroups(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/freebsd12.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,11 +71,11 @@ func TestParseFreebsd12EtcGroups(t *testing.T) {
 }
 
 func TestUnixGroupManager(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/debian.toml"))
 	require.NoError(t, err)
 	gm := &UnixGroupManager{
 		conn: mock,

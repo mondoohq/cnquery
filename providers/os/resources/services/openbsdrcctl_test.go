@@ -13,11 +13,11 @@ import (
 )
 
 func TestParseOpenbsdServicesRunning(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/openbsd6.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "openbsd",
 		},
-	})
+	}, mock.WithPath("./testdata/openbsd6.toml"))
 	require.NoError(t, err)
 
 	openbsd := OpenBsdRcctlServiceManager{conn: mock}

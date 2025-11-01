@@ -12,7 +12,7 @@ import (
 )
 
 func TestRpmUpdateParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/updates_rpm.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/updates_rpm.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestRpmUpdateParser(t *testing.T) {
 }
 
 func TestZypperUpdateParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/updates_zypper.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/updates_zypper.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}

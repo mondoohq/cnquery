@@ -23,7 +23,7 @@ func TestParseECSContainerId(t *testing.T) {
 }
 
 func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/container-identity.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/container-identity.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
