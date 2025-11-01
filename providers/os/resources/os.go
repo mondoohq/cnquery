@@ -695,7 +695,7 @@ func (s *mqlOsLinux) ip6tables() (*mqlIp6tables, error) {
 }
 
 func (s *mqlOsLinux) firewalld() (*mqlFirewalld, error) {
-	res, err := CreateResource(s.MqlRuntime, "firewalld", map[string]*llx.RawData{})
+	res, err := CreateResource(s.MqlRuntime, ResourceFirewalld, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}

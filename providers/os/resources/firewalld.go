@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/firewalld"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/parsers"
@@ -99,7 +100,7 @@ func (f *mqlFirewalld) ensureLoaded() error {
 	}
 
 	f.DefaultZone = plugin.TValue[string]{Data: data.DefaultZone, State: plugin.StateIsSet}
-	f.ActiveZones = plugin.TValue[[]any]{Data: stringsToAny(data.ActiveZones), State: plugin.StateIsSet}
+	f.ActiveZones = plugin.TValue[[]any]{Data: convert.SliceAnyToInterface(data.ActiveZones), State: plugin.StateIsSet}
 	f.Zones = plugin.TValue[[]any]{Data: zoneResources, State: plugin.StateIsSet}
 
 	f.loadError = nil
@@ -187,7 +188,7 @@ func loadFirewalldFromConfig(runtime *plugin.Runtime) (*firewalldData, error) {
 }
 
 func readFirewalldDefaultZone(runtime *plugin.Runtime) (string, error) {
-	fileRes, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+	fileRes, err := CreateResource(runtime, ResourceFile, map[string]*llx.RawData{
 		"path": llx.StringData(defaultFirewalldConfig),
 	})
 	if err != nil {
@@ -242,7 +243,7 @@ func collectFirewalldZoneFiles(runtime *plugin.Runtime, dir string) ([]firewalld
 		return collectZoneFilesFromFS(fs, dir)
 	}
 
-	fileRes, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+	fileRes, err := CreateResource(runtime, ResourceFile, map[string]*llx.RawData{
 		"path": llx.StringData(dir),
 	})
 	if err != nil {
@@ -953,24 +954,24 @@ func createFirewalldZoneResource(runtime *plugin.Runtime, zone parsedFirewalldZo
 
 	args := map[string]*llx.RawData{
 		"__id":               llx.StringData(zone.Name),
-		"name":               stringOrNil(zone.Name),
-		"target":             stringOrNil(zone.Target),
+		"name":               newStringOrNil(zone.Name),
+		"target":             newStringOrNil(zone.Target),
 		"active":             llx.BoolData(zone.Active),
-		"interfaces":         stringArrayData(zone.Interfaces),
-		"sources":            stringArrayData(zone.Sources),
-		"services":           stringArrayData(zone.Services),
-		"ports":              stringArrayData(zone.Ports),
-		"protocols":          stringArrayData(zone.Protocols),
+		"interfaces":         newStringArrayData(zone.Interfaces),
+		"sources":            newStringArrayData(zone.Sources),
+		"services":           newStringArrayData(zone.Services),
+		"ports":              newStringArrayData(zone.Ports),
+		"protocols":          newStringArrayData(zone.Protocols),
 		"masquerade":         llx.BoolData(zone.Masquerade),
-		"forwardPorts":       stringArrayData(zone.ForwardPorts),
-		"sourcePorts":        stringArrayData(zone.SourcePorts),
-		"icmpBlocks":         stringArrayData(zone.IcmpBlocks),
+		"forwardPorts":       newStringArrayData(zone.ForwardPorts),
+		"sourcePorts":        newStringArrayData(zone.SourcePorts),
+		"icmpBlocks":         newStringArrayData(zone.IcmpBlocks),
 		"icmpBlockInversion": llx.BoolData(zone.IcmpBlockInversion),
-		"richRules":          llx.ArrayData(ruleResources, types.Resource("firewalld.rule")),
-		"raw":                stringOrNil(zone.Raw),
+		"richRules":          llx.ArrayData(ruleResources, types.Resource(ResourceFirewalldRule)),
+		"raw":                newStringOrNil(zone.Raw),
 	}
 
-	zoneRes, err := CreateResource(runtime, "firewalld.zone", args)
+	zoneRes, err := CreateResource(runtime, ResourceFirewalldZone, args)
 	if err != nil {
 		return nil, err
 	}
@@ -988,7 +989,7 @@ func createFirewalldRuleResource(runtime *plugin.Runtime, zoneName string, idx i
 	var sourceRes plugin.Resource
 	var err error
 	if rule.Source.HasValue || rule.Source.HasNot {
-		sourceRes, err = createRuleEndpointResource(runtime, ruleID, "source", rule.Source)
+		sourceRes, err = newMqlFirewalldRuleEndpointResource(runtime, ruleID, "source", rule.Source)
 		if err != nil {
 			return nil, err
 		}
@@ -996,7 +997,7 @@ func createFirewalldRuleResource(runtime *plugin.Runtime, zoneName string, idx i
 
 	var destRes plugin.Resource
 	if rule.Dest.HasValue || rule.Dest.HasNot {
-		destRes, err = createRuleEndpointResource(runtime, ruleID, "destination", rule.Dest)
+		destRes, err = newMqlFirewalldRuleEndpointResource(runtime, ruleID, "destination", rule.Dest)
 		if err != nil {
 			return nil, err
 		}
@@ -1004,8 +1005,8 @@ func createFirewalldRuleResource(runtime *plugin.Runtime, zoneName string, idx i
 
 	args := map[string]*llx.RawData{
 		"__id":   llx.StringData(ruleID),
-		"raw":    stringOrNil(rule.Raw),
-		"family": stringOrNil(rule.Family),
+		"raw":    newStringOrNil(rule.Raw),
+		"family": newStringOrNil(rule.Family),
 		"service": func() *llx.RawData {
 			if rule.Service == "" {
 				return llx.NilData
@@ -1045,18 +1046,18 @@ func createFirewalldRuleResource(runtime *plugin.Runtime, zoneName string, idx i
 	}
 
 	if sourceRes != nil {
-		args["source"] = llx.ResourceData(sourceRes, "firewalld.ruleEndpoint")
+		args["source"] = llx.ResourceData(sourceRes, ResourceFirewalldRuleEndpoint)
 	} else {
 		args["source"] = llx.NilData
 	}
 
 	if destRes != nil {
-		args["destination"] = llx.ResourceData(destRes, "firewalld.ruleEndpoint")
+		args["destination"] = llx.ResourceData(destRes, ResourceFirewalldRuleEndpoint)
 	} else {
 		args["destination"] = llx.NilData
 	}
 
-	ruleRes, err := CreateResource(runtime, "firewalld.rule", args)
+	ruleRes, err := CreateResource(runtime, ResourceFirewalldRule, args)
 	if err != nil {
 		return nil, err
 	}
@@ -1064,60 +1065,47 @@ func createFirewalldRuleResource(runtime *plugin.Runtime, zoneName string, idx i
 	return ruleRes.(*mqlFirewalldRule), nil
 }
 
-func createRuleEndpointResource(runtime *plugin.Runtime, ruleID, label string, ep parsedRuleEndpoint) (plugin.Resource, error) {
+func newMqlFirewalldRuleEndpointResource(runtime *plugin.Runtime, ruleID, label string, ep parsedRuleEndpoint) (plugin.Resource, error) {
 	endpointID := fmt.Sprintf("%s/%s", ruleID, label)
 
 	args := map[string]*llx.RawData{
 		"__id":    llx.StringData(endpointID),
-		"address": stringOrNil(ep.Address),
-		"ipset":   stringOrNil(ep.Ipset),
-		"mac":     stringOrNil(ep.Mac),
+		"address": newStringOrNil(ep.Address),
+		"ipset":   newStringOrNil(ep.Ipset),
+		"mac":     newStringOrNil(ep.Mac),
 	}
 
 	if ep.HasNot {
 		qualifierArgs := map[string]*llx.RawData{
 			"__id":    llx.StringData(endpointID + "/not"),
-			"address": stringOrNil(ep.Not.Address),
-			"ipset":   stringOrNil(ep.Not.Ipset),
-			"mac":     stringOrNil(ep.Not.Mac),
+			"address": newStringOrNil(ep.Not.Address),
+			"ipset":   newStringOrNil(ep.Not.Ipset),
+			"mac":     newStringOrNil(ep.Not.Mac),
 		}
 
-		qualifierRes, err := CreateResource(runtime, "firewalld.ruleEndpointQualifier", qualifierArgs)
+		qualifierRes, err := CreateResource(runtime, ResourceFirewalldRuleEndpointQualifier, qualifierArgs)
 		if err != nil {
 			return nil, err
 		}
-		args["not"] = llx.ResourceData(qualifierRes, "firewalld.ruleEndpointQualifier")
+		args["not"] = llx.ResourceData(qualifierRes, ResourceFirewalldRuleEndpointQualifier)
 	} else {
 		args["not"] = llx.NilData
 	}
 
-	res, err := CreateResource(runtime, "firewalld.ruleEndpoint", args)
+	res, err := CreateResource(runtime, ResourceFirewalldRuleEndpoint, args)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func stringOrNil(s string) *llx.RawData {
+func newStringOrNil(s string) *llx.RawData {
 	if strings.TrimSpace(s) == "" {
 		return llx.NilData
 	}
 	return llx.StringData(s)
 }
 
-func stringArrayData(values []string) *llx.RawData {
-	arr := stringsToAny(values)
-	return llx.ArrayData(arr, types.String)
-}
-
-func stringsToAny(values []string) []any {
-	res := make([]any, 0, len(values))
-	for _, v := range values {
-		trimmed := strings.TrimSpace(v)
-		if trimmed == "" {
-			continue
-		}
-		res = append(res, trimmed)
-	}
-	return res
+func newStringArrayData(values []string) *llx.RawData {
+	return llx.ArrayData(convert.SliceAnyToInterface(values), types.String)
 }

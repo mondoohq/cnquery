@@ -51,7 +51,7 @@ DefaultZone=public
 	_, err = loadFirewalldFromConfig(runtime)
 	require.NoError(t, err)
 
-	res, err := CreateResource(runtime, "firewalld", map[string]*llx.RawData{})
+	res, err := CreateResource(runtime, ResourceFirewalld, map[string]*llx.RawData{})
 	require.NoError(t, err)
 
 	firewalld := res.(*mqlFirewalld)
@@ -133,7 +133,7 @@ rule family="ipv6" source address="::1" destination not address="::1" drop
 
 	runtime := plugin.NewRuntime(conn, nil, false, CreateResource, NewResource, GetData, SetData, nil)
 
-	res, err := CreateResource(runtime, "firewalld", map[string]*llx.RawData{})
+	res, err := CreateResource(runtime, ResourceFirewalld, map[string]*llx.RawData{})
 	require.NoError(t, err)
 
 	firewalld := res.(*mqlFirewalld)
