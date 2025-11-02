@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zone target="default">
+  <interface name="eth0"/>
+  <service name="ssh"/>
+  <service name="dhcpv6-client"/>
+  <port protocol="tcp" port="8080"/>
+  <rule family="ipv4">
+    <source address="127.0.0.1"/>
+    <destination invert="yes" address="127.0.0.1"/>
+    <drop/>
+  </rule>
+</zone>

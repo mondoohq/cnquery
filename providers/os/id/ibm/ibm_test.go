@@ -16,7 +16,7 @@ import (
 )
 
 func TestDetectLinuxInstance(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance_linux.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instance_linux.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -36,7 +36,7 @@ func TestDetectLinuxInstance(t *testing.T) {
 }
 
 func TestDetectAIXInstance(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance_unix_aix.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instance_unix_aix.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -56,7 +56,7 @@ func TestDetectAIXInstance(t *testing.T) {
 }
 
 func TestDetectInstanceWithoutMetadataService(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance_no_metadata.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instance_no_metadata.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

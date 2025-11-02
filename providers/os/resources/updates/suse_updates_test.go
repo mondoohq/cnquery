@@ -13,9 +13,9 @@ import (
 
 // SUSE OS updates
 func TestZypperPatchParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/updates_zypper.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{Name: "suse"},
-	})
+	}, mock.WithPath("./testdata/updates_zypper.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}

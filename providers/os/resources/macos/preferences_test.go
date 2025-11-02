@@ -13,13 +13,13 @@ import (
 )
 
 func TestPreferences(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/user_preferences.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "macos",
 			Version: "13.0",
 			Family:  []string{"macos"},
 		},
-	})
+	}, mock.WithPath("./testdata/user_preferences.toml"))
 	require.NoError(t, err)
 
 	prefs := &Preferences{

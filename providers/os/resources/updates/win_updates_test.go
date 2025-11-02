@@ -16,9 +16,9 @@ import (
 )
 
 func TestWinOSUpdatesParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/updates_win.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{Name: "windows"},
-	})
+	}, mock.WithPath("./testdata/updates_win.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}

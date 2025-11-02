@@ -14,7 +14,7 @@ import (
 )
 
 func TestDetectInstance(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instance.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -28,7 +28,7 @@ func TestDetectInstance(t *testing.T) {
 }
 
 func TestDetectInstanceArm(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instancearm.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instancearm.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -42,7 +42,7 @@ func TestDetectInstanceArm(t *testing.T) {
 }
 
 func TestDetectNotInstance(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/notinstance.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/notinstance.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -56,7 +56,7 @@ func TestDetectNotInstance(t *testing.T) {
 }
 
 func TestDetectContainer(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/container.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/container.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
