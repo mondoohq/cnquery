@@ -241,13 +241,18 @@ func (s *BsdKernelManager) Parameters() (map[string]string, error) {
 }
 
 func (s *BsdKernelManager) Modules() ([]*KernelModule, error) {
-	// NOTE: kldstat does not work on all bsd variants so failures are possible
-	cmd, err := s.conn.RunCommand("kldstat")
-	if err != nil {
-		return nil, errors.Wrap(err, "could not read kernel modules")
+	platform := s.conn.Asset().Platform
+	if platform.Name == "openbsd" {
+		// openbsd does not support kernel modules, so we return an empty list
+		return []*KernelModule{}, nil
+	} else {
+		// NOTE: kldstat is supported on freebsd variants so failures are possible
+		cmd, err := s.conn.RunCommand("kldstat")
+		if err != nil {
+			return nil, errors.Wrap(err, "could not read kernel modules")
+		}
+		return ParseKldstat(cmd.Stdout), nil
 	}
-
-	return ParseKldstat(cmd.Stdout), nil
 }
 
 type AixKernelManager struct {
