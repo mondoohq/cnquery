@@ -580,6 +580,21 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 			if len(credential.Secret) > 0 {
 				log.Debug().Msg("enabled ssh password authentication")
 				auths = append(auths, ssh.Password(string(credential.Secret)))
+
+				// some systems like PAM do not use password but keyboard interactive
+				auths = append(auths, ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) (answers []string, err error) {
+					res := []string{}
+
+					for _, q := range questions {
+						if strings.Contains(strings.ToLower(q), "password") {
+							res = append(res, string(credential.Secret))
+						} else {
+							res = append(res, "")
+						}
+					}
+
+					return res, nil
+				}))
 			}
 		case vault.CredentialType_ssh_agent:
 			log.Debug().Msg("enabled ssh agent authentication")
