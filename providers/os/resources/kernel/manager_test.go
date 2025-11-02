@@ -111,21 +111,41 @@ func TestManagerFreebsd(t *testing.T) {
 	mock, err := mock.New(0, "./testdata/freebsd14.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "freebsd",
-			Family: []string{"unix"},
+			Family: []string{"bsd", "unix", "os"},
 		},
 	})
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
 	require.NoError(t, err)
-	mounts, err := mm.Modules()
+	modules, err := mm.Modules()
 	require.NoError(t, err)
 
-	assert.Equal(t, 6, len(mounts))
+	assert.Equal(t, 6, len(modules))
 
 	info, err := mm.Info()
 	require.NoError(t, err)
 	assert.Equal(t, "FreeBSD 14.3-RELEASE releng/14.3-n271432-8c9ce319fef7 GENERIC", info.Version)
+}
+
+func TestManagerOpenBSD(t *testing.T) {
+	mock, err := mock.New(0, "./testdata/openbsd77.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "openbsd",
+			Family: []string{"bsd", "unix", "os"},
+		},
+	})
+	require.NoError(t, err)
+
+	mm, err := ResolveManager(mock)
+	require.NoError(t, err)
+	modules, err := mm.Modules()
+	require.NoError(t, err)
+	assert.Equal(t, 0, len(modules))
+
+	info, err := mm.Info()
+	require.NoError(t, err)
+	assert.Equal(t, "GENERIC.MP#625", info.Version)
 }
 
 func TestManagerAIX(t *testing.T) {

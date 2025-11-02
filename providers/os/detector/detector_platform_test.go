@@ -822,6 +822,28 @@ func TestFreebsd12Detector(t *testing.T) {
 	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
 }
 
+func TestFreebsd14Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-freebsd14.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "freebsd", di.Name, "os name should be identified")
+	assert.Equal(t, "FreeBSD", di.Title, "os title should be identified")
+	assert.Equal(t, "14.3-RELEASE", di.Version, "os version should be identified")
+	assert.Equal(t, "arm64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
+}
+
+func TestFreebsd15Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-freebsd15.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "freebsd", di.Name, "os name should be identified")
+	assert.Equal(t, "FreeBSD", di.Title, "os title should be identified")
+	assert.Equal(t, "15.0-BETA4", di.Version, "os version should be identified")
+	assert.Equal(t, "arm64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
+}
+
 func TestOpenBsd6Detector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-openbsd6.toml")
 	assert.Nil(t, err, "was able to create the provider")
@@ -830,6 +852,17 @@ func TestOpenBsd6Detector(t *testing.T) {
 	assert.Equal(t, "OpenBSD", di.Title, "os title should be identified")
 	assert.Equal(t, "6.7", di.Version, "os version should be identified")
 	assert.Equal(t, "amd64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
+}
+
+func TestOpenBsd7Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-openbsd7.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "openbsd", di.Name, "os name should be identified")
+	assert.Equal(t, "OpenBSD", di.Title, "os title should be identified")
+	assert.Equal(t, "7.8", di.Version, "os version should be identified")
+	assert.Equal(t, "arm64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
 }
 

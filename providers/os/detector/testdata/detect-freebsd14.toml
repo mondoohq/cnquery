@@ -1,0 +1,8 @@
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "arm64"
+
+[commands."uname -r"]
+stdout = "14.3-RELEASE"
