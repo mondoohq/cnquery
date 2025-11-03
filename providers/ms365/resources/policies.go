@@ -302,7 +302,6 @@ func (a *mqlMicrosoftPolicies) externalIdentitiesPolicy() (*mqlMicrosoftPolicies
 }
 
 // Internal struct for caching cross-tenant access policy data
-// This will be embedded in mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault after code generation
 type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal struct {
 	policyLock                                        sync.Mutex
 	fetched                                           bool
@@ -321,7 +320,7 @@ type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal struct {
 func (a *mqlMicrosoftPolicies) crossTenantAccessPolicy() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault, error) {
 	resource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefault,
 		map[string]*llx.RawData{
-			"__id": llx.StringData("crossTenantAccessPolicyDefault"),
+			"__id": llx.StringData(a.__id + "-crossTenantAccessPolicyDefault"),
 		})
 	if err != nil {
 		return nil, err
@@ -388,12 +387,11 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		a.IsServiceDefault = plugin.TValue[bool]{State: plugin.StateIsNull}
 	}
 
-	// Create and cache all nested resources once
 	if policy.GetAutomaticUserConsentSettings() != nil {
 		consentSettings := policy.GetAutomaticUserConsentSettings()
 		consentResource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings,
 			map[string]*llx.RawData{
-				"__id":            llx.StringData("automaticUserConsentSettings"),
+				"__id":            llx.StringData(a.__id + "-automaticUserConsentSettings"),
 				"inboundAllowed":  llx.BoolDataPtr(consentSettings.GetInboundAllowed()),
 				"outboundAllowed": llx.BoolDataPtr(consentSettings.GetOutboundAllowed()),
 			})
@@ -462,7 +460,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		inboundTrustValue := policy.GetInboundTrust()
 		inboundTrustResource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust,
 			map[string]*llx.RawData{
-				"__id":                                llx.StringData("inboundTrust"),
+				"__id":                                llx.StringData(a.__id + "-inboundTrust"),
 				"isMfaAccepted":                       llx.BoolDataPtr(inboundTrustValue.GetIsMfaAccepted()),
 				"isCompliantDeviceAccepted":           llx.BoolDataPtr(inboundTrustValue.GetIsCompliantDeviceAccepted()),
 				"isHybridAzureADJoinedDeviceAccepted": llx.BoolDataPtr(inboundTrustValue.GetIsHybridAzureADJoinedDeviceAccepted()),
@@ -650,7 +648,7 @@ func newUsersAndGroups(runtime *plugin.Runtime, usersAndGroups models.CrossTenan
 			targetValue = *target.GetTarget()
 		}
 
-		targetResource, err := CreateResource(runtime, "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target",
+		targetResource, err := CreateResource(runtime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget,
 			map[string]*llx.RawData{
 				"__id":       llx.StringData(fmt.Sprintf("%s-%s", id, targetValue)),
 				"target":     llx.StringData(targetValue),
@@ -662,11 +660,11 @@ func newUsersAndGroups(runtime *plugin.Runtime, usersAndGroups models.CrossTenan
 		targetResources = append(targetResources, targetResource)
 	}
 
-	resource, err := CreateResource(runtime, "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups",
+	resource, err := CreateResource(runtime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups,
 		map[string]*llx.RawData{
 			"__id":       llx.StringData(id),
 			"accessType": llx.StringData(accessType),
-			"targets":    llx.ArrayData(targetResources, "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target"),
+			"targets":    llx.ArrayData(targetResources, types.Type(ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget)),
 		})
 	if err != nil {
 		return nil, err
