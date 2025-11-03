@@ -693,7 +693,7 @@ var openwrt = &PlatformResolver{
 	Name:     "openwrt",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		// No clue why they are not using either lsb-release or os-release
+		// modern releases of openwrt include /etc/os-release but legacy versions do not
 		f, err := conn.FileSystem().Open("/etc/openwrt_release")
 		if err != nil {
 			return false, err
