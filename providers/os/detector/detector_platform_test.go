@@ -955,6 +955,17 @@ func TestZorinLinuxDetector(t *testing.T) {
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
+func TestParrotLinuxDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-parrot.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "parrot", di.Name, "os name should be identified")
+	assert.Equal(t, "Parrot OS 5.3 (Electro Ara)", di.Title, "os title should be identified")
+	assert.Equal(t, "5.3", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
 func TestSteamOSDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-steamos.toml")
 	assert.Nil(t, err, "was able to create the provider")

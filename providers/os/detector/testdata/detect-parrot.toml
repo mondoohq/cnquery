@@ -1,0 +1,25 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.1.0-1parrot1-amd64"
+
+[files."/etc/os-release"]
+content = """
+PRETTY_NAME="Parrot OS 5.3 (Electro Ara)"
+NAME="Parrot OS"
+VERSION_ID="5.3"
+VERSION="5.3 (Electro Ara)"
+VERSION_CODENAME=ara
+ID=parrot
+ID_LIKE=debian
+HOME_URL="https://www.parrotsec.org/"
+SUPPORT_URL="https://community.parrotsec.org/"
+BUG_REPORT_URL="https://community.parrotsec.org/"
+"""
+
+[files."/etc/debian_version"]
+content = "parrot"
