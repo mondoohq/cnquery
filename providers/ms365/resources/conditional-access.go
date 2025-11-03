@@ -44,7 +44,7 @@ func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]any, erro
 					trusted = *isTrusted
 				}
 
-				locationInfo, err := CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.ipNamedLocation",
+				locationInfo, err := CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessIpNamedLocation,
 					map[string]*llx.RawData{
 						"name":    llx.StringDataPtr(displayName),
 						"trusted": llx.BoolData(trusted),
@@ -94,7 +94,7 @@ func (a *mqlMicrosoftConditionalAccessNamedLocations) countryLocations() ([]any,
 			}
 
 			if displayName != nil && lookupMethodStr != nil {
-				locationInfo, err := CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.countryNamedLocation",
+				locationInfo, err := CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessCountryNamedLocation,
 					map[string]*llx.RawData{
 						"name":         llx.StringDataPtr(displayName),
 						"lookupMethod": llx.StringDataPtr(lookupMethodStr),
@@ -198,7 +198,7 @@ func (a *mqlMicrosoftConditionalAccess) createPolicyResource(policy models.Condi
 		}
 	}
 
-	policyInfo, err := CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy",
+	policyInfo, err := CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicy,
 		map[string]*llx.RawData{
 			"__id":             llx.StringDataPtr(id),
 			"id":               llx.StringDataPtr(id),
@@ -207,9 +207,9 @@ func (a *mqlMicrosoftConditionalAccess) createPolicyResource(policy models.Condi
 			"createdDateTime":  llx.TimeDataPtr(policy.GetCreatedDateTime()),
 			"modifiedDateTime": llx.TimeDataPtr(policy.GetModifiedDateTime()),
 			"state":            llx.StringData(policy.GetState().String()),
-			"sessionControls":  llx.ResourceData(sessionControls, "microsoft.conditionalAccess.policy.sessionControls"),
-			"conditions":       llx.ResourceData(conditions, "microsoft.conditionalAccess.policy.conditions"),
-			"grantControls":    llx.ResourceData(grantControls, "microsoft.conditionalAccess.policy.grantControls"),
+			"sessionControls":  llx.ResourceData(sessionControls, string(ResourceMicrosoftConditionalAccessPolicySessionControls)),
+			"conditions":       llx.ResourceData(conditions, string(ResourceMicrosoftConditionalAccessPolicyConditions)),
+			"grantControls":    llx.ResourceData(grantControls, string(ResourceMicrosoftConditionalAccessPolicyGrantControls)),
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create policy resource: %w", err)
@@ -239,7 +239,7 @@ func (a *mqlMicrosoftConditionalAccess) createConditionsResource(
 			"transferMethods": llx.StringData(authenticationFlows.GetTransferMethods().String()),
 		}
 
-		mqlAuthenticationFlows, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.conditions.authenticationFlows", usersData)
+		mqlAuthenticationFlows, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows, usersData)
 		if err != nil {
 			return nil, err
 		}
@@ -258,7 +258,7 @@ func (a *mqlMicrosoftConditionalAccess) createConditionsResource(
 			"excludeRoles":  llx.ArrayData(convert.SliceAnyToInterface(users.GetExcludeRoles()), types.String),
 		}
 
-		mqlUsers, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.conditions.users", usersData)
+		mqlUsers, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicyConditionsUsers, usersData)
 		if err != nil {
 			return nil, err
 		}
@@ -266,7 +266,7 @@ func (a *mqlMicrosoftConditionalAccess) createConditionsResource(
 
 	if conditions != nil && conditions.GetApplications() != nil {
 		apps := conditions.GetApplications()
-		mqlApplications, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.conditions.applications", map[string]*llx.RawData{
+		mqlApplications, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicyConditionsApplications, map[string]*llx.RawData{
 			"__id":                llx.StringData(policyId + "_conditions_applications"),
 			"includeApplications": llx.ArrayData(convert.SliceAnyToInterface(apps.GetIncludeApplications()), types.String),
 			"excludeApplications": llx.ArrayData(convert.SliceAnyToInterface(apps.GetExcludeApplications()), types.String),
@@ -285,7 +285,7 @@ func (a *mqlMicrosoftConditionalAccess) createConditionsResource(
 			"includeLocations": llx.ArrayData(convert.SliceAnyToInterface(locations.GetIncludeLocations()), types.String),
 			"excludeLocations": llx.ArrayData(convert.SliceAnyToInterface(locations.GetExcludeLocations()), types.String),
 		}
-		mqlLocations, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.conditions.locations", locationsData)
+		mqlLocations, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicyConditionsLocations, locationsData)
 		if err != nil {
 			return nil, err
 		}
@@ -312,7 +312,7 @@ func (a *mqlMicrosoftConditionalAccess) createConditionsResource(
 		}
 		platformsData["excludePlatforms"] = llx.ArrayData(convert.SliceAnyToInterface(excludePlatformStrings), types.String)
 
-		mqlPlatforms, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.conditions.platforms", platformsData)
+		mqlPlatforms, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicyConditionsPlatforms, platformsData)
 		if err != nil {
 			return nil, err
 		}
@@ -326,7 +326,7 @@ func (a *mqlMicrosoftConditionalAccess) createConditionsResource(
 			"includeServicePrincipals": llx.ArrayData(convert.SliceAnyToInterface(clientApps.GetIncludeServicePrincipals()), types.String),
 			"excludeServicePrincipals": llx.ArrayData(convert.SliceAnyToInterface(clientApps.GetExcludeServicePrincipals()), types.String),
 		}
-		mqlClientApplications, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.conditions.clientApplications", clientApplicationsData)
+		mqlClientApplications, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicyConditionsClientApplications, clientApplicationsData)
 		if err != nil {
 			return nil, err
 		}
@@ -337,16 +337,16 @@ func (a *mqlMicrosoftConditionalAccess) createConditionsResource(
 		insiderRiskLevelsStr = conditions.GetInsiderRiskLevels().String()
 	}
 
-	conditionsResource, err := CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.conditions",
+	conditionsResource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicyConditions,
 		map[string]*llx.RawData{
 			"__id":                       llx.StringData(conditionsId),
 			"id":                         llx.StringData(conditionsId),
-			"applications":               llx.ResourceData(mqlApplications, "microsoft.conditionalAccess.policy.conditions.applications"),
-			"authenticationFlows":        llx.ResourceData(mqlAuthenticationFlows, "microsoft.conditionalAccess.policy.conditions.authenticationFlows"),
-			"users":                      llx.ResourceData(mqlUsers, "microsoft.conditionalAccess.policy.conditions.users"),
-			"locations":                  llx.ResourceData(mqlLocations, "microsoft.conditionalAccess.policy.conditions.locations"),
-			"platforms":                  llx.ResourceData(mqlPlatforms, "microsoft.conditionalAccess.policy.conditions.platforms"),
-			"clientApplications":         llx.ResourceData(mqlClientApplications, "microsoft.conditionalAccess.policy.conditions.clientApplications"),
+			"applications":               llx.ResourceData(mqlApplications, string(ResourceMicrosoftConditionalAccessPolicyConditionsApplications)),
+			"authenticationFlows":        llx.ResourceData(mqlAuthenticationFlows, string(ResourceMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows)),
+			"users":                      llx.ResourceData(mqlUsers, string(ResourceMicrosoftConditionalAccessPolicyConditionsUsers)),
+			"locations":                  llx.ResourceData(mqlLocations, string(ResourceMicrosoftConditionalAccessPolicyConditionsLocations)),
+			"platforms":                  llx.ResourceData(mqlPlatforms, string(ResourceMicrosoftConditionalAccessPolicyConditionsPlatforms)),
+			"clientApplications":         llx.ResourceData(mqlClientApplications, string(ResourceMicrosoftConditionalAccessPolicyConditionsClientApplications)),
 			"insiderRiskLevels":          llx.StringData(insiderRiskLevelsStr),
 			"clientAppTypes":             llx.ArrayData(convert.SliceAnyToInterface(convertEnumCollectionToStrings(conditions.GetClientAppTypes())), types.String),
 			"userRiskLevels":             llx.ArrayData(convert.SliceAnyToInterface(convertEnumCollectionToStrings(conditions.GetUserRiskLevels())), types.String),
@@ -381,7 +381,7 @@ func (a *mqlMicrosoftConditionalAccess) createGrantControlsResource(
 		}
 
 		var err error
-		mqlAuthStrength, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.grantControls.authenticationStrength", authStrengthData)
+		mqlAuthStrength, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength, authStrengthData)
 		if err != nil {
 			return nil, err
 		}
@@ -391,7 +391,7 @@ func (a *mqlMicrosoftConditionalAccess) createGrantControlsResource(
 	termsOfUse := grantControls.GetTermsOfUse()
 	builtInControls := convertEnumCollectionToStrings(grantControls.GetBuiltInControls())
 
-	return CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.grantControls",
+	return CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicyGrantControls,
 		map[string]*llx.RawData{
 			"__id":                        llx.StringData(grantControlsId),
 			"id":                          llx.StringData(grantControlsId),
@@ -399,7 +399,7 @@ func (a *mqlMicrosoftConditionalAccess) createGrantControlsResource(
 			"builtInControls":             llx.ArrayData(convert.SliceAnyToInterface(builtInControls), types.String),
 			"customAuthenticationFactors": llx.ArrayData(convert.SliceAnyToInterface(customAuthFactors), types.String),
 			"termsOfUse":                  llx.ArrayData(convert.SliceAnyToInterface(termsOfUse), types.String),
-			"authenticationStrength":      llx.ResourceData(mqlAuthStrength, "microsoft.conditionalAccess.policy.grantControls.authenticationStrength"),
+			"authenticationStrength":      llx.ResourceData(mqlAuthStrength, string(ResourceMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength)),
 		})
 }
 
@@ -425,7 +425,7 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 			"isEnabled":          llx.BoolDataPtr(signInFreq.GetIsEnabled()),
 		}
 		var err error
-		mqlSignInFreq, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.sessionControls.signInFrequency", signInFreqData)
+		mqlSignInFreq, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicySessionControlsSignInFrequency, signInFreqData)
 		if err != nil {
 			return nil, err
 		}
@@ -440,7 +440,7 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 			"isEnabled":            llx.BoolDataPtr(cloudAppSecurity.GetIsEnabled()),
 		}
 		var err error
-		mqlCloudAppSecurity, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity", cloudAppSecurityData)
+		mqlCloudAppSecurity, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity, cloudAppSecurityData)
 		if err != nil {
 			return nil, err
 		}
@@ -455,7 +455,7 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 			"isEnabled": llx.BoolDataPtr(persistentBrowser.GetIsEnabled()),
 		}
 		var err error
-		mqlPersistentBrowser, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.sessionControls.persistentBrowser", persistentBrowserData)
+		mqlPersistentBrowser, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser, persistentBrowserData)
 		if err != nil {
 			return nil, err
 		}
@@ -469,7 +469,7 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 			"isEnabled": llx.BoolDataPtr(appEnforcedRestrictions.GetIsEnabled()),
 		}
 		var err error
-		mqlAppEnforcedRestrictions, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions", appEnforcedRestrictionsData)
+		mqlAppEnforcedRestrictions, err = CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions, appEnforcedRestrictionsData)
 		if err != nil {
 			return nil, err
 		}
@@ -488,14 +488,14 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 		}
 	}
 
-	return CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.sessionControls",
+	return CreateResource(a.MqlRuntime, ResourceMicrosoftConditionalAccessPolicySessionControls,
 		map[string]*llx.RawData{
 			"__id":                            llx.StringData(sessionControlsId),
 			"id":                              llx.StringData(sessionControlsId),
-			"signInFrequency":                 llx.ResourceData(mqlSignInFreq, "microsoft.conditionalAccess.policy.sessionControls.signInFrequency"),
-			"cloudAppSecurity":                llx.ResourceData(mqlCloudAppSecurity, "microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity"),
-			"persistentBrowser":               llx.ResourceData(mqlPersistentBrowser, "microsoft.conditionalAccess.policy.sessionControls.persistentBrowser"),
-			"applicationEnforcedRestrictions": llx.ResourceData(mqlAppEnforcedRestrictions, "microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions"),
+			"signInFrequency":                 llx.ResourceData(mqlSignInFreq, string(ResourceMicrosoftConditionalAccessPolicySessionControlsSignInFrequency)),
+			"cloudAppSecurity":                llx.ResourceData(mqlCloudAppSecurity, string(ResourceMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity)),
+			"persistentBrowser":               llx.ResourceData(mqlPersistentBrowser, string(ResourceMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser)),
+			"applicationEnforcedRestrictions": llx.ResourceData(mqlAppEnforcedRestrictions, string(ResourceMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions)),
 			"secureSignInSession":             llx.ResourceData(mqlSecureSignInSession, "microsoft.conditionalAccess.policy.sessionControls.secureSignInSession"),
 		})
 }
@@ -546,7 +546,7 @@ func newMqlAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Au
 		authMethodConfigs = append(authMethodConfigs, mqlConfig)
 	}
 
-	resource, err := CreateResource(runtime, "microsoft.conditionalAccess.authenticationMethodsPolicy", map[string]*llx.RawData{
+	resource, err := CreateResource(runtime, ResourceMicrosoftConditionalAccessAuthenticationMethodsPolicy, map[string]*llx.RawData{
 		"__id":                               llx.StringDataPtr(policy.GetId()),
 		"id":                                 llx.StringDataPtr(policy.GetId()),
 		"displayName":                        llx.StringDataPtr(policy.GetDisplayName()),
@@ -563,7 +563,7 @@ func newMqlAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Au
 }
 
 func newMqlAuthenticationMethodConfiguration(runtime *plugin.Runtime, config models.AuthenticationMethodConfigurationable) (*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration, error) {
-	resource, err := CreateResource(runtime, "microsoft.conditionalAccess.authenticationMethodConfiguration", map[string]*llx.RawData{
+	resource, err := CreateResource(runtime, ResourceMicrosoftConditionalAccessAuthenticationMethodConfiguration, map[string]*llx.RawData{
 		"__id":  llx.StringDataPtr(config.GetId()),
 		"id":    llx.StringDataPtr(config.GetId()),
 		"state": llx.StringData(config.GetState().String()),
