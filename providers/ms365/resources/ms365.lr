@@ -1321,9 +1321,9 @@ private microsoft.policies.crossTenantAccessPolicyDefault @defaults("isServiceDe
 
 // Automatic user consent settings for cross-tenant access policy
 private microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings @defaults("inboundAllowed outboundAllowed") {
-  // Indicates if automatic consent for inbound collaboration is enabled.
+  // if automatic consent for inbound collaboration is enabled.
   inboundAllowed bool
-  // Indicates if automatic consent for outbound collaboration is enabled.
+  // if automatic consent for outbound collaboration is enabled.
   outboundAllowed bool
 }
 
