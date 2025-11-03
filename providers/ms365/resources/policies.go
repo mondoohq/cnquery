@@ -18,7 +18,6 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
-// Package-level cache for cross-tenant access policies
 var (
 	crossTenantAccessPolicyCacheMu sync.Mutex
 	crossTenantAccessPolicyCache   = make(map[string]*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal)
@@ -336,11 +335,7 @@ func (a *mqlMicrosoftPolicies) crossTenantAccessPolicy() (*mqlMicrosoftPoliciesC
 }
 
 // getCrossTenantAccessPolicy fetches and caches the policy data
-// Following the same pattern as getExchangeReport() in ms365_exchange.go
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAccessPolicy() error {
-	// After code generation, these fields will be embedded and accessible directly:
-	// a.policyLock, a.fetched, a.fetchErr, a.policy
-
 	cacheKey := "crossTenantAccessPolicy_" + a.__id
 
 	crossTenantAccessPolicyCacheMu.Lock()
@@ -354,7 +349,6 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 	internal.policyLock.Lock()
 	defer internal.policyLock.Unlock()
 
-	// only fetch once
 	if internal.fetched {
 		return internal.fetchErr
 	}
@@ -375,12 +369,10 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		return errHandler(transformError(err))
 	}
 
-	// Cache the policy
 	internal.policy = policy
 	internal.fetched = true
 	internal.fetchErr = nil
 
-	// Set isServiceDefault field directly on the resource (following exchange pattern)
 	if policy.GetIsServiceDefault() != nil {
 		a.IsServiceDefault = plugin.TValue[bool]{Data: *policy.GetIsServiceDefault(), State: plugin.StateIsSet}
 	} else {
@@ -400,7 +392,6 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		}
 	}
 
-	// b2bCollaborationInbound
 	if policy.GetB2bCollaborationInbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bCollaborationInbound(), a.__id+"-b2bCollaborationInbound")
 		if err == nil {
@@ -408,7 +399,6 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		}
 	}
 
-	// b2bCollaborationOutbound
 	if policy.GetB2bCollaborationOutbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bCollaborationOutbound(), a.__id+"-b2bCollaborationOutbound")
 		if err == nil {
@@ -416,7 +406,6 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		}
 	}
 
-	// b2bDirectConnectInbound
 	if policy.GetB2bDirectConnectInbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bDirectConnectInbound(), a.__id+"-b2bDirectConnectInbound")
 		if err == nil {
@@ -424,7 +413,6 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		}
 	}
 
-	// b2bDirectConnectOutbound
 	if policy.GetB2bDirectConnectOutbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bDirectConnectOutbound(), a.__id+"-b2bDirectConnectOutbound")
 		if err == nil {
@@ -432,7 +420,6 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		}
 	}
 
-	// invitationRedemptionIdentityProviderConfiguration
 	if policy.GetInvitationRedemptionIdentityProviderConfiguration() != nil {
 		invConfig := policy.GetInvitationRedemptionIdentityProviderConfiguration()
 		var fallbackProvider string
@@ -455,7 +442,6 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		}
 	}
 
-	// inboundTrust
 	if policy.GetInboundTrust() != nil {
 		inboundTrustValue := policy.GetInboundTrust()
 		inboundTrustResource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust,
@@ -470,7 +456,6 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		}
 	}
 
-	// tenantRestrictions
 	if policy.GetTenantRestrictions() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetTenantRestrictions(), a.__id+"-tenantRestrictions")
 		if err == nil {
@@ -617,12 +602,10 @@ func newB2BSetting(runtime *plugin.Runtime, setting models.CrossTenantAccessPoli
 	return resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting), nil
 }
 
-// usersAndGroups returns the usersAndGroups field from the b2bSetting resource
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) usersAndGroups() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
 	return a.UsersAndGroups.Data, a.UsersAndGroups.Error
 }
 
-// applications returns the applications field from the b2bSetting resource
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) applications() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
 	return a.Applications.Data, a.Applications.Error
 }
