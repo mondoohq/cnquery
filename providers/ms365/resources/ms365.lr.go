@@ -17,117 +17,117 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceMicrosoft                                                                                                     string = "microsoft"
-	ResourceMicrosoftIdentityAndAccessAccessReviews                                                                       string = "microsoft.identityAndAccess.accessReviews"
-	ResourceMicrosoftIdentityAndAccessAccessReviewDefinition                                                              string = "microsoft.identityAndAccess.accessReviewDefinition"
-	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings                                  string = "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"
-	ResourceMicrosoftGroups                                                                                               string = "microsoft.groups"
-	ResourceMicrosoftSetting                                                                                              string = "microsoft.setting"
-	ResourceMicrosoftSettingValue                                                                                         string = "microsoft.settingValue"
-	ResourceMicrosoftApplications                                                                                         string = "microsoft.applications"
-	ResourceMicrosoftTenant                                                                                               string = "microsoft.tenant"
-	ResourceMicrosoftTenantSettings                                                                                       string = "microsoft.tenantSettings"
-	ResourceMicrosoftTenantFormsSettings                                                                                  string = "microsoft.tenantFormsSettings"
-	ResourceMicrosoftUsers                                                                                                string = "microsoft.users"
-	ResourceMicrosoftIdentityAndAccess                                                                                    string = "microsoft.identityAndAccess"
-	ResourceMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance                                                     string = "microsoft.identityAndAccess.roleEligibilityScheduleInstance"
-	ResourceMicrosoftIdentityAndAccessPolicy                                                                              string = "microsoft.identityAndAccess.policy"
-	ResourceMicrosoftIdentityAndAccessPolicyRule                                                                          string = "microsoft.identityAndAccess.policy.rule"
-	ResourceMicrosoftIdentityAndAccessPolicyRuleTarget                                                                    string = "microsoft.identityAndAccess.policy.ruleTarget"
-	ResourceMicrosoftIdentityAndAccessIdentityAndSignIn                                                                   string = "microsoft.identityAndAccess.identityAndSignIn"
-	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPolicies                                                           string = "microsoft.identityAndAccess.identityAndSignIn.policies"
-	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy                  string = "microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy"
-	ResourceMicrosoftUserAssignedLicense                                                                                  string = "microsoft.user.assignedLicense"
-	ResourceMicrosoftUserLicenseDetail                                                                                    string = "microsoft.user.licenseDetail"
-	ResourceMicrosoftUserLicenseDetailServicePlanInfo                                                                     string = "microsoft.user.licenseDetail.servicePlanInfo"
-	ResourceMicrosoftConditionalAccess                                                                                    string = "microsoft.conditionalAccess"
-	ResourceMicrosoftConditionalAccessAuthenticationMethodsPolicy                                                         string = "microsoft.conditionalAccess.authenticationMethodsPolicy"
-	ResourceMicrosoftConditionalAccessAuthenticationMethodConfiguration                                                   string = "microsoft.conditionalAccess.authenticationMethodConfiguration"
-	ResourceMicrosoftConditionalAccessNamedLocations                                                                      string = "microsoft.conditionalAccess.namedLocations"
-	ResourceMicrosoftConditionalAccessPolicy                                                                              string = "microsoft.conditionalAccess.policy"
-	ResourceMicrosoftConditionalAccessPolicyConditions                                                                    string = "microsoft.conditionalAccess.policy.conditions"
-	ResourceMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows                                                 string = "microsoft.conditionalAccess.policy.conditions.authenticationFlows"
-	ResourceMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength                                           string = "microsoft.conditionalAccess.policy.grantControls.authenticationStrength"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsSignInFrequency                                                string = "microsoft.conditionalAccess.policy.sessionControls.signInFrequency"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity                                               string = "microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser                                              string = "microsoft.conditionalAccess.policy.sessionControls.persistentBrowser"
-	ResourceMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions                                string = "microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions"
-	ResourceMicrosoftConditionalAccessPolicyConditionsClientApplications                                                  string = "microsoft.conditionalAccess.policy.conditions.clientApplications"
-	ResourceMicrosoftConditionalAccessPolicyConditionsPlatforms                                                           string = "microsoft.conditionalAccess.policy.conditions.platforms"
-	ResourceMicrosoftConditionalAccessPolicyConditionsApplications                                                        string = "microsoft.conditionalAccess.policy.conditions.applications"
-	ResourceMicrosoftConditionalAccessPolicyConditionsUsers                                                               string = "microsoft.conditionalAccess.policy.conditions.users"
-	ResourceMicrosoftConditionalAccessPolicyConditionsLocations                                                           string = "microsoft.conditionalAccess.policy.conditions.locations"
-	ResourceMicrosoftConditionalAccessPolicyGrantControls                                                                 string = "microsoft.conditionalAccess.policy.grantControls"
-	ResourceMicrosoftConditionalAccessPolicySessionControls                                                               string = "microsoft.conditionalAccess.policy.sessionControls"
-	ResourceMicrosoftConditionalAccessIpNamedLocation                                                                     string = "microsoft.conditionalAccess.ipNamedLocation"
-	ResourceMicrosoftConditionalAccessCountryNamedLocation                                                                string = "microsoft.conditionalAccess.countryNamedLocation"
-	ResourceMicrosoftUser                                                                                                 string = "microsoft.user"
-	ResourceMicrosoftUserAuthenticationRequirements                                                                       string = "microsoft.user.authenticationRequirements"
-	ResourceMicrosoftUserAuditlog                                                                                         string = "microsoft.user.auditlog"
-	ResourceMicrosoftUserIdentity                                                                                         string = "microsoft.user.identity"
-	ResourceMicrosoftUserSignin                                                                                           string = "microsoft.user.signin"
-	ResourceMicrosoftUserAuthenticationMethods                                                                            string = "microsoft.user.authenticationMethods"
-	ResourceMicrosoftUserAuthenticationMethodsUserRegistrationDetails                                                     string = "microsoft.user.authenticationMethods.userRegistrationDetails"
-	ResourceMicrosoftGroup                                                                                                string = "microsoft.group"
-	ResourceMicrosoftGroupOwner                                                                                           string = "microsoft.group.owner"
-	ResourceMicrosoftGroupLifecyclePolicy                                                                                 string = "microsoft.groupLifecyclePolicy"
-	ResourceMicrosoftDevices                                                                                              string = "microsoft.devices"
-	ResourceMicrosoftDevice                                                                                               string = "microsoft.device"
-	ResourceMicrosoftDomain                                                                                               string = "microsoft.domain"
-	ResourceMicrosoftDomaindnsrecord                                                                                      string = "microsoft.domaindnsrecord"
-	ResourceMicrosoftApplication                                                                                          string = "microsoft.application"
-	ResourceMicrosoftApplicationRole                                                                                      string = "microsoft.application.role"
-	ResourceMicrosoftKeyCredential                                                                                        string = "microsoft.keyCredential"
-	ResourceMicrosoftPasswordCredential                                                                                   string = "microsoft.passwordCredential"
-	ResourceMicrosoftServiceprincipal                                                                                     string = "microsoft.serviceprincipal"
-	ResourceMicrosoftServiceprincipalAssignment                                                                           string = "microsoft.serviceprincipal.assignment"
-	ResourceMicrosoftApplicationPermission                                                                                string = "microsoft.application.permission"
-	ResourceMicrosoftSecurity                                                                                             string = "microsoft.security"
-	ResourceMicrosoftSecuritySecurityscore                                                                                string = "microsoft.security.securityscore"
-	ResourceMicrosoftSecurityRiskyUser                                                                                    string = "microsoft.security.riskyUser"
-	ResourceMicrosoftSecurityExchange                                                                                     string = "microsoft.security.exchange"
-	ResourceMicrosoftSecurityExchangeAntispam                                                                             string = "microsoft.security.exchange.antispam"
-	ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy                                                 string = "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy"
-	ResourceMicrosoftPolicies                                                                                             string = "microsoft.policies"
-	ResourceMicrosoftPoliciesExternalIdentitiesPolicy                                                                     string = "microsoft.policies.externalIdentitiesPolicy"
-	ResourceMicrosoftPoliciesActivityBasedTimeoutPolicy                                                                   string = "microsoft.policies.activityBasedTimeoutPolicy"
-	ResourceMicrosoftAdminConsentRequestPolicy                                                                            string = "microsoft.adminConsentRequestPolicy"
-	ResourceMicrosoftGraphAccessReviewReviewerScope                                                                       string = "microsoft.graph.accessReviewReviewerScope"
-	ResourceMicrosoftPoliciesAuthenticationMethodsPolicy                                                                  string = "microsoft.policies.authenticationMethodsPolicy"
-	ResourceMicrosoftPoliciesAuthenticationMethodConfiguration                                                            string = "microsoft.policies.authenticationMethodConfiguration"
-	ResourceMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault                                                  string = "microsoft.policies.crossTenantAccessPolicyConfigurationDefault"
-	ResourceMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings                      string = "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings"
-	ResourceMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting                                        string = "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting"
-	ResourceMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups                          string = "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups"
-	ResourceMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget                                  string = "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target"
-	ResourceMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust                                      string = "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust"
-	ResourceMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration string = "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration"
-	ResourceMicrosoftRoles                                                                                                string = "microsoft.roles"
-	ResourceMicrosoftRolemanagement                                                                                       string = "microsoft.rolemanagement"
-	ResourceMicrosoftRolemanagementRoledefinition                                                                         string = "microsoft.rolemanagement.roledefinition"
-	ResourceMicrosoftRolemanagementRoleassignment                                                                         string = "microsoft.rolemanagement.roleassignment"
-	ResourceMicrosoftDevicemanagement                                                                                     string = "microsoft.devicemanagement"
-	ResourceMicrosoftDevicemanagementDeviceEnrollmentConfiguration                                                        string = "microsoft.devicemanagement.deviceEnrollmentConfiguration"
-	ResourceMicrosoftDevicemanagementManageddevice                                                                        string = "microsoft.devicemanagement.manageddevice"
-	ResourceMicrosoftDevicemanagementDeviceconfiguration                                                                  string = "microsoft.devicemanagement.deviceconfiguration"
-	ResourceMicrosoftDevicemanagementDevicecompliancepolicy                                                               string = "microsoft.devicemanagement.devicecompliancepolicy"
-	ResourceMs365Exchangeonline                                                                                           string = "ms365.exchangeonline"
-	ResourceMs365ExchangeonlineMailboxAuditBypassAssociation                                                              string = "ms365.exchangeonlineMailboxAuditBypassAssociation"
-	ResourceMs365ExchangeonlineSecurityAndCompliance                                                                      string = "ms365.exchangeonline.securityAndCompliance"
-	ResourceMs365ExchangeonlineTeamsProtectionPolicy                                                                      string = "ms365.exchangeonline.teamsProtectionPolicy"
-	ResourceMs365ExchangeonlineReportSubmissionPolicy                                                                     string = "ms365.exchangeonline.reportSubmissionPolicy"
-	ResourceMs365ExchangeonlineJournalRule                                                                                string = "ms365.exchangeonline.journalRule"
-	ResourceMs365ExchangeonlineExternalSender                                                                             string = "ms365.exchangeonline.externalSender"
-	ResourceMs365ExchangeonlineExoMailbox                                                                                 string = "ms365.exchangeonline.exoMailbox"
-	ResourceMs365ExchangeonlineMailbox                                                                                    string = "ms365.exchangeonline.mailbox"
-	ResourceMs365Sharepointonline                                                                                         string = "ms365.sharepointonline"
-	ResourceMs365SharepointonlineSite                                                                                     string = "ms365.sharepointonline.site"
-	ResourceMs365Teams                                                                                                    string = "ms365.teams"
-	ResourceMs365TeamsTenantFederationConfig                                                                              string = "ms365.teams.tenantFederationConfig"
-	ResourceMs365TeamsTeamsMeetingPolicyConfig                                                                            string = "ms365.teams.teamsMeetingPolicyConfig"
-	ResourceMs365TeamsTeamsMessagingPolicyConfig                                                                          string = "ms365.teams.teamsMessagingPolicyConfig"
-	ResourceMs365ExchangeonlineMailboxPlan                                                                                string = "ms365.exchangeonline.mailboxPlan"
-	ResourceMs365ExchangeonlineRetentionPolicy                                                                            string = "ms365.exchangeonline.retentionPolicy"
+	ResourceMicrosoft                                                                                        string = "microsoft"
+	ResourceMicrosoftIdentityAndAccessAccessReviews                                                          string = "microsoft.identityAndAccess.accessReviews"
+	ResourceMicrosoftIdentityAndAccessAccessReviewDefinition                                                 string = "microsoft.identityAndAccess.accessReviewDefinition"
+	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings                     string = "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"
+	ResourceMicrosoftGroups                                                                                  string = "microsoft.groups"
+	ResourceMicrosoftSetting                                                                                 string = "microsoft.setting"
+	ResourceMicrosoftSettingValue                                                                            string = "microsoft.settingValue"
+	ResourceMicrosoftApplications                                                                            string = "microsoft.applications"
+	ResourceMicrosoftTenant                                                                                  string = "microsoft.tenant"
+	ResourceMicrosoftTenantSettings                                                                          string = "microsoft.tenantSettings"
+	ResourceMicrosoftTenantFormsSettings                                                                     string = "microsoft.tenantFormsSettings"
+	ResourceMicrosoftUsers                                                                                   string = "microsoft.users"
+	ResourceMicrosoftIdentityAndAccess                                                                       string = "microsoft.identityAndAccess"
+	ResourceMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance                                        string = "microsoft.identityAndAccess.roleEligibilityScheduleInstance"
+	ResourceMicrosoftIdentityAndAccessPolicy                                                                 string = "microsoft.identityAndAccess.policy"
+	ResourceMicrosoftIdentityAndAccessPolicyRule                                                             string = "microsoft.identityAndAccess.policy.rule"
+	ResourceMicrosoftIdentityAndAccessPolicyRuleTarget                                                       string = "microsoft.identityAndAccess.policy.ruleTarget"
+	ResourceMicrosoftIdentityAndAccessIdentityAndSignIn                                                      string = "microsoft.identityAndAccess.identityAndSignIn"
+	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPolicies                                              string = "microsoft.identityAndAccess.identityAndSignIn.policies"
+	ResourceMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy     string = "microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy"
+	ResourceMicrosoftUserAssignedLicense                                                                     string = "microsoft.user.assignedLicense"
+	ResourceMicrosoftUserLicenseDetail                                                                       string = "microsoft.user.licenseDetail"
+	ResourceMicrosoftUserLicenseDetailServicePlanInfo                                                        string = "microsoft.user.licenseDetail.servicePlanInfo"
+	ResourceMicrosoftConditionalAccess                                                                       string = "microsoft.conditionalAccess"
+	ResourceMicrosoftConditionalAccessAuthenticationMethodsPolicy                                            string = "microsoft.conditionalAccess.authenticationMethodsPolicy"
+	ResourceMicrosoftConditionalAccessAuthenticationMethodConfiguration                                      string = "microsoft.conditionalAccess.authenticationMethodConfiguration"
+	ResourceMicrosoftConditionalAccessNamedLocations                                                         string = "microsoft.conditionalAccess.namedLocations"
+	ResourceMicrosoftConditionalAccessPolicy                                                                 string = "microsoft.conditionalAccess.policy"
+	ResourceMicrosoftConditionalAccessPolicyConditions                                                       string = "microsoft.conditionalAccess.policy.conditions"
+	ResourceMicrosoftConditionalAccessPolicyConditionsAuthenticationFlows                                    string = "microsoft.conditionalAccess.policy.conditions.authenticationFlows"
+	ResourceMicrosoftConditionalAccessPolicyGrantControlsAuthenticationStrength                              string = "microsoft.conditionalAccess.policy.grantControls.authenticationStrength"
+	ResourceMicrosoftConditionalAccessPolicySessionControlsSignInFrequency                                   string = "microsoft.conditionalAccess.policy.sessionControls.signInFrequency"
+	ResourceMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity                                  string = "microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity"
+	ResourceMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser                                 string = "microsoft.conditionalAccess.policy.sessionControls.persistentBrowser"
+	ResourceMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions                   string = "microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions"
+	ResourceMicrosoftConditionalAccessPolicyConditionsClientApplications                                     string = "microsoft.conditionalAccess.policy.conditions.clientApplications"
+	ResourceMicrosoftConditionalAccessPolicyConditionsPlatforms                                              string = "microsoft.conditionalAccess.policy.conditions.platforms"
+	ResourceMicrosoftConditionalAccessPolicyConditionsApplications                                           string = "microsoft.conditionalAccess.policy.conditions.applications"
+	ResourceMicrosoftConditionalAccessPolicyConditionsUsers                                                  string = "microsoft.conditionalAccess.policy.conditions.users"
+	ResourceMicrosoftConditionalAccessPolicyConditionsLocations                                              string = "microsoft.conditionalAccess.policy.conditions.locations"
+	ResourceMicrosoftConditionalAccessPolicyGrantControls                                                    string = "microsoft.conditionalAccess.policy.grantControls"
+	ResourceMicrosoftConditionalAccessPolicySessionControls                                                  string = "microsoft.conditionalAccess.policy.sessionControls"
+	ResourceMicrosoftConditionalAccessIpNamedLocation                                                        string = "microsoft.conditionalAccess.ipNamedLocation"
+	ResourceMicrosoftConditionalAccessCountryNamedLocation                                                   string = "microsoft.conditionalAccess.countryNamedLocation"
+	ResourceMicrosoftUser                                                                                    string = "microsoft.user"
+	ResourceMicrosoftUserAuthenticationRequirements                                                          string = "microsoft.user.authenticationRequirements"
+	ResourceMicrosoftUserAuditlog                                                                            string = "microsoft.user.auditlog"
+	ResourceMicrosoftUserIdentity                                                                            string = "microsoft.user.identity"
+	ResourceMicrosoftUserSignin                                                                              string = "microsoft.user.signin"
+	ResourceMicrosoftUserAuthenticationMethods                                                               string = "microsoft.user.authenticationMethods"
+	ResourceMicrosoftUserAuthenticationMethodsUserRegistrationDetails                                        string = "microsoft.user.authenticationMethods.userRegistrationDetails"
+	ResourceMicrosoftGroup                                                                                   string = "microsoft.group"
+	ResourceMicrosoftGroupOwner                                                                              string = "microsoft.group.owner"
+	ResourceMicrosoftGroupLifecyclePolicy                                                                    string = "microsoft.groupLifecyclePolicy"
+	ResourceMicrosoftDevices                                                                                 string = "microsoft.devices"
+	ResourceMicrosoftDevice                                                                                  string = "microsoft.device"
+	ResourceMicrosoftDomain                                                                                  string = "microsoft.domain"
+	ResourceMicrosoftDomaindnsrecord                                                                         string = "microsoft.domaindnsrecord"
+	ResourceMicrosoftApplication                                                                             string = "microsoft.application"
+	ResourceMicrosoftApplicationRole                                                                         string = "microsoft.application.role"
+	ResourceMicrosoftKeyCredential                                                                           string = "microsoft.keyCredential"
+	ResourceMicrosoftPasswordCredential                                                                      string = "microsoft.passwordCredential"
+	ResourceMicrosoftServiceprincipal                                                                        string = "microsoft.serviceprincipal"
+	ResourceMicrosoftServiceprincipalAssignment                                                              string = "microsoft.serviceprincipal.assignment"
+	ResourceMicrosoftApplicationPermission                                                                   string = "microsoft.application.permission"
+	ResourceMicrosoftSecurity                                                                                string = "microsoft.security"
+	ResourceMicrosoftSecuritySecurityscore                                                                   string = "microsoft.security.securityscore"
+	ResourceMicrosoftSecurityRiskyUser                                                                       string = "microsoft.security.riskyUser"
+	ResourceMicrosoftSecurityExchange                                                                        string = "microsoft.security.exchange"
+	ResourceMicrosoftSecurityExchangeAntispam                                                                string = "microsoft.security.exchange.antispam"
+	ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy                                    string = "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy"
+	ResourceMicrosoftPolicies                                                                                string = "microsoft.policies"
+	ResourceMicrosoftPoliciesExternalIdentitiesPolicy                                                        string = "microsoft.policies.externalIdentitiesPolicy"
+	ResourceMicrosoftPoliciesActivityBasedTimeoutPolicy                                                      string = "microsoft.policies.activityBasedTimeoutPolicy"
+	ResourceMicrosoftAdminConsentRequestPolicy                                                               string = "microsoft.adminConsentRequestPolicy"
+	ResourceMicrosoftGraphAccessReviewReviewerScope                                                          string = "microsoft.graph.accessReviewReviewerScope"
+	ResourceMicrosoftPoliciesAuthenticationMethodsPolicy                                                     string = "microsoft.policies.authenticationMethodsPolicy"
+	ResourceMicrosoftPoliciesAuthenticationMethodConfiguration                                               string = "microsoft.policies.authenticationMethodConfiguration"
+	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefault                                                  string = "microsoft.policies.crossTenantAccessPolicyDefault"
+	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings                      string = "microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings"
+	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting                                        string = "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting"
+	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups                          string = "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups"
+	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget                                  string = "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target"
+	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust                                      string = "microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust"
+	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration string = "microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration"
+	ResourceMicrosoftRoles                                                                                   string = "microsoft.roles"
+	ResourceMicrosoftRolemanagement                                                                          string = "microsoft.rolemanagement"
+	ResourceMicrosoftRolemanagementRoledefinition                                                            string = "microsoft.rolemanagement.roledefinition"
+	ResourceMicrosoftRolemanagementRoleassignment                                                            string = "microsoft.rolemanagement.roleassignment"
+	ResourceMicrosoftDevicemanagement                                                                        string = "microsoft.devicemanagement"
+	ResourceMicrosoftDevicemanagementDeviceEnrollmentConfiguration                                           string = "microsoft.devicemanagement.deviceEnrollmentConfiguration"
+	ResourceMicrosoftDevicemanagementManageddevice                                                           string = "microsoft.devicemanagement.manageddevice"
+	ResourceMicrosoftDevicemanagementDeviceconfiguration                                                     string = "microsoft.devicemanagement.deviceconfiguration"
+	ResourceMicrosoftDevicemanagementDevicecompliancepolicy                                                  string = "microsoft.devicemanagement.devicecompliancepolicy"
+	ResourceMs365Exchangeonline                                                                              string = "ms365.exchangeonline"
+	ResourceMs365ExchangeonlineMailboxAuditBypassAssociation                                                 string = "ms365.exchangeonlineMailboxAuditBypassAssociation"
+	ResourceMs365ExchangeonlineSecurityAndCompliance                                                         string = "ms365.exchangeonline.securityAndCompliance"
+	ResourceMs365ExchangeonlineTeamsProtectionPolicy                                                         string = "ms365.exchangeonline.teamsProtectionPolicy"
+	ResourceMs365ExchangeonlineReportSubmissionPolicy                                                        string = "ms365.exchangeonline.reportSubmissionPolicy"
+	ResourceMs365ExchangeonlineJournalRule                                                                   string = "ms365.exchangeonline.journalRule"
+	ResourceMs365ExchangeonlineExternalSender                                                                string = "ms365.exchangeonline.externalSender"
+	ResourceMs365ExchangeonlineExoMailbox                                                                    string = "ms365.exchangeonline.exoMailbox"
+	ResourceMs365ExchangeonlineMailbox                                                                       string = "ms365.exchangeonline.mailbox"
+	ResourceMs365Sharepointonline                                                                            string = "ms365.sharepointonline"
+	ResourceMs365SharepointonlineSite                                                                        string = "ms365.sharepointonline.site"
+	ResourceMs365Teams                                                                                       string = "ms365.teams"
+	ResourceMs365TeamsTenantFederationConfig                                                                 string = "ms365.teams.tenantFederationConfig"
+	ResourceMs365TeamsTeamsMeetingPolicyConfig                                                               string = "ms365.teams.teamsMeetingPolicyConfig"
+	ResourceMs365TeamsTeamsMessagingPolicyConfig                                                             string = "ms365.teams.teamsMessagingPolicyConfig"
+	ResourceMs365ExchangeonlineMailboxPlan                                                                   string = "ms365.exchangeonline.mailboxPlan"
+	ResourceMs365ExchangeonlineRetentionPolicy                                                               string = "ms365.exchangeonline.retentionPolicy"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -446,33 +446,33 @@ func init() {
 			// to override args, implement: initMicrosoftPoliciesAuthenticationMethodConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPoliciesAuthenticationMethodConfiguration,
 		},
-		"microsoft.policies.crossTenantAccessPolicyConfigurationDefault": {
-			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault,
+		"microsoft.policies.crossTenantAccessPolicyDefault": {
+			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefault,
 		},
-		"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings": {
-			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings,
+		"microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings": {
+			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings,
 		},
-		"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting": {
-			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting,
+		"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting": {
+			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting,
 		},
-		"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups": {
-			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups,
+		"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups": {
+			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups,
 		},
-		"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target": {
-			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget,
+		"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target": {
+			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget,
 		},
-		"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust": {
-			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust,
+		"microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust": {
+			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust,
 		},
-		"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration": {
-			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration,
+		"microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration": {
+			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration,
 		},
 		"microsoft.roles": {
 			Init:   initMicrosoftRoles,
@@ -2035,8 +2035,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.policies.externalIdentitiesPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetExternalIdentitiesPolicy()).ToDataRes(types.Resource("microsoft.policies.externalIdentitiesPolicy"))
 	},
-	"microsoft.policies.crossTenantAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPolicies).GetCrossTenantAccessPolicies()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault"))
+	"microsoft.policies.crossTenantAccessPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPolicies).GetCrossTenantAccessPolicy()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault"))
 	},
 	"microsoft.policies.externalIdentitiesPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy).GetId()).ToDataRes(types.String)
@@ -2116,71 +2116,71 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.policies.authenticationMethodConfiguration.excludeTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).GetExcludeTargets()).ToDataRes(types.Array(types.Dict))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.isServiceDefault": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).GetIsServiceDefault()).ToDataRes(types.Bool)
+	"microsoft.policies.crossTenantAccessPolicyDefault.isServiceDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetIsServiceDefault()).ToDataRes(types.Bool)
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).GetAutomaticUserConsentSettings()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings"))
+	"microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetAutomaticUserConsentSettings()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bCollaborationInbound": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).GetB2bCollaborationInbound()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting"))
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bCollaborationInbound": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetB2bCollaborationInbound()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bCollaborationOutbound": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).GetB2bCollaborationOutbound()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting"))
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bCollaborationOutbound": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetB2bCollaborationOutbound()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bDirectConnectInbound": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).GetB2bDirectConnectInbound()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting"))
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bDirectConnectInbound": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetB2bDirectConnectInbound()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bDirectConnectOutbound": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).GetB2bDirectConnectOutbound()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting"))
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bDirectConnectOutbound": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetB2bDirectConnectOutbound()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).GetInvitationRedemptionIdentityProviderConfiguration()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration"))
+	"microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetInvitationRedemptionIdentityProviderConfiguration()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).GetInboundTrust()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust"))
+	"microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetInboundTrust()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.tenantRestrictions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).GetTenantRestrictions()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting"))
+	"microsoft.policies.crossTenantAccessPolicyDefault.tenantRestrictions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetTenantRestrictions()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings.inboundAllowed": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings).GetInboundAllowed()).ToDataRes(types.Bool)
+	"microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings.inboundAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings).GetInboundAllowed()).ToDataRes(types.Bool)
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings.outboundAllowed": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings).GetOutboundAllowed()).ToDataRes(types.Bool)
+	"microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings.outboundAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings).GetOutboundAllowed()).ToDataRes(types.Bool)
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting).GetUsersAndGroups()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups"))
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).GetUsersAndGroups()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.applications": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting).GetApplications()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups"))
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).GetApplications()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups.accessType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups).GetAccessType()).ToDataRes(types.String)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups.accessType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups).GetAccessType()).ToDataRes(types.String)
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups.targets": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups).GetTargets()).ToDataRes(types.Array(types.Resource("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target")))
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups).GetTargets()).ToDataRes(types.Array(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target")))
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target.target": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget).GetTarget()).ToDataRes(types.String)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget).GetTarget()).ToDataRes(types.String)
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target.targetType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget).GetTargetType()).ToDataRes(types.String)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target.targetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget).GetTargetType()).ToDataRes(types.String)
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust.isMfaAccepted": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust).GetIsMfaAccepted()).ToDataRes(types.Bool)
+	"microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust.isMfaAccepted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust).GetIsMfaAccepted()).ToDataRes(types.Bool)
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust.isCompliantDeviceAccepted": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust).GetIsCompliantDeviceAccepted()).ToDataRes(types.Bool)
+	"microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust.isCompliantDeviceAccepted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust).GetIsCompliantDeviceAccepted()).ToDataRes(types.Bool)
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust.isHybridAzureADJoinedDeviceAccepted": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust).GetIsHybridAzureADJoinedDeviceAccepted()).ToDataRes(types.Bool)
+	"microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust.isHybridAzureADJoinedDeviceAccepted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust).GetIsHybridAzureADJoinedDeviceAccepted()).ToDataRes(types.Bool)
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration.fallbackIdentityProvider": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration).GetFallbackIdentityProvider()).ToDataRes(types.String)
+	"microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration.fallbackIdentityProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration).GetFallbackIdentityProvider()).ToDataRes(types.String)
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration.primaryIdentityProviderPrecedenceOrder": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration).GetPrimaryIdentityProviderPrecedenceOrder()).ToDataRes(types.Array(types.String))
+	"microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration.primaryIdentityProviderPrecedenceOrder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration).GetPrimaryIdentityProviderPrecedenceOrder()).ToDataRes(types.Array(types.String))
 	},
 	"microsoft.roles.filter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftRoles).GetFilter()).ToDataRes(types.String)
@@ -4873,8 +4873,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftPolicies).ExternalIdentitiesPolicy, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesExternalIdentitiesPolicy](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPolicies).CrossTenantAccessPolicies, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPolicies).CrossTenantAccessPolicy, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.externalIdentitiesPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5005,120 +5005,120 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).ExcludeTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).__id, ok = v.Value.(string)
+	"microsoft.policies.crossTenantAccessPolicyDefault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.isServiceDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).IsServiceDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.isServiceDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).IsServiceDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).AutomaticUserConsentSettings, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).AutomaticUserConsentSettings, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bCollaborationInbound": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).B2bCollaborationInbound, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bCollaborationInbound": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).B2bCollaborationInbound, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bCollaborationOutbound": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).B2bCollaborationOutbound, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bCollaborationOutbound": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).B2bCollaborationOutbound, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bDirectConnectInbound": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).B2bDirectConnectInbound, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bDirectConnectInbound": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).B2bDirectConnectInbound, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bDirectConnectOutbound": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).B2bDirectConnectOutbound, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bDirectConnectOutbound": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).B2bDirectConnectOutbound, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).InvitationRedemptionIdentityProviderConfiguration, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).InvitationRedemptionIdentityProviderConfiguration, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).InboundTrust, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).InboundTrust, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.tenantRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault).TenantRestrictions, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.tenantRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).TenantRestrictions, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings).__id, ok = v.Value.(string)
+	"microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings.inboundAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings).InboundAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings.inboundAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings).InboundAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings.outboundAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings).OutboundAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings.outboundAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings).OutboundAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting).__id, ok = v.Value.(string)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting).UsersAndGroups, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).UsersAndGroups, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting).Applications, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).Applications, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups).__id, ok = v.Value.(string)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups.accessType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups).AccessType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups.accessType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups).AccessType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget).__id, ok = v.Value.(string)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target.targetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget).TargetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target.targetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget).TargetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust).__id, ok = v.Value.(string)
+	"microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust.isMfaAccepted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust).IsMfaAccepted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust.isMfaAccepted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust).IsMfaAccepted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust.isCompliantDeviceAccepted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust).IsCompliantDeviceAccepted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust.isCompliantDeviceAccepted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust).IsCompliantDeviceAccepted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust.isHybridAzureADJoinedDeviceAccepted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust).IsHybridAzureADJoinedDeviceAccepted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust.isHybridAzureADJoinedDeviceAccepted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust).IsHybridAzureADJoinedDeviceAccepted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration).__id, ok = v.Value.(string)
+	"microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration.fallbackIdentityProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration).FallbackIdentityProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration.fallbackIdentityProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration).FallbackIdentityProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration.primaryIdentityProviderPrecedenceOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration).PrimaryIdentityProviderPrecedenceOrder, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration.primaryIdentityProviderPrecedenceOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration).PrimaryIdentityProviderPrecedenceOrder, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.roles.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11737,7 +11737,7 @@ type mqlMicrosoftPolicies struct {
 	AuthenticationMethodsPolicy               plugin.TValue[*mqlMicrosoftPoliciesAuthenticationMethodsPolicy]
 	ActivityBasedTimeoutPolicies              plugin.TValue[[]any]
 	ExternalIdentitiesPolicy                  plugin.TValue[*mqlMicrosoftPoliciesExternalIdentitiesPolicy]
-	CrossTenantAccessPolicies                 plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault]
+	CrossTenantAccessPolicy                   plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault]
 }
 
 // createMicrosoftPolicies creates a new instance of this resource
@@ -11860,19 +11860,19 @@ func (c *mqlMicrosoftPolicies) GetExternalIdentitiesPolicy() *plugin.TValue[*mql
 	})
 }
 
-func (c *mqlMicrosoftPolicies) GetCrossTenantAccessPolicies() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault](&c.CrossTenantAccessPolicies, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault, error) {
+func (c *mqlMicrosoftPolicies) GetCrossTenantAccessPolicy() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault](&c.CrossTenantAccessPolicy, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies", c.__id, "crossTenantAccessPolicies")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies", c.__id, "crossTenantAccessPolicy")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault), nil
 			}
 		}
 
-		return c.crossTenantAccessPolicies()
+		return c.crossTenantAccessPolicy()
 	})
 }
 
@@ -12240,25 +12240,25 @@ func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) GetExcludeTarget
 	return &c.ExcludeTargets
 }
 
-// mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault for the microsoft.policies.crossTenantAccessPolicyConfigurationDefault resource
-type mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault struct {
+// mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault for the microsoft.policies.crossTenantAccessPolicyDefault resource
+type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInternal
+	mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal
 	IsServiceDefault                                  plugin.TValue[bool]
-	AutomaticUserConsentSettings                      plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings]
-	B2bCollaborationInbound                           plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting]
-	B2bCollaborationOutbound                          plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting]
-	B2bDirectConnectInbound                           plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting]
-	B2bDirectConnectOutbound                          plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting]
-	InvitationRedemptionIdentityProviderConfiguration plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration]
-	InboundTrust                                      plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust]
-	TenantRestrictions                                plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting]
+	AutomaticUserConsentSettings                      plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings]
+	B2bCollaborationInbound                           plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting]
+	B2bCollaborationOutbound                          plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting]
+	B2bDirectConnectInbound                           plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting]
+	B2bDirectConnectOutbound                          plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting]
+	InvitationRedemptionIdentityProviderConfiguration plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration]
+	InboundTrust                                      plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust]
+	TenantRestrictions                                plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting]
 }
 
-// createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault creates a new instance of this resource
-func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault{
+// createMicrosoftPoliciesCrossTenantAccessPolicyDefault creates a new instance of this resource
+func createMicrosoftPoliciesCrossTenantAccessPolicyDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault{
 		MqlRuntime: runtime,
 	}
 
@@ -12270,7 +12270,7 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault(runtime 
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -12280,27 +12280,27 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault(runtime 
 	return res, nil
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) MqlName() string {
-	return "microsoft.policies.crossTenantAccessPolicyConfigurationDefault"
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) MqlName() string {
+	return "microsoft.policies.crossTenantAccessPolicyDefault"
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) MqlID() string {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetIsServiceDefault() *plugin.TValue[bool] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) GetIsServiceDefault() *plugin.TValue[bool] {
 	return &c.IsServiceDefault
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetAutomaticUserConsentSettings() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings](&c.AutomaticUserConsentSettings, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) GetAutomaticUserConsentSettings() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings](&c.AutomaticUserConsentSettings, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault", c.__id, "automaticUserConsentSettings")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault", c.__id, "automaticUserConsentSettings")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings), nil
 			}
 		}
 
@@ -12308,15 +12308,15 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetAut
 	})
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetB2bCollaborationInbound() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting](&c.B2bCollaborationInbound, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) GetB2bCollaborationInbound() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting](&c.B2bCollaborationInbound, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault", c.__id, "b2bCollaborationInbound")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault", c.__id, "b2bCollaborationInbound")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting), nil
 			}
 		}
 
@@ -12324,15 +12324,15 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetB2b
 	})
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetB2bCollaborationOutbound() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting](&c.B2bCollaborationOutbound, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) GetB2bCollaborationOutbound() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting](&c.B2bCollaborationOutbound, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault", c.__id, "b2bCollaborationOutbound")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault", c.__id, "b2bCollaborationOutbound")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting), nil
 			}
 		}
 
@@ -12340,15 +12340,15 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetB2b
 	})
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetB2bDirectConnectInbound() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting](&c.B2bDirectConnectInbound, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) GetB2bDirectConnectInbound() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting](&c.B2bDirectConnectInbound, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault", c.__id, "b2bDirectConnectInbound")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault", c.__id, "b2bDirectConnectInbound")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting), nil
 			}
 		}
 
@@ -12356,15 +12356,15 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetB2b
 	})
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetB2bDirectConnectOutbound() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting](&c.B2bDirectConnectOutbound, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) GetB2bDirectConnectOutbound() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting](&c.B2bDirectConnectOutbound, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault", c.__id, "b2bDirectConnectOutbound")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault", c.__id, "b2bDirectConnectOutbound")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting), nil
 			}
 		}
 
@@ -12372,15 +12372,15 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetB2b
 	})
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetInvitationRedemptionIdentityProviderConfiguration() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration](&c.InvitationRedemptionIdentityProviderConfiguration, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) GetInvitationRedemptionIdentityProviderConfiguration() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration](&c.InvitationRedemptionIdentityProviderConfiguration, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault", c.__id, "invitationRedemptionIdentityProviderConfiguration")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault", c.__id, "invitationRedemptionIdentityProviderConfiguration")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration), nil
 			}
 		}
 
@@ -12388,15 +12388,15 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetInv
 	})
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetInboundTrust() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust](&c.InboundTrust, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) GetInboundTrust() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust](&c.InboundTrust, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault", c.__id, "inboundTrust")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault", c.__id, "inboundTrust")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust), nil
 			}
 		}
 
@@ -12404,15 +12404,15 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetInb
 	})
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetTenantRestrictions() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting](&c.TenantRestrictions, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) GetTenantRestrictions() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting](&c.TenantRestrictions, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault", c.__id, "tenantRestrictions")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault", c.__id, "tenantRestrictions")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting), nil
 			}
 		}
 
@@ -12420,18 +12420,18 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) GetTen
 	})
 }
 
-// mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings for the microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings resource
-type mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings struct {
+// mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings for the microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings resource
+type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettingsInternal it will be used here
+	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettingsInternal it will be used here
 	InboundAllowed  plugin.TValue[bool]
 	OutboundAllowed plugin.TValue[bool]
 }
 
-// createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings creates a new instance of this resource
-func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings{
+// createMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings creates a new instance of this resource
+func createMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings{
 		MqlRuntime: runtime,
 	}
 
@@ -12443,7 +12443,7 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomatic
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -12453,34 +12453,34 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomatic
 	return res, nil
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings) MqlName() string {
-	return "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings"
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings) MqlName() string {
+	return "microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings"
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings) MqlID() string {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings) GetInboundAllowed() *plugin.TValue[bool] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings) GetInboundAllowed() *plugin.TValue[bool] {
 	return &c.InboundAllowed
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings) GetOutboundAllowed() *plugin.TValue[bool] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings) GetOutboundAllowed() *plugin.TValue[bool] {
 	return &c.OutboundAllowed
 }
 
-// mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting for the microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting resource
-type mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting struct {
+// mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting for the microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting resource
+type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingInternal it will be used here
-	UsersAndGroups plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups]
-	Applications   plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups]
+	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingInternal it will be used here
+	UsersAndGroups plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups]
+	Applications   plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups]
 }
 
-// createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting creates a new instance of this resource
-func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting{
+// createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting creates a new instance of this resource
+func createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting{
 		MqlRuntime: runtime,
 	}
 
@@ -12492,7 +12492,7 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettin
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -12502,23 +12502,23 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettin
 	return res, nil
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting) MqlName() string {
-	return "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting"
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) MqlName() string {
+	return "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting"
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting) MqlID() string {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting) GetUsersAndGroups() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups](&c.UsersAndGroups, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) GetUsersAndGroups() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups](&c.UsersAndGroups, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting", c.__id, "usersAndGroups")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting", c.__id, "usersAndGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups), nil
 			}
 		}
 
@@ -12526,15 +12526,15 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetti
 	})
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting) GetApplications() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups](&c.Applications, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) GetApplications() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups](&c.Applications, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting", c.__id, "applications")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting", c.__id, "applications")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups), nil
 			}
 		}
 
@@ -12542,18 +12542,18 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetti
 	})
 }
 
-// mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups for the microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups resource
-type mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups struct {
+// mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups for the microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups resource
+type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroupsInternal it will be used here
+	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroupsInternal it will be used here
 	AccessType plugin.TValue[string]
 	Targets    plugin.TValue[[]any]
 }
 
-// createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups creates a new instance of this resource
-func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups{
+// createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups creates a new instance of this resource
+func createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups{
 		MqlRuntime: runtime,
 	}
 
@@ -12565,7 +12565,7 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettin
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -12575,34 +12575,34 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettin
 	return res, nil
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups) MqlName() string {
-	return "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups"
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups) MqlName() string {
+	return "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups"
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups) MqlID() string {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups) GetAccessType() *plugin.TValue[string] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups) GetAccessType() *plugin.TValue[string] {
 	return &c.AccessType
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups) GetTargets() *plugin.TValue[[]any] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups) GetTargets() *plugin.TValue[[]any] {
 	return &c.Targets
 }
 
-// mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget for the microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target resource
-type mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget struct {
+// mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget for the microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target resource
+type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTargetInternal it will be used here
+	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetInternal it will be used here
 	Target     plugin.TValue[string]
 	TargetType plugin.TValue[string]
 }
 
-// createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget creates a new instance of this resource
-func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget{
+// createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget creates a new instance of this resource
+func createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget{
 		MqlRuntime: runtime,
 	}
 
@@ -12614,7 +12614,7 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettin
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -12624,35 +12624,35 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettin
 	return res, nil
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget) MqlName() string {
-	return "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target"
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget) MqlName() string {
+	return "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target"
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget) MqlID() string {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget) GetTarget() *plugin.TValue[string] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget) GetTarget() *plugin.TValue[string] {
 	return &c.Target
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingTarget) GetTargetType() *plugin.TValue[string] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget) GetTargetType() *plugin.TValue[string] {
 	return &c.TargetType
 }
 
-// mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust for the microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust resource
-type mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust struct {
+// mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust for the microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust resource
+type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrustInternal it will be used here
+	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrustInternal it will be used here
 	IsMfaAccepted                       plugin.TValue[bool]
 	IsCompliantDeviceAccepted           plugin.TValue[bool]
 	IsHybridAzureADJoinedDeviceAccepted plugin.TValue[bool]
 }
 
-// createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust creates a new instance of this resource
-func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust{
+// createMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust creates a new instance of this resource
+func createMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust{
 		MqlRuntime: runtime,
 	}
 
@@ -12664,7 +12664,7 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTr
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -12674,38 +12674,38 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTr
 	return res, nil
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust) MqlName() string {
-	return "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust"
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust) MqlName() string {
+	return "microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust"
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust) MqlID() string {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust) GetIsMfaAccepted() *plugin.TValue[bool] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust) GetIsMfaAccepted() *plugin.TValue[bool] {
 	return &c.IsMfaAccepted
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust) GetIsCompliantDeviceAccepted() *plugin.TValue[bool] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust) GetIsCompliantDeviceAccepted() *plugin.TValue[bool] {
 	return &c.IsCompliantDeviceAccepted
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust) GetIsHybridAzureADJoinedDeviceAccepted() *plugin.TValue[bool] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust) GetIsHybridAzureADJoinedDeviceAccepted() *plugin.TValue[bool] {
 	return &c.IsHybridAzureADJoinedDeviceAccepted
 }
 
-// mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration for the microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration resource
-type mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration struct {
+// mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration for the microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration resource
+type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfigurationInternal it will be used here
+	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfigurationInternal it will be used here
 	FallbackIdentityProvider               plugin.TValue[string]
 	PrimaryIdentityProviderPrecedenceOrder plugin.TValue[[]any]
 }
 
-// createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration creates a new instance of this resource
-func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration{
+// createMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration creates a new instance of this resource
+func createMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration{
 		MqlRuntime: runtime,
 	}
 
@@ -12717,7 +12717,7 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitatio
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -12727,19 +12727,19 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitatio
 	return res, nil
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration) MqlName() string {
-	return "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration"
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration) MqlName() string {
+	return "microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration"
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration) MqlID() string {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration) GetFallbackIdentityProvider() *plugin.TValue[string] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration) GetFallbackIdentityProvider() *plugin.TValue[string] {
 	return &c.FallbackIdentityProvider
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration) GetPrimaryIdentityProviderPrecedenceOrder() *plugin.TValue[[]any] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration) GetPrimaryIdentityProviderPrecedenceOrder() *plugin.TValue[[]any] {
 	return &c.PrimaryIdentityProviderPrecedenceOrder
 }
 

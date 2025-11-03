@@ -21,7 +21,7 @@ import (
 // Package-level cache for cross-tenant access policies
 var (
 	crossTenantAccessPolicyCacheMu sync.Mutex
-	crossTenantAccessPolicyCache   = make(map[string]*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInternal)
+	crossTenantAccessPolicyCache   = make(map[string]*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal)
 )
 
 func (a *mqlMicrosoftPolicies) authorizationPolicy() (any, error) {
@@ -302,32 +302,32 @@ func (a *mqlMicrosoftPolicies) externalIdentitiesPolicy() (*mqlMicrosoftPolicies
 }
 
 // Internal struct for caching cross-tenant access policy data
-// This will be embedded in mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault after code generation
-type mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInternal struct {
+// This will be embedded in mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault after code generation
+type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal struct {
 	policyLock                                        sync.Mutex
 	fetched                                           bool
 	fetchErr                                          error
 	policy                                            models.CrossTenantAccessPolicyConfigurationDefaultable
-	automaticUserConsentSettings                      *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings
-	b2bCollaborationInbound                           *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting
-	b2bCollaborationOutbound                          *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting
-	b2bDirectConnectInbound                           *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting
-	b2bDirectConnectOutbound                          *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting
-	invitationRedemptionIdentityProviderConfiguration *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration
-	inboundTrust                                      *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust
-	tenantRestrictions                                *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting
+	automaticUserConsentSettings                      *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings
+	b2bCollaborationInbound                           *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
+	b2bCollaborationOutbound                          *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
+	b2bDirectConnectInbound                           *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
+	b2bDirectConnectOutbound                          *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
+	invitationRedemptionIdentityProviderConfiguration *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration
+	inboundTrust                                      *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust
+	tenantRestrictions                                *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
 }
 
-func (a *mqlMicrosoftPolicies) crossTenantAccessPolicies() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault, error) {
-	resource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault,
+func (a *mqlMicrosoftPolicies) crossTenantAccessPolicy() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault, error) {
+	resource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefault,
 		map[string]*llx.RawData{
-			"__id": llx.StringData("crossTenantAccessPolicyConfigurationDefault"),
+			"__id": llx.StringData("crossTenantAccessPolicyDefault"),
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	mqlResource := resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault)
+	mqlResource := resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault)
 
 	if err := mqlResource.getCrossTenantAccessPolicy(); err != nil {
 		return nil, err
@@ -338,7 +338,7 @@ func (a *mqlMicrosoftPolicies) crossTenantAccessPolicies() (*mqlMicrosoftPolicie
 
 // getCrossTenantAccessPolicy fetches and caches the policy data
 // Following the same pattern as getExchangeReport() in ms365_exchange.go
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) getCrossTenantAccessPolicy() error {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAccessPolicy() error {
 	// After code generation, these fields will be embedded and accessible directly:
 	// a.policyLock, a.fetched, a.fetchErr, a.policy
 
@@ -347,7 +347,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) getCro
 	crossTenantAccessPolicyCacheMu.Lock()
 	internal, exists := crossTenantAccessPolicyCache[cacheKey]
 	if !exists {
-		internal = &mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInternal{}
+		internal = &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal{}
 		crossTenantAccessPolicyCache[cacheKey] = internal
 	}
 	crossTenantAccessPolicyCacheMu.Unlock()
@@ -391,14 +391,14 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) getCro
 	// Create and cache all nested resources once
 	if policy.GetAutomaticUserConsentSettings() != nil {
 		consentSettings := policy.GetAutomaticUserConsentSettings()
-		consentResource, err := CreateResource(a.MqlRuntime, "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.automaticUserConsentSettings",
+		consentResource, err := CreateResource(a.MqlRuntime, "microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings",
 			map[string]*llx.RawData{
 				"__id":            llx.StringData("automaticUserConsentSettings"),
 				"inboundAllowed":  llx.BoolDataPtr(consentSettings.GetInboundAllowed()),
 				"outboundAllowed": llx.BoolDataPtr(consentSettings.GetOutboundAllowed()),
 			})
 		if err == nil {
-			internal.automaticUserConsentSettings = consentResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings)
+			internal.automaticUserConsentSettings = consentResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings)
 		}
 	}
 
@@ -446,21 +446,21 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) getCro
 			precedenceOrder = append(precedenceOrder, provider.String())
 		}
 
-		invResource, err := CreateResource(a.MqlRuntime, "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.invitationRedemptionIdentityProviderConfiguration",
+		invResource, err := CreateResource(a.MqlRuntime, "microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration",
 			map[string]*llx.RawData{
 				"__id":                                   llx.StringData("invitationRedemptionIdentityProviderConfiguration"),
 				"fallbackIdentityProvider":               llx.StringData(fallbackProvider),
 				"primaryIdentityProviderPrecedenceOrder": llx.ArrayData(precedenceOrder, types.String),
 			})
 		if err == nil {
-			internal.invitationRedemptionIdentityProviderConfiguration = invResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration)
+			internal.invitationRedemptionIdentityProviderConfiguration = invResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration)
 		}
 	}
 
 	// inboundTrust
 	if policy.GetInboundTrust() != nil {
 		inboundTrustValue := policy.GetInboundTrust()
-		inboundTrustResource, err := CreateResource(a.MqlRuntime, "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.inboundTrust",
+		inboundTrustResource, err := CreateResource(a.MqlRuntime, "microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust",
 			map[string]*llx.RawData{
 				"__id":                                llx.StringData("inboundTrust"),
 				"isMfaAccepted":                       llx.BoolDataPtr(inboundTrustValue.GetIsMfaAccepted()),
@@ -468,7 +468,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) getCro
 				"isHybridAzureADJoinedDeviceAccepted": llx.BoolDataPtr(inboundTrustValue.GetIsHybridAzureADJoinedDeviceAccepted()),
 			})
 		if err == nil {
-			internal.inboundTrust = inboundTrustResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust)
+			internal.inboundTrust = inboundTrustResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust)
 		}
 	}
 
@@ -483,7 +483,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) getCro
 	return nil
 }
 
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) automaticUserConsentSettings() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultAutomaticUserConsentSettings, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) automaticUserConsentSettings() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings, error) {
 	if err := a.getCrossTenantAccessPolicy(); err != nil {
 		return nil, err
 	}
@@ -497,7 +497,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) automa
 	return internal.automaticUserConsentSettings, nil
 }
 
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) b2bCollaborationInbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bCollaborationInbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 	if err := a.getCrossTenantAccessPolicy(); err != nil {
 		return nil, err
 	}
@@ -511,7 +511,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) b2bCol
 	return internal.b2bCollaborationInbound, nil
 }
 
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) b2bCollaborationOutbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bCollaborationOutbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 	if err := a.getCrossTenantAccessPolicy(); err != nil {
 		return nil, err
 	}
@@ -525,7 +525,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) b2bCol
 	return internal.b2bCollaborationOutbound, nil
 }
 
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) b2bDirectConnectInbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bDirectConnectInbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 	if err := a.getCrossTenantAccessPolicy(); err != nil {
 		return nil, err
 	}
@@ -539,7 +539,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) b2bDir
 	return internal.b2bDirectConnectInbound, nil
 }
 
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) b2bDirectConnectOutbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bDirectConnectOutbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 	if err := a.getCrossTenantAccessPolicy(); err != nil {
 		return nil, err
 	}
@@ -553,7 +553,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) b2bDir
 	return internal.b2bDirectConnectOutbound, nil
 }
 
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) tenantRestrictions() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) tenantRestrictions() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 	if err := a.getCrossTenantAccessPolicy(); err != nil {
 		return nil, err
 	}
@@ -567,7 +567,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) tenant
 	return internal.tenantRestrictions, nil
 }
 
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) inboundTrust() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInboundTrust, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) inboundTrust() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust, error) {
 	if err := a.getCrossTenantAccessPolicy(); err != nil {
 		return nil, err
 	}
@@ -581,7 +581,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) inboun
 	return internal.inboundTrust, nil
 }
 
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) invitationRedemptionIdentityProviderConfiguration() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultInvitationRedemptionIdentityProviderConfiguration, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) invitationRedemptionIdentityProviderConfiguration() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration, error) {
 	if err := a.getCrossTenantAccessPolicy(); err != nil {
 		return nil, err
 	}
@@ -595,7 +595,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefault) invita
 	return internal.invitationRedemptionIdentityProviderConfiguration, nil
 }
 
-func newB2BSetting(runtime *plugin.Runtime, setting models.CrossTenantAccessPolicyB2BSettingable, settingId string) (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting, error) {
+func newB2BSetting(runtime *plugin.Runtime, setting models.CrossTenantAccessPolicyB2BSettingable, settingId string) (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
 	usersAndGroups, err := newUsersAndGroups(runtime, setting.GetUsersAndGroups(), settingId+"-usersAndGroups")
 	if err != nil {
 		return nil, err
@@ -606,30 +606,30 @@ func newB2BSetting(runtime *plugin.Runtime, setting models.CrossTenantAccessPoli
 		return nil, err
 	}
 
-	resource, err := CreateResource(runtime, "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting",
+	resource, err := CreateResource(runtime, "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting",
 		map[string]*llx.RawData{
 			"__id":           llx.StringData(settingId),
-			"usersAndGroups": llx.ResourceData(usersAndGroups, "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups"),
-			"applications":   llx.ResourceData(applications, "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups"),
+			"usersAndGroups": llx.ResourceData(usersAndGroups, "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups"),
+			"applications":   llx.ResourceData(applications, "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups"),
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	return resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting), nil
+	return resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting), nil
 }
 
 // usersAndGroups returns the usersAndGroups field from the b2bSetting resource
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting) usersAndGroups() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) usersAndGroups() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
 	return a.UsersAndGroups.Data, a.UsersAndGroups.Error
 }
 
 // applications returns the applications field from the b2bSetting resource
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSetting) applications() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) applications() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
 	return a.Applications.Data, a.Applications.Error
 }
 
-func newUsersAndGroups(runtime *plugin.Runtime, usersAndGroups models.CrossTenantAccessPolicyTargetConfigurationable, id string) (*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups, error) {
+func newUsersAndGroups(runtime *plugin.Runtime, usersAndGroups models.CrossTenantAccessPolicyTargetConfigurationable, id string) (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
 	if usersAndGroups == nil {
 		return nil, nil
 	}
@@ -650,7 +650,7 @@ func newUsersAndGroups(runtime *plugin.Runtime, usersAndGroups models.CrossTenan
 			targetValue = *target.GetTarget()
 		}
 
-		targetResource, err := CreateResource(runtime, "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target",
+		targetResource, err := CreateResource(runtime, "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target",
 			map[string]*llx.RawData{
 				"__id":       llx.StringData(fmt.Sprintf("%s-%s", id, targetValue)),
 				"target":     llx.StringData(targetValue),
@@ -662,15 +662,15 @@ func newUsersAndGroups(runtime *plugin.Runtime, usersAndGroups models.CrossTenan
 		targetResources = append(targetResources, targetResource)
 	}
 
-	resource, err := CreateResource(runtime, "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.usersAndGroups",
+	resource, err := CreateResource(runtime, "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups",
 		map[string]*llx.RawData{
 			"__id":       llx.StringData(id),
 			"accessType": llx.StringData(accessType),
-			"targets":    llx.ArrayData(targetResources, "microsoft.policies.crossTenantAccessPolicyConfigurationDefault.b2bSetting.target"),
+			"targets":    llx.ArrayData(targetResources, "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target"),
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	return resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyConfigurationDefaultB2bSettingUsersAndGroups), nil
+	return resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups), nil
 }
