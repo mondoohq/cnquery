@@ -18,11 +18,6 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
-var (
-	crossTenantAccessPolicyCacheMu sync.Mutex
-	crossTenantAccessPolicyCache   = make(map[string]*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal)
-)
-
 func (a *mqlMicrosoftPolicies) authorizationPolicy() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
@@ -301,60 +296,46 @@ func (a *mqlMicrosoftPolicies) externalIdentitiesPolicy() (*mqlMicrosoftPolicies
 }
 
 // Internal struct for caching cross-tenant access policy data
+// This will be embedded in mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault after code generation
 type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal struct {
-	policyLock                                        sync.Mutex
-	fetched                                           bool
-	fetchErr                                          error
-	policy                                            models.CrossTenantAccessPolicyConfigurationDefaultable
-	automaticUserConsentSettings                      *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings
-	b2bCollaborationInbound                           *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
-	b2bCollaborationOutbound                          *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
-	b2bDirectConnectInbound                           *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
-	b2bDirectConnectOutbound                          *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
-	invitationRedemptionIdentityProviderConfiguration *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration
-	inboundTrust                                      *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust
-	tenantRestrictions                                *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
+	policyLock                                              sync.Mutex
+	fetched                                                 bool
+	fetchErr                                                error
+	policy                                                  models.CrossTenantAccessPolicyConfigurationDefaultable
+	cachedAutomaticUserConsentSettings                      *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings
+	cachedB2bCollaborationInbound                           *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
+	cachedB2bCollaborationOutbound                          *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
+	cachedB2bDirectConnectInbound                           *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
+	cachedB2bDirectConnectOutbound                          *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
+	cachedInvitationRedemptionIdentityProviderConfiguration *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration
+	cachedInboundTrust                                      *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust
+	cachedTenantRestrictions                                *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting
 }
 
 func (a *mqlMicrosoftPolicies) crossTenantAccessPolicy() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault, error) {
 	resource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefault,
 		map[string]*llx.RawData{
-			"__id": llx.StringData(a.__id + "-crossTenantAccessPolicyDefault"),
+			"__id": llx.StringData("crossTenantAccessPolicyDefault"),
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	mqlResource := resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault)
-
-	if err := mqlResource.getCrossTenantAccessPolicy(); err != nil {
-		return nil, err
-	}
-
-	return mqlResource, nil
+	return resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault), nil
 }
 
-// getCrossTenantAccessPolicy fetches and caches the policy data
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAccessPolicy() error {
-	cacheKey := "crossTenantAccessPolicy_" + a.__id
+	a.policyLock.Lock()
+	defer a.policyLock.Unlock()
 
-	crossTenantAccessPolicyCacheMu.Lock()
-	internal, exists := crossTenantAccessPolicyCache[cacheKey]
-	if !exists {
-		internal = &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal{}
-		crossTenantAccessPolicyCache[cacheKey] = internal
+	if a.fetched {
+		return a.fetchErr
 	}
-	crossTenantAccessPolicyCacheMu.Unlock()
 
-	internal.policyLock.Lock()
-	defer internal.policyLock.Unlock()
-
-	if internal.fetched {
-		return internal.fetchErr
-	}
+	a.fetched = true
 
 	errHandler := func(err error) error {
-		internal.fetchErr = err
+		a.fetchErr = err
 		return err
 	}
 
@@ -369,9 +350,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 		return errHandler(transformError(err))
 	}
 
-	internal.policy = policy
-	internal.fetched = true
-	internal.fetchErr = nil
+	a.policy = policy
 
 	if policy.GetIsServiceDefault() != nil {
 		a.IsServiceDefault = plugin.TValue[bool]{Data: *policy.GetIsServiceDefault(), State: plugin.StateIsSet}
@@ -388,35 +367,35 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 				"outboundAllowed": llx.BoolDataPtr(consentSettings.GetOutboundAllowed()),
 			})
 		if err == nil {
-			internal.automaticUserConsentSettings = consentResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings)
+			a.cachedAutomaticUserConsentSettings = consentResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings)
 		}
 	}
 
 	if policy.GetB2bCollaborationInbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bCollaborationInbound(), a.__id+"-b2bCollaborationInbound")
 		if err == nil {
-			internal.b2bCollaborationInbound = b2bResource
+			a.cachedB2bCollaborationInbound = b2bResource
 		}
 	}
 
 	if policy.GetB2bCollaborationOutbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bCollaborationOutbound(), a.__id+"-b2bCollaborationOutbound")
 		if err == nil {
-			internal.b2bCollaborationOutbound = b2bResource
+			a.cachedB2bCollaborationOutbound = b2bResource
 		}
 	}
 
 	if policy.GetB2bDirectConnectInbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bDirectConnectInbound(), a.__id+"-b2bDirectConnectInbound")
 		if err == nil {
-			internal.b2bDirectConnectInbound = b2bResource
+			a.cachedB2bDirectConnectInbound = b2bResource
 		}
 	}
 
 	if policy.GetB2bDirectConnectOutbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bDirectConnectOutbound(), a.__id+"-b2bDirectConnectOutbound")
 		if err == nil {
-			internal.b2bDirectConnectOutbound = b2bResource
+			a.cachedB2bDirectConnectOutbound = b2bResource
 		}
 	}
 
@@ -438,7 +417,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 				"primaryIdentityProviderPrecedenceOrder": llx.ArrayData(precedenceOrder, types.String),
 			})
 		if err == nil {
-			internal.invitationRedemptionIdentityProviderConfiguration = invResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration)
+			a.cachedInvitationRedemptionIdentityProviderConfiguration = invResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration)
 		}
 	}
 
@@ -452,14 +431,14 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) getCrossTenantAcces
 				"isHybridAzureADJoinedDeviceAccepted": llx.BoolDataPtr(inboundTrustValue.GetIsHybridAzureADJoinedDeviceAccepted()),
 			})
 		if err == nil {
-			internal.inboundTrust = inboundTrustResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust)
+			a.cachedInboundTrust = inboundTrustResource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust)
 		}
 	}
 
 	if policy.GetTenantRestrictions() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetTenantRestrictions(), a.__id+"-tenantRestrictions")
 		if err == nil {
-			internal.tenantRestrictions = b2bResource
+			a.cachedTenantRestrictions = b2bResource
 		}
 	}
 
@@ -471,13 +450,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) automaticUserConsen
 		return nil, err
 	}
 
-	cacheKey := "crossTenantAccessPolicy_" + a.__id
-
-	crossTenantAccessPolicyCacheMu.Lock()
-	internal := crossTenantAccessPolicyCache[cacheKey]
-	crossTenantAccessPolicyCacheMu.Unlock()
-
-	return internal.automaticUserConsentSettings, nil
+	return a.cachedAutomaticUserConsentSettings, nil
 }
 
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bCollaborationInbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
@@ -485,13 +458,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bCollaborationInb
 		return nil, err
 	}
 
-	cacheKey := "crossTenantAccessPolicy_" + a.__id
-
-	crossTenantAccessPolicyCacheMu.Lock()
-	internal := crossTenantAccessPolicyCache[cacheKey]
-	crossTenantAccessPolicyCacheMu.Unlock()
-
-	return internal.b2bCollaborationInbound, nil
+	return a.cachedB2bCollaborationInbound, nil
 }
 
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bCollaborationOutbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
@@ -499,13 +466,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bCollaborationOut
 		return nil, err
 	}
 
-	cacheKey := "crossTenantAccessPolicy_" + a.__id
-
-	crossTenantAccessPolicyCacheMu.Lock()
-	internal := crossTenantAccessPolicyCache[cacheKey]
-	crossTenantAccessPolicyCacheMu.Unlock()
-
-	return internal.b2bCollaborationOutbound, nil
+	return a.cachedB2bCollaborationOutbound, nil
 }
 
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bDirectConnectInbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
@@ -513,13 +474,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bDirectConnectInb
 		return nil, err
 	}
 
-	cacheKey := "crossTenantAccessPolicy_" + a.__id
-
-	crossTenantAccessPolicyCacheMu.Lock()
-	internal := crossTenantAccessPolicyCache[cacheKey]
-	crossTenantAccessPolicyCacheMu.Unlock()
-
-	return internal.b2bDirectConnectInbound, nil
+	return a.cachedB2bDirectConnectInbound, nil
 }
 
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bDirectConnectOutbound() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
@@ -527,13 +482,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) b2bDirectConnectOut
 		return nil, err
 	}
 
-	cacheKey := "crossTenantAccessPolicy_" + a.__id
-
-	crossTenantAccessPolicyCacheMu.Lock()
-	internal := crossTenantAccessPolicyCache[cacheKey]
-	crossTenantAccessPolicyCacheMu.Unlock()
-
-	return internal.b2bDirectConnectOutbound, nil
+	return a.cachedB2bDirectConnectOutbound, nil
 }
 
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) tenantRestrictions() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
@@ -541,13 +490,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) tenantRestrictions(
 		return nil, err
 	}
 
-	cacheKey := "crossTenantAccessPolicy_" + a.__id
-
-	crossTenantAccessPolicyCacheMu.Lock()
-	internal := crossTenantAccessPolicyCache[cacheKey]
-	crossTenantAccessPolicyCacheMu.Unlock()
-
-	return internal.tenantRestrictions, nil
+	return a.cachedTenantRestrictions, nil
 }
 
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) inboundTrust() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust, error) {
@@ -555,13 +498,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) inboundTrust() (*mq
 		return nil, err
 	}
 
-	cacheKey := "crossTenantAccessPolicy_" + a.__id
-
-	crossTenantAccessPolicyCacheMu.Lock()
-	internal := crossTenantAccessPolicyCache[cacheKey]
-	crossTenantAccessPolicyCacheMu.Unlock()
-
-	return internal.inboundTrust, nil
+	return a.cachedInboundTrust, nil
 }
 
 func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) invitationRedemptionIdentityProviderConfiguration() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration, error) {
@@ -569,13 +506,7 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) invitationRedemptio
 		return nil, err
 	}
 
-	cacheKey := "crossTenantAccessPolicy_" + a.__id
-
-	crossTenantAccessPolicyCacheMu.Lock()
-	internal := crossTenantAccessPolicyCache[cacheKey]
-	crossTenantAccessPolicyCacheMu.Unlock()
-
-	return internal.invitationRedemptionIdentityProviderConfiguration, nil
+	return a.cachedInvitationRedemptionIdentityProviderConfiguration, nil
 }
 
 func newB2BSetting(runtime *plugin.Runtime, setting models.CrossTenantAccessPolicyB2BSettingable, settingId string) (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
