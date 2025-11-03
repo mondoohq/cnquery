@@ -98,7 +98,7 @@ const (
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefault                                                  string = "microsoft.policies.crossTenantAccessPolicyDefault"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings                      string = "microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting                                        string = "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting"
-	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups                          string = "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups"
+	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig                            string = "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget                                  string = "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultInboundTrust                                      string = "microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration string = "microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration"
@@ -458,9 +458,9 @@ func init() {
 			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting,
 		},
-		"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups": {
-			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups,
+		"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig": {
+			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig,
 		},
 		"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target": {
 			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2150,16 +2150,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings).GetOutboundAllowed()).ToDataRes(types.Bool)
 	},
 	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).GetUsersAndGroups()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups"))
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).GetUsersAndGroups()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig"))
 	},
 	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.applications": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).GetApplications()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups"))
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).GetApplications()).ToDataRes(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig"))
 	},
-	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups.accessType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups).GetAccessType()).ToDataRes(types.String)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig.accessType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig).GetAccessType()).ToDataRes(types.String)
 	},
-	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups.targets": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups).GetTargets()).ToDataRes(types.Array(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target")))
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig).GetTargets()).ToDataRes(types.Array(types.Resource("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target")))
 	},
 	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget).GetTarget()).ToDataRes(types.String)
@@ -5062,23 +5062,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).UsersAndGroups, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups](v.Value, v.Error)
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).UsersAndGroups, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).Applications, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups](v.Value, v.Error)
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting).Applications, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups).__id, ok = v.Value.(string)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups.accessType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups).AccessType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig.accessType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig).AccessType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12474,8 +12474,8 @@ type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingInternal it will be used here
-	UsersAndGroups plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups]
-	Applications   plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups]
+	UsersAndGroups plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig]
+	Applications   plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig]
 }
 
 // createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting creates a new instance of this resource
@@ -12510,15 +12510,15 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) MqlID() s
 	return c.__id
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) GetUsersAndGroups() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups](&c.UsersAndGroups, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) GetUsersAndGroups() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig](&c.UsersAndGroups, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting", c.__id, "usersAndGroups")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig), nil
 			}
 		}
 
@@ -12526,15 +12526,15 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) GetUsersA
 	})
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) GetApplications() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups] {
-	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups](&c.Applications, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) GetApplications() *plugin.TValue[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig](&c.Applications, func() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting", c.__id, "applications")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups), nil
+				return d.Value.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig), nil
 			}
 		}
 
@@ -12542,18 +12542,18 @@ func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) GetApplic
 	})
 }
 
-// mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups for the microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups resource
-type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups struct {
+// mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig for the microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig resource
+type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroupsInternal it will be used here
+	// optional: if you define mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfigInternal it will be used here
 	AccessType plugin.TValue[string]
 	Targets    plugin.TValue[[]any]
 }
 
-// createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups creates a new instance of this resource
-func createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups{
+// createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig creates a new instance of this resource
+func createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig{
 		MqlRuntime: runtime,
 	}
 
@@ -12565,7 +12565,7 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGrou
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups", res.__id)
+		args, err = runtime.ResourceFromRecording("microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -12575,19 +12575,19 @@ func createMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGrou
 	return res, nil
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups) MqlName() string {
-	return "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups"
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig) MqlName() string {
+	return "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig"
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups) MqlID() string {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups) GetAccessType() *plugin.TValue[string] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig) GetAccessType() *plugin.TValue[string] {
 	return &c.AccessType
 }
 
-func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups) GetTargets() *plugin.TValue[[]any] {
+func (c *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig) GetTargets() *plugin.TValue[[]any] {
 	return &c.Targets
 }
 

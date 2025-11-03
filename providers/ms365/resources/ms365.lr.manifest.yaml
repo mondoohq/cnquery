@@ -615,7 +615,7 @@ resources:
       targetType: {}
     is_private: true
     min_mondoo_version: 9.0.0
-  microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups:
+  microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig:
     fields:
       accessType: {}
       targets: {}

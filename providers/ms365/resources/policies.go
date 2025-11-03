@@ -592,8 +592,8 @@ func newB2BSetting(runtime *plugin.Runtime, setting models.CrossTenantAccessPoli
 	resource, err := CreateResource(runtime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting,
 		map[string]*llx.RawData{
 			"__id":           llx.StringData(settingId),
-			"usersAndGroups": llx.ResourceData(usersAndGroups, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups),
-			"applications":   llx.ResourceData(applications, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups),
+			"usersAndGroups": llx.ResourceData(usersAndGroups, string(ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig)),
+			"applications":   llx.ResourceData(applications, string(ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig)),
 		})
 	if err != nil {
 		return nil, err
@@ -602,15 +602,15 @@ func newB2BSetting(runtime *plugin.Runtime, setting models.CrossTenantAccessPoli
 	return resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting), nil
 }
 
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) usersAndGroups() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) usersAndGroups() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig, error) {
 	return a.UsersAndGroups.Data, a.UsersAndGroups.Error
 }
 
-func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) applications() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
+func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) applications() (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig, error) {
 	return a.Applications.Data, a.Applications.Error
 }
 
-func newCrossTenantAccessPolicyTarget(runtime *plugin.Runtime, accessPolicyTargetConfiguration models.CrossTenantAccessPolicyTargetConfigurationable, id string) (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
+func newCrossTenantAccessPolicyTarget(runtime *plugin.Runtime, accessPolicyTargetConfiguration models.CrossTenantAccessPolicyTargetConfigurationable, id string) (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig, error) {
 	var accessType string
 	if accessPolicyTargetConfiguration.GetAccessType() != nil {
 		accessType = accessPolicyTargetConfiguration.GetAccessType().String()
@@ -639,15 +639,15 @@ func newCrossTenantAccessPolicyTarget(runtime *plugin.Runtime, accessPolicyTarge
 		targetResources = append(targetResources, targetResource)
 	}
 
-	resource, err := CreateResource(runtime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups,
+	resource, err := CreateResource(runtime, ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig,
 		map[string]*llx.RawData{
 			"__id":       llx.StringData(id),
 			"accessType": llx.StringData(accessType),
-			"targets":    llx.ArrayData(targetResources, types.Type(ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget)),
+			"targets":    llx.ArrayData(targetResources, types.Resource(string(ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTarget))),
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	return resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups), nil
+	return resource.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingTargetConfig), nil
 }

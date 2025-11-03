@@ -1330,13 +1330,13 @@ private microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSe
 // B2B setting for cross-tenant access policy (used for collaboration, direct connect, and tenant restrictions)
 private microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting @defaults("usersAndGroups applications") {
   // Defines the default configuration for users and groups.
-  usersAndGroups() microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups
+  usersAndGroups() microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig
   // Defines the default configuration for applications.
-  applications() microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups
+  applications() microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig
 }
 
 // Users and groups configuration for B2B settings
-private microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.usersAndGroups @defaults("accessType targets") {
+private microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig @defaults("accessType targets") {
   // The type of access. Possible values are: blocked, allowed.
   accessType string
   // The targets of the policy configuration.
