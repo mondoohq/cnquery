@@ -579,12 +579,12 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault) invitationRedemptio
 }
 
 func newB2BSetting(runtime *plugin.Runtime, setting models.CrossTenantAccessPolicyB2BSettingable, settingId string) (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting, error) {
-	usersAndGroups, err := newUsersAndGroups(runtime, setting.GetUsersAndGroups(), settingId+"-usersAndGroups")
+	usersAndGroups, err := newCrossTenantAccessPolicyTarget(runtime, setting.GetUsersAndGroups(), settingId+"-usersAndGroups")
 	if err != nil {
 		return nil, err
 	}
 
-	applications, err := newUsersAndGroups(runtime, setting.GetApplications(), settingId+"-applications")
+	applications, err := newCrossTenantAccessPolicyTarget(runtime, setting.GetApplications(), settingId+"-applications")
 	if err != nil {
 		return nil, err
 	}
@@ -610,18 +610,14 @@ func (a *mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting) applicati
 	return a.Applications.Data, a.Applications.Error
 }
 
-func newUsersAndGroups(runtime *plugin.Runtime, usersAndGroups models.CrossTenantAccessPolicyTargetConfigurationable, id string) (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
-	if usersAndGroups == nil {
-		return nil, nil
-	}
-
+func newCrossTenantAccessPolicyTarget(runtime *plugin.Runtime, accessPolicyTargetConfiguration models.CrossTenantAccessPolicyTargetConfigurationable, id string) (*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSettingUsersAndGroups, error) {
 	var accessType string
-	if usersAndGroups.GetAccessType() != nil {
-		accessType = usersAndGroups.GetAccessType().String()
+	if accessPolicyTargetConfiguration.GetAccessType() != nil {
+		accessType = accessPolicyTargetConfiguration.GetAccessType().String()
 	}
 
 	var targetResources []any
-	for _, target := range usersAndGroups.GetTargets() {
+	for _, target := range accessPolicyTargetConfiguration.GetTargets() {
 		var targetType string
 		if target.GetTargetType() != nil {
 			targetType = target.GetTargetType().String()
