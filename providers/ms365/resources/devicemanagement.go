@@ -84,7 +84,7 @@ func newMqlMicrosoftManagedDevice(runtime *plugin.Runtime, u models.ManagedDevic
 		return nil, err
 	}
 
-	graphDevice, err := CreateResource(runtime, "microsoft.devicemanagement.manageddevice",
+	graphDevice, err := CreateResource(runtime, ResourceMicrosoftDevicemanagementManageddevice,
 		map[string]*llx.RawData{
 			"__id":                         llx.StringDataPtr(u.GetId()),
 			"id":                           llx.StringDataPtr(u.GetId()),
@@ -140,7 +140,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]any, error) {
 	configurations := resp.GetValue()
 	for _, configuration := range configurations {
 		properties := getConfigurationProperties(configuration)
-		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.deviceconfiguration",
+		mqlResource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftDevicemanagementDeviceconfiguration,
 			map[string]*llx.RawData{
 				"id":                   llx.StringDataPtr(configuration.GetId()),
 				"lastModifiedDateTime": llx.TimeDataPtr(configuration.GetLastModifiedDateTime()),
@@ -174,7 +174,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]any, 
 	configs := deviceEnrollmentConfigurations.GetValue()
 	res := []any{}
 	for _, config := range configs {
-		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.deviceEnrollmentConfiguration",
+		mqlResource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftDevicemanagementDeviceEnrollmentConfiguration,
 			map[string]*llx.RawData{
 				"__id":                 llx.StringDataPtr(config.GetId()),
 				"id":                   llx.StringDataPtr(config.GetId()),
@@ -220,7 +220,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]any, error)
 			return nil, err
 		}
 		properties := getComplianceProperties(compliancePolicy)
-		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.devicecompliancepolicy",
+		mqlResource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftDevicemanagementDevicecompliancepolicy,
 			map[string]*llx.RawData{
 				"id":                   llx.StringDataPtr(compliancePolicy.GetId()),
 				"createdDateTime":      llx.TimeDataPtr(compliancePolicy.GetCreatedDateTime()),
