@@ -22,7 +22,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		},
 	}
 
-	mock, err := mock.New(0, "./testdata/packages_apk.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/packages_apk.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,7 +237,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 }
 
 func TestApkUpdateParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/updates_apk.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/updates_apk.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}

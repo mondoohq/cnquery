@@ -13,12 +13,12 @@ import (
 )
 
 func TestParseServiceLaunchD(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "macos",
 			Family: []string{"unix", "darwin"},
 		},
-	})
+	}, mock.WithPath("./testdata/osx.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}

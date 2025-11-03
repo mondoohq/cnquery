@@ -14,7 +14,7 @@ import (
 )
 
 func TestDetectLinuxInstance(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance_linux.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instance_linux.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -28,7 +28,7 @@ func TestDetectLinuxInstance(t *testing.T) {
 }
 
 func TestDetectWindowsInstance(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance_windows.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/instance_windows.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -42,7 +42,7 @@ func TestDetectWindowsInstance(t *testing.T) {
 }
 
 func TestNoMatch(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/aws_instance.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/aws_instance.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

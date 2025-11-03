@@ -15,7 +15,7 @@ import (
 )
 
 func TestHostnameLinuxEtcHostname(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/hostname_arch.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_arch.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -27,7 +27,7 @@ func TestHostnameLinuxEtcHostname(t *testing.T) {
 }
 
 func TestHostnameLinux(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/hostname_linux.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_linux.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -39,7 +39,7 @@ func TestHostnameLinux(t *testing.T) {
 }
 
 func TestHostnameLinuxFqdn(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/hostname_fqdn.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_fqdn.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -51,7 +51,7 @@ func TestHostnameLinuxFqdn(t *testing.T) {
 }
 
 func TestHostnameLinuxGetentIPv4(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/hostname_getent_hosts_ipv4.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_getent_hosts_ipv4.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -63,7 +63,7 @@ func TestHostnameLinuxGetentIPv4(t *testing.T) {
 }
 
 func TestHostnameLinuxGetentIPv6(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/hostname_getent_hosts_ipv6.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_getent_hosts_ipv6.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -75,7 +75,7 @@ func TestHostnameLinuxGetentIPv6(t *testing.T) {
 }
 
 func TestHostnameWindows(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/hostname_windows.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_windows.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -87,7 +87,7 @@ func TestHostnameWindows(t *testing.T) {
 }
 
 func TestHostnameMacos(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/hostname_macos.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_macos.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

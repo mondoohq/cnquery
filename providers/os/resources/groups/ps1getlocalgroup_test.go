@@ -14,7 +14,7 @@ import (
 )
 
 func TestWindowsGroupsParserFromMock(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/windows.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows.toml"))
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("powershell -c \"Get-LocalGroup | ConvertTo-Json\"")
