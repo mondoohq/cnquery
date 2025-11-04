@@ -5,13 +5,13 @@ stdout = "Linux"
 stdout = "x86_64"
 
 [commands."uname -r"]
-stdout = "4.9.125-linuxkit"
+stdout = "3.10.0-1160.105.1.el7.x86_64"
 
 [files."/etc/redhat-release"]
-content = "CentOS Linux release 7.5.1804 (Core)"
+content = "CentOS Linux release 7.9.2009 (Core)"
 
 [files."/etc/centos-release"]
-content = "CentOS Linux release 7.5.1804 (Core)"
+content = "CentOS Linux release 7.9.2009 (Core)"
 
 [files."/etc/os-release"]
 content = """

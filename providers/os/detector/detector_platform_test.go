@@ -131,7 +131,7 @@ func TestCentos7OSDetector(t *testing.T) {
 
 	assert.Equal(t, "centos", di.Name, "os name should be identified")
 	assert.Equal(t, "CentOS Linux 7 (Core)", di.Title, "os title should be identified")
-	assert.Equal(t, "7.5.1804", di.Version, "os version should be identified")
+	assert.Equal(t, "7.9.2009", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
@@ -141,8 +141,8 @@ func TestCentos8OSDetector(t *testing.T) {
 	assert.Nil(t, err, "was able to create the provider")
 
 	assert.Equal(t, "centos", di.Name, "os name should be identified")
-	assert.Equal(t, "CentOS Linux 8 (Core)", di.Title, "os title should be identified")
-	assert.Equal(t, "8.2.2004", di.Version, "os version should be identified")
+	assert.Equal(t, "CentOS Linux 8", di.Title, "os title should be identified")
+	assert.Equal(t, "8.5.2111", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
