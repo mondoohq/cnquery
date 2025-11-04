@@ -26,6 +26,7 @@ const (
 	ResourceMicrosoftSettingValue                                                                            string = "microsoft.settingValue"
 	ResourceMicrosoftApplications                                                                            string = "microsoft.applications"
 	ResourceMicrosoftTenant                                                                                  string = "microsoft.tenant"
+	ResourceMicrosoftTenantBrandingInfo                                                                      string = "microsoft.tenant.brandingInfo"
 	ResourceMicrosoftTenantSettings                                                                          string = "microsoft.tenantSettings"
 	ResourceMicrosoftTenantFormsSettings                                                                     string = "microsoft.tenantFormsSettings"
 	ResourceMicrosoftUsers                                                                                   string = "microsoft.users"
