@@ -5,32 +5,49 @@ stdout = "Linux"
 stdout = "x86_64"
 
 [commands."uname -r"]
-stdout = "4.9.125-linuxkit"
+stdout = "5.10.176"
+
+[files."/etc/os-release"]
+content = """
+NAME="OpenWrt"
+VERSION="22.03.4"
+ID="openwrt"
+ID_LIKE="lede openwrt"
+PRETTY_NAME="OpenWrt 22.03.4"
+VERSION_ID="22.03.4"
+HOME_URL="https://openwrt.org/"
+BUG_URL="https://bugs.openwrt.org/"
+SUPPORT_URL="https://forum.openwrt.org/"
+BUILD_ID="r20123-38ccc47687"
+OPENWRT_BOARD="x86/64"
+OPENWRT_ARCH="x86_64"
+OPENWRT_TAINTS=""
+OPENWRT_DEVICE_MANUFACTURER="OpenWrt"
+OPENWRT_DEVICE_MANUFACTURER_URL="https://openwrt.org/"
+OPENWRT_DEVICE_PRODUCT="Generic"
+OPENWRT_DEVICE_REVISION="v0"
+OPENWRT_RELEASE="OpenWrt 22.03.4 r20123-38ccc47687"
+"""
 
 [files."/etc/banner"]
 content = """
-_______                     ________        __
-|       |.-----.-----.-----.|  |  |  |.----.|  |_
-|   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
-|_______||   __|_____|__|__||________||__|  |____|
-         |__| W I R E L E S S   F R E E D O M
------------------------------------------------------
-DESIGNATED DRIVER (Bleeding Edge, 50072)
------------------------------------------------------
- * 2 oz. Orange Juice         Combine all juices in a
- * 2 oz. Pineapple Juice      tall glass filled with
- * 2 oz. Grapefruit Juice     ice, stir well.
- * 2 oz. Cranberry Juice
------------------------------------------------------
+  _______                     ________        __
+ |       |.-----.-----.-----.|  |  |  |.----.|  |_
+ |   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
+ |_______||   __|_____|__|__||________||__|  |____|
+          |__| W I R E L E S S   F R E E D O M
+ -----------------------------------------------------
+ OpenWrt 22.03.4, r20123-38ccc47687
+ -----------------------------------------------------
 """
 
 [files."/etc/openwrt_release"]
 content = """
 DISTRIB_ID='OpenWrt'
-DISTRIB_RELEASE='Bleeding Edge'
-DISTRIB_REVISION='50072'
-DISTRIB_CODENAME='designated_driver'
+DISTRIB_RELEASE='22.03.4'
+DISTRIB_REVISION='r20123-38ccc47687'
 DISTRIB_TARGET='x86/64'
-DISTRIB_DESCRIPTION='OpenWrt Designated Driver 50072'
+DISTRIB_ARCH='x86_64'
+DISTRIB_DESCRIPTION='OpenWrt 22.03.4 r20123-38ccc47687'
 DISTRIB_TAINTS=''
 """
