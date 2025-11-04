@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "snowflake",
 	ID:              "go.mondoo.com/cnquery/v12/providers/snowflake",
-	Version:         "11.0.101",
+	Version:         "11.0.102",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
