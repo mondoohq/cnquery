@@ -5,18 +5,21 @@ stdout = "Linux"
 stdout = "x86_64"
 
 [commands."uname -r"]
-stdout = "4.9.125-linuxkit"
+stdout = "6.6.10-arch1-1"
 
 [files."/etc/os-release"]
 content = """
 NAME="Arch Linux"
 PRETTY_NAME="Arch Linux"
 ID=arch
-ID_LIKE=archlinux
-ANSI_COLOR="0;36"
-HOME_URL="https://www.archlinux.org/"
+BUILD_ID=rolling
+ANSI_COLOR="38;2;23;147;209"
+HOME_URL="https://archlinux.org/"
+DOCUMENTATION_URL="https://wiki.archlinux.org/"
 SUPPORT_URL="https://bbs.archlinux.org/"
 BUG_REPORT_URL="https://bugs.archlinux.org/"
+PRIVACY_POLICY_URL="https://terms.archlinux.org/docs/privacy-policy/"
+LOGO=archlinux-logo
 """
 
 [files."/etc/arch-release"]

@@ -1,6 +1,6 @@
 
 [commands."uname -r"]
-stdout = "3.10.0-1127.19.1.el7.x86_64"
+stdout = "3.10.0-1160.105.1.el7.x86_64"
 
 [commands."uname -s"]
 stdout = "Linux"
@@ -28,10 +28,10 @@ REDHAT_SUPPORT_PRODUCT_VERSION="7"
 """
 
 [files."/proc/version"]
-content = "Linux version 3.10.0-1127.19.1.el7.x86_64 (mockbuild@kbuilder.bsys.centos.org) (gcc version 4.8.5 20150623 (Red Hat 4.8.5-39) (GCC) ) #1 SMP Tue Aug 25 17:23:54 UTC 2020"
+content = "Linux version 3.10.0-1160.105.1.el7.x86_64 (mockbuild@kbuilder.bsys.centos.org) (gcc version 4.8.5 20150623 (Red Hat 4.8.5-44) (GCC) ) #1 SMP Thu Dec 7 15:39:45 UTC 2023"
 
 [files."/proc/cmdline"]
-content = "BOOT_IMAGE=/boot/vmlinuz-3.10.0-1127.19.1.el7.x86_64 root=UUID=ff6cbb65-ccab-489c-91a5-61b9b09e4d49 ro crashkernel=auto console=ttyS0,38400n8 elevator=noop\n"
+content = "BOOT_IMAGE=/vmlinuz-3.10.0-1160.105.1.el7.x86_64 root=/dev/mapper/centos_centos7-root ro elevator=noop no_timer_check crashkernel=auto rd.lvm.lv=centos_centos7/root rd.lvm.lv=centos_centos7/swap biosdevname=0 net.ifnames=0 rhgb quiet\n"
 
 [commands."/sbin/sysctl -a"]
 stdout = """abi.vsyscall32 = 1

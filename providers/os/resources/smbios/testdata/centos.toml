@@ -1,5 +1,5 @@
 [commands."uname -r"]
-stdout = "4.18.0-80.el8.x86_64"
+stdout = "4.18.0-348.7.1.el8_5.x86_64"
 
 [commands."uname -s"]
 stdout = "Linux"
@@ -10,21 +10,18 @@ stdout = "x86_64"
 [files."/etc/os-release"]
 content = """
 NAME="CentOS Linux"
-VERSION="8 (Core)"
+VERSION="8"
 ID="centos"
 ID_LIKE="rhel fedora"
 VERSION_ID="8"
 PLATFORM_ID="platform:el8"
-PRETTY_NAME="CentOS Linux 8 (Core)"
+PRETTY_NAME="CentOS Linux 8"
 ANSI_COLOR="0;31"
 CPE_NAME="cpe:/o:centos:centos:8"
-HOME_URL="https://www.centos.org/"
+HOME_URL="https://centos.org/"
 BUG_REPORT_URL="https://bugs.centos.org/"
-
 CENTOS_MANTISBT_PROJECT="CentOS-8"
 CENTOS_MANTISBT_PROJECT_VERSION="8"
-REDHAT_SUPPORT_PRODUCT="centos"
-REDHAT_SUPPORT_PRODUCT_VERSION="8"
 """
 
 [files."/sys/class/dmi/id/"]

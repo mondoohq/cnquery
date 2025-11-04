@@ -45,10 +45,10 @@ func TestManagerCentos(t *testing.T) {
 
 	info, err := mm.Info()
 	require.NoError(t, err)
-	assert.Equal(t, "3.10.0-1127.19.1.el7.x86_64", info.Version)
-	assert.Equal(t, map[string]string{"console": "ttyS0,38400n8", "crashkernel": "auto", "elevator": "noop", "ro": ""}, info.Arguments)
-	assert.Equal(t, "/boot/vmlinuz-3.10.0-1127.19.1.el7.x86_64", info.Path)
-	assert.Equal(t, "UUID=ff6cbb65-ccab-489c-91a5-61b9b09e4d49", info.Device)
+	assert.Equal(t, "3.10.0-1160.105.1.el7.x86_64", info.Version)
+	assert.Equal(t, map[string]string{"biosdevname": "0", "crashkernel": "auto", "elevator": "noop", "net.ifnames": "0", "no_timer_check": "", "quiet": "", "rd.lvm.lv": "centos_centos7/swap", "rhgb": "", "ro": ""}, info.Arguments)
+	assert.Equal(t, "/vmlinuz-3.10.0-1160.105.1.el7.x86_64", info.Path)
+	assert.Equal(t, "/dev/mapper/centos_centos7-root", info.Device)
 
 	mods, err := mm.Modules()
 	require.NoError(t, err)
