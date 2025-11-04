@@ -1,3 +1,8 @@
 {
-  "aliveStatusCodes": [429, 200, 406]
+  "aliveStatusCodes": [429, 200, 406],
+  "ignorePatterns": [
+    {
+      "pattern": "^https:\\/\\/wiki\\.jenkins\\.io\\/display\\/JENKINS\\/Building\\+a\\+software\\+project"
+    }
+  ]
 }

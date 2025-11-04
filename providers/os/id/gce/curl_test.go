@@ -16,7 +16,7 @@ import (
 )
 
 func TestRawMetadataLinux(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/metadata_raw_linux.toml", &inventory.Asset{})
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/metadata_raw_linux.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

@@ -212,6 +212,17 @@ var zorin = &PlatformResolver{
 	},
 }
 
+var parrot = &PlatformResolver{
+	Name:     "parrot",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "parrot" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var raspbian = &PlatformResolver{
 	Name:     "raspbian",
 	IsFamily: false,
@@ -682,7 +693,7 @@ var openwrt = &PlatformResolver{
 	Name:     "openwrt",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		// No clue why they are not using either lsb-release or os-release
+		// modern releases of openwrt include /etc/os-release but legacy versions do not
 		f, err := conn.FileSystem().Open("/etc/openwrt_release")
 		if err != nil {
 			return false, err
@@ -983,7 +994,7 @@ var redhatFamily = &PlatformResolver{
 var debianFamily = &PlatformResolver{
 	Name:     "debian",
 	IsFamily: true,
-	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin},
+	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},

@@ -13,7 +13,7 @@ import (
 )
 
 func TestMacOsXPackageParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/packages_macos.toml", &inventory.Asset{})
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/packages_macos.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 func detectPlatformFromMock(filepath string) (*inventory.Platform, error) {
-	mockConn, err := mock.New(0, filepath, &inventory.Asset{})
+	mockConn, err := mock.New(0, &inventory.Asset{}, mock.WithPath(filepath))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func TestCentos7OSDetector(t *testing.T) {
 
 	assert.Equal(t, "centos", di.Name, "os name should be identified")
 	assert.Equal(t, "CentOS Linux 7 (Core)", di.Title, "os title should be identified")
-	assert.Equal(t, "7.5.1804", di.Version, "os version should be identified")
+	assert.Equal(t, "7.9.2009", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
@@ -141,8 +141,8 @@ func TestCentos8OSDetector(t *testing.T) {
 	assert.Nil(t, err, "was able to create the provider")
 
 	assert.Equal(t, "centos", di.Name, "os name should be identified")
-	assert.Equal(t, "CentOS Linux 8 (Core)", di.Title, "os title should be identified")
-	assert.Equal(t, "8.2.2004", di.Version, "os version should be identified")
+	assert.Equal(t, "CentOS Linux 8", di.Title, "os title should be identified")
+	assert.Equal(t, "8.5.2111", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
@@ -339,7 +339,7 @@ func TestOpenWrtDetector(t *testing.T) {
 
 	assert.Equal(t, "openwrt", di.Name, "os name should be identified")
 	assert.Equal(t, "OpenWrt", di.Title, "os title should be identified")
-	assert.Equal(t, "Bleeding Edge", di.Version, "os version should be identified")
+	assert.Equal(t, "22.03.4", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
@@ -822,6 +822,28 @@ func TestFreebsd12Detector(t *testing.T) {
 	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
 }
 
+func TestFreebsd14Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-freebsd14.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "freebsd", di.Name, "os name should be identified")
+	assert.Equal(t, "FreeBSD", di.Title, "os title should be identified")
+	assert.Equal(t, "14.3-RELEASE", di.Version, "os version should be identified")
+	assert.Equal(t, "arm64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
+}
+
+func TestFreebsd15Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-freebsd15.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "freebsd", di.Name, "os name should be identified")
+	assert.Equal(t, "FreeBSD", di.Title, "os title should be identified")
+	assert.Equal(t, "15.0-BETA4", di.Version, "os version should be identified")
+	assert.Equal(t, "arm64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
+}
+
 func TestOpenBsd6Detector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-openbsd6.toml")
 	assert.Nil(t, err, "was able to create the provider")
@@ -830,6 +852,17 @@ func TestOpenBsd6Detector(t *testing.T) {
 	assert.Equal(t, "OpenBSD", di.Title, "os title should be identified")
 	assert.Equal(t, "6.7", di.Version, "os version should be identified")
 	assert.Equal(t, "amd64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
+}
+
+func TestOpenBsd7Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-openbsd7.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "openbsd", di.Name, "os name should be identified")
+	assert.Equal(t, "OpenBSD", di.Title, "os title should be identified")
+	assert.Equal(t, "7.8", di.Version, "os version should be identified")
+	assert.Equal(t, "arm64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
 }
 
@@ -918,6 +951,17 @@ func TestZorinLinuxDetector(t *testing.T) {
 	assert.Equal(t, "zorin", di.Name, "os name should be identified")
 	assert.Equal(t, "Zorin OS 16", di.Title, "os title should be identified")
 	assert.Equal(t, "16", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
+func TestParrotLinuxDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-parrot.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "parrot", di.Name, "os name should be identified")
+	assert.Equal(t, "Parrot OS 5.3 (Electro Ara)", di.Title, "os title should be identified")
+	assert.Equal(t, "5.3", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }

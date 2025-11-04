@@ -25,7 +25,7 @@ func TestOsDetection(t *testing.T) {
 	require.True(t, detected)
 
 	assert.Equal(t, "centos", pf.Name)
-	assert.Equal(t, "8.2.2004", pf.Version)
+	assert.Equal(t, "8.5.2111", pf.Version)
 }
 
 func TestMountedDirectoryFile(t *testing.T) {
@@ -46,23 +46,23 @@ func TestMountedDirectoryFile(t *testing.T) {
 	assert.Equal(t, "/etc/os-release", p, "path should be correct")
 
 	stat, err := f.Stat()
-	assert.Equal(t, int64(417), stat.Size(), "should read file size")
+	assert.Equal(t, int64(332), stat.Size(), "should read file size")
 	assert.Nil(t, err, "should execute without error")
 
 	content, err := afutil.ReadFile(f.Name())
 	assert.Equal(t, nil, err, "should execute without error")
-	assert.Equal(t, 417, len(content), "should read the full content")
+	assert.Equal(t, 332, len(content), "should read the full content")
 
 	// reset reader
 	f.Seek(0, 0)
 	sha, err := fsutil.Sha256(f)
-	assert.Equal(t, "1d272eeae89e45470abf750cdc037eb72b216686cf8c105e5b9925df21ec1043", sha, "sha256 output should be correct")
+	assert.Equal(t, "6c5f622e7011184134511fb18af399d5ba13164d1472e3df8dcfed346a376f70", sha, "sha256 output should be correct")
 	assert.Nil(t, err, "should execute without error")
 
 	// reset reader
 	f.Seek(0, 0)
 	md5, err := fsutil.Md5(f)
-	assert.Equal(t, "f5a898d54907811ccc54cd35dcb991d1", md5, "md5 output should be correct")
+	assert.Equal(t, "1c61d1e243561194a84bd1210c7f58ce", md5, "md5 output should be correct")
 	assert.Nil(t, err, "should execute without error")
 }
 

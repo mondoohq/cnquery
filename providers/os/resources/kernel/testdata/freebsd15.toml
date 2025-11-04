@@ -1,0 +1,44 @@
+[commands."kldstat"]
+stdout = """Id Refs Address                Size Name
+ 1   19 0xffff000000000000  140b860 kernel
+ 2    1 0xffff00000140d000   4526b8 zfs.ko
+ 3    1 0xffff0000a0e00000    22000 hms.ko
+ 4    1 0xffff0000a0e22000    24000 hidmap.ko
+"""
+
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "arm64"
+
+[commands."uname -r"]
+stdout = "15.0-BETA4"
+
+[commands."uname -v"]
+stdout = "FreeBSD 15.0-BETA4 releng/15.0-n280841-a7707f2a3bf4 GENERIC"
+
+[commands."sysctl -a"]
+stdout = """security.bsd.see_other_uids: 1
+kern.ostype: FreeBSD
+kern.osrelease: 15.0-BETA4
+kern.osrevision: 199506
+kern.version: FreeBSD 15.0-BETA4 releng/15.0-n280841-a7707f2a3bf4 GENERIC
+
+kern.maxvnodes: 14544
+kern.maxproc: 1796
+kern.maxfiles: 7146
+kern.argmax: 524288
+kern.securelevel: -1
+kern.hostname: freebsd15
+kern.hostid: 3782153603
+kern.clockrate: { hz = 1000, tick = 1000, profhz = 8127, stathz = 127 }
+kern.posix1version: 200809
+kern.ngroups: 1023
+kern.job_control: 1
+kern.saved_ids: 0
+kern.boottime: { sec = 1762105103, usec = 779441 } Sun Nov  2 18:38:23 2025
+kern.domainname:
+kern.osreldate: 1500068
+
+"""

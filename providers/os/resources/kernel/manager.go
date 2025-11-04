@@ -46,9 +46,8 @@ func ResolveManager(conn shared.Connection) (OSKernelManager, error) {
 		kmm = &OSXKernelManager{conn: conn}
 	} else if platform.IsFamily("linux") {
 		kmm = &LinuxKernelManager{conn: conn}
-	} else if platform.Name == "freebsd" {
-		// NOTE: kldstat may work on other bsd linux
-		kmm = &FreebsdKernelManager{conn: conn}
+	} else if platform.IsFamily("bsd") {
+		kmm = &BsdKernelManager{conn: conn}
 	} else if platform.Name == "aix" {
 		kmm = &AixKernelManager{conn: conn}
 	}
@@ -203,15 +202,15 @@ func (s *OSXKernelManager) Modules() ([]*KernelModule, error) {
 	return ParseKextstat(cmd.Stdout), nil
 }
 
-type FreebsdKernelManager struct {
+type BsdKernelManager struct {
 	conn shared.Connection
 }
 
-func (s *FreebsdKernelManager) Name() string {
-	return "FreeBSD Kernel Manager"
+func (s *BsdKernelManager) Name() string {
+	return "BSD Kernel Manager"
 }
 
-func (s *FreebsdKernelManager) Info() (KernelInfo, error) {
+func (s *BsdKernelManager) Info() (KernelInfo, error) {
 	// Use `uname -v` to get the kernel version
 	cmd, err := s.conn.RunCommand("uname -v")
 	if err != nil {
@@ -227,22 +226,33 @@ func (s *FreebsdKernelManager) Info() (KernelInfo, error) {
 	}, nil
 }
 
-func (s *FreebsdKernelManager) Parameters() (map[string]string, error) {
+func (s *BsdKernelManager) Parameters() (map[string]string, error) {
 	cmd, err := s.conn.RunCommand("sysctl -a")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read kernel parameters")
 	}
 
-	return ParseSysctl(cmd.Stdout, ":")
+	platform := s.conn.Asset().Platform
+	if platform.Name == "openbsd" {
+		return ParseSysctl(cmd.Stdout, "=")
+	} else {
+		return ParseSysctl(cmd.Stdout, ":")
+	}
 }
 
-func (s *FreebsdKernelManager) Modules() ([]*KernelModule, error) {
-	cmd, err := s.conn.RunCommand("kldstat")
-	if err != nil {
-		return nil, errors.Wrap(err, "could not read kernel modules")
+func (s *BsdKernelManager) Modules() ([]*KernelModule, error) {
+	platform := s.conn.Asset().Platform
+	if platform.Name == "openbsd" {
+		// openbsd does not support kernel modules, so we return an empty list
+		return []*KernelModule{}, nil
+	} else {
+		// NOTE: kldstat is supported on freebsd variants so failures are possible
+		cmd, err := s.conn.RunCommand("kldstat")
+		if err != nil {
+			return nil, errors.Wrap(err, "could not read kernel modules")
+		}
+		return ParseKldstat(cmd.Stdout), nil
 	}
-
-	return ParseKldstat(cmd.Stdout), nil
 }
 
 type AixKernelManager struct {

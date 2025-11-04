@@ -15,13 +15,13 @@ import (
 )
 
 func TestSystemSetup(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/systemsetup.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "macos",
 			Version: "13.0",
 			Family:  []string{"macos"},
 		},
-	})
+	}, mock.WithPath("./testdata/systemsetup.toml"))
 	require.NoError(t, err)
 
 	so := SystemSetupCmdOutput{}

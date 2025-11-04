@@ -13,13 +13,13 @@ import (
 )
 
 func TestManagerDebian(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "debian",
 			Version: "8.0",
 			Family:  []string{"debian", "linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/debian.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
@@ -31,13 +31,13 @@ func TestManagerDebian(t *testing.T) {
 }
 
 func TestManagerCentos(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/centos7.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "centos",
 			Version: "6.10",
 			Family:  []string{"linux", "redhat"},
 		},
-	})
+	}, mock.WithPath("./testdata/centos7.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
@@ -45,10 +45,10 @@ func TestManagerCentos(t *testing.T) {
 
 	info, err := mm.Info()
 	require.NoError(t, err)
-	assert.Equal(t, "3.10.0-1127.19.1.el7.x86_64", info.Version)
-	assert.Equal(t, map[string]string{"console": "ttyS0,38400n8", "crashkernel": "auto", "elevator": "noop", "ro": ""}, info.Arguments)
-	assert.Equal(t, "/boot/vmlinuz-3.10.0-1127.19.1.el7.x86_64", info.Path)
-	assert.Equal(t, "UUID=ff6cbb65-ccab-489c-91a5-61b9b09e4d49", info.Device)
+	assert.Equal(t, "3.10.0-1160.105.1.el7.x86_64", info.Version)
+	assert.Equal(t, map[string]string{"biosdevname": "0", "crashkernel": "auto", "elevator": "noop", "net.ifnames": "0", "no_timer_check": "", "quiet": "", "rd.lvm.lv": "centos_centos7/swap", "rhgb": "", "ro": ""}, info.Arguments)
+	assert.Equal(t, "/vmlinuz-3.10.0-1160.105.1.el7.x86_64", info.Path)
+	assert.Equal(t, "/dev/mapper/centos_centos7-root", info.Device)
 
 	mods, err := mm.Modules()
 	require.NoError(t, err)
@@ -57,13 +57,13 @@ func TestManagerCentos(t *testing.T) {
 }
 
 func TestManagerAmazonLinux1(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/amznlinux1.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "amazonlinux",
 			Version: "2018.03",
 			Family:  []string{"linux"},
 		},
-	})
+	}, mock.WithPath("./testdata/amznlinux1.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
@@ -83,12 +83,12 @@ func TestManagerAmazonLinux1(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "macos",
 			Family: []string{"unix", "darwin"},
 		},
-	})
+	}, mock.WithPath("./testdata/osx.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
@@ -108,33 +108,53 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd14.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "freebsd",
-			Family: []string{"unix"},
+			Family: []string{"bsd", "unix", "os"},
 		},
-	})
+	}, mock.WithPath("./testdata/freebsd14.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
 	require.NoError(t, err)
-	mounts, err := mm.Modules()
+	modules, err := mm.Modules()
 	require.NoError(t, err)
 
-	assert.Equal(t, 6, len(mounts))
+	assert.Equal(t, 6, len(modules))
 
 	info, err := mm.Info()
 	require.NoError(t, err)
 	assert.Equal(t, "FreeBSD 14.3-RELEASE releng/14.3-n271432-8c9ce319fef7 GENERIC", info.Version)
 }
 
+func TestManagerOpenBSD(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "openbsd",
+			Family: []string{"bsd", "unix", "os"},
+		},
+	}, mock.WithPath("./testdata/openbsd77.toml"))
+	require.NoError(t, err)
+
+	mm, err := ResolveManager(mock)
+	require.NoError(t, err)
+	modules, err := mm.Modules()
+	require.NoError(t, err)
+	assert.Equal(t, 0, len(modules))
+
+	info, err := mm.Info()
+	require.NoError(t, err)
+	assert.Equal(t, "GENERIC.MP#625", info.Version)
+}
+
 func TestManagerAIX(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/aix.toml", &inventory.Asset{
+	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "aix",
 			Family: []string{"unix"},
 		},
-	})
+	}, mock.WithPath("./testdata/aix.toml"))
 	require.NoError(t, err)
 
 	mm, err := ResolveManager(mock)
