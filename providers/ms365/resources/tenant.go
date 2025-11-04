@@ -5,12 +5,17 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"strings"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/directory"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
@@ -62,6 +67,30 @@ var tenantFields = []string{
 	"technicalNotificationMails",
 	"preferredLanguage",
 }
+
+var tenantBrandingReport = `
+$UserName = '%s'
+
+# Query realm discovery endpoint
+$response = Invoke-RestMethod -UseBasicParsing -Uri ("https://login.microsoftonline.com/common/userrealm/" + $UserName + "?api-version=2.0")
+
+# Build object with only the fields we care about
+$tenantBranding = New-Object PSObject
+Add-Member -InputObject $tenantBranding -MemberType NoteProperty -Name Login -Value $response.Login
+Add-Member -InputObject $tenantBranding -MemberType NoteProperty -Name DomainName -Value $response.DomainName
+Add-Member -InputObject $tenantBranding -MemberType NoteProperty -Name FederationBrandName -Value $response.FederationBrandName
+
+if ($response.TenantBrandingInfo -ne $null -and $response.TenantBrandingInfo.Count -gt 0) {
+    $brandingInfo = $response.TenantBrandingInfo[0]
+    Add-Member -InputObject $tenantBranding -MemberType NoteProperty -Name KeepMeSignedInDisabled -Value $brandingInfo.KeepMeSignedInDisabled
+    Add-Member -InputObject $tenantBranding -MemberType NoteProperty -Name BannerLogo -Value $brandingInfo.BannerLogo
+    Add-Member -InputObject $tenantBranding -MemberType NoteProperty -Name BackgroundColor -Value $brandingInfo.BackgroundColor
+} else {
+    Add-Member -InputObject $tenantBranding -MemberType NoteProperty -Name KeepMeSignedInDisabled -Value $null
+}
+
+ConvertTo-Json -Depth 4 $tenantBranding
+`
 
 func initMicrosoftTenant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.Ms365Connection)
@@ -255,4 +284,102 @@ func (a *mqlMicrosoftTenant) formsSettings() (*mqlMicrosoftTenantFormsSettings, 
 	}
 
 	return formSetting.(*mqlMicrosoftTenantFormsSettings), nil
+}
+
+// Helper function to get branding info for a specific domain from PowerShell script
+func (a *mqlMicrosoftTenant) getBrandingInfoForDomain(domainName string) (*BrandingInfo, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+
+	userName := domainName
+
+	fmtScript := fmt.Sprintf(tenantBrandingReport, userName)
+	res, err := conn.CheckAndRunPowershellScript(fmtScript)
+	if err != nil {
+		return nil, err
+	}
+
+	var branding BrandingInfo
+	if res.ExitStatus == 0 {
+		data, err := io.ReadAll(res.Stdout)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read script output: %w", err)
+		}
+		str := string(data)
+		// Strip away any PowerShell output before the JSON
+		idx := strings.IndexByte(str, '{')
+		if idx == -1 {
+			logger.DebugDumpJSON("tenant-branding-script-output", []byte(str))
+			return nil, errors.New("no JSON output found in script response")
+		}
+		after := str[idx:]
+		newData := []byte(after)
+
+		err = json.Unmarshal(newData, &branding)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse tenant branding JSON: %w", err)
+		}
+	} else {
+		data, err := io.ReadAll(res.Stderr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read script error: %w", err)
+		}
+
+		str := string(data)
+		logger.DebugDumpJSON("tenant-branding-error", string(data))
+		return nil, fmt.Errorf("failed to generate tenant branding report (exit code %d): %s", res.ExitStatus, str)
+	}
+
+	return &branding, nil
+}
+
+func (a *mqlMicrosoftTenant) branding() ([]any, error) {
+	verifiedDomains := a.GetVerifiedDomains()
+	if verifiedDomains.Error != nil {
+		return nil, verifiedDomains.Error
+	}
+
+	if len(verifiedDomains.Data) == 0 {
+		return []any{}, nil
+	}
+
+	var brandingInfos []any
+	for _, domain := range verifiedDomains.Data {
+		domainDict, ok := domain.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		domainName, ok := domainDict["name"].(string)
+		if !ok || domainName == "" {
+			continue
+		}
+
+		branding, err := a.getBrandingInfoForDomain(domainName)
+		if err != nil {
+			// Log error but continue with other domains
+			logger.DebugDumpJSON("tenant-branding-domain-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
+			continue
+		}
+
+		brandingId := fmt.Sprintf("%s-branding-info-%s", a.Id.Data, branding.DomainName)
+
+		mqlBranding, err := CreateResource(a.MqlRuntime, "microsoft.tenant.brandingInfo",
+			map[string]*llx.RawData{
+				"__id":                   llx.StringData(brandingId),
+				"keepMeSignedInDisabled": llx.BoolData(branding.KeepMeSignedInDisabled),
+				"backgroundColor":        llx.StringData(branding.BackgroundColor),
+				"bannerLogo":             llx.StringData(branding.BannerLogo),
+				"federationBrandName":    llx.StringData(branding.FederationBrandName),
+				"domainName":             llx.StringData(branding.DomainName),
+				"login":                  llx.StringData(branding.Login),
+			})
+		if err != nil {
+			logger.DebugDumpJSON("tenant-branding-create-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
+			continue
+		}
+
+		brandingInfos = append(brandingInfos, mqlBranding)
+	}
+
+	return brandingInfos, nil
 }
