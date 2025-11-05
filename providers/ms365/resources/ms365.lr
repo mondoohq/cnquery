@@ -155,17 +155,17 @@ microsoft.tenant @defaults("name") {
 
 // Tenant branding information
 private microsoft.tenant.brandingInfo @defaults("keepMeSignedInDisabled") {
-  // Whether "Keep me signed in" is disabled for the tenant
+  // if "Keep me signed in" is disabled for the tenant
   keepMeSignedInDisabled bool
   // Tenant branding background color
   backgroundColor string
-  // Tenant branding banner logo URL
+  // Tenant branding logo URL
   bannerLogo string
   // Tenant federation brand name
   federationBrandName string
-  // Domain name from branding info
+  // Domain name
   domainName string
-  // Login endpoint from branding info
+  // Login endpoint
   login string
 }
 

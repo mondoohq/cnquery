@@ -356,7 +356,6 @@ func (a *mqlMicrosoftTenant) branding() ([]any, error) {
 
 		branding, err := a.getBrandingInfoForDomain(domainName)
 		if err != nil {
-			// Log error but continue with other domains
 			logger.DebugDumpJSON("tenant-branding-domain-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
 			continue
 		}
