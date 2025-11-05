@@ -362,7 +362,7 @@ func (a *mqlMicrosoftTenant) branding() ([]any, error) {
 
 		brandingId := fmt.Sprintf("%s-branding-info-%s", a.Id.Data, branding.DomainName)
 
-		mqlBranding, err := CreateResource(a.MqlRuntime, "microsoft.tenant.brandingInfo",
+		mqlBranding, err := CreateResource(a.MqlRuntime, ResourceMicrosoftTenantBrandingInfo,
 			map[string]*llx.RawData{
 				"__id":                   llx.StringData(brandingId),
 				"keepMeSignedInDisabled": llx.BoolData(branding.KeepMeSignedInDisabled),
