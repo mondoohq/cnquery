@@ -4,6 +4,12 @@
 package resources
 
 import (
+	"encoding/json"
+	"io"
+	"net/http"
+	"time"
+
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
@@ -131,11 +137,14 @@ func (c *mqlNetwork) routes() (*mqlNetworkRoutes, error) {
 			}
 		}
 
+		// Convert flags to string array
+		flagStrings := route.FlagsToStrings()
+
 		routeRes, err := NewResource(c.MqlRuntime, "networkRoute", map[string]*llx.RawData{
 			"__id":        llx.StringData(route.Destination + "/" + route.Gateway + "/" + route.Interface),
 			"destination": llx.StringData(route.Destination),
 			"gateway":     llx.StringData(route.Gateway),
-			"flags":       llx.IntData(route.Flags),
+			"flags":       llx.ArrayData(convert.SliceAnyToInterface(flagStrings), types.String),
 			"iface":       llx.ResourceData(ifaceResource, "networkInterface"),
 		})
 		if err != nil {
@@ -232,7 +241,6 @@ func (c *mqlNetwork) primaryIpv4() (*mqlIpAddress, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
-	// Get routes to find default route
 	routes, err := networki.Routes(conn, platform)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to detect network routes")
@@ -348,8 +356,49 @@ func (c *mqlNetwork) primaryIpv6() (*mqlIpAddress, error) {
 func (c *mqlNetworkInterface) externalIP() (llx.RawIP, error) {
 	log.Debug().Str("interface", c.Name.Data).Msg("os.network.interface> externalIP")
 
-	// TODO: Implement external IP service lookup
-	// whatismyip.mondoo.com (when implemented)
+	// Call external IP service
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
 
-	return llx.RawIP{}, nil
+	resp, err := client.Get("https://ipinfo.chris-b73.workers.dev/")
+	if err != nil {
+		log.Error().Err(err).Msg("os.network.interface> failed to fetch external IP")
+		return llx.RawIP{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		err := errors.Errorf("external IP service returned status %d", resp.StatusCode)
+		log.Error().Err(err).Int("status", resp.StatusCode).Msg("os.network.interface> external IP service returned non-200 status")
+		return llx.RawIP{}, err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("os.network.interface> failed to read response body")
+		return llx.RawIP{}, err
+	}
+
+	// Parse JSON response
+	var ipInfo struct {
+		IP       string `json:"ip"`
+		Hostname string `json:"hostname"`
+	}
+
+	if err := json.Unmarshal(body, &ipInfo); err != nil {
+		log.Error().Err(err).Msg("os.network.interface> failed to parse JSON response")
+		return llx.RawIP{}, err
+	}
+
+	if ipInfo.IP == "" {
+		err := errors.New("IP field is empty in response")
+		log.Error().Err(err).Msg("os.network.interface> IP field is empty in response")
+		return llx.RawIP{}, err
+	}
+
+	// Convert to RawIP
+	rawIP := llx.ParseIP(ipInfo.IP)
+
+	return rawIP, nil
 }

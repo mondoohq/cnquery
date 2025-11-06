@@ -1855,7 +1855,7 @@ network {
 }
 
 // Detailed information of a network interface
-private networkInterface @defaults("name mac active") {
+private networkInterface @defaults("name mac active externalIP") {
   // Name of the network interface
   name string
   // Unique 12-digit hexadecimal identifier assigned by the manufacturer
@@ -1890,7 +1890,7 @@ private networkRoute @defaults("destination") {
   // Gateway address for this route
   gateway string
   // Route flags
-  flags int
+  flags []string
   // Network interface used for this route
   iface() networkInterface
 }

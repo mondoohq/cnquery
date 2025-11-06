@@ -2738,7 +2738,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlNetworkRoute).GetGateway()).ToDataRes(types.String)
 	},
 	"networkRoute.flags": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNetworkRoute).GetFlags()).ToDataRes(types.Int)
+		return (r.(*mqlNetworkRoute).GetFlags()).ToDataRes(types.Array(types.String))
 	},
 	"networkRoute.iface": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkRoute).GetIface()).ToDataRes(types.Resource("networkInterface"))
@@ -5939,7 +5939,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"networkRoute.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNetworkRoute).Flags, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlNetworkRoute).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"networkRoute.iface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16757,7 +16757,7 @@ type mqlNetworkRoute struct {
 	// optional: if you define mqlNetworkRouteInternal it will be used here
 	Destination plugin.TValue[string]
 	Gateway     plugin.TValue[string]
-	Flags       plugin.TValue[int64]
+	Flags       plugin.TValue[[]any]
 	Iface       plugin.TValue[*mqlNetworkInterface]
 }
 
@@ -16801,7 +16801,7 @@ func (c *mqlNetworkRoute) GetGateway() *plugin.TValue[string] {
 	return &c.Gateway
 }
 
-func (c *mqlNetworkRoute) GetFlags() *plugin.TValue[int64] {
+func (c *mqlNetworkRoute) GetFlags() *plugin.TValue[[]any] {
 	return &c.Flags
 }
 
