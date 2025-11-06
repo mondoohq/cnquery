@@ -1874,9 +1874,8 @@ private networkRoutes {
   defaults() []networkRoute
 }
 
-// NOTE: lets start small with the minimal fields, we add more once 
-// we have the establish abstraction
-private networkRoute @defaults("destination"){
+// information on the network routes
+private networkRoute @defaults("destination flags"){
   destination string
   gateway string
   flags []string
