@@ -1865,8 +1865,6 @@ private networkInterface @defaults("name mac active externalIP") {
   active bool
   // Whether a network interface is virtual of not
   virtual bool
-  // External IP address seen from outside (via Mondoo IP service, can be implemented later)
-  externalIP() ip
 }
 
 private networkRoutes {

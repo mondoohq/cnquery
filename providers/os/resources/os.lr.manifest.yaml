@@ -609,6 +609,7 @@ resources:
   network:
     fields:
       interfaces: {}
+      routes: {}
     min_mondoo_version: 9.0.0
   networkInterface:
     fields:
@@ -622,6 +623,20 @@ resources:
       virtual: {}
     is_private: true
     min_mondoo_version: 11.45.0
+  networkRoute:
+    fields:
+      destination: {}
+      flags: {}
+      gateway: {}
+      iface: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  networkRoutes:
+    fields:
+      defaults: {}
+      list: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   npm.package:
     fields:
       cpes: {}

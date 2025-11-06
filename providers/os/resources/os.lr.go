@@ -2710,9 +2710,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"networkInterface.virtual": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkInterface).GetVirtual()).ToDataRes(types.Bool)
 	},
-	"networkInterface.externalIP": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNetworkInterface).GetExternalIP()).ToDataRes(types.IP)
-	},
 	"networkRoutes.defaults": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkRoutes).GetDefaults()).ToDataRes(types.Array(types.Resource("networkRoute")))
 	},
@@ -5880,10 +5877,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"networkInterface.virtual": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetworkInterface).Virtual, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"networkInterface.externalIP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNetworkInterface).ExternalIP, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
 	},
 	"networkRoutes.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16500,15 +16493,14 @@ type mqlNetworkInterface struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNetworkInterfaceInternal it will be used here
-	Name       plugin.TValue[string]
-	Mac        plugin.TValue[string]
-	Vendor     plugin.TValue[string]
-	Ips        plugin.TValue[[]any]
-	Mtu        plugin.TValue[int64]
-	Flags      plugin.TValue[[]any]
-	Active     plugin.TValue[bool]
-	Virtual    plugin.TValue[bool]
-	ExternalIP plugin.TValue[llx.RawIP]
+	Name    plugin.TValue[string]
+	Mac     plugin.TValue[string]
+	Vendor  plugin.TValue[string]
+	Ips     plugin.TValue[[]any]
+	Mtu     plugin.TValue[int64]
+	Flags   plugin.TValue[[]any]
+	Active  plugin.TValue[bool]
+	Virtual plugin.TValue[bool]
 }
 
 // createNetworkInterface creates a new instance of this resource
@@ -16573,12 +16565,6 @@ func (c *mqlNetworkInterface) GetActive() *plugin.TValue[bool] {
 
 func (c *mqlNetworkInterface) GetVirtual() *plugin.TValue[bool] {
 	return &c.Virtual
-}
-
-func (c *mqlNetworkInterface) GetExternalIP() *plugin.TValue[llx.RawIP] {
-	return plugin.GetOrCompute[llx.RawIP](&c.ExternalIP, func() (llx.RawIP, error) {
-		return c.externalIP()
-	})
 }
 
 // mqlNetworkRoutes for the networkRoutes resource
