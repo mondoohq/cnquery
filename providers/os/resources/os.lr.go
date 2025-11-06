@@ -148,6 +148,8 @@ const (
 	ResourceIpAddress              string = "ipAddress"
 	ResourceNetwork                string = "network"
 	ResourceNetworkInterface       string = "networkInterface"
+	ResourceNetworkRoutes          string = "networkRoutes"
+	ResourceNetworkRoute           string = "networkRoute"
 	ResourceUsb                    string = "usb"
 	ResourceUsbDevice              string = "usb.device"
 )
@@ -679,6 +681,14 @@ func init() {
 		"networkInterface": {
 			// to override args, implement: initNetworkInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNetworkInterface,
+		},
+		"networkRoutes": {
+			// to override args, implement: initNetworkRoutes(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetworkRoutes,
+		},
+		"networkRoute": {
+			// to override args, implement: initNetworkRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetworkRoute,
 		},
 		"usb": {
 			// to override args, implement: initUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2673,6 +2683,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"network.interfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetwork).GetInterfaces()).ToDataRes(types.Array(types.Resource("networkInterface")))
 	},
+	"network.routes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetRoutes()).ToDataRes(types.Resource("networkRoutes"))
+	},
+	"network.ipv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetIpv4()).ToDataRes(types.Array(types.Resource("ipAddress")))
+	},
+	"network.ipv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetIpv6()).ToDataRes(types.Array(types.Resource("ipAddress")))
+	},
+	"network.primaryIpv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetPrimaryIpv4()).ToDataRes(types.Resource("ipAddress"))
+	},
+	"network.primaryIpv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetPrimaryIpv6()).ToDataRes(types.Resource("ipAddress"))
+	},
 	"networkInterface.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkInterface).GetName()).ToDataRes(types.String)
 	},
@@ -2696,6 +2721,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"networkInterface.virtual": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkInterface).GetVirtual()).ToDataRes(types.Bool)
+	},
+	"networkInterface.externalIP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkInterface).GetExternalIP()).ToDataRes(types.IP)
+	},
+	"networkRoutes.defaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkRoutes).GetDefaults()).ToDataRes(types.Array(types.Resource("networkRoute")))
+	},
+	"networkRoutes.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkRoutes).GetList()).ToDataRes(types.Array(types.Resource("networkRoute")))
+	},
+	"networkRoute.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkRoute).GetDestination()).ToDataRes(types.String)
+	},
+	"networkRoute.gateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkRoute).GetGateway()).ToDataRes(types.String)
+	},
+	"networkRoute.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkRoute).GetFlags()).ToDataRes(types.Int)
+	},
+	"networkRoute.iface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkRoute).GetIface()).ToDataRes(types.Resource("networkInterface"))
 	},
 	"usb.devices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsb).GetDevices()).ToDataRes(types.Array(types.Resource("usb.device")))
@@ -5808,6 +5854,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNetwork).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"network.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Routes, ok = plugin.RawToTValue[*mqlNetworkRoutes](v.Value, v.Error)
+		return
+	},
+	"network.ipv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Ipv4, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"network.ipv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Ipv6, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"network.primaryIpv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).PrimaryIpv4, ok = plugin.RawToTValue[*mqlIpAddress](v.Value, v.Error)
+		return
+	},
+	"network.primaryIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).PrimaryIpv6, ok = plugin.RawToTValue[*mqlIpAddress](v.Value, v.Error)
+		return
+	},
 	"networkInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetworkInterface).__id, ok = v.Value.(string)
 		return
@@ -5842,6 +5908,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"networkInterface.virtual": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetworkInterface).Virtual, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"networkInterface.externalIP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkInterface).ExternalIP, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"networkRoutes.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkRoutes).__id, ok = v.Value.(string)
+		return
+	},
+	"networkRoutes.defaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkRoutes).Defaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"networkRoutes.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkRoutes).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"networkRoute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkRoute).__id, ok = v.Value.(string)
+		return
+	},
+	"networkRoute.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkRoute).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkRoute.gateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkRoute).Gateway, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkRoute.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkRoute).Flags, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"networkRoute.iface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkRoute).Iface, ok = plugin.RawToTValue[*mqlNetworkInterface](v.Value, v.Error)
 		return
 	},
 	"usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16353,7 +16455,12 @@ type mqlNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNetworkInternal it will be used here
-	Interfaces plugin.TValue[[]any]
+	Interfaces  plugin.TValue[[]any]
+	Routes      plugin.TValue[*mqlNetworkRoutes]
+	Ipv4        plugin.TValue[[]any]
+	Ipv6        plugin.TValue[[]any]
+	PrimaryIpv4 plugin.TValue[*mqlIpAddress]
+	PrimaryIpv6 plugin.TValue[*mqlIpAddress]
 }
 
 // createNetwork creates a new instance of this resource
@@ -16404,19 +16511,100 @@ func (c *mqlNetwork) GetInterfaces() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlNetwork) GetRoutes() *plugin.TValue[*mqlNetworkRoutes] {
+	return plugin.GetOrCompute[*mqlNetworkRoutes](&c.Routes, func() (*mqlNetworkRoutes, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "routes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNetworkRoutes), nil
+			}
+		}
+
+		return c.routes()
+	})
+}
+
+func (c *mqlNetwork) GetIpv4() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ipv4, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "ipv4")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipv4()
+	})
+}
+
+func (c *mqlNetwork) GetIpv6() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ipv6, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "ipv6")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipv6()
+	})
+}
+
+func (c *mqlNetwork) GetPrimaryIpv4() *plugin.TValue[*mqlIpAddress] {
+	return plugin.GetOrCompute[*mqlIpAddress](&c.PrimaryIpv4, func() (*mqlIpAddress, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "primaryIpv4")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIpAddress), nil
+			}
+		}
+
+		return c.primaryIpv4()
+	})
+}
+
+func (c *mqlNetwork) GetPrimaryIpv6() *plugin.TValue[*mqlIpAddress] {
+	return plugin.GetOrCompute[*mqlIpAddress](&c.PrimaryIpv6, func() (*mqlIpAddress, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "primaryIpv6")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIpAddress), nil
+			}
+		}
+
+		return c.primaryIpv6()
+	})
+}
+
 // mqlNetworkInterface for the networkInterface resource
 type mqlNetworkInterface struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNetworkInterfaceInternal it will be used here
-	Name    plugin.TValue[string]
-	Mac     plugin.TValue[string]
-	Vendor  plugin.TValue[string]
-	Ips     plugin.TValue[[]any]
-	Mtu     plugin.TValue[int64]
-	Flags   plugin.TValue[[]any]
-	Active  plugin.TValue[bool]
-	Virtual plugin.TValue[bool]
+	Name       plugin.TValue[string]
+	Mac        plugin.TValue[string]
+	Vendor     plugin.TValue[string]
+	Ips        plugin.TValue[[]any]
+	Mtu        plugin.TValue[int64]
+	Flags      plugin.TValue[[]any]
+	Active     plugin.TValue[bool]
+	Virtual    plugin.TValue[bool]
+	ExternalIP plugin.TValue[llx.RawIP]
 }
 
 // createNetworkInterface creates a new instance of this resource
@@ -16481,6 +16669,156 @@ func (c *mqlNetworkInterface) GetActive() *plugin.TValue[bool] {
 
 func (c *mqlNetworkInterface) GetVirtual() *plugin.TValue[bool] {
 	return &c.Virtual
+}
+
+func (c *mqlNetworkInterface) GetExternalIP() *plugin.TValue[llx.RawIP] {
+	return plugin.GetOrCompute[llx.RawIP](&c.ExternalIP, func() (llx.RawIP, error) {
+		return c.externalIP()
+	})
+}
+
+// mqlNetworkRoutes for the networkRoutes resource
+type mqlNetworkRoutes struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkRoutesInternal it will be used here
+	Defaults plugin.TValue[[]any]
+	List     plugin.TValue[[]any]
+}
+
+// createNetworkRoutes creates a new instance of this resource
+func createNetworkRoutes(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkRoutes{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkRoutes", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkRoutes) MqlName() string {
+	return "networkRoutes"
+}
+
+func (c *mqlNetworkRoutes) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkRoutes) GetDefaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Defaults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("networkRoutes", c.__id, "defaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.defaults()
+	})
+}
+
+func (c *mqlNetworkRoutes) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("networkRoutes", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlNetworkRoute for the networkRoute resource
+type mqlNetworkRoute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkRouteInternal it will be used here
+	Destination plugin.TValue[string]
+	Gateway     plugin.TValue[string]
+	Flags       plugin.TValue[int64]
+	Iface       plugin.TValue[*mqlNetworkInterface]
+}
+
+// createNetworkRoute creates a new instance of this resource
+func createNetworkRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkRoute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkRoute", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkRoute) MqlName() string {
+	return "networkRoute"
+}
+
+func (c *mqlNetworkRoute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkRoute) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlNetworkRoute) GetGateway() *plugin.TValue[string] {
+	return &c.Gateway
+}
+
+func (c *mqlNetworkRoute) GetFlags() *plugin.TValue[int64] {
+	return &c.Flags
+}
+
+func (c *mqlNetworkRoute) GetIface() *plugin.TValue[*mqlNetworkInterface] {
+	return plugin.GetOrCompute[*mqlNetworkInterface](&c.Iface, func() (*mqlNetworkInterface, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("networkRoute", c.__id, "iface")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNetworkInterface), nil
+			}
+		}
+
+		return c.iface()
+	})
 }
 
 // mqlUsb for the usb resource
