@@ -1842,16 +1842,9 @@ ipAddress @defaults("ip") {
 network {
   // Network interfaces
   interfaces() []networkInterface
+  
   // Routes
   routes() networkRoutes
-  // List of IPv4 addresses detected on host interfaces
-  ipv4() []ipAddress
-  // List of IPv6 addresses detected on host interfaces
-  ipv6() []ipAddress
-  // Primary IPv4 address determined by the default route
-  primaryIpv4() ipAddress
-  // Primary IPv6 address determined by the default route
-  primaryIpv6() ipAddress
 }
 
 // Detailed information of a network interface
@@ -1876,23 +1869,20 @@ private networkInterface @defaults("name mac active externalIP") {
   externalIP() ip
 }
 
-// Network routes information
 private networkRoutes {
   []networkRoute
-  // Default routes
+  
+  // Default Route
   defaults() []networkRoute
 }
 
-// Network route entry
-private networkRoute @defaults("destination") {
-  // Destination network or host
+// NOTE: lets start small with the minimal fields, we add more once 
+// we have the establish abstraction
+private networkRoute @defaults("destination"){
   destination string
-  // Gateway address for this route
   gateway string
-  // Route flags
   flags []string
-  // Network interface used for this route
-  iface() networkInterface
+  iface()	networkInterface
 }
 
 // Experimental: USB resource
