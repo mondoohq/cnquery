@@ -1,8 +1,7 @@
-//go:build darwin
-// +build darwin
-
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
+
+//go:build darwin
 
 package networki
 

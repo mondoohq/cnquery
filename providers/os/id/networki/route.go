@@ -4,11 +4,7 @@
 package networki
 
 import (
-	"errors"
 	"net"
-
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
 // Route represents a network route entry
@@ -44,23 +40,6 @@ var routeFlagsMap = map[int64]string{
 	0x2000000: "LOCAL",     // RTF_LOCAL - route represents a local address
 	0x4000000: "BROADCAST", // RTF_BROADCAST - route represents a broadcast address
 	0x8000000: "MULTICAST", // RTF_MULTICAST - route represents a multicast address
-}
-
-// Routes returns the network routes of the system.
-func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
-	n := &neti{conn, pf}
-
-	if pf.IsFamily(inventory.FAMILY_LINUX) {
-		return n.detectLinuxRoutes()
-	}
-	if pf.IsFamily(inventory.FAMILY_DARWIN) {
-		return n.detectDarwinRoutes()
-	}
-	if pf.IsFamily(inventory.FAMILY_WINDOWS) {
-		return n.detectWindowsRoutes()
-	}
-
-	return nil, errors.New("your platform is not supported for the detection of network routes")
 }
 
 // IsDefaultRoute checks if a route is a default route (destination is 0.0.0.0/0 or ::/0)
