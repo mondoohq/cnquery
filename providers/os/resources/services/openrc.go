@@ -13,15 +13,15 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
-type AlpineOpenrcServiceManager struct {
+type OpenrcServiceManager struct {
 	conn shared.Connection
 }
 
-func (s *AlpineOpenrcServiceManager) Name() string {
+func (s *OpenrcServiceManager) Name() string {
 	return "OpenRC Init Service Manager"
 }
 
-func (s *AlpineOpenrcServiceManager) List() ([]*Service, error) {
+func (s *OpenrcServiceManager) List() ([]*Service, error) {
 	// retrieve service list by retrieving all files
 	var services []*Service
 
@@ -82,7 +82,7 @@ func (s *AlpineOpenrcServiceManager) List() ([]*Service, error) {
 	return services, nil
 }
 
-var OPENRC_SERVICE_STARTED = regexp.MustCompile(`^([a-zA-Z-\d]+)\s+\[\s*(stopped|started)\s*\]$`)
+var OPENRC_SERVICE_STARTED = regexp.MustCompile(`^\s([a-zA-Z-\d]+)\s+\[\s*(stopped|started)\s*\]$`)
 
 func ParseOpenRCServiceStatus(input io.Reader) (map[string]bool, error) {
 	status := map[string]bool{}

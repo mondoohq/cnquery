@@ -75,3 +75,35 @@ func TestManagerAlpineContainer(t *testing.T) {
 		Type:      "openrc",
 	})
 }
+
+func TestManagerGentoo(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name: "gentoo",
+		},
+	}, mock.WithPath("./testdata/gentoo.toml"))
+	require.NoError(t, err)
+
+	mm, err := ResolveManager(mock)
+	require.NoError(t, err)
+	serviceList, err := mm.List()
+	require.NoError(t, err)
+
+	assert.Equal(t, 2, len(serviceList))
+
+	assert.Contains(t, serviceList, &Service{
+		Name:      "agetty",
+		Running:   true,
+		Enabled:   true,
+		Installed: true,
+		Type:      "openrc",
+	})
+
+	assert.Contains(t, serviceList, &Service{
+		Name:      "sysstat",
+		Running:   false,
+		Enabled:   false,
+		Installed: true,
+		Type:      "openrc",
+	})
+}
