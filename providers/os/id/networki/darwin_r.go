@@ -1,3 +1,6 @@
+//go:build darwin
+// +build darwin
+
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
@@ -6,7 +9,6 @@ package networki
 import (
 	"fmt"
 	"net"
-	"strconv"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -73,9 +75,32 @@ func (n *neti) fetchDarwinRoutes(af int) ([]Route, error) {
 			continue
 		}
 
-		// Filter out unwanted routes
-		// TODO: maybe we don't need this, check on osquery what is included
-		if n.shouldSkipRoute(dest, gateway) {
+		// Filter out IPv6 multicast routes (ff00::/8) to match osquery behavior
+		if destIP := net.ParseIP(dest); destIP != nil {
+			if destIP.To4() == nil && destIP.To16() != nil {
+				// IPv6 multicast addresses start with 0xff
+				if destIP[0] == 0xff {
+					continue
+				}
+			}
+		} else if strings.HasPrefix(dest, "ff") {
+			// IPv6 multicast CIDR notation
+			continue
+		}
+
+		// Filter out IPv6 prefix routes (fe80::%X) that osquery doesn't show
+		// osquery only shows specific link-local addresses, not prefix routes
+		if strings.HasPrefix(dest, "fe80::%") && !strings.Contains(dest[7:], ":") {
+			// This is a prefix route like "fe80::%1", "fe80::%11", etc.
+			// osquery doesn't show these, only specific addresses like "fe80::1%lo0"
+			continue
+		}
+
+		// Filter out IPv6 link-local routes where gateway is another link-local address
+		// osquery only shows link-local routes with link#X gateways, not IP gateways
+		if strings.HasPrefix(dest, "fe80::") && strings.HasPrefix(gateway, "fe80::") {
+			// This is a link-local route with an IP gateway (not link#X)
+			// osquery doesn't show these, only routes with link#X gateways
 			continue
 		}
 
@@ -86,8 +111,6 @@ func (n *neti) fetchDarwinRoutes(af int) ([]Route, error) {
 			Interface:   iface,
 		})
 	}
-
-	routes = n.deduplicateRoutes(routes)
 
 	return routes, nil
 }
@@ -119,51 +142,72 @@ func (n *neti) getDarwinInterfaceMap() (map[int]string, error) {
 // parseRouteMessage extracts destination, gateway, and interface from a RouteMessage
 func (n *neti) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[int]string) (dest, gateway, iface string, err error) {
 	// RouteMessage.Addrs contains addresses in specific order on macOS:
-	// Typically: destination, gateway, netmask, interface, broadcast
-	// But we check types to be safe
+	// Index 0: Destination (Inet4Addr/Inet6Addr)
+	// Index 1: Gateway (Inet4Addr/Inet6Addr or LinkAddr)
+	// Index 2: Netmask (Inet4Addr/Inet6Addr, if present)
+	// Index 3: Interface (LinkAddr, if present)
 
 	var destAddr, gatewayAddr, netmaskAddr route.Addr
+	var gatewayLinkAddr *route.LinkAddr
 	var linkAddr *route.LinkAddr
 
-	for _, addr := range routeMsg.Addrs {
+	// Process addresses in order, respecting their position
+	// RouteMessage.Addrs preserves RTA_* order: 0=destination, 1=gateway, 2=netmask, 3=interface
+	for i, addr := range routeMsg.Addrs {
 		if addr == nil {
 			continue
 		}
 
 		switch a := addr.(type) {
 		case *route.Inet4Addr:
-			// First IPv4 address is typically destination
-			if destAddr == nil {
+			// Position-based identification: index 0 is destination, index 2+ is netmask
+			if i == 0 {
+				// First address is always destination (even if all zeros for default route)
 				destAddr = addr
-			} else if gatewayAddr == nil {
-				// Second IPv4 address is typically gateway
+			} else if i == 1 && gatewayAddr == nil && gatewayLinkAddr == nil {
+				// Second address is gateway
 				gatewayAddr = addr
-			} else if netmaskAddr == nil {
-				// Third IPv4 address is typically netmask
+			} else if i >= 2 && n.isValidNetmask(a.IP[:]) && netmaskAddr == nil {
+				// Later positions with valid netmask pattern are netmasks
 				netmaskAddr = addr
 			}
 		case *route.Inet6Addr:
-			// First IPv6 address is typically destination
-			if destAddr == nil {
+			// Position-based identification: index 0 is destination, index 2+ is netmask
+			if i == 0 {
+				// First address is always destination (even if all zeros for default route)
 				destAddr = addr
-			} else if gatewayAddr == nil {
-				// Second IPv6 address is typically gateway
+			} else if i == 1 && gatewayAddr == nil && gatewayLinkAddr == nil {
+				// Second address is gateway
 				gatewayAddr = addr
+			} else if i >= 2 && n.isValidNetmask6(a.IP[:]) && netmaskAddr == nil {
+				// Later positions with valid netmask pattern are netmasks
+				netmaskAddr = addr
 			}
 		case *route.LinkAddr:
-			// Link address represents the interface
-			linkAddr = a
+			// Link address position determines its role
+			if i == 1 && gatewayAddr == nil && gatewayLinkAddr == nil {
+				// Second position link address is the gateway
+				gatewayLinkAddr = a
+			} else {
+				// Later position is the interface
+				if linkAddr == nil {
+					linkAddr = a
+				}
+			}
 		}
 	}
 
 	// Convert destination address
 	if destAddr != nil {
-		dest = n.addrToString(destAddr)
+		dest = n.addrToString(destAddr, interfaceMap)
 	}
 
 	// Convert gateway address
 	if gatewayAddr != nil {
-		gateway = n.addrToString(gatewayAddr)
+		gateway = n.addrToString(gatewayAddr, interfaceMap)
+	} else if gatewayLinkAddr != nil {
+		// Gateway is a link address (e.g., "link#11")
+		gateway = fmt.Sprintf("link#%d", gatewayLinkAddr.Index)
 	}
 
 	// Calculate CIDR from netmask if available
@@ -191,30 +235,31 @@ func (n *neti) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[
 	}
 
 	// Get interface name
-	if linkAddr != nil && linkAddr.Name != "" {
-		iface = linkAddr.Name
-	} else if routeMsg.Index > 0 {
-		// Try to get interface name from index
+	// Always prefer routeMsg.Index as it represents the actual interface for the route
+	if routeMsg.Index > 0 {
 		if name, ok := interfaceMap[routeMsg.Index]; ok {
 			iface = name
 		} else {
 			// Fallback to index if name not found
 			iface = fmt.Sprintf("%d", routeMsg.Index)
 		}
+	} else if linkAddr != nil && linkAddr.Name != "" {
+		// Fallback to link address name if index not available
+		iface = linkAddr.Name
+	} else if gatewayLinkAddr != nil && gatewayLinkAddr.Name != "" {
+		// Last resort: use gateway link address name
+		iface = gatewayLinkAddr.Name
 	}
 
-	// Normalize default route
-	if dest == "0.0.0.0" {
-		dest = "0.0.0.0/0"
-	} else if dest == "::" {
-		dest = "::/0"
-	}
+	// Don't normalize default routes - osquery shows them as "0.0.0.0" and "::"
+	// Keep them as-is to match osquery output
 
 	return dest, gateway, iface, nil
 }
 
 // addrToString converts a route.Addr to a string IP address
-func (n *neti) addrToString(addr route.Addr) string {
+// For IPv6 addresses with zone IDs, converts the zone ID to interface name to match osquery format
+func (n *neti) addrToString(addr route.Addr, interfaceMap map[int]string) string {
 	switch a := addr.(type) {
 	case *route.Inet4Addr:
 		return net.IPv4(a.IP[0], a.IP[1], a.IP[2], a.IP[3]).String()
@@ -222,6 +267,11 @@ func (n *neti) addrToString(addr route.Addr) string {
 		ip := make(net.IP, 16)
 		copy(ip, a.IP[:])
 		if a.ZoneID > 0 {
+			// Convert zone ID to interface name to match osquery format (e.g., %16 -> %utun1)
+			if ifaceName, ok := interfaceMap[a.ZoneID]; ok {
+				return fmt.Sprintf("%s%%%s", ip.String(), ifaceName)
+			}
+			// Fallback to zone ID number if interface name not found
 			return fmt.Sprintf("%s%%%d", ip.String(), a.ZoneID)
 		}
 		return ip.String()
@@ -331,117 +381,4 @@ func (n *neti) isValidNetmask6(mask []byte) bool {
 		}
 	}
 	return true
-}
-
-// TODO: maybe we don't need this, check on osquery what is included
-// shouldSkipRoute determines if a route should be filtered out
-func (n *neti) shouldSkipRoute(dest, gateway string) bool {
-	// Parse destination to check if it's link-local or multicast
-	destIP := net.ParseIP(dest)
-	if destIP == nil {
-		// Try parsing as CIDR
-		ip, _, err := net.ParseCIDR(dest)
-		if err != nil {
-			return true // Invalid destination, skip
-		}
-		destIP = ip
-	}
-
-	// Skip link-local IPv6 addresses (fe80::/10)
-	if destIP.To4() == nil && destIP.To16() != nil {
-		if destIP[0] == 0xfe && (destIP[1]&0xc0) == 0x80 {
-			return true
-		}
-		// Skip multicast IPv6 addresses (ff00::/8)
-		if destIP[0] == 0xff {
-			return true
-		}
-	}
-
-	// Skip IPv4 multicast addresses (224.0.0.0/4)
-	if destIP.To4() != nil {
-		if destIP[0] >= 224 && destIP[0] <= 239 {
-			return true
-		}
-		// Skip broadcast addresses
-		if destIP.Equal(net.IPv4bcast) {
-			return true
-		}
-		// Skip 169.254.0.0/16 (link-local IPv4)
-		if destIP[0] == 169 && destIP[1] == 254 {
-			return true
-		}
-	}
-
-	// Skip host-specific routes (individual IPs) unless they're localhost or have a gateway
-	// Default routes are always included
-	if dest != "0.0.0.0/0" && dest != "::/0" {
-		// Check if it's a host route (no CIDR or /32 or /128)
-		if !strings.Contains(dest, "/") {
-			// Host route without CIDR - only include if it's localhost or has a gateway
-			if !destIP.IsLoopback() && gateway == "" {
-				return true
-			}
-		} else {
-			// Check CIDR prefix
-			parts := strings.Split(dest, "/")
-			if len(parts) == 2 {
-				prefix, err := strconv.Atoi(parts[1])
-				if err == nil {
-					// Skip host routes (/32 for IPv4, /128 for IPv6) unless they're meaningful
-					if (destIP.To4() != nil && prefix == 32) || (destIP.To4() == nil && prefix == 128) {
-						// Only include host routes if they're localhost or have a gateway
-						if !destIP.IsLoopback() && gateway == "" {
-							return true
-						}
-					}
-					// Skip routes with invalid prefix lengths (like /2)
-					if prefix < 8 || (destIP.To4() != nil && prefix > 32) || (destIP.To4() == nil && prefix > 128) {
-						return true
-					}
-				}
-			}
-		}
-	}
-
-	return false
-}
-
-// deduplicateRoutes removes duplicate routes, keeping only the most useful ones
-func (n *neti) deduplicateRoutes(routes []Route) []Route {
-	// Use a map to track seen routes
-	seen := make(map[string]Route)
-	var deduplicated []Route
-
-	for _, route := range routes {
-		// For default routes, only keep one per address family
-		if route.Destination == "0.0.0.0/0" || route.Destination == "::/0" {
-			key := route.Destination // Use just destination as key for default routes
-			if existing, exists := seen[key]; exists {
-				// Prefer route with a gateway, or keep the first one
-				if route.Gateway != "" && existing.Gateway == "" {
-					seen[key] = route
-				}
-				// Otherwise keep the existing one
-			} else {
-				seen[key] = route
-			}
-		} else {
-			// For non-default routes, use destination+gateway+interface as key
-			key := fmt.Sprintf("%s|%s|%s", route.Destination, route.Gateway, route.Interface)
-			if _, exists := seen[key]; !exists {
-				seen[key] = route
-				deduplicated = append(deduplicated, route)
-			}
-		}
-	}
-
-	// Add the deduplicated default routes
-	for _, route := range seen {
-		if route.Destination == "0.0.0.0/0" || route.Destination == "::/0" {
-			deduplicated = append(deduplicated, route)
-		}
-	}
-
-	return deduplicated
 }
