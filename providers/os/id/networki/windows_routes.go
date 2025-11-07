@@ -34,16 +34,14 @@ func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
 }
 
 // detectWindowsRoutes detects network routes on Windows
-// Tries 2 approaches in order: 1) PowerShell Get-NetRoute, 2) netstat -rn
 func (n *neti) detectWindowsRoutes() ([]Route, error) {
-	// Approach 1: PowerShell Get-NetRoute
 	routes, err := n.detectWindowsRoutesViaPowerShell()
 	if err == nil && len(routes) > 0 {
 		return routes, nil
 	}
 	log.Debug().Err(err).Msg("PowerShell Get-NetRoute failed, trying netstat")
 
-	// Approach 2: netstat -rn with PowerShell ConvertFrom-String
+	// fallback to netstat
 	return n.detectWindowsRoutesViaNetstat()
 }
 
@@ -80,8 +78,8 @@ type WindowsNetRoute struct {
 	InterfaceIndex    int    `json:"InterfaceIndex"`
 	InterfaceAlias    string `json:"InterfaceAlias"`
 	RouteMetric       int    `json:"RouteMetric"`
-	AddressFamily     int    `json:"AddressFamily"` // addressFamilyIPv4 (2) = IPv4, addressFamilyIPv6 (23) = IPv6
-	InterfaceIP       string `json:"InterfaceIP"`   // IP address of the interface
+	AddressFamily     int    `json:"AddressFamily"`
+	InterfaceIP       string `json:"InterfaceIP"`
 }
 
 // parsePowerShellGetNetRouteOutput parses JSON output from Get-NetRoute PowerShell command
@@ -92,7 +90,6 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 	var netRoutes []WindowsNetRoute
 	err := json.Unmarshal([]byte(output), &netRoutes)
 	if err != nil {
-		// If it fails, try parsing as a single object
 		var singleRoute WindowsNetRoute
 		err2 := json.Unmarshal([]byte(output), &singleRoute)
 		if err2 != nil {
@@ -102,13 +99,12 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 	}
 
 	for _, netRoute := range netRoutes {
-		// Skip routes without destination
 		destination := netRoute.DestinationPrefix
 		if destination == "" {
 			continue
 		}
 
-		// Normalize gateway - osquery shows "::" for IPv6 local routes
+		// osquery shows "::" for IPv6 local routes
 		gateway := netRoute.NextHop
 		if gateway == "" || gateway == "0.0.0.0" {
 			// Empty or 0.0.0.0 gateway means on-link route
@@ -125,10 +121,8 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 		}
 
 		// osquery shows IP address for IPv4, empty for IPv6
-		var iface string
-		if netRoute.AddressFamily == addressFamilyIPv6 {
-			iface = ""
-		} else {
+		iface := ""
+		if netRoute.AddressFamily != addressFamilyIPv6 {
 			iface = netRoute.InterfaceIP
 			if iface == "" {
 				iface = netRoute.InterfaceAlias
@@ -225,23 +219,17 @@ func (n *neti) parseNetstatPowerShellOutput(output string) ([]Route, error) {
 			continue
 		}
 
-		// Parse IPv6 routes: P2=If, P3=Metric, P4=Destination, P5=Gateway
-		// Note: Sometimes "On-link" appears in P2 of next row, so we need to handle that
 		if inIPv6Table {
-			// Check if this row has "On-link" in P2 (it's a continuation of previous route)
 			if strings.TrimSpace(route.P2) == "On-link" && pendingIPv6Route != nil {
-				// Complete the pending route with "On-link" -> "::"
 				pendingIPv6Route.Gateway = "::"
 				routes = append(routes, *pendingIPv6Route)
 				pendingIPv6Route = nil
 				continue
 			}
 
-			// Check if P4 contains IPv6 address (destination)
 			if route.P4 != "" && (strings.Contains(route.P4, ":") || strings.Contains(route.P4, "::")) {
 				r := n.parseIPv6NetstatRoute(route)
 				if r != nil {
-					// If gateway is empty or "On-link" appears in next row, save for later
 					if r.Gateway == "" {
 						// Check next row for "On-link"
 						if i+1 < len(netstatRoutes) && strings.TrimSpace(netstatRoutes[i+1].P2) == "On-link" {
@@ -256,7 +244,6 @@ func (n *neti) parseNetstatPowerShellOutput(output string) ([]Route, error) {
 		}
 	}
 
-	// Handle any pending IPv6 route
 	if pendingIPv6Route != nil {
 		pendingIPv6Route.Gateway = "::"
 		routes = append(routes, *pendingIPv6Route)
@@ -271,7 +258,6 @@ func (n *neti) isHeaderRow(route NetstatRoute) bool {
 	p2 := strings.TrimSpace(route.P2)
 	p3 := strings.TrimSpace(route.P3)
 
-	// Check for header combinations
 	if (p1 == "Network" && p2 == "Destination") ||
 		(p2 == "If" && p3 == "Metric") ||
 		(p1 == "Active" && p2 == "Routes:") ||
@@ -283,8 +269,7 @@ func (n *neti) isHeaderRow(route NetstatRoute) bool {
 	return false
 }
 
-// parseIPv4NetstatRoute parses an IPv4 route from netstat ConvertFrom-String output
-// Format: P2=Destination, P3=Netmask, P4=Gateway, P5=Interface
+// parseIPv4NetstatRoute parses an IPv4 route from netstat output
 func (n *neti) parseIPv4NetstatRoute(route NetstatRoute) *Route {
 	if route.P2 == "" || route.P3 == "" {
 		return nil
@@ -295,12 +280,10 @@ func (n *neti) parseIPv4NetstatRoute(route NetstatRoute) *Route {
 	gateway := strings.TrimSpace(route.P4)
 	iface := strings.TrimSpace(route.P5)
 
-	// Handle "On-link" gateway
 	if gateway == "On-link" {
 		gateway = iface
 	}
 
-	// Convert netmask to CIDR
 	destIP := net.ParseIP(destination)
 	if destIP == nil {
 		return nil
@@ -321,7 +304,6 @@ func (n *neti) parseIPv4NetstatRoute(route NetstatRoute) *Route {
 		return nil
 	}
 
-	// Format destination with CIDR
 	var dest string
 	if destIP.Equal(net.IPv4zero) {
 		dest = "0.0.0.0"
@@ -337,23 +319,18 @@ func (n *neti) parseIPv4NetstatRoute(route NetstatRoute) *Route {
 	}
 }
 
-// parseIPv6NetstatRoute parses an IPv6 route from netstat ConvertFrom-String output
-// Format: P2=If, P3=Metric, P4=Network Destination, P5=Gateway
+// parseIPv6NetstatRoute parses an IPv6 route from netstat output
 func (n *neti) parseIPv6NetstatRoute(route NetstatRoute) *Route {
-	destination := strings.TrimSpace(route.P4)
-	if destination == "" {
+	dest := strings.TrimSpace(route.P4)
+	if dest == "" {
 		return nil
 	}
 
 	gateway := strings.TrimSpace(route.P5)
 
-	// Handle "On-link" gateway
 	if gateway == "On-link" {
 		gateway = "::"
 	}
-
-	// Normalize destination format
-	dest := destination
 	if !strings.Contains(dest, "/") {
 		// Try to parse as IP and add /128 for host routes
 		if ip := net.ParseIP(dest); ip != nil {
@@ -369,6 +346,6 @@ func (n *neti) parseIPv6NetstatRoute(route NetstatRoute) *Route {
 		Destination: dest,
 		Gateway:     gateway,
 		Flags:       0,
-		Interface:   "", // Interface not available in netstat IPv6 output
+		Interface:   "",
 	}
 }
