@@ -170,6 +170,8 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.Name == "cloudlinux": // rhel based
 		osm = ResolveSystemdServiceManager(conn)
+	case asset.Platform.Name == "elementary": // ubuntu based
+		osm = ResolveSystemdServiceManager(conn)
 	}
 
 	if osm == nil {
