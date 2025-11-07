@@ -172,7 +172,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AristaConnecti
 		Version:               version,
 		Arch:                  arch,
 		Family:                []string{"arista"},
-		Kind:                  "api",
+		Kind:                  "network-device",
 		Title:                 "Arista EOS",
 		Runtime:               "arista",
 		TechnologyUrlSegments: []string{"network", "arista"},
