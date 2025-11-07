@@ -1000,3 +1000,13 @@ func TestDetectorFlatcar(t *testing.T) {
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
+
+func TestEndeavourOSContainerDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-endeavouros.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "endeavouros", di.Name, "os name should be identified")
+	assert.Equal(t, "EndeavourOS", di.Title, "os title should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"arch", "linux", "unix", "os"}, di.Family)
+}
