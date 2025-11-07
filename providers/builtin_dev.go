@@ -10,20 +10,10 @@ import (
 	_ "embed"
 	// osconf "go.mondoo.com/cnquery/v12/providers/os/config"
 	// os "go.mondoo.com/cnquery/v12/providers/os/provider"
-	networkconf "go.mondoo.com/cnquery/v12/providers/network/config"
-	network "go.mondoo.com/cnquery/v12/providers/network/provider"
-	osconf "go.mondoo.com/cnquery/v12/providers/os/config"
-	os "go.mondoo.com/cnquery/v12/providers/os/provider"
 )
 
 // //go:embed os/resources/os.resources.json
 // var osInfo []byte
-
-//go:embed os.resources.json
-var osInfo []byte
-
-//go:embed network.resources.json
-var networkInfo []byte
 
 func init() {
 	// builtinProviders[osconf.Config.ID] = &builtinProvider{
@@ -36,27 +26,5 @@ func init() {
 	// 	},
 	// 	Config: &osconf.Config,
 	// }
-
-	builtinProviders[osconf.Config.ID] = &builtinProvider{
-		Runtime: &RunningProvider{
-			Name:     osconf.Config.Name,
-			ID:       osconf.Config.ID,
-			Plugin:   os.Init(),
-			Schema:   MustLoadSchema("os", osInfo),
-			isClosed: false,
-		},
-		Config: &osconf.Config,
-	}
-
-	builtinProviders[networkconf.Config.ID] = &builtinProvider{
-		Runtime: &RunningProvider{
-			Name:     networkconf.Config.Name,
-			ID:       networkconf.Config.ID,
-			Plugin:   network.Init(),
-			Schema:   MustLoadSchema("network", networkInfo),
-			isClosed: false,
-		},
-		Config: &networkconf.Config,
-	}
 
 }
