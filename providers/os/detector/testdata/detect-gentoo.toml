@@ -14,9 +14,10 @@ content = "Gentoo Base System release 2.4.1"
 content = """
 NAME=Gentoo
 ID=gentoo
-PRETTY_NAME="Gentoo/Linux"
+PRETTY_NAME="Gentoo Linux"
 ANSI_COLOR="1;32"
 HOME_URL="https://www.gentoo.org/"
 SUPPORT_URL="https://www.gentoo.org/support/"
 BUG_REPORT_URL="https://bugs.gentoo.org/"
+VERSION_ID="2.18"
 """
