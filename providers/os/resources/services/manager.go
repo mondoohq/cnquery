@@ -133,7 +133,7 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		}
 	case asset.Platform.Name == "raspbian" || asset.Platform.Name == "parrot": // debian based distros that have always been systemd
 		osm = ResolveSystemdServiceManager(conn)
-	case asset.Platform.Name == "suse-microos": // it is suse family but uses a different version scheme
+	case asset.Platform.Name == "suse-microos" || asset.Platform.Name == "opensuse-microos": // suse family but uses a different version scheme
 		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.IsFamily("suse"):
 		rv := detector.ParseOsVersion(asset.Platform.Version)
