@@ -6,6 +6,7 @@ package services
 import (
 	"bufio"
 	"io"
+	"path/filepath"
 	"strings"
 
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
@@ -17,11 +18,12 @@ func ParseBsdInit(input io.Reader) ([]*Service, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		services = append(services, &Service{
-			Name:      strings.TrimSpace(line),
+			Name:      filepath.Base(strings.TrimSpace(line)),
 			Enabled:   true,
 			Installed: true,
 			Running:   true,
 			Type:      "bsd",
+			Path:      strings.TrimSpace(line),
 		})
 	}
 	return services, nil

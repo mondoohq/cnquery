@@ -31,7 +31,8 @@ func TestParseBsdInit(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 25, len(m), "detected the right amount of services")
 
-	assert.Equal(t, "/etc/rc.d/hostid", m[0].Name, "service name detected")
+	assert.Equal(t, "hostid", m[0].Name, "service name detected")
+	assert.Equal(t, "/etc/rc.d/hostid", m[0].Path, "service file path detected")
 	assert.Equal(t, true, m[0].Running, "service is running")
 	assert.Equal(t, true, m[0].Installed, "service is installed")
 	assert.Equal(t, "bsd", m[0].Type, "service type is added")
