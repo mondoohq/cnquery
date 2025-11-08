@@ -157,7 +157,9 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 	case asset.Platform.Name == "windows":
 		osm = &WindowsServiceManager{conn: conn}
 	case asset.Platform.Name == "alpine":
-		osm = &AlpineOpenrcServiceManager{conn: conn}
+		osm = &OpenrcServiceManager{conn: conn}
+	case asset.Platform.Name == "gentoo":
+		osm = &OpenrcServiceManager{conn: conn}
 	case asset.Platform.Name == "cos":
 		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.Name == "aix":

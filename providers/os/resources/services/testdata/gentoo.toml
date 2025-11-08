@@ -1,0 +1,129 @@
+[commands."uname -r"]
+stdout = "6.1.69-gentoo-dist"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/os-release"]
+content = """
+NAME=Gentoo
+ID=gentoo
+PRETTY_NAME="Gentoo Linux"
+ANSI_COLOR="1;32"
+HOME_URL="https://www.gentoo.org/"
+SUPPORT_URL="https://www.gentoo.org/support/"
+BUG_REPORT_URL="https://bugs.gentoo.org/"
+VERSION_ID="2.18"
+"""
+
+[commands."rc-status -s"]
+stdout = """
+ pydoc-3.12                                                                                   [  stopped  ]
+ sysfs                                                                                        [  started  ]
+ devfs                                                                                        [  started  ]
+ udev                                                                                         [  started  ]
+ dmesg                                                                                        [  started  ]
+ kmod-static-nodes                                                                            [  started  ]
+ systemd-tmpfiles-setup-dev                                                                   [  started  ]
+ udev-trigger                                                                                 [  started  ]
+ hwclock                                                                                      [  started  ]
+ modules                                                                                      [  started  ]
+ fsck                                                                                         [  started  ]
+ root                                                                                         [  started  ]
+ mtab                                                                                         [  started  ]
+ swap                                                                                         [  started  ]
+ localmount                                                                                   [  started  ]
+ sysctl                                                                                       [  started  ]
+ bootmisc                                                                                     [  started  ]
+ s6-svscan                                                                                    [  stopped  ]
+ iptables                                                                                     [  stopped  ]
+ bootlogd                                                                                     [  stopped  ]
+ numlock                                                                                      [  stopped  ]
+ termencoding                                                                                 [  started  ]
+ keymaps                                                                                      [  started  ]
+ save-keymaps                                                                                 [  started  ]
+ fancontrol                                                                                   [  stopped  ]
+ procfs                                                                                       [  started  ]
+ systemd-tmpfiles-setup                                                                       [  started  ]
+ udev-settle                                                                                  [  stopped  ]
+ hostname                                                                                     [  started  ]
+ rsyslog                                                                                      [  started  ]
+ dhcpcd                                                                                       [  stopped  ]
+ swclock                                                                                      [  stopped  ]
+ cgroups                                                                                      [  started  ]
+ consolefont                                                                                  [  stopped  ]
+ sshd                                                                                         [  started  ]
+ binfmt                                                                                       [  started  ]
+ dbus                                                                                         [  started  ]
+ loopback                                                                                     [  started  ]
+ net.eth0                                                                                     [  started  ]
+ netmount                                                                                     [  started  ]
+ save-termencoding                                                                            [  started  ]
+ seedrng                                                                                      [  started  ]
+ sysstat                                                                                      [  stopped  ]
+ virtualbox-guest-additions                                                                   [  started  ]
+ local                                                                                        [  started  ]
+ agetty                                                                                       [  started  ]
+ ip6tables                                                                                    [  stopped  ]
+ osclock                                                                                      [  stopped  ]
+ lm_sensors                                                                                   [  stopped  ]
+ pydoc-3.11                                                                                   [  stopped  ]
+ pciparm                                                                                      [  stopped  ]
+ mount-ro                                                                                     [  stopped  ]
+ rsyncd                                                                                       [  stopped  ]
+ savecache                                                                                    [  stopped  ]
+ nullmailer                                                                                   [  stopped  ]
+ runsvdir                                                                                     [  stopped  ]
+ net-online                                                                                   [  stopped  ]
+ net.lo                                                                                       [  stopped  ]
+ killprocs                                                                                    [  stopped  ]
+"""
+
+[files."/etc/init.d"]
+  [files."/etc/init.d".stat]
+  isdir = true
+
+[files."/etc/init.d/agetty"]
+content = """
+content does not matter for testing
+"""
+
+[files."/etc/init.d/sysstat"]
+content = """
+content does not matter for testing
+"""
+
+[files."/etc/runlevels/"]
+  [files."/etc/runlevels/".stat]
+  isdir = true
+
+[files."/etc/runlevels/boot"]
+  [files."/etc/runlevels/boot".stat]
+  isdir = true
+
+[files."/etc/runlevels/default"]
+  [files."/etc/runlevels/default".stat]
+  isdir = true
+
+[files."/etc/runlevels/nonetwork"]
+  [files."/etc/runlevels/nonetwork".stat]
+  isdir = true
+
+[files."/etc/runlevels/shutdown"]
+  [files."/etc/runlevels/shutdown".stat]
+  isdir = true
+
+[files."/etc/runlevels/sysinit"]
+  [files."/etc/runlevels/sysinit".stat]
+  isdir = true
+
+[files."/etc/runlevels/sysinit/agetty"]
+content = """
+this is actually a symlink to /etc/init.d/agetty
+"""
+
+[commands."which rc-status"]
+stdout = "/bin/rc-status"
