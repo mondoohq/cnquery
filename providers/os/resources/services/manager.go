@@ -174,6 +174,8 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.Name == "mx": // debian based
 		osm = ResolveSystemdServiceManager(conn)
+	case asset.Platform.Name == "zorin": // ubuntu based
+		osm = ResolveSystemdServiceManager(conn)
 	}
 
 	if osm == nil {
