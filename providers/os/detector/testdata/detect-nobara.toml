@@ -1,0 +1,38 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.184-linuxkit"
+
+[files."/etc/redhat-release"]
+content = "Nobara release 40 (Forty)"
+
+[files."/etc/os-release"]
+content = """
+NAME="Nobara Linux"
+VERSION="40 (KDE Plasma)"
+ID=nobara
+ID_LIKE="rhel centos fedora"
+VERSION_ID=40
+VERSION_CODENAME=""
+PLATFORM_ID="platform:f40"
+PRETTY_NAME="Nobara Linux 40 (KDE Plasma)"
+ANSI_COLOR="0;38;2;60;110;180"
+LOGO=nobara-logo-icon
+CPE_NAME="cpe:/o:nobaraproject:nobara:40"
+DEFAULT_HOSTNAME="nobara"
+HOME_URL="https://nobaraproject.org/"
+DOCUMENTATION_URL="https://www.nobaraproject.org/"
+SUPPORT_URL="https://www.nobaraproject.org/"
+BUG_REPORT_URL="https://gitlab.com/gloriouseggroll/nobara-images"
+REDHAT_BUGZILLA_PRODUCT="Nobara"
+REDHAT_BUGZILLA_PRODUCT_VERSION=40
+REDHAT_SUPPORT_PRODUCT="Nobara"
+REDHAT_SUPPORT_PRODUCT_VERSION=40
+SUPPORT_END=2025-05-13
+VARIANT="KDE Plasma"
+VARIANT_ID=kde
+"""

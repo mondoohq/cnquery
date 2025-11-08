@@ -300,6 +300,17 @@ var steamos = &PlatformResolver{
 	},
 }
 
+var nobara = &PlatformResolver{
+	Name:     "nobara",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "nobara" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 // rhel PlatformResolver only detects redhat and no derivatives
 var rhel = &PlatformResolver{
 	Name:     "redhat",
@@ -957,7 +968,7 @@ var redhatFamily = &PlatformResolver{
 	IsFamily: true,
 	// NOTE: oracle pretends to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
 	// want to check that platform before redhat
-	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux},
+	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux, nobara},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		f, err := conn.FileSystem().Open("/etc/redhat-release")
 		if err != nil {
