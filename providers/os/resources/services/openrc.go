@@ -22,10 +22,11 @@ func (s *OpenrcServiceManager) Name() string {
 }
 
 func (s *OpenrcServiceManager) List() ([]*Service, error) {
+	const iniddPath = "/etc/init.d"
 	// retrieve service list by retrieving all files
 	var services []*Service
 
-	f, err := s.conn.FileSystem().Open("/etc/init.d")
+	f, err := s.conn.FileSystem().Open(iniddPath)
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +77,7 @@ func (s *OpenrcServiceManager) List() ([]*Service, error) {
 			Installed: true,
 			Running:   serviceStatusMap[name], // read from status from rc-status command
 			Type:      "openrc",
+			Path:      filepath.Join(iniddPath, name),
 		})
 	}
 
