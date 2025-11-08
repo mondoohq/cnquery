@@ -9,6 +9,7 @@ on:
       - 'go.sum'
       - 'Makefile'
       - '.github/workflows/pr-test-lint.yml'
+      - '**.toml' # run tests when any recording changed
 
 jobs:
   # Check if there is any dirty change for go mod tidy

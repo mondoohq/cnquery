@@ -5,10 +5,10 @@ stdout = "Linux"
 stdout = "x86_64"
 
 [commands."uname -r"]
-stdout = "4.9.125-linuxkit"
+stdout = "6.1.69-gentoo-dist"
 
 [files."/etc/gentoo-release"]
-content = "Gentoo Base System release 2.4.1"
+content = "Gentoo Base System release 2.18"
 
 [files."/etc/os-release"]
 content = """

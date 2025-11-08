@@ -635,8 +635,8 @@ func TestGentooLinuxDetector(t *testing.T) {
 	assert.Nil(t, err, "was able to create the provider")
 
 	assert.Equal(t, "gentoo", di.Name, "os name should be identified")
-	assert.Equal(t, "Gentoo/Linux", di.Title, "os title should be identified")
-	assert.Equal(t, "2.4.1", di.Version, "os version should be identified")
+	assert.Equal(t, "Gentoo Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "2.18", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
