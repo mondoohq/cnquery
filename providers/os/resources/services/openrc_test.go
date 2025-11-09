@@ -33,6 +33,7 @@ func TestManagerAlpineImage(t *testing.T) {
 		Enabled:   true,
 		Installed: true,
 		Type:      "openrc",
+		Path:      "/etc/init.d/agetty",
 	})
 
 	assert.Contains(t, serviceList, &Service{
@@ -41,6 +42,7 @@ func TestManagerAlpineImage(t *testing.T) {
 		Enabled:   false,
 		Installed: true,
 		Type:      "openrc",
+		Path:      "/etc/init.d/urandom",
 	})
 }
 
@@ -65,6 +67,7 @@ func TestManagerAlpineContainer(t *testing.T) {
 		Enabled:   true,
 		Installed: true,
 		Type:      "openrc",
+		Path:      "/etc/init.d/agetty",
 	})
 
 	assert.Contains(t, serviceList, &Service{
@@ -73,6 +76,7 @@ func TestManagerAlpineContainer(t *testing.T) {
 		Enabled:   false,
 		Installed: true,
 		Type:      "openrc",
+		Path:      "/etc/init.d/urandom",
 	})
 }
 
@@ -97,6 +101,7 @@ func TestManagerGentoo(t *testing.T) {
 		Enabled:   true,
 		Installed: true,
 		Type:      "openrc",
+		Path:      "/etc/init.d/agetty",
 	})
 
 	assert.Contains(t, serviceList, &Service{
@@ -105,5 +110,6 @@ func TestManagerGentoo(t *testing.T) {
 		Enabled:   false,
 		Installed: true,
 		Type:      "openrc",
+		Path:      "/etc/init.d/sysstat",
 	})
 }
