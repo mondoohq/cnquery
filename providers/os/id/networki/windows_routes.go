@@ -19,6 +19,7 @@ import (
 
 const (
 	// Windows AddressFamily constants from Get-NetRoute
+	addressFamilyIPv4 = 2  // AF_INET
 	addressFamilyIPv6 = 23 // AF_INET6
 )
 
@@ -39,7 +40,7 @@ func (n *neti) detectWindowsRoutes() ([]Route, error) {
 	if err == nil && len(routes) > 0 {
 		return routes, nil
 	}
-	log.Debug().Err(err).Msg("PowerShell Get-NetRoute failed, trying netstat")
+	log.Debug().Err(err).Int("routeCount", len(routes)).Msg("PowerShell Get-NetRoute failed or returned no routes, trying netstat")
 
 	// fallback to netstat
 	return n.detectWindowsRoutesViaNetstat()
@@ -86,6 +87,12 @@ type WindowsNetRoute struct {
 func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) {
 	var routes []Route
 
+	// Trim whitespace from output
+	output = strings.TrimSpace(output)
+	if output == "" {
+		return nil, errors.New("Get-NetRoute output is empty")
+	}
+
 	// PowerShell may return a single object or an array
 	var netRoutes []WindowsNetRoute
 	err := json.Unmarshal([]byte(output), &netRoutes)
@@ -108,10 +115,8 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 		gateway := netRoute.NextHop
 		if gateway == "" || gateway == "0.0.0.0" {
 			// Empty or 0.0.0.0 gateway means on-link route
-			if netRoute.AddressFamily == addressFamilyIPv6 {
-				gateway = "::"
-			} else {
-				// For IPv4, use interface IP if available
+
+			if netRoute.AddressFamily == addressFamilyIPv4 {
 				if netRoute.InterfaceIP != "" {
 					gateway = netRoute.InterfaceIP
 				} else {
@@ -120,18 +125,14 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 			}
 		}
 
-		// osquery shows IP address for IPv4, empty for IPv6
-		iface := ""
-		if netRoute.AddressFamily != addressFamilyIPv6 {
-			iface = netRoute.InterfaceIP
-			if iface == "" {
-				iface = netRoute.InterfaceAlias
-			}
+		// Use interface name (InterfaceAlias) to match network.interfaces
+		var iface string
+		if netRoute.AddressFamily == addressFamilyIPv4 {
+			iface = netRoute.InterfaceAlias
 			if iface == "" {
 				iface = fmt.Sprintf("%d", netRoute.InterfaceIndex)
 			}
 		}
-
 		routes = append(routes, Route{
 			Destination: destination,
 			Gateway:     gateway,
@@ -146,6 +147,22 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 // detectWindowsRoutesViaNetstat uses netstat -rn with PowerShell ConvertFrom-String
 // Uses: $a = netstat -rn; $a[8..$a.count] | ConvertFrom-String | select p1,p2,p3,p4,p5,p6
 func (n *neti) detectWindowsRoutesViaNetstat() ([]Route, error) {
+	interfaces, err := n.detectWindowsInterfaces()
+	if err != nil {
+		log.Debug().Err(err).Msg("failed to get interfaces for netstat route parsing")
+		interfaces = []Interface{}
+	}
+
+	// Create IP -> Interface Name lookup map
+	ipToNameMap := make(map[string]string)
+	for _, iface := range interfaces {
+		for _, ipaddr := range iface.IPAddresses {
+			if ipaddr.IP != nil {
+				ipToNameMap[ipaddr.IP.String()] = iface.Name
+			}
+		}
+	}
+
 	cmd := `$a = netstat -rn; $a[8..$a.count] | ConvertFrom-String | select p1,p2,p3,p4,p5,p6 | ConvertTo-Json`
 	command := powershell.Encode(cmd)
 
@@ -154,7 +171,7 @@ func (n *neti) detectWindowsRoutesViaNetstat() ([]Route, error) {
 		return nil, errors.Wrap(err, "failed to get routes via netstat")
 	}
 
-	return n.parseNetstatPowerShellOutput(output)
+	return n.parseNetstatPowerShellOutput(output, ipToNameMap)
 }
 
 // NetstatRoute represents a route parsed from netstat -rn via ConvertFrom-String
@@ -170,7 +187,7 @@ type NetstatRoute struct {
 }
 
 // parseNetstatPowerShellOutput parses JSON output from netstat -rn via ConvertFrom-String
-func (n *neti) parseNetstatPowerShellOutput(output string) ([]Route, error) {
+func (n *neti) parseNetstatPowerShellOutput(output string, ipToNameMap map[string]string) ([]Route, error) {
 	var routes []Route
 
 	// PowerShell may return a single object or an array
@@ -211,7 +228,7 @@ func (n *neti) parseNetstatPowerShellOutput(output string) ([]Route, error) {
 
 		if inIPv4Table && !inIPv6Table {
 			if route.P2 != "" && strings.Contains(route.P2, ".") {
-				r := n.parseIPv4NetstatRoute(route)
+				r := n.parseIPv4NetstatRoute(route, ipToNameMap)
 				if r != nil {
 					routes = append(routes, *r)
 				}
@@ -270,7 +287,7 @@ func (n *neti) isHeaderRow(route NetstatRoute) bool {
 }
 
 // parseIPv4NetstatRoute parses an IPv4 route from netstat output
-func (n *neti) parseIPv4NetstatRoute(route NetstatRoute) *Route {
+func (n *neti) parseIPv4NetstatRoute(route NetstatRoute, ipToNameMap map[string]string) *Route {
 	if route.P2 == "" || route.P3 == "" {
 		return nil
 	}
@@ -278,10 +295,10 @@ func (n *neti) parseIPv4NetstatRoute(route NetstatRoute) *Route {
 	destination := strings.TrimSpace(route.P2)
 	netmask := strings.TrimSpace(route.P3)
 	gateway := strings.TrimSpace(route.P4)
-	iface := strings.TrimSpace(route.P5)
+	ifaceIP := strings.TrimSpace(route.P5)
 
 	if gateway == "On-link" {
-		gateway = iface
+		gateway = ifaceIP
 	}
 
 	destIP := net.ParseIP(destination)
@@ -309,6 +326,12 @@ func (n *neti) parseIPv4NetstatRoute(route NetstatRoute) *Route {
 		dest = "0.0.0.0"
 	} else {
 		dest = fmt.Sprintf("%s/%d", destination, ones)
+	}
+
+	// Convert interface IP to interface name using lookup map
+	iface := ifaceIP
+	if name, ok := ipToNameMap[ifaceIP]; ok {
+		iface = name
 	}
 
 	return &Route{

@@ -4,11 +4,14 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/id/machineid"
 	"go.mondoo.com/cnquery/v12/providers/os/id/networki"
 	"go.mondoo.com/cnquery/v12/types"
 )
@@ -79,26 +82,22 @@ func (c *mqlNetwork) routes() (*mqlNetworkRoutes, error) {
 		return nil, err
 	}
 
-	// Get interfaces to map route interfaces
 	interfaces, err := networki.Interfaces(conn, platform)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to get interfaces for routes")
 		interfaces = []networki.Interface{}
 	}
 
-	// Create interface map by name
+	// Map interfaces by name
 	interfaceMap := make(map[string]networki.Interface)
 	for _, iface := range interfaces {
 		interfaceMap[iface.Name] = iface
 	}
 
-	// Convert routes to resources
 	routeResources := []any{}
 	for _, route := range routes {
-		// Find the interface for this route
 		var ifaceResource plugin.Resource
 		if iface, ok := interfaceMap[route.Interface]; ok {
-			// Create networkInterface resource
 			ipaddresses := []any{}
 			for _, ipaddress := range iface.IPAddresses {
 				ipRes, err := NewResource(c.MqlRuntime, "ipAddress", map[string]*llx.RawData{
@@ -128,6 +127,7 @@ func (c *mqlNetwork) routes() (*mqlNetworkRoutes, error) {
 			})
 			if err != nil {
 				log.Debug().Err(err).Str("iface", route.Interface).Msg("unable to create networkInterface resource")
+				return nil, err
 			}
 		}
 
@@ -143,14 +143,23 @@ func (c *mqlNetwork) routes() (*mqlNetworkRoutes, error) {
 		})
 		if err != nil {
 			log.Debug().Err(err).Msg("unable to create networkRoute resource")
-			continue
+			return nil, err
 		}
 		routeResources = append(routeResources, routeRes)
 	}
 
-	// Create networkRoutes resource
+	machineID, err := machineid.MachineId(conn, platform)
+	if err != nil || machineID == "" {
+		// Fallback to asset MRN if machine ID is not available
+		assetID := conn.Asset().GetMrn()
+		if assetID == "" {
+			assetID = "default"
+		}
+		machineID = assetID
+	}
+
 	routesRes, err := NewResource(c.MqlRuntime, "networkRoutes", map[string]*llx.RawData{
-		"__id": llx.StringData("networkRoutes"),
+		"__id": llx.StringData(fmt.Sprintf("networkRoutes(%s)", machineID)),
 		"list": llx.ArrayData(routeResources, types.Resource("networkRoute")),
 	})
 	if err != nil {
