@@ -67,19 +67,6 @@ var tenantFields = []string{
 	"preferredLanguage",
 }
 
-type userRealmResponse struct {
-	Login               string               `json:"Login"`
-	DomainName          string               `json:"DomainName"`
-	FederationBrandName string               `json:"FederationBrandName"`
-	TenantBrandingInfo  []tenantBrandingInfo `json:"TenantBrandingInfo"`
-}
-
-type tenantBrandingInfo struct {
-	KeepMeSignedInDisabled bool   `json:"KeepMeSignedInDisabled"`
-	BannerLogo             string `json:"BannerLogo,omitempty"`
-	BackgroundColor        string `json:"BackgroundColor,omitempty"`
-}
-
 func initMicrosoftTenant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
@@ -274,7 +261,6 @@ func (a *mqlMicrosoftTenant) formsSettings() (*mqlMicrosoftTenantFormsSettings, 
 	return formSetting.(*mqlMicrosoftTenantFormsSettings), nil
 }
 
-// Helper function to get tenant branding info for a specific domain from userrealm endpoint
 func (a *mqlMicrosoftTenant) getTenantBrandingInfoForDomain(domainName string) (*userRealmResponse, error) {
 	url := fmt.Sprintf("https://login.microsoftonline.com/common/userrealm/%s?api-version=2.0", domainName)
 

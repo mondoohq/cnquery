@@ -156,6 +156,19 @@ func newUnifiedRolePermission(p models.UnifiedRolePermissionable) UnifiedRolePer
 	}
 }
 
+type userRealmResponse struct {
+	Login               string               `json:"Login"`
+	DomainName          string               `json:"DomainName"`
+	FederationBrandName string               `json:"FederationBrandName"`
+	TenantBrandingInfo  []tenantBrandingInfo `json:"TenantBrandingInfo"`
+}
+
+type tenantBrandingInfo struct {
+	KeepMeSignedInDisabled bool   `json:"KeepMeSignedInDisabled"`
+	BannerLogo             string `json:"BannerLogo,omitempty"`
+	BackgroundColor        string `json:"BackgroundColor,omitempty"`
+}
+
 type GroupSetting struct {
 	DisplayName string         `json:"displayName"`
 	TemplateId  string         `json:"templateId"`
