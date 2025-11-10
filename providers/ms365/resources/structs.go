@@ -156,16 +156,6 @@ func newUnifiedRolePermission(p models.UnifiedRolePermissionable) UnifiedRolePer
 	}
 }
 
-// struct for tenant branding information
-type BrandingInfo struct {
-	KeepMeSignedInDisabled bool   `json:"keepMeSignedInDisabled"`
-	BackgroundColor        string `json:"backgroundColor"`
-	BannerLogo             string `json:"bannerLogo"`
-	FederationBrandName    string `json:"federationBrandName"`
-	DomainName             string `json:"domainName"`
-	Login                  string `json:"login"`
-}
-
 type GroupSetting struct {
 	DisplayName string         `json:"displayName"`
 	TemplateId  string         `json:"templateId"`
