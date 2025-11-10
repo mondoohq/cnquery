@@ -1,6 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
+//go:build linux
+
 package networki
 
 import (
@@ -14,7 +16,20 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
+
+// Routes returns the network routes of the system.
+func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
+	n := &neti{conn, pf}
+
+	if pf.IsFamily(inventory.FAMILY_LINUX) {
+		return n.detectLinuxRoutes()
+	}
+
+	return nil, errors.New("your platform is not supported for the detection of network routes")
+}
 
 // detectLinuxRoutes detects network routes on Linux by reading /proc/net/route
 func (n *neti) detectLinuxRoutes() ([]Route, error) {
@@ -55,7 +70,6 @@ func (n *neti) detectLinuxRoutesViaCommand() ([]Route, error) {
 }
 
 // parseProcNetRoute parses /proc/net/route file format
-// Format: Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT
 func (n *neti) parseProcNetRoute(r io.Reader) ([]Route, error) {
 	var routes []Route
 	scanner := bufio.NewScanner(r)

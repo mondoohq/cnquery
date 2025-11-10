@@ -1848,7 +1848,7 @@ network {
 }
 
 // Detailed information of a network interface
-private networkInterface @defaults("name mac active externalIP") {
+private networkInterface @defaults("name mac active") {
   // Name of the network interface
   name string
   // Unique 12-digit hexadecimal identifier assigned by the manufacturer
