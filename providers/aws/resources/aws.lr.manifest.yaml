@@ -2053,8 +2053,12 @@ resources:
       groups: {}
       instanceProfiles:
         min_mondoo_version: 9.0.0
+      oidcProviders:
+        min_mondoo_version: 9.0.0
       policies: {}
       roles: {}
+      samlProviders:
+        min_mondoo_version: 9.0.0
       serverCertificates: {}
       users: {}
       virtualMfaDevices: {}
@@ -2185,6 +2189,19 @@ resources:
     platform:
       name:
       - aws
+  aws.iam.oidcProvider:
+    fields:
+      arn: {}
+      clientIds: {}
+      createdAt: {}
+      tags: {}
+      thumbprints: {}
+      url: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.iam.policy:
     docs:
       desc: |
@@ -2244,6 +2261,19 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.iam.samlProvider:
+    fields:
+      arn: {}
+      createdAt: {}
+      metadataDocument: {}
+      name: {}
+      tags: {}
+      validUntil: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
