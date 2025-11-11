@@ -266,23 +266,19 @@ func TestParseNetstatPowerShellOutput(t *testing.T) {
     }
 	]`
 
-	// Expected routes matching osquery output
-	// Note: osquery shows gateway as network address for "On-link" routes (e.g., 127.0.0.0 for 127.0.0.0/8)
-	// but our parser converts "On-link" to interface IP. This test reflects what the parser currently produces.
+	// Expected routes with mocked interface name mapping
 	expectedRoutes := []Route{
-		// IPv4 routes
-		{Destination: "0.0.0.0", Gateway: "192.168.64.1", Interface: "192.168.64.3"},
-		{Destination: "127.0.0.0/8", Gateway: "127.0.0.1", Interface: "127.0.0.1"}, // osquery shows gateway as 127.0.0.0
-		{Destination: "127.0.0.1/32", Gateway: "127.0.0.1", Interface: "127.0.0.1"},
-		{Destination: "127.255.255.255/32", Gateway: "127.0.0.1", Interface: "127.0.0.1"},
-		{Destination: "192.168.64.0/24", Gateway: "192.168.64.3", Interface: "192.168.64.3"},    // osquery shows gateway as 192.168.64.1
-		{Destination: "192.168.64.3/32", Gateway: "192.168.64.3", Interface: "192.168.64.3"},    // osquery shows gateway as 192.168.64.1
-		{Destination: "192.168.64.255/32", Gateway: "192.168.64.3", Interface: "192.168.64.3"},  // osquery shows gateway as 192.168.64.1
-		{Destination: "224.0.0.0/4", Gateway: "127.0.0.1", Interface: "127.0.0.1"},              // osquery shows gateway as 224.0.0.0
-		{Destination: "224.0.0.0/4", Gateway: "192.168.64.3", Interface: "192.168.64.3"},        // osquery shows gateway as 192.168.64.1
-		{Destination: "255.255.255.255/32", Gateway: "127.0.0.1", Interface: "127.0.0.1"},       // osquery shows gateway as 255.255.255.255
-		{Destination: "255.255.255.255/32", Gateway: "192.168.64.3", Interface: "192.168.64.3"}, // osquery shows gateway as 192.168.64.1
-		// IPv6 routes
+		{Destination: "0.0.0.0", Gateway: "192.168.64.1", Interface: "Ethernet"},
+		{Destination: "127.0.0.0/8", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "127.0.0.1/32", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "127.255.255.255/32", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "192.168.64.0/24", Gateway: "192.168.64.3", Interface: "Ethernet"},
+		{Destination: "192.168.64.3/32", Gateway: "192.168.64.3", Interface: "Ethernet"},
+		{Destination: "192.168.64.255/32", Gateway: "192.168.64.3", Interface: "Ethernet"},
+		{Destination: "224.0.0.0/4", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "224.0.0.0/4", Gateway: "192.168.64.3", Interface: "Ethernet"},
+		{Destination: "255.255.255.255/32", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "255.255.255.255/32", Gateway: "192.168.64.3", Interface: "Ethernet"},
 		{Destination: "::1/128", Gateway: "::", Interface: ""},
 		{Destination: "fd28:df6a:5fc8:2cb::/64", Gateway: "::", Interface: ""},
 		{Destination: "fd28:df6a:5fc8:2cb:cd60:a4f0:52ca:3c3/128", Gateway: "::", Interface: ""},
@@ -294,16 +290,13 @@ func TestParseNetstatPowerShellOutput(t *testing.T) {
 	}
 
 	n := &neti{}
-	interfaces, err := n.detectWindowsInterfaces()
-	assert.NoError(t, err)
-	ipToNameMap := make(map[string]string)
-	for _, iface := range interfaces {
-		for _, ipaddr := range iface.IPAddresses {
-			if ipaddr.IP != nil {
-				ipToNameMap[ipaddr.IP.String()] = iface.Name
-			}
-		}
+
+	// Mock IP to interface name mapping based on test data
+	ipToNameMap := map[string]string{
+		"127.0.0.1":    "Loopback Pseudo-Interface 1",
+		"192.168.64.3": "Ethernet",
 	}
+
 	routes, err := n.parseNetstatPowerShellOutput(netstatJSON, ipToNameMap)
 	require.NoError(t, err)
 
@@ -512,17 +505,17 @@ func TestParsePowerShellGetNetRouteOutput(t *testing.T) {
 
 	expectedRoutes := []Route{
 		// IPv4 routes
-		{Destination: "0.0.0.0", Gateway: "192.168.64.1", Interface: "192.168.64.3"},
-		{Destination: "127.0.0.0/8", Gateway: "127.0.0.1", Interface: "127.0.0.1"},
-		{Destination: "127.0.0.1/32", Gateway: "127.0.0.1", Interface: "127.0.0.1"},
-		{Destination: "127.255.255.255/32", Gateway: "127.0.0.1", Interface: "127.0.0.1"},
-		{Destination: "192.168.64.0/24", Gateway: "192.168.64.3", Interface: "192.168.64.3"},
-		{Destination: "192.168.64.3/32", Gateway: "192.168.64.3", Interface: "192.168.64.3"},
-		{Destination: "192.168.64.255/32", Gateway: "192.168.64.3", Interface: "192.168.64.3"},
-		{Destination: "224.0.0.0/4", Gateway: "127.0.0.1", Interface: "127.0.0.1"},
-		{Destination: "224.0.0.0/4", Gateway: "192.168.64.3", Interface: "192.168.64.3"},
-		{Destination: "255.255.255.255/32", Gateway: "127.0.0.1", Interface: "127.0.0.1"},
-		{Destination: "255.255.255.255/32", Gateway: "192.168.64.3", Interface: "192.168.64.3"},
+		{Destination: "0.0.0.0", Gateway: "192.168.64.1", Interface: "Ethernet"},
+		{Destination: "127.0.0.0/8", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "127.0.0.1/32", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "127.255.255.255/32", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "192.168.64.0/24", Gateway: "192.168.64.3", Interface: "Ethernet"},
+		{Destination: "192.168.64.3/32", Gateway: "192.168.64.3", Interface: "Ethernet"},
+		{Destination: "192.168.64.255/32", Gateway: "192.168.64.3", Interface: "Ethernet"},
+		{Destination: "224.0.0.0/4", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "224.0.0.0/4", Gateway: "192.168.64.3", Interface: "Ethernet"},
+		{Destination: "255.255.255.255/32", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "255.255.255.255/32", Gateway: "192.168.64.3", Interface: "Ethernet"},
 		// IPv6 routes
 		{Destination: "::1/128", Gateway: "::", Interface: ""},
 		{Destination: "fd28:df6a:5fc8:2cb::/64", Gateway: "::", Interface: ""},
