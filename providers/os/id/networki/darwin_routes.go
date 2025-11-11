@@ -179,119 +179,54 @@ func (n *neti) getDarwinInterfaceMap() (map[int]string, error) {
 }
 
 // parseRouteMessage extracts destination, gateway, and interface from a RouteMessage
+// RouteMessage.Addrs contains addresses in specific order on macOS:
+// Index 0: Destination (Inet4Addr/Inet6Addr)
+// Index 1: Gateway (Inet4Addr/Inet6Addr or LinkAddr)
+// Index 2: Netmask (Inet4Addr/Inet6Addr, if present)
+// Index 3: Interface (LinkAddr, if present)
 func (n *neti) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[int]string) (dest, gateway, iface string, err error) {
-	// RouteMessage.Addrs contains addresses in specific order on macOS:
-	// Index 0: Destination (Inet4Addr/Inet6Addr)
-	// Index 1: Gateway (Inet4Addr/Inet6Addr or LinkAddr)
-	// Index 2: Netmask (Inet4Addr/Inet6Addr, if present)
-	// Index 3: Interface (LinkAddr, if present)
+	// Get destination (index 0)
+	if len(routeMsg.Addrs) > 0 && routeMsg.Addrs[0] != nil {
+		dest = n.addrToString(routeMsg.Addrs[0], interfaceMap)
+	}
 
-	var destAddr, gatewayAddr, netmaskAddr route.Addr
-	var gatewayLinkAddr *route.LinkAddr
-	var linkAddr *route.LinkAddr
-
-	// Process addresses in order, respecting their position
-	// RouteMessage.Addrs preserves RTA_* order: 0=destination, 1=gateway, 2=netmask, 3=interface
-	for i, addr := range routeMsg.Addrs {
-		if addr == nil {
-			continue
+	// Get gateway (index 1) - can be Inet4Addr, Inet6Addr, or LinkAddr
+	if len(routeMsg.Addrs) > 1 && routeMsg.Addrs[1] != nil {
+		switch a := routeMsg.Addrs[1].(type) {
+		case *route.LinkAddr:
+			gateway = fmt.Sprintf("link#%d", a.Index)
+		default:
+			gateway = n.addrToString(routeMsg.Addrs[1], interfaceMap)
 		}
+	}
 
-		switch a := addr.(type) {
+	// Get netmask (index 2) and convert to CIDR if present
+	if len(routeMsg.Addrs) > 2 && routeMsg.Addrs[2] != nil && dest != "" {
+		switch a := routeMsg.Addrs[2].(type) {
 		case *route.Inet4Addr:
-			// Position-based identification: index 0 is destination, index 2+ is netmask
-			if i == 0 {
-				// First address is always destination (even if all zeros for default route)
-				destAddr = addr
-			} else if i == 1 && gatewayAddr == nil && gatewayLinkAddr == nil {
-				// Second address is gateway
-				gatewayAddr = addr
-			} else if i >= 2 && n.isValidNetmask(a.IP[:]) && netmaskAddr == nil {
-				// Later positions with valid netmask pattern are netmasks
-				netmaskAddr = addr
+			ones, bits := net.IPMask(a.IP[:]).Size()
+			if bits > 0 { // Size() returns 0,0 for invalid masks
+				dest = fmt.Sprintf("%s/%d", dest, ones)
 			}
 		case *route.Inet6Addr:
-			// Position-based identification: index 0 is destination, index 2+ is netmask
-			if i == 0 {
-				// First address is always destination (even if all zeros for default route)
-				destAddr = addr
-			} else if i == 1 && gatewayAddr == nil && gatewayLinkAddr == nil {
-				// Second address is gateway
-				gatewayAddr = addr
-			} else if i >= 2 && n.isValidNetmask6(a.IP[:]) && netmaskAddr == nil {
-				// Later positions with valid netmask pattern are netmasks
-				netmaskAddr = addr
-			}
-		case *route.LinkAddr:
-			// Link address position determines its role
-			if i == 1 && gatewayAddr == nil && gatewayLinkAddr == nil {
-				// Second position link address is the gateway
-				gatewayLinkAddr = a
-			} else {
-				// Later position is the interface
-				if linkAddr == nil {
-					linkAddr = a
-				}
+			ones, bits := net.IPMask(a.IP[:]).Size()
+			if bits > 0 { // Size() returns 0,0 for invalid masks
+				dest = fmt.Sprintf("%s/%d", dest, ones)
 			}
 		}
 	}
 
-	// Convert destination address
-	if destAddr != nil {
-		dest = n.addrToString(destAddr, interfaceMap)
-	}
-
-	// Convert gateway address
-	if gatewayAddr != nil {
-		gateway = n.addrToString(gatewayAddr, interfaceMap)
-	} else if gatewayLinkAddr != nil {
-		// Gateway is a link address (e.g., "link#11")
-		gateway = fmt.Sprintf("link#%d", gatewayLinkAddr.Index)
-	}
-
-	// Calculate CIDR from netmask if available
-	// Only use netmask if it's a valid subnet mask
-	if dest != "" && netmaskAddr != nil {
-		if inet4Addr, ok := netmaskAddr.(*route.Inet4Addr); ok {
-			if n.isValidNetmask(inet4Addr.IP[:]) {
-				ones := n.netmaskToCIDR(inet4Addr.IP)
-				if ones > 0 && ones <= 32 {
-					if destIP := net.ParseIP(dest); destIP != nil && destIP.To4() != nil {
-						dest = fmt.Sprintf("%s/%d", dest, ones)
-					}
-				}
-			}
-		} else if inet6Addr, ok := netmaskAddr.(*route.Inet6Addr); ok {
-			if n.isValidNetmask6(inet6Addr.IP[:]) {
-				ones := n.netmaskToCIDR6(inet6Addr.IP)
-				if ones > 0 && ones <= 128 {
-					if destIP := net.ParseIP(dest); destIP != nil && destIP.To4() == nil {
-						dest = fmt.Sprintf("%s/%d", dest, ones)
-					}
-				}
-			}
-		}
-	}
-
-	// Get interface name
-	// Always prefer routeMsg.Index as it represents the actual interface for the route
 	if routeMsg.Index > 0 {
 		if name, ok := interfaceMap[routeMsg.Index]; ok {
 			iface = name
 		} else {
-			// Fallback to index if name not found
 			iface = fmt.Sprintf("%d", routeMsg.Index)
 		}
-	} else if linkAddr != nil && linkAddr.Name != "" {
-		// Fallback to link address name if index not available
-		iface = linkAddr.Name
-	} else if gatewayLinkAddr != nil && gatewayLinkAddr.Name != "" {
-		// Last resort: use gateway link address name
-		iface = gatewayLinkAddr.Name
+	} else if len(routeMsg.Addrs) > 3 {
+		if linkAddr, ok := routeMsg.Addrs[3].(*route.LinkAddr); ok && linkAddr.Name != "" {
+			iface = linkAddr.Name
+		}
 	}
-
-	// Don't normalize default routes - osquery shows them as "0.0.0.0" and "::"
-	// Keep them as-is to match osquery output
 
 	return dest, gateway, iface, nil
 }
@@ -317,109 +252,6 @@ func (n *neti) addrToString(addr route.Addr, interfaceMap map[int]string) string
 	default:
 		return ""
 	}
-}
-
-// netmaskToCIDR converts an IPv4 netmask to CIDR prefix length
-func (n *neti) netmaskToCIDR(mask [4]byte) int {
-	ones := 0
-	for _, b := range mask {
-		for i := 0; i < 8; i++ {
-			if b&(1<<(7-i)) != 0 {
-				ones++
-			} else {
-				return ones
-			}
-		}
-	}
-	return ones
-}
-
-// netmaskToCIDR6 converts an IPv6 netmask to CIDR prefix length
-func (n *neti) netmaskToCIDR6(mask [16]byte) int {
-	ones := 0
-	for _, b := range mask {
-		if b == 0xff {
-			ones += 8
-		} else {
-			for i := 0; i < 8; i++ {
-				if b&(1<<(7-i)) != 0 {
-					ones++
-				} else {
-					return ones
-				}
-			}
-		}
-	}
-	return ones
-}
-
-// isValidNetmask checks if a byte array represents a valid IPv4 netmask
-// A valid netmask has all 1s followed by all 0s
-func (n *neti) isValidNetmask(mask []byte) bool {
-	if len(mask) != 4 {
-		return false
-	}
-	seenZero := false
-	for _, b := range mask {
-		if seenZero {
-			if b != 0 {
-				return false
-			}
-		} else {
-			if b == 0xff {
-				continue
-			} else if b == 0 {
-				seenZero = true
-			} else {
-				// Check if it's a valid partial byte (e.g., 11111100 = 252)
-				// All 1s must be on the left, all 0s on the right
-				for i := 0; i < 8; i++ {
-					if b&(1<<(7-i)) == 0 {
-						// Found a 0, all remaining bits must be 0
-						if b&((1<<(7-i))-1) != 0 {
-							return false
-						}
-						seenZero = true
-						break
-					}
-				}
-			}
-		}
-	}
-	return true
-}
-
-// isValidNetmask6 checks if a byte array represents a valid IPv6 netmask
-func (n *neti) isValidNetmask6(mask []byte) bool {
-	if len(mask) != 16 {
-		return false
-	}
-	seenZero := false
-	for _, b := range mask {
-		if seenZero {
-			if b != 0 {
-				return false
-			}
-		} else {
-			if b == 0xff {
-				continue
-			} else if b == 0 {
-				seenZero = true
-			} else {
-				// Check if it's a valid partial byte
-				for i := 0; i < 8; i++ {
-					if b&(1<<(7-i)) == 0 {
-						if b&((1<<(7-i))-1) != 0 {
-							return false
-						}
-						seenZero = true
-						break
-					}
-				}
-			}
-		}
-	}
-	return true
 }
 
 // parseRouteFlags converts route flags integer to an array of flag strings
