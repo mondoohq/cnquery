@@ -177,12 +177,56 @@ func (n *neti) detectWindowsRoutesViaNetstat() ([]Route, error) {
 // IPv4 format: P1=empty, P2=Destination, P3=Netmask, P4=Gateway, P5=Interface, P6=Metric
 // IPv6 format: P1=empty, P2=If, P3=Metric, P4=Network Destination, P5=Gateway, P6=Gateway
 type NetstatRoute struct {
-	P1 string `json:"p1"` // Empty (leading spaces) or header text
-	P2 string `json:"p2"` // Destination (IPv4) or If (IPv6)
-	P3 string `json:"p3"` // Netmask (IPv4) or Metric (IPv6)
-	P4 string `json:"p4"` // Gateway (IPv4) or Network Destination (IPv6)
-	P5 string `json:"p5"` // Interface (IPv4) or Gateway (IPv6)
-	P6 string `json:"p6"` // Metric (IPv4) or Gateway (IPv6, when "On-link" appears)
+	P1 string `json:"P1"` // Empty (leading spaces) or header text
+	P2 string `json:"P2"` // Destination (IPv4) or If (IPv6)
+	P3 string `json:"P3"` // Netmask (IPv4) or Metric (IPv6)
+	P4 string `json:"P4"` // Gateway (IPv4) or Network Destination (IPv6)
+	P5 string `json:"P5"` // Interface (IPv4) or Gateway (IPv6)
+	P6 string `json:"P6"` // Metric (IPv4) or Gateway (IPv6, when "On-link" appears)
+}
+
+// UnmarshalJSON handles case-insensitive field names (P1/P2/P3 vs p1/p2/p3)
+// and converts numeric values to strings
+func (n *NetstatRoute) UnmarshalJSON(data []byte) error {
+	var m map[string]interface{}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+
+	// Handle both uppercase and lowercase field names, and convert numbers to strings
+	getString := func(key string) string {
+		// Try uppercase first
+		if val, ok := m[key]; ok && val != nil {
+			if s, ok := val.(string); ok {
+				return s
+			}
+			// Convert number to string
+			if num, ok := val.(float64); ok {
+				return fmt.Sprintf("%.0f", num)
+			}
+		}
+		// Try lowercase version
+		lowerKey := strings.ToLower(key)
+		if val, ok := m[lowerKey]; ok && val != nil {
+			if s, ok := val.(string); ok {
+				return s
+			}
+			// Convert number to string
+			if num, ok := val.(float64); ok {
+				return fmt.Sprintf("%.0f", num)
+			}
+		}
+		return ""
+	}
+
+	n.P1 = getString("P1")
+	n.P2 = getString("P2")
+	n.P3 = getString("P3")
+	n.P4 = getString("P4")
+	n.P5 = getString("P5")
+	n.P6 = getString("P6")
+
+	return nil
 }
 
 // parseNetstatPowerShellOutput parses JSON output from netstat -rn via ConvertFrom-String
@@ -210,18 +254,21 @@ func (n *neti) parseNetstatPowerShellOutput(output string, ipToNameMap map[strin
 			if strings.Contains(route.P1, "IPv6") || strings.Contains(route.P2, "IPv6") {
 				inIPv6Table = true
 				inIPv4Table = false
-			} else if strings.Contains(route.P2, "Network") && strings.Contains(route.P3, "Destination") {
+			} else if route.P1 == "Network" && route.P2 == "Destination" {
 				inIPv4Table = true
 				inIPv6Table = false
-			} else if strings.Contains(route.P2, "If") && strings.Contains(route.P3, "Metric") {
+			} else if route.P2 == "If" && route.P3 == "Metric" {
 				inIPv6Table = true
 				inIPv4Table = false
 			}
 			continue
 		}
 
-		// Skip empty rows
+		// Skip empty rows and non-route rows
 		if route.P1 == "" && route.P2 == "" && route.P3 == "" && route.P4 == "" {
+			continue
+		}
+		if route.P2 == "None" {
 			continue
 		}
 
@@ -242,7 +289,6 @@ func (n *neti) parseNetstatPowerShellOutput(output string, ipToNameMap map[strin
 				pendingIPv6Route = nil
 				continue
 			}
-
 			if route.P4 != "" && (strings.Contains(route.P4, ":") || strings.Contains(route.P4, "::")) {
 				r := n.parseIPv6NetstatRoute(route)
 				if r != nil {

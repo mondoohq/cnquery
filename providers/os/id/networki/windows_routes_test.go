@@ -505,7 +505,7 @@ func TestParsePowerShellGetNetRouteOutput(t *testing.T) {
 
 	expectedRoutes := []Route{
 		// IPv4 routes
-		{Destination: "0.0.0.0", Gateway: "192.168.64.1", Interface: "Ethernet"},
+		{Destination: "0.0.0.0/0", Gateway: "192.168.64.1", Interface: "Ethernet"},
 		{Destination: "127.0.0.0/8", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
 		{Destination: "127.0.0.1/32", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
 		{Destination: "127.255.255.255/32", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
