@@ -517,14 +517,14 @@ func TestParsePowerShellGetNetRouteOutput(t *testing.T) {
 		{Destination: "255.255.255.255/32", Gateway: "127.0.0.1", Interface: "Loopback Pseudo-Interface 1"},
 		{Destination: "255.255.255.255/32", Gateway: "192.168.64.3", Interface: "Ethernet"},
 		// IPv6 routes
-		{Destination: "::1/128", Gateway: "::", Interface: ""},
-		{Destination: "fd28:df6a:5fc8:2cb::/64", Gateway: "::", Interface: ""},
-		{Destination: "fd28:df6a:5fc8:2cb:cd60:a4f0:52ca:3c3/128", Gateway: "::", Interface: ""},
-		{Destination: "fd28:df6a:5fc8:2cb:d33a:a509:e9d8:681a/128", Gateway: "::", Interface: ""},
-		{Destination: "fe80::/64", Gateway: "::", Interface: ""},
-		{Destination: "fe80::9b29:7b8f:bc2:f9bf/128", Gateway: "::", Interface: ""},
-		{Destination: "ff00::/8", Gateway: "::", Interface: ""},
-		{Destination: "ff00::/8", Gateway: "::", Interface: ""},
+		{Destination: "::1/128", Gateway: "::", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "fd28:df6a:5fc8:2cb::/64", Gateway: "::", Interface: "Ethernet"},
+		{Destination: "fd28:df6a:5fc8:2cb:cd60:a4f0:52ca:3c3/128", Gateway: "::", Interface: "Ethernet"},
+		{Destination: "fd28:df6a:5fc8:2cb:d33a:a509:e9d8:681a/128", Gateway: "::", Interface: "Ethernet"},
+		{Destination: "fe80::/64", Gateway: "::", Interface: "Ethernet"},
+		{Destination: "fe80::9b29:7b8f:bc2:f9bf/128", Gateway: "::", Interface: "Ethernet"},
+		{Destination: "ff00::/8", Gateway: "::", Interface: "Loopback Pseudo-Interface 1"},
+		{Destination: "ff00::/8", Gateway: "::", Interface: "Ethernet"},
 	}
 
 	n := &neti{}

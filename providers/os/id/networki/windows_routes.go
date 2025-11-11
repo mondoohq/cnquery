@@ -126,11 +126,9 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 		}
 
 		var iface string
-		if netRoute.AddressFamily == addressFamilyIPv4 {
-			iface = netRoute.InterfaceAlias
-			if iface == "" {
-				iface = fmt.Sprintf("%d", netRoute.InterfaceIndex)
-			}
+		iface = netRoute.InterfaceAlias
+		if iface == "" {
+			iface = fmt.Sprintf("%d", netRoute.InterfaceIndex)
 		}
 		routes = append(routes, Route{
 			Destination: destination,
