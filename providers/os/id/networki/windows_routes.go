@@ -136,7 +136,7 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 		routes = append(routes, Route{
 			Destination: destination,
 			Gateway:     gateway,
-			Flags:       0,
+			Flags:       []string{},
 			Interface:   iface,
 		})
 	}
