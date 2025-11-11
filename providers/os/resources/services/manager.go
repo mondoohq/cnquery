@@ -181,6 +181,8 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.Name == "nobara": // fedora based
 		osm = ResolveSystemdServiceManager(conn)
+	case asset.Platform.Name == "flatcar":
+		osm = ResolveSystemdServiceManager(conn)
 	}
 
 	if osm == nil {
