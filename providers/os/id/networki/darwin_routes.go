@@ -127,22 +127,6 @@ func (n *neti) fetchDarwinRoutes(af int) ([]Route, error) {
 			continue
 		}
 
-		// Filter out IPv6 prefix routes (fe80::%X) that osquery doesn't show
-		// osquery only shows specific link-local addresses, not prefix routes
-		if strings.HasPrefix(dest, "fe80::%") && !strings.Contains(dest[7:], ":") {
-			// This is a prefix route like "fe80::%1", "fe80::%11", etc.
-			// osquery doesn't show these, only specific addresses like "fe80::1%lo0"
-			continue
-		}
-
-		// Filter out IPv6 link-local routes where gateway is another link-local address
-		// osquery only shows link-local routes with link#X gateways, not IP gateways
-		if strings.HasPrefix(dest, "fe80::") && strings.HasPrefix(gateway, "fe80::") {
-			// This is a link-local route with an IP gateway (not link#X)
-			// osquery doesn't show these, only routes with link#X gateways
-			continue
-		}
-
 		routes = append(routes, Route{
 			Destination: dest,
 			Gateway:     gateway,
