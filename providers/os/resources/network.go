@@ -131,14 +131,11 @@ func (c *mqlNetwork) routes() (*mqlNetworkRoutes, error) {
 			}
 		}
 
-		// Convert flags to string array
-		flagStrings := route.FlagsToStrings()
-
 		routeRes, err := NewResource(c.MqlRuntime, "networkRoute", map[string]*llx.RawData{
 			"__id":        llx.StringData(route.Destination + "/" + route.Gateway + "/" + route.Interface),
 			"destination": llx.StringData(route.Destination),
 			"gateway":     llx.StringData(route.Gateway),
-			"flags":       llx.ArrayData(convert.SliceAnyToInterface(flagStrings), types.String),
+			"flags":       llx.ArrayData(convert.SliceAnyToInterface(route.Flags), types.String),
 			"iface":       llx.ResourceData(ifaceResource, "networkInterface"),
 		})
 		if err != nil {
