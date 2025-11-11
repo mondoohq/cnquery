@@ -114,16 +114,8 @@ func (n *neti) fetchDarwinRoutes(af int) ([]Route, error) {
 			continue
 		}
 
-		// Filter out IPv6 multicast routes (ff00::/8) to match osquery behavior
-		if destIP := net.ParseIP(dest); destIP != nil {
-			if destIP.To4() == nil && destIP.To16() != nil {
-				// IPv6 multicast addresses start with 0xff
-				if destIP[0] == 0xff {
-					continue
-				}
-			}
-		} else if strings.HasPrefix(dest, "ff") {
-			// IPv6 multicast CIDR notation
+		// Filter out IPv6 multicast routes (ff00::/8) to match osquery results
+		if strings.Contains(dest, ":") && strings.HasPrefix(dest, "ff") {
 			continue
 		}
 
@@ -186,15 +178,16 @@ func (n *neti) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[
 
 	// Get netmask (index 2) and convert to CIDR if present
 	if len(routeMsg.Addrs) > 2 && routeMsg.Addrs[2] != nil && dest != "" {
+		var maskBytes []byte
 		switch a := routeMsg.Addrs[2].(type) {
 		case *route.Inet4Addr:
-			ones, bits := net.IPMask(a.IP[:]).Size()
-			if bits > 0 { // Size() returns 0,0 for invalid masks
-				dest = fmt.Sprintf("%s/%d", dest, ones)
-			}
+			maskBytes = a.IP[:]
 		case *route.Inet6Addr:
-			ones, bits := net.IPMask(a.IP[:]).Size()
-			if bits > 0 { // Size() returns 0,0 for invalid masks
+			maskBytes = a.IP[:]
+		}
+		if maskBytes != nil {
+			ones, bits := net.IPMask(maskBytes).Size()
+			if bits > 0 {
 				dest = fmt.Sprintf("%s/%d", dest, ones)
 			}
 		}

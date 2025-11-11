@@ -14,7 +14,7 @@ import (
 	"golang.org/x/net/route"
 )
 
-func TestParseRouteMessage(t *testing.T) {
+func Test_parseRouteMessage(t *testing.T) {
 	pf := &inventory.Platform{
 		Family: []string{"darwin"},
 	}

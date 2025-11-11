@@ -125,7 +125,6 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 			}
 		}
 
-		// Use interface name (InterfaceAlias) to match network.interfaces
 		var iface string
 		if netRoute.AddressFamily == addressFamilyIPv4 {
 			iface = netRoute.InterfaceAlias
@@ -337,7 +336,7 @@ func (n *neti) parseIPv4NetstatRoute(route NetstatRoute, ipToNameMap map[string]
 	return &Route{
 		Destination: dest,
 		Gateway:     gateway,
-		Flags:       0,
+		Flags:       []string{},
 		Interface:   iface,
 	}
 }
@@ -368,7 +367,7 @@ func (n *neti) parseIPv6NetstatRoute(route NetstatRoute) *Route {
 	return &Route{
 		Destination: dest,
 		Gateway:     gateway,
-		Flags:       0,
+		Flags:       []string{},
 		Interface:   "",
 	}
 }

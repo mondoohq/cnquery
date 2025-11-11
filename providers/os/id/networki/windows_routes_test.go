@@ -294,7 +294,17 @@ func TestParseNetstatPowerShellOutput(t *testing.T) {
 	}
 
 	n := &neti{}
-	routes, err := n.parseNetstatPowerShellOutput(netstatJSON)
+	interfaces, err := n.detectWindowsInterfaces()
+	assert.NoError(t, err)
+	ipToNameMap := make(map[string]string)
+	for _, iface := range interfaces {
+		for _, ipaddr := range iface.IPAddresses {
+			if ipaddr.IP != nil {
+				ipToNameMap[ipaddr.IP.String()] = iface.Name
+			}
+		}
+	}
+	routes, err := n.parseNetstatPowerShellOutput(netstatJSON, ipToNameMap)
 	require.NoError(t, err)
 
 	// Compare routes (order may differ, so check by destination+gateway+interface)
@@ -500,7 +510,6 @@ func TestParsePowerShellGetNetRouteOutput(t *testing.T) {
 		}
 	]`
 
-	// Use the same expected routes as the netstat test
 	expectedRoutes := []Route{
 		// IPv4 routes
 		{Destination: "0.0.0.0", Gateway: "192.168.64.1", Interface: "192.168.64.3"},

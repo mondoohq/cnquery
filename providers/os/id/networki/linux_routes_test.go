@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParseIpRouteJSON(t *testing.T) {
+func Test_parseIpRouteJSON(t *testing.T) {
 	// Example JSON output from 'ip -json route show table all'
 	jsonOutput := `
 [
