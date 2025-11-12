@@ -58,17 +58,14 @@ func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
 
 // detectDarwinRoutes detects network routes on macOS using golang.org/x/net/route
 func (n *neti) detectDarwinRoutes() ([]Route, error) {
-	// Get IPv4 routes
 	ipv4Routes, err := n.fetchDarwinRoutes(unix.AF_INET)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get IPv4 routes")
 	}
 
-	// Get IPv6 routes
 	ipv6Routes, err := n.fetchDarwinRoutes(unix.AF_INET6)
 	if err != nil {
-		// IPv6 routes are optional, log but don't fail
-		log.Debug().Err(err).Msg("failed to get IPv6 routes")
+		return nil, errors.Wrap(err, "failed to get IPv4 routes")
 	}
 	routes := append(ipv4Routes, ipv6Routes...)
 
@@ -90,8 +87,7 @@ func (n *neti) fetchDarwinRoutes(af int) ([]Route, error) {
 	// Get interface map to resolve interface indices to names
 	interfaceMap, err := n.getDarwinInterfaceMap()
 	if err != nil {
-		log.Debug().Err(err).Msg("failed to get interface map, using indices")
-		interfaceMap = make(map[int]string)
+		return nil, errors.Wrap(err, "failed to get interface map")
 	}
 
 	var routes []Route
@@ -101,7 +97,6 @@ func (n *neti) fetchDarwinRoutes(af int) ([]Route, error) {
 			continue
 		}
 
-		// Extract route information
 		dest, gateway, iface, err := n.parseRouteMessage(routeMsg, interfaceMap)
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to parse route message")
