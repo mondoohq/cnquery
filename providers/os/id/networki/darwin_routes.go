@@ -75,15 +75,13 @@ func (n *neti) detectDarwinRoutes() ([]Route, error) {
 	return routes, nil
 }
 
-// fetchDarwinRoutes fetches routes for a specific address family
+// fetchDarwinRoutes fetches routes for a ipv4 or ipv6 address family
 func (n *neti) fetchDarwinRoutes(af int) ([]Route, error) {
-	// Fetch routing information base
 	rib, err := route.FetchRIB(af, route.RIBTypeRoute, 0)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch RIB")
 	}
 
-	// Parse the RIB
 	messages, err := route.ParseRIB(route.RIBTypeRoute, rib)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse RIB")
@@ -134,7 +132,6 @@ func (n *neti) fetchDarwinRoutes(af int) ([]Route, error) {
 func (n *neti) getDarwinInterfaceMap() (map[int]string, error) {
 	interfaceMap := make(map[int]string)
 
-	// Fetch interface list
 	rib, err := route.FetchRIB(unix.AF_UNSPEC, route.RIBTypeInterface, 0)
 	if err != nil {
 		return nil, err
@@ -155,7 +152,7 @@ func (n *neti) getDarwinInterfaceMap() (map[int]string, error) {
 }
 
 // parseRouteMessage extracts destination, gateway, and interface from a RouteMessage
-// RouteMessage.Addrs contains addresses in specific order on macOS:
+// RouteMessage.Addrs contains addresses in this order on macOS:
 // Index 0: Destination (Inet4Addr/Inet6Addr)
 // Index 1: Gateway (Inet4Addr/Inet6Addr or LinkAddr)
 // Index 2: Netmask (Inet4Addr/Inet6Addr, if present)
@@ -209,7 +206,7 @@ func (n *neti) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[
 }
 
 // addrToString converts a route.Addr to a string IP address
-// For IPv6 addresses with zone IDs, converts the zone ID to interface name to match osquery format
+// For IPv6 addresses with zone IDs, converts the zone ID to interface name to match osquery format (e.g., %16 -> %utun1)
 func (n *neti) addrToString(addr route.Addr, interfaceMap map[int]string) string {
 	switch a := addr.(type) {
 	case *route.Inet4Addr:
@@ -218,11 +215,9 @@ func (n *neti) addrToString(addr route.Addr, interfaceMap map[int]string) string
 		ip := make(net.IP, 16)
 		copy(ip, a.IP[:])
 		if a.ZoneID > 0 {
-			// Convert zone ID to interface name to match osquery format (e.g., %16 -> %utun1)
 			if ifaceName, ok := interfaceMap[a.ZoneID]; ok {
 				return fmt.Sprintf("%s%%%s", ip.String(), ifaceName)
 			}
-			// Fallback to zone ID number if interface name not found
 			return fmt.Sprintf("%s%%%d", ip.String(), a.ZoneID)
 		}
 		return ip.String()

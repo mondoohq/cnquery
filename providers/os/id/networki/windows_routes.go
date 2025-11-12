@@ -183,8 +183,7 @@ type NetstatRoute struct {
 	P6 string `json:"P6"` // Metric (IPv4) or Gateway (IPv6, when "On-link" appears)
 }
 
-// UnmarshalJSON handles case-insensitive field names (P1/P2/P3 vs p1/p2/p3)
-// and converts numeric values to strings
+// UnmarshalJSON handles unstable fields where type and field name is inconsistent
 func (n *NetstatRoute) UnmarshalJSON(data []byte) error {
 	var m map[string]interface{}
 	if err := json.Unmarshal(data, &m); err != nil {
@@ -235,7 +234,7 @@ func (n *neti) parseNetstatPowerShellOutput(output string, ipToNameMap map[strin
 	var netstatRoutes []NetstatRoute
 	err := json.Unmarshal([]byte(output), &netstatRoutes)
 	if err != nil {
-		// If it fails, try parsing as a single object
+		// try parsing as a single object
 		var singleRoute NetstatRoute
 		err = json.Unmarshal([]byte(output), &singleRoute)
 		if err != nil {
@@ -371,7 +370,6 @@ func (n *neti) parseIPv4NetstatRoute(route NetstatRoute, ipToNameMap map[string]
 		dest = fmt.Sprintf("%s/%d", destination, ones)
 	}
 
-	// Convert interface IP to interface name using lookup map
 	iface := ifaceIP
 	if name, ok := ipToNameMap[ifaceIP]; ok {
 		iface = name
