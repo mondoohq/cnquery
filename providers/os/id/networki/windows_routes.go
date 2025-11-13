@@ -146,8 +146,7 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 func (n *neti) detectWindowsRoutesViaNetstat() ([]Route, error) {
 	interfaces, err := n.detectWindowsInterfaces()
 	if err != nil {
-		log.Debug().Err(err).Msg("failed to get interfaces for netstat route parsing")
-		interfaces = []Interface{}
+		return nil, errors.Wrap(err, "failed to get interfaces for netstat route parsing")
 	}
 
 	// Create IP -> Interface Name lookup map
