@@ -19,10 +19,9 @@ import (
 // createHTTPClientForInterface creates an HTTP client bound to a specific network interface
 // by binding to the local IP address of that interface
 func createHTTPClientForInterface(interfaceIP net.IP) (*http.Client, error) {
-	// Resolve the local TCP address with dynamic port (0)
 	var localAddr net.Addr
 	var err error
-	
+
 	if interfaceIP.To4() != nil {
 		// IPv4
 		localAddr, err = net.ResolveTCPAddr("tcp4", interfaceIP.String()+":0")
@@ -58,7 +57,7 @@ func createHTTPClientForInterface(interfaceIP net.IP) (*http.Client, error) {
 
 func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	token := os.Getenv("IPINFO_TOKEN")
-	
+
 	var queryIP net.IP
 	var inputIP *llx.RawData
 	var isLocalIP bool
@@ -87,9 +86,6 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 				return nil, nil, errors.Wrap(err, "failed to create HTTP client for interface")
 			}
 			queryIP = nil // Query for YOUR public IP from this interface
-		} else {
-			// Public IP provided - query info about that specific IP
-			// No need to bind to interface for public IP queries
 		}
 	} else {
 		// No IP provided - get YOUR public IP (the one visible from internet)
@@ -101,12 +97,12 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	// Otherwise use default client from connection or create new one
 	var ipinfoClient *ipinfo.Client
 	conn := runtime.Connection.(*connection.IpinfoConnection)
-	
+
 	if httpClient != nil {
 		// Use the interface-bound HTTP client
 		ipinfoClient = ipinfo.NewClient(httpClient, nil, token)
 	} else {
-		// Use default client (from connection or create new)
+		// Use default client
 		client := conn.Client()
 		if client == nil {
 			ipinfoClient = ipinfo.NewClient(nil, nil, token)
