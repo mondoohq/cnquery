@@ -989,7 +989,7 @@ eth0	000011AC	00000000	0001	0	0	0	0000FFFF	0	0	0
 			destination:   "0.0.0.0/0",
 			gateway:       "172.17.0.1",
 			interfaceName: "eth0",
-			expectedFlags: []string{"UP", "GATEWAY"},
+			expectedFlags: []string{"GATEWAY", "UP"},
 		},
 		{
 			name:          "Network route",
@@ -1108,7 +1108,7 @@ wlo1	00B2A8C0	00000000	0001	0	0	600	00FFFFFF	0	0	0
 			destination:   "0.0.0.0/0",
 			gateway:       "192.168.178.1",
 			interfaceName: "wlo1",
-			expectedFlags: []string{"UP", "GATEWAY"},
+			expectedFlags: []string{"GATEWAY", "UP"},
 		},
 		{
 			name:          "Docker network route",

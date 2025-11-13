@@ -5,6 +5,7 @@ package networki
 
 import (
 	"net"
+	"sort"
 
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
@@ -88,5 +89,7 @@ func parseFlags(flags int64, flagsMap map[int64]string) []string {
 			flagStrings = append(flagStrings, name)
 		}
 	}
+
+	sort.Strings(flagStrings)
 	return flagStrings
 }
