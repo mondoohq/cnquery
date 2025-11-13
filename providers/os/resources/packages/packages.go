@@ -105,7 +105,7 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		// This is supported in Debian and Ubuntu:
 		// https: // snapcraft.io/docs/distro-support
 		pms = append(pms, &SnapPkgManager{conn: conn, platform: asset.Platform})
-	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux":
+	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux" || asset.Platform.Name == "bottlerocket":
 		fallthrough
 	case asset.Platform.IsFamily("redhat") || asset.Platform.IsFamily("euler") || asset.Platform.Name == "mageia": // rhel/euler/mageia based systems
 		pms = append(pms, &RpmPkgManager{conn: conn, platform: asset.Platform})
