@@ -79,7 +79,7 @@ func (a *AixPkgManager) Format() string {
 func (a *AixPkgManager) List() ([]Package, error) {
 	cmd, err := a.conn.RunCommand("lslpp -cl ")
 	if err != nil {
-		return nil, fmt.Errorf("could not read freebsd package list")
+		return nil, fmt.Errorf("could not read aix package list")
 	}
 
 	return parseAixPackages(a.platform, cmd.Stdout)

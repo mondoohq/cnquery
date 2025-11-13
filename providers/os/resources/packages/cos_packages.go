@@ -44,7 +44,7 @@ func (cpm *CosPkgManager) List() ([]Package, error) {
 	// https://cloud.google.com/container-optimized-os/docs/release-notes/m85#cos-85-13310-1260-1
 	fr, err := cpm.conn.FileSystem().Open("/etc/cos-package-info.json")
 	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
+		return nil, fmt.Errorf("could not read cos package list")
 	}
 	defer fr.Close()
 

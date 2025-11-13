@@ -152,7 +152,7 @@ func (apm *AlpinePkgManager) Format() string {
 func (apm *AlpinePkgManager) List() ([]Package, error) {
 	fr, err := apm.conn.FileSystem().Open("/lib/apk/db/installed")
 	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
+		return nil, fmt.Errorf("could not read apk package list")
 	}
 	defer fr.Close()
 
@@ -167,7 +167,7 @@ func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {
 	cmd, err := apm.conn.RunCommand("apk version -v -l '<'")
 	if err != nil {
 		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
-		return nil, fmt.Errorf("could not read package update list")
+		return nil, fmt.Errorf("could not read apk package update list")
 	}
 	return ParseApkUpdates(cmd.Stdout)
 }
