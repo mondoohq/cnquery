@@ -956,3 +956,119 @@ func Test_parseIpRouteJSON(t *testing.T) {
 		})
 	}
 }
+
+func Test_parseLinuxRoutesFromProc(t *testing.T) {
+	// Test data from Alpine container /proc/net/route
+	procOutput := `Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRTT                                                       
+eth0	00000000	010011AC	0003	0	0	0	00000000	0	0	0                                                                               
+eth0	000011AC	00000000	0001	0	0	0	0000FFFF	0	0	0                                                                               
+
+`
+
+	n := &neti{}
+	routes, err := n.parseLinuxRoutesFromProc(procOutput)
+	require.NoError(t, err)
+	require.Len(t, routes, 2, "Should parse 2 routes from /proc/net/route")
+
+	// Build route map for easy lookup
+	routeMap := make(map[string]*Route, len(routes))
+	for i := range routes {
+		key := routes[i].Destination + "|" + routes[i].Gateway + "|" + routes[i].Interface
+		routeMap[key] = &routes[i]
+	}
+
+	tests := []struct {
+		name          string
+		destination   string
+		gateway       string
+		interfaceName string
+		expectedFlags []string
+	}{
+		{
+			name:          "Default route",
+			destination:   "0.0.0.0/0",
+			gateway:       "172.17.0.1",
+			interfaceName: "eth0",
+			expectedFlags: []string{"UP"},
+		},
+		{
+			name:          "Network route",
+			destination:   "172.17.0.0/16",
+			gateway:       "",
+			interfaceName: "eth0",
+			expectedFlags: []string{"UP"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			key := tt.destination + "|" + tt.gateway + "|" + tt.interfaceName
+			found, exists := routeMap[key]
+
+			require.True(t, exists, "Route not found: %s", key)
+			assert.Equal(t, tt.destination, found.Destination, "Destination should match")
+			assert.Equal(t, tt.gateway, found.Gateway, "Gateway should match")
+			assert.Equal(t, tt.interfaceName, found.Interface, "Interface should match")
+			assert.Equal(t, tt.expectedFlags, found.Flags, "Flags should match")
+		})
+	}
+}
+
+func Test_parseLinuxIPv6RoutesFromProc(t *testing.T) {
+	// Test data from Alpine container /proc/net/ipv6_route (exact content from alpine-proc-test/proc_net_ipv6_route.txt)
+	procOutput := `00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo
+00000000000000000000000000000001 80 00000000000000000000000000000000 00 00000000000000000000000000000000 00000000 00000002 00000000 80200001       lo
+00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo
+
+`
+
+	n := &neti{}
+	routes, err := n.parseLinuxIPv6RoutesFromProc(procOutput)
+	require.NoError(t, err)
+	// The test data has 3 lines: 2 default routes (::/0) and 1 localhost route (::1/128)
+	// So we expect 3 routes, but 2 are duplicates in the map
+	require.GreaterOrEqual(t, len(routes), 2, "Should parse at least 2 routes from /proc/net/ipv6_route")
+
+	// Build route map for easy lookup
+	routeMap := make(map[string]*Route, len(routes))
+	for i := range routes {
+		key := routes[i].Destination + "|" + routes[i].Gateway + "|" + routes[i].Interface
+		routeMap[key] = &routes[i]
+	}
+
+	tests := []struct {
+		name          string
+		destination   string
+		gateway       string
+		interfaceName string
+		expectedFlags []string
+	}{
+		{
+			name:          "IPv6 default route",
+			destination:   "::/0",
+			gateway:       "::",
+			interfaceName: "lo",
+			expectedFlags: []string{},
+		},
+		{
+			name:          "IPv6 localhost route",
+			destination:   "::1/128",
+			gateway:       "::",
+			interfaceName: "lo",
+			expectedFlags: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			key := tt.destination + "|" + tt.gateway + "|" + tt.interfaceName
+			found, exists := routeMap[key]
+
+			require.True(t, exists, "Route not found: %s", key)
+			assert.Equal(t, tt.destination, found.Destination, "Destination should match")
+			assert.Equal(t, tt.gateway, found.Gateway, "Gateway should match")
+			assert.Equal(t, tt.interfaceName, found.Interface, "Interface should match")
+			assert.Equal(t, tt.expectedFlags, found.Flags, "Flags should match")
+		})
+	}
+}
