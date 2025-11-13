@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
@@ -48,10 +49,8 @@ func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
 // First tries 'ip -json route show table all' (modern approach)
 // Falls back to /proc/net/route and /proc/net/ipv6_route if ip -json is not available (e.g., Alpine Linux)
 func (n *neti) detectLinuxRoutes() ([]Route, error) {
-	// Try modern ip -json approach first
 	output, err := n.RunCommand("ip -json route show table all")
 	if err == nil {
-		// Successfully got JSON output, parse it
 		return n.parseIpRouteJSON(output)
 	}
 
@@ -67,17 +66,13 @@ func (n *neti) detectLinuxRoutes() ([]Route, error) {
 		return nil, errors.Wrap(err, "failed to parse IPv4 routes from /proc/net/route")
 	}
 
-	// Get IPv6 routes from /proc/net/ipv6_route
 	ipv6Data, err := afero.ReadFile(n.connection.FileSystem(), "/proc/net/ipv6_route")
 	var ipv6Routes []Route
-	if err != nil {
-		// IPv6 routes are optional, log but don't fail
-		// Some alpine systems may not have IPv6 enabled
-		ipv6Routes = []Route{}
-	} else {
+	if err == nil {
 		ipv6Routes, err = n.parseLinuxIPv6RoutesFromProc(string(ipv6Data))
 		if err != nil {
-			// IPv6 parsing failed, but don't fail the whole operation
+			// Some alpine systems may not have IPv6 enabled
+			log.Warn().Err(err).Msg("Failed to parse IPv6 routes from /proc/net/ipv6_route")
 			ipv6Routes = []Route{}
 		}
 	}
@@ -105,11 +100,6 @@ func (n *neti) parseIpRouteJSON(output string) ([]Route, error) {
 
 // convertJSONRouteToRoute converts an ipRouteJSON to a Route
 func (n *neti) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Route {
-	// Skip routes without a device
-	if jsonRoute.Dev == "" {
-		return nil
-	}
-
 	route := &Route{
 		Interface: jsonRoute.Dev,
 		Gateway:   jsonRoute.Gateway,
@@ -146,6 +136,7 @@ func (n *neti) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Route {
 
 // parseLinuxRoutesFromProc parses IPv4 routes from /proc/net/route output
 // Format: Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT
+// based on osquery implementation https://github.com/osquery/osquery/blob/master/osquery/tables/networking/linux/routes.cpp
 func (n *neti) parseLinuxRoutesFromProc(output string) ([]Route, error) {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	if len(lines) < 2 {
@@ -180,9 +171,12 @@ func (n *neti) parseLinuxRoutesFromProc(output string) ([]Route, error) {
 			continue
 		}
 
+		destStr := dest.String()
 		// Calculate CIDR from netmask
-		ones, _ := net.IPMask(mask.To4()).Size()
-		destStr := fmt.Sprintf("%s/%d", dest.String(), ones)
+		if mask.To4() != nil {
+			ones, _ := net.IPMask(mask.To4()).Size()
+			destStr = fmt.Sprintf("%s/%d", dest.String(), ones)
+		}
 
 		// Handle default route
 		if dest.Equal(net.IPv4zero) {
@@ -195,13 +189,8 @@ func (n *neti) parseLinuxRoutesFromProc(output string) ([]Route, error) {
 			flagsInt = 0
 		}
 
-		// Convert flags to strings (simplified - just check for UP flag)
-		var flags []string
-		if flagsInt&0x1 != 0 { // RTF_UP
-			flags = []string{"UP"}
-		} else {
-			flags = []string{}
-		}
+		// Convert flags to strings using BSD-style route flags (RTF_*)
+		flags := parseRouteFlags(int64(flagsInt))
 
 		// Handle gateway
 		gatewayStr := gateway.String()
@@ -222,7 +211,7 @@ func (n *neti) parseLinuxRoutesFromProc(output string) ([]Route, error) {
 
 // parseLinuxIPv6RoutesFromProc parses IPv6 routes from /proc/net/ipv6_route output
 // Format: destination dest_prefix_len source src_prefix_len next_hop metric ref use flags device
-// Based on Linux kernel format and osquery implementation
+// Based on osquery implementation https://github.com/osquery/osquery/blob/master/osquery/tables/networking/linux/routes.cpp
 func (n *neti) parseLinuxIPv6RoutesFromProc(output string) ([]Route, error) {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	if len(lines) == 0 {
