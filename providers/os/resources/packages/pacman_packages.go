@@ -59,7 +59,7 @@ func (ppm *PacmanPkgManager) Format() string {
 func (ppm *PacmanPkgManager) List() ([]Package, error) {
 	cmd, err := ppm.conn.RunCommand("pacman -Q")
 	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
+		return nil, fmt.Errorf("could not read pacman package list")
 	}
 
 	return ParsePacmanPackages(ppm.platform, cmd.Stdout), nil
