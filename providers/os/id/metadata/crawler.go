@@ -97,6 +97,14 @@ var multilineStringFields = []string{
 	"instance/attributes/startup-script",
 	"instance/attributes/shutdown-script",
 	"instance/attributes/user-data",
+	"instance/attributes/windows-startup-script-ps1",
+	"instance/attributes/windows-startup-script-cmd",
+	"instance/attributes/windows-startup-script-bat",
+	"instance/attributes/windows-startup-script-url",
+	"instance/attributes/sysprep-specialize-script-ps1",
+	"instance/attributes/sysprep-specialize-script-cmd",
+	"instance/attributes/sysprep-specialize-script-bat",
+	"instance/attributes/sysprep-specialize-script-url",
 }
 
 // isMultilineString checks if a path should be treated as a raw multiline string.
