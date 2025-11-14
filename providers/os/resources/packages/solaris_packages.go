@@ -61,7 +61,7 @@ func ParseSolarisPackages(input io.Reader) []Package {
 	for scanner.Scan() {
 		line := scanner.Text()
 		m := SOLARIS_PKG_REGEX.FindStringSubmatch(line)
-		if m != nil && len(m) >= 1 {
+		if len(m) >= 1 {
 			// TODO: check that it has the i flag
 			spkg, err := ParseSolarisFmri(m[0])
 			if err == nil {
@@ -89,7 +89,7 @@ func (script *SolarisPkgManager) Format() string {
 }
 
 func (s *SolarisPkgManager) List() ([]Package, error) {
-	cmd, err := s.conn.RunCommand("pkg list -v")
+	cmd, err := s.conn.RunCommand("pkg list -Hv")
 	if err != nil {
 		return nil, fmt.Errorf("could not read solaris package list")
 	}

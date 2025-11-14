@@ -20,6 +20,7 @@ type Service struct {
 	Running     bool
 	Enabled     bool
 	Masked      bool
+	Path        string
 }
 
 type State string
@@ -133,7 +134,7 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		}
 	case asset.Platform.Name == "raspbian" || asset.Platform.Name == "parrot": // debian based distros that have always been systemd
 		osm = ResolveSystemdServiceManager(conn)
-	case asset.Platform.Name == "suse-microos": // it is suse family but uses a different version scheme
+	case asset.Platform.Name == "suse-microos" || asset.Platform.Name == "opensuse-microos": // suse family but uses a different version scheme
 		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.IsFamily("suse"):
 		rv := detector.ParseOsVersion(asset.Platform.Version)
@@ -157,7 +158,9 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 	case asset.Platform.Name == "windows":
 		osm = &WindowsServiceManager{conn: conn}
 	case asset.Platform.Name == "alpine":
-		osm = &AlpineOpenrcServiceManager{conn: conn}
+		osm = &OpenrcServiceManager{conn: conn}
+	case asset.Platform.Name == "gentoo":
+		osm = &OpenrcServiceManager{conn: conn}
 	case asset.Platform.Name == "cos":
 		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.Name == "aix":
@@ -169,6 +172,16 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 	case asset.Platform.Name == "mageia": // mageia 2 and later are systemd based
 		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.Name == "cloudlinux": // rhel based
+		osm = ResolveSystemdServiceManager(conn)
+	case asset.Platform.Name == "elementary": // ubuntu based
+		osm = ResolveSystemdServiceManager(conn)
+	case asset.Platform.Name == "mx": // debian based
+		osm = ResolveSystemdServiceManager(conn)
+	case asset.Platform.Name == "zorin": // ubuntu based
+		osm = ResolveSystemdServiceManager(conn)
+	case asset.Platform.Name == "nobara": // fedora based
+		osm = ResolveSystemdServiceManager(conn)
+	case asset.Platform.Name == "flatcar":
 		osm = ResolveSystemdServiceManager(conn)
 	}
 

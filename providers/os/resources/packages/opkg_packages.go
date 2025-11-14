@@ -127,7 +127,7 @@ func (opkg *OpkgPkgManager) List() ([]Package, error) {
 	if opkg.conn.Capabilities().Has(shared.Capability_RunCommand) {
 		cmd, err := opkg.conn.RunCommand("opkg list-installed")
 		if err != nil {
-			return nil, fmt.Errorf("could not read package list")
+			return nil, fmt.Errorf("could not read opkg package list")
 		}
 		return ParseOpkgListPackagesCommand(cmd.Stdout), nil
 	}

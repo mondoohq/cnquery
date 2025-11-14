@@ -140,3 +140,6 @@ MONDOO_REGISTRATION_TOKEN='\S*'
 
 # cnquery shell commands
 cnquery shell.*
+
+# Ip.Foo is an acceptable value
+Ip\..*

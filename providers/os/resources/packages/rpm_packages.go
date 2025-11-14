@@ -200,7 +200,7 @@ func (rpm *RpmPkgManager) runtimeList() ([]Package, error) {
 	command := fmt.Sprintf("rpm -qa --queryformat '%s'", rpm.queryFormat())
 	cmd, err := rpm.conn.RunCommand(command)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read package list")
+		return nil, errors.Wrap(err, "could not read rpm package list")
 	}
 	return ParseRpmPackages(rpm.platform, cmd.Stdout), nil
 }
@@ -214,8 +214,8 @@ func (rpm *RpmPkgManager) runtimeAvailable() (map[string]PackageUpdate, error) {
 
 	cmd, err := rpm.conn.RunCommand(script)
 	if err != nil {
-		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
-		return nil, errors.Wrap(err, "could not read package update list")
+		log.Debug().Err(err).Msg("mql[packages]> could not read rpm package updates")
+		return nil, errors.Wrap(err, "could not read rpm package update list")
 	}
 	return ParseRpmUpdates(cmd.Stdout)
 }
@@ -367,7 +367,7 @@ func (spm *SusePkgManager) Available() (map[string]PackageUpdate, error) {
 	cmd, err := spm.conn.RunCommand("zypper -n --xmlout list-updates")
 	if err != nil {
 		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
-		return nil, fmt.Errorf("could not read package update list")
+		return nil, fmt.Errorf("could not read rpm package update list")
 	}
 	return ParseZypperUpdates(cmd.Stdout)
 }

@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:    "os",
 	ID:      "go.mondoo.com/cnquery/v9/providers/os",
-	Version: "11.4.55",
+	Version: "11.4.61",
 	ConnectionTypes: []string{
 		shared.Type_Local.String(),
 		shared.Type_SSH.String(),
@@ -40,7 +40,7 @@ var Config = plugin.Provider{
 Examples:
   cnquery shell
   cnspec scan
-	cnspec scan -o json > FILENAME.json
+  cnspec scan -o json > FILENAME.json
 `,
 			MinArgs: 0,
 			MaxArgs: 0,
@@ -246,7 +246,7 @@ Examples:
 
 Examples:
   cnspec scan docker <DOCKER-CONTAINER-ID>
-	cnspec scan docker file <FILEPATH>
+  cnspec scan docker file <FILEPATH>
   cnspec scan docker ubuntu:latest
   cnspec scan docker elastic/elasticsearch:7.2.0
   cnspec scan docker gcr.io/google-containers/ubuntu:22.04
@@ -296,7 +296,7 @@ Examples:
 
 Examples:
   cnspec scan filesystem <MOUNT-PATH-TO-FILE-SYSTEM>
-	cnquery shell fs <MOUNT-PATH-TO-FILE-SYSTEM>
+  cnquery shell fs <MOUNT-PATH-TO-FILE-SYSTEM>
 `,
 			MinArgs: 0,
 			MaxArgs: 1,
@@ -318,7 +318,7 @@ Examples:
 
 Examples:
   cnspec scan device --lun <LOGICAL-UNIT-NUMBER>
-	cnquery shell device --device-name <NAME-OF-LINUX-DEVICE>
+  cnquery shell device --device-name <NAME-OF-LINUX-DEVICE>
 `,
 			MinArgs: 0,
 			MaxArgs: 0,

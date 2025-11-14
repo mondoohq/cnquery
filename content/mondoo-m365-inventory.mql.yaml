@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 packs:
-  - uid: mondoo-ms365-inventory
+  - uid: mondoo-m365-inventory
     name: Microsoft 365 Inventory Pack
     version: 1.0.0
     license: BUSL-1.1
@@ -19,7 +19,7 @@ packs:
         To run this pack for an Microsoft 365 Tenant:
 
         ```bash
-        cnspec scan ms365 --certificate-path certificate.combo.pem --tenant-id YOUR-TENANT-ID --client-id YOUR-CLIENT-ID --policy-bundle mondoo-ms365-inventory.mql.yaml
+        cnspec scan ms365 --certificate-path certificate.combo.pem --tenant-id YOUR-TENANT-ID --client-id YOUR-CLIENT-ID --policy-bundle mondoo-m365-inventory.mql.yaml
         ```
 
         ## Join the community!
@@ -31,31 +31,31 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-organization-id
+        - uid: mondoo-asset-inventory-m365-organization-id
           title: Organization ID
           mql: |
             microsoft.organizations.first.id
-        - uid: mondoo-asset-inventory-ms365-organization-name
+        - uid: mondoo-asset-inventory-m365-organization-name
           title: Organization Name
           mql: |
             microsoft.organizations.first.name
-        - uid: mondoo-asset-inventory-ms365-tenant-doamin-name
+        - uid: mondoo-asset-inventory-m365-tenant-doamin-name
           title: Organization Tenant Domain Name
           mql: |
             microsoft.tenantDomainName
-        - uid: mondoo-asset-inventory-ms365-organization-assigned-plans
+        - uid: mondoo-asset-inventory-m365-organization-assigned-plans
           title: Organization Assigned Plans
           mql: |
             microsoft.organizations.first.assignedPlans
-        - uid: mondoo-asset-inventory-ms365-organization-provisioned-plans
+        - uid: mondoo-asset-inventory-m365-organization-provisioned-plans
           title: Organization Provisioned Plans
           mql: |
             microsoft.organizations.first.provisionedPlans
-        - uid: mondoo-asset-inventory-ms365-organization-created
+        - uid: mondoo-asset-inventory-m365-organization-created
           title: Organization Created
           mql: |
             microsoft.organizations.first.createdAt
-        - uid: mondoo-asset-inventory-ms365-organization-subscriptions
+        - uid: mondoo-asset-inventory-m365-organization-subscriptions
           title: Organization Subscriptions
           mql: |
             microsoft.tenant.subscriptions
@@ -64,15 +64,15 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-groups
+        - uid: mondoo-asset-inventory-m365-groups
           title: Groups
           mql: |
             microsoft.groups
-        - uid: mondoo-asset-inventory-ms365-groups-public
+        - uid: mondoo-asset-inventory-m365-groups-public
           title: Public Groups and their Members
           mql: |
             microsoft.groups.where (visibility == "Public") {id displayName securityEnabled members}
-        - uid: mondoo-asset-inventory-ms365-groups-security-enabled
+        - uid: mondoo-asset-inventory-m365-groups-security-enabled
           title: Groups no Security enabled
           mql: |
             microsoft.groups.where (securityEnabled == false) {id displayName securityEnabled members}
@@ -81,15 +81,15 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-applications
+        - uid: mondoo-asset-inventory-m365-applications
           title: Applications
           mql: |
             microsoft.applications
-        - uid: mondoo-asset-inventory-ms365-applications-expired-credentials
+        - uid: mondoo-asset-inventory-m365-applications-expired-credentials
           title: Applications with expired credentials
           mql: |
             microsoft.applications.where(hasExpiredCredentials == true) {appId name owners createdAt servicePrincipal}
-        - uid: mondoo-asset-inventory-ms365-enterprise-applications
+        - uid: mondoo-asset-inventory-m365-enterprise-applications
           title: Enterprise Applications
           mql: |
             microsoft.enterpriseApplications
@@ -98,11 +98,11 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-device-management-device-compliance-policy
+        - uid: mondoo-asset-inventory-m365-device-management-device-compliance-policy
           title: Device Compliance Policy
           mql: |
             microsoft.devicemanagement.deviceCompliancePolicies
-        - uid: mondoo-asset-inventory-ms365-device-management-device-configurations
+        - uid: mondoo-asset-inventory-m365-device-management-device-configurations
           title: Device Configurations
           mql: |
             microsoft.devicemanagement.deviceConfigurations
@@ -111,7 +111,7 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-domains
+        - uid: mondoo-asset-inventory-m365-domains
           title: Domains
           mql: |
             microsoft.domains
@@ -120,15 +120,15 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-users
+        - uid: mondoo-asset-inventory-m365-users
           title: Users
           mql: |
             microsoft.users
-        - uid: mondoo-asset-inventory-ms365-users-account-enabled
+        - uid: mondoo-asset-inventory-m365-users-account-enabled
           title: Users account enabled
           mql: |
             microsoft.users.where(accountEnabled == true) {id givenName surname userPrincipalName}
-        - uid: mondoo-asset-inventory-ms365-users-mfa
+        - uid: mondoo-asset-inventory-m365-users-mfa
           title: Users with no MFA enabled
           mql: |
             microsoft.users.where(mfaEnabled == false) {id givenName surname userPrincipalName}
@@ -137,23 +137,23 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-policies-admin-consent-request-policy
+        - uid: mondoo-asset-inventory-m365-policies-admin-consent-request-policy
           title: Admin Consent Request Policy
           mql: |
             microsoft.policies.adminConsentRequestPolicy
-        - uid: mondoo-asset-inventory-ms365-policies-authorization-policy
+        - uid: mondoo-asset-inventory-m365-policies-authorization-policy
           title: Authorization Policy
           mql: |
             microsoft.policies.authorizationPolicy
-        - uid: mondoo-asset-inventory-ms365-policies-consent-policy-settings
+        - uid: mondoo-asset-inventory-m365-policies-consent-policy-settings
           title: Consent Policy Settings
           mql: |
             microsoft.policies.consentPolicySettings
-        - uid: mondoo-asset-inventory-ms365-policies-identity-security-defaults-enforcement-policy
+        - uid: mondoo-asset-inventory-m365-policies-identity-security-defaults-enforcement-policy
           title: Identity Security Defaults Enforcement Policy
           mql: |
             microsoft.policies.identitySecurityDefaultsEnforcementPolicy
-        - uid: mondoo-asset-inventory-ms365-policies-permission-grant-policies
+        - uid: mondoo-asset-inventory-m365-policies-permission-grant-policies
           title: Permission Grant Policies
           mql: |
             microsoft.policies.permissionGrantPolicies
@@ -162,7 +162,7 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-roles
+        - uid: mondoo-asset-inventory-m365-roles
           title: Roles
           mql: |
             microsoft.roles
@@ -171,11 +171,11 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-security-latest-secure-scores
+        - uid: mondoo-asset-inventory-m365-security-latest-secure-scores
           title: Latest Security Score
           mql: |
             microsoft.security.latestSecureScores {maxScore currentScore azureTenantId vendorInformation averageComparativeScores activeUserCount}
-        - uid: mondoo-asset-inventory-ms365-security-risky-users
+        - uid: mondoo-asset-inventory-m365-security-risky-users
           title: Risky Users
           mql: |
             microsoft.security.riskyUsers
@@ -184,11 +184,11 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-service-principals
+        - uid: mondoo-asset-inventory-m365-service-principals
           title: Service Principals
           mql: |
             microsoft.serviceprincipals
-        - uid: mondoo-asset-inventory-ms365-service-principals-enabled
+        - uid: mondoo-asset-inventory-m365-service-principals-enabled
           title: Enabled Service Principals
           mql: |
             microsoft.serviceprincipals.where(enabled == true) {id name servicePrincipalNames assignments signInAudience permissions}
@@ -197,7 +197,7 @@ packs:
         filters:
           - asset.platform == "microsoft365" || asset.runtime == "ms-graph"
         queries:
-        - uid: mondoo-asset-inventory-ms365-settings
+        - uid: mondoo-asset-inventory-m365-settings
           title: Settings
           mql: |
             microsoft.settings

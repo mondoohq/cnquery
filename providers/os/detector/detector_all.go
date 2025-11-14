@@ -267,6 +267,17 @@ var popos = &PlatformResolver{
 	},
 }
 
+var endeavouros = &PlatformResolver{
+	Name:     "endeavouros",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "endeavouros" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var elementary = &PlatformResolver{
 	Name:     "elementary",
 	IsFamily: false,
@@ -283,6 +294,17 @@ var steamos = &PlatformResolver{
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		if pf.Name == "steamos" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
+var nobara = &PlatformResolver{
+	Name:     "nobara",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "nobara" {
 			return true, nil
 		}
 		return false, nil
@@ -946,7 +968,7 @@ var redhatFamily = &PlatformResolver{
 	IsFamily: true,
 	// NOTE: oracle pretends to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
 	// want to check that platform before redhat
-	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux},
+	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux, nobara},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		f, err := conn.FileSystem().Open("/etc/redhat-release")
 		if err != nil {
@@ -1012,7 +1034,7 @@ var suseFamily = &PlatformResolver{
 var archFamily = &PlatformResolver{
 	Name:     "arch",
 	IsFamily: true,
-	Children: []*PlatformResolver{arch, manjaro, steamos},
+	Children: []*PlatformResolver{arch, manjaro, endeavouros, steamos},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// if the file exists, we are on arch or one of its derivatives
 		f, err := conn.FileSystem().Open("/etc/arch-release")
