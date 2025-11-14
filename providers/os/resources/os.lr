@@ -1867,19 +1867,23 @@ private networkInterface @defaults("name mac active") {
   virtual bool
 }
 
+// Collection of routing table entries on the system.
 private networkRoutes {
   []networkRoute
   
-  // Default Route
   defaults() []networkRoute
 }
 
 // information on the network routes
 private networkRoute @defaults("destination flags"){
+  // Destination network or destination subnet for this route
   destination string
+  // Gateway IP address for this route
   gateway string
+  // Flags that describe route properties (e.g., 'UG' for up/gateway)
   flags []string
-  iface()	networkInterface
+  // Network interface this route applies to
+  iface() networkInterface
 }
 
 // Experimental: USB resource
