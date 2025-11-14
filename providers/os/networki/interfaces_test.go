@@ -7,7 +7,7 @@ import (
 	"net"
 	"testing"
 
-	subject "go.mondoo.com/cnquery/v12/providers/os/id/networki"
+	subject "go.mondoo.com/cnquery/v12/providers/os/networki"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
