@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-//go:build darwin
+//go:build !windows && !linux
 
 package networki
 
@@ -12,22 +12,9 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"golang.org/x/net/route"
 	"golang.org/x/sys/unix"
 )
-
-// Routes returns the network routes of the system.
-func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
-	n := &neti{conn, pf}
-
-	if pf.IsFamily(inventory.FAMILY_DARWIN) {
-		return n.detectDarwinRoutes()
-	}
-
-	return nil, errors.New("your platform is not supported for the detection of network routes")
-}
 
 // detectDarwinRoutes detects network routes on macOS using golang.org/x/net/route
 func (n *neti) detectDarwinRoutes() ([]Route, error) {

@@ -1,7 +1,6 @@
-//go:build windows
-
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
+
 package networki
 
 import (
@@ -12,8 +11,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
 
@@ -22,17 +19,6 @@ const (
 	addressFamilyIPv4 = 2  // AF_INET
 	addressFamilyIPv6 = 23 // AF_INET6
 )
-
-// Routes returns the network routes of the system.
-func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
-	n := &neti{conn, pf}
-
-	if pf.IsFamily(inventory.FAMILY_WINDOWS) {
-		return n.detectWindowsRoutes()
-	}
-
-	return nil, errors.New("your platform is not supported for the detection of network routes")
-}
 
 // detectWindowsRoutes detects network routes on Windows
 func (n *neti) detectWindowsRoutes() ([]Route, error) {
