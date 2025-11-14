@@ -14,9 +14,8 @@ Copyright (c) 1983, 2012, Oracle and/or its affiliates.  All rights reserved.
                          Assembled 19 September 2012
 """
 
-[commands."pkg list -v"]
+[commands."pkg list -Hv"]
 stdout = """
-FMRI                                                                         IFO
 pkg://solaris/archiver/gnu-tar@1.26,5.11-0.175.1.0.0.24.0:20120904T170545Z   i--
 pkg://solaris/compress/bzip2@1.0.6,5.11-0.175.1.0.0.24.0:20120904T170602Z    i--
 pkg://solaris/compress/gzip@1.4,5.11-0.175.1.0.0.24.0:20120904T170603Z       i--

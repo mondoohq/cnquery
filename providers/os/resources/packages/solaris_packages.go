@@ -89,7 +89,7 @@ func (script *SolarisPkgManager) Format() string {
 }
 
 func (s *SolarisPkgManager) List() ([]Package, error) {
-	cmd, err := s.conn.RunCommand("pkg list -v")
+	cmd, err := s.conn.RunCommand("pkg list -Hv")
 	if err != nil {
 		return nil, fmt.Errorf("could not read solaris package list")
 	}
