@@ -149,6 +149,24 @@ microsoft.tenant @defaults("name") {
   technicalNotificationMails []string
   // Preferred language
   preferredLanguage string
+  // Tenant branding information for all verified domains
+  branding() []microsoft.tenant.brandingInfo
+}
+
+// Tenant branding information
+private microsoft.tenant.brandingInfo @defaults("keepMeSignedInDisabled") {
+  // if "Keep me signed in" is disabled for the tenant
+  keepMeSignedInDisabled bool
+  // Tenant branding background color
+  backgroundColor string
+  // Tenant branding logo URL
+  bannerLogo string
+  // Tenant federation brand name
+  federationBrandName string
+  // Domain name
+  domainName string
+  // Login endpoint
+  login string
 }
 
 // Company-wide configuration for apps and services.

@@ -5,12 +5,16 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/directory"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
@@ -255,4 +259,84 @@ func (a *mqlMicrosoftTenant) formsSettings() (*mqlMicrosoftTenantFormsSettings, 
 	}
 
 	return formSetting.(*mqlMicrosoftTenantFormsSettings), nil
+}
+
+func (a *mqlMicrosoftTenant) getTenantBrandingInfoForDomain(domainName string) (*userRealmResponse, error) {
+	url := fmt.Sprintf("https://login.microsoftonline.com/common/userrealm/%s?api-version=2.0", domainName)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query userrealm endpoint: %w", err)
+	}
+
+	body, readErr := io.ReadAll(resp.Body)
+	if resp.Body != nil {
+		resp.Body.Close()
+	}
+	if readErr != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", readErr)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		logger.DebugDumpJSON("tenant-branding-error", body)
+		return nil, fmt.Errorf("userrealm endpoint returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var realmResp userRealmResponse
+	if err := json.Unmarshal(body, &realmResp); err != nil {
+		return nil, fmt.Errorf("failed to parse userrealm response: %w", err)
+	}
+
+	return &realmResp, nil
+}
+
+func (a *mqlMicrosoftTenant) branding() ([]any, error) {
+	verifiedDomains := a.GetVerifiedDomains()
+	if verifiedDomains.Error != nil {
+		return nil, verifiedDomains.Error
+	}
+
+	if len(verifiedDomains.Data) == 0 {
+		return []any{}, nil
+	}
+
+	var brandingInfos []any
+	for _, domain := range verifiedDomains.Data {
+		domainDict, ok := domain.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		domainName, ok := domainDict["name"].(string)
+		if !ok || domainName == "" {
+			continue
+		}
+
+		realmResp, err := a.getTenantBrandingInfoForDomain(domainName)
+		if err != nil {
+			logger.DebugDumpJSON("tenant-branding-domain-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
+			return nil, err
+		}
+
+		for i, info := range realmResp.TenantBrandingInfo {
+			brandingId := fmt.Sprintf("%s-branding-info-%s-%d", a.Id.Data, realmResp.DomainName, i)
+			mqlBranding, err := CreateResource(a.MqlRuntime, ResourceMicrosoftTenantBrandingInfo,
+				map[string]*llx.RawData{
+					"__id":                   llx.StringData(brandingId),
+					"keepMeSignedInDisabled": llx.BoolData(info.KeepMeSignedInDisabled),
+					"backgroundColor":        llx.StringData(info.BackgroundColor),
+					"bannerLogo":             llx.StringData(info.BannerLogo),
+					"federationBrandName":    llx.StringData(realmResp.FederationBrandName),
+					"domainName":             llx.StringData(realmResp.DomainName),
+					"login":                  llx.StringData(realmResp.Login),
+				})
+			if err != nil {
+				logger.DebugDumpJSON("tenant-branding-create-error", []byte(fmt.Sprintf("domain: %s, index: %d, error: %v", domainName, i, err)))
+				return nil, err
+			}
+			brandingInfos = append(brandingInfos, mqlBranding)
+		}
+	}
+
+	return brandingInfos, nil
 }
