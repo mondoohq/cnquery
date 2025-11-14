@@ -1870,7 +1870,7 @@ private networkInterface @defaults("name mac active") {
 // Collection of routing table entries on the system.
 private networkRoutes {
   []networkRoute
-  // default routes
+  // default routes found on the machine
   defaults() []networkRoute
 }
 
