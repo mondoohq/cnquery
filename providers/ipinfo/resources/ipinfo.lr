@@ -1,0 +1,11 @@
+option provider = "go.mondoo.com/cnquery/v12/providers/ipinfo"
+option go_package = "go.mondoo.com/cnquery/v12/providers/ipinfo/resources"
+
+// IP information from ipinfo.io service
+ipinfo @defaults("ip") {
+  init(ip ip)
+  // IP address
+  ip ip
+  // Hostname for this IP address
+  hostname string
+}
