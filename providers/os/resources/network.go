@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v12/providers/os/id/machineid"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/networki"
+	"go.mondoo.com/cnquery/v12/providers/os/networki"
 	"go.mondoo.com/cnquery/v12/types"
 )
 
