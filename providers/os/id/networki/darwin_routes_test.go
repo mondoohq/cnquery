@@ -1,4 +1,4 @@
-//go:build !windows
+//go:build !windows && !linux
 
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
