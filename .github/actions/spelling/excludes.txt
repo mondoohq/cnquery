@@ -83,3 +83,4 @@
 ^\Q.github/workflows/spelling.yml\E$
 _release_template_file.md
 ignore$
+ipinfo

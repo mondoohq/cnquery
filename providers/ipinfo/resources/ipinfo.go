@@ -194,7 +194,9 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 				if err != nil {
 					log.Debug().Err(err).Str("ip", queryIP.String()).Msg("failed to bind to interface, using default client")
 					// Continue with default client if binding fails
-					httpClient = nil // Will be set to default client below
+					httpClient = &http.Client{
+						Timeout: 30 * time.Second,
+					}
 				} else {
 					log.Debug().Str("ip", queryIP.String()).Msg("bound HTTP client to interface")
 				}
@@ -204,13 +206,6 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	} else {
 		// No IP provided - get YOUR public IP (the one visible from internet)
 		queryIP = nil
-	}
-
-	// Use interface-bound client if we created one, otherwise use default HTTP client
-	if httpClient == nil {
-		httpClient = &http.Client{
-			Timeout: 30 * time.Second,
-		}
 	}
 
 	// Call ipinfo.io API directly
