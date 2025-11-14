@@ -1,5 +1,7 @@
-//go:build linux
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
 
+// This file is used to stub out the Darwin route detection for Linux builds
 package networki
 
 import (

@@ -1,5 +1,3 @@
-//go:build windows
-
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
@@ -12,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParseNetstatPowerShellOutput(t *testing.T) {
+func Test_parseNetstatPowerShellOutput(t *testing.T) {
 	// Sample netstat command output
 	netstatJSON := `
 	[
@@ -328,7 +326,7 @@ func TestParseNetstatPowerShellOutput(t *testing.T) {
 	}
 }
 
-func TestParsePowerShellGetNetRouteOutput(t *testing.T) {
+func Test_parsePowerShellGetNetRouteOutput(t *testing.T) {
 	powerShellJSON := `[
 		{
 			"DestinationPrefix":  "255.255.255.255/32",
