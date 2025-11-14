@@ -83,3 +83,4 @@
 ^\.github/workflows/.*\.yaml
 _release_template_file.md
 ignore$
+ipinfo
