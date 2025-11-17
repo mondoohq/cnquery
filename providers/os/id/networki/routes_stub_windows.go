@@ -10,7 +10,7 @@ import (
 )
 
 func (n *neti) detectDarwinRoutes() ([]Route, error) {
-	return nil, errors.New("Darwin route detection is not available on Linux builds")
+	return nil, errors.New("Darwin route detection is not available on Windows builds")
 }
 
 func (n *neti) detectLinuxRoutes() ([]Route, error) {
