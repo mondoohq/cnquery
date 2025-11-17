@@ -61,6 +61,7 @@ jsonbody
 kqueue
 labelmatchstatement
 lfs
+Lightbox
 liveanalytics
 loggingservice
 manageddevice
