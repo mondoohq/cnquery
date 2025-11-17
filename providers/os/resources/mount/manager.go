@@ -82,7 +82,7 @@ func (s *UnixMountManager) Name() string {
 func (s *UnixMountManager) List() ([]MountPoint, error) {
 	cmd, err := s.conn.RunCommand("mount")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read package list")
+		return nil, errors.Wrap(err, "could not run mount command")
 	}
 
 	return ParseUnixMountCmd(cmd.Stdout), nil

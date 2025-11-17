@@ -11,32 +11,33 @@ stdout = "x86_64"
 content = """
 NAME="Alpine Linux"
 ID=alpine
-VERSION_ID=3.13.0_alpha20200917
-PRETTY_NAME="Alpine Linux edge"
+VERSION_ID=3.22.2
+PRETTY_NAME="Alpine Linux v3.22"
 HOME_URL="https://alpinelinux.org/"
-BUG_REPORT_URL="https://bugs.alpinelinux.org/"
+BUG_REPORT_URL="https://gitlab.alpinelinux.org/alpine/aports/-/issues"
 """
 
 [commands."rc-status -s"]
 stdout = """
-local                                                       [  stopped  ]
-savecache                                                   [  stopped  ]
-hwdrivers                                                   [  stopped  ]
-osclock                                                     [  stopped  ]
-agetty                                                      [  started  ]
-bootmisc                                                    [  stopped  ]
-modules                                                     [  stopped  ]
-loopback                                                    [  stopped  ]
-runsvdir                                                    [  stopped  ]
-firstboot                                                   [  stopped  ]
-sysfsconf                                                   [  stopped  ]
-sysctl                                                      [  stopped  ]
-killprocs                                                   [  stopped  ]
-s6-svscan                                                   [  stopped  ]
-mtab                                                        [  stopped  ]
-modloop                                                     [  stopped  ]
-machine-id                                                  [  stopped  ]
-staticroute                                                 [  stopped  ]
+ agetty                                                                                                           [  started  ]
+ sysctl                                                                                                           [  stopped  ]
+ bootmisc                                                                                                         [  stopped  ]
+ user                                                                                                             [  stopped  ]
+ local                                                                                                            [  stopped  ]
+ firstboot                                                                                                        [  stopped  ]
+ killprocs                                                                                                        [  stopped  ]
+ loopback                                                                                                         [  stopped  ]
+ savecache                                                                                                        [  stopped  ]
+ machine-id                                                                                                       [  stopped  ]
+ sysfsconf                                                                                                        [  stopped  ]
+ osclock                                                                                                          [  stopped  ]
+ mtab                                                                                                             [  stopped  ]
+ modloop                                                                                                          [  stopped  ]
+ s6-svscan                                                                                                        [  stopped  ]
+ hwdrivers                                                                                                        [  stopped  ]
+ modules                                                                                                          [  stopped  ]
+ runsvdir                                                                                                         [  stopped  ]
+ staticroute                                                                                                      [  stopped  ]
 """
 
 [files."/etc/init.d"]

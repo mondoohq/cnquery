@@ -354,7 +354,7 @@ var DefaultProviders Providers = map[string]*Provider{
 		Provider: &plugin.Provider{
 			Name:            "os",
 			ID:              "go.mondoo.com/cnquery/v9/providers/os",
-			ConnectionTypes: []string{"local", "ssh", "tar", "docker-snapshot", "vagrant", "docker-container", "docker-image", "docker-file", "docker-registry", "container-registry", "registry-image", "filesystem", "winrm", "device"},
+			ConnectionTypes: []string{"local", "ssh", "tar", "docker-snapshot", "vagrant", "docker-container", "docker-image", "docker-file", "docker-registry", "container-registry", "registry-image", "fs", "filesystem", "winrm", "device"},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "local",
@@ -390,6 +390,12 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "docker",
 					Use:   "docker",
 					Short: "a running Docker container, Docker image, or Dockerfile",
+				},
+
+				{
+					Name:  "fs",
+					Use:   "fs PATH [flags]",
+					Short: "a mounted file system target",
 				},
 
 				{

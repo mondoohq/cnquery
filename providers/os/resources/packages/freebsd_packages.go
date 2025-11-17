@@ -5,9 +5,11 @@ package packages
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
+
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
@@ -29,32 +31,31 @@ type FreeBSDPackage struct {
 func ParseFreeBSDPackages(r io.Reader) ([]Package, error) {
 	pkgs := []Package{}
 
-	// the raw list does not return a valid json slice, therefore
-	// we need to read and parse each line individually
-	// https://github.com/freebsd/pkg/issues/1287
-	reader := bufio.NewReader(r)
-	for {
-		line, err := reader.ReadString('\n')
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, err
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			continue
 		}
 
-		var freeBSDPkg FreeBSDPackage
-		err = json.Unmarshal([]byte(line), &freeBSDPkg)
-		if err != nil {
-			return nil, err
+		parts := strings.Split(line, "\t")
+		if len(parts) != 5 {
+			log.Debug().Msgf("skipping invalid freebsd package line: %s", line)
+			continue
 		}
 
 		pkgs = append(pkgs, Package{
-			Name:        freeBSDPkg.Name,
-			Version:     freeBSDPkg.Version,
-			Description: freeBSDPkg.Desc,
-			Arch:        freeBSDPkg.Arch,
-			Origin:      freeBSDPkg.Origin,
+			Name:        parts[0],
+			Version:     parts[1],
+			Description: parts[2],
+			Arch:        parts[3],
+			Origin:      parts[4],
 			Format:      FreebsdPkgFormat,
 		})
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 
 	return pkgs, nil
@@ -73,7 +74,7 @@ func (f *FreeBSDPkgManager) Format() string {
 }
 
 func (f *FreeBSDPkgManager) List() ([]Package, error) {
-	cmd, err := f.conn.RunCommand("pkg info --raw --raw-format json-compact --all")
+	cmd, err := f.conn.RunCommand("pkg query -a '%n\\t%v\\t%c\\t%q\\t%o'")
 	if err != nil {
 		return nil, fmt.Errorf("could not read freebsd package list")
 	}
