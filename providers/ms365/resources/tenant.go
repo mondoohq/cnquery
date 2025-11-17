@@ -22,10 +22,13 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
-var (
-	realmCacheMutex sync.RWMutex
-	realmCache      = make(map[string]*userRealmResponse)
-)
+type mqlMicrosoftTenantInternal struct {
+	lock             sync.Mutex
+	realmDataFetched bool
+	realmDataErr     error
+	realmInfos       []any
+	brandingInfos    []any
+}
 
 type userRealmResponse struct {
 	Login               string               `json:"Login"`
@@ -282,15 +285,92 @@ func (a *mqlMicrosoftTenant) formsSettings() (*mqlMicrosoftTenantFormsSettings, 
 	return formSetting.(*mqlMicrosoftTenantFormsSettings), nil
 }
 
-func (a *mqlMicrosoftTenant) getUserRealmInfoForDomain(domainName string) (*userRealmResponse, error) {
-	// Check cache first
-	realmCacheMutex.Lock()
-	if cached, ok := realmCache[domainName]; ok {
-		realmCacheMutex.Unlock()
-		return cached, nil
-	}
-	defer realmCacheMutex.Unlock()
+func (a *mqlMicrosoftTenant) fetchRealmData() error {
+	a.lock.Lock()
+	defer a.lock.Unlock()
 
+	if a.realmDataFetched {
+		return a.realmDataErr
+	}
+	a.realmDataFetched = true
+
+	verifiedDomains := a.GetVerifiedDomains()
+	if verifiedDomains.Error != nil {
+		a.realmDataErr = verifiedDomains.Error
+		return a.realmDataErr
+	}
+
+	if len(verifiedDomains.Data) == 0 {
+		a.realmInfos = []any{}
+		a.brandingInfos = []any{}
+		return nil
+	}
+
+	var realmInfos []any
+	var brandingInfos []any
+
+	for _, domain := range verifiedDomains.Data {
+		domainDict, ok := domain.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		domainName, ok := domainDict["name"].(string)
+		if !ok || domainName == "" {
+			continue
+		}
+
+		realmResp, err := a.getUserRealmInfoForDomain(domainName)
+		if err != nil {
+			logger.DebugDumpJSON("tenant-realm-domain-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
+			a.realmDataErr = err
+			return err
+		}
+
+		// Create realm info resource
+		realmId := fmt.Sprintf("%s-realm-info-%s", a.Id.Data, realmResp.DomainName)
+		mqlRealm, err := CreateResource(a.MqlRuntime, ResourceMicrosoftTenantRealmInfo,
+			map[string]*llx.RawData{
+				"__id":                llx.StringData(realmId),
+				"federationBrandName": llx.StringData(realmResp.FederationBrandName),
+				"domainName":          llx.StringData(realmResp.DomainName),
+				"login":               llx.StringData(realmResp.Login),
+				"nameSpaceType":       llx.StringData(realmResp.NameSpaceType),
+			})
+		if err != nil {
+			logger.DebugDumpJSON("tenant-realm-create-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
+			a.realmDataErr = err
+			return err
+		}
+		realmInfos = append(realmInfos, mqlRealm)
+
+		// Create branding info resources
+		for i, info := range realmResp.TenantBrandingInfo {
+			brandingId := fmt.Sprintf("%s-branding-info-%s-%d", a.Id.Data, realmResp.DomainName, i)
+			mqlBranding, err := CreateResource(a.MqlRuntime, ResourceMicrosoftTenantBrandingInfo,
+				map[string]*llx.RawData{
+					"__id":                   llx.StringData(brandingId),
+					"domainName":             llx.StringData(realmResp.DomainName),
+					"keepMeSignedInDisabled": llx.BoolData(info.KeepMeSignedInDisabled),
+					"backgroundColor":        llx.StringData(info.BackgroundColor),
+					"bannerLogo":             llx.StringData(info.BannerLogo),
+					"useTransparentLightbox": llx.BoolData(info.UseTransparentLightbox),
+				})
+			if err != nil {
+				logger.DebugDumpJSON("tenant-branding-create-error", []byte(fmt.Sprintf("domain: %s, index: %d, error: %v", domainName, i, err)))
+				a.realmDataErr = err
+				return err
+			}
+			brandingInfos = append(brandingInfos, mqlBranding)
+		}
+	}
+
+	a.realmInfos = realmInfos
+	a.brandingInfos = brandingInfos
+	return nil
+}
+
+func (a *mqlMicrosoftTenant) getUserRealmInfoForDomain(domainName string) (*userRealmResponse, error) {
 	url := fmt.Sprintf("https://login.microsoftonline.com/common/userrealm/%s?api-version=2.0", domainName)
 
 	resp, err := http.Get(url)
@@ -314,105 +394,19 @@ func (a *mqlMicrosoftTenant) getUserRealmInfoForDomain(domainName string) (*user
 		return nil, fmt.Errorf("failed to parse userrealm response: %w", err)
 	}
 
-	// Cache the response
-	realmCache[domainName] = &realmResp
-
 	return &realmResp, nil
 }
 
 func (a *mqlMicrosoftTenant) realm() ([]any, error) {
-	verifiedDomains := a.GetVerifiedDomains()
-	if verifiedDomains.Error != nil {
-		return nil, verifiedDomains.Error
+	if err := a.fetchRealmData(); err != nil {
+		return nil, err
 	}
-
-	if len(verifiedDomains.Data) == 0 {
-		return []any{}, nil
-	}
-
-	var realmInfos []any
-	for _, domain := range verifiedDomains.Data {
-		domainDict, ok := domain.(map[string]any)
-		if !ok {
-			continue
-		}
-
-		domainName, ok := domainDict["name"].(string)
-		if !ok || domainName == "" {
-			continue
-		}
-
-		realmResp, err := a.getUserRealmInfoForDomain(domainName)
-		if err != nil {
-			logger.DebugDumpJSON("tenant-realm-domain-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
-			return nil, err
-		}
-
-		realmId := fmt.Sprintf("%s-realm-info-%s", a.Id.Data, realmResp.DomainName)
-		mqlRealm, err := CreateResource(a.MqlRuntime, ResourceMicrosoftTenantRealmInfo,
-			map[string]*llx.RawData{
-				"__id":                llx.StringData(realmId),
-				"federationBrandName": llx.StringData(realmResp.FederationBrandName),
-				"domainName":          llx.StringData(realmResp.DomainName),
-				"login":               llx.StringData(realmResp.Login),
-				"nameSpaceType":       llx.StringData(realmResp.NameSpaceType),
-			})
-		if err != nil {
-			logger.DebugDumpJSON("tenant-realm-create-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
-			return nil, err
-		}
-		realmInfos = append(realmInfos, mqlRealm)
-	}
-
-	return realmInfos, nil
+	return a.realmInfos, nil
 }
 
 func (a *mqlMicrosoftTenant) branding() ([]any, error) {
-	verifiedDomains := a.GetVerifiedDomains()
-	if verifiedDomains.Error != nil {
-		return nil, verifiedDomains.Error
+	if err := a.fetchRealmData(); err != nil {
+		return nil, err
 	}
-
-	if len(verifiedDomains.Data) == 0 {
-		return []any{}, nil
-	}
-
-	var brandingInfos []any
-	for _, domain := range verifiedDomains.Data {
-		domainDict, ok := domain.(map[string]any)
-		if !ok {
-			continue
-		}
-
-		domainName, ok := domainDict["name"].(string)
-		if !ok || domainName == "" {
-			continue
-		}
-
-		realmResp, err := a.getUserRealmInfoForDomain(domainName)
-		if err != nil {
-			logger.DebugDumpJSON("tenant-branding-domain-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
-			return nil, err
-		}
-
-		for i, info := range realmResp.TenantBrandingInfo {
-			brandingId := fmt.Sprintf("%s-branding-info-%s-%d", a.Id.Data, realmResp.DomainName, i)
-			mqlBranding, err := CreateResource(a.MqlRuntime, ResourceMicrosoftTenantBrandingInfo,
-				map[string]*llx.RawData{
-					"__id":                   llx.StringData(brandingId),
-					"domainName":             llx.StringData(realmResp.DomainName),
-					"keepMeSignedInDisabled": llx.BoolData(info.KeepMeSignedInDisabled),
-					"backgroundColor":        llx.StringData(info.BackgroundColor),
-					"bannerLogo":             llx.StringData(info.BannerLogo),
-					"useTransparentLightbox": llx.BoolData(info.UseTransparentLightbox),
-				})
-			if err != nil {
-				logger.DebugDumpJSON("tenant-branding-create-error", []byte(fmt.Sprintf("domain: %s, index: %d, error: %v", domainName, i, err)))
-				return nil, err
-			}
-			brandingInfos = append(brandingInfos, mqlBranding)
-		}
-	}
-
-	return brandingInfos, nil
+	return a.brandingInfos, nil
 }

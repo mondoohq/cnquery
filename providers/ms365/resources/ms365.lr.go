@@ -6788,7 +6788,7 @@ func (c *mqlMicrosoftApplications) GetList() *plugin.TValue[[]any] {
 type mqlMicrosoftTenant struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMicrosoftTenantInternal it will be used here
+	mqlMicrosoftTenantInternal
 	Id                         plugin.TValue[string]
 	AssignedPlans              plugin.TValue[[]any]
 	ProvisionedPlans           plugin.TValue[[]any]
