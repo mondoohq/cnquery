@@ -38,7 +38,11 @@ type ipRouteJSON struct {
 func (n *neti) detectLinuxRoutes() ([]Route, error) {
 	output, err := n.RunCommand("ip -json route show table all")
 	if err == nil {
-		return n.parseIpRouteJSON(output)
+		routes, err := n.parseIpRouteJSON(output)
+		if err == nil {
+			return routes, nil
+		}
+		log.Warn().Err(err).Msg("Failed to parse ip route JSON output, falling back to /proc/net/route and /proc/net/ipv6_route")
 	}
 
 	// ip -json failed (e.g., not available on Alpine), fall back to /proc
