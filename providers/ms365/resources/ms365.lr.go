@@ -27,6 +27,7 @@ const (
 	ResourceMicrosoftApplications                                                                            string = "microsoft.applications"
 	ResourceMicrosoftTenant                                                                                  string = "microsoft.tenant"
 	ResourceMicrosoftTenantBrandingInfo                                                                      string = "microsoft.tenant.brandingInfo"
+	ResourceMicrosoftTenantRealmInfo                                                                         string = "microsoft.tenant.realmInfo"
 	ResourceMicrosoftTenantSettings                                                                          string = "microsoft.tenantSettings"
 	ResourceMicrosoftTenantFormsSettings                                                                     string = "microsoft.tenantFormsSettings"
 	ResourceMicrosoftUsers                                                                                   string = "microsoft.users"
@@ -174,6 +175,10 @@ func init() {
 		"microsoft.tenant.brandingInfo": {
 			// to override args, implement: initMicrosoftTenantBrandingInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftTenantBrandingInfo,
+		},
+		"microsoft.tenant.realmInfo": {
+			// to override args, implement: initMicrosoftTenantRealmInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftTenantRealmInfo,
 		},
 		"microsoft.tenantSettings": {
 			// to override args, implement: initMicrosoftTenantSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -828,8 +833,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenant.preferredLanguage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetPreferredLanguage()).ToDataRes(types.String)
 	},
+	"microsoft.tenant.realm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetRealm()).ToDataRes(types.Array(types.Resource("microsoft.tenant.realmInfo")))
+	},
 	"microsoft.tenant.branding": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetBranding()).ToDataRes(types.Array(types.Resource("microsoft.tenant.brandingInfo")))
+	},
+	"microsoft.tenant.brandingInfo.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantBrandingInfo).GetDomainName()).ToDataRes(types.String)
 	},
 	"microsoft.tenant.brandingInfo.keepMeSignedInDisabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantBrandingInfo).GetKeepMeSignedInDisabled()).ToDataRes(types.Bool)
@@ -840,14 +851,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenant.brandingInfo.bannerLogo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantBrandingInfo).GetBannerLogo()).ToDataRes(types.String)
 	},
-	"microsoft.tenant.brandingInfo.federationBrandName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftTenantBrandingInfo).GetFederationBrandName()).ToDataRes(types.String)
+	"microsoft.tenant.brandingInfo.useTransparentLightbox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantBrandingInfo).GetUseTransparentLightbox()).ToDataRes(types.Bool)
 	},
-	"microsoft.tenant.brandingInfo.domainName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftTenantBrandingInfo).GetDomainName()).ToDataRes(types.String)
+	"microsoft.tenant.realmInfo.federationBrandName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantRealmInfo).GetFederationBrandName()).ToDataRes(types.String)
 	},
-	"microsoft.tenant.brandingInfo.login": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftTenantBrandingInfo).GetLogin()).ToDataRes(types.String)
+	"microsoft.tenant.realmInfo.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantRealmInfo).GetDomainName()).ToDataRes(types.String)
+	},
+	"microsoft.tenant.realmInfo.login": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantRealmInfo).GetLogin()).ToDataRes(types.String)
+	},
+	"microsoft.tenant.realmInfo.nameSpaceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenantRealmInfo).GetNameSpaceType()).ToDataRes(types.String)
 	},
 	"microsoft.tenantSettings.isAppAndServicesTrialEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenantSettings).GetIsAppAndServicesTrialEnabled()).ToDataRes(types.Bool)
@@ -3031,12 +3048,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftTenant).PreferredLanguage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.tenant.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).Realm, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.tenant.branding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).Branding, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenant.brandingInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenantBrandingInfo).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.tenant.brandingInfo.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantBrandingInfo).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenant.brandingInfo.keepMeSignedInDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3051,16 +3076,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftTenantBrandingInfo).BannerLogo, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.brandingInfo.federationBrandName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftTenantBrandingInfo).FederationBrandName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.tenant.brandingInfo.useTransparentLightbox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantBrandingInfo).UseTransparentLightbox, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.tenant.brandingInfo.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftTenantBrandingInfo).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.tenant.realmInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantRealmInfo).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.tenant.brandingInfo.login": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftTenantBrandingInfo).Login, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"microsoft.tenant.realmInfo.federationBrandName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantRealmInfo).FederationBrandName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.realmInfo.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantRealmInfo).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.realmInfo.login": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantRealmInfo).Login, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.realmInfo.nameSpaceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenantRealmInfo).NameSpaceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.tenantSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6767,6 +6804,7 @@ type mqlMicrosoftTenant struct {
 	PrivacyProfile             plugin.TValue[any]
 	TechnicalNotificationMails plugin.TValue[[]any]
 	PreferredLanguage          plugin.TValue[string]
+	Realm                      plugin.TValue[[]any]
 	Branding                   plugin.TValue[[]any]
 }
 
@@ -6893,6 +6931,22 @@ func (c *mqlMicrosoftTenant) GetPreferredLanguage() *plugin.TValue[string] {
 	return &c.PreferredLanguage
 }
 
+func (c *mqlMicrosoftTenant) GetRealm() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Realm, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.tenant", c.__id, "realm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.realm()
+	})
+}
+
 func (c *mqlMicrosoftTenant) GetBranding() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Branding, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -6914,12 +6968,11 @@ type mqlMicrosoftTenantBrandingInfo struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftTenantBrandingInfoInternal it will be used here
+	DomainName             plugin.TValue[string]
 	KeepMeSignedInDisabled plugin.TValue[bool]
 	BackgroundColor        plugin.TValue[string]
 	BannerLogo             plugin.TValue[string]
-	FederationBrandName    plugin.TValue[string]
-	DomainName             plugin.TValue[string]
-	Login                  plugin.TValue[string]
+	UseTransparentLightbox plugin.TValue[bool]
 }
 
 // createMicrosoftTenantBrandingInfo creates a new instance of this resource
@@ -6954,6 +7007,10 @@ func (c *mqlMicrosoftTenantBrandingInfo) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlMicrosoftTenantBrandingInfo) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
 func (c *mqlMicrosoftTenantBrandingInfo) GetKeepMeSignedInDisabled() *plugin.TValue[bool] {
 	return &c.KeepMeSignedInDisabled
 }
@@ -6966,16 +7023,67 @@ func (c *mqlMicrosoftTenantBrandingInfo) GetBannerLogo() *plugin.TValue[string] 
 	return &c.BannerLogo
 }
 
-func (c *mqlMicrosoftTenantBrandingInfo) GetFederationBrandName() *plugin.TValue[string] {
+func (c *mqlMicrosoftTenantBrandingInfo) GetUseTransparentLightbox() *plugin.TValue[bool] {
+	return &c.UseTransparentLightbox
+}
+
+// mqlMicrosoftTenantRealmInfo for the microsoft.tenant.realmInfo resource
+type mqlMicrosoftTenantRealmInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftTenantRealmInfoInternal it will be used here
+	FederationBrandName plugin.TValue[string]
+	DomainName          plugin.TValue[string]
+	Login               plugin.TValue[string]
+	NameSpaceType       plugin.TValue[string]
+}
+
+// createMicrosoftTenantRealmInfo creates a new instance of this resource
+func createMicrosoftTenantRealmInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftTenantRealmInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.tenant.realmInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftTenantRealmInfo) MqlName() string {
+	return "microsoft.tenant.realmInfo"
+}
+
+func (c *mqlMicrosoftTenantRealmInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftTenantRealmInfo) GetFederationBrandName() *plugin.TValue[string] {
 	return &c.FederationBrandName
 }
 
-func (c *mqlMicrosoftTenantBrandingInfo) GetDomainName() *plugin.TValue[string] {
+func (c *mqlMicrosoftTenantRealmInfo) GetDomainName() *plugin.TValue[string] {
 	return &c.DomainName
 }
 
-func (c *mqlMicrosoftTenantBrandingInfo) GetLogin() *plugin.TValue[string] {
+func (c *mqlMicrosoftTenantRealmInfo) GetLogin() *plugin.TValue[string] {
 	return &c.Login
+}
+
+func (c *mqlMicrosoftTenantRealmInfo) GetNameSpaceType() *plugin.TValue[string] {
+	return &c.NameSpaceType
 }
 
 // mqlMicrosoftTenantSettings for the microsoft.tenantSettings resource

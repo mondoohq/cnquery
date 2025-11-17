@@ -792,6 +792,7 @@ resources:
       preferredLanguage: {}
       privacyProfile: {}
       provisionedPlans: {}
+      realm: {}
       settings: {}
       subscriptions: {}
       technicalNotificationMails: {}
@@ -806,6 +807,15 @@ resources:
       federationBrandName: {}
       keepMeSignedInDisabled: {}
       login: {}
+      useTransparentLightbox: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.tenant.realmInfo:
+    fields:
+      domainName: {}
+      federationBrandName: {}
+      login: {}
+      nameSpaceType: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.tenantFormsSettings:
