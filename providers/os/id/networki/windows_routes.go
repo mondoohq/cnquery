@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
 
@@ -19,18 +18,6 @@ const (
 	addressFamilyIPv4 = 2  // AF_INET
 	addressFamilyIPv6 = 23 // AF_INET6
 )
-
-// detectWindowsRoutes detects network routes on Windows
-func (n *neti) detectWindowsRoutes() ([]Route, error) {
-	routes, err := n.detectWindowsRoutesViaPowerShell()
-	if err == nil && len(routes) > 0 {
-		return routes, nil
-	}
-	log.Debug().Err(err).Int("routeCount", len(routes)).Msg("PowerShell Get-NetRoute failed or returned no routes, trying netstat")
-
-	// fallback to netstat
-	return n.detectWindowsRoutesViaNetstat()
-}
 
 // detectWindowsRoutesViaPowerShell uses PowerShell Get-NetRoute command
 func (n *neti) detectWindowsRoutesViaPowerShell() ([]Route, error) {
