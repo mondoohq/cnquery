@@ -894,6 +894,8 @@ docker.file @defaults("file.path instructions.length stages.length") {
   instructions(file) dict
   // All stages included in this Dockerfile
   stages(file) []docker.file.stage
+  // List all environment variables in this Dockerfile from all stages
+  env(file) []dict
 }
 
 // Dockerfile stages

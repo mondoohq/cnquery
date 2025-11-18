@@ -1650,6 +1650,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.file.stages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFile).GetStages()).ToDataRes(types.Array(types.Resource("docker.file.stage")))
 	},
+	"docker.file.env": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFile).GetEnv()).ToDataRes(types.Array(types.Dict))
+	},
 	"docker.file.stage.from": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetFrom()).ToDataRes(types.Resource("docker.file.from"))
 	},
@@ -4190,6 +4193,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.file.stages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFile).Stages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"docker.file.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFile).Env, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"docker.file.stage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11245,6 +11252,7 @@ type mqlDockerFile struct {
 	File         plugin.TValue[*mqlFile]
 	Instructions plugin.TValue[any]
 	Stages       plugin.TValue[[]any]
+	Env          plugin.TValue[[]any]
 }
 
 // createDockerFile creates a new instance of this resource
@@ -11329,6 +11337,17 @@ func (c *mqlDockerFile) GetStages() *plugin.TValue[[]any] {
 		}
 
 		return c.stages(vargFile.Data)
+	})
+}
+
+func (c *mqlDockerFile) GetEnv() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Env, func() ([]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.env(vargFile.Data)
 	})
 }
 

@@ -130,17 +130,26 @@ func (p *mqlDockerFile) parse(file *mqlFile) error {
 	}
 
 	stages := make([]any, len(parsedStages))
+	stageEnvVars := make([]any, len(parsedStages))
 	var stagesErr error
 	for i := range parsedStages {
-		stages[i], err = p.stage2resource(parsedStages[i])
+		stage, err := p.stage2resource(parsedStages[i])
 		if err != nil {
 			stagesErr = multierr.Wrap(err, "failed to parse stage in dockerfile "+file.Path.Data)
 			break
 		}
+
+		stageEnvVars[i] = stage.Env.Data
+		stages[i] = stage
 	}
 	p.Stages = plugin.TValue[[]any]{
 		Data:  stages,
 		Error: stagesErr,
+		State: plugin.StateIsSet,
+	}
+	p.Env = plugin.TValue[[]any]{
+		Data:  stageEnvVars,
+		Error: nil,
 		State: plugin.StateIsSet,
 	}
 
@@ -376,5 +385,9 @@ func (p *mqlDockerFile) instructions(file *mqlFile) (any, error) {
 }
 
 func (p *mqlDockerFile) stages(file *mqlFile) ([]any, error) {
+	return nil, p.parse(file)
+}
+
+func (p *mqlDockerFile) env(file *mqlFile) ([]any, error) {
 	return nil, p.parse(file)
 }

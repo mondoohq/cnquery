@@ -196,6 +196,7 @@ resources:
       desc: |
         The `docker.file` resource provides fields for assessing Dockerfiles.
     fields:
+      env: {}
       file: {}
       instructions: {}
       stages: {}
