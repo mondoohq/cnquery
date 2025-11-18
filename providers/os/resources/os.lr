@@ -917,8 +917,10 @@ private docker.file.stage @defaults("from.name") {
   from docker.file.from
   // Contains the reference to the Dockerfile this stage belongs to
   file docker.file
-  // Environment variables configured in the Dockerfile
-  env map[string]string
+  // ENV instructions in this Dockerfile
+  env []docker.file.env
+  // ARG instructions in the Dockerfile
+  arg []docker.file.arg
   // LABEL instructions in the Dockerfile
   labels map[string]string
   // RUN instructions in this Dockerfile
@@ -935,6 +937,24 @@ private docker.file.stage @defaults("from.name") {
   copy []docker.file.copy
   // EXPOSE instructions in this Dockerfile
   expose []docker.file.expose
+}
+
+// Dockerfile ARG instructions
+private docker.file.arg @defaults("name default") {
+  // Name of the variable
+  name string
+  // (optional) Default value of the variable.
+  // Values are preserved as-is, without stripping quotes.
+  default string
+}
+
+// Dockerfile ENV instructions
+private docker.file.env @defaults("name value") {
+  // Name of the variable
+  name string
+  // Value of the variable
+  // Values are preserved as-is, without stripping quotes.
+  value string
 }
 
 // Dockerfile USER instructions

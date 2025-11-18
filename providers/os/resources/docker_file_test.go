@@ -17,7 +17,8 @@ func TestParseDockerfile(t *testing.T) {
 		subjectDockerFile string
 
 		expectedLabels          map[string]any
-		expectedEnv             map[string]any
+		expectedEnv             func(r *plugin.Runtime) []any
+		expectedArg             func(r *plugin.Runtime) []any
 		expectedFromImage       string
 		expectedFromTag         string
 		expectedUser            plugin.TValue[*mqlDockerFileUser]
@@ -35,7 +36,8 @@ FROM alpine
 CMD ["/bin/sh", "-c", "echo 'Hola'"]
 `,
 			expectedLabels:    map[string]any{},
-			expectedEnv:       map[string]any{},
+			expectedEnv:       nil,
+			expectedArg:       nil,
 			expectedFromImage: "alpine",
 			expectedCmd: plugin.TValue[*mqlDockerFileRun]{
 				Data: &mqlDockerFileRun{
@@ -50,7 +52,8 @@ FROM debian:stable
 ENTRYPOINT ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
 `,
 			expectedLabels:    map[string]any{},
-			expectedEnv:       map[string]any{},
+			expectedEnv:       nil,
+			expectedArg:       nil,
 			expectedFromImage: "debian",
 			expectedFromTag:   "stable",
 			expectedEntrypoint: plugin.TValue[*mqlDockerFileRun]{
@@ -63,6 +66,7 @@ ENTRYPOINT ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
 			purpose: "with all instructions",
 			subjectDockerFile: `
 FROM alpine:3.14
+ARG foo=baz
 ENV foo=bar
 LABEL a=b
 RUN apk add --no-cache curl
@@ -79,8 +83,23 @@ ADD /foo-add /bar-add
 				"a": "b",
 				"c": "d",
 			},
-			expectedEnv: map[string]any{
-				"foo": "bar",
+			expectedEnv: func(r *plugin.Runtime) []any {
+				return []any{
+					&mqlDockerFileEnv{
+						MqlRuntime: r,
+						Name:       plugin.TValue[string]{Data: "foo", State: plugin.StateIsSet},
+						Value:      plugin.TValue[string]{Data: "bar", State: plugin.StateIsSet},
+					},
+				}
+			},
+			expectedArg: func(r *plugin.Runtime) []any {
+				return []any{
+					&mqlDockerFileArg{
+						MqlRuntime: r,
+						Name:       plugin.TValue[string]{Data: "foo", State: plugin.StateIsSet},
+						Default:    plugin.TValue[string]{Data: "baz", State: plugin.StateIsSet},
+					},
+				}
 			},
 			expectedFromImage: "alpine",
 			expectedFromTag:   "3.14",
@@ -103,23 +122,28 @@ ADD /foo-add /bar-add
 			expectedCopyStruct: []plugin.TValue[*mqlDockerFileCopy]{
 				{Data: &mqlDockerFileCopy{
 					Src: plugin.TValue[[]any]{
-						Data: []any{"/foo"}},
+						Data: []any{"/foo"},
+					},
 					Dst: plugin.TValue[string]{
-						Data: "/bar"},
+						Data: "/bar",
+					},
 				}},
 			},
 			expectedRunStruct: []plugin.TValue[*mqlDockerFileRun]{
 				{Data: &mqlDockerFileRun{
 					Script: plugin.TValue[string]{
-						Data: "apk add --no-cache curl"},
+						Data: "apk add --no-cache curl",
+					},
 				}},
 			},
 			expectedAddStruct: []plugin.TValue[*mqlDockerFileAdd]{
 				{Data: &mqlDockerFileAdd{
 					Src: plugin.TValue[[]any]{
-						Data: []any{"/foo-add"}},
+						Data: []any{"/foo-add"},
+					},
 					Dst: plugin.TValue[string]{
-						Data: "/bar-add"},
+						Data: "/bar-add",
+					},
 				}},
 			},
 			expectedExposeStructArr: []plugin.TValue[*mqlDockerFileExpose]{
@@ -154,7 +178,12 @@ ADD /foo-add /bar-add
 			actualMqlDockerFileStage := dockerFile.Stages.Data[0].(*mqlDockerFileStage)
 
 			require.Equal(t, kase.expectedLabels, actualMqlDockerFileStage.Labels.Data)
-			require.Equal(t, kase.expectedEnv, actualMqlDockerFileStage.Env.Data)
+			if kase.expectedEnv != nil {
+				require.EqualExportedValues(t, kase.expectedEnv(r), actualMqlDockerFileStage.Env.Data)
+			}
+			if kase.expectedArg != nil {
+				require.EqualExportedValues(t, kase.expectedArg(r), actualMqlDockerFileStage.Arg.Data)
+			}
 			require.Equal(t, kase.expectedFromImage, actualMqlDockerFileStage.From.Data.Image.Data)
 			require.Equal(t, kase.expectedFromTag, actualMqlDockerFileStage.From.Data.Tag.Data)
 
