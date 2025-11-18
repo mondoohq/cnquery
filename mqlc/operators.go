@@ -182,7 +182,8 @@ func compileComparable(c *compiler, id string, call *parser.Call) (types.Type, e
 
 	// find specialized or generalized builtin function
 	lt := leftOrg.DereferencedTypeV2(c.Result.CodeV2)
-	rt := (&llx.Chunk{Primitive: right}).DereferencedTypeV2(c.Result.CodeV2)
+	rtChunk := &llx.Chunk{Primitive: right}
+	rt := rtChunk.DereferencedTypeV2(c.Result.CodeV2)
 
 	name := id + string(rt)
 

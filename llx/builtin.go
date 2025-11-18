@@ -882,7 +882,8 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 
 // BuiltinFunction provides the handler for this type's function
 func BuiltinFunctionV2(typ types.Type, name string) (*chunkHandlerV2, error) {
-	h, ok := BuiltinFunctionsV2[typ.Underlying()]
+	underlying := typ.Underlying()
+	h, ok := BuiltinFunctionsV2[underlying]
 	if !ok {
 		return nil, errors.New("cannot find functions for type '" + typ.Label() + "' (called '" + name + "')")
 	}
