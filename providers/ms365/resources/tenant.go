@@ -25,9 +25,6 @@ import (
 type mqlMicrosoftTenantInternal struct {
 	lock             sync.Mutex
 	realmDataFetched bool
-	realmDataErr     error
-	realmInfos       []any
-	brandingInfos    []any
 }
 
 type userRealmResponse struct {
@@ -290,19 +287,21 @@ func (a *mqlMicrosoftTenant) fetchRealmData() error {
 	defer a.lock.Unlock()
 
 	if a.realmDataFetched {
-		return a.realmDataErr
+		return a.Realm.Error
 	}
 	a.realmDataFetched = true
 
 	verifiedDomains := a.GetVerifiedDomains()
 	if verifiedDomains.Error != nil {
-		a.realmDataErr = verifiedDomains.Error
-		return a.realmDataErr
+		err := verifiedDomains.Error
+		a.Realm = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+		a.Branding = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+		return err
 	}
 
 	if len(verifiedDomains.Data) == 0 {
-		a.realmInfos = []any{}
-		a.brandingInfos = []any{}
+		a.Realm = plugin.TValue[[]any]{Data: []any{}, Error: nil, State: plugin.StateIsSet}
+		a.Branding = plugin.TValue[[]any]{Data: []any{}, Error: nil, State: plugin.StateIsSet}
 		return nil
 	}
 
@@ -323,7 +322,8 @@ func (a *mqlMicrosoftTenant) fetchRealmData() error {
 		realmResp, err := a.getUserRealmInfoForDomain(domainName)
 		if err != nil {
 			logger.DebugDumpJSON("tenant-realm-domain-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
-			a.realmDataErr = err
+			a.Realm = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+			a.Branding = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 			return err
 		}
 
@@ -339,7 +339,8 @@ func (a *mqlMicrosoftTenant) fetchRealmData() error {
 			})
 		if err != nil {
 			logger.DebugDumpJSON("tenant-realm-create-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
-			a.realmDataErr = err
+			a.Realm = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+			a.Branding = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 			return err
 		}
 		realmInfos = append(realmInfos, mqlRealm)
@@ -358,15 +359,16 @@ func (a *mqlMicrosoftTenant) fetchRealmData() error {
 				})
 			if err != nil {
 				logger.DebugDumpJSON("tenant-branding-create-error", []byte(fmt.Sprintf("domain: %s, index: %d, error: %v", domainName, i, err)))
-				a.realmDataErr = err
+				a.Realm = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+				a.Branding = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
 				return err
 			}
 			brandingInfos = append(brandingInfos, mqlBranding)
 		}
 	}
 
-	a.realmInfos = realmInfos
-	a.brandingInfos = brandingInfos
+	a.Realm = plugin.TValue[[]any]{Data: realmInfos, Error: nil, State: plugin.StateIsSet}
+	a.Branding = plugin.TValue[[]any]{Data: brandingInfos, Error: nil, State: plugin.StateIsSet}
 	return nil
 }
 
@@ -398,15 +400,9 @@ func (a *mqlMicrosoftTenant) getUserRealmInfoForDomain(domainName string) (*user
 }
 
 func (a *mqlMicrosoftTenant) realm() ([]any, error) {
-	if err := a.fetchRealmData(); err != nil {
-		return nil, err
-	}
-	return a.realmInfos, nil
+	return nil, a.fetchRealmData()
 }
 
 func (a *mqlMicrosoftTenant) branding() ([]any, error) {
-	if err := a.fetchRealmData(); err != nil {
-		return nil, err
-	}
-	return a.brandingInfos, nil
+	return nil, a.fetchRealmData()
 }
