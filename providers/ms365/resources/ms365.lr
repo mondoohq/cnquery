@@ -170,7 +170,7 @@ private microsoft.tenant.brandingInfo @defaults("keepMeSignedInDisabled") {
 }
 
 // Tenant realm information
-private microsoft.tenant.realmInfo {
+private microsoft.tenant.realmInfo @defaults("login nameSpaceType")  {
   // Tenant federation brand name
   federationBrandName string
   // Domain name
