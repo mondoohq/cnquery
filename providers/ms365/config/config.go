@@ -16,9 +16,10 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:  "ms365",
-			Use:   "ms365",
-			Short: "a Microsoft 365 tenant",
+			Name:    "ms365",
+			Use:     "ms365",
+			Aliases: []string{"m365"},
+			Short:   "a Microsoft 365 tenant",
 			Long: `Use the ms365 provider to query resources within Microsoft 365, including organizations, users, roles, SharePoint sites, and more.
 
 Examples:
