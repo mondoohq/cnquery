@@ -63,7 +63,7 @@ func (n *netr) detectLinuxRoutes() ([]Route, error) {
 		ipv6Routes, err = n.parseLinuxIPv6RoutesFromProc(string(ipv6Data))
 		if err != nil {
 			// Some alpine systems may not have IPv6 enabled
-			log.Warn().Err(err).Msg("Failed to parse IPv6 routes from /proc/net/ipv6_route")
+			log.Debug().Err(err).Msg("Failed to parse IPv6 routes from /proc/net/ipv6_route")
 			ipv6Routes = []Route{}
 		}
 	}
