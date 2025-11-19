@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v12/providers/os/id/machineid"
 	"go.mondoo.com/cnquery/v12/providers/os/id/networki"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/networkinterface"
 	"go.mondoo.com/cnquery/v12/types"
 )
 
@@ -76,7 +77,7 @@ func (c *mqlNetwork) routes() (*mqlNetworkRoutes, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
-	routes, err := networki.Routes(conn, platform)
+	routes, err := networkinterface.Routes(conn, platform)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to detect network routes")
 		return nil, err

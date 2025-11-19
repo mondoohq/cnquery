@@ -1,16 +1,26 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package networki
+package networkinterface
 
 import (
+	"io"
 	"net"
 	"sort"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
+
+// netr is a helper struct to avoid passing the connection and platform
+// as function arguments.
+type netr struct {
+	connection shared.Connection
+	platform   *inventory.Platform
+}
 
 // Route represents a network route entry
 type Route struct {
@@ -24,7 +34,7 @@ type Route struct {
 // Routes returns the network routes of the system.
 // This function dispatches to platform-specific implementations based on runtime detection.
 func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
-	n := &neti{conn, pf}
+	n := &netr{conn, pf}
 
 	if pf.IsFamily(inventory.FAMILY_LINUX) {
 		return n.detectLinuxRoutes()
@@ -112,4 +122,23 @@ func parseFlags(flags int64, flagsMap map[int64]string) []string {
 
 	sort.Strings(flagStrings)
 	return flagStrings
+}
+
+// runCommand is a wrapper around connection.RunCommand that helps execute commands
+// and read the standard output for unix and windows systems.
+func (n *netr) RunCommand(commandString string) (string, error) {
+	if n.platform.IsFamily(inventory.FAMILY_WINDOWS) {
+		commandString = powershell.Encode(commandString)
+	}
+	cmd, err := n.connection.RunCommand(commandString)
+	if err != nil {
+		return "", err
+	}
+
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(data)), nil
 }

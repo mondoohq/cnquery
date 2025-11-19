@@ -3,12 +3,12 @@
 
 //go:build !windows
 
-package networki
+package networkinterface
 
 import "github.com/rs/zerolog/log"
 
 // detectWindowsRoutes detects network routes on Windows
-func (n *neti) detectWindowsRoutes() ([]Route, error) {
+func (n *netr) detectWindowsRoutes() ([]Route, error) {
 	routes, err := n.detectWindowsRoutesViaPowerShell()
 	if err == nil && len(routes) > 0 {
 		return routes, nil

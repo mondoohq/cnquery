@@ -3,7 +3,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package networki
+package networkinterface
 
 import (
 	"testing"
@@ -644,7 +644,7 @@ func Test_parseIpRouteJSON(t *testing.T) {
 ]
 `
 
-	n := &neti{}
+	n := &netr{}
 	routes, err := n.parseIpRouteJSON(jsonOutput)
 	require.NoError(t, err)
 	require.NotEmpty(t, routes)
@@ -965,7 +965,7 @@ eth0	000011AC	00000000	0001	0	0	0	0000FFFF	0	0	0
 
 `
 
-	n := &neti{}
+	n := &netr{}
 	routes, err := n.parseLinuxRoutesFromProc(procOutput)
 	require.NoError(t, err)
 	require.Len(t, routes, 2, "Should parse 2 routes from /proc/net/route")
@@ -1022,7 +1022,7 @@ func Test_parseLinuxIPv6RoutesFromProc(t *testing.T) {
 
 `
 
-	n := &neti{}
+	n := &netr{}
 	routes, err := n.parseLinuxIPv6RoutesFromProc(procOutput)
 	require.NoError(t, err)
 	// The test data has 3 lines: 2 default routes (::/0) and 1 localhost route (::1/128)
@@ -1084,7 +1084,7 @@ wlo1	00B2A8C0	00000000	0001	0	0	600	00FFFFFF	0	0	0
 
 `
 
-	n := &neti{}
+	n := &netr{}
 	routes, err := n.parseLinuxRoutesFromProc(procOutput)
 	require.NoError(t, err)
 	require.Len(t, routes, 5, "Should parse 5 routes from /proc/net/route")
@@ -1209,7 +1209,7 @@ ff000000000000000000000000000000 08 00000000000000000000000000000000 00 00000000
 
 `
 
-	n := &neti{}
+	n := &netr{}
 	routes, err := n.parseLinuxIPv6RoutesFromProc(procOutput)
 	require.NoError(t, err)
 	require.Greater(t, len(routes), 10, "Should parse many routes from /proc/net/ipv6_route (excluding multicast)")

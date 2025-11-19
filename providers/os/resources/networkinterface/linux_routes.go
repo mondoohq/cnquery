@@ -3,7 +3,7 @@
 
 //go:build !windows
 
-package networki
+package networkinterface
 
 import (
 	"encoding/json"
@@ -35,7 +35,7 @@ type ipRouteJSON struct {
 // detectLinuxRoutes detects network routes on Linux
 // First tries 'ip -json route show table all' (modern approach)
 // Falls back to /proc/net/route and /proc/net/ipv6_route if ip -json is not available (e.g., Alpine Linux)
-func (n *neti) detectLinuxRoutes() ([]Route, error) {
+func (n *netr) detectLinuxRoutes() ([]Route, error) {
 	output, err := n.RunCommand("ip -json route show table all")
 	if err == nil {
 		routes, err := n.parseIpRouteJSON(output)
@@ -72,7 +72,7 @@ func (n *neti) detectLinuxRoutes() ([]Route, error) {
 }
 
 // parseIpRouteJSON parses JSON output from 'ip -json route show table all'
-func (n *neti) parseIpRouteJSON(output string) ([]Route, error) {
+func (n *netr) parseIpRouteJSON(output string) ([]Route, error) {
 	var jsonRoutes []ipRouteJSON
 	if err := json.Unmarshal([]byte(output), &jsonRoutes); err != nil {
 		return nil, errors.Wrap(err, "failed to parse ip route JSON output")
@@ -90,7 +90,7 @@ func (n *neti) parseIpRouteJSON(output string) ([]Route, error) {
 }
 
 // convertJSONRouteToRoute converts an ipRouteJSON to a Route
-func (n *neti) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Route {
+func (n *netr) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Route {
 	route := &Route{
 		Interface: jsonRoute.Dev,
 		Gateway:   jsonRoute.Gateway,
@@ -128,7 +128,7 @@ func (n *neti) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Route {
 // parseLinuxRoutesFromProc parses IPv4 routes from /proc/net/route output
 // Format: Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT
 // based on osquery implementation https://github.com/osquery/osquery/blob/master/osquery/tables/networking/linux/routes.cpp
-func (n *neti) parseLinuxRoutesFromProc(output string) ([]Route, error) {
+func (n *netr) parseLinuxRoutesFromProc(output string) ([]Route, error) {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	if len(lines) < 2 {
 		return nil, errors.New("invalid /proc/net/route format")
@@ -203,7 +203,7 @@ func (n *neti) parseLinuxRoutesFromProc(output string) ([]Route, error) {
 // parseLinuxIPv6RoutesFromProc parses IPv6 routes from /proc/net/ipv6_route output
 // Format: destination dest_prefix_len source src_prefix_len next_hop metric ref use flags device
 // Based on osquery implementation https://github.com/osquery/osquery/blob/master/osquery/tables/networking/linux/routes.cpp
-func (n *neti) parseLinuxIPv6RoutesFromProc(output string) ([]Route, error) {
+func (n *netr) parseLinuxIPv6RoutesFromProc(output string) ([]Route, error) {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	if len(lines) == 0 {
 		return []Route{}, nil

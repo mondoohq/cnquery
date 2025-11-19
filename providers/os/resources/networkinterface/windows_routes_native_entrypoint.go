@@ -3,7 +3,7 @@
 
 //go:build windows
 
-package networki
+package networkinterface
 
 import (
 	"fmt"
@@ -40,7 +40,7 @@ var (
 )
 
 // detectWindowsRoutes detects network routes on Windows using native IP Helper API
-func (n *neti) detectWindowsRoutes() ([]Route, error) {
+func (n *netr) detectWindowsRoutes() ([]Route, error) {
 	routes, err := n.detectWindowsRoutesViaGetIpForwardTable()
 	if err == nil && len(routes) > 0 {
 		return routes, nil
@@ -107,7 +107,7 @@ type mibIpForwardTable2 struct {
 }
 
 // detectWindowsRoutesViaGetIpForwardTable uses GetIpForwardTable2 to get routes (IPv4 + IPv6)
-func (n *neti) detectWindowsRoutesViaGetIpForwardTable() ([]Route, error) {
+func (n *netr) detectWindowsRoutesViaGetIpForwardTable() ([]Route, error) {
 	interfaceMap, err := n.getWindowsInterfaceMap()
 	if err != nil {
 		log.Debug().Err(err).Msg("failed to get interface map, continuing without interface names")
@@ -191,7 +191,7 @@ func (n *neti) detectWindowsRoutesViaGetIpForwardTable() ([]Route, error) {
 }
 
 // formatDestination formats a destination IP address with prefix length
-func (n *neti) formatDestination(destIP net.IP, prefixLen int) string {
+func (n *netr) formatDestination(destIP net.IP, prefixLen int) string {
 	if destIP == nil {
 		return ""
 	}
@@ -208,7 +208,7 @@ func (n *neti) formatDestination(destIP net.IP, prefixLen int) string {
 	return fmt.Sprintf("%s/%d", destIP.String(), prefixLen)
 }
 
-func (n *neti) formatGateway(gatewayIP net.IP, family uint16) string {
+func (n *netr) formatGateway(gatewayIP net.IP, family uint16) string {
 	if gatewayIP == nil {
 		if family == AF_INET {
 			return "0.0.0.0"
@@ -228,7 +228,7 @@ func (n *neti) formatGateway(gatewayIP net.IP, family uint16) string {
 }
 
 // getInterfaceName returns the interface name from the map, or the index as string if not found
-func (n *neti) getInterfaceName(interfaceIndex uint32, interfaceMap map[uint32]string) string {
+func (n *netr) getInterfaceName(interfaceIndex uint32, interfaceMap map[uint32]string) string {
 	if name, ok := interfaceMap[interfaceIndex]; ok {
 		return name
 	}
@@ -236,7 +236,7 @@ func (n *neti) getInterfaceName(interfaceIndex uint32, interfaceMap map[uint32]s
 }
 
 // parseSockaddrInet parses a SOCKADDR_INET union into a net.IP
-func (n *neti) parseSockaddrInet(addr socketInetAddress, family uint16) (net.IP, int, error) {
+func (n *netr) parseSockaddrInet(addr socketInetAddress, family uint16) (net.IP, int, error) {
 	switch family {
 	case AF_INET:
 		sa := (*ipv4Address)(unsafe.Pointer(&addr.Data[0]))
@@ -277,7 +277,7 @@ type ipAdapterAddresses struct {
 
 // getWindowsInterfaceMap creates a map of interface index to interface name
 // Uses native Windows GetAdaptersAddresses API https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersaddresses
-func (n *neti) getWindowsInterfaceMap() (map[uint32]string, error) {
+func (n *netr) getWindowsInterfaceMap() (map[uint32]string, error) {
 	interfaceMap := make(map[uint32]string)
 
 	var size uint32
@@ -333,7 +333,7 @@ func (n *neti) getWindowsInterfaceMap() (map[uint32]string, error) {
 }
 
 // getAdapterName extracts the adapter name from IP_ADAPTER_ADDRESSES structure
-func (n *neti) getAdapterName(adapter *ipAdapterAddresses) string {
+func (n *netr) getAdapterName(adapter *ipAdapterAddresses) string {
 	if adapter.FriendlyName != nil {
 		return windows.UTF16PtrToString(adapter.FriendlyName)
 	}

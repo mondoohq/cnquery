@@ -1,9 +1,9 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-//go:build !windows && !linux
+//go:build darwin
 
-package networki
+package networkinterface
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ import (
 )
 
 // detectDarwinRoutes detects network routes on macOS using golang.org/x/net/route
-func (n *neti) detectDarwinRoutes() ([]Route, error) {
+func (n *netr) detectDarwinRoutes() ([]Route, error) {
 	ipv4Routes, err := n.fetchDarwinRoutes(unix.AF_INET)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get IPv4 routes")
@@ -33,7 +33,7 @@ func (n *neti) detectDarwinRoutes() ([]Route, error) {
 }
 
 // fetchDarwinRoutes fetches routes for a ipv4 or ipv6 address family
-func (n *neti) fetchDarwinRoutes(af int) ([]Route, error) {
+func (n *netr) fetchDarwinRoutes(af int) ([]Route, error) {
 	rib, err := route.FetchRIB(af, route.RIBTypeRoute, 0)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch RIB")
@@ -84,7 +84,7 @@ func (n *neti) fetchDarwinRoutes(af int) ([]Route, error) {
 }
 
 // getDarwinInterfaceMap creates a map of interface index to interface name
-func (n *neti) getDarwinInterfaceMap() (map[int]string, error) {
+func (n *netr) getDarwinInterfaceMap() (map[int]string, error) {
 	interfaceMap := make(map[int]string)
 
 	rib, err := route.FetchRIB(unix.AF_UNSPEC, route.RIBTypeInterface, 0)
@@ -112,7 +112,7 @@ func (n *neti) getDarwinInterfaceMap() (map[int]string, error) {
 // Index 1: Gateway (Inet4Addr/Inet6Addr or LinkAddr)
 // Index 2: Netmask (Inet4Addr/Inet6Addr, if present)
 // Index 3: Interface (LinkAddr, if present)
-func (n *neti) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[int]string) (dest, gateway, iface string, err error) {
+func (n *netr) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[int]string) (dest, gateway, iface string, err error) {
 	// Get destination (index 0)
 	if len(routeMsg.Addrs) > 0 && routeMsg.Addrs[0] != nil {
 		dest = n.addrToString(routeMsg.Addrs[0], interfaceMap)
@@ -162,7 +162,7 @@ func (n *neti) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[
 
 // addrToString converts a route.Addr to a string IP address
 // For IPv6 addresses with zone IDs, converts the zone ID to interface name to match osquery format (e.g., %16 -> %utun1)
-func (n *neti) addrToString(addr route.Addr, interfaceMap map[int]string) string {
+func (n *netr) addrToString(addr route.Addr, interfaceMap map[int]string) string {
 	switch a := addr.(type) {
 	case *route.Inet4Addr:
 		return net.IPv4(a.IP[0], a.IP[1], a.IP[2], a.IP[3]).String()

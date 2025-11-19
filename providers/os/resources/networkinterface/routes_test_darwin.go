@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package networki
+package networkinterface
 
 import (
 	"testing"
@@ -16,7 +16,7 @@ func Test_parseRouteMessage(t *testing.T) {
 	pf := &inventory.Platform{
 		Family: []string{"darwin"},
 	}
-	n := &neti{connection: nil, platform: pf}
+	n := &netr{connection: nil, platform: pf}
 
 	// Create interface map for testing
 	interfaceMap := map[int]string{

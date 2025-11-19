@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package networki
+package networkinterface
 
 import (
 	"encoding/json"
@@ -20,7 +20,7 @@ const (
 )
 
 // detectWindowsRoutesViaPowerShell uses PowerShell Get-NetRoute command
-func (n *neti) detectWindowsRoutesViaPowerShell() ([]Route, error) {
+func (n *netr) detectWindowsRoutesViaPowerShell() ([]Route, error) {
 	cmd := `Get-NetRoute | ForEach-Object {
 		$route = $_
 		$ifIndex = $route.InterfaceIndex
@@ -57,7 +57,7 @@ type WindowsNetRoute struct {
 }
 
 // parsePowerShellGetNetRouteOutput parses JSON output from Get-NetRoute PowerShell command
-func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) {
+func (n *netr) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) {
 	var routes []Route
 
 	// Trim whitespace from output
@@ -116,20 +116,11 @@ func (n *neti) parsePowerShellGetNetRouteOutput(output string) ([]Route, error) 
 
 // detectWindowsRoutesViaNetstat uses netstat -rn with PowerShell ConvertFrom-String
 // Uses: $a = netstat -rn; $a[8..$a.count] | ConvertFrom-String | select p1,p2,p3,p4,p5,p6
-func (n *neti) detectWindowsRoutesViaNetstat() ([]Route, error) {
-	interfaces, err := n.detectWindowsInterfaces()
+func (n *netr) detectWindowsRoutesViaNetstat() ([]Route, error) {
+	// Get IP -> Interface Name lookup map using PowerShell Get-NetIPAddress
+	ipToNameMap, err := n.getWindowsIPToInterfaceMap()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get interfaces for netstat route parsing")
-	}
-
-	// Create IP -> Interface Name lookup map
-	ipToNameMap := make(map[string]string)
-	for _, iface := range interfaces {
-		for _, ipaddr := range iface.IPAddresses {
-			if ipaddr.IP != nil {
-				ipToNameMap[ipaddr.IP.String()] = iface.Name
-			}
-		}
+		return nil, errors.Wrap(err, "failed to get IP to interface mapping")
 	}
 
 	cmd := `$a = netstat -rn; $a[8..$a.count] | ConvertFrom-String | select p1,p2,p3,p4,p5,p6 | ConvertTo-Json`
@@ -141,6 +132,54 @@ func (n *neti) detectWindowsRoutesViaNetstat() ([]Route, error) {
 	}
 
 	return n.parseNetstatPowerShellOutput(output, ipToNameMap)
+}
+
+// getWindowsIPToInterfaceMap uses PowerShell Get-NetIPAddress to create an IP -> Interface Name mapping
+func (n *netr) getWindowsIPToInterfaceMap() (map[string]string, error) {
+	cmd := `Get-NetIPAddress | Select-Object IPAddress, InterfaceAlias | ConvertTo-Json`
+	command := powershell.Encode(cmd)
+
+	output, err := n.RunCommand(command)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get IP addresses via Get-NetIPAddress")
+	}
+
+	// Parse JSON output
+	var ipAddresses []struct {
+		IPAddress      string `json:"IPAddress"`
+		InterfaceAlias string `json:"InterfaceAlias"`
+	}
+
+	output = strings.TrimSpace(output)
+	if output == "" {
+		return make(map[string]string), nil
+	}
+
+	err = json.Unmarshal([]byte(output), &ipAddresses)
+	if err != nil {
+		// Try parsing as a single object
+		var singleAddr struct {
+			IPAddress      string `json:"IPAddress"`
+			InterfaceAlias string `json:"InterfaceAlias"`
+		}
+		err2 := json.Unmarshal([]byte(output), &singleAddr)
+		if err2 != nil {
+			return nil, errors.Wrap(err, "failed to parse Get-NetIPAddress output")
+		}
+		ipAddresses = []struct {
+			IPAddress      string `json:"IPAddress"`
+			InterfaceAlias string `json:"InterfaceAlias"`
+		}{singleAddr}
+	}
+
+	ipToNameMap := make(map[string]string)
+	for _, addr := range ipAddresses {
+		if addr.IPAddress != "" && addr.InterfaceAlias != "" {
+			ipToNameMap[addr.IPAddress] = addr.InterfaceAlias
+		}
+	}
+
+	return ipToNameMap, nil
 }
 
 // NetstatRoute represents a route parsed from netstat -rn via ConvertFrom-String
@@ -199,7 +238,7 @@ func (n *NetstatRoute) UnmarshalJSON(data []byte) error {
 }
 
 // parseNetstatPowerShellOutput parses JSON output from netstat -rn via ConvertFrom-String
-func (n *neti) parseNetstatPowerShellOutput(output string, ipToNameMap map[string]string) ([]Route, error) {
+func (n *netr) parseNetstatPowerShellOutput(output string, ipToNameMap map[string]string) ([]Route, error) {
 	var routes []Route
 
 	// PowerShell may return a single object or an array
@@ -284,7 +323,7 @@ func (n *neti) parseNetstatPowerShellOutput(output string, ipToNameMap map[strin
 }
 
 // isHeaderRow checks if a row is a header that should be skipped
-func (n *neti) isHeaderRow(route NetstatRoute) bool {
+func (n *netr) isHeaderRow(route NetstatRoute) bool {
 	p1 := strings.TrimSpace(route.P1)
 	p2 := strings.TrimSpace(route.P2)
 	p3 := strings.TrimSpace(route.P3)
@@ -301,7 +340,7 @@ func (n *neti) isHeaderRow(route NetstatRoute) bool {
 }
 
 // parseIPv4NetstatRoute parses an IPv4 route from netstat output
-func (n *neti) parseIPv4NetstatRoute(route NetstatRoute, ipToNameMap map[string]string) *Route {
+func (n *netr) parseIPv4NetstatRoute(route NetstatRoute, ipToNameMap map[string]string) *Route {
 	if route.P2 == "" || route.P3 == "" {
 		return nil
 	}
@@ -356,7 +395,7 @@ func (n *neti) parseIPv4NetstatRoute(route NetstatRoute, ipToNameMap map[string]
 }
 
 // parseIPv6NetstatRoute parses an IPv6 route from netstat output
-func (n *neti) parseIPv6NetstatRoute(route NetstatRoute) *Route {
+func (n *netr) parseIPv6NetstatRoute(route NetstatRoute) *Route {
 	dest := strings.TrimSpace(route.P4)
 	if dest == "" {
 		return nil

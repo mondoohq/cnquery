@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package networki
+package networkinterface
 
 import (
 	"testing"
@@ -287,7 +287,7 @@ func Test_parseNetstatPowerShellOutput(t *testing.T) {
 		{Destination: "ff00::/8", Gateway: "::", Interface: ""},
 	}
 
-	n := &neti{}
+	n := &netr{}
 
 	// Mock IP to interface name mapping based on test data
 	ipToNameMap := map[string]string{
@@ -525,7 +525,7 @@ func Test_parsePowerShellGetNetRouteOutput(t *testing.T) {
 		{Destination: "ff00::/8", Gateway: "::", Interface: "Ethernet"},
 	}
 
-	n := &neti{}
+	n := &netr{}
 	routes, err := n.parsePowerShellGetNetRouteOutput(powerShellJSON)
 	require.NoError(t, err)
 
