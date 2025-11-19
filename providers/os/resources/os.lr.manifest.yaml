@@ -275,6 +275,12 @@ resources:
       url: https://docs.docker.com/reference/dockerfile/
     - title: Multi-stage builds
       url: https://docs.docker.com/build/building/multi-stage/
+  docker.file.stage.env:
+    fields:
+      name: {}
+      value: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   docker.file.user:
     fields:
       group: {}

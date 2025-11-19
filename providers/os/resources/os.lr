@@ -894,8 +894,6 @@ docker.file @defaults("file.path instructions.length stages.length") {
   instructions(file) dict
   // All stages included in this Dockerfile
   stages(file) []docker.file.stage
-  // List all environment variables in this Dockerfile from all stages
-  env(file) []dict
 }
 
 // Dockerfile stages
@@ -905,7 +903,7 @@ private docker.file.stage @defaults("from.name") {
   // Contains the reference to the Dockerfile this stage belongs to
   file docker.file
   // Environment variables configured in the Dockerfile
-  env map[string]string
+  env []docker.file.stage.env
   // LABEL instructions in the Dockerfile
   labels map[string]string
   // RUN instructions in this Dockerfile
@@ -922,6 +920,14 @@ private docker.file.stage @defaults("from.name") {
   copy []docker.file.copy
   // EXPOSE instructions in this Dockerfile
   expose []docker.file.expose
+}
+
+// Dockerfile ENV instructions
+private docker.file.stage.env @defaults("name value") {
+  // Set name of env variable
+  name string
+  // Set value of env variable
+  value string
 }
 
 // Dockerfile USER instructions
