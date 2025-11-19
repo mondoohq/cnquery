@@ -42,7 +42,7 @@ func (n *netr) detectLinuxRoutes() ([]Route, error) {
 		if err == nil {
 			return routes, nil
 		}
-		log.Warn().Err(err).Msg("Failed to parse ip route JSON output, falling back to /proc/net/route and /proc/net/ipv6_route")
+		log.Debug().Err(err).Msg("Failed to parse ip route JSON output, falling back to /proc/net/route and /proc/net/ipv6_route")
 	}
 
 	// ip -json failed (e.g., not available on Alpine), fall back to /proc
