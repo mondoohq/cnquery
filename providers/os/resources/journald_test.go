@@ -28,6 +28,7 @@ func TestResource_JournaldConfig(t *testing.T) {
 	t.Run("journald params", func(t *testing.T) {
 		res := x.TestQuery(t, "journald.config.params")
 		assert.NotEmpty(t, res)
+		assert.Equal(t, 8, len(res[0].Data.Value.(map[string]any)), "incorrect number of params present in config")
 		assert.NoError(t, res[0].Data.Error)
 	})
 
