@@ -596,7 +596,7 @@ lr/docs/markdown: providers/lr
 		--pack-name "Microsoft 365 (M365)" \
 		--description "The Microsoft 365 (M365) resource pack lets you use MQL to query and assess the security of your Microsoft 365 identities and configuration." \
 		--docs-file providers/ms365/resources/ms365.lr.manifest.yaml \
-		--output ../docs/docs/mql/resources/ms365-pack
+		--output ../docs/docs/mql/resources/m365-pack
 	./lr markdown providers/network/resources/network.lr \
 		--pack-name "Network" \
 		--description "The Network resource pack lets you use MQL to query and assess the security of domains and network services." \
