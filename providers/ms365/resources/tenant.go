@@ -5,17 +5,42 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"sync"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/directory"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/logger"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v12/types"
 )
+
+type mqlMicrosoftTenantInternal struct {
+	lock             sync.Mutex
+	realmDataFetched bool
+}
+
+type userRealmResponse struct {
+	Login               string               `json:"Login"`
+	DomainName          string               `json:"DomainName"`
+	FederationBrandName string               `json:"FederationBrandName"`
+	NameSpaceType       string               `json:"NameSpaceType,omitempty"`
+	TenantBrandingInfo  []tenantBrandingInfo `json:"TenantBrandingInfo"`
+}
+
+type tenantBrandingInfo struct {
+	KeepMeSignedInDisabled bool   `json:"KeepMeSignedInDisabled"`
+	BannerLogo             string `json:"BannerLogo,omitempty"`
+	BackgroundColor        string `json:"BackgroundColor,omitempty"`
+	UseTransparentLightbox bool   `json:"UseTransparentLightbox,omitempty"`
+}
 
 func (m *mqlMicrosoftTenant) id() (string, error) {
 	return m.Id.Data, nil
@@ -255,4 +280,129 @@ func (a *mqlMicrosoftTenant) formsSettings() (*mqlMicrosoftTenantFormsSettings, 
 	}
 
 	return formSetting.(*mqlMicrosoftTenantFormsSettings), nil
+}
+
+func (a *mqlMicrosoftTenant) fetchRealmData() error {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	if a.realmDataFetched {
+		return a.Realm.Error
+	}
+	a.realmDataFetched = true
+
+	verifiedDomains := a.GetVerifiedDomains()
+	if verifiedDomains.Error != nil {
+		err := verifiedDomains.Error
+		a.Realm = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+		a.Branding = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+		return err
+	}
+
+	if len(verifiedDomains.Data) == 0 {
+		a.Realm = plugin.TValue[[]any]{Data: []any{}, Error: nil, State: plugin.StateIsSet}
+		a.Branding = plugin.TValue[[]any]{Data: []any{}, Error: nil, State: plugin.StateIsSet}
+		return nil
+	}
+
+	var realmInfos []any
+	var brandingInfos []any
+
+	for _, domain := range verifiedDomains.Data {
+		domainDict, ok := domain.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		domainName, ok := domainDict["name"].(string)
+		if !ok || domainName == "" {
+			continue
+		}
+
+		realmResp, err := a.getUserRealmInfoForDomain(domainName)
+		if err != nil {
+			logger.DebugDumpJSON("tenant-realm-domain-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
+			a.Realm = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+			a.Branding = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+			return err
+		}
+
+		// Create realm info resource
+		realmId := fmt.Sprintf("%s-realm-info-%s", a.Id.Data, realmResp.DomainName)
+		mqlRealm, err := CreateResource(a.MqlRuntime, ResourceMicrosoftTenantRealmInfo,
+			map[string]*llx.RawData{
+				"__id":                llx.StringData(realmId),
+				"federationBrandName": llx.StringData(realmResp.FederationBrandName),
+				"domainName":          llx.StringData(realmResp.DomainName),
+				"login":               llx.StringData(realmResp.Login),
+				"nameSpaceType":       llx.StringData(realmResp.NameSpaceType),
+			})
+		if err != nil {
+			logger.DebugDumpJSON("tenant-realm-create-error", []byte(fmt.Sprintf("domain: %s, error: %v", domainName, err)))
+			a.Realm = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+			a.Branding = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+			return err
+		}
+		realmInfos = append(realmInfos, mqlRealm)
+
+		// Create branding info resources
+		for i, info := range realmResp.TenantBrandingInfo {
+			brandingId := fmt.Sprintf("%s-branding-info-%s-%d", a.Id.Data, realmResp.DomainName, i)
+			mqlBranding, err := CreateResource(a.MqlRuntime, ResourceMicrosoftTenantBrandingInfo,
+				map[string]*llx.RawData{
+					"__id":                   llx.StringData(brandingId),
+					"domainName":             llx.StringData(realmResp.DomainName),
+					"keepMeSignedInDisabled": llx.BoolData(info.KeepMeSignedInDisabled),
+					"backgroundColor":        llx.StringData(info.BackgroundColor),
+					"bannerLogo":             llx.StringData(info.BannerLogo),
+					"useTransparentLightbox": llx.BoolData(info.UseTransparentLightbox),
+				})
+			if err != nil {
+				logger.DebugDumpJSON("tenant-branding-create-error", []byte(fmt.Sprintf("domain: %s, index: %d, error: %v", domainName, i, err)))
+				a.Realm = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+				a.Branding = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet}
+				return err
+			}
+			brandingInfos = append(brandingInfos, mqlBranding)
+		}
+	}
+
+	a.Realm = plugin.TValue[[]any]{Data: realmInfos, Error: nil, State: plugin.StateIsSet}
+	a.Branding = plugin.TValue[[]any]{Data: brandingInfos, Error: nil, State: plugin.StateIsSet}
+	return nil
+}
+
+func (a *mqlMicrosoftTenant) getUserRealmInfoForDomain(domainName string) (*userRealmResponse, error) {
+	url := fmt.Sprintf("https://login.microsoftonline.com/common/userrealm/%s?api-version=2.0", domainName)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query userrealm endpoint: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		logger.DebugDumpJSON("tenant-branding-error", body)
+		return nil, fmt.Errorf("userrealm endpoint returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var realmResp userRealmResponse
+	if err := json.Unmarshal(body, &realmResp); err != nil {
+		return nil, fmt.Errorf("failed to parse userrealm response: %w", err)
+	}
+
+	return &realmResp, nil
+}
+
+func (a *mqlMicrosoftTenant) realm() ([]any, error) {
+	return nil, a.fetchRealmData()
+}
+
+func (a *mqlMicrosoftTenant) branding() ([]any, error) {
+	return nil, a.fetchRealmData()
 }
