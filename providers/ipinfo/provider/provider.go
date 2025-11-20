@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package provider
 
 import (
@@ -13,7 +16,7 @@ import (
 )
 
 const (
-	DefaultConnectionType        = "ipinfo"
+	DefaultConnectionType = "ipinfo"
 )
 
 type Service struct {
@@ -33,7 +36,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	conf := &inventory.Config{
-		Type: req.Connector,
+		Type:    req.Connector,
 		Options: map[string]string{},
 	}
 
@@ -117,8 +120,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.IpinfoConnection) error {
-  // TODO: adjust asset detection
-  asset.Id = conn.Conf.Type
+	// TODO: adjust asset detection
+	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
