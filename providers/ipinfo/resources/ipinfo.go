@@ -195,7 +195,7 @@ func queryIPInfo(runtime *plugin.Runtime, queryIP net.IP, interfaceIP net.IP, to
 }
 
 func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	log.Debug().Msg("initIpinfo called")
+	log.Debug().Str("args", fmt.Sprintf("%+v", args)).Msg("initIpinfo called")
 
 	// Get token from environment variable
 	token := os.Getenv("IPINFO_TOKEN")
@@ -213,8 +213,10 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 			return nil, nil, errors.New("ip cannot be empty")
 		}
 
-		interfaceIP = ipVal.IP
-		if !isBogonIP(queryIP) {
+		if isBogonIP(ipVal.IP) {
+			interfaceIP = ipVal.IP
+			queryIP = nil
+		} else {
 			queryIP = ipVal.IP
 			interfaceIP = nil
 		}
@@ -246,13 +248,7 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		Interface("full_response", info).
 		Msg("ipinfo response")
 
-	// Set the IP field to the public IP returned by ipinfo
-	if info.IP != "" {
-		args["ip"] = llx.IPData(llx.ParseIP(info.IP))
-	}
-
-	// Set the hostname from API response
-	// For local/private IPs, this will be the hostname for the public IP of that interface
+	args["ip"] = llx.IPData(llx.ParseIP(info.IP))
 	args["hostname"] = llx.StringData(info.Hostname)
 
 	return args, nil, nil
