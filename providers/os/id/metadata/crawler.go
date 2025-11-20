@@ -5,11 +5,14 @@ package metadata
 
 import (
 	"encoding/json"
+	"errors"
 	"regexp"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 )
+
+const maxDepth = 50
 
 // recursive is the interface passed to `Crawl` to fetch all metadata from an instance
 type recursive interface {
@@ -18,10 +21,14 @@ type recursive interface {
 
 // Crawl fetches all metadata from an instance recursively
 func Crawl(r recursive, path string) (any, error) {
-	return getMetadataRecursively(r, path)
+	return getMetadataRecursively(r, path, 0)
 }
 
-func getMetadataRecursively(r recursive, path string) (any, error) {
+func getMetadataRecursively(r recursive, path string, depth int) (any, error) {
+	if depth > maxDepth {
+		return nil, errors.New("crawler reached maximum depth limit")
+	}
+
 	log.Trace().Str("path", path).Msg("os.id.metadata> crawling")
 	data, err := r.GetMetadataValue(path)
 	if err != nil {
@@ -58,7 +65,7 @@ func getMetadataRecursively(r recursive, path string) (any, error) {
 
 			subPath := path + line
 
-			subData, err := getMetadataRecursively(r, subPath)
+			subData, err := getMetadataRecursively(r, subPath, depth+1)
 			if err != nil {
 				log.Trace().Err(err).
 					Str("path", path).
