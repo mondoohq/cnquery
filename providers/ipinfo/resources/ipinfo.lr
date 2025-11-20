@@ -2,10 +2,14 @@ option provider = "go.mondoo.com/cnquery/v12/providers/ipinfo"
 option go_package = "go.mondoo.com/cnquery/v12/providers/ipinfo/resources"
 
 // IP information from ipinfo.io service
-ipinfo @defaults("ip") {
+ipinfo @defaults("returned_ip hostname bogon") {
   init(ip ip)
-  // IP address
-  ip ip
+  // The IP address that was requested (empty if querying for your public IP)
+  requested_ip ip
+  // The IP address returned by ipinfo.io
+  returned_ip ip
   // Hostname for this IP address
   hostname string
+  // Whether the returned IP is a bogon. In this case the returned ip is same as the requested ip
+  bogon bool
 }

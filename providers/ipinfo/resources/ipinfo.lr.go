@@ -107,11 +107,17 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
-	"ipinfo.ip": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlIpinfo).GetIp()).ToDataRes(types.IP)
+	"ipinfo.requested_ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetRequested_ip()).ToDataRes(types.IP)
+	},
+	"ipinfo.returned_ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetReturned_ip()).ToDataRes(types.IP)
 	},
 	"ipinfo.hostname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIpinfo).GetHostname()).ToDataRes(types.String)
+	},
+	"ipinfo.bogon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetBogon()).ToDataRes(types.Bool)
 	},
 }
 
@@ -129,12 +135,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIpinfo).__id, ok = v.Value.(string)
 		return
 	},
-	"ipinfo.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlIpinfo).Ip, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+	"ipinfo.requested_ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Requested_ip, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"ipinfo.returned_ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Returned_ip, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
 	},
 	"ipinfo.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIpinfo).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipinfo.bogon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Bogon, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -166,8 +180,10 @@ type mqlIpinfo struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlIpinfoInternal it will be used here
-	Ip       plugin.TValue[llx.RawIP]
-	Hostname plugin.TValue[string]
+	Requested_ip plugin.TValue[llx.RawIP]
+	Returned_ip  plugin.TValue[llx.RawIP]
+	Hostname     plugin.TValue[string]
+	Bogon        plugin.TValue[bool]
 }
 
 // createIpinfo creates a new instance of this resource
@@ -207,10 +223,18 @@ func (c *mqlIpinfo) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlIpinfo) GetIp() *plugin.TValue[llx.RawIP] {
-	return &c.Ip
+func (c *mqlIpinfo) GetRequested_ip() *plugin.TValue[llx.RawIP] {
+	return &c.Requested_ip
+}
+
+func (c *mqlIpinfo) GetReturned_ip() *plugin.TValue[llx.RawIP] {
+	return &c.Returned_ip
 }
 
 func (c *mqlIpinfo) GetHostname() *plugin.TValue[string] {
 	return &c.Hostname
+}
+
+func (c *mqlIpinfo) GetBogon() *plugin.TValue[bool] {
+	return &c.Bogon
 }

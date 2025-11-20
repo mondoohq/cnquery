@@ -4,6 +4,8 @@
 resources:
   ipinfo:
     fields:
+      bogon: {}
       hostname: {}
-      ip: {}
+      requested_ip: {}
+      returned_ip: {}
     min_mondoo_version: 9.0.0

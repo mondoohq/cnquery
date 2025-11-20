@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -19,42 +20,17 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 )
 
-// createHTTPClientForIP creates an HTTP client bound to a specific local IP address
-// Binds directly to the provided IP without looking up interfaces
-func createHTTPClientForIP(runtime *plugin.Runtime, interfaceIP net.IP) (*http.Client, error) {
-	var localAddr *net.TCPAddr
+var (
+	ipInfoToken     string
+	ipInfoTokenOnce sync.Once
+)
 
-	// Create TCP address with the IP (port 0 means let OS choose)
-	if interfaceIP.To4() != nil {
-		// IPv4 - bind directly
-		localAddr = &net.TCPAddr{IP: interfaceIP.To4(), Port: 0}
-	} else {
-		// IPv6 - bind directly
-		// Note: For link-local addresses, the zone identifier should already be in the IP
-		// if it was provided that way. Otherwise, binding may fail for link-local addresses.
-		localAddr = &net.TCPAddr{IP: interfaceIP.To16(), Port: 0}
-	}
-
-	// Create a custom dialer that binds to the specific IP
-	dialer := &net.Dialer{
-		LocalAddr: localAddr,
-		Timeout:   30 * time.Second,
-		KeepAlive: 30 * time.Second,
-	}
-
-	// Create a transport with the custom dialer
-	transport := &http.Transport{
-		DialContext:       dialer.DialContext,
-		DisableKeepAlives: false,
-	}
-
-	// Create an HTTP client with the custom transport
-	client := &http.Client{
-		Transport: transport,
-		Timeout:   30 * time.Second,
-	}
-
-	return client, nil
+// getIPInfoToken returns the IPINFO_TOKEN from environment variable, cached after first read
+func getIPInfoToken() string {
+	ipInfoTokenOnce.Do(func() {
+		ipInfoToken = os.Getenv("IPINFO_TOKEN")
+	})
+	return ipInfoToken
 }
 
 // ipinfoResponse represents the JSON response from ipinfo.io API
@@ -68,39 +44,22 @@ type ipinfoResponse struct {
 	Org      string `json:"org"`
 	Postal   string `json:"postal"`
 	Timezone string `json:"timezone"`
-}
-
-// isBogonIP checks if an IP is a bogon (private, loopback, link-local, etc.)
-func isBogonIP(ip net.IP) bool {
-	if ip == nil {
-		return false
-	}
-	return ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsPrivate() || ip.IsMulticast() || ip.IsUnspecified()
+	Bogon    bool   `json:"bogon"`
 }
 
 // queryIPWithSDK queries IP information using the ipinfo Go SDK
-// The SDK automatically handles bogon detection and returns appropriate responses
-func queryIPWithSDK(runtime *plugin.Runtime, token string, queryIP net.IP, interfaceIP net.IP) (*ipinfoResponse, error) {
-	// Create HTTP client bound to interface if we have a local IP
-	var httpClient *http.Client
-	var err error
-	if interfaceIP != nil && !interfaceIP.IsLoopback() {
-		httpClient, err = createHTTPClientForIP(runtime, interfaceIP)
-		if err != nil {
-			log.Debug().Err(err).Str("ip", interfaceIP.String()).Msg("failed to create interface-bound client, using default")
-			httpClient = nil
-		}
-	}
-
-	// Create SDK client with custom HTTP client if needed
-	sdkClient := ipinfo.NewClient(httpClient, nil, token)
+func queryIPWithSDK(runtime *plugin.Runtime, token string, queryIP net.IP) (*ipinfoResponse, error) {
+	// Use default HTTP client - no interface binding
+	sdkClient := ipinfo.NewClient(nil, nil, token)
 
 	// Query the IP
 	var info *ipinfo.Core
+	var err error
 	if queryIP == nil {
 		// Query for YOUR public IP
 		info, err = sdkClient.GetIPInfo(nil)
 	} else {
+		// Query for the specific IP
 		info, err = sdkClient.GetIPInfo(queryIP)
 	}
 
@@ -119,6 +78,7 @@ func queryIPWithSDK(runtime *plugin.Runtime, token string, queryIP net.IP, inter
 		Org:      info.Org,
 		Postal:   info.Postal,
 		Timezone: info.Timezone,
+		Bogon:    info.Bogon,
 	}
 
 	return response, nil
@@ -166,42 +126,26 @@ func queryIPWithFreeAPI(client *http.Client, queryIP net.IP) (*ipinfoResponse, e
 }
 
 // queryIPInfo is a wrapper function that chooses between SDK and free API based on token availability
-func queryIPInfo(runtime *plugin.Runtime, queryIP net.IP, interfaceIP net.IP, token string) (*ipinfoResponse, error) {
+func queryIPInfo(runtime *plugin.Runtime, queryIP net.IP, token string) (*ipinfoResponse, error) {
 	if token == "" {
-		// Use free API
-		var httpClient *http.Client
-		var err error
-
-		// Create HTTP client bound to interface if we have a local IP
-		if interfaceIP != nil && !interfaceIP.IsLoopback() {
-			httpClient, err = createHTTPClientForIP(runtime, interfaceIP)
-			if err != nil {
-				log.Debug().Err(err).Str("ip", interfaceIP.String()).Msg("failed to create interface-bound client, using default")
-				httpClient = &http.Client{
-					Timeout: 30 * time.Second,
-				}
-			}
-		} else {
-			httpClient = &http.Client{
-				Timeout: 30 * time.Second,
-			}
+		// Use free API with default client
+		httpClient := &http.Client{
+			Timeout: 30 * time.Second,
 		}
-
 		return queryIPWithFreeAPI(httpClient, queryIP)
 	}
 
 	// Use SDK
-	return queryIPWithSDK(runtime, token, queryIP, interfaceIP)
+	return queryIPWithSDK(runtime, token, queryIP)
 }
 
 func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	log.Debug().Str("args", fmt.Sprintf("%+v", args)).Msg("initIpinfo called")
 
-	// Get token from environment variable
-	token := os.Getenv("IPINFO_TOKEN")
+	token := getIPInfoToken()
 
 	var queryIP net.IP
-	var interfaceIP net.IP
+	var requestedIP net.IP
 
 	// Check if an IP was provided as input
 	if ip, ok := args["ip"]; ok {
@@ -212,29 +156,24 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		if ipVal.IP == nil {
 			return nil, nil, errors.New("ip cannot be empty")
 		}
-
-		if isBogonIP(ipVal.IP) {
-			interfaceIP = ipVal.IP
-			queryIP = nil
-		} else {
-			queryIP = ipVal.IP
-			interfaceIP = nil
-		}
+		queryIP = ipVal.IP
+		requestedIP = ipVal.IP
 	}
-
+	// If no IP provided, queryIP remains nil (query for your public IP)
 	log.Debug().
-		Str("queryIP", queryIP.String()).
-		Str("interfaceIP", interfaceIP.String()).
+		Str("queryIP", func() string {
+			if queryIP == nil {
+				return "nil (public IP)"
+			}
+			return queryIP.String()
+		}()).
 		Str("withSDK", fmt.Sprintf("%t", token != "")).
 		Msg("querying ipinfo")
 
 	// Query IP information using the appropriate method
-	info, err := queryIPInfo(runtime, queryIP, interfaceIP, token)
+	info, err := queryIPInfo(runtime, queryIP, token)
 	if err != nil {
-		log.Debug().Err(err).
-			Str("queryIP", queryIP.String()).
-			Str("interfaceIP", interfaceIP.String()).
-			Msg("ipinfo query failed")
+		log.Debug().Err(err).Msg("ipinfo query failed")
 		return nil, nil, err
 	}
 
@@ -245,18 +184,29 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	log.Debug().
 		Str("response_ip", info.IP).
 		Str("response_hostname", info.Hostname).
+		Bool("response_bogon", info.Bogon).
 		Interface("full_response", info).
 		Msg("ipinfo response")
 
-	args["ip"] = llx.IPData(llx.ParseIP(info.IP))
-	args["hostname"] = llx.StringData(info.Hostname)
+	// Create result map with output fields
+	res := make(map[string]*llx.RawData)
 
-	return args, nil, nil
+	if requestedIP != nil {
+		res["requested_ip"] = llx.IPData(llx.RawIP{IP: requestedIP})
+	} else {
+		res["requested_ip"] = llx.NilData
+	}
+
+	res["returned_ip"] = llx.IPData(llx.ParseIP(info.IP))
+	res["hostname"] = llx.StringData(info.Hostname)
+	res["bogon"] = llx.BoolData(info.Bogon)
+
+	return res, nil, nil
 }
 
 func (c *mqlIpinfo) id() (string, error) {
-	if c.Ip.Error != nil {
-		return "", c.Ip.Error
+	if c.Returned_ip.Error != nil {
+		return "", c.Returned_ip.Error
 	}
-	return "ipinfo\x00" + c.Ip.Data.String(), nil
+	return "ipinfo\x00" + c.Returned_ip.Data.String(), nil
 }
