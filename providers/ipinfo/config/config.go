@@ -14,14 +14,13 @@ var Config = plugin.Provider{
 		{
 			Name:  "ipinfo",
 			Use:   "ipinfo",
-			Short: "IP information from ipinfo.io service",
+			Short: "IP information from ipinfo.io",
 			Long: `Use the ipinfo provider to query IP address information from ipinfo.io, including the IP address, hostname, and whether the IP address is a bogon.
 
 Examples:
   cnquery shell ipinfo
-  cnquery run ipinfo -c "ipinfo(ip('1.1.1.1')){*}"
-  cnquery run ipinfo -c "ipinfo(){*}"  # Query your public IP
   cnquery run ipinfo -c "ipinfo(ip('8.8.8.8')){*}"
+  cnquery run ipinfo -c "ipinfo(){*}"  # Query your public IP"
 
 Notes:
   - Pass an IP address to query information about that specific IP: ipinfo(ip("1.1.1.1"))
