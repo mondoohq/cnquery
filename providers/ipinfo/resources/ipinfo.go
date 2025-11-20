@@ -16,93 +16,23 @@ import (
 	"github.com/ipinfo/go/v2/ipinfo"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/id/networki"
 )
 
-// getOSConnection tries to get the OS provider connection from the runtime
-// Returns nil if OS provider is not available
-// Since OS is a cross-provider, the runtime should have access to it when needed
-func getOSConnection(runtime *plugin.Runtime) (shared.Connection, *inventory.Platform) {
-	// Check if the current connection is an OS connection
-	// This works when ipinfo is used as a cross-provider from an OS provider context
-	if osConn, ok := runtime.Connection.(shared.Connection); ok {
-		// shared.Connection has an Asset() method
-		asset := osConn.Asset()
-		if asset != nil {
-			return osConn, asset.Platform
-		}
-	}
-
-	// If not, we can't access other providers' connections directly
-	// The runtime's cross-provider mechanism handles OS provider access
-	// when OS resources are queried, but we don't have direct access to the connection here
-	// We'll fall back to direct IP binding
-
-	return nil, nil
-}
-
-// findInterfaceForIP finds the network interface that has the given IP address
-// Uses OS provider's networki.Interfaces() if available, otherwise returns nil
-func findInterfaceForIP(runtime *plugin.Runtime, targetIP net.IP) *networki.Interface {
-	osConn, platform := getOSConnection(runtime)
-	if osConn == nil || platform == nil {
-		log.Debug().Str("ip", targetIP.String()).Msg("OS provider connection not available, cannot find interface")
-		return nil
-	}
-
-	interfaces, err := networki.Interfaces(osConn, platform)
-	if err != nil {
-		log.Debug().Err(err).Str("ip", targetIP.String()).Msg("failed to get network interfaces from OS provider")
-		return nil
-	}
-
-	// Find the interface that has this IP
-	for _, iface := range interfaces {
-		for _, ipAddr := range iface.IPAddresses {
-			if ipAddr.IP != nil && ipAddr.IP.Equal(targetIP) {
-				return &iface
-			}
-		}
-	}
-
-	return nil
-}
-
 // createHTTPClientForIP creates an HTTP client bound to a specific local IP address
-// Tries to use OS provider's network interfaces if available, otherwise binds directly to IP
+// Binds directly to the provided IP without looking up interfaces
 func createHTTPClientForIP(runtime *plugin.Runtime, interfaceIP net.IP) (*http.Client, error) {
 	var localAddr *net.TCPAddr
-	var ifaceName string
-
-	// Try to find the interface using OS provider's network interfaces
-	if iface := findInterfaceForIP(runtime, interfaceIP); iface != nil {
-		ifaceName = iface.Name
-		log.Debug().Str("ip", interfaceIP.String()).Str("interface", ifaceName).Msg("found interface using OS provider")
-	}
 
 	// Create TCP address with the IP (port 0 means let OS choose)
 	if interfaceIP.To4() != nil {
+		// IPv4 - bind directly
 		localAddr = &net.TCPAddr{IP: interfaceIP.To4(), Port: 0}
 	} else {
-		// For IPv6 link-local addresses, we need the zone identifier
-		if interfaceIP.IsLinkLocalUnicast() && ifaceName != "" {
-			// Try to resolve with zone identifier
-			// Format: fe80::1%en0
-			zoneAddr := interfaceIP.String() + "%" + ifaceName
-			ipAddr, err := net.ResolveIPAddr("ip6", zoneAddr)
-			if err == nil {
-				localAddr = &net.TCPAddr{IP: ipAddr.IP, Zone: ifaceName, Port: 0}
-			} else {
-				// Fallback to IP without zone (may not work for link-local)
-				log.Debug().Err(err).Str("ip", interfaceIP.String()).Msg("failed to resolve IPv6 with zone, using without zone")
-				localAddr = &net.TCPAddr{IP: interfaceIP.To16(), Port: 0}
-			}
-		} else {
-			localAddr = &net.TCPAddr{IP: interfaceIP.To16(), Port: 0}
-		}
+		// IPv6 - bind directly
+		// Note: For link-local addresses, the zone identifier should already be in the IP
+		// if it was provided that way. Otherwise, binding may fail for link-local addresses.
+		localAddr = &net.TCPAddr{IP: interfaceIP.To16(), Port: 0}
 	}
 
 	// Create a custom dialer that binds to the specific IP
@@ -237,7 +167,6 @@ func queryIPWithFreeAPI(client *http.Client, queryIP net.IP) (*ipinfoResponse, e
 
 // queryIPInfo is a wrapper function that chooses between SDK and free API based on token availability
 func queryIPInfo(runtime *plugin.Runtime, queryIP net.IP, interfaceIP net.IP, token string) (*ipinfoResponse, error) {
-	// Check if token is available
 	if token == "" {
 		// Use free API
 		var httpClient *http.Client
@@ -272,9 +201,7 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	token := os.Getenv("IPINFO_TOKEN")
 
 	var queryIP net.IP
-	var inputIP *llx.RawData
 	var interfaceIP net.IP
-	var isLocalIP bool
 
 	// Check if an IP was provided as input
 	if ip, ok := args["ip"]; ok {
@@ -285,66 +212,32 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		if ipVal.IP == nil {
 			return nil, nil, errors.New("ip cannot be empty")
 		}
-		inputIP = ip
-		queryIP = ipVal.IP
 
-		// Check if this is a bogon IP (local/private/loopback/link-local)
-		if isBogonIP(queryIP) {
-			isLocalIP = true
-			interfaceIP = queryIP
-			// For local IPs, query for the public IP from this interface
-			// The SDK or free API will handle this appropriately
-			queryIP = nil
+		interfaceIP = ipVal.IP
+		if !isBogonIP(queryIP) {
+			queryIP = ipVal.IP
+			interfaceIP = nil
 		}
-	} else {
-		// No IP provided - get YOUR public IP (the one visible from internet)
-		queryIP = nil
-	}
-
-	// Determine which API to use and log
-	queryIPStr := "nil (public IP)"
-	if queryIP != nil {
-		queryIPStr = queryIP.String()
-	}
-	tokenStatus := "empty (using free API)"
-	if token != "" {
-		tokenStatus = "set (using SDK)"
-	}
-
-	interfaceIPStr := "none"
-	if interfaceIP != nil {
-		interfaceIPStr = interfaceIP.String()
 	}
 
 	log.Debug().
-		Str("queryIP", queryIPStr).
-		Bool("isLocalIP", isLocalIP).
-		Str("interfaceIP", interfaceIPStr).
-		Str("token", tokenStatus).
+		Str("queryIP", queryIP.String()).
+		Str("interfaceIP", interfaceIP.String()).
+		Str("withSDK", fmt.Sprintf("%t", token != "")).
 		Msg("querying ipinfo")
 
 	// Query IP information using the appropriate method
 	info, err := queryIPInfo(runtime, queryIP, interfaceIP, token)
 	if err != nil {
-		// If interface binding failed and we got an error, try again with default client as fallback
-		if isLocalIP && interfaceIP != nil && !interfaceIP.IsLoopback() {
-			log.Debug().Err(err).Str("ip", queryIPStr).Msg("interface-bound request failed, retrying with default client")
-			info, err = queryIPInfo(runtime, queryIP, nil, token)
-		}
-
-		if err != nil {
-			log.Debug().Err(err).
-				Str("queryIP", queryIPStr).
-				Msg("ipinfo query failed")
-			// Return nil values instead of error to allow query to continue
-			// The resource will show "no data available" but won't crash
-			return nil, nil, nil
-		}
+		log.Debug().Err(err).
+			Str("queryIP", queryIP.String()).
+			Str("interfaceIP", interfaceIP.String()).
+			Msg("ipinfo query failed")
+		return nil, nil, err
 	}
 
 	if info == nil {
-		// Should not happen, but handle gracefully
-		return nil, nil, nil
+		return nil, nil, errors.New("ipinfo query returned no data")
 	}
 
 	log.Debug().
@@ -353,19 +246,8 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		Interface("full_response", info).
 		Msg("ipinfo response")
 
-	// Set the IP field:
-	// - If input was a local IP, return the public IP for that interface
-	// - If input was a public IP, return that public IP
-	// - If no input, return YOUR public IP
-	if isLocalIP && info.IP != "" {
-		// Local IP was provided, we queried for public IP from that interface
-		// Return the public IP that ipinfo sees from that interface
-		args["ip"] = llx.IPData(llx.ParseIP(info.IP))
-	} else if inputIP != nil {
-		// Public IP was provided, keep it
-		args["ip"] = inputIP
-	} else if info.IP != "" {
-		// No input, use the public IP returned by ipinfo
+	// Set the IP field to the public IP returned by ipinfo
+	if info.IP != "" {
 		args["ip"] = llx.IPData(llx.ParseIP(info.IP))
 	}
 
