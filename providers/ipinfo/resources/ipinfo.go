@@ -9,28 +9,14 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"os"
-	"sync"
 
 	"github.com/cockroachdb/errors"
 	"github.com/ipinfo/go/v2/ipinfo"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/ipinfo/connection"
 )
-
-var (
-	ipInfoToken     string
-	ipInfoTokenOnce sync.Once
-)
-
-// getIPInfoToken returns the IPINFO_TOKEN from environment variable, cached after first read
-func getIPInfoToken() string {
-	ipInfoTokenOnce.Do(func() {
-		ipInfoToken = os.Getenv("IPINFO_TOKEN")
-	})
-	return ipInfoToken
-}
 
 // ipinfoResponse represents the JSON response from ipinfo.io API
 type ipinfoResponse struct {
@@ -109,7 +95,8 @@ func queryIPWithFreeAPI(client *http.Client, queryIP net.IP) (*ipinfoResponse, e
 func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	log.Debug().Str("args", fmt.Sprintf("%+v", args)).Msg("initIpinfo called")
 
-	token := getIPInfoToken()
+	conn := runtime.Connection.(*connection.IpinfoConnection)
+	token := conn.Token()
 
 	var queryIP net.IP
 	var requestedIP net.IP

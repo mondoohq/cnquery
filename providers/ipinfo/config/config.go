@@ -16,7 +16,7 @@ var Config = plugin.Provider{
 	Connectors: []plugin.Connector{
 		{
 			Name:  "ipinfo",
-			Use:   "ipinfo(<ip_address>)",
+			Use:   "ipinfo",
 			Short: "IP information from ipinfo.io",
 			Long: `Use the ipinfo provider to query IP address information from ipinfo.io, including the IP address, hostname, and whether the IP address is a bogon.
 

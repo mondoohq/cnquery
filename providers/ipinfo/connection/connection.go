@@ -4,6 +4,8 @@
 package connection
 
 import (
+	"os"
+
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 )
@@ -12,6 +14,7 @@ type IpinfoConnection struct {
 	plugin.Connection
 	Conf   *inventory.Config
 	asset  *inventory.Asset
+	token  string
 	client interface{} // ipinfo client will be stored here
 }
 
@@ -22,7 +25,7 @@ func NewIpinfoConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		asset:      asset,
 	}
 
-	// initialize your connection here
+	conn.token = os.Getenv("IPINFO_TOKEN")
 
 	return conn, nil
 }
@@ -41,4 +44,8 @@ func (c *IpinfoConnection) Client() interface{} {
 
 func (c *IpinfoConnection) SetClient(client interface{}) {
 	c.client = client
+}
+
+func (c *IpinfoConnection) Token() string {
+	return c.token
 }

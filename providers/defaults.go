@@ -560,7 +560,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "ipinfo",
-					Use:   "ipinfo(<ip_address>)",
+					Use:   "ipinfo",
 					Short: "IP information from ipinfo.io",
 				},
 			},
