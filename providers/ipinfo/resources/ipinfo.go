@@ -35,8 +35,11 @@ func getIPInfoToken() string {
 
 // ipinfoResponse represents the JSON response from ipinfo.io API
 type ipinfoResponse struct {
+	// fields included in all APIs
 	IP       string `json:"ip"`
 	Hostname string `json:"hostname"`
+	Bogon    bool   `json:"bogon"`
+	// fields included only in the SDK
 	City     string `json:"city"`
 	Region   string `json:"region"`
 	Country  string `json:"country"`
@@ -44,27 +47,23 @@ type ipinfoResponse struct {
 	Org      string `json:"org"`
 	Postal   string `json:"postal"`
 	Timezone string `json:"timezone"`
-	Bogon    bool   `json:"bogon"`
 }
 
 // queryIPWithSDK queries IP information using the ipinfo Go SDK
 func queryIPWithSDK(runtime *plugin.Runtime, token string, queryIP net.IP) (*ipinfoResponse, error) {
-	// Use default HTTP client - no interface binding
 	sdkClient := ipinfo.NewClient(nil, nil, token)
 
 	// Query the IP
 	var info *ipinfo.Core
 	var err error
 	if queryIP == nil {
-		// Query for YOUR public IP
 		info, err = sdkClient.GetIPInfo(nil)
 	} else {
-		// Query for the specific IP
 		info, err = sdkClient.GetIPInfo(queryIP)
 	}
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to query ipinfo SDK")
+		return nil, errors.Wrap(err, "failed to query with ipinfo SDK")
 	}
 
 	// Convert SDK response to our response format
@@ -89,7 +88,7 @@ func queryIPWithSDK(runtime *plugin.Runtime, token string, queryIP net.IP) (*ipi
 func queryIPWithFreeAPI(client *http.Client, queryIP net.IP) (*ipinfoResponse, error) {
 	var url string
 	if queryIP == nil {
-		// Query for YOUR public IP
+		// Query for public IP
 		url = "https://ipinfo.io"
 	} else {
 		// Query for specific IP
@@ -108,8 +107,7 @@ func queryIPWithFreeAPI(client *http.Client, queryIP net.IP) (*ipinfoResponse, e
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, errors.Errorf("ipinfo.io API returned status %d: %s", resp.StatusCode, string(body))
+		return nil, errors.Errorf("ipinfo.io API returned status %d: %s", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -188,9 +186,7 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		Interface("full_response", info).
 		Msg("ipinfo response")
 
-	// Create result map with output fields
 	res := make(map[string]*llx.RawData)
-
 	if requestedIP != nil {
 		res["requested_ip"] = llx.IPData(llx.RawIP{IP: requestedIP})
 	} else {
