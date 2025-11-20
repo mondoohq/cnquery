@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/ipinfo/go/v2/ipinfo"
@@ -35,11 +34,9 @@ func getIPInfoToken() string {
 
 // ipinfoResponse represents the JSON response from ipinfo.io API
 type ipinfoResponse struct {
-	// fields included in all APIs
 	IP       string `json:"ip"`
 	Hostname string `json:"hostname"`
 	Bogon    bool   `json:"bogon"`
-	// fields included only in the SDK
 	City     string `json:"city"`
 	Region   string `json:"region"`
 	Country  string `json:"country"`
@@ -50,7 +47,7 @@ type ipinfoResponse struct {
 }
 
 // queryIPWithSDK queries IP information using the ipinfo Go SDK
-func queryIPWithSDK(runtime *plugin.Runtime, token string, queryIP net.IP) (*ipinfoResponse, error) {
+func queryIPWithSDK(runtime *plugin.Runtime, token string, queryIP net.IP) (*ipinfo.Core, error) {
 	sdkClient := ipinfo.NewClient(nil, nil, token)
 
 	// Query the IP
@@ -66,21 +63,7 @@ func queryIPWithSDK(runtime *plugin.Runtime, token string, queryIP net.IP) (*ipi
 		return nil, errors.Wrap(err, "failed to query with ipinfo SDK")
 	}
 
-	// Convert SDK response to our response format
-	response := &ipinfoResponse{
-		IP:       info.IP.String(),
-		Hostname: info.Hostname,
-		City:     info.City,
-		Region:   info.Region,
-		Country:  info.Country,
-		Loc:      info.Location,
-		Org:      info.Org,
-		Postal:   info.Postal,
-		Timezone: info.Timezone,
-		Bogon:    info.Bogon,
-	}
-
-	return response, nil
+	return info, nil
 }
 
 // queryIPWithFreeAPI queries IP information using the free ipinfo.io API
@@ -123,20 +106,6 @@ func queryIPWithFreeAPI(client *http.Client, queryIP net.IP) (*ipinfoResponse, e
 	return &info, nil
 }
 
-// queryIPInfo is a wrapper function that chooses between SDK and free API based on token availability
-func queryIPInfo(runtime *plugin.Runtime, queryIP net.IP, token string) (*ipinfoResponse, error) {
-	if token == "" {
-		// Use free API with default client
-		httpClient := &http.Client{
-			Timeout: 30 * time.Second,
-		}
-		return queryIPWithFreeAPI(httpClient, queryIP)
-	}
-
-	// Use SDK
-	return queryIPWithSDK(runtime, token, queryIP)
-}
-
 func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	log.Debug().Str("args", fmt.Sprintf("%+v", args)).Msg("initIpinfo called")
 
@@ -165,11 +134,10 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 			}
 			return queryIP.String()
 		}()).
-		Str("withSDK", fmt.Sprintf("%t", token != "")).
 		Msg("querying ipinfo")
 
 	// Query IP information using the appropriate method
-	info, err := queryIPInfo(runtime, queryIP, token)
+	info, err := queryIPWithSDK(runtime, token, queryIP)
 	if err != nil {
 		log.Debug().Err(err).Msg("ipinfo query failed")
 		return nil, nil, err
@@ -180,7 +148,7 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	}
 
 	log.Debug().
-		Str("response_ip", info.IP).
+		Str("response_ip", info.IP.String()).
 		Str("response_hostname", info.Hostname).
 		Bool("response_bogon", info.Bogon).
 		Interface("full_response", info).
@@ -193,7 +161,7 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		res["requested_ip"] = llx.NilData
 	}
 
-	res["returned_ip"] = llx.IPData(llx.ParseIP(info.IP))
+	res["returned_ip"] = llx.IPData(llx.ParseIP(info.IP.String()))
 	res["hostname"] = llx.StringData(info.Hostname)
 	res["bogon"] = llx.BoolData(info.Bogon)
 

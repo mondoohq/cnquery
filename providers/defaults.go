@@ -552,4 +552,18 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
+	"ipinfo": {
+		Provider: &plugin.Provider{
+			Name:            "ipinfo",
+			ID:              "go.mondoo.com/cnquery/v12/providers/ipinfo",
+			ConnectionTypes: []string{"ipinfo"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "ipinfo",
+					Use:   "ipinfo(<ip_address>)",
+					Short: "IP information from ipinfo.io",
+				},
+			},
+		},
+	},
 }

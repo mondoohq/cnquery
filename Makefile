@@ -409,6 +409,11 @@ providers/build/tailscale: providers/lr
 providers/install/tailscale:
 	@$(call installProvider, providers/tailscale)
 
+providers/build/ipinfo: providers/lr
+	@$(call buildProvider, providers/ipinfo)
+providers/install/ipinfo:
+	@$(call installProvider, providers/ipinfo)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
