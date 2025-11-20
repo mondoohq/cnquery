@@ -23,3 +23,4 @@ providers/mock_schema.go
 providers-sdk/*/testutils/mockprovider/resources/*.resources.json
 !providers/core/resources/*.resources.json
 providers/os/connection/snapshot/mock_volumemounter.go
+!providers-sdk/v1/mqlr

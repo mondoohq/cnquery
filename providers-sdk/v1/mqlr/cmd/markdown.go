@@ -387,11 +387,6 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	return builder.String()
 }
 
-func anchore(name string) string {
-	name = strings.Replace(name, ".", "", -1)
-	return strings.ToLower(name)
-}
-
 func mdRef(name string) string {
 	return strings.ToLower(name) + ".md"
 }
@@ -415,10 +410,18 @@ func renderLrType(t lrcore.Type, resourceHrefMap map[string]bool) string {
 	}
 }
 
-func sanitizeComments(c []string) []string {
-	for i := range c {
-		c[i] = strings.TrimPrefix(c[i], "// ")
+func sanitizeComments(comments []string) []string {
+	sanitizedComments := []string{}
+	for _, c := range comments {
+		sanitized := strings.TrimPrefix(c, "// ")
+		// if the comment is pre-escaped, we unescape so that all | are uniform (unescaped)
+		// and get properly escaped in the next 'ReplaceAll'
+		// if we directly try to replace '|' with '\|' for pre-escaped comments
+		// it would look like '\\|' which would break the table.
+		sanitized = strings.ReplaceAll(sanitized, `\|`, `|`)
+		sanitized = strings.ReplaceAll(sanitized, `|`, `\|`)
+		sanitizedComments = append(sanitizedComments, sanitized)
 	}
 
-	return c
+	return sanitizedComments
 }
