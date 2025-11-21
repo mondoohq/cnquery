@@ -287,7 +287,7 @@ func Test_parseNetstatPowerShellOutput(t *testing.T) {
 		{Destination: "ff00::/8", Gateway: "::", Interface: ""},
 	}
 
-	n := &netr{}
+	w := &windowsRouteDetector{}
 
 	// Mock IP to interface name mapping based on test data
 	ipToNameMap := map[string]string{
@@ -295,7 +295,7 @@ func Test_parseNetstatPowerShellOutput(t *testing.T) {
 		"192.168.64.3": "Ethernet",
 	}
 
-	routes, err := n.parseNetstatPowerShellOutput(netstatJSON, ipToNameMap)
+	routes, err := w.parseNetstatPowerShellOutput(netstatJSON, ipToNameMap)
 	require.NoError(t, err)
 
 	// Compare routes (order may differ, so check by destination+gateway+interface)
@@ -525,8 +525,8 @@ func Test_parsePowerShellGetNetRouteOutput(t *testing.T) {
 		{Destination: "ff00::/8", Gateway: "::", Interface: "Ethernet"},
 	}
 
-	n := &netr{}
-	routes, err := n.parsePowerShellGetNetRouteOutput(powerShellJSON)
+	w := &windowsRouteDetector{}
+	routes, err := w.parsePowerShellGetNetRouteOutput(powerShellJSON)
 	require.NoError(t, err)
 
 	assert.Equal(t, len(expectedRoutes), len(routes), "route count mismatch")

@@ -1,6 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
+//go:build darwin
+
 package networkinterface
 
 import (
@@ -16,7 +18,7 @@ func Test_parseRouteMessage(t *testing.T) {
 	pf := &inventory.Platform{
 		Family: []string{"darwin"},
 	}
-	n := &netr{connection: nil, platform: pf}
+	d := &darwinRouteDetector{conn: nil, platform: pf}
 
 	// Create interface map for testing
 	interfaceMap := map[int]string{
@@ -142,7 +144,7 @@ func Test_parseRouteMessage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dest, gateway, iface, err := n.parseRouteMessage(tt.routeMsg, interfaceMap)
+			dest, gateway, iface, err := d.parseRouteMessage(tt.routeMsg, interfaceMap)
 
 			if tt.expectError {
 				require.Error(t, err)

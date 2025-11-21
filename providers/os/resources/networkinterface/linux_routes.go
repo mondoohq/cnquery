@@ -1,8 +1,6 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-//go:build !windows
-
 package networkinterface
 
 import (
@@ -32,13 +30,13 @@ type ipRouteJSON struct {
 	Flags    []string `json:"flags,omitempty"`
 }
 
-// detectLinuxRoutes detects network routes on Linux
+// List detects network routes on Linux
 // First tries 'ip -json route show table all' (modern approach)
 // Falls back to /proc/net/route and /proc/net/ipv6_route if ip -json is not available (e.g., Alpine Linux)
-func (n *netr) detectLinuxRoutes() ([]Route, error) {
-	output, err := n.RunCommand("ip -json route show table all")
+func (l *linuxRouteDetector) List() ([]Route, error) {
+	output, err := runCommand(l.conn, l.platform, "ip -json route show table all")
 	if err == nil {
-		routes, err := n.parseIpRouteJSON(output)
+		routes, err := l.parseIpRouteJSON(output)
 		if err == nil {
 			return routes, nil
 		}
@@ -47,20 +45,20 @@ func (n *netr) detectLinuxRoutes() ([]Route, error) {
 
 	// ip -json failed (e.g., not available on Alpine), fall back to /proc
 	// Get IPv4 routes from /proc/net/route
-	ipv4Data, err := afero.ReadFile(n.connection.FileSystem(), "/proc/net/route")
+	ipv4Data, err := afero.ReadFile(l.conn.FileSystem(), "/proc/net/route")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read /proc/net/route")
 	}
 
-	ipv4Routes, err := n.parseLinuxRoutesFromProc(string(ipv4Data))
+	ipv4Routes, err := l.parseLinuxRoutesFromProc(string(ipv4Data))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse IPv4 routes from /proc/net/route")
 	}
 
-	ipv6Data, err := afero.ReadFile(n.connection.FileSystem(), "/proc/net/ipv6_route")
+	ipv6Data, err := afero.ReadFile(l.conn.FileSystem(), "/proc/net/ipv6_route")
 	var ipv6Routes []Route
 	if err == nil {
-		ipv6Routes, err = n.parseLinuxIPv6RoutesFromProc(string(ipv6Data))
+		ipv6Routes, err = l.parseLinuxIPv6RoutesFromProc(string(ipv6Data))
 		if err != nil {
 			// Some alpine systems may not have IPv6 enabled
 			log.Debug().Err(err).Msg("Failed to parse IPv6 routes from /proc/net/ipv6_route")
@@ -72,7 +70,7 @@ func (n *netr) detectLinuxRoutes() ([]Route, error) {
 }
 
 // parseIpRouteJSON parses JSON output from 'ip -json route show table all'
-func (n *netr) parseIpRouteJSON(output string) ([]Route, error) {
+func (l *linuxRouteDetector) parseIpRouteJSON(output string) ([]Route, error) {
 	var jsonRoutes []ipRouteJSON
 	if err := json.Unmarshal([]byte(output), &jsonRoutes); err != nil {
 		return nil, errors.Wrap(err, "failed to parse ip route JSON output")
@@ -80,7 +78,7 @@ func (n *netr) parseIpRouteJSON(output string) ([]Route, error) {
 
 	var routes []Route
 	for _, jsonRoute := range jsonRoutes {
-		route := n.convertJSONRouteToRoute(jsonRoute)
+		route := l.convertJSONRouteToRoute(jsonRoute)
 		if route != nil {
 			routes = append(routes, *route)
 		}
@@ -90,7 +88,7 @@ func (n *netr) parseIpRouteJSON(output string) ([]Route, error) {
 }
 
 // convertJSONRouteToRoute converts an ipRouteJSON to a Route
-func (n *netr) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Route {
+func (l *linuxRouteDetector) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Route {
 	route := &Route{
 		Interface: jsonRoute.Dev,
 		Gateway:   jsonRoute.Gateway,
@@ -128,7 +126,7 @@ func (n *netr) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Route {
 // parseLinuxRoutesFromProc parses IPv4 routes from /proc/net/route output
 // Format: Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT
 // based on osquery implementation https://github.com/osquery/osquery/blob/master/osquery/tables/networking/linux/routes.cpp
-func (n *netr) parseLinuxRoutesFromProc(output string) ([]Route, error) {
+func (l *linuxRouteDetector) parseLinuxRoutesFromProc(output string) ([]Route, error) {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	if len(lines) < 2 {
 		return nil, errors.New("invalid /proc/net/route format")
@@ -203,7 +201,7 @@ func (n *netr) parseLinuxRoutesFromProc(output string) ([]Route, error) {
 // parseLinuxIPv6RoutesFromProc parses IPv6 routes from /proc/net/ipv6_route output
 // Format: destination dest_prefix_len source src_prefix_len next_hop metric ref use flags device
 // Based on osquery implementation https://github.com/osquery/osquery/blob/master/osquery/tables/networking/linux/routes.cpp
-func (n *netr) parseLinuxIPv6RoutesFromProc(output string) ([]Route, error) {
+func (l *linuxRouteDetector) parseLinuxIPv6RoutesFromProc(output string) ([]Route, error) {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	if len(lines) == 0 {
 		return []Route{}, nil

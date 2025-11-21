@@ -15,13 +15,6 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
 
-// netr is a helper struct to avoid passing the connection and platform
-// as function arguments.
-type netr struct {
-	connection shared.Connection
-	platform   *inventory.Platform
-}
-
 // Route represents a network route entry
 type Route struct {
 	Destination string
@@ -31,22 +24,47 @@ type Route struct {
 	Platform    *inventory.Platform // Platform-specific flag handling
 }
 
+// OperatingSystemRouteDetector is an interface for platform-specific route detection
+type OperatingSystemRouteDetector interface {
+	// List returns a list of Routes
+	List() ([]Route, error)
+}
+
+// darwinRouteDetector detects network routes on macOS/Darwin systems
+type darwinRouteDetector struct {
+	conn     shared.Connection
+	platform *inventory.Platform
+}
+
+// linuxRouteDetector detects network routes on Linux systems
+type linuxRouteDetector struct {
+	conn     shared.Connection
+	platform *inventory.Platform
+}
+
+// windowsRouteDetector detects network routes on Windows systems
+type windowsRouteDetector struct {
+	conn     shared.Connection
+	platform *inventory.Platform
+}
+
 // Routes returns the network routes of the system.
 // This function dispatches to platform-specific implementations based on runtime detection.
 func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
-	n := &netr{conn, pf}
+	var detector OperatingSystemRouteDetector
 
-	if pf.IsFamily(inventory.FAMILY_LINUX) {
-		return n.detectLinuxRoutes()
-	}
-	if pf.IsFamily(inventory.FAMILY_DARWIN) {
-		return n.detectDarwinRoutes()
-	}
-	if pf.IsFamily(inventory.FAMILY_WINDOWS) {
-		return n.detectWindowsRoutes()
+	switch {
+	case pf.IsFamily(inventory.FAMILY_LINUX):
+		detector = &linuxRouteDetector{conn: conn, platform: pf}
+	case pf.IsFamily(inventory.FAMILY_DARWIN):
+		detector = &darwinRouteDetector{conn: conn, platform: pf}
+	case pf.IsFamily(inventory.FAMILY_WINDOWS):
+		detector = &windowsRouteDetector{conn: conn, platform: pf}
+	default:
+		return nil, errors.New("your platform is not supported for the detection of network routes")
 	}
 
-	return nil, errors.New("your platform is not supported for the detection of network routes")
+	return detector.List()
 }
 
 // IsDefaultRoute checks if a route is a default route (destination is 0.0.0.0/0 or ::/0)
@@ -124,13 +142,12 @@ func parseFlags(flags int64, flagsMap map[int64]string) []string {
 	return flagStrings
 }
 
-// runCommand is a wrapper around connection.RunCommand that helps execute commands
-// and read the standard output for unix and windows systems.
-func (n *netr) RunCommand(commandString string) (string, error) {
-	if n.platform.IsFamily(inventory.FAMILY_WINDOWS) {
+// runCommand is a helper function that executes commands and reads the standard output
+func runCommand(conn shared.Connection, platform *inventory.Platform, commandString string) (string, error) {
+	if platform.IsFamily(inventory.FAMILY_WINDOWS) {
 		commandString = powershell.Encode(commandString)
 	}
-	cmd, err := n.connection.RunCommand(commandString)
+	cmd, err := conn.RunCommand(commandString)
 	if err != nil {
 		return "", err
 	}

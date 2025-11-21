@@ -151,8 +151,8 @@ func Test_parseIpRouteJSON(t *testing.T) {
 ]
 `
 
-	n := &netr{}
-	routes, err := n.parseIpRouteJSON(jsonOutput)
+	l := &linuxRouteDetector{}
+	routes, err := l.parseIpRouteJSON(jsonOutput)
 	require.NoError(t, err)
 	require.NotEmpty(t, routes)
 
@@ -260,8 +260,8 @@ eth0	000011AC	00000000	0001	0	0	0	0000FFFF	0	0	0
 
 `
 
-	n := &netr{}
-	alpineRoutes, err := n.parseLinuxRoutesFromProc(alpineProcOutput)
+	l := &linuxRouteDetector{}
+	alpineRoutes, err := l.parseLinuxRoutesFromProc(alpineProcOutput)
 	require.NoError(t, err)
 	require.Len(t, alpineRoutes, 2, "Should parse 2 routes from /proc/net/route")
 
@@ -274,7 +274,7 @@ eth0	000011AC	00000000	0001	0	0	0	0000FFFF	0	0	0
 		wlo1	00B2A8C0	00000000	0001	0	0	600	00FFFFFF	0	0	0                                                                             
 		
 		`
-	debianRoutes, err := n.parseLinuxRoutesFromProc(debianProcOutput)
+	debianRoutes, err := l.parseLinuxRoutesFromProc(debianProcOutput)
 	require.NoError(t, err)
 	require.Len(t, debianRoutes, 5, "Should parse 5 routes from /proc/net/route")
 
@@ -368,8 +368,8 @@ func Test_parseLinuxIPv6RoutesFromProc(t *testing.T) {
 
 `
 
-	n := &netr{}
-	alpineRoutes, err := n.parseLinuxIPv6RoutesFromProc(alpineIPv6ProcOutput)
+	l := &linuxRouteDetector{}
+	alpineRoutes, err := l.parseLinuxIPv6RoutesFromProc(alpineIPv6ProcOutput)
 	require.NoError(t, err)
 	// The test data has 3 lines: 2 default routes (::/0) and 1 localhost route (::1/128)
 	// So we expect 3 routes, but 2 are duplicates in the map
@@ -429,7 +429,7 @@ func Test_parseLinuxIPv6RoutesFromProc(t *testing.T) {
 		
 		`
 
-	debianRoutes, err := n.parseLinuxIPv6RoutesFromProc(debianIPv6ProcOutput)
+	debianRoutes, err := l.parseLinuxIPv6RoutesFromProc(debianIPv6ProcOutput)
 	require.NoError(t, err)
 	require.Greater(t, len(debianRoutes), 10, "Should parse many routes from /proc/net/ipv6_route (excluding multicast)")
 

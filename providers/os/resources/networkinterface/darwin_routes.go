@@ -16,16 +16,16 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// detectDarwinRoutes detects network routes on macOS using golang.org/x/net/route
-func (n *netr) detectDarwinRoutes() ([]Route, error) {
-	ipv4Routes, err := n.fetchDarwinRoutes(unix.AF_INET)
+// List detects network routes on macOS using golang.org/x/net/route
+func (d *darwinRouteDetector) List() ([]Route, error) {
+	ipv4Routes, err := d.fetchDarwinRoutes(unix.AF_INET)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get IPv4 routes")
 	}
 
-	ipv6Routes, err := n.fetchDarwinRoutes(unix.AF_INET6)
+	ipv6Routes, err := d.fetchDarwinRoutes(unix.AF_INET6)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get IPv4 routes")
+		return nil, errors.Wrap(err, "failed to get IPv6 routes")
 	}
 	routes := append(ipv4Routes, ipv6Routes...)
 
@@ -33,7 +33,7 @@ func (n *netr) detectDarwinRoutes() ([]Route, error) {
 }
 
 // fetchDarwinRoutes fetches routes for a ipv4 or ipv6 address family
-func (n *netr) fetchDarwinRoutes(af int) ([]Route, error) {
+func (d *darwinRouteDetector) fetchDarwinRoutes(af int) ([]Route, error) {
 	rib, err := route.FetchRIB(af, route.RIBTypeRoute, 0)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch RIB")
@@ -45,7 +45,7 @@ func (n *netr) fetchDarwinRoutes(af int) ([]Route, error) {
 	}
 
 	// Get interface map to resolve interface indices to names
-	interfaceMap, err := n.getDarwinInterfaceMap()
+	interfaceMap, err := d.getDarwinInterfaceMap()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get interface map")
 	}
@@ -57,7 +57,7 @@ func (n *netr) fetchDarwinRoutes(af int) ([]Route, error) {
 			continue
 		}
 
-		dest, gateway, iface, err := n.parseRouteMessage(routeMsg, interfaceMap)
+		dest, gateway, iface, err := d.parseRouteMessage(routeMsg, interfaceMap)
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to parse route message")
 			continue
@@ -84,7 +84,7 @@ func (n *netr) fetchDarwinRoutes(af int) ([]Route, error) {
 }
 
 // getDarwinInterfaceMap creates a map of interface index to interface name
-func (n *netr) getDarwinInterfaceMap() (map[int]string, error) {
+func (d *darwinRouteDetector) getDarwinInterfaceMap() (map[int]string, error) {
 	interfaceMap := make(map[int]string)
 
 	rib, err := route.FetchRIB(unix.AF_UNSPEC, route.RIBTypeInterface, 0)
@@ -112,10 +112,10 @@ func (n *netr) getDarwinInterfaceMap() (map[int]string, error) {
 // Index 1: Gateway (Inet4Addr/Inet6Addr or LinkAddr)
 // Index 2: Netmask (Inet4Addr/Inet6Addr, if present)
 // Index 3: Interface (LinkAddr, if present)
-func (n *netr) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[int]string) (dest, gateway, iface string, err error) {
+func (d *darwinRouteDetector) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[int]string) (dest, gateway, iface string, err error) {
 	// Get destination (index 0)
 	if len(routeMsg.Addrs) > 0 && routeMsg.Addrs[0] != nil {
-		dest = n.addrToString(routeMsg.Addrs[0], interfaceMap)
+		dest = d.addrToString(routeMsg.Addrs[0], interfaceMap)
 	}
 
 	// Get gateway (index 1) - can be Inet4Addr, Inet6Addr, or LinkAddr
@@ -124,7 +124,7 @@ func (n *netr) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[
 		case *route.LinkAddr:
 			gateway = fmt.Sprintf("link#%d", a.Index)
 		default:
-			gateway = n.addrToString(routeMsg.Addrs[1], interfaceMap)
+			gateway = d.addrToString(routeMsg.Addrs[1], interfaceMap)
 		}
 	}
 
@@ -162,7 +162,7 @@ func (n *netr) parseRouteMessage(routeMsg *route.RouteMessage, interfaceMap map[
 
 // addrToString converts a route.Addr to a string IP address
 // For IPv6 addresses with zone IDs, converts the zone ID to interface name to match osquery format (e.g., %16 -> %utun1)
-func (n *netr) addrToString(addr route.Addr, interfaceMap map[int]string) string {
+func (d *darwinRouteDetector) addrToString(addr route.Addr, interfaceMap map[int]string) string {
 	switch a := addr.(type) {
 	case *route.Inet4Addr:
 		return net.IPv4(a.IP[0], a.IP[1], a.IP[2], a.IP[3]).String()
