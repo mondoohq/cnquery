@@ -2,7 +2,7 @@ option provider = "go.mondoo.com/cnquery/providers/ipinfo"
 option go_package = "go.mondoo.com/cnquery/v12/providers/ipinfo/resources"
 
 // IP information from ipinfo.io service
-ipinfo @defaults("returned_ip hostname bogon city region country country_name is_eu location org postal timezone") {
+ipinfo @defaults("returned_ip hostname city") {
   init(ip ip)
   // The IP address that was requested (empty if querying for your public IP)
   requested_ip ip
