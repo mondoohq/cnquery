@@ -1010,3 +1010,13 @@ func TestEndeavourOSContainerDetector(t *testing.T) {
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"arch", "linux", "unix", "os"}, di.Family)
 }
+
+func TestCumulusContainerDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-cumulus.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "cumulus-linux", di.Name, "os name should be identified")
+	assert.Equal(t, "Cumulus Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}
