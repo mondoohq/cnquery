@@ -79,40 +79,40 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 
 	ini := parsers.ParseIni(content.Data, "=")
 
-	res := make(map[string]any, len(ini.Fields))
-	s.Params.Data = res
+	res := make(map[string]any)
 	s.Params.State = plugin.StateIsSet
 
 	if len(ini.Fields) == 0 {
 		return nil
 	}
 
-	root := ini.Fields["Journal"]
-	if root == nil {
-		s.Params.Error = errors.New("failed to parse journald config")
-		return s.Params.Error
-	}
-
-	fields, ok := root.(map[string]any)
-	if !ok {
-		s.Params.Error = errors.New("failed to parse journald config (invalid data retrieved)")
-		return s.Params.Error
-	}
-
-	var errs multierr.Errors
-	for k, v := range fields {
-		if s, ok := v.(string); ok {
-			if slices.Contains(journaldDowncaseKeywords, k) {
-				res[k] = strings.ToLower(s)
-			} else {
-				res[k] = s
-			}
-		} else {
-			errs.Add(fmt.Errorf("can't parse field '"+s+"', value is %+v", v))
+	for _, v := range ini.Fields {
+		if v == nil {
+			s.Params.Error = errors.New("failed to parse journald config")
+			return s.Params.Error
 		}
+
+		fields, ok := v.(map[string]any)
+		if !ok {
+			s.Params.Error = errors.New("failed to parse journald config (invalid data retrieved)")
+			return s.Params.Error
+		}
+		var errs multierr.Errors
+		for k, v := range fields {
+			if s, ok := v.(string); ok {
+				if slices.Contains(journaldDowncaseKeywords, k) {
+					res[k] = strings.ToLower(s)
+				} else {
+					res[k] = s
+				}
+			} else {
+				errs.Add(fmt.Errorf("can't parse field '"+s+"', value is %+v", v))
+			}
+		}
+		s.Params.Error = errs.Deduplicate()
 	}
 
-	s.Params.Error = errs.Deduplicate()
+	s.Params.Data = res
 	return s.Params.Error
 }
 
