@@ -24,8 +24,8 @@ type Route struct {
 	Platform    *inventory.Platform // Platform-specific flag handling
 }
 
-// OperatingSystemRouteDetector is an interface for platform-specific route detection
-type OperatingSystemRouteDetector interface {
+// operatingSystemRouteDetector is an interface for platform-specific route detection
+type operatingSystemRouteDetector interface {
 	// List returns a list of Routes
 	List() ([]Route, error)
 }
@@ -51,7 +51,7 @@ type windowsRouteDetector struct {
 // Routes returns the network routes of the system.
 // This function dispatches to platform-specific implementations based on runtime detection.
 func Routes(conn shared.Connection, pf *inventory.Platform) ([]Route, error) {
-	var detector OperatingSystemRouteDetector
+	var detector operatingSystemRouteDetector
 
 	switch {
 	case pf.IsFamily(inventory.FAMILY_LINUX):
