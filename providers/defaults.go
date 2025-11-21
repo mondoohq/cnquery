@@ -555,13 +555,13 @@ var DefaultProviders Providers = map[string]*Provider{
 	"ipinfo": {
 		Provider: &plugin.Provider{
 			Name:            "ipinfo",
-			ID:              "go.mondoo.com/cnquery/v12/providers/ipinfo",
+			ID:              "go.mondoo.com/cnquery/providers/ipinfo",
 			ConnectionTypes: []string{"ipinfo"},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "ipinfo",
 					Use:   "ipinfo",
-					Short: "IP information from ipinfo.io",
+					Short: "Query ipinfo.io for IP address information",
 				},
 			},
 		},

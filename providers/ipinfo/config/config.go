@@ -10,14 +10,14 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "ipinfo",
-	ID:              "go.mondoo.com/cnquery/v12/providers/ipinfo",
+	ID:              "go.mondoo.com/cnquery/providers/ipinfo",
 	Version:         "12.10.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:  "ipinfo",
 			Use:   "ipinfo",
-			Short: "IP information from ipinfo.io",
+			Short: "Query ipinfo.io for IP address information",
 			Long: `Use the ipinfo provider to query IP address information from ipinfo.io, including the IP address, hostname, and whether the IP address is a bogon.
 
 Examples:

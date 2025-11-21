@@ -1,8 +1,8 @@
-option provider = "go.mondoo.com/cnquery/v12/providers/ipinfo"
+option provider = "go.mondoo.com/cnquery/providers/ipinfo"
 option go_package = "go.mondoo.com/cnquery/v12/providers/ipinfo/resources"
 
 // IP information from ipinfo.io service
-ipinfo @defaults("returned_ip hostname bogon") {
+ipinfo @defaults("returned_ip hostname bogon city region country country_name is_eu location org postal timezone") {
   init(ip ip)
   // The IP address that was requested (empty if querying for your public IP)
   requested_ip ip
@@ -10,6 +10,24 @@ ipinfo @defaults("returned_ip hostname bogon") {
   returned_ip ip
   // Hostname for this IP address
   hostname string
-  // Whether the returned IP is a bogon. In this case the returned ip is same as the requested ip
+  // True if the IP is from a special use, non-public range.
   bogon bool
+  // City where the IP is located, e.g. Los Angeles
+  city string
+  // Region where the IP is located, e.g. California
+  region string
+  // Country code where the IP is located, e.g. US
+  country string
+  // Country name of the location, e.g. United States
+  country_name string
+  // True if the IP address is located in the European Union (EU).
+  is_eu bool
+  // Geocode location, e.g. 34.0522,-118.2437
+  location string
+  // Name of the organization that manages the IP, e.g. AS13335 Cloudflare, Inc.
+  org string
+  // Postal code of the location, e.g. 90076
+  postal string
+  // Timezone of the location, e.g. America/Los_Angeles
+  timezone string
 }

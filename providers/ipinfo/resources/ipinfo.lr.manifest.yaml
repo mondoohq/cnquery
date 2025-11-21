@@ -5,7 +5,16 @@ resources:
   ipinfo:
     fields:
       bogon: {}
+      city: {}
+      country: {}
+      country_name: {}
       hostname: {}
+      is_eu: {}
+      location: {}
+      org: {}
+      postal: {}
+      region: {}
       requested_ip: {}
       returned_ip: {}
+      timezone: {}
     min_mondoo_version: 9.0.0

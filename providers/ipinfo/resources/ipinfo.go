@@ -4,11 +4,8 @@
 package resources
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net"
-	"net/http"
 
 	"github.com/cockroachdb/errors"
 	"github.com/ipinfo/go/v2/ipinfo"
@@ -18,22 +15,8 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/ipinfo/connection"
 )
 
-// ipinfoResponse represents the JSON response from ipinfo.io API
-type ipinfoResponse struct {
-	IP       string `json:"ip"`
-	Hostname string `json:"hostname"`
-	Bogon    bool   `json:"bogon"`
-	City     string `json:"city"`
-	Region   string `json:"region"`
-	Country  string `json:"country"`
-	Loc      string `json:"loc"`
-	Org      string `json:"org"`
-	Postal   string `json:"postal"`
-	Timezone string `json:"timezone"`
-}
-
 // queryIPWithSDK queries IP information using the ipinfo Go SDK
-func queryIPWithSDK(runtime *plugin.Runtime, token string, queryIP net.IP) (*ipinfo.Core, error) {
+func queryIPWithSDK(token string, queryIP net.IP) (*ipinfo.Core, error) {
 	sdkClient := ipinfo.NewClient(nil, nil, token)
 
 	// Query the IP
@@ -50,46 +33,6 @@ func queryIPWithSDK(runtime *plugin.Runtime, token string, queryIP net.IP) (*ipi
 	}
 
 	return info, nil
-}
-
-// queryIPWithFreeAPI queries IP information using the free ipinfo.io API
-// This is the deprecated free API that doesn't require authentication
-func queryIPWithFreeAPI(client *http.Client, queryIP net.IP) (*ipinfoResponse, error) {
-	var url string
-	if queryIP == nil {
-		// Query for public IP
-		url = "https://ipinfo.io"
-	} else {
-		// Query for specific IP
-		url = fmt.Sprintf("https://ipinfo.io/%s", queryIP.String())
-	}
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create HTTP request")
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to make HTTP request to ipinfo.io")
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("ipinfo.io API returned status %d: %s", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read response body")
-	}
-
-	var info ipinfoResponse
-	if err := json.Unmarshal(body, &info); err != nil {
-		return nil, errors.Wrap(err, "failed to parse ipinfo.io response")
-	}
-
-	return &info, nil
 }
 
 func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -124,7 +67,7 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		Msg("querying ipinfo")
 
 	// Query IP information using the appropriate method
-	info, err := queryIPWithSDK(runtime, token, queryIP)
+	info, err := queryIPWithSDK(token, queryIP)
 	if err != nil {
 		log.Debug().Err(err).Msg("ipinfo query failed")
 		return nil, nil, err
@@ -151,6 +94,15 @@ func initIpinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	res["returned_ip"] = llx.IPData(llx.ParseIP(info.IP.String()))
 	res["hostname"] = llx.StringData(info.Hostname)
 	res["bogon"] = llx.BoolData(info.Bogon)
+	res["city"] = llx.StringData(info.City)
+	res["region"] = llx.StringData(info.Region)
+	res["country"] = llx.StringData(info.Country)
+	res["country_name"] = llx.StringData(info.CountryName)
+	res["is_eu"] = llx.BoolData(info.IsEU)
+	res["location"] = llx.StringData(info.Location)
+	res["org"] = llx.StringData(info.Org)
+	res["postal"] = llx.StringData(info.Postal)
+	res["timezone"] = llx.StringData(info.Timezone)
 
 	return res, nil, nil
 }

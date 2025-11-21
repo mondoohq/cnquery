@@ -119,6 +119,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ipinfo.bogon": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIpinfo).GetBogon()).ToDataRes(types.Bool)
 	},
+	"ipinfo.city": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetCity()).ToDataRes(types.String)
+	},
+	"ipinfo.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetRegion()).ToDataRes(types.String)
+	},
+	"ipinfo.country": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetCountry()).ToDataRes(types.String)
+	},
+	"ipinfo.country_name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetCountry_name()).ToDataRes(types.String)
+	},
+	"ipinfo.is_eu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetIs_eu()).ToDataRes(types.Bool)
+	},
+	"ipinfo.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetLocation()).ToDataRes(types.String)
+	},
+	"ipinfo.org": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetOrg()).ToDataRes(types.String)
+	},
+	"ipinfo.postal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetPostal()).ToDataRes(types.String)
+	},
+	"ipinfo.timezone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIpinfo).GetTimezone()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -149,6 +176,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ipinfo.bogon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIpinfo).Bogon, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ipinfo.city": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).City, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipinfo.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipinfo.country": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Country, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipinfo.country_name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Country_name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipinfo.is_eu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Is_eu, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ipinfo.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipinfo.org": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Org, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipinfo.postal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Postal, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ipinfo.timezone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIpinfo).Timezone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -184,6 +247,15 @@ type mqlIpinfo struct {
 	Returned_ip  plugin.TValue[llx.RawIP]
 	Hostname     plugin.TValue[string]
 	Bogon        plugin.TValue[bool]
+	City         plugin.TValue[string]
+	Region       plugin.TValue[string]
+	Country      plugin.TValue[string]
+	Country_name plugin.TValue[string]
+	Is_eu        plugin.TValue[bool]
+	Location     plugin.TValue[string]
+	Org          plugin.TValue[string]
+	Postal       plugin.TValue[string]
+	Timezone     plugin.TValue[string]
 }
 
 // createIpinfo creates a new instance of this resource
@@ -237,4 +309,40 @@ func (c *mqlIpinfo) GetHostname() *plugin.TValue[string] {
 
 func (c *mqlIpinfo) GetBogon() *plugin.TValue[bool] {
 	return &c.Bogon
+}
+
+func (c *mqlIpinfo) GetCity() *plugin.TValue[string] {
+	return &c.City
+}
+
+func (c *mqlIpinfo) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlIpinfo) GetCountry() *plugin.TValue[string] {
+	return &c.Country
+}
+
+func (c *mqlIpinfo) GetCountry_name() *plugin.TValue[string] {
+	return &c.Country_name
+}
+
+func (c *mqlIpinfo) GetIs_eu() *plugin.TValue[bool] {
+	return &c.Is_eu
+}
+
+func (c *mqlIpinfo) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlIpinfo) GetOrg() *plugin.TValue[string] {
+	return &c.Org
+}
+
+func (c *mqlIpinfo) GetPostal() *plugin.TValue[string] {
+	return &c.Postal
+}
+
+func (c *mqlIpinfo) GetTimezone() *plugin.TValue[string] {
+	return &c.Timezone
 }
