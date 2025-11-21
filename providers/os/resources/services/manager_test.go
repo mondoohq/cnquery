@@ -18,7 +18,7 @@ func TestManagerMacos(t *testing.T) {
 			Name:   "macos",
 			Family: []string{"unix", "darwin"},
 		},
-	}, mock.WithPath("./testdata/osx.toml"))
+	}, mock.WithPath("./testdata/macos.toml"))
 	require.NoError(t, err)
 
 	mm, err := services.ResolveManager(mock)
@@ -67,7 +67,7 @@ func TestManagerOpenBsd6(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "openbsd",
-			Family: []string{"unix", "os"},
+			Family: []string{"bsd", "unix", "os"},
 		},
 	}, mock.WithPath("./testdata/openbsd6.toml"))
 	require.NoError(t, err)
@@ -131,4 +131,340 @@ func TestManagerPhoton(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, 137, len(serviceList))
+}
+
+func TestManagerCumulus(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "cumulus-linux",
+			Version: "5.12.1",
+			Family:  []string{"debian", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Cumulus Linux")
+}
+
+func TestManagerRaspbian(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "raspbian",
+			Version: "13",
+			Family:  []string{"debian", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Raspbian")
+}
+
+func TestManagerArch(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "arch",
+			Version: "unknown",
+			Family:  []string{"arch", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Arch Linux")
+}
+
+func TestManagerParrot(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "parrot",
+			Version: "5.3",
+			Family:  []string{"debian", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Parrot Linux")
+}
+
+func TestManagerOpenSuseMicroOs(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "opensuse-microos",
+			Version: "20211224",
+			Family:  []string{"suse", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for OpenSUSE MicroOS")
+}
+
+func TestManagerSuseMicroOs(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "suse-microos",
+			Version: "5.1",
+			Family:  []string{"suse", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for SUSE MicroOS")
+}
+
+func TestManagerCos(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "cos",
+			Version: "97",
+			Family:  []string{"linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for COS")
+}
+
+func TestManagerOpenEuler(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "openeuler",
+			Version: "24.03",
+			Family:  []string{"euler", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for OpenEuler")
+}
+
+func TestManagerKali(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "kali",
+			Version: "2019.4",
+			Family:  []string{"debian", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Kali Linux")
+}
+
+func TestManagerMageia(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "mageia",
+			Version: "9",
+			Family:  []string{"linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Mageia Linux")
+}
+
+func TestManagerCloudLinux(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "cloudlinux",
+			Version: "9.0",
+			Family:  []string{"redhat", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for CloudLinux")
+}
+
+func TestManagerElementary(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "elementary",
+			Version: "7",
+			Family:  []string{"debian", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Elementary Linux")
+}
+
+func TestManagerMXLinux(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "mx",
+			Version: "23.2",
+			Family:  []string{"debian", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for MX Linux")
+}
+
+func TestManagerZorin(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "zorin",
+			Version: "16",
+			Family:  []string{"debian", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Zorin Linux")
+}
+
+func TestManagerFlatcar(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "flatcar",
+			Version: "4459.0.0",
+			Family:  []string{"linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Flatcar Linux")
+}
+
+func TestManagerNobara(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "nobara",
+			Version: "4459.0.0",
+			Family:  []string{"redhat", "linux", "unix", "os"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/sbin/init": {},
+		},
+	}))
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+
+	_, ok := mm.(*services.SystemDServiceManager)
+	assert.True(t, ok, "SystemDServiceManager used for Nobara Linux")
 }
