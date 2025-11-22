@@ -4,12 +4,16 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/id/machineid"
 	"go.mondoo.com/cnquery/v12/providers/os/id/networki"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/networkinterface"
 	"go.mondoo.com/cnquery/v12/types"
 )
 
@@ -66,4 +70,140 @@ func (c *mqlNetwork) interfaces() ([]any, error) {
 		}
 	}
 	return resources, nil
+}
+
+func (c *mqlNetwork) routes() (*mqlNetworkRoutes, error) {
+	log.Debug().Msg("os.network> routes")
+	conn := c.MqlRuntime.Connection.(shared.Connection)
+	platform := conn.Asset().Platform
+
+	routes, err := networkinterface.Routes(conn, platform)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to detect network routes")
+		return nil, err
+	}
+
+	interfaces, err := networki.Interfaces(conn, platform)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get interfaces for routes")
+		interfaces = []networki.Interface{}
+	}
+
+	// Map interfaces by name
+	interfaceMap := make(map[string]networki.Interface)
+	for _, iface := range interfaces {
+		interfaceMap[iface.Name] = iface
+	}
+
+	routeResources := []any{}
+	for _, route := range routes {
+		var ifaceResource plugin.Resource
+		if iface, ok := interfaceMap[route.Interface]; ok {
+			ipaddresses := []any{}
+			for _, ipaddress := range iface.IPAddresses {
+				ipRes, err := NewResource(c.MqlRuntime, "ipAddress", map[string]*llx.RawData{
+					"__id":      llx.StringData(ipaddress.IP.String()),
+					"ip":        llx.IPData(llx.ParseIP(ipaddress.IP.String())),
+					"cidr":      llx.IPData(llx.ParseIP(ipaddress.CIDR)),
+					"broadcast": llx.IPData(llx.ParseIP(ipaddress.Broadcast)),
+					"gateway":   llx.IPData(llx.ParseIP(ipaddress.Gateway)),
+					"subnet":    llx.IPData(llx.ParseIP(ipaddress.Subnet)),
+				})
+				if err != nil {
+					continue
+				}
+				ipaddresses = append(ipaddresses, ipRes)
+			}
+
+			ifaceResource, err = NewResource(c.MqlRuntime, "networkInterface", map[string]*llx.RawData{
+				"__id":    llx.StringData(iface.Name + "/" + iface.MACAddress),
+				"name":    llx.StringData(iface.Name),
+				"mac":     llx.StringData(iface.MACAddress),
+				"mtu":     llx.IntData(iface.MTU),
+				"active":  llx.BoolDataPtr(iface.Active),
+				"virtual": llx.BoolDataPtr(iface.Virtual),
+				"vendor":  llx.StringData(iface.Vendor),
+				"flags":   llx.ArrayData(convert.SliceAnyToInterface(iface.Flags), types.String),
+				"ips":     llx.ArrayData(ipaddresses, types.Resource("ipAddress")),
+			})
+			if err != nil {
+				log.Debug().Err(err).Str("iface", route.Interface).Msg("unable to create networkInterface resource")
+				return nil, err
+			}
+		}
+
+		routeRes, err := NewResource(c.MqlRuntime, "networkRoute", map[string]*llx.RawData{
+			"__id":        llx.StringData(route.Destination + "/" + route.Gateway + "/" + route.Interface),
+			"destination": llx.StringData(route.Destination),
+			"gateway":     llx.StringData(route.Gateway),
+			"flags":       llx.ArrayData(convert.SliceAnyToInterface(route.Flags), types.String),
+			"iface":       llx.ResourceData(ifaceResource, "networkInterface"),
+		})
+		if err != nil {
+			log.Debug().Err(err).Msg("unable to create networkRoute resource")
+			return nil, err
+		}
+		routeResources = append(routeResources, routeRes)
+	}
+
+	machineID, err := machineid.MachineId(conn, platform)
+	if err != nil || machineID == "" {
+		// Fallback to asset MRN if machine ID is not available
+		assetID := conn.Asset().GetMrn()
+		if assetID == "" {
+			assetID = "default"
+		}
+		machineID = assetID
+	}
+
+	routesRes, err := NewResource(c.MqlRuntime, "networkRoutes", map[string]*llx.RawData{
+		"__id": llx.StringData(fmt.Sprintf("networkRoutes(%s)", machineID)),
+		"list": llx.ArrayData(routeResources, types.Resource("networkRoute")),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return routesRes.(*mqlNetworkRoutes), nil
+}
+
+func (c *mqlNetworkRoutes) list() ([]any, error) {
+	return c.List.Data, c.List.Error
+}
+
+func (c *mqlNetworkRoutes) defaults() ([]any, error) {
+	log.Debug().Msg("os.network.routes> defaults")
+
+	// Get all routes from the list
+	allRoutes := c.GetList()
+	if allRoutes.Error != nil {
+		return nil, allRoutes.Error
+	}
+
+	// Filter to only default routes
+	var defaultRoutes []any
+	for _, routeRes := range allRoutes.Data {
+		route, ok := routeRes.(*mqlNetworkRoute)
+		if !ok {
+			continue
+		}
+
+		dest := route.GetDestination()
+		if dest.Error != nil {
+			continue
+		}
+
+		// Check if it's a default route
+		destStr := dest.Data
+		if destStr == "0.0.0.0/0" || destStr == "::/0" || destStr == "default" ||
+			destStr == "0.0.0.0" || destStr == "::" {
+			defaultRoutes = append(defaultRoutes, routeRes)
+		}
+	}
+
+	return defaultRoutes, nil
+}
+
+func (c *mqlNetworkRoute) iface() (*mqlNetworkInterface, error) {
+	return c.Iface.Data, c.Iface.Error
 }
