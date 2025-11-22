@@ -18,7 +18,7 @@ func TestParseServiceLaunchD(t *testing.T) {
 			Name:   "macos",
 			Family: []string{"unix", "darwin"},
 		},
-	}, mock.WithPath("./testdata/osx.toml"))
+	}, mock.WithPath("./testdata/macos.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
