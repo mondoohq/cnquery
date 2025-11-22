@@ -59,6 +59,10 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 			continue
 		}
 
+		if strings.Contains(line, "unit files listed.") {
+			continue // skip the summary line
+		}
+
 		name := strings.TrimSuffix(fields[0], ".service")
 
 		service := &Service{

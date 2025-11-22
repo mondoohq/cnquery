@@ -62,7 +62,7 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 
 	m, err := ParseServiceSystemDUnitFiles(c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 264, len(m), "detected the right amount of services")
+	assert.Equal(t, 263, len(m), "detected the right amount of services")
 
 	// check first element
 	assert.Equal(t, "accounts-daemon", m[0].Name, "service name detected")
@@ -81,7 +81,7 @@ func TestParseServiceSystemDUnitFilesPhoton(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "photon",
-			Family: []string{"redhat", "linux"},
+			Family: []string{"linux", "unix", "os"},
 		},
 	}, mock.WithPath("./testdata/photon.toml"))
 	if err != nil {
@@ -95,7 +95,7 @@ func TestParseServiceSystemDUnitFilesPhoton(t *testing.T) {
 
 	m, err := ParseServiceSystemDUnitFiles(c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 138, len(m), "detected the right amount of services")
+	assert.Equal(t, 137, len(m), "detected the right amount of services")
 
 	// check first element
 	assert.Equal(t, "autovt@", m[0].Name, "service name detected")
