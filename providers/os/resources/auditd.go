@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/v12/checksums"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/parsers"
 	"go.mondoo.com/cnquery/v12/types"
 	"go.mondoo.com/cnquery/v12/utils/multierr"
@@ -140,15 +141,18 @@ var auditdDowncaseKeywords = []string{
 	"overflow_action",
 }
 
-type mqlAuditdRulesInternal struct {
-	lock      sync.Mutex
-	loaded    bool
-	loadError error
-}
+// mqlAuditdRulesInternal holds minimal internal state for the resource
+type mqlAuditdRulesInternal struct{}
 
 const defaultAuditdRules = "/etc/audit/rules.d"
 
+func initAuditdRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// v3.0: No source parameter to handle - connection determines behavior
+	return args, nil, nil
+}
+
 func (s *mqlAuditdRules) id() (string, error) {
+	// Simple path-based ID (source is connection-level implementation detail)
 	return s.Path.Data, nil
 }
 
@@ -156,45 +160,245 @@ func (s *mqlAuditdRules) path() (string, error) {
 	return defaultAuditdRules, nil
 }
 
-func (s *mqlAuditdRules) load(path string) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	if s.loaded {
-		return s.loadError
+// controls returns all control rules via connection provider
+func (s *mqlAuditdRules) controls(path string) ([]any, error) {
+	data, err := s.getAuditRuleData(path)
+	if err != nil {
+		return nil, err
 	}
 
+	s.Controls.Data = data.Controls
+	s.Controls.State = plugin.StateIsSet
+	return data.Controls, nil
+}
+
+// files returns all file rules via connection provider
+func (s *mqlAuditdRules) files(path string) ([]any, error) {
+	data, err := s.getAuditRuleData(path)
+	if err != nil {
+		return nil, err
+	}
+
+	s.Files.Data = data.Files
+	s.Files.State = plugin.StateIsSet
+	return data.Files, nil
+}
+
+// syscalls returns all syscall rules via connection provider
+func (s *mqlAuditdRules) syscalls(path string) ([]any, error) {
+	data, err := s.getAuditRuleData(path)
+	if err != nil {
+		return nil, err
+	}
+
+	s.Syscalls.Data = data.Syscalls
+	s.Syscalls.State = plugin.StateIsSet
+	return data.Syscalls, nil
+}
+
+// getAuditRuleData loads filesystem rules and optionally merges with runtime via provider
+func (s *mqlAuditdRules) getAuditRuleData(path string) (*shared.AuditRuleData, error) {
+	// First, load filesystem rules using existing helpers
+	filesystemData, err := s.loadFilesystemRules(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get connection provider
+	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return nil, fmt.Errorf("connection does not implement shared.Connection interface")
+	}
+
+	provider := conn.AuditRuleProvider()
+	if provider == nil {
+		return nil, fmt.Errorf("connection does not provide audit rule provider")
+	}
+
+	// Inject parser function into provider
+	provider.SetParser(s.parseAuditRules)
+
+	// Let provider merge with runtime data if on live system
+	return provider.GetRules(filesystemData)
+}
+
+// loadFilesystemRules loads rules from filesystem using MQL resource helpers
+func (s *mqlAuditdRules) loadFilesystemRules(path string) (*shared.AuditRuleData, error) {
 	if path == "" {
-		return errors.New("the path must be non-empty to parse auditd rules")
+		return nil, errors.New("the path must be non-empty to parse auditd rules")
 	}
 
 	files, err := getSortedPathFiles(s.MqlRuntime, path)
 	if err != nil {
-		s.Controls = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
-		s.Files = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
-		s.Syscalls = plugin.TValue[[]any]{State: plugin.StateIsSet, Error: err}
-		return err
+		return nil, err
 	}
 
-	var errors multierr.Errors
+	// Initialize result data
+	data := &shared.AuditRuleData{
+		Controls: make([]interface{}, 0),
+		Files:    make([]interface{}, 0),
+		Syscalls: make([]interface{}, 0),
+	}
+
+	var parseErrors multierr.Errors
 	for i := range files {
 		file := files[i].(*mqlFile)
 
 		bn := file.GetBasename()
-		if !strings.HasSuffix(bn.Data, ".rules") {
+		if !matchesExtension(bn.Data, ".rules") {
 			continue
 		}
 
 		content := file.GetContent()
 		if content.Error != nil {
-			return content.Error
+			return nil, content.Error
 		}
 
-		s.parse(content.Data, &errors)
+		// Parse directly into data structure
+		s.parseInto(content.Data, &data.Controls, &data.Files, &data.Syscalls, &parseErrors)
 	}
 
-	s.loadError = errors.Deduplicate()
-	s.loaded = true
-	return s.loadError
+	if len(parseErrors.Errors) > 0 {
+		return nil, parseErrors.Deduplicate()
+	}
+
+	return data, nil
+}
+
+// matchesExtension checks if filename ends with extension
+func matchesExtension(filename, ext string) bool {
+	if len(filename) < len(ext) {
+		return false
+	}
+	return filename[len(filename)-len(ext):] == ext
+}
+
+// parseAuditRules is the parser function injected into the connection provider
+// It parses audit rule content and returns structured data
+func (s *mqlAuditdRules) parseAuditRules(content string) (*shared.AuditRuleData, error) {
+	// Initialize result data
+	data := &shared.AuditRuleData{
+		Controls: make([]interface{}, 0),
+		Files:    make([]interface{}, 0),
+		Syscalls: make([]interface{}, 0),
+	}
+
+	// Use existing parse logic
+	var errors multierr.Errors
+	s.parseInto(content, &data.Controls, &data.Files, &data.Syscalls, &errors)
+
+	if len(errors.Errors) > 0 {
+		return nil, fmt.Errorf("failed to parse audit rules: %w", errors.Deduplicate())
+	}
+
+	return data, nil
+}
+
+// parseInto parses audit rule content into provided slices
+func (s *mqlAuditdRules) parseInto(content string, controls, files, syscalls *[]interface{}, errors *multierr.Errors) {
+	lines := strings.Split(content, "\n")
+	for _, rawline := range lines {
+		line := strings.TrimSpace(rawline)
+		if line == "" || line[0] == '#' {
+			continue
+		}
+
+		resourceName := "auditd.rule.control"
+		args := map[string]*llx.RawData{}
+		rawFields := []string{}
+		syscallList := []any{}
+		other := [][2]string{}
+
+		for line != "" {
+			k, v, idx := parseKeyVal(line)
+			line = line[idx:]
+
+			switch k {
+			case "-a":
+				resourceName = "auditd.rule.syscall"
+				arr := strings.SplitN(v, ",", 2)
+				args["action"] = llx.StringData(arr[0])
+				args["list"] = llx.StringData(arr[1])
+
+			case "-F":
+				rawFields = append(rawFields, v)
+
+			case "-w":
+				resourceName = "auditd.rule.file"
+				args["path"] = llx.StringData(v)
+
+			case "-k":
+				args["keyname"] = llx.StringData(v)
+
+			case "-p":
+				args["permissions"] = llx.StringData(v)
+
+			case "-S":
+				syscallList = append(syscallList, v)
+
+			default:
+				other = append(other, [2]string{k, v})
+			}
+		}
+
+		switch resourceName {
+		case "auditd.rule.file":
+			if _, ok := args["keyname"]; !ok {
+				args["keyname"] = llx.StringData("")
+			}
+
+			r, err := CreateResource(s.MqlRuntime, resourceName, args)
+			if err != nil {
+				errors.Add(err)
+				continue
+			}
+			*files = append(*files, r)
+
+		case "auditd.rule.syscall":
+			args["syscalls"] = llx.ArrayData(syscallList, types.String)
+
+			fields := make([]any, len(rawFields))
+			for i, raw := range rawFields {
+				op := reOperator.FindString(raw)
+				if op == "" {
+					fields[i] = map[string]any{"key": raw}
+					continue
+				}
+				// it must exist according to the preceding statement
+				idx := strings.Index(raw, op)
+				fields[i] = map[string]any{
+					"key":   raw[0:idx],
+					"op":    raw[idx : idx+len(op)],
+					"value": raw[idx+len(op):],
+				}
+			}
+			args["fields"] = llx.ArrayData(fields, types.Dict)
+
+			if _, ok := args["keyname"]; !ok {
+				args["keyname"] = llx.StringData("")
+			}
+
+			r, err := CreateResource(s.MqlRuntime, resourceName, args)
+			if err != nil {
+				errors.Add(err)
+				continue
+			}
+			*syscalls = append(*syscalls, r)
+
+		default:
+			for io := range other {
+				r, err := CreateResource(s.MqlRuntime, resourceName, map[string]*llx.RawData{
+					"flag":  llx.StringData(other[io][0]),
+					"value": llx.StringData(other[io][1]),
+				})
+				if err != nil {
+					errors.Add(err)
+					continue
+				}
+				*controls = append(*controls, r)
+			}
+		}
+	}
 }
 
 func parseKeyVal(line string) (string, string, int) {
@@ -260,128 +464,6 @@ func parseKeyVal(line string) (string, string, int) {
 // Make sure this regex matches the most complete form first (ie >=) before
 // matching the shorter forms (ie =)
 var reOperator = regexp.MustCompile(`(!=|<=|>=|=|>|<)`)
-
-func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
-	s.Syscalls.State = plugin.StateIsSet
-	s.Files.State = plugin.StateIsSet
-	s.Controls.State = plugin.StateIsSet
-
-	lines := strings.Split(content, "\n")
-	for _, rawline := range lines {
-		line := strings.TrimSpace(rawline)
-		if line == "" || line[0] == '#' {
-			continue
-		}
-
-		resourceName := "auditd.rule.control"
-		args := map[string]*llx.RawData{}
-		rawFields := []string{}
-		syscalls := []any{}
-		other := [][2]string{}
-
-		for line != "" {
-			k, v, idx := parseKeyVal(line)
-			line = line[idx:]
-
-			switch k {
-			case "-a":
-				resourceName = "auditd.rule.syscall"
-				arr := strings.SplitN(v, ",", 2)
-				args["action"] = llx.StringData(arr[0])
-				args["list"] = llx.StringData(arr[1])
-
-			case "-F":
-				rawFields = append(rawFields, v)
-
-			case "-w":
-				resourceName = "auditd.rule.file"
-				args["path"] = llx.StringData(v)
-
-			case "-k":
-				args["keyname"] = llx.StringData(v)
-
-			case "-p":
-				args["permissions"] = llx.StringData(v)
-
-			case "-S":
-				syscalls = append(syscalls, v)
-
-			default:
-				other = append(other, [2]string{k, v})
-			}
-		}
-
-		switch resourceName {
-		case "auditd.rule.file":
-			if _, ok := args["keyname"]; !ok {
-				args["keyname"] = llx.StringData("")
-			}
-
-			r, err := CreateResource(s.MqlRuntime, resourceName, args)
-			if err != nil {
-				errors.Add(err)
-				continue
-			}
-			s.Files.Data = append(s.Files.Data, r)
-
-		case "auditd.rule.syscall":
-			args["syscalls"] = llx.ArrayData(syscalls, types.String)
-
-			fields := make([]any, len(rawFields))
-			for i, raw := range rawFields {
-				op := reOperator.FindString(raw)
-				if op == "" {
-					fields[i] = map[string]any{"key": raw}
-					continue
-				}
-				// it must exist according to the preceding statement
-				idx := strings.Index(raw, op)
-				fields[i] = map[string]any{
-					"key":   raw[0:idx],
-					"op":    raw[idx : idx+len(op)],
-					"value": raw[idx+len(op):],
-				}
-			}
-			args["fields"] = llx.ArrayData(fields, types.Dict)
-
-			if _, ok := args["keyname"]; !ok {
-				args["keyname"] = llx.StringData("")
-			}
-
-			r, err := CreateResource(s.MqlRuntime, resourceName, args)
-			if err != nil {
-				errors.Add(err)
-				continue
-			}
-			s.Syscalls.Data = append(s.Syscalls.Data, r)
-
-		default:
-			for io := range other {
-				r, err := CreateResource(s.MqlRuntime, resourceName, map[string]*llx.RawData{
-					"flag":  llx.StringData(other[io][0]),
-					"value": llx.StringData(other[io][1]),
-				})
-				if err != nil {
-					errors.Add(err)
-					continue
-				}
-				s.Controls.Data = append(s.Controls.Data, r)
-			}
-		}
-	}
-}
-
-func (s *mqlAuditdRules) controls(path string) ([]any, error) {
-	return nil, s.load(path)
-}
-
-func (s *mqlAuditdRules) files(path string) ([]any, error) {
-	return nil, s.load(path)
-}
-
-func (s *mqlAuditdRules) syscalls(path string) ([]any, error) {
-	return nil, s.load(path)
-}
 
 func (s *mqlAuditdRuleFile) id() (string, error) {
 	var f checksums.Fast
