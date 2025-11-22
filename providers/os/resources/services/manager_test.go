@@ -50,7 +50,7 @@ func TestManagerDragonflybsd5(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "dragonflybsd",
-			Family: []string{"unix"},
+			Family: []string{"bsd", "unix", "os"},
 		},
 	}, mock.WithPath("./testdata/dragonfly5.toml"))
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestManagerOpenBsd6(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "openbsd",
-			Family: []string{"unix"},
+			Family: []string{"unix", "os"},
 		},
 	}, mock.WithPath("./testdata/openbsd6.toml"))
 	require.NoError(t, err)
@@ -84,7 +84,7 @@ func TestManagerWindows(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "windows",
-			Family: []string{"windows"},
+			Family: []string{"windows", "os"},
 		},
 	}, mock.WithPath("./testdata/windows2019.toml"))
 	require.NoError(t, err)
@@ -102,7 +102,7 @@ func TestManagerUbuntu2204(t *testing.T) {
 		Platform: &inventory.Platform{
 			Name:    "ubuntu",
 			Version: "22.04",
-			Family:  []string{"ubuntu", "linux"},
+			Family:  []string{"ubuntu", "linux", "unix", "os"},
 		},
 	}, mock.WithPath("./testdata/ubuntu2204.toml"))
 	require.NoError(t, err)
@@ -112,15 +112,15 @@ func TestManagerUbuntu2204(t *testing.T) {
 	serviceList, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 264, len(serviceList))
+	assert.Equal(t, 263, len(serviceList))
 }
 
 func TestManagerPhoton(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "photon",
-			Version: "8.1.10",
-			Family:  []string{"photon", "linux"},
+			Version: "3.0",
+			Family:  []string{"linux", "unix", "os"},
 		},
 	}, mock.WithPath("./testdata/photon.toml"))
 	require.NoError(t, err)
@@ -130,5 +130,5 @@ func TestManagerPhoton(t *testing.T) {
 	serviceList, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 138, len(serviceList))
+	assert.Equal(t, 137, len(serviceList))
 }
