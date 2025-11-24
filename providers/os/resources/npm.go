@@ -103,26 +103,50 @@ func collectNpmPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []str
 			return nil
 		}
 
-		// we walk through the directories and check if there is a node_modules directory
-		log.Debug().Str("path", walkPath).Msg("found npm package")
+		// when node_modules exist we check the directory for dependencies (only applies if lockfile is missing)
 		nodeModulesPath := filepath.Join(walkPath, "node_modules")
+		_, err := afs.Stat(nodeModulesPath)
+		if err == nil {
+			log.Debug().Str("path", walkPath).Msg("found npm package")
+			files, err := afs.ReadDir(nodeModulesPath)
+			if err != nil {
+				return nil
+			}
+			for _, nodePkg := range files {
+				p := nodePkg.Name()
 
-		files, err := afs.ReadDir(nodeModulesPath)
-		if err != nil {
-			// we ignore the error, it is expected that there is no node_modules directory
+				// we ignore the files
+				if !nodePkg.IsDir() {
+					continue
+				}
+
+				// check that the directory starts with @, which is used for npm scopes
+				// see https://docs.npmjs.com/about-scopes
+				if strings.HasPrefix(nodePkg.Name(), "@") {
+					scopePath := filepath.Join(nodeModulesPath, nodePkg.Name())
+					d, err := afs.Open(scopePath)
+					if err != nil {
+						continue
+					}
+					scopedPkgs, err := d.Readdirnames(-1)
+					if err != nil {
+						continue
+					}
+					for _, scopedPkg := range scopedPkgs {
+						isDir, err := afs.IsDir(filepath.Join(scopePath, scopedPkg))
+						if !isDir || err != nil {
+							continue
+						}
+						handler(filepath.Join(scopePath, scopedPkg))
+					}
+				} else {
+					log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
+					handler(filepath.Join(nodeModulesPath, p))
+				}
+			}
 			return nil
 		}
-		for i := range files {
-			f := files[i]
-			p := f.Name()
 
-			if !f.IsDir() {
-				continue
-			}
-
-			log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
-			handler(filepath.Join(nodeModulesPath, p))
-		}
 		return nil
 	})
 	if err != nil {
