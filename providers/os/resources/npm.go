@@ -256,6 +256,7 @@ func (r *mqlNpmPackages) gatherData() error {
 		if err != nil {
 			return err
 		}
+		filePaths = append(filePaths, path)
 		root = bom.Root()
 		directDependencies = bom.Direct()
 		transitiveDependencies = bom.Transitive()
