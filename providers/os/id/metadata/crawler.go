@@ -51,6 +51,12 @@ func getMetadataRecursively(r recursive, path string, depth int) (any, error) {
 		return data, nil // Preserve as a raw string
 	}
 
+	// If the data is a multiline string, return it as a raw string
+	if detectMultilineString(data) {
+		log.Trace().Str("path", path).Msg("os.id.metadata> multiline string (detected)")
+		return data, nil
+	}
+
 	lines := strings.Split(data, "\n")
 
 	// If the data contains sub-paths, fetch them recursively
@@ -153,4 +159,31 @@ func patternToRegex(pattern string) string {
 
 	// Ensure full match
 	return pattern + "$"
+}
+
+// detectMultilineString checks if the data is a multiline string value rather than metadata we subpaths
+func detectMultilineString(data string) bool {
+	if !strings.Contains(data, "\n") {
+		return false
+	}
+
+	prefix := data
+	if len(data) > 50 {
+		prefix = data[:50]
+	}
+
+	sshKeyPattern := regexp.MustCompile(`(?:^|[:\s])(?:ssh-(?:rsa|dss|ed25519)|ecdsa-sha2-nistp(?:256|384|521)|ssh-ecdsa)\s+[A-Za-z0-9+/=]`)
+
+	switch {
+	case strings.Contains(prefix, "#!/bin/bash"):
+		return true
+	case strings.ContainsAny(prefix, "#!&+>"):
+		return true
+	case strings.Contains(prefix, "<!DOCTYPE") || strings.Contains(prefix, "<html"):
+		return true
+	case sshKeyPattern.MatchString(prefix):
+		return true
+	default:
+		return false
+	}
 }
