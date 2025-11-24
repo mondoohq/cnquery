@@ -80,22 +80,22 @@ partner-attributes/`
 		expected bool
 	}{
 		{
-			name:     "SSH key - ed25519 with user prefix",
+			name:     "ssh key - ed25519 with user prefix",
 			data:     "debian:ssh-ed25519 AAAAExampleKey1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\n\ndebian:ssh-ed25519 AAAAExampleKey1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\ndebian:ssh-ed25519 AAAAExampleKey1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+ Comment\ndebian:ssh-rsa AAAAExampleKey1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
 			expected: true,
 		},
 		{
-			name:     "SSH key - rsa without user prefix",
+			name:     "ssh key - rsa without user prefix",
 			data:     "ssh-rsa AAAAExampleKey1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\nssh-rsa AAAAExampleKey1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\nssh-ed25519 AAAAExampleKey1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+ Comment",
 			expected: true,
 		},
 		{
-			name:     "HTML error page",
+			name:     "html error page",
 			data:     htmlErrorPage,
 			expected: true,
 		},
 		{
-			name:     "Bash script with shebang",
+			name:     "bash script",
 			data:     bashScript,
 			expected: true,
 		},
