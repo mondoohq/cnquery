@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -318,6 +319,38 @@ func (r *mqlNpmPackages) list() ([]any, error) {
 
 func (r *mqlNpmPackages) files() ([]any, error) {
 	return nil, r.gatherData()
+}
+
+func (r *mqlNpmPackages) scripts() (map[string]any, error) {
+	if r.Path.Error != nil {
+		return nil, r.Path.Error
+	}
+	path := r.Path.Data
+
+	f, err := newFile(r.MqlRuntime, path)
+	if err != nil {
+		return nil, err
+	}
+	content := f.GetContent()
+	if content.Error != nil {
+		return nil, content.Error
+	}
+
+	type packageJson struct {
+		Scripts map[string]string `json:"scripts"`
+	}
+
+	pkgInfo := packageJson{}
+	err = json.Unmarshal([]byte(content.Data), &pkgInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]any)
+	for k, v := range pkgInfo.Scripts {
+		res[k] = v
+	}
+	return res, nil
 }
 
 // newNpmPackageList creates a list of npm package resources
