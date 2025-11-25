@@ -9,6 +9,8 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
+	"sort"
 	"strings"
 )
 
@@ -62,6 +64,7 @@ func (f *File) Readdir(n int) ([]os.FileInfo, error) {
 	return fi, nil
 }
 
+// Readdirnames returns the direct directories
 func (f *File) Readdirnames(n int) ([]string, error) {
 	fi := []string{}
 	// search all child items
@@ -80,10 +83,20 @@ func (f *File) Readdirnames(n int) ([]string, error) {
 				continue
 			}
 
+			// we only look into the direct dependencies
+			entries := strings.Split(rel, string("/"))
+			if len(entries) > 1 {
+				rel = entries[0]
+			}
+
 			// log.Debug().Str("entry", Abs(entry)).Str("path", f.path).Str("rel", rel).Msg("rel")
 			fi = append(fi, rel)
 		}
 	}
+
+	// since we iterate over nested paths, we need to compact the list
+	sort.Strings(fi)
+	fi = slices.Compact(fi)
 	return fi, nil
 }
 
