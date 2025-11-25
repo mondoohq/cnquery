@@ -70,12 +70,12 @@ func TestTarFileAlpine(t *testing.T) {
 			assert.Equal(t, "/etc/alpine-release", p, "path should be correct")
 
 			stat, err := f.Stat()
-			assert.Equal(t, int64(6), stat.Size(), "should read file size")
+			assert.Equal(t, int64(8), stat.Size(), "should read file size")
 			assert.Equal(t, nil, err, "should execute without error")
 
 			content, err := io.ReadAll(f)
 			assert.Equal(t, nil, err, "should execute without error")
-			assert.Equal(t, 6, len(content), "should read the full content")
+			assert.Equal(t, 8, len(content), "should read the full content")
 		}
 	})
 
@@ -144,11 +144,11 @@ func TestTarFileAlpine(t *testing.T) {
 
 			stat, err := f.Stat()
 			assert.Equal(t, nil, err, "should stat without error")
-			assert.Equal(t, int64(796240), stat.Size(), "should read file size")
+			assert.Equal(t, int64(829000), stat.Size(), "should read file size")
 
 			content, err := io.ReadAll(f)
 			assert.Equal(t, nil, err, "should execute without error")
-			assert.Equal(t, 796240, len(content), "should read the full content")
+			assert.Equal(t, 829000, len(content), "should read the full content")
 		}
 	})
 
