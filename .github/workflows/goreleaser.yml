@@ -3,11 +3,11 @@ name: goreleaser
 on:
   push:
     tags:
-      - '*'
+      - "*"
   workflow_dispatch:
     inputs:
       skip-publish:
-        description: 'Skip publishing to releases.mondoo.com?'
+        description: "Skip publishing to releases.mondoo.com?"
         type: boolean
         required: false
         default: false
@@ -17,7 +17,7 @@ on:
         default: false
         type: boolean
       goreleaser-snapshot:
-        description: 'Run goreleaser in snapshot mode, which will not publish and bypass tag checks.'
+        description: "Run goreleaser in snapshot mode, which will not publish and bypass tag checks."
         required: false
         default: false
         type: boolean
@@ -34,9 +34,9 @@ jobs:
   goreleaser:
     permissions:
       # Add "contents" to write release
-      contents: 'write'
+      contents: "write"
       # Add "id-token" for google-github-actions/auth
-      id-token: 'write'
+      id-token: "write"
 
     runs-on:
       group: Default
@@ -61,7 +61,7 @@ jobs:
 
       - name: Import environment variables from file
         run: cat ".github/env" >> $GITHUB_ENV
-      
+
       - name: Set up Go
         uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
@@ -74,8 +74,8 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.protoc-version }}
 
-      - name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093' # v3.0.0
+      - name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093" # v3.0.0
         with:
           workload_identity_provider: ${{ secrets.GCP_WIP }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -86,10 +86,10 @@ jobs:
           base64 -d <<<"$GPG_KEY" > "$gpgkey"
           echo "GPG_KEY_PATH=$gpgkey" >> $GITHUB_ENV
         env:
-          GPG_KEY: '${{ secrets.GPG_KEY}}'
+          GPG_KEY: "${{ secrets.GPG_KEY}}"
 
-# jsign and azure-cli are both requirements for Azure Trusted Signing and these actions to authenticate
-# These packages have been installed on the self-hosted runner using ansible from the private repo
+      # jsign and azure-cli are both requirements for Azure Trusted Signing and these actions to authenticate
+      # These packages have been installed on the self-hosted runner using ansible from the private repo
 
       - name: Azure login
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
@@ -112,11 +112,10 @@ jobs:
           echo "Access token prefix: ${PREFIX}..."
           echo "TSIGN_ACCESS_TOKEN=$TSIGN_ACCESS_TOKEN" >> $GITHUB_OUTPUT
 
-
       - name: Install Quill for Mac Signing and Notarization
         run: |
-            curl -sSfL https://raw.githubusercontent.com/anchore/quill/main/install.sh | sh -s -- -b /tmp
-            /tmp/quill help
+          curl -sSfL https://raw.githubusercontent.com/anchore/quill/main/install.sh | sh -s -- -b /tmp
+          /tmp/quill help
 
       - name: Log in to the Container registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
@@ -149,12 +148,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          QUILL_SIGN_PASSWORD: ''
+          QUILL_SIGN_PASSWORD: ""
           QUILL_SIGN_P12: ${{ secrets.APPLE_SIGN_P12 }}
           QUILL_NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
           QUILL_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
           QUILL_NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER }}
-          TSIGN_AZURE_ENDPOINT: ${{ vars.TSIGN_AZURE_ENDPOINT }}
+          TSIGN_AZURE_ENDPOINT: https://eus.codesigning.azure.net
           TSIGN_ACCOUNT_NAME: ${{ vars.TSIGN_ACCOUNT_NAME }}
           TSIGN_CERT_PROFILE_NAME: ${{ github.event.inputs.use-test-cert == 'true' && vars.TSIGN_TEST_CERT_PROFILE_NAME || vars.TSIGN_CERT_PROFILE_NAME }}
           TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.TSIGN_ACCESS_TOKEN }}
@@ -175,12 +174,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          QUILL_SIGN_PASSWORD: ''
+          QUILL_SIGN_PASSWORD: ""
           QUILL_SIGN_P12: ${{ secrets.APPLE_SIGN_P12 }}
           QUILL_NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
           QUILL_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
           QUILL_NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER }}
-          TSIGN_AZURE_ENDPOINT: ${{ vars.TSIGN_AZURE_ENDPOINT }}
+          TSIGN_AZURE_ENDPOINT: https://eus.codesigning.azure.net
           TSIGN_ACCOUNT_NAME: ${{ vars.TSIGN_ACCOUNT_NAME }}
           TSIGN_CERT_PROFILE_NAME: ${{ github.event.inputs.use-test-cert == 'true' && vars.TSIGN_TEST_CERT_PROFILE_NAME || vars.TSIGN_CERT_PROFILE_NAME }}
           TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.TSIGN_ACCESS_TOKEN }}
@@ -217,5 +216,5 @@ jobs:
           repository: "mondoohq/cnspec"
           event-type: update-cnquery
           client-payload: '{
-              "version": "${{  github.ref_name }}"
+            "version": "${{  github.ref_name }}"
             }'
