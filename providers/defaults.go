@@ -566,4 +566,18 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
+	"fortios": {
+		Provider: &plugin.Provider{
+			Name:            "fortios",
+			ID:              "go.mondoo.com/cnquery/providers/fortios",
+			ConnectionTypes: []string{"fortios"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "fortios",
+					Use:   "fortios",
+					Short: "a remote FortiOS system",
+				},
+			},
+		},
+	},
 }
