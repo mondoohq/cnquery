@@ -1902,11 +1902,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"port.tls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPort).GetTls()).ToDataRes(types.Resource("tls"))
 	},
-	"ports.list": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPorts).GetList()).ToDataRes(types.Array(types.Resource("port")))
-	},
 	"ports.listening": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPorts).GetListening()).ToDataRes(types.Array(types.Resource("port")))
+	},
+	"ports.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPorts).GetList()).ToDataRes(types.Array(types.Resource("port")))
 	},
 	"auditpol.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditpol).GetList()).ToDataRes(types.Array(types.Resource("auditpol.entry")))
@@ -4603,12 +4603,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlPorts).__id, ok = v.Value.(string)
 		return
 	},
-	"ports.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPorts).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"ports.listening": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPorts).Listening, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ports.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPorts).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"auditpol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12590,8 +12590,8 @@ type mqlPorts struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlPortsInternal
-	List      plugin.TValue[[]any]
 	Listening plugin.TValue[[]any]
+	List      plugin.TValue[[]any]
 }
 
 // createPorts creates a new instance of this resource
@@ -12626,22 +12626,6 @@ func (c *mqlPorts) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlPorts) GetList() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("ports", c.__id, "list")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.list()
-	})
-}
-
 func (c *mqlPorts) GetListening() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Listening, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -12655,6 +12639,22 @@ func (c *mqlPorts) GetListening() *plugin.TValue[[]any] {
 		}
 
 		return c.listening()
+	})
+}
+
+func (c *mqlPorts) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ports", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
 	})
 }
 

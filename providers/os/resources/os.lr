@@ -1119,9 +1119,8 @@ port @defaults("port protocol address process.executable") {
 }
 
 // TCP/IP ports on the system
-ports @defaults("list") {
-  // All ports in use by processes (both listening and non-listening)
-  list() []port
+ports {
+  []port
   // All listening ports
   listening() []port
 }
