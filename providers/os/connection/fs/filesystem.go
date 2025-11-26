@@ -57,10 +57,11 @@ type FileSystemConnection struct {
 	Conf  *inventory.Config
 	asset *inventory.Asset
 
-	MountedDir   string
-	fs           afero.Fs
-	tcPlatformId string
-	closeFN      func()
+	MountedDir    string
+	fs            afero.Fs
+	tcPlatformId  string
+	closeFN       func()
+	auditProvider *shared.AuditRuleProvider
 }
 
 func (c *FileSystemConnection) RunCommand(command string) (*shared.Command, error) {
@@ -102,6 +103,13 @@ func (c *FileSystemConnection) Close() {
 
 func (c *FileSystemConnection) Capabilities() shared.Capabilities {
 	return shared.Capability_FileSearch | shared.Capability_File | shared.Capability_FindFile
+}
+
+func (c *FileSystemConnection) AuditRuleProvider() *shared.AuditRuleProvider {
+	if c.auditProvider == nil {
+		c.auditProvider = shared.NewAuditRuleProvider(c)
+	}
+	return c.auditProvider
 }
 
 func (c *FileSystemConnection) Identifier() (string, error) {
