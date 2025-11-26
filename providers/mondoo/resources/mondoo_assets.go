@@ -118,5 +118,5 @@ func (m *mqlMondooAsset) resources() ([]any, error) {
 }
 
 func (m *mqlMondooResource) id() (string, error) {
-	return m.Name.Data + "\x00" + m.Id.Data, nil
+	return m.Name.Data + "/" + m.Id.Data, nil
 }
