@@ -4,6 +4,8 @@
 package networkinterface
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -276,12 +278,9 @@ func hexToIP(hexStr string) (net.IP, error) {
 		return nil, err
 	}
 	// Convert from little-endian to IP
-	return net.IPv4(
-		byte(val&0xff),
-		byte((val>>8)&0xff),
-		byte((val>>16)&0xff),
-		byte((val>>24)&0xff),
-	), nil
+	bytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(bytes, uint32(val))
+	return net.IPv4(bytes[0], bytes[1], bytes[2], bytes[3]), nil
 }
 
 // hexToIPv6 converts a hex string (32 hex chars) to net.IP (IPv6)
@@ -291,15 +290,9 @@ func hexToIPv6(hexStr string) (net.IP, error) {
 	}
 
 	ip := make(net.IP, 16)
-	for i := 0; i < 16; i++ {
-		// IPv6 in /proc/net/ipv6_route is stored in network byte order (big-endian)
-		// Each byte is represented by 2 hex chars
-		byteStr := hexStr[i*2 : i*2+2]
-		val, err := strconv.ParseUint(byteStr, 16, 8)
-		if err != nil {
-			return nil, err
-		}
-		ip[i] = byte(val)
+	_, err := hex.Decode(ip, []byte(hexStr))
+	if err != nil {
+		return nil, err
 	}
 
 	return ip, nil
