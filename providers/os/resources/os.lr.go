@@ -126,6 +126,7 @@ const (
 	ResourceNpmPackages            string = "npm.packages"
 	ResourceNpmPackage             string = "npm.package"
 	ResourceMacos                  string = "macos"
+	ResourceMacosHardware          string = "macos.hardware"
 	ResourceMacosAlf               string = "macos.alf"
 	ResourceMacosTimemachine       string = "macos.timemachine"
 	ResourceMacosSystemsetup       string = "macos.systemsetup"
@@ -591,6 +592,10 @@ func init() {
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacos,
+		},
+		"macos.hardware": {
+			Init:   initMacosHardware,
+			Create: createMacosHardware,
 		},
 		"macos.alf": {
 			Init:   initMacosAlf,
@@ -2238,6 +2243,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"npm.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNpmPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
+	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
+	},
 	"macos.userPreferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetUserPreferences()).ToDataRes(types.Map(types.String, types.Dict))
 	},
@@ -2249,6 +2257,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.systemExtensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetSystemExtensions()).ToDataRes(types.Array(types.Resource("macos.systemExtension")))
+	},
+	"macos.hardware.activationLockStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetActivationLockStatus()).ToDataRes(types.String)
+	},
+	"macos.hardware.bootRomVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetBootRomVersion()).ToDataRes(types.String)
+	},
+	"macos.hardware.chipType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetChipType()).ToDataRes(types.String)
+	},
+	"macos.hardware.machineModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetMachineModel()).ToDataRes(types.String)
+	},
+	"macos.hardware.machineName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetMachineName()).ToDataRes(types.String)
+	},
+	"macos.hardware.modelNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetModelNumber()).ToDataRes(types.String)
+	},
+	"macos.hardware.numberProcessors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetNumberProcessors()).ToDataRes(types.String)
+	},
+	"macos.hardware.osLoaderVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetOsLoaderVersion()).ToDataRes(types.String)
+	},
+	"macos.hardware.physicalMemory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetPhysicalMemory()).ToDataRes(types.String)
+	},
+	"macos.hardware.platformUUID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetPlatformUUID()).ToDataRes(types.String)
+	},
+	"macos.hardware.provisioningUDID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetProvisioningUDID()).ToDataRes(types.String)
+	},
+	"macos.hardware.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosHardware).GetSerialNumber()).ToDataRes(types.String)
 	},
 	"macos.alf.allowDownloadSignedEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosAlf).GetAllowDownloadSignedEnabled()).ToDataRes(types.Int)
@@ -5150,6 +5194,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMacos).__id, ok = v.Value.(string)
 		return
 	},
+	"macos.computerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacos).ComputerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"macos.userPreferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacos).UserPreferences, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -5164,6 +5212,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.systemExtensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacos).SystemExtensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.hardware.activationLockStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).ActivationLockStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.bootRomVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).BootRomVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.chipType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).ChipType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.machineModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).MachineModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.machineName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).MachineName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.modelNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).ModelNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.numberProcessors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).NumberProcessors, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.osLoaderVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).OsLoaderVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.physicalMemory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).PhysicalMemory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.platformUUID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).PlatformUUID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.provisioningUDID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).ProvisioningUDID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.hardware.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosHardware).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"macos.alf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14579,6 +14679,7 @@ type mqlMacos struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMacosInternal it will be used here
+	ComputerName          plugin.TValue[string]
 	UserPreferences       plugin.TValue[map[string]any]
 	UserHostPreferences   plugin.TValue[map[string]any]
 	GlobalAccountPolicies plugin.TValue[any]
@@ -14617,6 +14718,12 @@ func (c *mqlMacos) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlMacos) GetComputerName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ComputerName, func() (string, error) {
+		return c.computerName()
+	})
+}
+
 func (c *mqlMacos) GetUserPreferences() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.UserPreferences, func() (map[string]any, error) {
 		return c.userPreferences()
@@ -14649,6 +14756,105 @@ func (c *mqlMacos) GetSystemExtensions() *plugin.TValue[[]any] {
 
 		return c.systemExtensions()
 	})
+}
+
+// mqlMacosHardware for the macos.hardware resource
+type mqlMacosHardware struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMacosHardwareInternal it will be used here
+	ActivationLockStatus plugin.TValue[string]
+	BootRomVersion       plugin.TValue[string]
+	ChipType             plugin.TValue[string]
+	MachineModel         plugin.TValue[string]
+	MachineName          plugin.TValue[string]
+	ModelNumber          plugin.TValue[string]
+	NumberProcessors     plugin.TValue[string]
+	OsLoaderVersion      plugin.TValue[string]
+	PhysicalMemory       plugin.TValue[string]
+	PlatformUUID         plugin.TValue[string]
+	ProvisioningUDID     plugin.TValue[string]
+	SerialNumber         plugin.TValue[string]
+}
+
+// createMacosHardware creates a new instance of this resource
+func createMacosHardware(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosHardware{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.hardware", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosHardware) MqlName() string {
+	return "macos.hardware"
+}
+
+func (c *mqlMacosHardware) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosHardware) GetActivationLockStatus() *plugin.TValue[string] {
+	return &c.ActivationLockStatus
+}
+
+func (c *mqlMacosHardware) GetBootRomVersion() *plugin.TValue[string] {
+	return &c.BootRomVersion
+}
+
+func (c *mqlMacosHardware) GetChipType() *plugin.TValue[string] {
+	return &c.ChipType
+}
+
+func (c *mqlMacosHardware) GetMachineModel() *plugin.TValue[string] {
+	return &c.MachineModel
+}
+
+func (c *mqlMacosHardware) GetMachineName() *plugin.TValue[string] {
+	return &c.MachineName
+}
+
+func (c *mqlMacosHardware) GetModelNumber() *plugin.TValue[string] {
+	return &c.ModelNumber
+}
+
+func (c *mqlMacosHardware) GetNumberProcessors() *plugin.TValue[string] {
+	return &c.NumberProcessors
+}
+
+func (c *mqlMacosHardware) GetOsLoaderVersion() *plugin.TValue[string] {
+	return &c.OsLoaderVersion
+}
+
+func (c *mqlMacosHardware) GetPhysicalMemory() *plugin.TValue[string] {
+	return &c.PhysicalMemory
+}
+
+func (c *mqlMacosHardware) GetPlatformUUID() *plugin.TValue[string] {
+	return &c.PlatformUUID
+}
+
+func (c *mqlMacosHardware) GetProvisioningUDID() *plugin.TValue[string] {
+	return &c.ProvisioningUDID
+}
+
+func (c *mqlMacosHardware) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
 }
 
 // mqlMacosAlf for the macos.alf resource

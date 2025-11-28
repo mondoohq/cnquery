@@ -508,6 +508,8 @@ resources:
     min_mondoo_version: 5.15.0
   macos:
     fields:
+      computerName:
+        min_mondoo_version: 9.0.0
       globalAccountPolicies: {}
       systemExtensions:
         min_mondoo_version: 9.0.0
@@ -528,6 +530,21 @@ resources:
       stealthEnabled: {}
       version: {}
     min_mondoo_version: 5.15.0
+  macos.hardware:
+    fields:
+      activationLockStatus: {}
+      bootRomVersion: {}
+      chipType: {}
+      machineModel: {}
+      machineName: {}
+      modelNumber: {}
+      numberProcessors: {}
+      osLoaderVersion: {}
+      physicalMemory: {}
+      platformUUID: {}
+      provisioningUDID: {}
+      serialNumber: {}
+    min_mondoo_version: 9.0.0
   macos.systemExtension:
     fields:
       active: {}
