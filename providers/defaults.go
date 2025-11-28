@@ -580,15 +580,15 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-	"pan-os": {
+	"panos": {
 		Provider: &plugin.Provider{
-			Name:            "pan-os",
-			ID:              "go.mondoo.com/cnquery/providers/pan-os",
-			ConnectionTypes: []string{"pan-os"},
+			Name:            "panos",
+			ID:              "go.mondoo.com/cnquery/providers/panos",
+			ConnectionTypes: []string{"panos"},
 			Connectors: []plugin.Connector{
 				{
-					Name:  "pan-os",
-					Use:   "pan-os",
+					Name:  "panos",
+					Use:   "panos",
 					Short: "a remote PAN-OS system",
 				},
 			},
