@@ -637,6 +637,8 @@ resources:
       files: {}
       list: {}
       path: {}
+      paths:
+        min_mondoo_version: 9.0.0
       root: {}
       scripts:
         min_mondoo_version: 9.0.0
