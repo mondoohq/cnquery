@@ -1452,6 +1452,8 @@ npm.package @defaults("name version purl") {
 
 // macOS specific resources
 macos {
+  // macOS computer name
+  computerName() string
   // macOS user defaults
   userPreferences() map[string]dict
   // macOS user defaults for current host
@@ -1460,6 +1462,34 @@ macos {
   globalAccountPolicies() dict
   // System extensions
   systemExtensions() []macos.systemExtension
+}
+
+// macOS hardware overview
+macos.hardware @defaults("machineName chipType physicalMemory serialNumber") {
+  // Activation Lock security feature
+  activationLockStatus string
+  // Boot ROM (firmware) version identifier
+  bootRomVersion string
+  // Processor chip type (e.g., "Apple M1", "Apple M2", "Intel")
+  chipType string
+  // Specific model identifier (e.g., "MacBookPro18,3")
+  machineModel string
+  // User-friendly hardware name (e.g., "MacBook Pro")
+  machineName string
+  // Apple's model number for the device (e.g., "A2442")
+  modelNumber string
+  // Total number of processor cores
+  numberProcessors string
+  // Version of the OS bootloader
+  osLoaderVersion string
+  // Total RAM installed (e.g., "16 GB")
+  physicalMemory string
+  // Universally unique identifier for the hardware platform
+  platformUUID string
+  // Unique Device Identifier for MDM provisioning
+  provisioningUDID string
+  // Apple's unique serial number for the device
+  serialNumber string
 }
 
 // macOS application layer firewall (ALF) service

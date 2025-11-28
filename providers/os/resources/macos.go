@@ -11,11 +11,31 @@ import (
 	"io"
 	"strings"
 
+	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/macos"
 	"howett.net/plist"
 )
+
+func (m *mqlMacos) computerName() (string, error) {
+	// equivalent to MQL query with:
+	// parse.plist("/Library/Preferences/SystemConfiguration/preferences.plist").params.System.System.ComputerName
+	res, err := NewResource(m.MqlRuntime, "parse.plist", map[string]*llx.RawData{
+		"path": llx.StringData("/Library/Preferences/SystemConfiguration/preferences.plist"),
+	})
+	if err != nil {
+		return "", err
+	}
+	parsePlist, ok := res.(*mqlParsePlist)
+	if !ok {
+		return "", errors.New("could not parse plist file")
+	}
+	params := parsePlist.GetParams().Data.(map[string]any)
+	pParams := plistData(params)
+	name := pParams.GetString("System", "System", "ComputerName")
+	return name, nil
+}
 
 func (m *mqlMacos) userPreferences() (map[string]any, error) {
 	conn := m.MqlRuntime.Connection.(shared.Connection)
