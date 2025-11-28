@@ -86,7 +86,7 @@ func matchBlocks2Resources(m sshd.MatchBlocks, runtime *plugin.Runtime, ownerID 
 		}
 
 		obj, err := CreateResource(runtime, "sshd.config.matchBlock", map[string]*llx.RawData{
-			"__id":     llx.StringData(ownerID + "\x00" + cur.Criteria),
+			"__id":     llx.StringData(ownerID + "/" + cur.Criteria),
 			"criteria": llx.StringData(cur.Criteria),
 			"params":   llx.MapData(cur.Params, types.String),
 			"context":  llx.ResourceData(cobj, "file.context"),

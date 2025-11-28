@@ -252,6 +252,19 @@ func TestParser_ParseValues(t *testing.T) {
 				{Operand: &Operand{Value: vIdent("uid")}},
 			},
 		}}},
+		{"users.where(uid != empty)", &Expression{Operand: &Operand{
+			Value: vIdent("users"),
+			Calls: []*Call{
+				callIdent("where"),
+				{Function: []*Arg{{Value: &Expression{
+					Operand: &Operand{Value: vIdent("uid")},
+					Operations: []*Operation{{
+						Operator: OpNotEqual,
+						Operand:  &Operand{Value: vIdent("empty")},
+					}},
+				}}}},
+			},
+		}}},
 		{"1 + 2 == 3", &Expression{
 			Operand: &Operand{Value: vInt(1)},
 			Operations: []*Operation{

@@ -73,16 +73,12 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 	switch {
 	case useNoopInit:
 		osm = &noopOsServiceManager{}
-	case asset.Platform.IsFamily("arch"): // arch family
-		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.Name == "amazonlinux":
 		if amazonlinux1version.MatchString(asset.Platform.Version) {
 			osm = &UpstartServiceManager{SysVServiceManager{conn: conn}}
 		} else {
 			osm = ResolveSystemdServiceManager(conn)
 		}
-	case asset.Platform.Name == "photon":
-		osm = ResolveSystemdServiceManager(conn)
 	// NOTE: we need to check fedora before rhel family, since its also rhel family
 	case asset.Platform.Name == "fedora":
 		rv := detector.ParseOsVersion(asset.Platform.Version)
@@ -132,8 +128,6 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		} else {
 			osm = ResolveSystemdServiceManager(conn)
 		}
-	case asset.Platform.Name == "raspbian" || asset.Platform.Name == "parrot": // debian based distros that have always been systemd
-		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.Name == "suse-microos" || asset.Platform.Name == "opensuse-microos": // suse family but uses a different version scheme
 		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.IsFamily("suse"):
@@ -161,27 +155,9 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		osm = &OpenrcServiceManager{conn: conn}
 	case asset.Platform.Name == "gentoo":
 		osm = &OpenrcServiceManager{conn: conn}
-	case asset.Platform.Name == "cos":
-		osm = ResolveSystemdServiceManager(conn)
 	case asset.Platform.Name == "aix":
 		osm = &AixServiceManager{conn: conn}
-	case asset.Platform.IsFamily("euler"):
-		osm = ResolveSystemdServiceManager(conn)
-	case asset.Platform.Name == "kali": // debian based with versions from 2015 onwards being systemd based
-		osm = ResolveSystemdServiceManager(conn)
-	case asset.Platform.Name == "mageia": // mageia 2 and later are systemd based
-		osm = ResolveSystemdServiceManager(conn)
-	case asset.Platform.Name == "cloudlinux": // rhel based
-		osm = ResolveSystemdServiceManager(conn)
-	case asset.Platform.Name == "elementary": // ubuntu based
-		osm = ResolveSystemdServiceManager(conn)
-	case asset.Platform.Name == "mx": // debian based
-		osm = ResolveSystemdServiceManager(conn)
-	case asset.Platform.Name == "zorin": // ubuntu based
-		osm = ResolveSystemdServiceManager(conn)
-	case asset.Platform.Name == "nobara": // fedora based
-		osm = ResolveSystemdServiceManager(conn)
-	case asset.Platform.Name == "flatcar":
+	case asset.Platform.IsFamily("linux"): // fallback for other linux distros which we assume are systemd
 		osm = ResolveSystemdServiceManager(conn)
 	}
 

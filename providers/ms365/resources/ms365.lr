@@ -149,6 +149,36 @@ microsoft.tenant @defaults("name") {
   technicalNotificationMails []string
   // Preferred language
   preferredLanguage string
+  // Tenant realm information for all verified domains
+  realm() []microsoft.tenant.realmInfo
+  // Tenant branding information for all verified domains
+  branding() []microsoft.tenant.brandingInfo
+}
+
+// Tenant branding information
+private microsoft.tenant.brandingInfo @defaults("keepMeSignedInDisabled") {
+  // Domain name
+  domainName string
+  // if "Keep me signed in" is disabled for the tenant
+  keepMeSignedInDisabled bool
+  // Tenant branding background color
+  backgroundColor string
+  // Tenant branding logo URL
+  bannerLogo string
+  // Transparent light box
+  useTransparentLightbox bool
+}
+
+// Tenant realm information
+private microsoft.tenant.realmInfo @defaults("login nameSpaceType")  {
+  // Tenant federation brand name
+  federationBrandName string
+  // Domain name
+  domainName string
+  // Login endpoint
+  login string
+  // Namespace Type
+  nameSpaceType string
 }
 
 // Company-wide configuration for apps and services.

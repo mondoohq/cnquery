@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -73,49 +74,113 @@ func collectNpmPackagesInPaths(runtime *plugin.Runtime, fs afero.Fs, paths []str
 	var transitivePackageList []*languages.Package
 	evidenceFiles := []string{}
 
+	handler := func(nodeModulesPath string) {
+		// Not found is an expected error and we handle that properly
+		bom, err := collectNpmPackages(runtime, fs, nodeModulesPath)
+		if err != nil {
+			return
+		}
+
+		root := bom.Root()
+		if root != nil {
+			directPackageList = append(directPackageList, root)
+		}
+		transitive := bom.Transitive()
+		if transitive != nil {
+			transitivePackageList = append(transitivePackageList, transitive...)
+		}
+	}
+
 	log.Debug().Msg("searching for npm packages in default locations")
 	err := fsutil.WalkGlob(fs, paths, func(fs afero.Fs, walkPath string) error {
 		afs := &afero.Afero{Fs: fs}
 
-		// we walk through the directories and check if there is a node_modules directory
-		log.Debug().Str("path", walkPath).Msg("found npm package")
-		nodeModulesPath := filepath.Join(walkPath, "node_modules")
-		files, err := afs.ReadDir(nodeModulesPath)
-		if err != nil {
-			// we ignore the error, it is expected that there is no node_modules directory
+		// check root directory
+		handler(walkPath)
+
+		// if we have a lock file, we do not need to check for node_modules directory
+		if hasLockfile(runtime, fs, walkPath) {
 			return nil
 		}
-		for i := range files {
-			f := files[i]
-			p := f.Name()
 
-			if !f.IsDir() {
-				continue
-			}
-
-			log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
-
-			// Not found is an expected error and we handle that properly
-			bom, err := collectNpmPackages(runtime, fs, filepath.Join(nodeModulesPath, p))
+		// when node_modules exist we check the directory for dependencies (only applies if lockfile is missing)
+		nodeModulesPath := filepath.Join(walkPath, "node_modules")
+		_, err := afs.Stat(nodeModulesPath)
+		if err == nil {
+			log.Debug().Str("path", walkPath).Msg("found npm package")
+			files, err := afs.ReadDir(nodeModulesPath)
 			if err != nil {
-				continue
+				return nil
 			}
+			for _, nodePkg := range files {
+				p := nodePkg.Name()
 
-			root := bom.Root()
-			if root != nil {
-				directPackageList = append(directPackageList, root)
+				// we ignore the files
+				if !nodePkg.IsDir() {
+					continue
+				}
+
+				// check that the directory starts with @, which is used for npm scopes
+				// see https://docs.npmjs.com/about-scopes
+				if strings.HasPrefix(nodePkg.Name(), "@") {
+					scopePath := filepath.Join(nodeModulesPath, nodePkg.Name())
+					d, err := afs.Open(scopePath)
+					if err != nil {
+						continue
+					}
+					scopedPkgs, err := d.Readdirnames(-1)
+					if err != nil {
+						continue
+					}
+					for _, scopedPkg := range scopedPkgs {
+						isDir, err := afs.IsDir(filepath.Join(scopePath, scopedPkg))
+						if !isDir || err != nil {
+							continue
+						}
+						handler(filepath.Join(scopePath, scopedPkg))
+					}
+				} else {
+					log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
+					handler(filepath.Join(nodeModulesPath, p))
+				}
 			}
-			transitive := bom.Transitive()
-			if transitive != nil {
-				transitivePackageList = append(transitivePackageList, transitive...)
-			}
+			return nil
 		}
+
 		return nil
 	})
 	if err != nil {
 		return nil, nil, nil, err
 	}
 	return directPackageList, transitivePackageList, evidenceFiles, nil
+}
+
+// hasLockfile checks for the lock files
+func hasLockfile(runtime *plugin.Runtime, fs afero.Fs, path string) bool {
+	// specific path was provided
+	afs := &afero.Afero{Fs: fs}
+	isDir, err := afs.IsDir(path)
+	if err != nil {
+		return false
+	}
+
+	searchPaths := []string{}
+	if isDir {
+		// check if there is a package-lock.json or package.json file
+		searchPaths = append(searchPaths, filepath.Join(path, "/package-lock.json"))
+	} else if strings.HasSuffix(path, "package-lock.json") {
+		searchPaths = append(searchPaths, path)
+	}
+
+	// filter out non-existing files using the new slice package
+	filteredSearchPath := []string{}
+	for i := range searchPaths {
+		exists, _ := afs.Exists(searchPaths[i])
+		if exists {
+			filteredSearchPath = append(filteredSearchPath, searchPaths[i])
+		}
+	}
+	return len(filteredSearchPath) > 0
 }
 
 func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (languages.Bom, error) {
@@ -215,6 +280,7 @@ func (r *mqlNpmPackages) gatherData() error {
 		if err != nil {
 			return err
 		}
+		filePaths = append(filePaths, path)
 		root = bom.Root()
 		directDependencies = bom.Direct()
 		transitiveDependencies = bom.Transitive()
@@ -278,6 +344,38 @@ func (r *mqlNpmPackages) list() ([]any, error) {
 
 func (r *mqlNpmPackages) files() ([]any, error) {
 	return nil, r.gatherData()
+}
+
+func (r *mqlNpmPackages) scripts() (map[string]any, error) {
+	if r.Path.Error != nil {
+		return nil, r.Path.Error
+	}
+	path := r.Path.Data
+
+	f, err := newFile(r.MqlRuntime, path)
+	if err != nil {
+		return nil, err
+	}
+	content := f.GetContent()
+	if content.Error != nil {
+		return nil, content.Error
+	}
+
+	type packageJson struct {
+		Scripts map[string]string `json:"scripts"`
+	}
+
+	pkgInfo := packageJson{}
+	err = json.Unmarshal([]byte(content.Data), &pkgInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]any)
+	for k, v := range pkgInfo.Scripts {
+		res[k] = v
+	}
+	return res, nil
 }
 
 // newNpmPackageList creates a list of npm package resources

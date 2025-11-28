@@ -16,7 +16,7 @@ import (
 func TestManagerDebian(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
-			Family: []string{"unix", "linux", "debian"},
+			Family: []string{"debian", "linux", "unix", "os"},
 		},
 	}, mock.WithPath("./testdata/debian.toml"))
 	require.NoError(t, err)
@@ -38,7 +38,7 @@ func TestManagerDebian(t *testing.T) {
 func TestManagerMacos(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
-			Family: []string{"darwin"},
+			Family: []string{"darwin", "bsd", "unix", "os"},
 		},
 	}, mock.WithPath("./testdata/osx.toml"))
 	require.NoError(t, err)
@@ -60,7 +60,7 @@ func TestManagerMacos(t *testing.T) {
 func TestManagerFreebsd(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
-			Family: []string{"unix", "bsd"},
+			Family: []string{"bsd", "unix", "os"},
 		},
 	}, mock.WithPath("./testdata/freebsd12.toml"))
 	require.NoError(t, err)
@@ -82,7 +82,7 @@ func TestManagerFreebsd(t *testing.T) {
 func TestManagerWindows(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
-			Family: []string{"windows"},
+			Family: []string{"windows", "os"},
 		},
 	}, mock.WithPath("./testdata/windows.toml"))
 	require.NoError(t, err)

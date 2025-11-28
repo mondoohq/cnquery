@@ -314,7 +314,7 @@ func TestCompiler_DeterministicChecksum(t *testing.T) {
 	mql := `azure.subscription.sql.servers.all(databases.one (transparentDataEncryption["state"] == "Enabled") && encryptionProtector["serverKeyType"] == "AzureKeyVault" )`
 	azure_schema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "azure"})
 
-	for i := 0; i < 10_000; i++ {
+	for range 10000 {
 		azureConf := mqlc.NewConfig(azure_schema, features)
 		res, err := mqlc.Compile(mql, mqlc.EmptyPropsHandler, azureConf)
 		require.Nil(t, err)
@@ -1040,6 +1040,63 @@ func TestCompiler_ArrayAll(t *testing.T) {
 		}, res.CodeV2.Blocks[0].Chunks[2])
 
 		assert.Equal(t, 3, len(res.CodeV2.Blocks[0].Chunks))
+	})
+
+	compileT(t, "['a','b'].all(_ != empty)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Array(types.String)),
+			Array: []*llx.Primitive{
+				llx.StringPrimitive("a"),
+				llx.StringPrimitive("b"),
+			},
+		}, res.CodeV2.Blocks[0].Chunks[0])
+
+		assertFunction(t, "$whereNot", &llx.Function{
+			Type:    string(types.Array(types.String)),
+			Binding: (1 << 32) | 1,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV2((1 << 32) | 1),
+				llx.FunctionPrimitive(2 << 32),
+			},
+		}, res.CodeV2.Blocks[0].Chunks[1])
+
+		assertFunction(t, "$all", &llx.Function{
+			Type:    string(types.Bool),
+			Binding: (1 << 32) | 2,
+		}, res.CodeV2.Blocks[0].Chunks[2])
+
+		assertFunction(t, "!=\r", &llx.Function{
+			Type:    string(types.Type(types.Bool)),
+			Binding: (2 << 32) | 1,
+			Args: []*llx.Primitive{
+				llx.EmptyPrimitive,
+			},
+		}, res.CodeV2.Blocks[1].Chunks[1])
+
+		assert.Equal(t, 3, len(res.CodeV2.Blocks[0].Chunks))
+		assert.Equal(t, 2, len(res.CodeV2.Blocks[1].Chunks))
+	})
+
+	compileT(t, "users.all(_ != empty)", func(res *llx.CodeBundle) {
+		// 3 blocks:
+		// 1. users
+		// 2. function for != empty + ref
+		// 3. users expand (properties)
+		assert.Equal(t, 3, len(res.CodeV2.Blocks))
+		assertFunction(t, "users", nil, res.CodeV2.Blocks[0].Chunks[0])
+		assertFunction(t, "list", &llx.Function{
+			Binding: (1 << 32) | 1,
+			Args:    nil,
+			Type:    string(types.Array(types.Resource("user"))),
+		}, res.CodeV2.Blocks[0].Chunks[1])
+
+		assertFunction(t, "!=\r", &llx.Function{
+			Type:    string(types.Type(types.Bool)),
+			Binding: (2 << 32) | 1,
+			Args: []*llx.Primitive{
+				llx.EmptyPrimitive,
+			},
+		}, res.CodeV2.Blocks[1].Chunks[1])
 	})
 }
 

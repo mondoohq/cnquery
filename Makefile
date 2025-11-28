@@ -198,6 +198,7 @@ providers/build: \
 	providers/build/network \
 	providers/build/os \
 	providers/build/ipmi \
+	providers/build/ipinfo \
 	providers/build/oci \
 	providers/build/slack \
 	providers/build/github \
@@ -231,6 +232,7 @@ providers/install: \
 	providers/install/network \
 	providers/install/os \
 	providers/install/ipmi \
+	providers/install/ipinfo \
 	providers/install/oci \
 	providers/install/slack \
 	providers/install/github \
@@ -409,10 +411,16 @@ providers/build/tailscale: providers/lr
 providers/install/tailscale:
 	@$(call installProvider, providers/tailscale)
 
+providers/build/ipinfo: providers/lr
+	@$(call buildProvider, providers/ipinfo)
+providers/install/ipinfo:
+	@$(call installProvider, providers/ipinfo)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
 	@$(call buildProviderDist, providers/ipmi)
+	@$(call buildProviderDist, providers/ipinfo)
 	@$(call buildProviderDist, providers/oci)
 	@$(call buildProviderDist, providers/slack)
 	@$(call buildProviderDist, providers/github)
@@ -443,6 +451,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/network)
 	@$(call bundleProvider, providers/os)
 	@$(call bundleProvider, providers/ipmi)
+	@$(call bundleProvider, providers/ipinfo)
 	@$(call bundleProvider, providers/oci)
 	@$(call bundleProvider, providers/slack)
 	@$(call bundleProvider, providers/github)
@@ -474,6 +483,7 @@ providers/test:
 	@$(call testProvider, providers/network)
 	@$(call testProvider, providers/os)
 	@$(call testGoModProvider, providers/ipmi)
+	@$(call testGoModProvider, providers/ipinfo)
 	@$(call testGoModProvider, providers/oci)
 	@$(call testGoModProvider, providers/slack)
 	@$(call testGoModProvider, providers/github)
@@ -582,6 +592,11 @@ lr/docs/markdown: providers/lr
 		--description "The IPMI resource pack lets you use MQL to query and assess the security of your IPMI devices." \
 		--docs-file providers/ipmi/resources/ipmi.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/ipmi-pack
+	./lr markdown providers/ipinfo/resources/ipinfo.lr \
+		--pack-name "IPinfo" \
+		--description "The IPinfo resource pack lets you use MQL to query IP address information from ipinfo.io." \
+		--docs-file providers/ipinfo/resources/ipinfo.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/ipinfo-pack
 	./lr markdown providers/k8s/resources/k8s.lr \
 		--pack-name "Kubernetes (K8s)" \
 		--description "The Kubernetes resource pack lets you use MQL to query and assess the security of your Kubernetes clusters and workloads." \
@@ -596,7 +611,7 @@ lr/docs/markdown: providers/lr
 		--pack-name "Microsoft 365 (M365)" \
 		--description "The Microsoft 365 (M365) resource pack lets you use MQL to query and assess the security of your Microsoft 365 identities and configuration." \
 		--docs-file providers/ms365/resources/ms365.lr.manifest.yaml \
-		--output ../docs/docs/mql/resources/ms365-pack
+		--output ../docs/docs/mql/resources/m365-pack
 	./lr markdown providers/network/resources/network.lr \
 		--pack-name "Network" \
 		--description "The Network resource pack lets you use MQL to query and assess the security of domains and network services." \

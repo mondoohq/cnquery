@@ -1,0 +1,21 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.1.0-cl-1-amd64"
+
+[files."/etc/os-release"]
+content = """
+NAME="Cumulus Linux"
+VERSION_ID=5.12.1
+VERSION="Cumulus Linux 5.12.1"
+PRETTY_NAME="Cumulus Linux"
+ID=cumulus-linux
+ID_LIKE=debian
+CPE_NAME=cpe:/o:cumulusnetworks:cumulus_linux:5.12.1
+HOME_URL="http://www.cumulusnetworks.com/"
+SUPPORT_URL="http://support.cumulusnetworks.com/"
+"""

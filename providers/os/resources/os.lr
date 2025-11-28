@@ -1427,6 +1427,9 @@ npm.packages {
 
   // Files used to determine the packages
   files() []pkgFileInfo
+
+  // scripts defined in package json
+  scripts() map[string]string
 }
 
 npm.package  @defaults("name version") {

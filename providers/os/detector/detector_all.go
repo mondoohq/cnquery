@@ -212,6 +212,17 @@ var zorin = &PlatformResolver{
 	},
 }
 
+var cumulus = &PlatformResolver{
+	Name:     "cumulus-linux",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "cumulus-linux" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var parrot = &PlatformResolver{
 	Name:     "parrot",
 	IsFamily: false,
@@ -1016,7 +1027,7 @@ var redhatFamily = &PlatformResolver{
 var debianFamily = &PlatformResolver{
 	Name:     "debian",
 	IsFamily: true,
-	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot},
+	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot, cumulus},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},

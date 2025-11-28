@@ -12,13 +12,14 @@ import (
 var Config = plugin.Provider{
 	Name:            "ms365",
 	ID:              "go.mondoo.com/cnquery/v9/providers/ms365",
-	Version:         "11.1.74",
+	Version:         "11.1.78",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:  "ms365",
-			Use:   "ms365",
-			Short: "a Microsoft 365 tenant",
+			Name:    "ms365",
+			Use:     "ms365",
+			Aliases: []string{"m365"},
+			Short:   "a Microsoft 365 tenant",
 			Long: `Use the ms365 provider to query resources within Microsoft 365, including organizations, users, roles, SharePoint sites, and more.
 
 Examples:

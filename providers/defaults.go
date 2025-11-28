@@ -552,4 +552,32 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
+	"ipinfo": {
+		Provider: &plugin.Provider{
+			Name:            "ipinfo",
+			ID:              "go.mondoo.com/cnquery/providers/ipinfo",
+			ConnectionTypes: []string{"ipinfo"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "ipinfo",
+					Use:   "ipinfo",
+					Short: "Query ipinfo.io for IP address information",
+				},
+			},
+		},
+	},
+	"fortios": {
+		Provider: &plugin.Provider{
+			Name:            "fortios",
+			ID:              "go.mondoo.com/cnquery/providers/fortios",
+			ConnectionTypes: []string{"fortios"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "fortios",
+					Use:   "fortios",
+					Short: "a remote FortiOS system",
+				},
+			},
+		},
+	},
 }

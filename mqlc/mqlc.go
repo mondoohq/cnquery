@@ -1377,6 +1377,10 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			ref = c.tailRef()
 			res = llx.RefPrimitiveV2(ref)
 		}
+	} else if *operand.Value.Ident == "empty" {
+		// special case for empty: there's no ref for an empty value
+		// since we're not really referencing anything
+		res = llx.EmptyPrimitive
 	} else {
 		id := *operand.Value.Ident
 		orgcalls := calls

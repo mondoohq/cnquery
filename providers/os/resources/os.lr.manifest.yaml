@@ -653,6 +653,8 @@ resources:
       list: {}
       path: {}
       root: {}
+      scripts:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: latest
   ntp.conf:
     fields:

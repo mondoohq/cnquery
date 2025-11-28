@@ -6,6 +6,7 @@ package vault
 import (
 	"encoding/json"
 	"errors"
+	"sort"
 	"strings"
 )
 
@@ -65,6 +66,7 @@ func TypeIds() []string {
 	for _, v := range vaultMarshalNameMap {
 		types = append(types, v)
 	}
+	sort.Strings(types)
 	return types
 }
 

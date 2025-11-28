@@ -107,7 +107,10 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		pms = append(pms, &SnapPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux" || asset.Platform.Name == "bottlerocket":
 		fallthrough
-	case asset.Platform.IsFamily("redhat") || asset.Platform.IsFamily("euler") || asset.Platform.Name == "mageia": // rhel/euler/mageia based systems
+	case asset.Platform.IsFamily("redhat") ||
+		asset.Platform.IsFamily("euler") ||
+		asset.Platform.Name == "hce" ||
+		asset.Platform.Name == "mageia": // rhel/euler/mageia based systems
 		pms = append(pms, &RpmPkgManager{conn: conn, platform: asset.Platform})
 		if asset.Platform.Name == "fedora" {
 			// https: // snapcraft.io/docs/distro-support

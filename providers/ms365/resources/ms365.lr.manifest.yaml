@@ -774,6 +774,7 @@ resources:
   microsoft.tenant:
     fields:
       assignedPlans: {}
+      branding: {}
       createdAt: {}
       createdDateTime: {}
       displayName: {}
@@ -791,11 +792,31 @@ resources:
       preferredLanguage: {}
       privacyProfile: {}
       provisionedPlans: {}
+      realm: {}
       settings: {}
       subscriptions: {}
       technicalNotificationMails: {}
       type: {}
       verifiedDomains: {}
+    min_mondoo_version: 9.0.0
+  microsoft.tenant.brandingInfo:
+    fields:
+      backgroundColor: {}
+      bannerLogo: {}
+      domainName: {}
+      federationBrandName: {}
+      keepMeSignedInDisabled: {}
+      login: {}
+      useTransparentLightbox: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.tenant.realmInfo:
+    fields:
+      domainName: {}
+      federationBrandName: {}
+      login: {}
+      nameSpaceType: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   microsoft.tenantFormsSettings:
     fields:
