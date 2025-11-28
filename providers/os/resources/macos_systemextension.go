@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
 	"go.mondoo.com/cnquery/v12/types"
 )
 
@@ -22,7 +23,7 @@ func (m *mqlMacos) systemExtensions() ([]any, error) {
 	}
 	defer f.Close()
 
-	systemExtensionDb, err := Decode(f)
+	systemExtensionDb, err := plist.Decode(f)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +43,7 @@ func (m *mqlMacos) systemExtensions() ([]any, error) {
 	return list, nil
 }
 
-func newMacosSystemExtension(runtime *plugin.Runtime, extension plistData, extensionPolicies []any) (*mqlMacosSystemExtension, error) {
+func newMacosSystemExtension(runtime *plugin.Runtime, extension plist.Data, extensionPolicies []any) (*mqlMacosSystemExtension, error) {
 	uuid := extension.GetString("uniqueID")
 	identifier := extension.GetString("identifier")
 	teamID := extension.GetString("teamID")
@@ -52,7 +53,7 @@ func newMacosSystemExtension(runtime *plugin.Runtime, extension plistData, exten
 		if !ok {
 			continue
 		}
-		plistPolicy := plistData(policy)
+		plistPolicy := plist.Data(policy)
 
 		// check if the team id is in allowedTeamIDs list
 		allowedTeams := plistPolicy.GetPlistData("allowedTeamIDs")
