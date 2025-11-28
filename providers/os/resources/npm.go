@@ -4,11 +4,14 @@
 package resources
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 	"sync"
 
@@ -46,23 +49,56 @@ func initNpmPackages(_ *plugin.Runtime, args map[string]*llx.RawData) (map[strin
 	if x, ok := args["path"]; ok {
 		_, ok := x.Value.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in npm initialization, it must be a string")
+			return nil, nil, errors.New("wrong type for 'path' in npm.packages initialization, it must be a string")
 		}
 	} else {
-		// empty path means search through default locations
 		args["path"] = llx.StringData("")
 	}
 
+	if x, ok := args["paths"]; ok {
+		xv, ok := x.Value.([]any)
+		if !ok {
+			return nil, nil, errors.New("wrong type for 'paths' in npm.packages initialization, it must be a list of strings")
+		}
+		for i := range xv {
+			_, ok := xv[i].(string)
+			if !ok {
+				return nil, nil, errors.New("wrong type for 'paths' in npm.packages initialization, it must be a list of strings")
+			}
+		}
+	}
 	return args, nil, nil
 }
 
 func (r *mqlNpmPackages) id() (string, error) {
-	path := r.Path.Data
-	if path == "" {
-		return "npm.packages", nil
+	entries, err := r.getPaths()
+	if err != nil {
+		return "", err
 	}
 
-	return "npm.packages/" + path, nil
+	if len(entries) == 0 {
+		return "npm.packages", nil
+	} else if len(entries) == 1 {
+		return "npm.packages/" + entries[0], nil
+	} else {
+		hash := sha256.New()
+		for _, entry := range entries {
+			hash.Write([]byte(entry))
+		}
+		return "npm.packages/" + hex.EncodeToString(hash.Sum(nil)), nil
+	}
+}
+
+func (r *mqlNpmPackages) paths() ([]any, error) {
+	paths, err := r.getPaths()
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	for i := range paths {
+		res = append(res, paths[i])
+	}
+	return res, nil
 }
 
 // gatherPackagesFromSystemDefaults returns
@@ -246,15 +282,42 @@ type mqlNpmPackagesInternal struct {
 	mutex sync.Mutex
 }
 
+func (r *mqlNpmPackages) getPaths() ([]string, error) {
+	paths := []string{}
+	if r.Paths.Error != nil {
+		return nil, r.Paths.Error
+	}
+
+	for i := range r.Paths.Data {
+		paths = append(paths, r.Paths.Data[i].(string))
+	}
+
+	if r.Path.Error != nil {
+		return nil, r.Path.Error
+	}
+	if r.Path.Data != "" {
+		paths = append(paths, r.Path.Data)
+	}
+
+	sort.Strings(paths)
+	paths = slices.Compact(paths)
+
+	if len(paths) == 0 {
+		paths = defaultNpmPaths
+	}
+	return paths, nil
+}
+
 func (r *mqlNpmPackages) gatherData() error {
 	// ensure we only gather data once, happens when multiple fields are called by MQL
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	if r.Path.Error != nil {
-		return r.Path.Error
+	// NOTE: that we do not get paths that are an empty slice here
+	paths, err := r.getPaths()
+	if err != nil {
+		return err
 	}
-	path := r.Path.Data
 
 	// we check if the path is a directory or a file
 	// if it is a directory, we check if there is a package-lock.json or package.json file
@@ -264,26 +327,30 @@ func (r *mqlNpmPackages) gatherData() error {
 	var directDependencies []*languages.Package
 	var transitiveDependencies []*languages.Package
 	var filePaths []string
-	var err error
+	fs := conn.FileSystem()
 
-	if path == "" {
+	if len(paths) > 1 {
 		// no specific path was provided, we search through default locations
 		// here we are not going to have a root package, only direct and transitive dependencies
-		directDependencies, transitiveDependencies, filePaths, err = collectNpmPackagesInPaths(r.MqlRuntime, conn.FileSystem(), defaultNpmPaths)
+		directDependencies, transitiveDependencies, filePaths, err = collectNpmPackagesInPaths(r.MqlRuntime, fs, paths)
 		if err != nil {
 			return err
 		}
 	} else {
-		// specific path was provided and most likely it is a package-lock.json or package.json file or a directory
-		// that contains one of those files. We will have a root package direct and transitive dependencies
-		bom, err := collectNpmPackages(r.MqlRuntime, conn.FileSystem(), path)
-		if err != nil {
-			return err
+		// do not load anything if the path does not exist
+		_, err := fs.Stat(paths[0])
+		if err == nil {
+			// specific path was provided and most likely it is a package-lock.json or package.json file or a directory
+			// that contains one of those files. We will have a root package direct and transitive dependencies
+			bom, err := collectNpmPackages(r.MqlRuntime, fs, paths[0])
+			if err != nil {
+				return err
+			}
+			filePaths = append(filePaths, paths[0])
+			root = bom.Root()
+			directDependencies = bom.Direct()
+			transitiveDependencies = bom.Transitive()
 		}
-		filePaths = append(filePaths, path)
-		root = bom.Root()
-		directDependencies = bom.Direct()
-		transitiveDependencies = bom.Transitive()
 	}
 
 	// sort packages by name

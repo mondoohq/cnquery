@@ -1416,8 +1416,11 @@ npm.packages {
 
   init(path? string)
 
-  // Optional path to search for packages
+  // Deprecated: path to search for packages, use paths instead
   path string
+
+  // Optional: list of paths searched for packages
+  paths() []string
 
   // Root Package (may not exist)
   root() npm.package
@@ -1432,7 +1435,7 @@ npm.packages {
   scripts() map[string]string
 }
 
-npm.package  @defaults("name version") {
+npm.package @defaults("name version purl") {
   // ID is the npm.package unique identifier
   id string
   // Name of the package
