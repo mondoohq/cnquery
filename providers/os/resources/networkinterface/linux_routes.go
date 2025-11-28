@@ -31,9 +31,14 @@ type ipRouteJSON struct {
 }
 
 // List detects network routes on Linux
-// First tries 'ip -json route show table all' (modern approach)
-// Falls back to /proc/net/route and /proc/net/ipv6_route if ip -json is not available (e.g., Alpine Linux)
 func (l *linuxRouteDetector) List() ([]Route, error) {
+	routes, err := l.getRoutesFromProcFs()
+	if err == nil {
+		return routes, nil
+	}
+	log.Debug().Err(err).Msg("Failed to get routes from proc fs, falling back to ip route show table all")
+
+	// use ip route command as fallback in case the proc fs doesn't work for some reason
 	output, err := runCommand(l.conn, l.platform, "ip -json route show table all")
 	if err == nil {
 		routes, err := l.parseIpRouteJSON(output)
@@ -43,8 +48,10 @@ func (l *linuxRouteDetector) List() ([]Route, error) {
 		log.Debug().Err(err).Msg("Failed to parse ip route JSON output, falling back to /proc/net/route and /proc/net/ipv6_route")
 	}
 
-	// ip -json failed (e.g., not available on Alpine), fall back to /proc
-	// Get IPv4 routes from /proc/net/route
+	return nil, errors.New("failed to get network routes")
+}
+
+func (l *linuxRouteDetector) getRoutesFromProcFs() ([]Route, error) {
 	ipv4Data, err := afero.ReadFile(l.conn.FileSystem(), "/proc/net/route")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read /proc/net/route")
@@ -65,7 +72,6 @@ func (l *linuxRouteDetector) List() ([]Route, error) {
 			ipv6Routes = []Route{}
 		}
 	}
-
 	return append(ipv4Routes, ipv6Routes...), nil
 }
 
@@ -125,7 +131,6 @@ func (l *linuxRouteDetector) convertJSONRouteToRoute(jsonRoute ipRouteJSON) *Rou
 
 // parseLinuxRoutesFromProc parses IPv4 routes from /proc/net/route output
 // Format: Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT
-// based on osquery implementation https://github.com/osquery/osquery/blob/master/osquery/tables/networking/linux/routes.cpp
 func (l *linuxRouteDetector) parseLinuxRoutesFromProc(output string) ([]Route, error) {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	if len(lines) < 2 {
@@ -200,7 +205,6 @@ func (l *linuxRouteDetector) parseLinuxRoutesFromProc(output string) ([]Route, e
 
 // parseLinuxIPv6RoutesFromProc parses IPv6 routes from /proc/net/ipv6_route output
 // Format: destination dest_prefix_len source src_prefix_len next_hop metric ref use flags device
-// Based on osquery implementation https://github.com/osquery/osquery/blob/master/osquery/tables/networking/linux/routes.cpp
 func (l *linuxRouteDetector) parseLinuxIPv6RoutesFromProc(output string) ([]Route, error) {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	if len(lines) == 0 {
