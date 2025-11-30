@@ -84,7 +84,6 @@ resources:
       tldIcannManaged: {}
     min_mondoo_version: 5.15.0
   http:
-    fields: {}
     min_mondoo_version: 9.0.0
   http.get:
     fields:
