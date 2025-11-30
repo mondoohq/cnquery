@@ -1,0 +1,18 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.10.0-182.0.0.95.r3008_246.hce2.x86_64"
+
+[files."/etc/os-release"]
+content = """
+NAME="Huawei Cloud EulerOS"
+VERSION="2.0 (x86_64)"
+ID="hce"
+VERSION_ID="2.0"
+PRETTY_NAME="Huawei Cloud EulerOS 2.0 (x86_64)"
+ANSI_COLOR="0;31"
+"""
