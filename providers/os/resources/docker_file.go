@@ -182,7 +182,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 		return nil, err
 	}
 
-	env := map[string]string{}
+	var env []any
 	labels := map[string]string{}
 	var expose []any
 	var runs []any
@@ -196,7 +196,15 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 		switch v := stage.Commands[i].(type) {
 		case *instructions.EnvCommand:
 			for _, kv := range v.Env {
-				env[kv.Key] = strings.Trim(kv.Value, "\"")
+				envResource, err := CreateResource(p.MqlRuntime, "docker.file.stage.env", map[string]*llx.RawData{
+					"__id":  llx.StringData(p.locationID(v.Location())),
+					"name":  llx.StringData(kv.Key),
+					"value": llx.StringData(strings.Trim(kv.Value, "\"")),
+				})
+				if err != nil {
+					return nil, err
+				}
+				env = append(env, envResource)
 			}
 		case *instructions.LabelCommand:
 			for _, kv := range v.Labels {
@@ -293,7 +301,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 		"__id":   llx.StringData(stageID),
 		"from":   llx.ResourceData(rawFrom, "docker.file.from"),
 		"file":   llx.ResourceData(p, "docker.file"),
-		"env":    llx.MapData(llx.TMap2Raw(env), types.String),
+		"env":    llx.ArrayData(env, types.Resource("docker.file.stage.env")),
 		"labels": llx.MapData(llx.TMap2Raw(labels), types.String),
 		"run":    llx.ArrayData(runs, types.Resource("docker.file.run")),
 		"add":    llx.ArrayData(add, types.Resource("docker.file.add")),

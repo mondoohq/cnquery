@@ -85,6 +85,7 @@ const (
 	ResourceDocker                 string = "docker"
 	ResourceDockerFile             string = "docker.file"
 	ResourceDockerFileStage        string = "docker.file.stage"
+	ResourceDockerFileStageEnv     string = "docker.file.stage.env"
 	ResourceDockerFileUser         string = "docker.file.user"
 	ResourceDockerFileExpose       string = "docker.file.expose"
 	ResourceDockerFileFrom         string = "docker.file.from"
@@ -428,6 +429,10 @@ func init() {
 		"docker.file.stage": {
 			// to override args, implement: initDockerFileStage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDockerFileStage,
+		},
+		"docker.file.stage.env": {
+			// to override args, implement: initDockerFileStageEnv(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerFileStageEnv,
 		},
 		"docker.file.user": {
 			// to override args, implement: initDockerFileUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1662,7 +1667,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlDockerFileStage).GetFile()).ToDataRes(types.Resource("docker.file"))
 	},
 	"docker.file.stage.env": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDockerFileStage).GetEnv()).ToDataRes(types.Map(types.String, types.String))
+		return (r.(*mqlDockerFileStage).GetEnv()).ToDataRes(types.Array(types.Resource("docker.file.stage.env")))
 	},
 	"docker.file.stage.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetLabels()).ToDataRes(types.Map(types.String, types.String))
@@ -1687,6 +1692,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.file.stage.expose": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetExpose()).ToDataRes(types.Array(types.Resource("docker.file.expose")))
+	},
+	"docker.file.stage.env.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStageEnv).GetName()).ToDataRes(types.String)
+	},
+	"docker.file.stage.env.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStageEnv).GetValue()).ToDataRes(types.String)
 	},
 	"docker.file.user.user": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileUser).GetUser()).ToDataRes(types.String)
@@ -4255,7 +4266,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"docker.file.stage.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDockerFileStage).Env, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		r.(*mqlDockerFileStage).Env, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"docker.file.stage.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4288,6 +4299,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.file.stage.expose": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileStage).Expose, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"docker.file.stage.env.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStageEnv).__id, ok = v.Value.(string)
+		return
+	},
+	"docker.file.stage.env.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStageEnv).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.stage.env.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStageEnv).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"docker.file.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11453,7 +11476,7 @@ type mqlDockerFileStage struct {
 	// optional: if you define mqlDockerFileStageInternal it will be used here
 	From       plugin.TValue[*mqlDockerFileFrom]
 	File       plugin.TValue[*mqlDockerFile]
-	Env        plugin.TValue[map[string]any]
+	Env        plugin.TValue[[]any]
 	Labels     plugin.TValue[map[string]any]
 	Run        plugin.TValue[[]any]
 	Cmd        plugin.TValue[*mqlDockerFileRun]
@@ -11504,7 +11527,7 @@ func (c *mqlDockerFileStage) GetFile() *plugin.TValue[*mqlDockerFile] {
 	return &c.File
 }
 
-func (c *mqlDockerFileStage) GetEnv() *plugin.TValue[map[string]any] {
+func (c *mqlDockerFileStage) GetEnv() *plugin.TValue[[]any] {
 	return &c.Env
 }
 
@@ -11538,6 +11561,55 @@ func (c *mqlDockerFileStage) GetCopy() *plugin.TValue[[]any] {
 
 func (c *mqlDockerFileStage) GetExpose() *plugin.TValue[[]any] {
 	return &c.Expose
+}
+
+// mqlDockerFileStageEnv for the docker.file.stage.env resource
+type mqlDockerFileStageEnv struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDockerFileStageEnvInternal it will be used here
+	Name  plugin.TValue[string]
+	Value plugin.TValue[string]
+}
+
+// createDockerFileStageEnv creates a new instance of this resource
+func createDockerFileStageEnv(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerFileStageEnv{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.file.stage.env", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerFileStageEnv) MqlName() string {
+	return "docker.file.stage.env"
+}
+
+func (c *mqlDockerFileStageEnv) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerFileStageEnv) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDockerFileStageEnv) GetValue() *plugin.TValue[string] {
+	return &c.Value
 }
 
 // mqlDockerFileUser for the docker.file.user resource
