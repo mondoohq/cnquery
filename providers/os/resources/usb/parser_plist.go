@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
 )
 
 type USBDevice struct {
@@ -32,6 +34,11 @@ type USBDevice struct {
 func ParseMacosIORegData(data any, devices *[]USBDevice) {
 	// Process the data based on its type
 	switch v := data.(type) {
+	case plist.Data:
+		// root object, we need to convert it to map[string]any
+		obj := data.(plist.Data)
+		// typecase so that we reach case map[string]any
+		ParseMacosIORegData(map[string]any(obj), devices)
 	case []any:
 		// An array of entries
 		for _, entry := range v {
