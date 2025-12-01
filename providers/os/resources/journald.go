@@ -89,19 +89,28 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 		return nil
 	}
 
+	filePath := file.GetPath()
+	if filePath.Error != nil {
+		return filePath.Error
+	}
+
 	var errs multierr.Errors
 	sectionResources := []any{}
 
-	for _, unitSection := range unit.Sections {
+	for i, unitSection := range unit.Sections {
+		sectionID := fmt.Sprintf("%s/%s/%d", filePath.Data, unitSection.Name, i)
 		paramResources := []any{}
-		for _, unitParam := range unitSection.Params {
+
+		for j, unitParam := range unitSection.Params {
 			val := unitParam.Value
 			// Apply downcase logic for boolean keywords
 			if slices.Contains(journaldDowncaseKeywords, unitParam.Name) {
 				val = strings.ToLower(val)
 			}
 
+			paramID := fmt.Sprintf("%s/%s/%d", sectionID, unitParam.Name, j)
 			param, err := CreateResource(s.MqlRuntime, ResourceJournaldConfigSectionParam, map[string]*llx.RawData{
+				"__id":  llx.StringData(paramID),
 				"name":  llx.StringData(unitParam.Name),
 				"value": llx.StringData(val),
 			})
@@ -113,6 +122,7 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 		}
 
 		section, err := CreateResource(s.MqlRuntime, ResourceJournaldConfigSection, map[string]*llx.RawData{
+			"__id":   llx.StringData(sectionID),
 			"name":   llx.StringData(unitSection.Name),
 			"params": llx.ArrayData(paramResources, types.Resource(ResourceJournaldConfigSectionParam)),
 		})
@@ -178,26 +188,6 @@ func (s *mqlJournaldConfig) params(file *mqlFile) (map[string]any, error) {
 	}
 
 	return map[string]any{}, nil
-}
-
-func (s *mqlJournaldConfigSection) id() (string, error) {
-	name := s.GetName()
-	if name.Error != nil {
-		return "", name.Error
-	}
-	return ResourceJournaldConfigSection + ":" + name.Data, nil
-}
-
-func (s *mqlJournaldConfigSectionParam) id() (string, error) {
-	name := s.GetName()
-	if name.Error != nil {
-		return "", name.Error
-	}
-	value := s.GetValue()
-	if value.Error != nil {
-		return "", value.Error
-	}
-	return ResourceJournaldConfigSectionParam + ":" + name.Data + "=" + value.Data, nil
 }
 
 // These are the boolean options in journald.conf which are case insensitive

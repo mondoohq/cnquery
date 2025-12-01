@@ -11169,12 +11169,7 @@ func createJournaldConfigSection(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("journald.config.section", res.__id)
@@ -11223,12 +11218,7 @@ func createJournaldConfigSectionParam(runtime *plugin.Runtime, args map[string]*
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("journald.config.section.param", res.__id)
