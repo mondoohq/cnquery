@@ -425,6 +425,17 @@ resources:
     fields:
       file: {}
       params: {}
+      sections: {}
+    min_mondoo_version: 9.0.0
+  journald.config.section:
+    fields:
+      name: {}
+      params: {}
+    min_mondoo_version: 9.0.0
+  journald.config.section.param:
+    fields:
+      name: {}
+      value: {}
     min_mondoo_version: 9.0.0
   kernel:
     fields:

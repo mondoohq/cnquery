@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/parsers"
+	"go.mondoo.com/cnquery/v12/types"
 	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
@@ -79,45 +80,86 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 
 	ini := parsers.ParseIni(content.Data, "=")
 
-	res := make(map[string]any, len(ini.Fields))
-	s.Params.Data = res
-	s.Params.State = plugin.StateIsSet
-
 	if len(ini.Fields) == 0 {
+		s.Sections.Data = []any{}
+		s.Sections.State = plugin.StateIsSet
 		return nil
 	}
 
-	root := ini.Fields["Journal"]
-	if root == nil {
-		s.Params.Error = errors.New("failed to parse journald config")
-		return s.Params.Error
-	}
-
-	fields, ok := root.(map[string]any)
-	if !ok {
-		s.Params.Error = errors.New("failed to parse journald config (invalid data retrieved)")
-		return s.Params.Error
-	}
-
 	var errs multierr.Errors
-	for k, v := range fields {
-		if s, ok := v.(string); ok {
-			if slices.Contains(journaldDowncaseKeywords, k) {
-				res[k] = strings.ToLower(s)
-			} else {
-				res[k] = s
-			}
-		} else {
-			errs.Add(fmt.Errorf("can't parse field '"+s+"', value is %+v", v))
+	sectionResources := []any{}
+
+	for sectionName, sectionData := range ini.Fields {
+		fields, ok := sectionData.(map[string]any)
+		if !ok {
+			errs.Add(fmt.Errorf("failed to parse section '%s' (invalid data)", sectionName))
+			continue
 		}
+
+		paramResources := []any{}
+		for k, v := range fields {
+			if val, ok := v.(string); ok {
+				if slices.Contains(journaldDowncaseKeywords, k) {
+					val = strings.ToLower(val)
+				}
+
+				param, err := CreateResource(s.MqlRuntime, "journald.config.section.param", map[string]*llx.RawData{
+					"name":  llx.StringData(k),
+					"value": llx.StringData(val),
+				})
+				if err != nil {
+					errs.Add(fmt.Errorf("failed to create param resource for '%s' in section '%s': %w", k, sectionName, err))
+					continue
+				}
+				paramResources = append(paramResources, param)
+			} else {
+				errs.Add(fmt.Errorf("can't parse field '%s' in section '%s', value is %+v", k, sectionName, v))
+			}
+		}
+
+		section, err := CreateResource(s.MqlRuntime, "journald.config.section", map[string]*llx.RawData{
+			"name":   llx.StringData(sectionName),
+			"params": llx.ArrayData(paramResources, types.Resource("journald.config.section.param")),
+		})
+		if err != nil {
+			errs.Add(fmt.Errorf("failed to create section resource for '%s': %w", sectionName, err))
+			continue
+		}
+
+		sectionResources = append(sectionResources, section)
 	}
 
-	s.Params.Error = errs.Deduplicate()
-	return s.Params.Error
+	s.Sections.Data = sectionResources
+	s.Sections.State = plugin.StateIsSet
+	s.Sections.Error = errs.Deduplicate()
+	return s.Sections.Error
 }
 
-func (s *mqlJournaldConfig) params(file *mqlFile) (map[string]any, error) {
-	return nil, s.parse(file)
+func (s *mqlJournaldConfig) sections(file *mqlFile) ([]any, error) {
+	if err := s.parse(file); err != nil {
+		return nil, err
+	}
+	return s.Sections.Data, s.Sections.Error
+}
+
+func (s *mqlJournaldConfigSection) id() (string, error) {
+	name := s.GetName()
+	if name.Error != nil {
+		return "", name.Error
+	}
+	return "journald.config.section:" + name.Data, nil
+}
+
+func (s *mqlJournaldConfigSectionParam) id() (string, error) {
+	name := s.GetName()
+	if name.Error != nil {
+		return "", name.Error
+	}
+	value := s.GetValue()
+	if value.Error != nil {
+		return "", value.Error
+	}
+	return "journald.config.section.param:" + name.Data + "=" + value.Data, nil
 }
 
 // These are the boolean options in journald.conf which are case insensitive
