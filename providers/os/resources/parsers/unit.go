@@ -28,7 +28,7 @@ type Unit struct {
 }
 
 // ParseUnit parses the raw text contents of a systemd unit file
-// Returns sections and params as arrays to support duplicate keys
+// Returns sections and params as arrays to support duplicate keys and multiline values
 func ParseUnit(raw string) (*Unit, error) {
 	opts, err := unit.Deserialize(strings.NewReader(raw))
 	if err != nil {
