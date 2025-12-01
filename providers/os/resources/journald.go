@@ -102,8 +102,8 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 				if slices.Contains(journaldDowncaseKeywords, k) {
 					val = strings.ToLower(val)
 				}
-
-				param, err := CreateResource(s.MqlRuntime, "journald.config.section.param", map[string]*llx.RawData{
+				// journald.config.section.param
+				param, err := CreateResource(s.MqlRuntime, ResourceJournaldConfigSectionParam, map[string]*llx.RawData{
 					"name":  llx.StringData(k),
 					"value": llx.StringData(val),
 				})
@@ -117,9 +117,9 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 			}
 		}
 
-		section, err := CreateResource(s.MqlRuntime, "journald.config.section", map[string]*llx.RawData{
+		section, err := CreateResource(s.MqlRuntime, ResourceJournaldConfigSection, map[string]*llx.RawData{
 			"name":   llx.StringData(sectionName),
-			"params": llx.ArrayData(paramResources, types.Resource("journald.config.section.param")),
+			"params": llx.ArrayData(paramResources, types.Resource(ResourceJournaldConfigSectionParam)),
 		})
 		if err != nil {
 			errs.Add(fmt.Errorf("failed to create section resource for '%s': %w", sectionName, err))
@@ -147,7 +147,7 @@ func (s *mqlJournaldConfigSection) id() (string, error) {
 	if name.Error != nil {
 		return "", name.Error
 	}
-	return "journald.config.section:" + name.Data, nil
+	return ResourceJournaldConfigSection + ":" + name.Data, nil
 }
 
 func (s *mqlJournaldConfigSectionParam) id() (string, error) {
@@ -159,7 +159,7 @@ func (s *mqlJournaldConfigSectionParam) id() (string, error) {
 	if value.Error != nil {
 		return "", value.Error
 	}
-	return "journald.config.section.param:" + name.Data + "=" + value.Data, nil
+	return ResourceJournaldConfigSectionParam + ":" + name.Data + "=" + value.Data, nil
 }
 
 // These are the boolean options in journald.conf which are case insensitive
