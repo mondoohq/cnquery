@@ -197,16 +197,16 @@ func groupPlatform() *inventory.Platform {
 	}
 }
 
-func newGitLabGroupID(groupID int) string {
-	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.Itoa(groupID)
+func newGitLabGroupID(groupID int64) string {
+	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.FormatInt(groupID, 10)
 }
 
 func newGitLabGroupIDFromPath(groupPath string) string {
 	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + groupPath
 }
 
-func newGitLabProjectID(groupID int, projectID int) string {
-	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.Itoa(groupID) + "/project/" + strconv.Itoa(projectID)
+func newGitLabProjectID(groupID int64, projectID int64) string {
+	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.FormatInt(groupID, 10) + "/project/" + strconv.FormatInt(projectID, 10)
 }
 
 func newGitLabProjectIDFromPaths(groupPath string, projectPath string) string {
@@ -238,7 +238,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GitLabConnecti
 	return nil
 }
 
-func (s *Service) detectAsProject(asset *inventory.Asset, groupID int, groupFullPath string, project *gitlab.Project) {
+func (s *Service) detectAsProject(asset *inventory.Asset, groupID int64, groupFullPath string, project *gitlab.Project) {
 	asset.Platform = projectPlatform()
 	asset.Name = "GitLab Project " + project.Name
 	asset.PlatformIds = []string{

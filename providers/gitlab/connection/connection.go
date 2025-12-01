@@ -93,8 +93,8 @@ func (c *GitLabConnection) GroupName() string {
 	return c.groupName
 }
 
-func (c *GitLabConnection) GroupID() int {
-	i, err := strconv.Atoi(c.groupID)
+func (c *GitLabConnection) GroupID() int64 {
+	i, err := strconv.ParseInt(c.groupID, 10, 64)
 	if err == nil {
 		return i
 	}
@@ -210,9 +210,9 @@ func DiscoverSubAndDescendantGroupsForGroup(conn *GitLabConnection, rootGroup st
 
 func groupDescendantGroups(conn *GitLabConnection, gid any) ([]*gitlab.Group, error) {
 	log.Debug().Msgf("calling list descendant groups with %v", gid)
-	perPage := 50
-	page := 1
-	total := 50
+	perPage := int64(50)
+	page := int64(1)
+	total := int64(50)
 	groups := []*gitlab.Group{}
 	for page*perPage <= total {
 		grps, resp, err := conn.Client().Groups.ListDescendantGroups(gid, &gitlab.ListDescendantGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
@@ -229,9 +229,9 @@ func groupDescendantGroups(conn *GitLabConnection, gid any) ([]*gitlab.Group, er
 
 func groupSubgroups(conn *GitLabConnection, gid any) ([]*gitlab.Group, error) {
 	log.Debug().Msgf("calling list subgroups with %v", gid)
-	perPage := 50
-	page := 1
-	total := 50
+	perPage := int64(50)
+	page := int64(1)
+	total := int64(50)
 	groups := []*gitlab.Group{}
 	for page*perPage <= total {
 		grps, resp, err := conn.Client().Groups.ListSubGroups(gid, &gitlab.ListSubGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
