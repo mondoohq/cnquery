@@ -64,11 +64,6 @@ prep/tools: prep/tools/protolint prep/tools/mockgen
 	go install gotest.tools/gotestsum@latest
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	go install github.com/hashicorp/copywrite@latest
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
-	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
-	go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@latest
 
 prep/tools/mockgen:
 	go install go.uber.org/mock/mockgen@latest
@@ -819,4 +814,3 @@ metrics/grafana/start:
 
 metrics/grafana/stop:
 	docker stop grafana
-
