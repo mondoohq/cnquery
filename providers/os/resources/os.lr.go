@@ -1612,6 +1612,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"journald.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetFile()).ToDataRes(types.Resource("file"))
 	},
+	"journald.config.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJournaldConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"journald.config.sections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetSections()).ToDataRes(types.Array(types.Resource("journald.config.section")))
 	},
@@ -4185,6 +4188,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"journald.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJournaldConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"journald.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfig).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"journald.config.sections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11053,6 +11060,7 @@ type mqlJournaldConfig struct {
 	__id       string
 	mqlJournaldConfigInternal
 	File     plugin.TValue[*mqlFile]
+	Params   plugin.TValue[map[string]any]
 	Sections plugin.TValue[[]any]
 }
 
@@ -11106,6 +11114,17 @@ func (c *mqlJournaldConfig) GetFile() *plugin.TValue[*mqlFile] {
 		}
 
 		return c.file()
+	})
+}
+
+func (c *mqlJournaldConfig) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
 	})
 }
 

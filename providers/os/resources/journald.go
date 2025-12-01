@@ -137,6 +137,49 @@ func (s *mqlJournaldConfig) sections(file *mqlFile) ([]any, error) {
 	return s.Sections.Data, s.Sections.Error
 }
 
+// params is deprecated, use sections instead
+func (s *mqlJournaldConfig) params(file *mqlFile) (map[string]any, error) {
+	if err := s.parse(file); err != nil {
+		return nil, err
+	}
+
+	// For backward compatibility, return the [Journal] section's params as a map
+	// Find the Journal section
+	for _, sectionAny := range s.Sections.Data {
+		section := sectionAny.(*mqlJournaldConfigSection)
+		name := section.GetName()
+		if name.Error != nil {
+			continue
+		}
+
+		// Only return params from the Journal section for backward compatibility
+		if name.Data != "Journal" {
+			continue
+		}
+
+		params := section.GetParams()
+		if params.Error != nil {
+			return nil, params.Error
+		}
+
+		// Convert params array to map[string]any
+		// If there are duplicate keys, the last one wins
+		result := make(map[string]any, len(params.Data))
+		for _, paramAny := range params.Data {
+			param := paramAny.(*mqlJournaldConfigSectionParam)
+			paramName := param.GetName()
+			paramValue := param.GetValue()
+			if paramName.Error != nil || paramValue.Error != nil {
+				continue
+			}
+			result[paramName.Data] = paramValue.Data
+		}
+		return result, nil
+	}
+
+	return map[string]any{}, nil
+}
+
 func (s *mqlJournaldConfigSection) id() (string, error) {
 	name := s.GetName()
 	if name.Error != nil {
