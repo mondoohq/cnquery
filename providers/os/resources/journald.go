@@ -65,6 +65,7 @@ func (s *mqlJournaldConfig) file() (*mqlFile, error) {
 	return f.(*mqlFile), nil
 }
 
+// parses the journald config file and creates the resources
 func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -103,7 +104,6 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 
 		for j, unitParam := range unitSection.Params {
 			val := unitParam.Value
-			// Apply downcase logic for boolean keywords
 			if slices.Contains(journaldDowncaseKeywords, unitParam.Name) {
 				val = strings.ToLower(val)
 			}
@@ -140,6 +140,7 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 	return s.Sections.Error
 }
 
+// returns the sections of the journald config, eg [Journal], [Upload], etc
 func (s *mqlJournaldConfig) sections(file *mqlFile) ([]any, error) {
 	if err := s.parse(file); err != nil {
 		return nil, err
@@ -154,7 +155,6 @@ func (s *mqlJournaldConfig) params(file *mqlFile) (map[string]any, error) {
 	}
 
 	// For backward compatibility, return the [Journal] section's params as a map
-	// Find the Journal section
 	for _, sectionAny := range s.Sections.Data {
 		section := sectionAny.(*mqlJournaldConfigSection)
 		name := section.GetName()
@@ -162,7 +162,6 @@ func (s *mqlJournaldConfig) params(file *mqlFile) (map[string]any, error) {
 			continue
 		}
 
-		// Only return params from the Journal section for backward compatibility
 		if name.Data != "Journal" {
 			continue
 		}
@@ -172,8 +171,6 @@ func (s *mqlJournaldConfig) params(file *mqlFile) (map[string]any, error) {
 			return nil, params.Error
 		}
 
-		// Convert params array to map[string]any
-		// If there are duplicate keys, the last one wins
 		result := make(map[string]any, len(params.Data))
 		for _, paramAny := range params.Data {
 			param := paramAny.(*mqlJournaldConfigSectionParam)
