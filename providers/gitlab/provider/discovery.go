@@ -139,7 +139,7 @@ func (s *Service) discoverGroups(root *inventory.Asset, conn *connection.GitLabC
 	conf.Type = GitlabGroupConnection
 	conf.Options = map[string]string{
 		"group":    group.FullPath,
-		"group-id": strconv.Itoa(group.ID),
+		"group-id": strconv.FormatInt(group.ID, 10),
 		"url":      conn.Conf.Options["url"],
 	}
 	asset := &inventory.Asset{
@@ -173,7 +173,7 @@ func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLa
 	}
 
 	var assets []*inventory.Asset
-	projects := map[int]*gitlab.Project{}
+	projects := map[int64]*gitlab.Project{}
 
 	for i := range groups {
 		group := groups[i]
@@ -188,9 +188,9 @@ func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLa
 			conf.Type = GitlabProjectConnection
 			conf.Options = map[string]string{
 				"group":      group.FullPath,
-				"group-id":   strconv.Itoa(group.ID),
+				"group-id":   strconv.FormatInt(group.ID, 10),
 				"project":    project.Name,
-				"project-id": strconv.Itoa(project.ID),
+				"project-id": strconv.FormatInt(project.ID, 10),
 				"url":        conn.Conf.Options["url"],
 			}
 			asset := &inventory.Asset{
@@ -217,9 +217,9 @@ func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLa
 
 func discoverGroupProjects(conn *connection.GitLabConnection, gid any) ([]*gitlab.Project, error) {
 	log.Debug().Msgf("discover group projects for %v", gid)
-	perPage := 50
-	page := 1
-	total := 50
+	perPage := int64(50)
+	page := int64(1)
+	total := int64(50)
 	projects := []*gitlab.Project{}
 	for page*perPage <= total {
 		projs, resp, err := conn.Client().Groups.ListGroupProjects(gid, &gitlab.ListGroupProjectsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
@@ -243,7 +243,7 @@ func (s *Service) convertGitlabGroupsToAssetGroups(groups []*gitlab.Group, conn 
 			conf.Options = map[string]string{}
 		}
 		conf.Options["group"] = group.FullPath
-		conf.Options["group-id"] = strconv.Itoa(group.ID)
+		conf.Options["group-id"] = strconv.FormatInt(group.ID, 10)
 		conf.Options["url"] = conn.Conf.Options["url"]
 		conf.Type = GitlabGroupConnection
 		asset := &inventory.Asset{
@@ -261,9 +261,9 @@ func (s *Service) convertGitlabGroupsToAssetGroups(groups []*gitlab.Group, conn 
 
 func listAllGroups(conn *connection.GitLabConnection) ([]*gitlab.Group, error) {
 	log.Debug().Msg("calling list all groups")
-	perPage := 50
-	page := 1
-	total := 50
+	perPage := int64(50)
+	page := int64(1)
+	total := int64(50)
 	groups := []*gitlab.Group{}
 	for page*perPage <= total {
 		grps, resp, err := conn.Client().Groups.ListGroups(&gitlab.ListGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
