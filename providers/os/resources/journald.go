@@ -78,9 +78,12 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 		return content.Error
 	}
 
-	ini := parsers.ParseIni(content.Data, "=")
+	unit, err := parsers.ParseUnit(content.Data)
+	if err != nil {
+		return fmt.Errorf("failed to parse journald config: %w", err)
+	}
 
-	if len(ini.Fields) == 0 {
+	if len(unit.Sections) == 0 {
 		s.Sections.Data = []any{}
 		s.Sections.State = plugin.StateIsSet
 		return nil
@@ -89,40 +92,32 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 	var errs multierr.Errors
 	sectionResources := []any{}
 
-	for sectionName, sectionData := range ini.Fields {
-		fields, ok := sectionData.(map[string]any)
-		if !ok {
-			errs.Add(fmt.Errorf("failed to parse section '%s' (invalid data)", sectionName))
-			continue
-		}
-
+	for _, unitSection := range unit.Sections {
 		paramResources := []any{}
-		for k, v := range fields {
-			if val, ok := v.(string); ok {
-				if slices.Contains(journaldDowncaseKeywords, k) {
-					val = strings.ToLower(val)
-				}
-				// journald.config.section.param
-				param, err := CreateResource(s.MqlRuntime, ResourceJournaldConfigSectionParam, map[string]*llx.RawData{
-					"name":  llx.StringData(k),
-					"value": llx.StringData(val),
-				})
-				if err != nil {
-					errs.Add(fmt.Errorf("failed to create param resource for '%s' in section '%s': %w", k, sectionName, err))
-					continue
-				}
-				paramResources = append(paramResources, param)
-			} else {
-				errs.Add(fmt.Errorf("can't parse field '%s' in section '%s', value is %+v", k, sectionName, v))
+		for _, unitParam := range unitSection.Params {
+			val := unitParam.Value
+			// Apply downcase logic for boolean keywords
+			if slices.Contains(journaldDowncaseKeywords, unitParam.Name) {
+				val = strings.ToLower(val)
 			}
+
+			param, err := CreateResource(s.MqlRuntime, ResourceJournaldConfigSectionParam, map[string]*llx.RawData{
+				"name":  llx.StringData(unitParam.Name),
+				"value": llx.StringData(val),
+			})
+			if err != nil {
+				errs.Add(fmt.Errorf("failed to create param resource for '%s' in section '%s': %w", unitParam.Name, unitSection.Name, err))
+				continue
+			}
+			paramResources = append(paramResources, param)
 		}
 
 		section, err := CreateResource(s.MqlRuntime, ResourceJournaldConfigSection, map[string]*llx.RawData{
-			"name":   llx.StringData(sectionName),
+			"name":   llx.StringData(unitSection.Name),
 			"params": llx.ArrayData(paramResources, types.Resource(ResourceJournaldConfigSectionParam)),
 		})
 		if err != nil {
-			errs.Add(fmt.Errorf("failed to create section resource for '%s': %w", sectionName, err))
+			errs.Add(fmt.Errorf("failed to create section resource for '%s': %w", unitSection.Name, err))
 			continue
 		}
 
