@@ -825,8 +825,23 @@ journald.config {
   init(path? string)
   // File of this journald configuration
   file() file
-  // Configuration values of this config
+  // Deprecated; use sections() instead
   params(file) map[string]string
+  // All sections in this journald configuration
+  sections(file) []journald.config.section
+}
+
+// A section in journald configuration
+journald.config.section @defaults("name") {
+  // Name of the section (e.g., "Journal", "Upload")
+  name string
+  // Key-value pairs in this section
+  params []journald.config.section.param
+}
+
+journald.config.section.param @defaults("name value") {
+  name string
+  value string
 }
 
 // Service on this system

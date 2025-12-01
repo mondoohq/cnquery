@@ -17,142 +17,144 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset                  string = "asset"
-	ResourceAssetEol               string = "asset.eol"
-	ResourceMondooEol              string = "mondoo.eol"
-	ResourcePlatformEol            string = "platform.eol"
-	ResourcePlatform               string = "platform"
-	ResourceVulnmgmt               string = "vulnmgmt"
-	ResourceVulnCve                string = "vuln.cve"
-	ResourceVulnAdvisory           string = "vuln.advisory"
-	ResourceVulnPackage            string = "vuln.package"
-	ResourcePlatformAdvisories     string = "platform.advisories"
-	ResourcePlatformCves           string = "platform.cves"
-	ResourceAuditCvss              string = "audit.cvss"
-	ResourceAuditAdvisory          string = "audit.advisory"
-	ResourceAuditCve               string = "audit.cve"
-	ResourceMachine                string = "machine"
-	ResourceMachineBios            string = "machine.bios"
-	ResourceMachineSystem          string = "machine.system"
-	ResourceMachineBaseboard       string = "machine.baseboard"
-	ResourceMachineChassis         string = "machine.chassis"
-	ResourceOs                     string = "os"
-	ResourceOsUpdate               string = "os.update"
-	ResourceOsBase                 string = "os.base"
-	ResourceOsUnix                 string = "os.unix"
-	ResourceOsLinux                string = "os.linux"
-	ResourceOsRootCertificates     string = "os.rootCertificates"
-	ResourceCommand                string = "command"
-	ResourcePowershell             string = "powershell"
-	ResourceFile                   string = "file"
-	ResourceFileContext            string = "file.context"
-	ResourceFilePermissions        string = "file.permissions"
-	ResourceFiles                  string = "files"
-	ResourceFilesFind              string = "files.find"
-	ResourceParseIni               string = "parse.ini"
-	ResourceParseJson              string = "parse.json"
-	ResourceParseXml               string = "parse.xml"
-	ResourceParsePlist             string = "parse.plist"
-	ResourceParseYaml              string = "parse.yaml"
-	ResourceParseCertificates      string = "parse.certificates"
-	ResourceParseOpenpgp           string = "parse.openpgp"
-	ResourceUser                   string = "user"
-	ResourcePrivatekey             string = "privatekey"
-	ResourceUsers                  string = "users"
-	ResourceAuthorizedkeys         string = "authorizedkeys"
-	ResourceAuthorizedkeysEntry    string = "authorizedkeys.entry"
-	ResourceGroup                  string = "group"
-	ResourceGroups                 string = "groups"
-	ResourcePackage                string = "package"
-	ResourcePkgFileInfo            string = "pkgFileInfo"
-	ResourcePackages               string = "packages"
-	ResourcePamConf                string = "pam.conf"
-	ResourcePamConfServiceEntry    string = "pam.conf.serviceEntry"
-	ResourceSshd                   string = "sshd"
-	ResourceSshdConfig             string = "sshd.config"
-	ResourceSshdConfigMatchBlock   string = "sshd.config.matchBlock"
-	ResourceAuditdConfig           string = "auditd.config"
-	ResourceAuditdRules            string = "auditd.rules"
-	ResourceAuditdRule             string = "auditd.rule"
-	ResourceAuditdRuleControl      string = "auditd.rule.control"
-	ResourceAuditdRuleFile         string = "auditd.rule.file"
-	ResourceAuditdRuleSyscall      string = "auditd.rule.syscall"
-	ResourceJournaldConfig         string = "journald.config"
-	ResourceService                string = "service"
-	ResourceServices               string = "services"
-	ResourceKernel                 string = "kernel"
-	ResourceKernelModule           string = "kernel.module"
-	ResourceDocker                 string = "docker"
-	ResourceDockerFile             string = "docker.file"
-	ResourceDockerFileStage        string = "docker.file.stage"
-	ResourceDockerFileUser         string = "docker.file.user"
-	ResourceDockerFileExpose       string = "docker.file.expose"
-	ResourceDockerFileFrom         string = "docker.file.from"
-	ResourceDockerFileRun          string = "docker.file.run"
-	ResourceDockerFileAdd          string = "docker.file.add"
-	ResourceDockerFileCopy         string = "docker.file.copy"
-	ResourceDockerImage            string = "docker.image"
-	ResourceDockerContainer        string = "docker.container"
-	ResourceIptables               string = "iptables"
-	ResourceIp6tables              string = "ip6tables"
-	ResourceIptablesEntry          string = "iptables.entry"
-	ResourceFstab                  string = "fstab"
-	ResourceFstabEntry             string = "fstab.entry"
-	ResourceProcess                string = "process"
-	ResourceProcesses              string = "processes"
-	ResourcePort                   string = "port"
-	ResourcePorts                  string = "ports"
-	ResourceAuditpol               string = "auditpol"
-	ResourceAuditpolEntry          string = "auditpol.entry"
-	ResourceSecpol                 string = "secpol"
-	ResourceNtpConf                string = "ntp.conf"
-	ResourceRsyslogConf            string = "rsyslog.conf"
-	ResourceLogindefs              string = "logindefs"
-	ResourceLsblk                  string = "lsblk"
-	ResourceLsblkEntry             string = "lsblk.entry"
-	ResourceMount                  string = "mount"
-	ResourceMountPoint             string = "mount.point"
-	ResourceShadow                 string = "shadow"
-	ResourceShadowEntry            string = "shadow.entry"
-	ResourceYum                    string = "yum"
-	ResourceYumRepo                string = "yum.repo"
-	ResourceRegistrykey            string = "registrykey"
-	ResourceRegistrykeyProperty    string = "registrykey.property"
-	ResourceContainerImage         string = "container.image"
-	ResourceContainerRepository    string = "container.repository"
-	ResourceKubelet                string = "kubelet"
-	ResourcePython                 string = "python"
-	ResourcePythonPackage          string = "python.package"
-	ResourceNpmPackages            string = "npm.packages"
-	ResourceNpmPackage             string = "npm.package"
-	ResourceMacos                  string = "macos"
-	ResourceMacosHardware          string = "macos.hardware"
-	ResourceMacosAlf               string = "macos.alf"
-	ResourceMacosTimemachine       string = "macos.timemachine"
-	ResourceMacosSystemsetup       string = "macos.systemsetup"
-	ResourceWindows                string = "windows"
-	ResourceMacosSystemExtension   string = "macos.systemExtension"
-	ResourceWindowsHotfix          string = "windows.hotfix"
-	ResourceWindowsFeature         string = "windows.feature"
-	ResourceWindowsServerFeature   string = "windows.serverFeature"
-	ResourceWindowsOptionalFeature string = "windows.optionalFeature"
-	ResourceWindowsFirewall        string = "windows.firewall"
-	ResourceWindowsFirewallProfile string = "windows.firewall.profile"
-	ResourceWindowsFirewallRule    string = "windows.firewall.rule"
-	ResourceWindowsBitlocker       string = "windows.bitlocker"
-	ResourceWindowsBitlockerVolume string = "windows.bitlocker.volume"
-	ResourceWindowsSecurity        string = "windows.security"
-	ResourceWindowsSecurityProduct string = "windows.security.product"
-	ResourceWindowsSecurityHealth  string = "windows.security.health"
-	ResourceCloud                  string = "cloud"
-	ResourceCloudInstance          string = "cloudInstance"
-	ResourceIpAddress              string = "ipAddress"
-	ResourceNetwork                string = "network"
-	ResourceNetworkInterface       string = "networkInterface"
-	ResourceNetworkRoutes          string = "networkRoutes"
-	ResourceNetworkRoute           string = "networkRoute"
-	ResourceUsb                    string = "usb"
-	ResourceUsbDevice              string = "usb.device"
+	ResourceAsset                      string = "asset"
+	ResourceAssetEol                   string = "asset.eol"
+	ResourceMondooEol                  string = "mondoo.eol"
+	ResourcePlatformEol                string = "platform.eol"
+	ResourcePlatform                   string = "platform"
+	ResourceVulnmgmt                   string = "vulnmgmt"
+	ResourceVulnCve                    string = "vuln.cve"
+	ResourceVulnAdvisory               string = "vuln.advisory"
+	ResourceVulnPackage                string = "vuln.package"
+	ResourcePlatformAdvisories         string = "platform.advisories"
+	ResourcePlatformCves               string = "platform.cves"
+	ResourceAuditCvss                  string = "audit.cvss"
+	ResourceAuditAdvisory              string = "audit.advisory"
+	ResourceAuditCve                   string = "audit.cve"
+	ResourceMachine                    string = "machine"
+	ResourceMachineBios                string = "machine.bios"
+	ResourceMachineSystem              string = "machine.system"
+	ResourceMachineBaseboard           string = "machine.baseboard"
+	ResourceMachineChassis             string = "machine.chassis"
+	ResourceOs                         string = "os"
+	ResourceOsUpdate                   string = "os.update"
+	ResourceOsBase                     string = "os.base"
+	ResourceOsUnix                     string = "os.unix"
+	ResourceOsLinux                    string = "os.linux"
+	ResourceOsRootCertificates         string = "os.rootCertificates"
+	ResourceCommand                    string = "command"
+	ResourcePowershell                 string = "powershell"
+	ResourceFile                       string = "file"
+	ResourceFileContext                string = "file.context"
+	ResourceFilePermissions            string = "file.permissions"
+	ResourceFiles                      string = "files"
+	ResourceFilesFind                  string = "files.find"
+	ResourceParseIni                   string = "parse.ini"
+	ResourceParseJson                  string = "parse.json"
+	ResourceParseXml                   string = "parse.xml"
+	ResourceParsePlist                 string = "parse.plist"
+	ResourceParseYaml                  string = "parse.yaml"
+	ResourceParseCertificates          string = "parse.certificates"
+	ResourceParseOpenpgp               string = "parse.openpgp"
+	ResourceUser                       string = "user"
+	ResourcePrivatekey                 string = "privatekey"
+	ResourceUsers                      string = "users"
+	ResourceAuthorizedkeys             string = "authorizedkeys"
+	ResourceAuthorizedkeysEntry        string = "authorizedkeys.entry"
+	ResourceGroup                      string = "group"
+	ResourceGroups                     string = "groups"
+	ResourcePackage                    string = "package"
+	ResourcePkgFileInfo                string = "pkgFileInfo"
+	ResourcePackages                   string = "packages"
+	ResourcePamConf                    string = "pam.conf"
+	ResourcePamConfServiceEntry        string = "pam.conf.serviceEntry"
+	ResourceSshd                       string = "sshd"
+	ResourceSshdConfig                 string = "sshd.config"
+	ResourceSshdConfigMatchBlock       string = "sshd.config.matchBlock"
+	ResourceAuditdConfig               string = "auditd.config"
+	ResourceAuditdRules                string = "auditd.rules"
+	ResourceAuditdRule                 string = "auditd.rule"
+	ResourceAuditdRuleControl          string = "auditd.rule.control"
+	ResourceAuditdRuleFile             string = "auditd.rule.file"
+	ResourceAuditdRuleSyscall          string = "auditd.rule.syscall"
+	ResourceJournaldConfig             string = "journald.config"
+	ResourceJournaldConfigSection      string = "journald.config.section"
+	ResourceJournaldConfigSectionParam string = "journald.config.section.param"
+	ResourceService                    string = "service"
+	ResourceServices                   string = "services"
+	ResourceKernel                     string = "kernel"
+	ResourceKernelModule               string = "kernel.module"
+	ResourceDocker                     string = "docker"
+	ResourceDockerFile                 string = "docker.file"
+	ResourceDockerFileStage            string = "docker.file.stage"
+	ResourceDockerFileUser             string = "docker.file.user"
+	ResourceDockerFileExpose           string = "docker.file.expose"
+	ResourceDockerFileFrom             string = "docker.file.from"
+	ResourceDockerFileRun              string = "docker.file.run"
+	ResourceDockerFileAdd              string = "docker.file.add"
+	ResourceDockerFileCopy             string = "docker.file.copy"
+	ResourceDockerImage                string = "docker.image"
+	ResourceDockerContainer            string = "docker.container"
+	ResourceIptables                   string = "iptables"
+	ResourceIp6tables                  string = "ip6tables"
+	ResourceIptablesEntry              string = "iptables.entry"
+	ResourceFstab                      string = "fstab"
+	ResourceFstabEntry                 string = "fstab.entry"
+	ResourceProcess                    string = "process"
+	ResourceProcesses                  string = "processes"
+	ResourcePort                       string = "port"
+	ResourcePorts                      string = "ports"
+	ResourceAuditpol                   string = "auditpol"
+	ResourceAuditpolEntry              string = "auditpol.entry"
+	ResourceSecpol                     string = "secpol"
+	ResourceNtpConf                    string = "ntp.conf"
+	ResourceRsyslogConf                string = "rsyslog.conf"
+	ResourceLogindefs                  string = "logindefs"
+	ResourceLsblk                      string = "lsblk"
+	ResourceLsblkEntry                 string = "lsblk.entry"
+	ResourceMount                      string = "mount"
+	ResourceMountPoint                 string = "mount.point"
+	ResourceShadow                     string = "shadow"
+	ResourceShadowEntry                string = "shadow.entry"
+	ResourceYum                        string = "yum"
+	ResourceYumRepo                    string = "yum.repo"
+	ResourceRegistrykey                string = "registrykey"
+	ResourceRegistrykeyProperty        string = "registrykey.property"
+	ResourceContainerImage             string = "container.image"
+	ResourceContainerRepository        string = "container.repository"
+	ResourceKubelet                    string = "kubelet"
+	ResourcePython                     string = "python"
+	ResourcePythonPackage              string = "python.package"
+	ResourceNpmPackages                string = "npm.packages"
+	ResourceNpmPackage                 string = "npm.package"
+	ResourceMacos                      string = "macos"
+	ResourceMacosHardware              string = "macos.hardware"
+	ResourceMacosAlf                   string = "macos.alf"
+	ResourceMacosTimemachine           string = "macos.timemachine"
+	ResourceMacosSystemsetup           string = "macos.systemsetup"
+	ResourceWindows                    string = "windows"
+	ResourceMacosSystemExtension       string = "macos.systemExtension"
+	ResourceWindowsHotfix              string = "windows.hotfix"
+	ResourceWindowsFeature             string = "windows.feature"
+	ResourceWindowsServerFeature       string = "windows.serverFeature"
+	ResourceWindowsOptionalFeature     string = "windows.optionalFeature"
+	ResourceWindowsFirewall            string = "windows.firewall"
+	ResourceWindowsFirewallProfile     string = "windows.firewall.profile"
+	ResourceWindowsFirewallRule        string = "windows.firewall.rule"
+	ResourceWindowsBitlocker           string = "windows.bitlocker"
+	ResourceWindowsBitlockerVolume     string = "windows.bitlocker.volume"
+	ResourceWindowsSecurity            string = "windows.security"
+	ResourceWindowsSecurityProduct     string = "windows.security.product"
+	ResourceWindowsSecurityHealth      string = "windows.security.health"
+	ResourceCloud                      string = "cloud"
+	ResourceCloudInstance              string = "cloudInstance"
+	ResourceIpAddress                  string = "ipAddress"
+	ResourceNetwork                    string = "network"
+	ResourceNetworkInterface           string = "networkInterface"
+	ResourceNetworkRoutes              string = "networkRoutes"
+	ResourceNetworkRoute               string = "networkRoute"
+	ResourceUsb                        string = "usb"
+	ResourceUsbDevice                  string = "usb.device"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -402,6 +404,14 @@ func init() {
 		"journald.config": {
 			Init:   initJournaldConfig,
 			Create: createJournaldConfig,
+		},
+		"journald.config.section": {
+			// to override args, implement: initJournaldConfigSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJournaldConfigSection,
+		},
+		"journald.config.section.param": {
+			// to override args, implement: initJournaldConfigSectionParam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJournaldConfigSectionParam,
 		},
 		"service": {
 			Init:   initService,
@@ -1604,6 +1614,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"journald.config.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"journald.config.sections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJournaldConfig).GetSections()).ToDataRes(types.Array(types.Resource("journald.config.section")))
+	},
+	"journald.config.section.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJournaldConfigSection).GetName()).ToDataRes(types.String)
+	},
+	"journald.config.section.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJournaldConfigSection).GetParams()).ToDataRes(types.Array(types.Resource("journald.config.section.param")))
+	},
+	"journald.config.section.param.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJournaldConfigSectionParam).GetName()).ToDataRes(types.String)
+	},
+	"journald.config.section.param.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJournaldConfigSectionParam).GetValue()).ToDataRes(types.String)
 	},
 	"service.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlService).GetName()).ToDataRes(types.String)
@@ -4167,6 +4192,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"journald.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJournaldConfig).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"journald.config.sections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfig).Sections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"journald.config.section.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfigSection).__id, ok = v.Value.(string)
+		return
+	},
+	"journald.config.section.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfigSection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"journald.config.section.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfigSection).Params, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"journald.config.section.param.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfigSectionParam).__id, ok = v.Value.(string)
+		return
+	},
+	"journald.config.section.param.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfigSectionParam).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"journald.config.section.param.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJournaldConfigSectionParam).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11006,8 +11059,9 @@ type mqlJournaldConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlJournaldConfigInternal
-	File   plugin.TValue[*mqlFile]
-	Params plugin.TValue[map[string]any]
+	File     plugin.TValue[*mqlFile]
+	Params   plugin.TValue[map[string]any]
+	Sections plugin.TValue[[]any]
 }
 
 // createJournaldConfig creates a new instance of this resource
@@ -11072,6 +11126,125 @@ func (c *mqlJournaldConfig) GetParams() *plugin.TValue[map[string]any] {
 
 		return c.params(vargFile.Data)
 	})
+}
+
+func (c *mqlJournaldConfig) GetSections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("journald.config", c.__id, "sections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.sections(vargFile.Data)
+	})
+}
+
+// mqlJournaldConfigSection for the journald.config.section resource
+type mqlJournaldConfigSection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJournaldConfigSectionInternal it will be used here
+	Name   plugin.TValue[string]
+	Params plugin.TValue[[]any]
+}
+
+// createJournaldConfigSection creates a new instance of this resource
+func createJournaldConfigSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJournaldConfigSection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("journald.config.section", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJournaldConfigSection) MqlName() string {
+	return "journald.config.section"
+}
+
+func (c *mqlJournaldConfigSection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJournaldConfigSection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJournaldConfigSection) GetParams() *plugin.TValue[[]any] {
+	return &c.Params
+}
+
+// mqlJournaldConfigSectionParam for the journald.config.section.param resource
+type mqlJournaldConfigSectionParam struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJournaldConfigSectionParamInternal it will be used here
+	Name  plugin.TValue[string]
+	Value plugin.TValue[string]
+}
+
+// createJournaldConfigSectionParam creates a new instance of this resource
+func createJournaldConfigSectionParam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJournaldConfigSectionParam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("journald.config.section.param", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJournaldConfigSectionParam) MqlName() string {
+	return "journald.config.section.param"
+}
+
+func (c *mqlJournaldConfigSectionParam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJournaldConfigSectionParam) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJournaldConfigSectionParam) GetValue() *plugin.TValue[string] {
+	return &c.Value
 }
 
 // mqlService for the service resource
