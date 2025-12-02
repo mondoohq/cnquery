@@ -86,6 +86,7 @@ notebookinstancedetails
 nsrecord
 nullgroup
 nullstring
+oicd
 opcplc
 openssh
 openssl
