@@ -12,9 +12,9 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
-type passwordErrMsg error
+type inputErrMsg error
 
-type password struct {
+type inputModel struct {
 	textInput  input.Model
 	err        error
 	onComplete func(res string, aborted bool)
@@ -32,26 +32,29 @@ type password struct {
 //	if err := p.Start(); err != nil {
 //		 panic(err)
 //	}
-func NewPasswordModel(prompt string, onComplete func(res string, aborted bool)) password {
-	inputModel := input.NewModel()
-	inputModel.Prompt = prompt
-	inputModel.Focus()
-	inputModel.EchoMode = input.EchoNone
-	inputModel.CharLimit = 156
-	inputModel.Width = 20
+func NewInputModel(prompt string, onComplete func(res string, aborted bool), password bool) inputModel {
+	im := input.New()
+	im.Prompt = prompt
+	im.Focus()
+	im.EchoMode = input.EchoNormal
+	if password {
+		im.EchoMode = input.EchoPassword
+	}
+	im.CharLimit = 156
+	im.Width = 20
 
-	return password{
-		textInput:  inputModel,
+	return inputModel{
+		textInput:  im,
 		err:        nil,
 		onComplete: onComplete,
 	}
 }
 
-func (m password) Init() tea.Cmd {
+func (m inputModel) Init() tea.Cmd {
 	return input.Blink
 }
 
-func (m password) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m inputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
@@ -70,7 +73,7 @@ func (m password) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	// We handle errors just like any other message
-	case passwordErrMsg:
+	case inputErrMsg:
 		m.err = msg
 		return m, nil
 	}
@@ -79,30 +82,40 @@ func (m password) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m password) View() string {
+func (m inputModel) View() string {
 	return m.textInput.View() + "\n"
 }
 
-// AskPassword will only prompt the user for a password if they are on a TTY.
-func AskPassword(prompt string) (string, error) {
-	// check if password is set
+// AskInput will only prompt the user for input if they are on a TTY.
+func askInput(prompt string, password bool) (string, error) {
+	// check if input is set
 	if !isatty.IsTerminal(os.Stdout.Fd()) {
-		return "", errors.New("asking passwords is only supported when used with an interactive terminal (TTY)")
+		return "", errors.New("asking input is only supported when used with an interactive terminal (TTY)")
 	}
 
-	// ask user for password
+	// ask user for input
 	var res string = ""
-	passwordModel := NewPasswordModel(prompt, func(userPassword string, aborted bool) {
-		res = userPassword
+	inputModel := NewInputModel(prompt, func(userInput string, aborted bool) {
+		res = userInput
 		if aborted {
 			os.Exit(1)
 		}
-	})
+	}, password)
 
-	p := tea.NewProgram(passwordModel, tea.WithInputTTY())
+	p := tea.NewProgram(inputModel, tea.WithInputTTY())
 	if _, err := p.Run(); err != nil {
 		return res, err
 	}
 
 	return res, nil
+}
+
+// AskInput will only prompt the user for input if they are on a TTY.
+func AskInput(prompt string) (string, error) {
+	return askInput(prompt, false)
+}
+
+// AskPassword will only prompt the user for input if they are on a TTY.
+func AskPassword(prompt string) (string, error) {
+	return askInput(prompt, true)
 }
