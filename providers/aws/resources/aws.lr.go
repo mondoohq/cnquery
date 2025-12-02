@@ -75,6 +75,8 @@ const (
 	ResourceAwsIamRole                                                       string = "aws.iam.role"
 	ResourceAwsIamGroup                                                      string = "aws.iam.group"
 	ResourceAwsIamVirtualmfadevice                                           string = "aws.iam.virtualmfadevice"
+	ResourceAwsIamSamlProvider                                               string = "aws.iam.samlProvider"
+	ResourceAwsIamOidcProvider                                               string = "aws.iam.oidcProvider"
 	ResourceAwsIamAccessAnalyzer                                             string = "aws.iam.accessAnalyzer"
 	ResourceAwsIamAccessanalyzerAnalyzer                                     string = "aws.iam.accessanalyzer.analyzer"
 	ResourceAwsIamAccessanalyzerFinding                                      string = "aws.iam.accessanalyzer.finding"
@@ -456,6 +458,14 @@ func init() {
 		"aws.iam.virtualmfadevice": {
 			// to override args, implement: initAwsIamVirtualmfadevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamVirtualmfadevice,
+		},
+		"aws.iam.samlProvider": {
+			// to override args, implement: initAwsIamSamlProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamSamlProvider,
+		},
+		"aws.iam.oidcProvider": {
+			// to override args, implement: initAwsIamOidcProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamOidcProvider,
 		},
 		"aws.iam.accessAnalyzer": {
 			// to override args, implement: initAwsIamAccessAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1935,6 +1945,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.instanceProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetInstanceProfiles()).ToDataRes(types.Array(types.Resource("aws.iam.instanceProfile")))
 	},
+	"aws.iam.samlProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetSamlProviders()).ToDataRes(types.Array(types.Resource("aws.iam.samlProvider")))
+	},
+	"aws.iam.oidcProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetOidcProviders()).ToDataRes(types.Array(types.Resource("aws.iam.oidcProvider")))
+	},
 	"aws.iam.usercredentialreportentry.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetProperties()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -2159,6 +2175,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.virtualmfadevice.user": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamVirtualmfadevice).GetUser()).ToDataRes(types.Resource("aws.iam.user"))
+	},
+	"aws.iam.samlProvider.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamSamlProvider).GetArn()).ToDataRes(types.String)
+	},
+	"aws.iam.samlProvider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamSamlProvider).GetName()).ToDataRes(types.String)
+	},
+	"aws.iam.samlProvider.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamSamlProvider).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.samlProvider.validUntil": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamSamlProvider).GetValidUntil()).ToDataRes(types.Time)
+	},
+	"aws.iam.samlProvider.metadataDocument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamSamlProvider).GetMetadataDocument()).ToDataRes(types.String)
+	},
+	"aws.iam.samlProvider.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamSamlProvider).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.iam.oidcProvider.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamOidcProvider).GetArn()).ToDataRes(types.String)
+	},
+	"aws.iam.oidcProvider.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamOidcProvider).GetUrl()).ToDataRes(types.String)
+	},
+	"aws.iam.oidcProvider.clientIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamOidcProvider).GetClientIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.oidcProvider.thumbprints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamOidcProvider).GetThumbprints()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.oidcProvider.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamOidcProvider).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.oidcProvider.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamOidcProvider).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.iam.accessAnalyzer.analyzers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamAccessAnalyzer).GetAnalyzers()).ToDataRes(types.Array(types.Resource("aws.iam.accessanalyzer.analyzer")))
@@ -7034,6 +7086,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIam).InstanceProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.iam.samlProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).SamlProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.oidcProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).OidcProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.usercredentialreportentry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUsercredentialreportentry).__id, ok = v.Value.(string)
 		return
@@ -7368,6 +7428,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.virtualmfadevice.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamVirtualmfadevice).User, ok = plugin.RawToTValue[*mqlAwsIamUser](v.Value, v.Error)
+		return
+	},
+	"aws.iam.samlProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamSamlProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.samlProvider.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamSamlProvider).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.samlProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamSamlProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.samlProvider.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamSamlProvider).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.samlProvider.validUntil": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamSamlProvider).ValidUntil, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.samlProvider.metadataDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamSamlProvider).MetadataDocument, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.samlProvider.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamSamlProvider).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.oidcProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamOidcProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.oidcProvider.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamOidcProvider).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.oidcProvider.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamOidcProvider).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.oidcProvider.clientIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamOidcProvider).ClientIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.oidcProvider.thumbprints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamOidcProvider).Thumbprints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.oidcProvider.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamOidcProvider).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.oidcProvider.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamOidcProvider).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.accessAnalyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16444,6 +16560,8 @@ type mqlAwsIam struct {
 	VirtualMfaDevices     plugin.TValue[[]any]
 	ServerCertificates    plugin.TValue[[]any]
 	InstanceProfiles      plugin.TValue[[]any]
+	SamlProviders         plugin.TValue[[]any]
+	OidcProviders         plugin.TValue[[]any]
 }
 
 // createAwsIam creates a new instance of this resource
@@ -16626,6 +16744,38 @@ func (c *mqlAwsIam) GetInstanceProfiles() *plugin.TValue[[]any] {
 		}
 
 		return c.instanceProfiles()
+	})
+}
+
+func (c *mqlAwsIam) GetSamlProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SamlProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "samlProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.samlProviders()
+	})
+}
+
+func (c *mqlAwsIam) GetOidcProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OidcProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "oidcProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.oidcProviders()
 	})
 }
 
@@ -17573,6 +17723,174 @@ func (c *mqlAwsIamVirtualmfadevice) GetUser() *plugin.TValue[*mqlAwsIamUser] {
 		}
 
 		return c.user()
+	})
+}
+
+// mqlAwsIamSamlProvider for the aws.iam.samlProvider resource
+type mqlAwsIamSamlProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsIamSamlProviderInternal
+	Arn              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	ValidUntil       plugin.TValue[*time.Time]
+	MetadataDocument plugin.TValue[string]
+	Tags             plugin.TValue[map[string]any]
+}
+
+// createAwsIamSamlProvider creates a new instance of this resource
+func createAwsIamSamlProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamSamlProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.samlProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamSamlProvider) MqlName() string {
+	return "aws.iam.samlProvider"
+}
+
+func (c *mqlAwsIamSamlProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamSamlProvider) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsIamSamlProvider) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlAwsIamSamlProvider) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsIamSamlProvider) GetValidUntil() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ValidUntil, func() (*time.Time, error) {
+		return c.validUntil()
+	})
+}
+
+func (c *mqlAwsIamSamlProvider) GetMetadataDocument() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MetadataDocument, func() (string, error) {
+		return c.metadataDocument()
+	})
+}
+
+func (c *mqlAwsIamSamlProvider) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsIamOidcProvider for the aws.iam.oidcProvider resource
+type mqlAwsIamOidcProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsIamOidcProviderInternal
+	Arn         plugin.TValue[string]
+	Url         plugin.TValue[string]
+	ClientIds   plugin.TValue[[]any]
+	Thumbprints plugin.TValue[[]any]
+	CreatedAt   plugin.TValue[*time.Time]
+	Tags        plugin.TValue[map[string]any]
+}
+
+// createAwsIamOidcProvider creates a new instance of this resource
+func createAwsIamOidcProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamOidcProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.oidcProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamOidcProvider) MqlName() string {
+	return "aws.iam.oidcProvider"
+}
+
+func (c *mqlAwsIamOidcProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamOidcProvider) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsIamOidcProvider) GetUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Url, func() (string, error) {
+		return c.url()
+	})
+}
+
+func (c *mqlAwsIamOidcProvider) GetClientIds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientIds, func() ([]any, error) {
+		return c.clientIds()
+	})
+}
+
+func (c *mqlAwsIamOidcProvider) GetThumbprints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Thumbprints, func() ([]any, error) {
+		return c.thumbprints()
+	})
+}
+
+func (c *mqlAwsIamOidcProvider) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsIamOidcProvider) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
 	})
 }
 
