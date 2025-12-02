@@ -315,13 +315,15 @@ func (g *mqlGithubOrganization) repositories() ([]any, error) {
 	}
 
 	repoCount := g.TotalPrivateRepos.Data + g.TotalPublicRepos.Data
-	workerPool := workerpool.New[[]*github.Repository](workers)
+	expectedPages := int(repoCount)/paginationPerPage + 1
+	workerCount := int(repoCount)/paginationPerPage + 1
+	workerPool := workerpool.New[[]*github.Repository](workerCount)
 	workerPool.Start()
 	defer workerPool.Close()
 
 	log.Debug().
-		Int("workers", workers).
-		Int64("total_repos", repoCount).
+		Int("workers", workerCount).
+		Int64("total-repos", repoCount).
 		Str("organization", g.Name.Data).
 		Msg("list repositories")
 
@@ -329,6 +331,19 @@ func (g *mqlGithubOrganization) repositories() ([]any, error) {
 		// exit as soon as we collect all repositories
 		reposLen := len(slices.Concat(workerPool.GetValues()...))
 		if reposLen >= int(repoCount) {
+			break
+		}
+
+		// failsafe: when total count is correct but some repos aren't returned from ListByOrg
+		// (e.g., due to permission issues), we stop after enough pages have been requested
+		// plus the number of pending workers to account for concurrency
+		if listOpts.Page > (int(workerPool.PendingRequests()) + expectedPages) {
+			log.Warn().
+				Int("found-repos", reposLen).
+				Int64("total-repos", repoCount).
+				Int("page", listOpts.Page).
+				Int("per-page", listOpts.PerPage).
+				Msg("Failsafe triggered, no more repos are returned")
 			break
 		}
 
