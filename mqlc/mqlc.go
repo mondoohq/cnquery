@@ -1339,6 +1339,10 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 		if resType == "" {
 			resType = types.Unset
 		}
+		// TODO: improve this by adding types to refs
+		if resType == types.Ref {
+			resType = types.Any
+		}
 
 		return &llx.Primitive{
 			Type: string(types.Map(types.String, resType)),

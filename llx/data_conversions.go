@@ -819,6 +819,21 @@ func (b *blockExecutor) resolveValue(arg *Primitive, ref uint64) (*RawData, uint
 			Type:  typ,
 			Value: res,
 		}, 0, nil
+	case types.MapLike:
+		res := make(map[string]any, len(arg.Map))
+		for k, v := range arg.Map {
+			c, ref, err := b.resolveValue(v, ref)
+			if ref != 0 || err != nil {
+				return nil, ref, err
+			}
+			res[k] = c.Value
+		}
+
+		// type is in arg.Value
+		return &RawData{
+			Type:  typ,
+			Value: res,
+		}, 0, nil
 	default:
 		v := arg.RawData()
 		return v, 0, v.Error
