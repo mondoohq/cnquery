@@ -756,7 +756,12 @@ aws.iam {
   virtualMfaDevices() []aws.iam.virtualmfadevice
   // List of server certificates stored in IAM
   serverCertificates() []dict
+  // List of IAM instance profiles in the account
   instanceProfiles() []aws.iam.instanceProfile
+  // List of SAML 2.0 identity providers configured in IAM
+  samlProviders() []aws.iam.samlProvider
+  // List of OpenID Connect (OIDC) identity providers configured in IAM
+  oidcProviders() []aws.iam.oidcProvider
 }
 
 // Entry in AWS IAM credential report
@@ -952,6 +957,38 @@ private aws.iam.virtualmfadevice @defaults("serialNumber") {
   enableDate time
   // User associated with the MFA device
   user() aws.iam.user
+}
+
+// AWS IAM SAML 2.0 identity provider
+private aws.iam.samlProvider @defaults("arn name") {
+  // ARN of the SAML provider
+  arn string
+  // Name of the SAML provider
+  name() string
+  // Time when the SAML provider was created
+  createdAt() time
+  // SAML metadata document expiration time
+  validUntil() time
+  // SAML metadata document in XML format
+  metadataDocument() string
+  // Tags associated with the SAML provider
+  tags() map[string]string
+}
+
+// AWS IAM OpenID Connect (OIDC) identity provider
+private aws.iam.oidcProvider @defaults("arn url") {
+  // ARN of the OIDC provider
+  arn string
+  // URL of the identity provider
+  url() string
+  // List of client IDs (audiences) for the OIDC provider
+  clientIds() []string
+  // List of server certificate thumbprints for the OIDC provider
+  thumbprints() []string
+  // Time when the OIDC provider was created
+  createdAt() time
+  // Tags associated with the OIDC provider
+  tags() map[string]string
 }
 
 // AWS IAM Access Analyzer resource (for assessing the configuration of AWS IAM Access Analyzer)
