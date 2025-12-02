@@ -196,6 +196,7 @@ resources:
       desc: |
         The `docker.file` resource provides fields for assessing Dockerfiles.
     fields:
+      env: {}
       file: {}
       instructions: {}
       stages: {}
@@ -214,6 +215,12 @@ resources:
     refs:
     - title: Dockerfile ADD reference
       url: https://docs.docker.com/reference/dockerfile/#add
+  docker.file.arg:
+    fields:
+      default: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   docker.file.copy:
     fields:
       chmod: {}
@@ -225,6 +232,12 @@ resources:
     refs:
     - title: Dockerfile COPY reference
       url: https://docs.docker.com/reference/dockerfile/#copy
+  docker.file.env:
+    fields:
+      name: {}
+      value: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   docker.file.expose:
     fields:
       port: {}
@@ -257,6 +270,7 @@ resources:
   docker.file.stage:
     fields:
       add: {}
+      arg: {}
       cmd: {}
       copy: {}
       entrypoint: {}
@@ -274,6 +288,11 @@ resources:
       url: https://docs.docker.com/reference/dockerfile/
     - title: Multi-stage builds
       url: https://docs.docker.com/build/building/multi-stage/
+  docker.file.stage.env:
+    fields:
+      name: {}
+      value: {}
+    min_mondoo_version: 9.0.0
   docker.file.user:
     fields:
       group: {}
