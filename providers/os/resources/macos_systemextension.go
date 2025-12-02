@@ -44,9 +44,9 @@ func (m *mqlMacos) systemExtensions() ([]any, error) {
 }
 
 func newMacosSystemExtension(runtime *plugin.Runtime, extension plist.Data, extensionPolicies []any) (*mqlMacosSystemExtension, error) {
-	uuid := extension.GetString("uniqueID")
-	identifier := extension.GetString("identifier")
-	teamID := extension.GetString("teamID")
+	uuid, _ := extension.GetString("uniqueID")
+	identifier, _ := extension.GetString("identifier")
+	teamID, _ := extension.GetString("teamID")
 	isMdmManaged := false
 	for i := range extensionPolicies {
 		policy, ok := extensionPolicies[i].(map[string]any)
@@ -80,15 +80,20 @@ func newMacosSystemExtension(runtime *plugin.Runtime, extension plist.Data, exte
 		}
 	}
 
+	version, _ := extension.GetString("bundleVersion", "CFBundleShortVersionString")
+	state, _ := extension.GetString("state")
+	categories, _ := extension.GetList("categories")
+	bundlePath, _ := extension.GetString("container", "bundlePath")
+
 	pkg, err := CreateResource(runtime, "macos.systemExtension", map[string]*llx.RawData{
 		"__id":       llx.StringData(uuid),
 		"identifier": llx.StringData(identifier),
 		"uuid":       llx.StringData(uuid),
-		"version":    llx.StringData(extension.GetString("bundleVersion", "CFBundleShortVersionString")),
-		"categories": llx.ArrayData(convert.SliceAnyToInterface(extension.GetList("categories")), types.String),
-		"state":      llx.StringData(extension.GetString("state")),
+		"version":    llx.StringData(version),
+		"categories": llx.ArrayData(convert.SliceAnyToInterface(categories), types.String),
+		"state":      llx.StringData(state),
 		"teamID":     llx.StringData(teamID),
-		"bundlePath": llx.StringData(extension.GetString("container", "bundlePath")),
+		"bundlePath": llx.StringData(bundlePath),
 		"mdmManaged": llx.BoolData(isMdmManaged),
 	})
 	if err != nil {

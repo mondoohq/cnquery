@@ -32,7 +32,10 @@ func (m *mqlMacos) computerName() (string, error) {
 	}
 	params := parsePlist.GetParams().Data.(map[string]any)
 	pParams := plist.Data(params)
-	name := pParams.GetString("System", "System", "ComputerName")
+	name, ok := pParams.GetString("System", "System", "ComputerName")
+	if !ok {
+		return "", errors.New("could not get computer name")
+	}
 	return name, nil
 }
 

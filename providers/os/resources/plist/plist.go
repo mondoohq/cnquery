@@ -69,30 +69,44 @@ func (d Data) GetPlistData(path ...string) Data {
 	return val
 }
 
-func (d Data) GetString(path ...string) string {
+func (d Data) getEntry(path ...string) any {
 	val := d
 	ok := false
 	for i := 0; i < len(path)-1; i++ {
 		if val == nil {
-			return ""
+			return nil
 		}
 		val, ok = val[path[i]].(map[string]any)
 		if !ok {
-			return ""
+			return nil
 		}
 	}
 	key := path[len(path)-1]
-	return val[key].(string)
+	return val[key]
 }
 
-func (d Data) GetList(path ...string) []any {
+func (d Data) GetString(path ...string) (string, bool) {
+	entry := d.getEntry(path...)
+	str, converted := entry.(string)
+	return str, converted
+}
+
+func (d Data) GetNumber(path ...string) (float64, bool) {
+	entry := d.getEntry(path...)
+	val, converted := entry.(float64)
+	return val, converted
+}
+
+func (d Data) GetList(path ...string) ([]any, bool) {
 	val := d
 	for i := 0; i < len(path)-1; i++ {
 		if val == nil {
-			return nil
+			return nil, false
 		}
 		val = val[path[i]].(map[string]any)
 	}
 	key := path[len(path)-1]
-	return val[key].([]any)
+
+	res, converted := val[key].([]interface{})
+	return res, converted
 }
