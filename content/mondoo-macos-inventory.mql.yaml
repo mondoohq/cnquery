@@ -40,27 +40,27 @@ packs:
       - uid: mondoo-macos-machine-model-identifier
         title: Machine model identifier
         mql: |
-          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['machine_model']
+          macos.hardware.machineModel
       - uid: mondoo-macos-machine-model-name
         title: Machine model name
         mql: |
-          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['machine_name']
+          macos.hardware.machineName
       - uid: mondoo-macos-model-part-number
         title: Model part number
         mql: |
-          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['model_number']
+          macos.hardware.modelNumber
       - uid: mondoo-macos-serial-number
         title: System serial number
         mql: |
-          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['serial_number']
+          macos.hardware.serialNumber
       - uid: mondoo-macos-cpu-type
         title: CPU type
         mql: |
-          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['chip_type']
+          macos.hardware.chipType
       - uid: mondoo-macos-physical-memory
         title: Physical memory size
         mql: |
-          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['physical_memory']
+          macos.hardware.physicalMemory
       - uid: mondoo-asset-info
         title: Asset information
         mql: asset { kind title platform name arch runtime version }
