@@ -35,8 +35,9 @@ type Connection struct {
 	fetchFn   func() (string, error)
 	fetchOnce sync.Once
 
-	fs      *FS
-	closeFN func()
+	fs            *FS
+	closeFN       func()
+	auditProvider *shared.AuditRuleProvider
 	// fields are exposed since the tar backend is re-used for the docker backend
 	PlatformKind         string
 	PlatformRuntime      string
@@ -75,6 +76,13 @@ func (c *Connection) Identifier() (string, error) {
 
 func (c *Connection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_FileSearch | shared.Capability_FindFile
+}
+
+func (c *Connection) AuditRuleProvider() *shared.AuditRuleProvider {
+	if c.auditProvider == nil {
+		c.auditProvider = shared.NewAuditRuleProvider(c)
+	}
+	return c.auditProvider
 }
 
 func (p *Connection) RunCommand(command string) (*shared.Command, error) {
