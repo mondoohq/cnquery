@@ -65,7 +65,6 @@ func (g *mqlGithubWorkflow) file() (*mqlGithubFile, error) {
 	ownerLogin := fullNameSplit[0]
 	repoName := fullNameSplit[1]
 
-	// Get the repository to find the default branch
 	repo, _, err := conn.Client().Repositories.Get(conn.Context(), ownerLogin, repoName)
 	if err != nil {
 		return nil, err
@@ -94,9 +93,8 @@ func (g *mqlGithubWorkflow) file() (*mqlGithubFile, error) {
 			Str("branch", defaultBranch).
 			Msg("failed to get workflow file contents")
 
-		// TODO: should this be an error
 		if strings.Contains(err.Error(), "404") {
-			return nil, nil
+			return nil, errors.New("file not found, got 404")
 		}
 		return nil, err
 	}
