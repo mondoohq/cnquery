@@ -27,12 +27,12 @@ func TestParseOptsToFilters(t *testing.T) {
 			"ec2:instance-ids": "iid-1,iid-2",
 			// Ec2DiscoveryFilters.ExcludeInstanceIds
 			"ec2:exclude:instance-ids": "iid-1,iid-2",
-			// Ec2DiscoveryFilters.Tags
-			"ec2:tag:key1": "val1",
-			"ec2:tag:key2": "val2",
-			// Ec2DiscoveryFilters.ExcludeTags
-			"ec2:exclude:tag:key1": "val1,val2",
-			"ec2:exclude:tag:key2": "val3",
+			// GeneralDiscoveryFilters.Tags
+			"tag:key1": "val1",
+			"tag:key2": "val2",
+			// GeneralDiscoveryFilters.ExcludeTags
+			"exclude:tag:key1": "val1,val2",
+			"exclude:tag:key2": "val3",
 			// EcrDiscoveryFilters.Tags
 			"ecr:tags": "tag1,tag2",
 			// EcrDiscoveryFilters.ExcludeTags

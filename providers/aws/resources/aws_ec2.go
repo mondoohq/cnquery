@@ -63,7 +63,6 @@ func initAwsEc2Eip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.Ec2(r)
 	ctx := context.Background()
-	// TODO: apply filters? probably not because it's coming from another resource.
 	address, err := svc.DescribeAddresses(ctx, &ec2.DescribeAddressesInput{Filters: []ec2types.Filter{{Name: aws.String("public-ip"), Values: []string{p}}}})
 	if err != nil {
 		return nil, nil, err
@@ -783,6 +782,7 @@ func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, filter
 		for _, reservation := range reservations.Reservations {
 			for _, instance := range reservation.Instances {
 				if shouldExcludeInstance(instance, filters) {
+					log.Debug().Interface("instance", instance.InstanceId).Msg("excluding ec2 instance due to filters")
 					continue
 				}
 				res = append(res, instance)

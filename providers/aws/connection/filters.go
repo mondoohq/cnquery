@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package connection
 
 import (
@@ -9,7 +12,6 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
-// TODO: Rename to General, Ec2, Ecr, Ecs for brevity.
 type DiscoveryFilters struct {
 	Ec2     Ec2DiscoveryFilters
 	Ecr     EcrDiscoveryFilters
@@ -30,8 +32,9 @@ func EmptyDiscoveryFilters() DiscoveryFilters {
 type GeneralDiscoveryFilters struct {
 	Regions        []string
 	ExcludeRegions []string
-	// Note: Tag values in the include/exclude filters can be in a CSV format, e.g. "env": "prod,staging"
-	Tags        map[string]string
+	// note: values can be in a CSV format, e.g. "env": "prod,staging"
+	Tags map[string]string
+	// note: values can be in a CSV format, e.g. "env": "prod,staging"
 	ExcludeTags map[string]string
 }
 
@@ -47,11 +50,10 @@ func (f GeneralDiscoveryFilters) MatchesIncludeTags(resourceTags map[string]stri
 			}
 		}
 	}
-
 	return false
 }
 
-// note: matching exclude tags means a resource should be skipped
+// note: if this function returns `true`, it means that the resource should be skipped
 func (f GeneralDiscoveryFilters) MatchesExcludeTags(resourceTags map[string]string) bool {
 	for k, csv := range f.ExcludeTags {
 		for v := range strings.SplitSeq(csv, ",") {
@@ -60,7 +62,6 @@ func (f GeneralDiscoveryFilters) MatchesExcludeTags(resourceTags map[string]stri
 			}
 		}
 	}
-
 	return false
 }
 
@@ -81,6 +82,7 @@ type Ec2DiscoveryFilters struct {
 	ExcludeInstanceIds []string
 }
 
+// note: if this function returns `true`, it means that the resource should be skipped
 func (f Ec2DiscoveryFilters) MatchesExcludeInstanceIds(instanceId *string) bool {
 	return instanceId != nil && slices.Contains(f.ExcludeInstanceIds, *instanceId)
 }

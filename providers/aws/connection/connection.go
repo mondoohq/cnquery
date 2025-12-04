@@ -155,13 +155,18 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 			d.General.Regions = append(d.General.Regions, strings.Split(v, ",")...)
 		case k == "exclude:regions":
 			d.General.ExcludeRegions = append(d.General.ExcludeRegions, strings.Split(v, ",")...)
+		case strings.HasPrefix(k, "tag:"):
+			d.General.Tags[strings.TrimPrefix(k, "tag:")] = v
+		case strings.HasPrefix(k, "exclude:tag:"):
+			d.General.ExcludeTags[strings.TrimPrefix(k, "exclude:tag:")] = v
 		case k == "ec2:instance-ids":
 			d.Ec2.InstanceIds = append(d.Ec2.InstanceIds, strings.Split(v, ",")...)
 		case k == "ec2:exclude:instance-ids":
 			d.Ec2.ExcludeInstanceIds = append(d.Ec2.ExcludeInstanceIds, strings.Split(v, ",")...)
-		case strings.HasPrefix(k, "tag:"), strings.HasPrefix(k, "ec2:tag:"):
+		// tag filters were moved to GeneralDiscoveryFilters, ec2 opts are kept for backward compatibility
+		case strings.HasPrefix(k, "ec2:tag:"):
 			d.General.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v
-		case strings.HasPrefix(k, "exclude:tag:"), strings.HasPrefix(k, "ec2:exclude:tag:"):
+		case strings.HasPrefix(k, "ec2:exclude:tag:"):
 			d.General.ExcludeTags[strings.TrimPrefix(k, "ec2:exclude:tag:")] = v
 		case k == "ecr:tags":
 			d.Ecr.Tags = append(d.Ecr.Tags, strings.Split(v, ",")...)

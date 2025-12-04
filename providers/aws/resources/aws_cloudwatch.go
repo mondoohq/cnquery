@@ -597,9 +597,6 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 					args["region"] = llx.StringData(region)
 					args["retentionInDays"] = llx.IntDataDefault(loggroup.RetentionInDays, 0)
 
-					// TODO: @vasil - svc.ListTagsForResource and pass in ARN to get tags of cloudwatch log group
-					// then use those to filter stuff :)
-
 					// add kms key if there is one
 					if loggroup.KmsKeyId != nil {
 						mqlKeyResource, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
