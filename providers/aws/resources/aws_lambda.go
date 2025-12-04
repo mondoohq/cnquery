@@ -85,7 +85,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 						maps.Copy(tags, tagsResp.Tags)
 					}
 
-					if !conn.Filters.General.MatchesIncludeTags(tags) || conn.Filters.General.MatchesExcludeTags(tags) {
+					if conn.Filters.General.IsFilteredOutByTags(tags) {
 						log.Debug().Interface("function", function.FunctionArn).Msg("excluding function due to filters")
 						continue
 					}

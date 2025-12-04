@@ -114,7 +114,7 @@ func (a *mqlAwsS3) buckets() ([]any, error) {
 				return nil, err
 			}
 
-			if !conn.Filters.General.MatchesIncludeTags(mapStringInterfaceToStringString(tags)) || conn.Filters.General.MatchesExcludeTags(mapStringInterfaceToStringString(tags)) {
+			if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
 				log.Debug().Interface("log_group", bucket.Name).Msg("excluding log group due to filters")
 				continue
 			}
