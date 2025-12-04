@@ -37,7 +37,7 @@ func (a *mqlAwsEcrImage) id() (string, error) {
 }
 
 func (a *mqlAwsEcr) images() ([]any, error) {
-	obj, err := CreateResource(a.MqlRuntime, "aws.ecr", map[string]*llx.RawData{})
+	obj, err := CreateResource(a.MqlRuntime, ResourceAwsEcr, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 			for _, imageTag := range image.ImageTags {
 				tags = append(tags, imageTag)
 			}
-			mqlImage, err := CreateResource(a.MqlRuntime, "aws.ecr.image",
+			mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
 				map[string]*llx.RawData{
 					"digest":     llx.StringDataPtr(image.ImageDigest),
 					"mediaType":  llx.StringDataPtr(image.ImageManifestMediaType),
@@ -190,13 +190,12 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 			}
 			return nil, err
 		}
-		for i := range res.ImageDetails {
-			image := res.ImageDetails[i]
+		for _, image := range res.ImageDetails {
 			tags := []any{}
-			for i := range image.ImageTags {
-				tags = append(tags, image.ImageTags[i])
+			for _, itag := range image.ImageTags {
+				tags = append(tags, itag)
 			}
-			mqlImage, err := CreateResource(a.MqlRuntime, "aws.ecr.image",
+			mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
 				map[string]*llx.RawData{
 					"arn":                  llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
 					"digest":               llx.StringDataPtr(image.ImageDigest),

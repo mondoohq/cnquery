@@ -59,7 +59,9 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []any{}
 
-			params := &ec2.DescribeVpcsInput{}
+			params := &ec2.DescribeVpcsInput{
+				// Filters: connection.Ec2TagFilters(conn.Filters.Ec2DiscoveryFilters.Tags),
+			}
 			paginator := ec2.NewDescribeVpcsPaginator(svc, params)
 			for paginator.HasMorePages() {
 				vpcs, err := paginator.NextPage(ctx)

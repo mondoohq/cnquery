@@ -102,7 +102,7 @@ var AllAPIResources = []string{
 
 func containsInterfaceSlice(sl []any, s string) bool {
 	for i := range sl {
-		if sl[i].(string) == s {
+		if ss, ok := sl[i].(string); ok && ss == s {
 			return true
 		}
 	}
@@ -257,7 +257,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range images.Data {
 			a := images.Data[i].(*mqlAwsEcrImage)
-			if !imageMatchesFilters(a, filters.EcrDiscoveryFilters) {
+			if !imageMatchesFilters(a, filters.Ecr) {
 				continue
 			}
 			ecrAsset := addConnectionInfoToEcrAsset(a, conn)
@@ -282,12 +282,12 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range containers.Data {
 			c := containers.Data[i].(*mqlAwsEcsContainer)
-			if !containerMatchesFilters(c, filters.EcsDiscoveryFilters) {
+			if !containerMatchesFilters(c, filters.Ecs) {
 				continue
 			}
 			assetList = append(assetList, addConnectionInfoToECSContainerAsset(c, accountId, conn))
 		}
-		if filters.EcsDiscoveryFilters.DiscoverInstances {
+		if filters.Ecs.DiscoverInstances {
 			containerInst := ecs.GetContainerInstances()
 			if containerInst == nil {
 				return assetList, nil
@@ -316,7 +316,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range containers.Data {
 			c := containers.Data[i].(*mqlAwsEcsContainer)
-			if !containerMatchesFilters(c, filters.EcsDiscoveryFilters) {
+			if !containerMatchesFilters(c, filters.Ecs) {
 				continue
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId,
@@ -330,7 +330,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 		}
 
 	case DiscoveryECRImageAPI:
-		res, err := NewResource(runtime, "aws.ecr", map[string]*llx.RawData{})
+		res, err := NewResource(runtime, ResourceAwsEcr, map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}
@@ -344,7 +344,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range images.Data {
 			a := images.Data[i].(*mqlAwsEcrImage)
-			if !imageMatchesFilters(a, filters.EcrDiscoveryFilters) {
+			if !imageMatchesFilters(a, filters.Ecr) {
 				continue
 			}
 			l := make(map[string]string)
@@ -362,7 +362,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				}, conn))
 		}
 	case DiscoveryEC2InstanceAPI:
-		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
+		res, err := NewResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}
@@ -388,7 +388,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				}, conn))
 		}
 	case DiscoverySSMInstanceAPI:
-		res, err := NewResource(runtime, "aws.ssm", map[string]*llx.RawData{})
+		res, err := NewResource(runtime, ResourceAwsSsm, map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}
@@ -413,7 +413,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				}, conn))
 		}
 	case DiscoveryS3Buckets:
-		res, err := NewResource(runtime, "aws.s3", map[string]*llx.RawData{})
+		res, err := NewResource(runtime, ResourceAwsS3, map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}

@@ -53,46 +53,6 @@ type awsConnectionOptions struct {
 	options map[string]string
 }
 
-type DiscoveryFilters struct {
-	Ec2DiscoveryFilters Ec2DiscoveryFilters
-	EcrDiscoveryFilters EcrDiscoveryFilters
-	EcsDiscoveryFilters EcsDiscoveryFilters
-	DiscoveryFilters    GeneralDiscoveryFilters
-}
-
-// ensure all underlying reference types aren't `nil`
-func EmptyDiscoveryFilters() DiscoveryFilters {
-	return DiscoveryFilters{
-		DiscoveryFilters:    GeneralDiscoveryFilters{Regions: []string{}, ExcludeRegions: []string{}},
-		Ec2DiscoveryFilters: Ec2DiscoveryFilters{InstanceIds: []string{}, ExcludeInstanceIds: []string{}, Tags: map[string]string{}, ExcludeTags: map[string]string{}},
-		EcrDiscoveryFilters: EcrDiscoveryFilters{Tags: []string{}, ExcludeTags: []string{}},
-		EcsDiscoveryFilters: EcsDiscoveryFilters{},
-	}
-}
-
-type GeneralDiscoveryFilters struct {
-	Regions        []string
-	ExcludeRegions []string
-}
-
-type Ec2DiscoveryFilters struct {
-	InstanceIds        []string
-	ExcludeInstanceIds []string
-	Tags               map[string]string
-	ExcludeTags        map[string]string
-}
-
-type EcrDiscoveryFilters struct {
-	Tags        []string
-	ExcludeTags []string
-}
-
-type EcsDiscoveryFilters struct {
-	OnlyRunningContainers bool
-	DiscoverImages        bool
-	DiscoverInstances     bool
-}
-
 func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *AwsConnection {
 	return &AwsConnection{
 		Connection: plugin.NewConnection(id, asset),
@@ -182,6 +142,7 @@ func (c *AwsConnection) SetAccountId(id string) {
 		c.accountId = id
 	}
 }
+
 func (p *AwsConnection) AccountId() string {
 	return p.accountId
 }
@@ -191,35 +152,35 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 	for k, v := range opts {
 		switch {
 		case k == "regions":
-			d.DiscoveryFilters.Regions = append(d.DiscoveryFilters.Regions, strings.Split(v, ",")...)
+			d.General.Regions = append(d.General.Regions, strings.Split(v, ",")...)
 		case k == "exclude:regions":
-			d.DiscoveryFilters.ExcludeRegions = append(d.DiscoveryFilters.ExcludeRegions, strings.Split(v, ",")...)
+			d.General.ExcludeRegions = append(d.General.ExcludeRegions, strings.Split(v, ",")...)
 		case k == "ec2:instance-ids":
-			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, strings.Split(v, ",")...)
+			d.Ec2.InstanceIds = append(d.Ec2.InstanceIds, strings.Split(v, ",")...)
 		case k == "ec2:exclude:instance-ids":
-			d.Ec2DiscoveryFilters.ExcludeInstanceIds = append(d.Ec2DiscoveryFilters.ExcludeInstanceIds, strings.Split(v, ",")...)
-		case strings.HasPrefix(k, "ec2:tag:"):
-			d.Ec2DiscoveryFilters.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v
-		case strings.HasPrefix(k, "ec2:exclude:tag:"):
-			d.Ec2DiscoveryFilters.ExcludeTags[strings.TrimPrefix(k, "ec2:exclude:tag:")] = v
+			d.Ec2.ExcludeInstanceIds = append(d.Ec2.ExcludeInstanceIds, strings.Split(v, ",")...)
+		case strings.HasPrefix(k, "tag:"), strings.HasPrefix(k, "ec2:tag:"):
+			d.General.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v
+		case strings.HasPrefix(k, "exclude:tag:"), strings.HasPrefix(k, "ec2:exclude:tag:"):
+			d.General.ExcludeTags[strings.TrimPrefix(k, "ec2:exclude:tag:")] = v
 		case k == "ecr:tags":
-			d.EcrDiscoveryFilters.Tags = append(d.EcrDiscoveryFilters.Tags, strings.Split(v, ",")...)
+			d.Ecr.Tags = append(d.Ecr.Tags, strings.Split(v, ",")...)
 		case k == "ecr:exclude:tags":
-			d.EcrDiscoveryFilters.ExcludeTags = append(d.EcrDiscoveryFilters.ExcludeTags, strings.Split(v, ",")...)
+			d.Ecr.ExcludeTags = append(d.Ecr.ExcludeTags, strings.Split(v, ",")...)
 		case k == "ecs:only-running-containers":
 			parsed, err := strconv.ParseBool(v)
 			if err == nil {
-				d.EcsDiscoveryFilters.OnlyRunningContainers = parsed
+				d.Ecs.OnlyRunningContainers = parsed
 			}
 		case k == "ecs:discover-instances":
 			parsed, err := strconv.ParseBool(v)
 			if err == nil {
-				d.EcsDiscoveryFilters.DiscoverInstances = parsed
+				d.Ecs.DiscoverInstances = parsed
 			}
 		case k == "ecs:discover-images":
 			parsed, err := strconv.ParseBool(v)
 			if err == nil {
-				d.EcsDiscoveryFilters.DiscoverImages = parsed
+				d.Ecs.DiscoverImages = parsed
 			}
 		}
 	}
@@ -399,7 +360,7 @@ func (h *AwsConnection) Regions() ([]string, error) {
 	}
 
 	// include filters have precedense over exclude filters. in any normal situation they should be mutually exclusive.
-	regionLimits := h.Filters.DiscoveryFilters.Regions
+	regionLimits := h.Filters.General.Regions
 	if len(regionLimits) > 0 {
 		log.Debug().Interface("regions", regionLimits).Msg("using region limits")
 		// cache the regions as part of the provider instance
@@ -433,7 +394,7 @@ func (h *AwsConnection) Regions() ([]string, error) {
 	// ensure excluded regions are discarded
 	filteredRegions := []string{}
 	for _, region := range regions {
-		if !slices.Contains(h.Filters.DiscoveryFilters.ExcludeRegions, region) {
+		if !slices.Contains(h.Filters.General.ExcludeRegions, region) {
 			filteredRegions = append(filteredRegions, region)
 		}
 	}
