@@ -28,7 +28,7 @@ import (
 )
 
 func (a *mqlAwsS3control) id() (string, error) {
-	return "aws.s3control", nil
+	return ResourceAwsS3control, nil
 }
 
 func (a *mqlAwsS3control) accountPublicAccessBlock() (any, error) {
@@ -52,7 +52,7 @@ func (a *mqlAwsS3control) accountPublicAccessBlock() (any, error) {
 }
 
 func (a *mqlAwsS3) id() (string, error) {
-	return "aws.s3", nil
+	return ResourceAwsS3, nil
 }
 
 func (a *mqlAwsS3) buckets() ([]any, error) {
@@ -94,7 +94,7 @@ func (a *mqlAwsS3) buckets() ([]any, error) {
 		if region == "" {
 			region = "us-east-1"
 		}
-		mqlS3Bucket, err := CreateResource(a.MqlRuntime, "aws.s3.bucket",
+		mqlS3Bucket, err := CreateResource(a.MqlRuntime, ResourceAwsS3Bucket,
 			map[string]*llx.RawData{
 				"name":        llx.StringDataPtr(bucket.Name),
 				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bucket.Name))),
@@ -106,6 +106,17 @@ func (a *mqlAwsS3) buckets() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		tags, err := mqlS3Bucket.(*mqlAwsS3Bucket).tags()
+		if err != nil {
+			return nil, err
+		}
+
+		if !conn.Filters.General.MatchesIncludeTags(mapStringInterfaceToStringString(tags)) || conn.Filters.General.MatchesExcludeTags(mapStringInterfaceToStringString(tags)) {
+			log.Debug().Interface("log_group", bucket.Name).Msg("excluding log group due to filters")
+			continue
+		}
+
 		res = append(res, mqlS3Bucket)
 	}
 
@@ -275,8 +286,7 @@ func (a *mqlAwsS3Bucket) tags() (map[string]any, error) {
 	}
 
 	res := map[string]any{}
-	for i := range tags.TagSet {
-		tag := tags.TagSet[i]
+	for _, tag := range tags.TagSet {
 		res[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 	}
 

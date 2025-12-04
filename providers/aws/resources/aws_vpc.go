@@ -59,7 +59,9 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []any{}
 
-			params := &ec2.DescribeVpcsInput{}
+			params := &ec2.DescribeVpcsInput{
+				Filters: conn.Filters.General.ToServerSideEc2Filters(),
+			}
 			paginator := ec2.NewDescribeVpcsPaginator(svc, params)
 			for paginator.HasMorePages() {
 				vpcs, err := paginator.NextPage(ctx)
@@ -72,16 +74,14 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 				}
 
 				for _, vpc := range vpcs.Vpcs {
-					name := ""
-					if vpc.Tags != nil {
-						for _, tag := range vpc.Tags {
-							if tag.Key != nil && *tag.Key == "Name" && tag.Value != nil {
-								name = *tag.Value
-								break
-							}
-						}
+					tagsMap := ec2TagsToMap(vpc.Tags)
+					if conn.Filters.General.MatchesExcludeTags(tagsMap) {
+						log.Debug().Interface("vpc", vpc.VpcId).Msg("excluding vpc due to filters")
+						continue
 					}
-					mqlVpc, err := CreateResource(a.MqlRuntime, "aws.vpc",
+
+					name := tagsMap["Name"]
+					mqlVpc, err := CreateResource(a.MqlRuntime, ResourceAwsVpc,
 						map[string]*llx.RawData{
 							"arn":                      llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(vpc.VpcId))),
 							"cidrBlock":                llx.StringDataPtr(vpc.CidrBlock),
@@ -129,7 +129,7 @@ type mqlAwsVpcNatgatewayAddressInternal struct {
 func (a *mqlAwsVpcNatgateway) vpc() (*mqlAwsVpc, error) {
 	if a.natGatewayCache.VpcId != nil {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.region, conn.AccountId(), convert.ToValue(a.natGatewayCache.VpcId)))})
+		res, err := NewResource(a.MqlRuntime, ResourceAwsVpc, map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.region, conn.AccountId(), convert.ToValue(a.natGatewayCache.VpcId)))})
 		if err != nil {
 			return nil, err
 		}
@@ -142,7 +142,7 @@ func (a *mqlAwsVpcNatgateway) vpc() (*mqlAwsVpc, error) {
 func (a *mqlAwsVpcNatgateway) subnet() (*mqlAwsVpcSubnet, error) {
 	if a.natGatewayCache.SubnetId != nil {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(a.natGatewayCache.SubnetId)))})
+		res, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(a.natGatewayCache.SubnetId)))})
 		if err != nil {
 			a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, err
@@ -155,7 +155,7 @@ func (a *mqlAwsVpcNatgateway) subnet() (*mqlAwsVpcSubnet, error) {
 
 func (a *mqlAwsVpcNatgatewayAddress) publicIp() (*mqlAwsEc2Eip, error) {
 	if a.natGatewayAddressCache.PublicIp != nil {
-		res, err := NewResource(a.MqlRuntime, "aws.ec2.eip", map[string]*llx.RawData{"publicIp": llx.StringDataPtr(a.natGatewayAddressCache.PublicIp), "region": llx.StringData(a.region)})
+		res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Eip, map[string]*llx.RawData{"publicIp": llx.StringDataPtr(a.natGatewayAddressCache.PublicIp), "region": llx.StringData(a.region)})
 		if err != nil {
 			return nil, err
 		}
@@ -172,8 +172,10 @@ func (a *mqlAwsVpc) natGateways() ([]any, error) {
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
 	endpoints := []any{}
-	filterKeyVal := "vpc-id"
-	params := &ec2.DescribeNatGatewaysInput{Filter: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpc}}}}
+
+	filters := conn.Filters.General.ToServerSideEc2Filters()
+	filters = append(filters, vpctypes.Filter{Name: aws.String("vpc-id"), Values: []string{vpc}})
+	params := &ec2.DescribeNatGatewaysInput{Filter: filters}
 	paginator := ec2.NewDescribeNatGatewaysPaginator(svc, params)
 	for paginator.HasMorePages() {
 		natgateways, err := paginator.NextPage(ctx)
@@ -183,9 +185,14 @@ func (a *mqlAwsVpc) natGateways() ([]any, error) {
 		}
 
 		for _, gw := range natgateways.NatGateways {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(gw.Tags)) {
+				log.Debug().Interface("nat_gateway", gw.NatGatewayId).Msg("excluding nat gateway due to filters")
+				continue
+			}
+
 			addresses := []any{}
 			for _, address := range gw.NatGatewayAddresses {
-				mqlNatGatewayAddress, err := CreateResource(a.MqlRuntime, "aws.vpc.natgateway.address",
+				mqlNatGatewayAddress, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgatewayAddress,
 					map[string]*llx.RawData{
 						"allocationId":       llx.StringDataPtr(address.AllocationId),
 						"networkInterfaceId": llx.StringDataPtr(address.NetworkInterfaceId),
@@ -206,10 +213,10 @@ func (a *mqlAwsVpc) natGateways() ([]any, error) {
 				"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
 				"state":        llx.StringData(string(gw.State)),
 				"tags":         llx.MapData(Ec2TagsToMap(gw.Tags), types.String),
-				"addresses":    llx.ArrayData(addresses, "aws.vpc.natgatewayaddress"),
+				"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
 			}
 
-			mqlNatGat, err := CreateResource(a.MqlRuntime, "aws.vpc.natgateway", args)
+			mqlNatGat, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgateway, args)
 			if err != nil {
 				return nil, err
 			}
@@ -233,14 +240,10 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
 	endpoints := []any{}
-	params := &ec2.DescribeVpcEndpointsInput{
-		Filters: []vpctypes.Filter{
-			{
-				Name:   aws.String("vpc-id"),
-				Values: []string{vpcId},
-			},
-		},
-	}
+
+	filters := conn.Filters.General.ToServerSideEc2Filters()
+	filters = append(filters, vpctypes.Filter{Name: aws.String("vpc-id"), Values: []string{vpcId}})
+	params := &ec2.DescribeVpcEndpointsInput{Filters: filters}
 	paginator := ec2.NewDescribeVpcEndpointsPaginator(svc, params)
 	for paginator.HasMorePages() {
 		endpointsRes, err := paginator.NextPage(ctx)
@@ -249,11 +252,16 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 		}
 
 		for _, endpoint := range endpointsRes.VpcEndpoints {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(endpoint.Tags)) {
+				log.Debug().Interface("vpc_endpoint", endpoint.VpcEndpointId).Msg("excluding vpc endpoint due to filters")
+				continue
+			}
+
 			var subnetIds []any
 			for _, subnet := range endpoint.SubnetIds {
 				subnetIds = append(subnetIds, subnet)
 			}
-			mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.vpc.endpoint",
+			mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsVpcEndpoint,
 				map[string]*llx.RawData{
 					"id":                llx.StringData(fmt.Sprintf("%s/%s", a.Region.Data, *endpoint.VpcEndpointId)),
 					"policyDocument":    llx.StringDataPtr(endpoint.PolicyDocument),
@@ -289,15 +297,9 @@ func (a *mqlAwsVpc) serviceEndpoints() ([]any, error) {
 		endpoints = []any{}
 	)
 
-	paginator := ec2.NewDescribeVpcEndpointsPaginator(svc, &ec2.DescribeVpcEndpointsInput{
-		Filters: []vpctypes.Filter{
-			{
-				Name:   aws.String("vpc-id"),
-				Values: []string{vpcID},
-			},
-		},
-	})
-
+	filters := conn.Filters.General.ToServerSideEc2Filters()
+	filters = append(filters, vpctypes.Filter{Name: aws.String("vpc-id"), Values: []string{vpcID}})
+	paginator := ec2.NewDescribeVpcEndpointsPaginator(svc, &ec2.DescribeVpcEndpointsInput{Filters: filters})
 	for paginator.HasMorePages() {
 		resp, err := paginator.NextPage(ctx)
 		if err != nil {
@@ -305,10 +307,15 @@ func (a *mqlAwsVpc) serviceEndpoints() ([]any, error) {
 		}
 
 		for _, endpoint := range resp.VpcEndpoints {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(endpoint.Tags)) {
+				log.Debug().Interface("vpc_endpoint", endpoint.VpcEndpointId).Msg("excluding vpc endpoint due to filters")
+				continue
+			}
+
 			dnsNames := convert.Into(endpoint.DnsEntries,
 				func(d vpctypes.DnsEntry) any { return convert.ToValue(d.DnsName) },
 			)
-			mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.vpc.serviceEndpoint",
+			mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsVpcServiceEndpoint,
 				map[string]*llx.RawData{
 					"id":       llx.StringDataPtr(endpoint.VpcEndpointId),
 					"name":     llx.StringDataPtr(endpoint.ServiceName),
@@ -525,7 +532,7 @@ func (a *mqlAwsVpcPeeringConnection) requestorVpc() (*mqlAwsVpcPeeringConnection
 	for i := range acceptor.Ipv6CidrBlockSet {
 		ipv6 = append(ipv6, *acceptor.Ipv6CidrBlockSet[i].Ipv6CidrBlock)
 	}
-	mql, err := CreateResource(a.MqlRuntime, "aws.vpc.peeringConnection.peeringVpc",
+	mql, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnectionPeeringVpc,
 		map[string]*llx.RawData{
 			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
 			"ipv4CiderBlocks":                 llx.ArrayData(ipv4, types.String),
@@ -596,8 +603,9 @@ func (a *mqlAwsVpc) routeTables() ([]any, error) {
 	ctx := context.Background()
 	res := []any{}
 
-	filterName := "vpc-id"
-	params := &ec2.DescribeRouteTablesInput{Filters: []vpctypes.Filter{{Name: &filterName, Values: []string{vpcVal}}}}
+	filters := conn.Filters.General.ToServerSideEc2Filters()
+	filters = append(filters, vpctypes.Filter{Name: aws.String("vpc-id"), Values: []string{vpcVal}})
+	params := &ec2.DescribeRouteTablesInput{Filters: filters}
 	paginator := ec2.NewDescribeRouteTablesPaginator(svc, params)
 	for paginator.HasMorePages() {
 		routeTables, err := paginator.NextPage(ctx)
@@ -606,11 +614,16 @@ func (a *mqlAwsVpc) routeTables() ([]any, error) {
 		}
 
 		for _, routeTable := range routeTables.RouteTables {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(routeTable.Tags)) {
+				log.Debug().Interface("route_table", routeTable.RouteTableId).Msg("excluding route table due to filters")
+				continue
+			}
+
 			dictRoutes, err := convert.JsonToDictSlice(routeTable.Routes)
 			if err != nil {
 				return nil, err
 			}
-			mqlRouteTable, err := CreateResource(a.MqlRuntime, "aws.vpc.routetable",
+			mqlRouteTable, err := CreateResource(a.MqlRuntime, ResourceAwsVpcRoutetable,
 				map[string]*llx.RawData{
 					"id":     llx.StringDataPtr(routeTable.RouteTableId),
 					"routes": llx.ArrayData(dictRoutes, types.Any),
@@ -634,13 +647,12 @@ type mqlAwsVpcRoutetableInternal struct {
 
 func (a *mqlAwsVpcRoutetable) associations() ([]any, error) {
 	res := []any{}
-	for i := range a.cacheAssociations {
-		assoc := a.cacheAssociations[i]
+	for _, assoc := range a.cacheAssociations {
 		state, err := convert.JsonToDict(assoc.AssociationState)
 		if err != nil {
 			return nil, err
 		}
-		mqlAssoc, err := CreateResource(a.MqlRuntime, "aws.vpc.routetable.association", map[string]*llx.RawData{
+		mqlAssoc, err := CreateResource(a.MqlRuntime, ResourceAwsVpcRoutetableAssociation, map[string]*llx.RawData{
 			"routeTableAssociationId": llx.StringDataPtr(assoc.RouteTableAssociationId),
 			"associationsState":       llx.DictData(state),
 			"gatewayId":               llx.StringDataPtr(assoc.GatewayId),
@@ -688,8 +700,9 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 	ctx := context.Background()
 	res := []any{}
 
-	filterName := "vpc-id"
-	params := &ec2.DescribeSubnetsInput{Filters: []vpctypes.Filter{{Name: &filterName, Values: []string{vpcVal}}}}
+	filters := conn.Filters.General.ToServerSideEc2Filters()
+	filters = append(filters, vpctypes.Filter{Name: aws.String("vpc-id"), Values: []string{vpcVal}})
+	params := &ec2.DescribeSubnetsInput{Filters: filters}
 	paginator := ec2.NewDescribeSubnetsPaginator(svc, params)
 	for paginator.HasMorePages() {
 		subnets, err := paginator.NextPage(ctx)
@@ -698,7 +711,12 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 		}
 
 		for _, subnet := range subnets.Subnets {
-			subnetResource, err := CreateResource(a.MqlRuntime, "aws.vpc.subnet",
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(subnet.Tags)) {
+				log.Debug().Interface("subnet", subnet.SubnetId).Msg("excluding subnet due to filters")
+				continue
+			}
+
+			subnetResource, err := CreateResource(a.MqlRuntime, ResourceAwsVpcSubnet,
 				map[string]*llx.RawData{
 					"arn":                         llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(subnet.SubnetId))),
 					"assignIpv6AddressOnCreation": llx.BoolDataPtr(subnet.AssignIpv6AddressOnCreation),
