@@ -29,7 +29,7 @@ import (
 )
 
 func (e *mqlAwsEc2) id() (string, error) {
-	return "aws.ec2", nil
+	return ResourceAwsEc2, nil
 }
 
 func Ec2TagsToMap(tags []ec2types.Tag) map[string]any {
@@ -97,7 +97,7 @@ func (a *mqlAwsEc2Eip) instance() (*mqlAwsEc2Instance, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	if a.eipCache.InstanceId != nil {
 		instanceId := a.eipCache.InstanceId
-		mqlEc2Instance, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
+		mqlEc2Instance, err := NewResource(a.MqlRuntime, ResourceAwsEc2Instance,
 			map[string]*llx.RawData{
 				"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToValue(instanceId))),
 			})
@@ -143,7 +143,9 @@ func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []any{}
 
-			params := &ec2.DescribeAddressesInput{} // no pagination
+			params := &ec2.DescribeAddressesInput{
+				Filters: conn.Filters.General.ToServerSideEc2Filters(),
+			} // no pagination
 			addresses, err := svc.DescribeAddresses(ctx, params)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
@@ -153,10 +155,13 @@ func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
 				return nil, err
 			}
 
-			for i := range addresses.Addresses {
-				add := addresses.Addresses[i]
-				attached := add.AllocationId != nil
+			for _, add := range addresses.Addresses {
+				if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(add.Tags)) {
+					log.Debug().Interface("acl", add.AllocationId).Msg("excluding elastic ip address due to filters")
+					continue
+				}
 
+				attached := add.AllocationId != nil
 				args := map[string]*llx.RawData{
 					"publicIp":                llx.StringDataPtr(add.PublicIp),
 					"attached":                llx.BoolData(attached), // this is false if allocationId is null and true otherwise
@@ -167,14 +172,13 @@ func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
 					"tags":                    llx.MapData(Ec2TagsToMap(add.Tags), types.String),
 					"region":                  llx.StringData(region),
 				}
-				mqlAddress, err := CreateResource(a.MqlRuntime, "aws.ec2.eip", args)
+				mqlAddress, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Eip, args)
 				if err != nil {
 					return nil, err
 				}
 				mqlAddress.(*mqlAwsEc2Eip).eipCache = add
 
 				res = append(res, mqlAddress)
-
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -220,7 +224,9 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 			ctx := context.Background()
 			res := []any{}
 
-			params := &ec2.DescribeNetworkAclsInput{}
+			params := &ec2.DescribeNetworkAclsInput{
+				Filters: conn.Filters.General.ToServerSideEc2Filters(),
+			}
 			paginator := ec2.NewDescribeNetworkAclsPaginator(svc, params)
 			for paginator.HasMorePages() {
 				networkAcls, err := paginator.NextPage(ctx)
@@ -233,9 +239,13 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 				}
 
 				for _, acl := range networkAcls.NetworkAcls {
+					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(acl.Tags)) {
+						log.Debug().Interface("acl", acl.NetworkAclId).Msg("excluding network acl due to filters")
+						continue
+					}
 					assoc := []any{}
 					for _, association := range acl.Associations {
-						mqlNetworkAclAssoc, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.association",
+						mqlNetworkAclAssoc, err := CreateResource(a.MqlRuntime, ResourceAwsEc2NetworkaclAssociation,
 							map[string]*llx.RawData{
 								"associationId": llx.StringDataPtr(association.NetworkAclAssociationId),
 								"networkAclId":  llx.StringDataPtr(association.NetworkAclId),
@@ -246,14 +256,14 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 						}
 					}
 
-					mqlNetworkAcl, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl",
+					mqlNetworkAcl, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Networkacl,
 						map[string]*llx.RawData{
 							"arn":          llx.StringData(fmt.Sprintf(networkAclArnPattern, region, conn.AccountId(), convert.ToValue(acl.NetworkAclId))),
 							"id":           llx.StringDataPtr(acl.NetworkAclId),
 							"region":       llx.StringData(region),
 							"isDefault":    llx.BoolDataPtr(acl.IsDefault),
 							"tags":         llx.MapData(Ec2TagsToMap(acl.Tags), types.String),
-							"associations": llx.ArrayData(assoc, "aws.ec2.networkacl.association"),
+							"associations": llx.ArrayData(assoc, types.Type(ResourceAwsEc2NetworkaclAssociation)),
 						})
 					if err != nil {
 						return nil, err
@@ -310,7 +320,7 @@ func (a *mqlAwsEc2Networkacl) entries() ([]any, error) {
 			"id":            llx.StringData(entryId),
 		}
 		if entry.PortRange != nil {
-			mqlPortRange, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.entry.portrange",
+			mqlPortRange, err := CreateResource(a.MqlRuntime, ResourceAwsEc2NetworkaclEntryPortrange,
 				map[string]*llx.RawData{
 					"from": llx.IntDataDefault(entry.PortRange.From, -1),
 					"to":   llx.IntDataDefault(entry.PortRange.To, -1),
@@ -324,7 +334,7 @@ func (a *mqlAwsEc2Networkacl) entries() ([]any, error) {
 			args["portRange"] = llx.NilData
 		}
 
-		mqlAclEntry, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.entry", args)
+		mqlAclEntry, err := CreateResource(a.MqlRuntime, ResourceAwsEc2NetworkaclEntry, args)
 		if err != nil {
 			return nil, err
 		}
@@ -381,7 +391,9 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 			ctx := context.Background()
 			res := []any{}
 
-			params := &ec2.DescribeSecurityGroupsInput{}
+			params := &ec2.DescribeSecurityGroupsInput{
+				Filters: conn.Filters.General.ToServerSideEc2Filters(),
+			}
 			paginator := ec2.NewDescribeSecurityGroupsPaginator(svc, params)
 			for paginator.HasMorePages() {
 				securityGroups, err := paginator.NextPage(ctx)
@@ -394,6 +406,11 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 				}
 
 				for _, group := range securityGroups.SecurityGroups {
+					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(group.Tags)) {
+						log.Debug().Interface("securitygroup", group.GroupId).Msg("excluding security group due to filters")
+						continue
+					}
+
 					args := map[string]*llx.RawData{
 						"arn":         llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), convert.ToValue(group.GroupId))),
 						"id":          llx.StringDataPtr(group.GroupId),
@@ -403,7 +420,7 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 						"region":      llx.StringData(region),
 					}
 
-					mqlEc2SecurityGroup, err := CreateResource(a.MqlRuntime, "aws.ec2.securitygroup", args)
+					mqlEc2SecurityGroup, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Securitygroup, args)
 					if err != nil {
 						return nil, err
 					}
@@ -425,7 +442,7 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 func (a *mqlAwsEc2Securitygroup) vpc() (*mqlAwsVpc, error) {
 	if a.cacheVpc != nil {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+		mqlVpc, err := NewResource(a.MqlRuntime, ResourceAwsVpc,
 			map[string]*llx.RawData{
 				"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.region, conn.AccountId(), convert.ToValue(a.cacheVpc))),
 			})
@@ -440,9 +457,7 @@ func (a *mqlAwsEc2Securitygroup) vpc() (*mqlAwsVpc, error) {
 
 func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]any, error) {
 	mqlIpPermissions := []any{}
-	for p := range a.cacheIpPerms {
-		permission := a.cacheIpPerms[p]
-
+	for p, permission := range a.cacheIpPerms {
 		ipRanges := []any{}
 		for r := range permission.IpRanges {
 			iprange := permission.IpRanges[r]
@@ -466,7 +481,7 @@ func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlSecurityGroupIpPermission, err := CreateResource(a.MqlRuntime, "aws.ec2.securitygroup.ippermission",
+		mqlSecurityGroupIpPermission, err := CreateResource(a.MqlRuntime, ResourceAwsEc2SecuritygroupIppermission,
 			map[string]*llx.RawData{
 				"id":               llx.StringData(a.groupId + "-" + strconv.Itoa(p)),
 				"fromPort":         llx.IntDataDefault(permission.FromPort, -1),
@@ -514,7 +529,7 @@ func (a *mqlAwsEc2Securitygroup) ipPermissionsEgress() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlSecurityGroupIpPermission, err := CreateResource(a.MqlRuntime, "aws.ec2.securitygroup.ippermission",
+		mqlSecurityGroupIpPermission, err := CreateResource(a.MqlRuntime, ResourceAwsEc2SecuritygroupIppermission,
 			map[string]*llx.RawData{
 				"id":               llx.StringData(a.groupId + "-" + strconv.Itoa(p) + "-egress"),
 				"fromPort":         llx.IntDataDefault(permission.FromPort, -1),
@@ -571,7 +586,9 @@ func (a *mqlAwsEc2) getKeypairs(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []any{}
 
-			params := &ec2.DescribeKeyPairsInput{}
+			params := &ec2.DescribeKeyPairsInput{
+				Filters: conn.Filters.General.ToServerSideEc2Filters(),
+			}
 			keyPairs, err := svc.DescribeKeyPairs(ctx, params)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
@@ -581,9 +598,12 @@ func (a *mqlAwsEc2) getKeypairs(conn *connection.AwsConnection) []*jobpool.Job {
 				return nil, err
 			}
 
-			for i := range keyPairs.KeyPairs {
-				kp := keyPairs.KeyPairs[i]
-				mqlKeypair, err := CreateResource(a.MqlRuntime, "aws.ec2.keypair",
+			for _, kp := range keyPairs.KeyPairs {
+				if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(kp.Tags)) {
+					log.Debug().Interface("keypair", kp.KeyPairId).Msg("excluding keypair due to filters")
+					continue
+				}
+				mqlKeypair, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Keypair,
 					map[string]*llx.RawData{
 						"arn":         llx.StringData(fmt.Sprintf(keypairArnPattern, conn.AccountId(), region, convert.ToValue(kp.KeyPairId))),
 						"fingerprint": llx.StringDataPtr(kp.KeyFingerprint),
@@ -748,28 +768,26 @@ func (a *mqlAwsEc2) instances() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, filters connection.DiscoveryFilters) ([]ec2types.Reservation, error) {
-	res := []ec2types.Reservation{}
-	params := &ec2.DescribeInstancesInput{
-		Filters: []ec2types.Filter{},
-	}
-	for k, v := range filters.Ec2DiscoveryFilters.Tags {
-		params.Filters = append(params.Filters, ec2types.Filter{
-			Name:   aws.String(fmt.Sprintf("tag:%s", k)),
-			Values: strings.Split(v, ","),
-		})
-	}
-	if len(filters.Ec2DiscoveryFilters.InstanceIds) > 0 {
-		params.InstanceIds = filters.Ec2DiscoveryFilters.InstanceIds
-	}
-
-	paginator := ec2.NewDescribeInstancesPaginator(svc, params)
+func (a *mqlAwsEc2) getEc2Instances(ctx context.Context, svc *ec2.Client, filters connection.DiscoveryFilters) ([]ec2types.Instance, error) {
+	res := []ec2types.Instance{}
+	paginator := ec2.NewDescribeInstancesPaginator(svc, &ec2.DescribeInstancesInput{
+		Filters:     filters.General.ToServerSideEc2Filters(),
+		InstanceIds: filters.Ec2.InstanceIds,
+	})
 	for paginator.HasMorePages() {
-		instances, err := paginator.NextPage(ctx)
+		reservations, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, instances.Reservations...)
+		for _, reservation := range reservations.Reservations {
+			for _, instance := range reservation.Instances {
+				if shouldExcludeInstance(instance, filters) {
+					log.Debug().Interface("instance", instance.InstanceId).Msg("excluding ec2 instance due to filters")
+					continue
+				}
+				res = append(res, instance)
+			}
+		}
 	}
 	return res, nil
 }
@@ -815,97 +833,90 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	return tasks
 }
 
-func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, regionVal string) ([]any, error) {
+func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal string) ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
-	for _, reservation := range instances {
-		for _, instance := range reservation.Instances {
-			if shouldExcludeInstance(instance, conn.Filters.Ec2DiscoveryFilters) {
-				continue
-			}
-			mqlDevices := []any{}
-			for i := range instance.BlockDeviceMappings {
-				device := instance.BlockDeviceMappings[i]
-
-				mqlInstanceDevice, err := CreateResource(a.MqlRuntime, "aws.ec2.instance.device",
-					map[string]*llx.RawData{
-						"deleteOnTermination": llx.BoolData(convert.ToValue(device.Ebs.DeleteOnTermination)),
-						"status":              llx.StringData(string(device.Ebs.Status)),
-						"volumeId":            llx.StringData(convert.ToValue(device.Ebs.VolumeId)),
-						"deviceName":          llx.StringData(convert.ToValue(device.DeviceName)),
-					})
-				if err != nil {
-					return nil, err
-				}
-				mqlDevices = append(mqlDevices, mqlInstanceDevice)
-			}
-
-			stateReason, err := convert.JsonToDict(instance.StateReason)
+	for _, instance := range instances {
+		mqlDevices := []any{}
+		for _, device := range instance.BlockDeviceMappings {
+			mqlInstanceDevice, err := CreateResource(a.MqlRuntime, ResourceAwsEc2InstanceDevice,
+				map[string]*llx.RawData{
+					"deleteOnTermination": llx.BoolData(convert.ToValue(device.Ebs.DeleteOnTermination)),
+					"status":              llx.StringData(string(device.Ebs.Status)),
+					"volumeId":            llx.StringData(convert.ToValue(device.Ebs.VolumeId)),
+					"deviceName":          llx.StringData(convert.ToValue(device.DeviceName)),
+				})
 			if err != nil {
 				return nil, err
 			}
-
-			var stateTransitionTime time.Time
-			reg := regexp.MustCompile(`.*\((\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}) GMT\)`)
-			timeString := reg.FindStringSubmatch(convert.ToValue(instance.StateTransitionReason))
-			if len(timeString) == 2 {
-				stateTransitionTime, err = time.Parse(time.DateTime, timeString[1])
-				if err != nil {
-					log.Error().Err(err).Msg("cannot parse state transition time for ec2 instance")
-					stateTransitionTime = llx.NeverPastTime
-				}
-			}
-			args := map[string]*llx.RawData{
-				"architecture":       llx.StringData(string(instance.Architecture)),
-				"arn":                llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.InstanceId))),
-				"detailedMonitoring": llx.StringData(string(instance.Monitoring.State)),
-				"deviceMappings":     llx.ArrayData(mqlDevices, types.Resource("aws.ec2.instance.device")),
-				"ebsOptimized":       llx.BoolDataPtr(instance.EbsOptimized),
-				"enaSupported":       llx.BoolDataPtr(instance.EnaSupport),
-				"hypervisor":         llx.StringData(string(instance.Hypervisor)),
-				"instanceId":         llx.StringDataPtr(instance.InstanceId),
-				"instanceLifecycle":  llx.StringData(string(instance.InstanceLifecycle)),
-				"instanceType":       llx.StringData(string(instance.InstanceType)),
-				"launchTime":         llx.TimeDataPtr(instance.LaunchTime),
-				"platformDetails":    llx.StringDataPtr(instance.PlatformDetails),
-				"privateDnsName":     llx.StringDataPtr(instance.PrivateDnsName),
-				"privateIp":          llx.StringDataPtr(instance.PrivateIpAddress),
-				"publicDnsName":      llx.StringDataPtr(instance.PublicDnsName),
-				"publicIp":           llx.StringDataPtr(instance.PublicIpAddress),
-				"region":             llx.StringData(regionVal),
-				"rootDeviceName":     llx.StringDataPtr(instance.RootDeviceName),
-				"rootDeviceType":     llx.StringData(string(instance.RootDeviceType)),
-				"state":              llx.StringData(string(instance.State.Name)),
-				"stateReason":        llx.MapData(stateReason, types.Any),
-				// "iamInstanceProfile":    llx.MapData(iamInstanceProfile, types.Any),
-				"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
-				"stateTransitionTime":   llx.TimeData(stateTransitionTime),
-				"tags":                  llx.MapData(Ec2TagsToMap(instance.Tags), types.String),
-				"tpmSupport":            llx.StringDataPtr(instance.TpmSupport),
-			}
-
-			if instance.MetadataOptions != nil {
-				args["httpEndpoint"] = llx.StringData(string(instance.MetadataOptions.HttpEndpoint))
-				args["httpTokens"] = llx.StringData(string(instance.MetadataOptions.HttpTokens))
-			} else {
-				args["httpEndpoint"] = llx.NilData
-				args["httpTokens"] = llx.NilData
-			}
-			// add vpc if there is one
-			if instance.VpcId != nil {
-				arn := fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.VpcId))
-				args["vpcArn"] = llx.StringData(arn)
-			} else {
-				args["vpcArn"] = llx.NilData
-			}
-
-			mqlEc2Instance, err := CreateResource(a.MqlRuntime, "aws.ec2.instance", args)
-			if err != nil {
-				return nil, err
-			}
-			mqlEc2Instance.(*mqlAwsEc2Instance).instanceCache = instance
-			res = append(res, mqlEc2Instance)
+			mqlDevices = append(mqlDevices, mqlInstanceDevice)
 		}
+
+		stateReason, err := convert.JsonToDict(instance.StateReason)
+		if err != nil {
+			return nil, err
+		}
+
+		var stateTransitionTime time.Time
+		reg := regexp.MustCompile(`.*\((\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}) GMT\)`)
+		timeString := reg.FindStringSubmatch(convert.ToValue(instance.StateTransitionReason))
+		if len(timeString) == 2 {
+			stateTransitionTime, err = time.Parse(time.DateTime, timeString[1])
+			if err != nil {
+				log.Error().Err(err).Msg("cannot parse state transition time for ec2 instance")
+				stateTransitionTime = llx.NeverPastTime
+			}
+		}
+		args := map[string]*llx.RawData{
+			"architecture":       llx.StringData(string(instance.Architecture)),
+			"arn":                llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.InstanceId))),
+			"detailedMonitoring": llx.StringData(string(instance.Monitoring.State)),
+			"deviceMappings":     llx.ArrayData(mqlDevices, types.Type(ResourceAwsEc2InstanceDevice)),
+			"ebsOptimized":       llx.BoolDataPtr(instance.EbsOptimized),
+			"enaSupported":       llx.BoolDataPtr(instance.EnaSupport),
+			"hypervisor":         llx.StringData(string(instance.Hypervisor)),
+			"instanceId":         llx.StringDataPtr(instance.InstanceId),
+			"instanceLifecycle":  llx.StringData(string(instance.InstanceLifecycle)),
+			"instanceType":       llx.StringData(string(instance.InstanceType)),
+			"launchTime":         llx.TimeDataPtr(instance.LaunchTime),
+			"platformDetails":    llx.StringDataPtr(instance.PlatformDetails),
+			"privateDnsName":     llx.StringDataPtr(instance.PrivateDnsName),
+			"privateIp":          llx.StringDataPtr(instance.PrivateIpAddress),
+			"publicDnsName":      llx.StringDataPtr(instance.PublicDnsName),
+			"publicIp":           llx.StringDataPtr(instance.PublicIpAddress),
+			"region":             llx.StringData(regionVal),
+			"rootDeviceName":     llx.StringDataPtr(instance.RootDeviceName),
+			"rootDeviceType":     llx.StringData(string(instance.RootDeviceType)),
+			"state":              llx.StringData(string(instance.State.Name)),
+			"stateReason":        llx.MapData(stateReason, types.Any),
+			// "iamInstanceProfile":    llx.MapData(iamInstanceProfile, types.Any),
+			"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
+			"stateTransitionTime":   llx.TimeData(stateTransitionTime),
+			"tags":                  llx.MapData(Ec2TagsToMap(instance.Tags), types.String),
+			"tpmSupport":            llx.StringDataPtr(instance.TpmSupport),
+		}
+
+		if instance.MetadataOptions != nil {
+			args["httpEndpoint"] = llx.StringData(string(instance.MetadataOptions.HttpEndpoint))
+			args["httpTokens"] = llx.StringData(string(instance.MetadataOptions.HttpTokens))
+		} else {
+			args["httpEndpoint"] = llx.NilData
+			args["httpTokens"] = llx.NilData
+		}
+		// add vpc if there is one
+		if instance.VpcId != nil {
+			arn := fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.VpcId))
+			args["vpcArn"] = llx.StringData(arn)
+		} else {
+			args["vpcArn"] = llx.NilData
+		}
+
+		mqlEc2Instance, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Instance, args)
+		if err != nil {
+			return nil, err
+		}
+		mqlEc2Instance.(*mqlAwsEc2Instance).instanceCache = instance
+		res = append(res, mqlEc2Instance)
 	}
 	return res, nil
 }
@@ -918,7 +929,9 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
 	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Ec2(i.Region.Data)
 	ctx := context.Background()
-	params := &ec2.DescribeNetworkInterfacesInput{Filters: []ec2types.Filter{{Name: aws.String("attachment.instance-id"), Values: []string{i.InstanceId.Data}}}}
+	filters := conn.Filters.General.ToServerSideEc2Filters()
+	filters = append(filters, ec2types.Filter{Name: aws.String("attachment.instance-id"), Values: []string{i.InstanceId.Data}})
+	params := &ec2.DescribeNetworkInterfacesInput{Filters: filters}
 	res := []any{}
 	paginator := ec2.NewDescribeNetworkInterfacesPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -927,6 +940,10 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
 			return nil, err
 		}
 		for _, networkingInterface := range nis.NetworkInterfaces {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(networkingInterface.TagSet)) {
+				log.Debug().Interface("networkInterface", networkingInterface.NetworkInterfaceId).Msg("excluding network interface due to filters")
+				continue
+			}
 			args := map[string]*llx.RawData{
 				"availabilityZone": llx.StringDataPtr(networkingInterface.AvailabilityZone),
 				"description":      llx.StringDataPtr(networkingInterface.Description),
@@ -940,7 +957,7 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
 				"status":           llx.StringData(string(networkingInterface.Status)),
 				"tags":             llx.MapData(Ec2TagsToMap(networkingInterface.TagSet), types.String),
 			}
-			mqlNetworkInterface, err := CreateResource(i.MqlRuntime, "aws.ec2.networkinterface", args)
+			mqlNetworkInterface, err := CreateResource(i.MqlRuntime, ResourceAwsEc2Networkinterface, args)
 			if err != nil {
 				return nil, err
 			}
@@ -963,7 +980,7 @@ func (i *mqlAwsEc2Networkinterface) securityGroups() ([]any, error) {
 		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 
 		for _, group := range i.networkInterfaceCache.Groups {
-			mqlSg, err := NewResource(i.MqlRuntime, "aws.ec2.securitygroup",
+			mqlSg, err := NewResource(i.MqlRuntime, ResourceAwsEc2Securitygroup,
 				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, i.region, conn.AccountId(), *group.GroupId))})
 			if err != nil {
 				return nil, err
@@ -981,7 +998,7 @@ func (i *mqlAwsEc2Networkinterface) subnet() (*mqlAwsVpcSubnet, error) {
 	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 	if subn != nil {
 		arn := fmt.Sprintf(subnetArnPattern, i.region, conn.AccountId(), *subn)
-		res, err := NewResource(i.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(arn)})
+		res, err := NewResource(i.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{"arn": llx.StringData(arn)})
 		if err != nil {
 			return nil, err
 		}
@@ -996,7 +1013,7 @@ func (i *mqlAwsEc2Networkinterface) vpc() (*mqlAwsVpc, error) {
 	if vpcId != nil {
 		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 		vpcArn := fmt.Sprintf(vpcArnPattern, i.region, conn.AccountId(), convert.ToValue(vpcId))
-		res, err := NewResource(i.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+		res, err := NewResource(i.MqlRuntime, ResourceAwsVpc, map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
 		if err != nil {
 			return nil, err
 		}
@@ -1012,7 +1029,7 @@ func (i *mqlAwsEc2Instance) securityGroups() ([]any, error) {
 		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 
 		for _, sg := range i.instanceCache.SecurityGroups {
-			mqlSg, err := NewResource(i.MqlRuntime, "aws.ec2.securitygroup",
+			mqlSg, err := NewResource(i.MqlRuntime, ResourceAwsEc2Securitygroup,
 				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, i.Region.Data, conn.AccountId(), convert.ToValue(sg.GroupId)))})
 			if err != nil {
 				return nil, err
@@ -1029,7 +1046,7 @@ func (i *mqlAwsEc2Instance) image() (*mqlAwsEc2Image, error) {
 	if i.instanceCache.ImageId != nil {
 		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
 
-		mqlImage, err := NewResource(i.MqlRuntime, "aws.ec2.image",
+		mqlImage, err := NewResource(i.MqlRuntime, ResourceAwsEc2Image,
 			map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(imageArnPattern, i.Region.Data, conn.AccountId(), convert.ToValue(i.instanceCache.ImageId)))})
 		if err == nil {
 			return mqlImage.(*mqlAwsEc2Image), nil
@@ -1041,7 +1058,7 @@ func (i *mqlAwsEc2Instance) image() (*mqlAwsEc2Image, error) {
 
 func (i *mqlAwsEc2Instance) keypair() (*mqlAwsEc2Keypair, error) {
 	if i.instanceCache.KeyName != nil {
-		mqlKeyPair, err := NewResource(i.MqlRuntime, "aws.ec2.keypair",
+		mqlKeyPair, err := NewResource(i.MqlRuntime, ResourceAwsEc2Keypair,
 			map[string]*llx.RawData{
 				"region": llx.StringData(i.Region.Data),
 				"name":   llx.StringDataPtr(i.instanceCache.KeyName),
@@ -1146,7 +1163,7 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	// load all security groups
-	obj, err := CreateResource(runtime, "aws.ec2", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1299,7 +1316,7 @@ func (a *mqlAwsEc2Instance) iamInstanceProfile() (*mqlAwsIamInstanceProfile, err
 
 	arn := a.instanceCache.IamInstanceProfile.Arn
 
-	res, err := NewResource(a.MqlRuntime, "aws.iam.instanceProfile", map[string]*llx.RawData{
+	res, err := NewResource(a.MqlRuntime, ResourceAwsIamInstanceProfile, map[string]*llx.RawData{
 		"arn": llx.StringDataPtr(arn),
 	})
 	if err != nil {
@@ -1341,7 +1358,9 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []any{}
 
-			params := &ec2.DescribeVolumesInput{}
+			params := &ec2.DescribeVolumesInput{
+				Filters: conn.Filters.General.ToServerSideEc2Filters(),
+			}
 			paginator := ec2.NewDescribeVolumesPaginator(svc, params)
 			for paginator.HasMorePages() {
 				volumes, err := paginator.NextPage(ctx)
@@ -1353,11 +1372,15 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 					return nil, err
 				}
 				for _, vol := range volumes.Volumes {
+					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(vol.Tags)) {
+						log.Debug().Interface("volume", vol.VolumeId).Msg("excluding volume due to filters")
+						continue
+					}
 					jsonAttachments, err := convert.JsonToDictSlice(vol.Attachments)
 					if err != nil {
 						return nil, err
 					}
-					mqlVol, err := CreateResource(a.MqlRuntime, "aws.ec2.volume",
+					mqlVol, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Volume,
 						map[string]*llx.RawData{
 							"arn":                llx.StringData(fmt.Sprintf(volumeArnPattern, region, conn.AccountId(), convert.ToValue(vol.VolumeId))),
 							"attachments":        llx.ArrayData(jsonAttachments, types.Any),
@@ -1404,7 +1427,7 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 
 	// load all security groups
-	obj, err := CreateResource(runtime, "aws.ec2", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1450,7 +1473,7 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return nil, nil, errors.New("arn required to fetch ec2 instance")
 	}
 
-	obj, err := CreateResource(runtime, "aws.ec2", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1487,7 +1510,7 @@ func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	// load all security groups
-	obj, err := CreateResource(runtime, "aws.ec2", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1562,7 +1585,9 @@ func (a *mqlAwsEc2) getVpnConnections(conn *connection.AwsConnection) []*jobpool
 			ctx := context.Background()
 			res := []any{}
 
-			vpnConnections, err := svc.DescribeVpnConnections(ctx, &ec2.DescribeVpnConnectionsInput{})
+			vpnConnections, err := svc.DescribeVpnConnections(ctx, &ec2.DescribeVpnConnectionsInput{
+				Filters: conn.Filters.General.ToServerSideEc2Filters(),
+			})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
 					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
@@ -1571,9 +1596,13 @@ func (a *mqlAwsEc2) getVpnConnections(conn *connection.AwsConnection) []*jobpool
 				return nil, err
 			}
 			for _, vpnConn := range vpnConnections.VpnConnections {
+				if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(vpnConn.Tags)) {
+					log.Debug().Interface("vpnConnection", vpnConn.VpnConnectionId).Msg("excluding vpn connection due to filters")
+					continue
+				}
 				mqlVgwT := []any{}
 				for _, vgwT := range vpnConn.VgwTelemetry {
-					mqlVgwTelemetry, err := CreateResource(a.MqlRuntime, "aws.ec2.vgwtelemetry",
+					mqlVgwTelemetry, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Vgwtelemetry,
 						map[string]*llx.RawData{
 							"outsideIpAddress": llx.StringData(convert.ToValue(vgwT.OutsideIpAddress)),
 							"status":           llx.StringData(string(vgwT.Status)),
@@ -1584,10 +1613,10 @@ func (a *mqlAwsEc2) getVpnConnections(conn *connection.AwsConnection) []*jobpool
 					}
 					mqlVgwT = append(mqlVgwT, mqlVgwTelemetry)
 				}
-				mqlVpnConn, err := CreateResource(a.MqlRuntime, "aws.ec2.vpnconnection",
+				mqlVpnConn, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Vpnconnection,
 					map[string]*llx.RawData{
 						"arn":          llx.StringData(fmt.Sprintf(vpnConnArnPattern, region, conn.AccountId(), convert.ToValue(vpnConn.VpnConnectionId))),
-						"vgwTelemetry": llx.ArrayData(mqlVgwT, types.Resource("aws.ec2.vgwtelemetry")),
+						"vgwTelemetry": llx.ArrayData(mqlVgwT, types.Resource(ResourceAwsEc2Vgwtelemetry)),
 					})
 				if err != nil {
 					return nil, err
@@ -1632,7 +1661,11 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 			ctx := context.Background()
 			res := []any{}
 
-			params := &ec2.DescribeSnapshotsInput{Filters: []ec2types.Filter{{Name: aws.String("owner-id"), Values: []string{conn.AccountId()}}}}
+			filters := conn.Filters.General.ToServerSideEc2Filters()
+			filters = append(filters, ec2types.Filter{Name: aws.String("owner-id"), Values: []string{conn.AccountId()}})
+			params := &ec2.DescribeSnapshotsInput{
+				Filters: filters,
+			}
 			paginator := ec2.NewDescribeSnapshotsPaginator(svc, params)
 			for paginator.HasMorePages() {
 				snapshots, err := paginator.NextPage(ctx)
@@ -1644,7 +1677,11 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 					return nil, err
 				}
 				for _, snapshot := range snapshots.Snapshots {
-					mqlSnap, err := CreateResource(a.MqlRuntime, "aws.ec2.snapshot",
+					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(snapshot.Tags)) {
+						log.Debug().Interface("snapshot", snapshot.SnapshotId).Msg("excluding snapshot due to filters")
+						continue
+					}
+					mqlSnap, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Snapshot,
 						map[string]*llx.RawData{
 							"arn":            llx.StringData(fmt.Sprintf(snapshotArnPattern, region, conn.AccountId(), convert.ToValue(snapshot.SnapshotId))),
 							"completionTime": llx.TimeDataPtr(snapshot.CompletionTime),
@@ -1715,7 +1752,9 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.Ec2(region)
 			ctx := context.Background()
-			params := &ec2.DescribeInternetGatewaysInput{}
+			params := &ec2.DescribeInternetGatewaysInput{
+				Filters: conn.Filters.General.ToServerSideEc2Filters(),
+			}
 			res := []any{}
 			paginator := ec2.NewDescribeInternetGatewaysPaginator(svc, params)
 			for paginator.HasMorePages() {
@@ -1728,11 +1767,15 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 					return nil, err
 				}
 				for _, gateway := range internetGws.InternetGateways {
+					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(gateway.Tags)) {
+						log.Debug().Interface("igw", gateway.InternetGatewayId).Msg("excluding internet gateway due to filters")
+						continue
+					}
 					jsonAttachments, err := convert.JsonToDictSlice(gateway.Attachments)
 					if err != nil {
 						return nil, err
 					}
-					mqlInternetGw, err := CreateResource(a.MqlRuntime, "aws.ec2.internetgateway",
+					mqlInternetGw, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Internetgateway,
 						map[string]*llx.RawData{
 							"arn":         llx.StringData(fmt.Sprintf(internetGwArnPattern, region, convert.ToValue(gateway.OwnerId), convert.ToValue(gateway.InternetGatewayId))),
 							"id":          llx.StringData(convert.ToValue(gateway.InternetGatewayId)),
@@ -1764,21 +1807,19 @@ func (a *mqlAwsEc2Vgwtelemetry) id() (string, error) {
 }
 
 // true if the instance should be excluded from results. filtering for excluded regions should happen before we retrieve the EC2 instance.
-func shouldExcludeInstance(instance ec2types.Instance, ec2Filters connection.Ec2DiscoveryFilters) bool {
-	for _, id := range ec2Filters.ExcludeInstanceIds {
-		if instance.InstanceId != nil && *instance.InstanceId == id {
-			return true
+func shouldExcludeInstance(instance ec2types.Instance, filters connection.DiscoveryFilters) bool {
+	hasExcludedId := filters.Ec2.MatchesExcludeInstanceIds(instance.InstanceId)
+	hasExcludedTag := filters.General.MatchesExcludeTags(ec2TagsToMap(instance.Tags))
+	return hasExcludedId || hasExcludedTag
+}
+
+// tags in AWS are guaranteed to have a unique key, so we can convert the slice to a map for easier processing
+func ec2TagsToMap(tags []ec2types.Tag) map[string]string {
+	result := make(map[string]string)
+	for _, tag := range tags {
+		if tag.Key != nil && tag.Value != nil {
+			result[*tag.Key] = *tag.Value
 		}
 	}
-	for k, v := range ec2Filters.ExcludeTags {
-		for _, tagValue := range strings.Split(v, ",") {
-			for _, iTag := range instance.Tags {
-				if iTag.Key != nil && *iTag.Key == k &&
-					iTag.Value != nil && *iTag.Value == tagValue {
-					return true
-				}
-			}
-		}
-	}
-	return false
+	return result
 }
