@@ -38,6 +38,10 @@ type GeneralDiscoveryFilters struct {
 	ExcludeTags map[string]string
 }
 
+func (f GeneralDiscoveryFilters) HasTags() bool {
+	return len(f.Tags) > 0 || len(f.ExcludeTags) > 0
+}
+
 func (f GeneralDiscoveryFilters) MatchesIncludeTags(resourceTags map[string]string) bool {
 	if len(f.Tags) == 0 {
 		return true

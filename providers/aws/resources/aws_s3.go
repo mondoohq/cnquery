@@ -107,14 +107,17 @@ func (a *mqlAwsS3) buckets() ([]any, error) {
 			return nil, err
 		}
 
-		tags, err := mqlS3Bucket.(*mqlAwsS3Bucket).tags()
-		if err != nil {
-			return nil, err
-		}
+		// keeps the tags lazy unless the filters need to be evaluated
+		if conn.Filters.General.HasTags() {
+			tags, err := mqlS3Bucket.(*mqlAwsS3Bucket).tags()
+			if err != nil {
+				return nil, err
+			}
 
-		if !conn.Filters.General.MatchesIncludeTags(mapStringInterfaceToStringString(tags)) || conn.Filters.General.MatchesExcludeTags(mapStringInterfaceToStringString(tags)) {
-			log.Debug().Interface("log_group", bucket.Name).Msg("excluding log group due to filters")
-			continue
+			if !conn.Filters.General.MatchesIncludeTags(mapStringInterfaceToStringString(tags)) || conn.Filters.General.MatchesExcludeTags(mapStringInterfaceToStringString(tags)) {
+				log.Debug().Interface("log_group", bucket.Name).Msg("excluding log group due to filters")
+				continue
+			}
 		}
 
 		res = append(res, mqlS3Bucket)
