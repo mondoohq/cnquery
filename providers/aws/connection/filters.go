@@ -38,6 +38,16 @@ type GeneralDiscoveryFilters struct {
 	ExcludeTags map[string]string
 }
 
+func (f GeneralDiscoveryFilters) HasTags() bool {
+	return len(f.Tags) > 0 || len(f.ExcludeTags) > 0
+}
+
+// helper function to improve the readability of filter application
+// some resources do not support server-side filtering, so we need to apply filters client-side
+func (f GeneralDiscoveryFilters) IsFilteredOutByTags(resourceTags map[string]string) bool {
+	return !f.MatchesIncludeTags(resourceTags) || f.MatchesExcludeTags(resourceTags)
+}
+
 func (f GeneralDiscoveryFilters) MatchesIncludeTags(resourceTags map[string]string) bool {
 	if len(f.Tags) == 0 {
 		return true

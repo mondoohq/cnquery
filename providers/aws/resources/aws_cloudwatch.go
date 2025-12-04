@@ -587,6 +587,10 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 				for _, loggroup := range logGroups.LogGroups {
 					groupTags, err := svc.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{ResourceArn: loggroup.LogGroupArn})
 					if err == nil {
+						if conn.Filters.General.IsFilteredOutByTags(groupTags.Tags) {
+							log.Debug().Interface("log_group", loggroup.LogGroupName).Msg("excluding log group due to filters")
+							continue
+						}
 						args["tags"] = llx.MapData(strMapToInterface(groupTags.Tags), types.String)
 					} else {
 						log.Warn().Err(err).Interface("log_group", loggroup.LogGroupName).Msg("could not get tags for log group")
