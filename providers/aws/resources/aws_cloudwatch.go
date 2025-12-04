@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"maps"
 	"strings"
 	"time"
 
@@ -586,21 +585,17 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 				}
 				args := make(map[string]*llx.RawData)
 				for _, loggroup := range logGroups.LogGroups {
-					tags := make(map[string]any)
-					groupTags, err := svc.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{
-						ResourceArn: loggroup.LogGroupArn,
-					})
+					groupTags, err := svc.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{ResourceArn: loggroup.LogGroupArn})
 					if err == nil {
-						maps.Copy(tags, strMapToInterface(groupTags.Tags))
+						args["tags"] = llx.MapData(strMapToInterface(groupTags.Tags), types.String)
 					} else {
-						log.Warn().Msgf("could not get tags for log group %s: %v", convert.ToValue(loggroup.LogGroupName), err)
+						log.Warn().Err(err).Interface("log_group", loggroup.LogGroupName).Msg("could not get tags for log group")
 					}
 
 					args["arn"] = llx.StringDataPtr(loggroup.Arn)
 					args["name"] = llx.StringDataPtr(loggroup.LogGroupName)
 					args["region"] = llx.StringData(region)
 					args["retentionInDays"] = llx.IntDataDefault(loggroup.RetentionInDays, 0)
-					args["tags"] = llx.MapData(tags, types.String)
 
 					// add kms key if there is one
 					if loggroup.KmsKeyId != nil {
