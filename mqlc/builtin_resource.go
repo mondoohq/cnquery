@@ -514,7 +514,7 @@ func compileResourceChildAccess(c *compiler, typ types.Type, ref uint64, id stri
 			},
 		},
 	})
-	return typ, nil
+	return t.Child(), nil
 }
 
 func compileResourceLength(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
