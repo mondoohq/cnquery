@@ -44,8 +44,8 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
-	list := items.Value.([]any)
-	if len(list) == 0 {
+	list, ok := items.Value.([]any)
+	if !ok || len(list) == 0 {
 		return bind, 0, nil
 	}
 
@@ -143,8 +143,8 @@ func resourceSample(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
-	list := items.Value.([]any)
-	if len(list) == 0 {
+	list, ok := items.Value.([]any)
+	if !ok || len(list) == 0 {
 		return bind, 0, nil
 	}
 
@@ -169,9 +169,11 @@ func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
-	list := items.Value.([]any)
-	if len(list) == 0 {
-		return bind, 0, nil
+	list, ok := items.Value.([]any)
+	if !ok || len(list) == 0 {
+		// When the input list is empty or not an array(e.g. embedding), return an empty array
+		// so downstream array operations (e.g., $all) can execute without error.
+		return &RawData{Type: types.Array(types.Unset), Value: []any{}}, 0, nil
 	}
 
 	arg1 := chunk.Function.Args[1]
