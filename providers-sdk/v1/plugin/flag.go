@@ -20,6 +20,7 @@ const (
 	FlagOption_Deprecated
 	FlagOption_Required
 	FlagOption_Password
+	FlagOption_AskInput
 	// max: 8 options!
 )
 
