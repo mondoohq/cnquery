@@ -70,6 +70,7 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 
 				for _, restApi := range restApisResp.Items {
 					if conn.Filters.General.IsFilteredOutByTags(restApi.Tags) {
+						log.Debug().Interface("restApi", restApi.Name).Msg("skipping api gateway restapi due to filters")
 						continue
 					}
 
@@ -153,6 +154,7 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 	res := []any{}
 	for _, stage := range stagesResp.Item {
 		if conn.Filters.General.IsFilteredOutByTags(stage.Tags) {
+			log.Debug().Interface("stage", stage.StageName).Msg("skipping api gateway stage due to filters")
 			continue
 		}
 

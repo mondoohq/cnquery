@@ -89,6 +89,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 
 				cluster := describeClusterOutput.Cluster
 				if conn.Filters.General.IsFilteredOutByTags(cluster.Tags) {
+					log.Debug().Interface("cluster", cluster.Arn).Msg("skipping eks cluster due to filters")
 					continue
 				}
 

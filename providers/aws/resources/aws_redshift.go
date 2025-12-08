@@ -81,6 +81,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 					}
 
 					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(redshiftTagsToMap(cluster.Tags))) {
+						log.Debug().Interface("cluster", cluster.ClusterIdentifier).Msg("skipping redshift cluster due to filters")
 						continue
 					}
 

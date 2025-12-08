@@ -212,6 +212,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 					}
 
 					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(rdsTagsToMap(dbInstance.TagList))) {
+						log.Debug().Interface("dbInstance", dbInstance.DBInstanceArn).Msg("skipping rds db instance due to filters")
 						continue
 					}
 
@@ -709,6 +710,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 					}
 
 					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(rdsTagsToMap(cluster.TagList))) {
+						log.Debug().Interface("cluster", cluster.DBClusterArn).Msg("skipping rds cluster due to filters")
 						continue
 					}
 

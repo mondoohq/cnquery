@@ -74,7 +74,7 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 					}
 
 					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
-						log.Debug().Interface("endpoint", endpoint.EndpointArn).Msg("skipping sagemaker endpoint due to tag filters")
+						log.Debug().Interface("endpoint", endpoint.EndpointArn).Msg("skipping sagemaker endpoint due to filters")
 						continue
 					}
 
@@ -162,7 +162,7 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 					}
 
 					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
-						log.Debug().Interface("notebook", instance.NotebookInstanceArn).Msg("skipping sagemaker notebook instance due to tag filters")
+						log.Debug().Interface("notebook", instance.NotebookInstanceArn).Msg("skipping sagemaker notebook instance due to filters")
 						continue
 					}
 
