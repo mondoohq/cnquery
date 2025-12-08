@@ -20,7 +20,7 @@ import (
 )
 
 func (a *mqlAwsSagemaker) id() (string, error) {
-	return "aws.sagemaker", nil
+	return ResourceAwsSagemaker, nil
 }
 
 func (a *mqlAwsSagemaker) endpoints() ([]any, error) {
@@ -72,7 +72,13 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 					if err != nil {
 						return nil, err
 					}
-					mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.sagemaker.endpoint",
+
+					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+						log.Debug().Interface("endpoint", endpoint.EndpointArn).Msg("skipping sagemaker endpoint due to tag filters")
+						continue
+					}
+
+					mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerEndpoint,
 						map[string]*llx.RawData{
 							"arn":    llx.StringDataPtr(endpoint.EndpointArn),
 							"name":   llx.StringDataPtr(endpoint.EndpointName),
@@ -154,7 +160,13 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 					if err != nil {
 						return nil, err
 					}
-					mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstance",
+
+					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+						log.Debug().Interface("notebook", instance.NotebookInstanceArn).Msg("skipping sagemaker notebook instance due to tag filters")
+						continue
+					}
+
+					mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerNotebookinstance,
 						map[string]*llx.RawData{
 							"arn":    llx.StringData(convert.ToValue(instance.NotebookInstanceArn)),
 							"name":   llx.StringData(convert.ToValue(instance.NotebookInstanceName)),

@@ -24,7 +24,7 @@ import (
 )
 
 func (a *mqlAwsEks) id() (string, error) {
-	return "aws.eks", nil
+	return ResourceAwsEks, nil
 }
 
 func (a *mqlAwsEks) clusters() ([]any, error) {
@@ -73,9 +73,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 				return jobpool.JobResult(res), nil
 			}
 
-			for i := range describeClusterRes.Clusters {
-				clusterName := describeClusterRes.Clusters[i]
-
+			for _, clusterName := range describeClusterRes.Clusters {
 				// get cluster details
 				log.Debug().Str("cluster", clusterName).Str("region", region).Msg("get info for cluster")
 				describeClusterOutput, err := svc.DescribeCluster(ctx, &eks.DescribeClusterInput{
@@ -90,6 +88,10 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 				}
 
 				cluster := describeClusterOutput.Cluster
+				if conn.Filters.General.IsFilteredOutByTags(cluster.Tags) {
+					continue
+				}
+
 				encryptionConfig, _ := convert.JsonToDictSlice(cluster.EncryptionConfig)
 				logging, _ := convert.JsonToDict(cluster.Logging)
 				kubernetesNetworkConfig, _ := convert.JsonToDict(cluster.KubernetesNetworkConfig)
@@ -116,7 +118,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 				}
 
 				if cluster.RoleArn != nil {
-					mqlIam, err := NewResource(a.MqlRuntime, "aws.iam.role",
+					mqlIam, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
 						map[string]*llx.RawData{"arn": llx.StringDataPtr(cluster.RoleArn)},
 					)
 					if err != nil {
@@ -126,7 +128,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					args["iamRole"] = llx.ResourceData(mqlIam, mqlIam.MqlName())
 				}
 
-				mqlFilesystem, err := CreateResource(a.MqlRuntime, "aws.eks.cluster", args)
+				mqlFilesystem, err := CreateResource(a.MqlRuntime, ResourceAwsEksCluster, args)
 				if err != nil {
 					return nil, err
 				}
@@ -157,7 +159,7 @@ func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	// load all eks clusters
-	obj, err := CreateResource(runtime, "aws.eks", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, ResourceAwsEks, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -208,7 +210,7 @@ func (a *mqlAwsEksCluster) nodeGroups() ([]any, error) {
 			"region": llx.StringData(regionVal),
 		}
 
-		mqlNg, err := CreateResource(a.MqlRuntime, "aws.eks.nodegroup", args)
+		mqlNg, err := CreateResource(a.MqlRuntime, ResourceAwsEksNodegroup, args)
 		if err != nil {
 			return nil, err
 		}
@@ -241,7 +243,7 @@ func (a *mqlAwsEksNodegroup) autoscalingGroups() ([]any, error) {
 	res := []any{}
 	for i := range ng.Resources.AutoScalingGroups {
 		ag := ng.Resources.AutoScalingGroups[i]
-		mqlAg, err := NewResource(a.MqlRuntime, "aws.autoscaling.group",
+		mqlAg, err := NewResource(a.MqlRuntime, ResourceAwsAutoscalingGroup,
 			map[string]*llx.RawData{
 				"name":   llx.StringDataPtr(ag.Name),
 				"region": llx.StringData(a.region),
@@ -385,7 +387,7 @@ func (a *mqlAwsEksNodegroup) nodeRole() (*mqlAwsIamRole, error) {
 		a.NodeRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	mqlIam, err := NewResource(a.MqlRuntime, "aws.iam.role",
+	mqlIam, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
 		map[string]*llx.RawData{
 			"arn": llx.StringDataPtr(ng.NodeRole),
 		})
@@ -421,11 +423,11 @@ func (a *mqlAwsEksCluster) addons() ([]any, error) {
 	for i := range addonsRes.Addons {
 		addon := addonsRes.Addons[i]
 		args := map[string]*llx.RawData{
-			"__id": llx.StringData(fmt.Sprintf("aws.eks.addon/%s/%s", a.Name.Data, addon)),
+			"__id": llx.StringData(fmt.Sprintf("%s/%s/%s", ResourceAwsEksAddon, a.Name.Data, addon)),
 			"name": llx.StringData(addon),
 		}
 
-		mqlNg, err := CreateResource(a.MqlRuntime, "aws.eks.addon", args)
+		mqlNg, err := CreateResource(a.MqlRuntime, ResourceAwsEksAddon, args)
 		if err != nil {
 			return nil, err
 		}

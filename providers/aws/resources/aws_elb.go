@@ -24,7 +24,7 @@ import (
 )
 
 func (a *mqlAwsElb) id() (string, error) {
-	return "aws.elb", nil
+	return ResourceAwsElb, nil
 }
 
 func (a *mqlAwsElb) classicLoadBalancers() ([]any, error) {
@@ -74,7 +74,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					if err != nil {
 						return nil, err
 					}
-					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
+					mqlLb, err := CreateResource(a.MqlRuntime, ResourceAwsElbLoadbalancer,
 						map[string]*llx.RawData{
 							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, region, conn.AccountId(), convert.ToValue(lb.LoadBalancerName))),
 							"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
@@ -155,7 +155,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 
 					sgs := []any{}
 					for _, sg := range lb.SecurityGroups {
-						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
+						mqlSg, err := NewResource(a.MqlRuntime, ResourceAwsEc2Securitygroup,
 							map[string]*llx.RawData{
 								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), sg)),
 							})
@@ -174,7 +174,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 						"hostedZoneId":      llx.StringDataPtr(lb.CanonicalHostedZoneId),
 						"name":              llx.StringDataPtr(lb.LoadBalancerName),
 						"scheme":            llx.StringData(string(lb.Scheme)),
-						"securityGroups":    llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
+						"securityGroups":    llx.ArrayData(sgs, types.Resource(ResourceAwsEc2Securitygroup)),
 						"vpcId":             llx.StringDataPtr(lb.VpcId),
 						"elbType":           llx.StringData(string(lb.Type)),
 						"region":            llx.StringData(region),
@@ -182,7 +182,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					}
 
 					if lb.VpcId != nil {
-						mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+						mqlVpc, err := NewResource(a.MqlRuntime, ResourceAwsVpc,
 							map[string]*llx.RawData{
 								"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(lb.VpcId))),
 							})
@@ -193,7 +193,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 						args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
 					}
 
-					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer", args)
+					mqlLb, err := CreateResource(a.MqlRuntime, ResourceAwsElbLoadbalancer, args)
 					if err != nil {
 						return nil, err
 					}
@@ -223,7 +223,7 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, errors.New("arn required to fetch elb loadbalancer")
 	}
 
-	obj, err := CreateResource(runtime, "aws.elb", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, ResourceAwsElb, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -348,7 +348,7 @@ func (a *mqlAwsElbLoadbalancer) targetGroups() ([]any, error) {
 				"unhealthyThresholdCount":    llx.IntDataPtr(tg.UnhealthyThresholdCount),
 			}
 
-			mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.targetgroup", args)
+			mqlLb, err := CreateResource(a.MqlRuntime, ResourceAwsElbTargetgroup, args)
 			if err != nil {
 				return nil, err
 			}
@@ -371,7 +371,7 @@ func (a *mqlAwsElbTargetgroup) vpc() (*mqlAwsVpc, error) {
 		return nil, nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+	mqlVpc, err := NewResource(a.MqlRuntime, ResourceAwsVpc,
 		map[string]*llx.RawData{
 			"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.region, conn.AccountId(), *a.targetGroup.VpcId)),
 		})

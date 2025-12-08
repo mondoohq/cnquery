@@ -22,7 +22,7 @@ import (
 )
 
 func (a *mqlAwsRedshift) id() (string, error) {
-	return "aws.redshift", nil
+	return ResourceAwsRedshift, nil
 }
 
 const (
@@ -79,7 +79,12 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 					for _, group := range cluster.ClusterParameterGroups {
 						names = append(names, convert.ToValue(group.ParameterGroupName))
 					}
-					mqlDBInstance, err := CreateResource(a.MqlRuntime, "aws.redshift.cluster",
+
+					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(redshiftTagsToMap(cluster.Tags))) {
+						continue
+					}
+
+					mqlDBInstance, err := CreateResource(a.MqlRuntime, ResourceAwsRedshiftCluster,
 						map[string]*llx.RawData{
 							"allowVersionUpgrade":              llx.BoolDataPtr(cluster.AllowVersionUpgrade),
 							"arn":                              llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, region, conn.AccountId(), convert.ToValue(cluster.ClusterIdentifier))),
@@ -120,14 +125,9 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 
 func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]any {
 	tagsMap := make(map[string]any)
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
+	for _, tag := range tags {
+		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 	}
-
 	return tagsMap
 }
 
