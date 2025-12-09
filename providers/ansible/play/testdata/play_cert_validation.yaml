@@ -1,0 +1,9 @@
+- name: Install packages
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Install httpd server
+      ansible.builtin.yum:
+        name: httpd>=2.4
+        state: present
+        validate_certs: false

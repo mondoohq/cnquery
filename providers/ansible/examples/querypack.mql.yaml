@@ -1,0 +1,21 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+packs:
+  - uid: ansible-example-pack
+    name: Ansible Example Pack
+    version: 1.0.0
+    license: BUSL-1.1
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    groups:
+      - title: Query tasks that use insecure yum
+        filters: asset.platform == 'ansible-playbook'
+        queries:
+          - uid: ansible-example-pack-yum-validate-certs
+            title: Ansible tasks that do not validate yum certificates
+            mql: |
+              ansible.plays { 
+                tasks.where (action["ansible.builtin.yum"]["validate_certs"] == false )
+              }
