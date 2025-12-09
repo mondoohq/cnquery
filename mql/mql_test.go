@@ -260,6 +260,11 @@ func TestResource_List_Builtins(t *testing.T) {
 			Expectation: &llx.MockResource{Name: "mgroup", ID: "group1"},
 		},
 		{
+			Code:        "customGroups.first.name",
+			ResultIndex: 0,
+			Expectation: "group1",
+		},
+		{
 			Code:        "customGroups.last",
 			ResultIndex: 0,
 			Expectation: &llx.MockResource{Name: "mgroup", ID: "group7"},
