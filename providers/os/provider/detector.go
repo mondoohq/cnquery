@@ -153,7 +153,7 @@ func appendRelatedAssetsFromFingerprint(f *id.PlatformFingerprint, a *inventory.
 
 func (s *Service) assetName(asset *inventory.Asset, conn shared.Connection) {
 	// for macOS we want to use the computer name, therefore we detect the computer name
-	if asset.Platform.Name == "macos" {
+	if asset != nil && asset.Platform != nil && asset.Platform.Name == "macos" {
 		// run command to get computer name and use it as asset name
 		f, err := conn.FileSystem().Open("/Library/Preferences/SystemConfiguration/preferences.plist")
 		if err == nil {
