@@ -6,7 +6,6 @@ package resources
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"errors"
 	"io"
 	"strings"
@@ -15,7 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/macos"
-	"howett.net/plist"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
 )
 
 func (m *mqlMacos) computerName() (string, error) {
@@ -32,8 +31,11 @@ func (m *mqlMacos) computerName() (string, error) {
 		return "", errors.New("could not parse plist file")
 	}
 	params := parsePlist.GetParams().Data.(map[string]any)
-	pParams := plistData(params)
-	name := pParams.GetString("System", "System", "ComputerName")
+	pParams := plist.Data(params)
+	name, ok := pParams.GetString("System", "System", "ComputerName")
+	if !ok {
+		return "", errors.New("could not get computer name")
+	}
 	return name, nil
 }
 
@@ -71,7 +73,7 @@ func (m *mqlMacos) globalAccountPolicies() (map[string]any, error) {
 		return nil, err
 	}
 
-	return Decode(bytes.NewReader(data))
+	return plist.Decode(bytes.NewReader(data))
 }
 
 // GetPreferences returns the time machine preferences
@@ -105,7 +107,7 @@ func (m *mqlMacosTimemachine) preferences() (map[string]any, error) {
 		return nil, err
 	}
 
-	return Decode(bytes.NewReader(buf.Bytes()))
+	return plist.Decode(bytes.NewReader(buf.Bytes()))
 }
 
 func (m *mqlMacosSystemsetup) runCmd(command string) (string, error) {
@@ -228,75 +230,4 @@ func (m *mqlMacosSystemsetup) waitForStartupAfterPowerFailure() (string, error) 
 func (m *mqlMacosSystemsetup) disableKeyboardWhenEnclosureLockIsEngaged() (string, error) {
 	data, err := m.runCmd("systemsetup -getdisablekeyboardwhenenclosurelockisengaged")
 	return macos.SystemSetupCmdOutput{}.ParseDisableKeyboardWhenEnclosureLockIsEngaged(data), err
-}
-
-type plistData map[string]any
-
-func Decode(r io.ReadSeeker) (plistData, error) {
-	var data map[string]any
-	decoder := plist.NewDecoder(r)
-	err := decoder.Decode(&data)
-	if err != nil {
-		return nil, err
-	}
-
-	// NOTE: we need to do the extra conversion here to make sure we use supported
-	// values by our dict structure: string, float64, int64
-	// plist also uses uint64 heavily which we do not support
-	// TODO: we really do not want to use the poor-man's json conversion version
-	jsondata, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	var dataJson plistData
-	err = json.Unmarshal(jsondata, &dataJson)
-	if err != nil {
-		return nil, err
-	}
-
-	return dataJson, nil
-}
-
-func (d plistData) GetPlistData(path ...string) plistData {
-	val := d
-	ok := false
-	for i := range path {
-		if val == nil {
-			return nil
-		}
-		val, ok = val[path[i]].(map[string]any)
-		if !ok {
-			return nil
-		}
-	}
-	return val
-}
-
-func (d plistData) GetString(path ...string) string {
-	val := d
-	ok := false
-	for i := 0; i < len(path)-1; i++ {
-		if val == nil {
-			return ""
-		}
-		val, ok = val[path[i]].(map[string]any)
-		if !ok {
-			return ""
-		}
-	}
-	key := path[len(path)-1]
-	return val[key].(string)
-}
-
-func (d plistData) GetList(path ...string) []any {
-	val := d
-	for i := 0; i < len(path)-1; i++ {
-		if val == nil {
-			return nil
-		}
-		val = val[path[i]].(map[string]any)
-	}
-	key := path[len(path)-1]
-	return val[key].([]any)
 }

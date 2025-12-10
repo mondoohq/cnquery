@@ -26,7 +26,9 @@ func ToXml(r io.ReadSeeker) ([]byte, error) {
 	return out.Bytes(), err
 }
 
-func Decode(r io.ReadSeeker) (map[string]any, error) {
+type Data map[string]any
+
+func Decode(r io.ReadSeeker) (Data, error) {
 	var data map[string]any
 	decoder := plist.NewDecoder(r)
 	err := decoder.Decode(&data)
@@ -43,11 +45,68 @@ func Decode(r io.ReadSeeker) (map[string]any, error) {
 		return nil, err
 	}
 
-	var dataJson map[string]any
+	var dataJson Data
 	err = json.Unmarshal(jsondata, &dataJson)
 	if err != nil {
 		return nil, err
 	}
 
 	return dataJson, nil
+}
+
+func (d Data) GetPlistData(path ...string) Data {
+	val := d
+	ok := false
+	for i := range path {
+		if val == nil {
+			return nil
+		}
+		val, ok = val[path[i]].(map[string]any)
+		if !ok {
+			return nil
+		}
+	}
+	return val
+}
+
+func (d Data) getEntry(path ...string) any {
+	val := d
+	ok := false
+	for i := 0; i < len(path)-1; i++ {
+		if val == nil {
+			return nil
+		}
+		val, ok = val[path[i]].(map[string]any)
+		if !ok {
+			return nil
+		}
+	}
+	key := path[len(path)-1]
+	return val[key]
+}
+
+func (d Data) GetString(path ...string) (string, bool) {
+	entry := d.getEntry(path...)
+	str, converted := entry.(string)
+	return str, converted
+}
+
+func (d Data) GetNumber(path ...string) (float64, bool) {
+	entry := d.getEntry(path...)
+	val, converted := entry.(float64)
+	return val, converted
+}
+
+func (d Data) GetList(path ...string) ([]any, bool) {
+	val := d
+	for i := 0; i < len(path)-1; i++ {
+		if val == nil {
+			return nil, false
+		}
+		val = val[path[i]].(map[string]any)
+	}
+	key := path[len(path)-1]
+
+	res, converted := val[key].([]interface{})
+	return res, converted
 }
