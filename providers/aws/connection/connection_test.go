@@ -92,8 +92,6 @@ func TestGetRegionsFromRegionalTable(t *testing.T) {
 			"ap-southeast-1",
 			"ca-central-1",
 			"ca-west-1",
-			"cn-north-1",
-			"cn-northwest-1",
 			"eu-central-1",
 			"eu-central-2",
 			"eu-north-1",
