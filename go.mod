@@ -2,6 +2,8 @@ module go.mondoo.com/cnquery/v12
 
 go 1.25.1
 
+toolchain go1.25.5
+
 require (
 	cloud.google.com/go/logging v1.11.0
 	cloud.google.com/go/secretmanager v1.14.0
