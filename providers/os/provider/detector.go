@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/os/id/ids"
 	"go.mondoo.com/cnquery/v12/providers/os/id/machineid"
 	"go.mondoo.com/cnquery/v12/providers/os/id/sshhostkey"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
 )
 
 // default id detectors
@@ -52,6 +53,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 		return errors.New("failed to detect OS")
 	}
 	asset.MergePlatform(pf)
+
 	if asset.Platform.Kind == "" {
 		asset.Platform.Kind = inventory.AssetKindBaremetal
 	}
@@ -145,6 +147,22 @@ func appendRelatedAssetsFromFingerprint(f *id.PlatformFingerprint, a *inventory.
 		}
 		if shouldAdd {
 			a.RelatedAssets = append(a.RelatedAssets, &inventory.Asset{Id: ra.PlatformIDs[0]})
+		}
+	}
+}
+
+func (s *Service) assetName(asset *inventory.Asset, conn shared.Connection) {
+	// for macOS we want to use the computer name, therefore we detect the computer name
+	if asset != nil && asset.Platform != nil && asset.Platform.Name == "macos" {
+		// run command to get computer name and use it as asset name
+		f, err := conn.FileSystem().Open("/Library/Preferences/SystemConfiguration/preferences.plist")
+		if err == nil {
+			data, err := plist.Decode(f)
+			if err == nil {
+				if computerName, ok := data.GetString("System", "System", "ComputerName"); ok {
+					asset.Name = computerName
+				}
+			}
 		}
 	}
 }
