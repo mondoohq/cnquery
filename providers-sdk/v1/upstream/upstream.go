@@ -19,7 +19,7 @@ import (
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/crypto"
 )
 
-//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size+clone upstream.proto
+//go:generate protoc --plugin=protoc-gen-go=../../../scripts/protoc/protoc-gen-go --plugin=protoc-gen-rangerrpc=../../../scripts/protoc/protoc-gen-rangerrpc --plugin=protoc-gen-go-vtproto=../../../scripts/protoc/protoc-gen-go-vtproto --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size+clone upstream.proto
 
 const agents_issuer = "mondoo/ams"
 

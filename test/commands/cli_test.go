@@ -12,18 +12,19 @@ import (
 	"sync"
 	"testing"
 
-	cmdtest "github.com/google/go-cmdtest"
-	"github.com/spf13/cobra"
+	"github.com/google/go-cmdtest"
 	"github.com/stretchr/testify/require"
 )
 
 var once sync.Once
 var testDir string
-var cnqueryCmd *cobra.Command
 
 func setup() {
 	// build cnquery
-	if err := exec.Command("go", "build", "../../apps/cnquery/cnquery.go").Run(); err != nil {
+	cmd := exec.Command("go", "build", "../../apps/cnquery/cnquery.go")
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	if err := cmd.Run(); err != nil {
 		log.Fatalf("building cnquery: %v", err)
 	}
 
