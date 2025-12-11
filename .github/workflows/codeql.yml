@@ -45,8 +45,9 @@ jobs:
         include:
           - language: actions
             build-mode: none
-          - language: go
-            build-mode: autobuild
+          # disabling this for now, as it does not finish on a runner. The runner get's killed after ~15 minutes
+          #- language: go
+          #  build-mode: autobuild
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
