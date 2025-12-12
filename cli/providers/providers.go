@@ -5,6 +5,7 @@ package providers
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
@@ -326,10 +327,20 @@ func attachFlags(flagset *pflag.FlagSet, flags []plugin.Flag) {
 }
 
 func markFlagsRequired(cmd *cobra.Command, flags []plugin.Flag) {
+	askFlags := []string{}
 	for _, f := range flags {
 		if f.Option&plugin.FlagOption_Required != 0 {
 			cmd.MarkFlagRequired(f.Long) // nolint:errcheck
 		}
+		if f.Option&plugin.FlagOption_AskInput != 0 {
+			askFlags = append(askFlags, f.Long)
+		}
+	}
+	if len(askFlags) > 0 {
+		if cmd.Annotations == nil {
+			cmd.Annotations = map[string]string{}
+		}
+		cmd.Annotations["ask-flags"] = strings.Join(askFlags, ",")
 	}
 }
 
@@ -420,10 +431,8 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 
 		log.Debug().Msg("using provider " + provider.Name + " with connector " + connector.Name)
 
-		// TODO: replace this hard-coded block. This should be dynamic for all
-		// fields that are specified to be passwords with the --ask-field
-		// associated with it to make it simple.
-		// check if the user used --password without a value
+		// this is the builtin ask-password flag. we should eventually remove this in favour
+		// of an explicit ask-password flag on the provider connector that is marked with AskInput
 		askPass, err := cc.Flags().GetBool("ask-pass")
 		if err == nil && askPass {
 			pass, err := components.AskPassword("Enter password: ")
@@ -432,8 +441,20 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			}
 			cc.Flags().Set("password", pass)
 		}
-		// ^^
 
+		askFlags := cc.Annotations["ask-flags"]
+		askFLagsList := strings.SplitSeq(askFlags, ",")
+		for f := range askFLagsList {
+			ask, err := cc.Flags().GetBool(f)
+			if err == nil && ask {
+				ask := strings.TrimPrefix(f, "ask-")
+				input, err := components.AskPassword(fmt.Sprintf("Enter value for %s: ", ask))
+				if err != nil {
+					log.Fatal().Err(err).Msg("failed to get input for " + f)
+				}
+				cc.Flags().Set(ask, input) //nolint:errcheck
+			}
+		}
 		useRecording, err := cc.Flags().GetString("use-recording")
 		if err != nil {
 			log.Warn().Msg("failed to get flag --recording")
