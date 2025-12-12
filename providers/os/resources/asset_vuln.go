@@ -107,10 +107,6 @@ func fetchVulnReport(runtime *plugin.Runtime) (any, error) {
 	return convert.JsonToDict(report)
 }
 
-func (p *mqlPlatform) vulnerabilityReport() (any, error) {
-	return fetchVulnReport(p.MqlRuntime)
-}
-
 // fetches the vulnerability report and returns the full report
 func (p *mqlAsset) vulnerabilityReport() (any, error) {
 	return fetchVulnReport(p.MqlRuntime)
