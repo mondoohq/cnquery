@@ -507,7 +507,12 @@ func (m *modelMultiProgress) View() string {
 			continue
 		}
 		name := m.Progress[k].Name
-		pad := strings.Repeat(" ", m.maxNameWidth-len(name))
+
+		repeat := m.maxNameWidth - ansi.PrintableRuneWidth(name)
+		if repeat < 0 {
+			repeat = 0
+		}
+		pad := strings.Repeat(" ", repeat)
 		switch progressState {
 		case ProgressStateErrored:
 			outputFinished += " " + theme.DefaultTheme.Error(name) + pad + " " + m.Progress[k].model.View() + theme.DefaultTheme.Error("    X")
@@ -541,7 +546,12 @@ func (m *modelMultiProgress) View() string {
 			continue
 		}
 		name := m.Progress[k].Name
-		pad := strings.Repeat(" ", m.maxNameWidth-len(name))
+
+		repeat := m.maxNameWidth - ansi.PrintableRuneWidth(name)
+		if repeat < 0 {
+			repeat = 0
+		}
+		pad := strings.Repeat(" ", repeat)
 		percent := m.Progress[k].percent
 		outputNotDone += " " + name + pad + " " + m.Progress[k].model.ViewAs(percent) + "\n"
 		itemsInProgress++
@@ -571,7 +581,7 @@ func (m *modelMultiProgress) View() string {
 			stats += fmt.Sprintf(" %d/%d n/a", notApplicableAssets, len(m.Progress)-1)
 		}
 
-		repeat := m.maxNameWidth - len(stats)
+		repeat := m.maxNameWidth - ansi.PrintableRuneWidth(stats)
 		if repeat < 0 {
 			repeat = 0
 		}

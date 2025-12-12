@@ -39,6 +39,32 @@ func TestMultiProgressBar(t *testing.T) {
 	assert.Contains(t, buf.String(), "... 1 more asset ...")
 }
 
+func TestProgressBarLongAssetName(t *testing.T) {
+	var in bytes.Buffer
+	var buf bytes.Buffer
+
+	data := []byte{77, 97, 110, 97, 103, 101, 100, 226, 128, 153, 115, 32, 86, 105, 114, 116, 117, 97, 108, 32, 77, 97, 99, 104, 105, 110, 101}
+	str := string(data)
+
+	progressBarElements := map[string]string{"1": str}
+	multiprogress, err := newMultiProgressBarsMock(progressBarElements, []string{"1"}, &in, &buf)
+	require.NoError(t, err)
+
+	go func() {
+		// we need to wait for tea to start the Program, otherwise these would be no-ops
+		time.Sleep(1 * time.Millisecond)
+		multiprogress.OnProgress("1", 0.5)
+		multiprogress.OnProgress("1", 1.0)
+		multiprogress.Score("1", "F")
+		multiprogress.Completed("1")
+		multiprogress.Close()
+	}()
+	err = multiprogress.Open()
+	require.NoError(t, err)
+
+	assert.Contains(t, buf.String(), "Managed’s Virtual Machine ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+}
+
 func TestMultiProgressBarSingleAsset(t *testing.T) {
 	var in bytes.Buffer
 	var buf bytes.Buffer
