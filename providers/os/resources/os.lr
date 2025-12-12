@@ -45,13 +45,7 @@ private mondoo.eol {
   date() time
 }
 
-platform {
-  // Deprecated; will be removed in version 13.0
-  // Use vulnmgmt instead
-  vulnerabilityReport() dict
-}
-
-// Vulnerability Information
+// Asset vulnerability information
 vulnmgmt {
   // List of all CVEs affecting the asset
   cves() []vuln.cve

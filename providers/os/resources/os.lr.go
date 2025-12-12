@@ -201,10 +201,6 @@ func init() {
 			// to override args, implement: initMondooEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMondooEol,
 		},
-		"platform": {
-			// to override args, implement: initPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createPlatform,
-		},
 		"vulnmgmt": {
 			// to override args, implement: initVulnmgmt(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVulnmgmt,
@@ -959,9 +955,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mondoo.eol.date": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooEol).GetDate()).ToDataRes(types.Time)
-	},
-	"platform.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPlatform).GetVulnerabilityReport()).ToDataRes(types.Dict)
 	},
 	"vulnmgmt.cves": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVulnmgmt).GetCves()).ToDataRes(types.Array(types.Resource("vuln.cve")))
@@ -3538,14 +3531,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mondoo.eol.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"platform.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatform).__id, ok = v.Value.(string)
-		return
-	},
-	"platform.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatform).VulnerabilityReport, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vulnmgmt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7758,52 +7743,6 @@ func (c *mqlMondooEol) GetVersion() *plugin.TValue[string] {
 func (c *mqlMondooEol) GetDate() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.Date, func() (*time.Time, error) {
 		return c.date()
-	})
-}
-
-// mqlPlatform for the platform resource
-type mqlPlatform struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlPlatformInternal it will be used here
-	VulnerabilityReport plugin.TValue[any]
-}
-
-// createPlatform creates a new instance of this resource
-func createPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlPlatform{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("platform", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlPlatform) MqlName() string {
-	return "platform"
-}
-
-func (c *mqlPlatform) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlPlatform) GetVulnerabilityReport() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.VulnerabilityReport, func() (any, error) {
-		return c.vulnerabilityReport()
 	})
 }
 
