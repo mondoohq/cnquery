@@ -148,92 +148,6 @@ func (w *mqlWindows) hotfixes() ([]any, error) {
 	return mqlHotFixes, nil
 }
 
-func (wh *mqlWindowsFeature) id() (string, error) {
-	return wh.Path.Data, nil
-}
-
-func initWindowsFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
-		return args, nil, nil
-	}
-
-	nameRaw := args["name"]
-	if nameRaw == nil {
-		return args, nil, nil
-	}
-
-	name, ok := nameRaw.Value.(string)
-	if !ok {
-		return args, nil, nil
-	}
-
-	obj, err := NewResource(runtime, "windows", nil)
-	if err != nil {
-		return nil, nil, err
-	}
-	winResource := obj.(*mqlWindows)
-
-	features := winResource.GetFeatures()
-	if features.Error != nil {
-		return nil, nil, features.Error
-	}
-
-	for i := range features.Data {
-		hf := features.Data[i].(*mqlWindowsFeature)
-		if hf.Name.Data == name {
-			return nil, hf, nil
-		}
-	}
-
-	// if the feature cannot be found we return an error
-	return nil, nil, errors.New("could not find feature " + name)
-}
-
-func (w *mqlWindows) features() ([]any, error) {
-	conn := w.MqlRuntime.Connection.(shared.Connection)
-
-	// query features
-	encodedCmd := powershell.Encode(windows.QUERY_FEATURES)
-	executedCmd, err := conn.RunCommand(encodedCmd)
-	if err != nil {
-		return nil, err
-	}
-
-	if executedCmd.ExitStatus != 0 {
-		stderr, err := io.ReadAll(executedCmd.Stderr)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New("failed to retrieve features: " + string(stderr))
-	}
-
-	features, err := windows.ParseWindowsFeatures(executedCmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	// convert features to MQL resource
-	mqlFeatures := make([]any, len(features))
-	for i, feature := range features {
-
-		mqlFeature, err := CreateResource(w.MqlRuntime, "windows.feature", map[string]*llx.RawData{
-			"path":         llx.StringData(feature.Path),
-			"name":         llx.StringData(feature.Name),
-			"displayName":  llx.StringData(feature.DisplayName),
-			"description":  llx.StringData(feature.Description),
-			"installed":    llx.BoolData(feature.Installed),
-			"installState": llx.IntData(feature.InstallState),
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		mqlFeatures[i] = mqlFeature
-	}
-
-	return mqlFeatures, nil
-}
-
 func (wh *mqlWindowsServerFeature) id() (string, error) {
 	return wh.Path.Data, nil
 }
@@ -259,7 +173,7 @@ func initWindowsServerFeature(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 	winResource := obj.(*mqlWindows)
 
-	features := winResource.GetFeatures()
+	features := winResource.GetServerFeatures()
 	if features.Error != nil {
 		return nil, nil, features.Error
 	}
