@@ -101,7 +101,6 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					args := map[string]*llx.RawData{
 						"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, region, conn.AccountId(), lbName)),
 						"availabilityZones":    llx.ArrayData(availabilityZones, types.String),
-						"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
 						"createdAt":            llx.TimeDataPtr(lb.CreatedTime),
 						"dnsName":              llx.StringDataPtr(lb.DNSName),
 						"elbType":              llx.StringData("classic"),
@@ -111,7 +110,6 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 						"region":               llx.StringData(region),
 						"scheme":               llx.StringDataPtr(lb.Scheme),
 						"securityGroups":       llx.ArrayData(sgs, types.Resource(ResourceAwsEc2Securitygroup)),
-						"vpcId":                llx.StringDataPtr(lb.VPCId),
 						"vpc":                  llx.NilData,
 					}
 
@@ -225,14 +223,12 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					args := map[string]*llx.RawData{
 						"arn":               llx.StringDataPtr(lb.LoadBalancerArn),
 						"availabilityZones": llx.ArrayData(availabilityZones, types.String),
-						"createdTime":       llx.TimeDataPtr(lb.CreatedTime),
 						"createdAt":         llx.TimeDataPtr(lb.CreatedTime),
 						"dnsName":           llx.StringDataPtr(lb.DNSName),
 						"hostedZoneId":      llx.StringDataPtr(lb.CanonicalHostedZoneId),
 						"name":              llx.StringDataPtr(lb.LoadBalancerName),
 						"scheme":            llx.StringData(string(lb.Scheme)),
 						"securityGroups":    llx.ArrayData(sgs, types.Resource(ResourceAwsEc2Securitygroup)),
-						"vpcId":             llx.StringDataPtr(lb.VpcId),
 						"elbType":           llx.StringData(string(lb.Type)),
 						"ipAddressType":     llx.StringData(string(lb.IpAddressType)),
 						"region":            llx.StringData(region),
