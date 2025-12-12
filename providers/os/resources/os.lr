@@ -45,17 +45,6 @@ private mondoo.eol {
   date() time
 }
 
-// Deprecated; will be removed in version 13.0
-// Use asset.eol instead.
-platform.eol @defaults("date") {
-  // Documentation URL
-  docsUrl string
-  // Product URL
-  productUrl string
-  // End-of-life date
-  date time
-}
-
 platform {
   // Deprecated; will be removed in version 13.0
   // Use vulnmgmt instead
