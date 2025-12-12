@@ -306,7 +306,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	// for some assets we need to do additional asset name detection, eg. macOS
-	// s.assetName(req.Asset, conn)
+	s.assetName(req.Asset, conn)
 
 	log.Debug().Str("asset", req.Asset.Name).Msg("detected asset")
 
