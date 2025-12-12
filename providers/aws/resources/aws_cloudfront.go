@@ -162,7 +162,6 @@ func (a *mqlAwsCloudfront) functions() ([]any, error) {
 				"name":             llx.StringDataPtr(funct.Name),
 				"status":           llx.StringDataPtr(funct.Status),
 				"lastModifiedTime": llx.TimeDataPtr(lmTime),
-				"createdTime":      llx.TimeDataPtr(crTime),
 				"createdAt":        llx.TimeDataPtr(crTime),
 				"stage":            llx.StringData(stage),
 				"comment":          llx.StringData(comment),

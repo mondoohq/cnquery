@@ -492,7 +492,6 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 						"region":                    llx.StringData(region),
 						"sseDescription":            llx.DictData(sseDict),
 						"provisionedThroughput":     llx.DictData(throughputDict),
-						"createdTime":               llx.TimeDataPtr(table.Table.CreationDateTime),
 						"createdAt":                 llx.TimeDataPtr(table.Table.CreationDateTime),
 						"deletionProtectionEnabled": llx.BoolDataPtr(table.Table.DeletionProtectionEnabled),
 						"globalTableVersion":        llx.StringDataPtr(table.Table.GlobalTableVersion),
