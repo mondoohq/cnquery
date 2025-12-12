@@ -274,17 +274,20 @@ func ParseStat(lines []string, ipv6 bool) ([]Stat, error) {
 			opts = strings.Join(o, " ")
 		}
 		entry := Stat{
-			LineNumber:  ln,
-			Packets:     pkts,
-			Bytes:       bts,
-			Target:      fields[3],
-			Protocol:    fields[4],
-			Opt:         fields[5],
-			Input:       fields[6],
-			Output:      fields[7],
-			Source:      fields[8],
-			Destination: fields[9],
-			Options:     opts,
+			LineNumber: ln,
+			Packets:    pkts,
+			Bytes:      bts,
+			Target:     fields[3],
+			Protocol:   fields[4],
+			Opt:        fields[5],
+			Input:      fields[6],
+			Output:     fields[7],
+			Source:     fields[8],
+			Options:    opts,
+		}
+
+		if len(fields) > 9 {
+			entry.Destination = fields[9]
 		}
 		entries = append(entries, entry)
 	}
