@@ -68,6 +68,11 @@ func (l *mqlFilesFind) list() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else if conn.Capabilities().Has(shared.Capability_RunCommand) && pf.IsFamily("windows") {
+		foundFiles, err = l.windowsPowershellCmd()
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		return nil, errors.New("find is not supported for your platform")
 	}
@@ -151,6 +156,36 @@ func (l *mqlFilesFind) unixFilesFindCmd() ([]string, error) {
 		foundFiles = []string{}
 	} else {
 		foundFiles = strings.Split(lines, "\n")
+	}
+	return foundFiles, nil
+}
+
+func (l *mqlFilesFind) windowsPowershellCmd() ([]string, error) {
+	var depth *int64
+	if l.Depth.IsSet() {
+		depth = &l.Depth.Data
+	}
+
+	pwshScript := filesfind.BuildPowershellCmd(l.From.Data, l.Xdev.Data, l.Type.Data, l.Regex.Data, l.Permissions.Data, l.Name.Data, depth)
+	rawCmd, err := CreateResource(l.MqlRuntime, "powershell", map[string]*llx.RawData{
+		"script": llx.StringData(pwshScript),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ps := rawCmd.(*mqlPowershell)
+	out := ps.GetStdout()
+	if out.Error != nil {
+		return nil, out.Error
+	}
+
+	var foundFiles []string
+	lines := strings.TrimSpace(out.Data)
+	if lines == "" {
+		foundFiles = []string{}
+	} else {
+		foundFiles = strings.Split(strings.ReplaceAll(lines, "\r\n", "\n"), "\n")
 	}
 	return foundFiles, nil
 }
