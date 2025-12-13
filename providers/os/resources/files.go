@@ -6,7 +6,6 @@ package resources
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -15,16 +14,8 @@ import (
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/filesfind"
 )
-
-var findTypes = map[string]string{
-	"file":      "f",
-	"directory": "d",
-	"character": "c",
-	"block":     "b",
-	"socket":    "s",
-	"link":      "l",
-}
 
 func initFilesFind(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if args["permissions"] == nil {
@@ -32,10 +23,6 @@ func initFilesFind(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	}
 
 	return args, nil, nil
-}
-
-func octal2string(o int64) string {
-	return fmt.Sprintf("%o", o)
 }
 
 func (l *mqlFilesFind) id() (string, error) {
@@ -62,7 +49,7 @@ func (l *mqlFilesFind) id() (string, error) {
 	}
 
 	if l.Permissions.Data != 0o777 {
-		id.WriteString(" permissions=" + octal2string(l.Permissions.Data))
+		id.WriteString(" permissions=" + filesfind.Octal2string(l.Permissions.Data))
 	}
 
 	return id.String(), nil
@@ -84,6 +71,9 @@ func (l *mqlFilesFind) list() ([]any, error) {
 		}
 	} else if conn.Capabilities().Has(shared.Capability_RunCommand) && pf.IsFamily("unix") {
 		foundFiles, err = l.unixFilesFindCmd()
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		return nil, errors.New("find is not supported for your platform")
 	}
@@ -142,45 +132,14 @@ func (l *mqlFilesFind) fsFilesFind(conn shared.Connection) ([]string, error) {
 }
 
 func (l *mqlFilesFind) unixFilesFindCmd() ([]string, error) {
-	var call strings.Builder
-	call.WriteString("find -L ")
-	call.WriteString(strconv.Quote(l.From.Data))
-
-	if !l.Xdev.Data {
-		call.WriteString(" -xdev")
-	}
-
-	if l.Type.Data != "" {
-		t, ok := findTypes[l.Type.Data]
-		if ok {
-			call.WriteString(" -type " + t)
-		}
-	}
-
-	if l.Regex.Data != "" {
-		// TODO: we need to escape regex here
-		call.WriteString(" -regex '")
-		call.WriteString(l.Regex.Data)
-		call.WriteString("'")
-	}
-
-	if l.Permissions.Data != 0o777 {
-		call.WriteString(" -perm -")
-		call.WriteString(octal2string(l.Permissions.Data))
-	}
-
-	if l.Name.Data != "" {
-		call.WriteString(" -name ")
-		call.WriteString(l.Name.Data)
-	}
-
+	var depth *int64
 	if l.Depth.IsSet() {
-		call.WriteString(" -maxdepth ")
-		call.WriteString(octal2string(l.Depth.Data))
+		depth = &l.Depth.Data
 	}
 
+	callCmd := filesfind.BuildFilesFindCmd(l.From.Data, l.Xdev.Data, l.Type.Data, l.Regex.Data, l.Permissions.Data, l.Name.Data, depth)
 	rawCmd, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{
-		"command": llx.StringData(call.String()),
+		"command": llx.StringData(callCmd),
 	})
 	if err != nil {
 		return nil, err
