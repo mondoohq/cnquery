@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
@@ -69,101 +70,20 @@ func (l *mqlFilesFind) id() (string, error) {
 
 func (l *mqlFilesFind) list() ([]any, error) {
 	var err error
-	var compiledRegexp *regexp.Regexp
-	if len(l.Regex.Data) > 0 {
-		compiledRegexp, err = regexp.Compile(l.Regex.Data)
-		if err != nil {
-			return nil, err
-		}
-	} else if len(l.Name.Data) > 0 {
-		compiledRegexp, err = regexp.Compile(l.Name.Data)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	var foundFiles []string
 	conn := l.MqlRuntime.Connection.(shared.Connection)
+	pf := conn.Asset().Platform
+	if pf == nil {
+		return nil, errors.New("missing platform information")
+	}
+
 	if conn.Capabilities().Has(shared.Capability_FindFile) {
-		fs := conn.FileSystem()
-		fsSearch, ok := fs.(shared.FileSearch)
-		if !ok {
-			return nil, errors.New("find is not supported for your platform")
-		}
-
-		var perm *uint32
-		if l.Permissions.Data != 0o777 {
-			p := uint32(l.Permissions.Data)
-			perm = &p
-		}
-
-		var depth *int
-		if l.Depth.IsSet() {
-			d := int(l.Depth.Data)
-			depth = &d
-		}
-
-		foundFiles, err = fsSearch.Find(l.From.Data, compiledRegexp, l.Type.Data, perm, depth)
+		foundFiles, err = l.fsFilesFind(conn)
 		if err != nil {
 			return nil, err
 		}
-	} else if conn.Capabilities().Has(shared.Capability_RunCommand) {
-		var call strings.Builder
-		call.WriteString("find -L ")
-		call.WriteString(strconv.Quote(l.From.Data))
-
-		if !l.Xdev.Data {
-			call.WriteString(" -xdev")
-		}
-
-		if l.Type.Data != "" {
-			t, ok := findTypes[l.Type.Data]
-			if ok {
-				call.WriteString(" -type " + t)
-			}
-		}
-
-		if l.Regex.Data != "" {
-			// TODO: we need to escape regex here
-			call.WriteString(" -regex '")
-			call.WriteString(l.Regex.Data)
-			call.WriteString("'")
-		}
-
-		if l.Permissions.Data != 0o777 {
-			call.WriteString(" -perm -")
-			call.WriteString(octal2string(l.Permissions.Data))
-		}
-
-		if l.Name.Data != "" {
-			call.WriteString(" -name ")
-			call.WriteString(l.Name.Data)
-		}
-
-		if l.Depth.IsSet() {
-			call.WriteString(" -maxdepth ")
-			call.WriteString(octal2string(l.Depth.Data))
-		}
-
-		rawCmd, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{
-			"command": llx.StringData(call.String()),
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		cmd := rawCmd.(*mqlCommand)
-		out := cmd.GetStdout()
-		if out.Error != nil {
-			return nil, out.Error
-		}
-
-		lines := strings.TrimSpace(out.Data)
-		if lines == "" {
-			foundFiles = []string{}
-		} else {
-			foundFiles = strings.Split(lines, "\n")
-		}
+	} else if conn.Capabilities().Has(shared.Capability_RunCommand) && pf.IsFamily("unix") {
+		foundFiles, err = l.unixFilesFindCmd()
 	} else {
 		return nil, errors.New("find is not supported for your platform")
 	}
@@ -182,4 +102,102 @@ func (l *mqlFilesFind) list() ([]any, error) {
 
 	// return the packages as new entries
 	return files, nil
+}
+
+func (l *mqlFilesFind) fsFilesFind(conn shared.Connection) ([]string, error) {
+	log.Debug().Msgf("use native files find approach")
+	fs := conn.FileSystem()
+	fsSearch, ok := fs.(shared.FileSearch)
+	if !ok {
+		return nil, errors.New("find is not supported for your platform")
+	}
+
+	var perm *uint32
+	if l.Permissions.Data != 0o777 {
+		p := uint32(l.Permissions.Data)
+		perm = &p
+	}
+
+	var depth *int
+	if l.Depth.IsSet() {
+		d := int(l.Depth.Data)
+		depth = &d
+	}
+
+	var compiledRegexp *regexp.Regexp
+	var err error
+	if len(l.Regex.Data) > 0 {
+		compiledRegexp, err = regexp.Compile(l.Regex.Data)
+		if err != nil {
+			return nil, err
+		}
+	} else if len(l.Name.Data) > 0 {
+		compiledRegexp, err = regexp.Compile(l.Name.Data)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return fsSearch.Find(l.From.Data, compiledRegexp, l.Type.Data, perm, depth)
+}
+
+func (l *mqlFilesFind) unixFilesFindCmd() ([]string, error) {
+	var call strings.Builder
+	call.WriteString("find -L ")
+	call.WriteString(strconv.Quote(l.From.Data))
+
+	if !l.Xdev.Data {
+		call.WriteString(" -xdev")
+	}
+
+	if l.Type.Data != "" {
+		t, ok := findTypes[l.Type.Data]
+		if ok {
+			call.WriteString(" -type " + t)
+		}
+	}
+
+	if l.Regex.Data != "" {
+		// TODO: we need to escape regex here
+		call.WriteString(" -regex '")
+		call.WriteString(l.Regex.Data)
+		call.WriteString("'")
+	}
+
+	if l.Permissions.Data != 0o777 {
+		call.WriteString(" -perm -")
+		call.WriteString(octal2string(l.Permissions.Data))
+	}
+
+	if l.Name.Data != "" {
+		call.WriteString(" -name ")
+		call.WriteString(l.Name.Data)
+	}
+
+	if l.Depth.IsSet() {
+		call.WriteString(" -maxdepth ")
+		call.WriteString(octal2string(l.Depth.Data))
+	}
+
+	rawCmd, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{
+		"command": llx.StringData(call.String()),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	cmd := rawCmd.(*mqlCommand)
+	out := cmd.GetStdout()
+	if out.Error != nil {
+		return nil, out.Error
+	}
+
+	var foundFiles []string
+	lines := strings.TrimSpace(out.Data)
+	if lines == "" {
+		foundFiles = []string{}
+	} else {
+		foundFiles = strings.Split(lines, "\n")
+	}
+	return foundFiles, nil
 }
