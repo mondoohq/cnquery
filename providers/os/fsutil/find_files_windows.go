@@ -4,7 +4,7 @@
 //go:build windows
 // +build windows
 
-package fs
+package fsutil
 
 import (
 	"errors"

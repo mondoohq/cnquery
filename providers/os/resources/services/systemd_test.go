@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v12/providers/os/fs"
+	"go.mondoo.com/cnquery/v12/providers/os/mountedfs"
 )
 
 func TestSystemDExtractDescription(t *testing.T) {
@@ -112,7 +112,7 @@ func TestParseServiceSystemDUnitFilesPhoton(t *testing.T) {
 
 func TestSystemdFS(t *testing.T) {
 	s := SystemdFSServiceManager{
-		Fs: fs.NewMountedFs("testdata/systemd"),
+		Fs: mountedfs.NewMountedFs("testdata/systemd"),
 	}
 
 	services, err := s.List()

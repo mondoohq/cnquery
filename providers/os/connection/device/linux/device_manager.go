@@ -19,7 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/snapshot"
-	"go.mondoo.com/cnquery/v12/providers/os/fs"
+	"go.mondoo.com/cnquery/v12/providers/os/mountedfs"
 	"go.mondoo.com/cnquery/v12/providers/os/resources"
 )
 
@@ -201,7 +201,7 @@ func (d *LinuxDeviceManager) attemptFindFstab(dir string) ([]resources.FstabEntr
 
 	mnt, fstab := path.Split(strings.TrimSpace(string(out)))
 	fstabFile, err := afero.ReadFile(
-		fs.NewMountedFs(mnt),
+		mountedfs.NewMountedFs(mnt),
 		path.Base(fstab))
 	if err != nil {
 		log.Error().Err(err).Msg("error reading fstab")
