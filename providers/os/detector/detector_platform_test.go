@@ -1031,7 +1031,7 @@ func TestNobaraDetector(t *testing.T) {
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
-func TestHCEDetector(t *testing.T) {
+func TestEulerOSDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-euleros-2.toml")
 	assert.Nil(t, err, "was able to create the provider")
 
