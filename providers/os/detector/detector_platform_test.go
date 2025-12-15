@@ -1032,11 +1032,11 @@ func TestNobaraDetector(t *testing.T) {
 }
 
 func TestHCEDetector(t *testing.T) {
-	di, err := detectPlatformFromMock("./testdata/detect-hce-2.toml")
+	di, err := detectPlatformFromMock("./testdata/detect-euleros-2.toml")
 	assert.Nil(t, err, "was able to create the provider")
 
-	assert.Equal(t, "hce", di.Name, "os name should be identified")
-	assert.Equal(t, "Huawei Cloud EulerOS 2.0 (x86_64)", di.Title, "os title should be identified")
+	assert.Equal(t, "euleros", di.Name, "os name should be identified")
+	assert.Equal(t, "EulerOS 2.0 (SP9x86_64)", di.Title, "os title should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"euler", "linux", "unix", "os"}, di.Family)
 }
