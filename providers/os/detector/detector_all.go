@@ -817,6 +817,17 @@ var hce = &PlatformResolver{
 	},
 }
 
+var euleros = &PlatformResolver{
+	Name:     "euleros",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "euleros" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 // fallback linux detection, since we do not know the system, the family detection may not be correct
 var defaultLinux = &PlatformResolver{
 	Name:     "generic-linux",
@@ -1089,7 +1100,7 @@ var archFamily = &PlatformResolver{
 var eulerFamily = &PlatformResolver{
 	Name:     "euler",
 	IsFamily: true,
-	Children: []*PlatformResolver{openeuler, hce},
+	Children: []*PlatformResolver{openeuler, hce, euleros},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},
