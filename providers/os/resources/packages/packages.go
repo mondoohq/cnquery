@@ -110,6 +110,7 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 	case asset.Platform.IsFamily("redhat") ||
 		asset.Platform.IsFamily("euler") ||
 		asset.Platform.Name == "hce" ||
+		asset.Platform.Name == "euleros" ||
 		asset.Platform.Name == "mageia": // rhel/euler/mageia based systems
 		pms = append(pms, &RpmPkgManager{conn: conn, platform: asset.Platform})
 		if asset.Platform.Name == "fedora" {
