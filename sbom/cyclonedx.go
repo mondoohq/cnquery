@@ -173,7 +173,7 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 		Packages: make([]*Package, 0),
 	}
 
-	if bom.Metadata.Tools != nil {
+	if bom.Metadata.Tools != nil && bom.Metadata.Tools.Components != nil {
 		// last one wins :-) - we only support one tool
 		for i := range *bom.Metadata.Tools.Components {
 			component := (*bom.Metadata.Tools.Components)[i]
@@ -237,12 +237,12 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 }
 
 var familyMap = map[string][]string{
-	"windows": []string{"windows", "os"},
-	"macos":   []string{"darwin", "bsd", "unix", "os"},
-	"debian":  []string{"linux", "unix", "os"},
-	"ubuntu":  []string{"linux", "unix", "os"},
-	"centos":  []string{"linux", "unix", "os"},
-	"alpine":  []string{"linux", "unix", "os"},
-	"fedora":  []string{"linux", "unix", "os"},
-	"rhel":    []string{"linux", "unix", "os"},
+	"windows": {"windows", "os"},
+	"macos":   {"darwin", "bsd", "unix", "os"},
+	"debian":  {"linux", "unix", "os"},
+	"ubuntu":  {"linux", "unix", "os"},
+	"centos":  {"linux", "unix", "os"},
+	"alpine":  {"linux", "unix", "os"},
+	"fedora":  {"linux", "unix", "os"},
+	"rhel":    {"linux", "unix", "os"},
 }
