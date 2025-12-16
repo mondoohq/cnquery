@@ -88,27 +88,10 @@ func (s *sbomProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 		return nil, err
 	}
 
-	decoder := []sbom.Decoder{}
-
-	decoder = append(decoder,
-		sbom.NewCycloneDX(sbom.FormatCycloneDxJSON),
-		sbom.NewCycloneDX(sbom.FormatCycloneDxXML),
-		sbom.NewSPDX(sbom.FormatSpdxTagValue),
-		sbom.NewSPDX(sbom.FormatSpdxJSON),
-		sbom.New(sbom.FormatJson),
-	)
-
-	var sbomReport *sbom.Sbom
-	found := false
-	for i := range decoder {
-		sbomReport, err = decoder[i].Parse(bytes.NewReader(data))
-		if err == nil {
-			found = true
-			break
-		}
-	}
-	if !found {
-		return nil, errors.New("unsupported sbom format")
+	decoder := sbom.DefaultMultiDecoder()
+	sbomReport, err := decoder.Parse(bytes.NewReader(data))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse sbom file")
 	}
 
 	// Platform need to be set, otherwise it will panic
