@@ -11,8 +11,6 @@ import (
 	"maps"
 	"net/http"
 	"slices"
-	"strconv"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -65,7 +63,6 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	// check flags for connection options
 	c := &AwsConnection{
 		awsConfigOptions: []func(*config.LoadOptions) error{},
-		Filters:          EmptyDiscoveryFilters(),
 	}
 
 	// merge the options to make sure we don't miss anything
@@ -100,9 +97,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.opts.profile = asset.Options["profile"]
 	c.opts.scope = asset.Options["scope"]
 	c.opts.options = asset.Options
-	if conf.Discover != nil {
-		c.Filters = parseOptsToFilters(conf.Discover.Filter)
-	}
+	c.Filters = DiscoveryFiltersFromOpts(conf.Discover.GetFilter())
 	return c, nil
 }
 
@@ -145,51 +140,6 @@ func (c *AwsConnection) SetAccountId(id string) {
 
 func (p *AwsConnection) AccountId() string {
 	return p.accountId
-}
-
-func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
-	d := EmptyDiscoveryFilters()
-	for k, v := range opts {
-		switch {
-		case k == "regions":
-			d.General.Regions = append(d.General.Regions, strings.Split(v, ",")...)
-		case k == "exclude:regions":
-			d.General.ExcludeRegions = append(d.General.ExcludeRegions, strings.Split(v, ",")...)
-		case strings.HasPrefix(k, "tag:"):
-			d.General.Tags[strings.TrimPrefix(k, "tag:")] = v
-		case strings.HasPrefix(k, "exclude:tag:"):
-			d.General.ExcludeTags[strings.TrimPrefix(k, "exclude:tag:")] = v
-		case k == "ec2:instance-ids":
-			d.Ec2.InstanceIds = append(d.Ec2.InstanceIds, strings.Split(v, ",")...)
-		case k == "ec2:exclude:instance-ids":
-			d.Ec2.ExcludeInstanceIds = append(d.Ec2.ExcludeInstanceIds, strings.Split(v, ",")...)
-		// tag filters were moved to GeneralDiscoveryFilters, ec2 opts are kept for backward compatibility
-		case strings.HasPrefix(k, "ec2:tag:"):
-			d.General.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v
-		case strings.HasPrefix(k, "ec2:exclude:tag:"):
-			d.General.ExcludeTags[strings.TrimPrefix(k, "ec2:exclude:tag:")] = v
-		case k == "ecr:tags":
-			d.Ecr.Tags = append(d.Ecr.Tags, strings.Split(v, ",")...)
-		case k == "ecr:exclude:tags":
-			d.Ecr.ExcludeTags = append(d.Ecr.ExcludeTags, strings.Split(v, ",")...)
-		case k == "ecs:only-running-containers":
-			parsed, err := strconv.ParseBool(v)
-			if err == nil {
-				d.Ecs.OnlyRunningContainers = parsed
-			}
-		case k == "ecs:discover-instances":
-			parsed, err := strconv.ParseBool(v)
-			if err == nil {
-				d.Ecs.DiscoverInstances = parsed
-			}
-		case k == "ecs:discover-images":
-			parsed, err := strconv.ParseBool(v)
-			if err == nil {
-				d.Ecs.DiscoverImages = parsed
-			}
-		}
-	}
-	return d
 }
 
 func parseFlagsForConnectionOptions(m map[string]string, creds []*vault.Credential) []ConnectionOption {

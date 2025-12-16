@@ -6,6 +6,7 @@ package connection
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,14 +20,43 @@ type DiscoveryFilters struct {
 	General GeneralDiscoveryFilters
 }
 
-// ensure all underlying reference types aren't `nil`
-func EmptyDiscoveryFilters() DiscoveryFilters {
-	return DiscoveryFilters{
-		General: GeneralDiscoveryFilters{Regions: []string{}, ExcludeRegions: []string{}, Tags: map[string]string{}, ExcludeTags: map[string]string{}},
-		Ec2:     Ec2DiscoveryFilters{InstanceIds: []string{}, ExcludeInstanceIds: []string{}},
-		Ecr:     EcrDiscoveryFilters{Tags: []string{}, ExcludeTags: []string{}},
-		Ecs:     EcsDiscoveryFilters{},
+func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
+	d := DiscoveryFilters{
+		General: GeneralDiscoveryFilters{
+			Regions:        parseCsvSliceOpt(opts, "regions"),
+			ExcludeRegions: parseCsvSliceOpt(opts, "exclude:regions"),
+			Tags:           parseMapOpt(opts, "tag:"),
+			ExcludeTags:    parseMapOpt(opts, "exclude:tag:"),
+		},
+		Ec2: Ec2DiscoveryFilters{
+			InstanceIds:        parseCsvSliceOpt(opts, "ec2:instance-ids"),
+			ExcludeInstanceIds: parseCsvSliceOpt(opts, "ec2:exclude:instance-ids"),
+		},
+		Ecr: EcrDiscoveryFilters{
+			Tags:        parseCsvSliceOpt(opts, "ecr:tags"),
+			ExcludeTags: parseCsvSliceOpt(opts, "ecr:exclude:tags"),
+		},
+		Ecs: EcsDiscoveryFilters{
+			OnlyRunningContainers: parseBoolOpt(opts, "ecs:only-running-containers", false),
+			DiscoverInstances:     parseBoolOpt(opts, "ecs:discover-instances", false),
+			DiscoverImages:        parseBoolOpt(opts, "ecs:discover-images", false),
+		},
 	}
+
+	// TODO: backward compatibility, remove in future versions
+	ec2Tags := parseMapOpt(opts, "ec2:tag:")
+	ec2ExcludeTags := parseMapOpt(opts, "ec2:exclude:tag:")
+	for k, v := range ec2Tags {
+		if _, exists := d.General.Tags[k]; !exists {
+			d.General.Tags[k] = v
+		}
+	}
+	for k, v := range ec2ExcludeTags {
+		if _, exists := d.General.ExcludeTags[k]; !exists {
+			d.General.ExcludeTags[k] = v
+		}
+	}
+	return d
 }
 
 type GeneralDiscoveryFilters struct {
@@ -106,4 +136,59 @@ type EcsDiscoveryFilters struct {
 	OnlyRunningContainers bool
 	DiscoverImages        bool
 	DiscoverInstances     bool
+}
+
+// Given a key-value pair that matches a key, return the boolean value of the key.
+// If the key is not found or the value cannot be parsed as a boolean, return the default value.
+// Example: key = "ecs:only-running-containers", opts = {"ecs:only-running-containers": "true"}
+// Returns: true
+func parseBoolOpt(opts map[string]string, key string, defaultVal bool) bool {
+	for k, v := range opts {
+		if k == key {
+			parsed, err := strconv.ParseBool(v)
+			if err == nil {
+				return parsed
+			}
+		}
+	}
+	return defaultVal
+}
+
+// Given a map of options and a key prefix, return a map of key-value pairs
+// where the keys start with the given prefix, with the prefix removed.
+// Example:
+// keyPrefix = "tag:"
+// opts = {"tag:env": "prod", "tag:role": "web"}
+// returns {"env": "prod", "role": "web"}
+func parseMapOpt(opts map[string]string, keyPrefix string) map[string]string {
+	res := map[string]string{}
+	for k, v := range opts {
+		if k == "" || v == "" {
+			continue
+		}
+		if !strings.HasPrefix(k, keyPrefix) {
+			continue
+		}
+		res[strings.TrimPrefix(k, keyPrefix)] = v
+	}
+	return res
+}
+
+// Given a map of options and a key, return a slice of strings
+// where the key matches the given key. The value is split by commas.
+// Example:
+// key = "regions"
+// opts = {"regions": "us-east-1,us-west-2"}
+// returns []string{"us-east-1", "us-west-2"}
+func parseCsvSliceOpt(opts map[string]string, key string) []string {
+	res := []string{}
+	for k, v := range opts {
+		if k == "" || v == "" {
+			continue
+		}
+		if k == key {
+			res = append(res, strings.Split(v, ",")...)
+		}
+	}
+	return res
 }
