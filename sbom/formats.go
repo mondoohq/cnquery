@@ -21,8 +21,8 @@ const (
 )
 
 var (
-	conversionNotSupportedError = errors.New("conversion is not supported")
-	parsingNotSupportedError    = errors.New("parsing is not supported")
+	errConversionNotSupported = errors.New("conversion is not supported")
+	errParsingNotSupported    = errors.New("parsing is not supported")
 )
 
 type FormatSpecificationHandler interface {

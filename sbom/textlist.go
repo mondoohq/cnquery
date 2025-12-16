@@ -26,7 +26,7 @@ func (s *TextList) ApplyOptions(opts ...renderOption) {
 }
 
 func (s *TextList) Convert(bom *Sbom) (any, error) {
-	return nil, conversionNotSupportedError
+	return nil, errConversionNotSupported
 }
 
 func (s *TextList) Render(w io.Writer, bom *Sbom) error {
@@ -89,5 +89,5 @@ func (s *TextList) Render(w io.Writer, bom *Sbom) error {
 }
 
 func (s *TextList) Parse(r io.ReadSeeker) (*Sbom, error) {
-	return nil, parsingNotSupportedError
+	return nil, errParsingNotSupported
 }
