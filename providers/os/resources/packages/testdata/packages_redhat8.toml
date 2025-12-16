@@ -1,6 +1,9 @@
 [commands."command -v rpm"]
 stdout="/usr/bin/rpm"
 
+[commands."rpm -E '%{_dbpath}'"]
+stdout="/var/lib/rpm/rpmdb.sqlite"
+
 [commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\\n'"]
 stdout="""
 tzdata 0:2021c-1.el8 noarch__Red Hat, Inc.__Timezone data
