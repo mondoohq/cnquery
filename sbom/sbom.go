@@ -14,7 +14,7 @@ import (
 )
 
 type Decoder interface {
-	Parse(r io.Reader) (*Sbom, error)
+	Parse(r io.ReadSeeker) (*Sbom, error)
 }
 
 func (b *Package) Hash() (string, error) {
