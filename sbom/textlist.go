@@ -12,6 +12,8 @@ import (
 	"go.mondoo.com/cnquery/v12/cli/theme/colors"
 )
 
+var _ Decoder = &TextList{}
+
 // TextList is a simple text list output format
 type TextList struct {
 	opts renderOpts
@@ -28,7 +30,6 @@ func (s *TextList) Convert(bom *Sbom) (any, error) {
 }
 
 func (s *TextList) Render(w io.Writer, bom *Sbom) error {
-
 	sort.SliceStable(bom.Packages, func(i, j int) bool {
 		if bom.Packages[i].Name != bom.Packages[j].Name {
 			return bom.Packages[i].Name < bom.Packages[j].Name
@@ -87,6 +88,6 @@ func (s *TextList) Render(w io.Writer, bom *Sbom) error {
 	return nil
 }
 
-func (s *TextList) Parse(r io.Reader) (*Sbom, error) {
+func (s *TextList) Parse(r io.ReadSeeker) (*Sbom, error) {
 	return nil, parsingNotSupportedError
 }

@@ -28,6 +28,8 @@ func NewSPDX(format string) *Spdx {
 	}
 }
 
+var _ Decoder = &Spdx{}
+
 type Spdx struct {
 	opts    renderOpts
 	Version string
@@ -164,7 +166,7 @@ func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
 	}
 }
 
-func (s *Spdx) Parse(r io.Reader) (*Sbom, error) {
+func (s *Spdx) Parse(r io.ReadSeeker) (*Sbom, error) {
 	// try to parse all supported SPDX format
 	if s.Format == FormatSpdxTagValue {
 		doc, err := tagvalue.Read(r)

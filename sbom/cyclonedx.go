@@ -26,6 +26,8 @@ func NewCycloneDX(format string) *CycloneDX {
 	}
 }
 
+var _ Decoder = &CycloneDX{}
+
 type CycloneDX struct {
 	opts   renderOpts
 	Format cyclonedx.BOMFileFormat
@@ -144,7 +146,7 @@ func (ccx *CycloneDX) Render(w io.Writer, bom *Sbom) error {
 	return enc.Encode(sbom)
 }
 
-func (ccx *CycloneDX) Parse(r io.Reader) (*Sbom, error) {
+func (ccx *CycloneDX) Parse(r io.ReadSeeker) (*Sbom, error) {
 	doc := &cyclonedx.BOM{
 		Components: &[]cyclonedx.Component{},
 	}
@@ -175,8 +177,7 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 
 	if bom.Metadata.Tools != nil && bom.Metadata.Tools.Components != nil {
 		// last one wins :-) - we only support one tool
-		for i := range *bom.Metadata.Tools.Components {
-			component := (*bom.Metadata.Tools.Components)[i]
+		for _, component := range *bom.Metadata.Tools.Components {
 			sbom.Generator = &Generator{
 				Name:    component.Name,
 				Version: component.Version,
