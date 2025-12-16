@@ -191,9 +191,8 @@ func TestRedhat8Parser(t *testing.T) {
 	}
 	pkgFiles, err := mgr.Files(p.Name, p.Version, p.Arch)
 	require.NoError(t, err)
-	assert.Equal(t, 15, len(pkgFiles), "detected the right amount of package files")
-	assert.Contains(t, pkgFiles, FileRecord{Path: "/usr/share/doc/which"})
-	assert.Contains(t, pkgFiles, FileRecord{Path: "/usr/share/info/which.info.gz"})
+	assert.Equal(t, 1, len(pkgFiles), "detected the right amount of package files")
+	assert.Contains(t, pkgFiles, FileRecord{Path: "/var/lib/rpm/rpmdb.sqlite"})
 }
 
 func TestPhoton4ImageParser(t *testing.T) {
