@@ -1,0 +1,222 @@
+{
+    "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.6",
+    "serialNumber": "urn:uuid:c88c51af-76b8-4dd7-9a18-6343bba4edb5",
+    "version": 1,
+    "metadata": {
+        "timestamp": "2025-12-17T16:08:46+02:00",
+        "tools": {
+            "components": [
+                {
+                    "type": "application",
+                    "author": "anchore",
+                    "name": "syft",
+                    "version": "1.38.2"
+                }
+            ]
+        },
+        "component": {
+            "bom-ref": "e3cf4bf83104fade",
+            "type": "container",
+            "name": "ubuntu",
+            "version": "20.04"
+        },
+        "properties": [
+            {
+                "name": "syft:image:labels:org.opencontainers.image.ref.name",
+                "value": "ubuntu"
+            },
+            {
+                "name": "syft:image:labels:org.opencontainers.image.version",
+                "value": "20.04"
+            }
+        ]
+    },
+    "components": [
+        {
+            "bom-ref": "os:ubuntu@20.04",
+            "type": "operating-system",
+            "name": "ubuntu",
+            "version": "20.04",
+            "description": "Ubuntu 20.04.6 LTS",
+            "swid": {
+                "tagId": "ubuntu",
+                "name": "ubuntu",
+                "version": "20.04"
+            },
+            "externalReferences": [
+                {
+                    "url": "https://bugs.launchpad.net/ubuntu/",
+                    "type": "issue-tracker"
+                },
+                {
+                    "url": "https://www.ubuntu.com/",
+                    "type": "website"
+                },
+                {
+                    "url": "https://help.ubuntu.com/",
+                    "comment": "support",
+                    "type": "other"
+                },
+                {
+                    "url": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+                    "comment": "privacyPolicy",
+                    "type": "other"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "syft:distro:extendedSupport",
+                    "value": "false"
+                },
+                {
+                    "name": "syft:distro:id",
+                    "value": "ubuntu"
+                },
+                {
+                    "name": "syft:distro:idLike:0",
+                    "value": "debian"
+                },
+                {
+                    "name": "syft:distro:prettyName",
+                    "value": "Ubuntu 20.04.6 LTS"
+                },
+                {
+                    "name": "syft:distro:versionCodename",
+                    "value": "focal"
+                },
+                {
+                    "name": "syft:distro:versionID",
+                    "value": "20.04"
+                }
+            ]
+        },
+        {
+            "bom-ref": "pkg:deb/ubuntu/base-files@11ubuntu5.8?arch=arm64&distro=ubuntu-20.04&package-id=252913c296b3558d",
+            "type": "library",
+            "publisher": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
+            "name": "base-files",
+            "version": "11ubuntu5.8",
+            "licenses": [
+                {
+                    "license": {
+                        "name": "GPL"
+                    }
+                }
+            ],
+            "cpe": "cpe:2.3:a:base-files:base-files:11ubuntu5.8:*:*:*:*:*:*:*",
+            "purl": "pkg:deb/ubuntu/base-files@11ubuntu5.8?arch=arm64&distro=ubuntu-20.04",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "dpkg-db-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "deb"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "dpkg-db-entry"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:base-files:base_files:11ubuntu5.8:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:base_files:base-files:11ubuntu5.8:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:base_files:base_files:11ubuntu5.8:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:base:base-files:11ubuntu5.8:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:cpe23",
+                    "value": "cpe:2.3:a:base:base_files:11ubuntu5.8:*:*:*:*:*:*:*"
+                },
+                {
+                    "name": "syft:location:0:layerID",
+                    "value": "sha256:37250a17e932419f4b54e624c819baf38c0025e7f9c4ba0e15af15f14a3d74c3"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/var/lib/dpkg/status"
+                },
+                {
+                    "name": "syft:location:1:layerID",
+                    "value": "sha256:37250a17e932419f4b54e624c819baf38c0025e7f9c4ba0e15af15f14a3d74c3"
+                },
+                {
+                    "name": "syft:location:1:path",
+                    "value": "/usr/share/doc/base-files/copyright"
+                },
+                {
+                    "name": "syft:location:2:layerID",
+                    "value": "sha256:37250a17e932419f4b54e624c819baf38c0025e7f9c4ba0e15af15f14a3d74c3"
+                },
+                {
+                    "name": "syft:location:2:path",
+                    "value": "/var/lib/dpkg/info/base-files.conffiles"
+                },
+                {
+                    "name": "syft:location:3:layerID",
+                    "value": "sha256:37250a17e932419f4b54e624c819baf38c0025e7f9c4ba0e15af15f14a3d74c3"
+                },
+                {
+                    "name": "syft:location:3:path",
+                    "value": "/var/lib/dpkg/info/base-files.md5sums"
+                },
+                {
+                    "name": "syft:location:4:layerID",
+                    "value": "sha256:37250a17e932419f4b54e624c819baf38c0025e7f9c4ba0e15af15f14a3d74c3"
+                },
+                {
+                    "name": "syft:location:4:path",
+                    "value": "/var/lib/dpkg/info/base-files.list"
+                },
+                {
+                    "name": "syft:location:5:layerID",
+                    "value": "sha256:37250a17e932419f4b54e624c819baf38c0025e7f9c4ba0e15af15f14a3d74c3"
+                },
+                {
+                    "name": "syft:location:5:path",
+                    "value": "/var/lib/dpkg/info/base-files.postinst"
+                },
+                {
+                    "name": "syft:location:6:layerID",
+                    "value": "sha256:37250a17e932419f4b54e624c819baf38c0025e7f9c4ba0e15af15f14a3d74c3"
+                },
+                {
+                    "name": "syft:location:6:path",
+                    "value": "/var/lib/dpkg/info/base-files.postrm"
+                },
+                {
+                    "name": "syft:location:7:layerID",
+                    "value": "sha256:37250a17e932419f4b54e624c819baf38c0025e7f9c4ba0e15af15f14a3d74c3"
+                },
+                {
+                    "name": "syft:location:7:path",
+                    "value": "/var/lib/dpkg/info/base-files.preinst"
+                },
+                {
+                    "name": "syft:location:8:layerID",
+                    "value": "sha256:37250a17e932419f4b54e624c819baf38c0025e7f9c4ba0e15af15f14a3d74c3"
+                },
+                {
+                    "name": "syft:location:8:path",
+                    "value": "/var/lib/dpkg/info/base-files.prerm"
+                },
+                {
+                    "name": "syft:metadata:installedSize",
+                    "value": "387"
+                }
+            ]
+        }
+    ]
+}

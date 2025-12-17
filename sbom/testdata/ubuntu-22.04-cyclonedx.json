@@ -1,0 +1,202 @@
+{
+    "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.6",
+    "serialNumber": "urn:uuid:03556ed4-6b21-44f2-8d7f-54d487aa40a5",
+    "version": 1,
+    "metadata": {
+        "timestamp": "2025-12-17T12:40:48+02:00",
+        "tools": {
+            "components": [
+                {
+                    "type": "application",
+                    "author": "anchore",
+                    "name": "syft",
+                    "version": "1.38.2"
+                }
+            ]
+        },
+        "component": {
+            "bom-ref": "2e194621f3c81dfe",
+            "type": "container",
+            "name": "ubuntu",
+            "version": "22.04"
+        },
+        "properties": [
+            {
+                "name": "syft:image:labels:org.opencontainers.image.ref.name",
+                "value": "ubuntu"
+            },
+            {
+                "name": "syft:image:labels:org.opencontainers.image.version",
+                "value": "22.04"
+            }
+        ]
+    },
+    "components": [
+        {
+            "bom-ref": "pkg:deb/ubuntu/adduser@3.118ubuntu5?arch=all&distro=ubuntu-22.04&package-id=d92eefd2f2007729",
+            "type": "library",
+            "publisher": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
+            "name": "adduser",
+            "version": "3.118ubuntu5",
+            "licenses": [
+                {
+                    "license": {
+                        "id": "GPL-2.0-only"
+                    }
+                }
+            ],
+            "cpe": "cpe:2.3:a:adduser:adduser:3.118ubuntu5:*:*:*:*:*:*:*",
+            "purl": "pkg:deb/ubuntu/adduser@3.118ubuntu5?arch=all&distro=ubuntu-22.04",
+            "properties": [
+                {
+                    "name": "syft:package:foundBy",
+                    "value": "dpkg-db-cataloger"
+                },
+                {
+                    "name": "syft:package:type",
+                    "value": "deb"
+                },
+                {
+                    "name": "syft:package:metadataType",
+                    "value": "dpkg-db-entry"
+                },
+                {
+                    "name": "syft:location:0:layerID",
+                    "value": "sha256:b3f74c31dcaee85c6efbb1c8b30081ee1e7f2b11e841d4492217caa7d1681539"
+                },
+                {
+                    "name": "syft:location:0:path",
+                    "value": "/var/lib/dpkg/status"
+                },
+                {
+                    "name": "syft:location:1:layerID",
+                    "value": "sha256:b3f74c31dcaee85c6efbb1c8b30081ee1e7f2b11e841d4492217caa7d1681539"
+                },
+                {
+                    "name": "syft:location:1:path",
+                    "value": "/usr/share/doc/adduser/copyright"
+                },
+                {
+                    "name": "syft:location:2:layerID",
+                    "value": "sha256:b3f74c31dcaee85c6efbb1c8b30081ee1e7f2b11e841d4492217caa7d1681539"
+                },
+                {
+                    "name": "syft:location:2:path",
+                    "value": "/var/lib/dpkg/info/adduser.conffiles"
+                },
+                {
+                    "name": "syft:location:3:layerID",
+                    "value": "sha256:b3f74c31dcaee85c6efbb1c8b30081ee1e7f2b11e841d4492217caa7d1681539"
+                },
+                {
+                    "name": "syft:location:3:path",
+                    "value": "/var/lib/dpkg/info/adduser.md5sums"
+                },
+                {
+                    "name": "syft:location:4:layerID",
+                    "value": "sha256:b3f74c31dcaee85c6efbb1c8b30081ee1e7f2b11e841d4492217caa7d1681539"
+                },
+                {
+                    "name": "syft:location:4:path",
+                    "value": "/var/lib/dpkg/info/adduser.config"
+                },
+                {
+                    "name": "syft:location:5:layerID",
+                    "value": "sha256:b3f74c31dcaee85c6efbb1c8b30081ee1e7f2b11e841d4492217caa7d1681539"
+                },
+                {
+                    "name": "syft:location:5:path",
+                    "value": "/var/lib/dpkg/info/adduser.list"
+                },
+                {
+                    "name": "syft:location:6:layerID",
+                    "value": "sha256:b3f74c31dcaee85c6efbb1c8b30081ee1e7f2b11e841d4492217caa7d1681539"
+                },
+                {
+                    "name": "syft:location:6:path",
+                    "value": "/var/lib/dpkg/info/adduser.postinst"
+                },
+                {
+                    "name": "syft:location:7:layerID",
+                    "value": "sha256:b3f74c31dcaee85c6efbb1c8b30081ee1e7f2b11e841d4492217caa7d1681539"
+                },
+                {
+                    "name": "syft:location:7:path",
+                    "value": "/var/lib/dpkg/info/adduser.postrm"
+                },
+                {
+                    "name": "syft:location:8:layerID",
+                    "value": "sha256:b3f74c31dcaee85c6efbb1c8b30081ee1e7f2b11e841d4492217caa7d1681539"
+                },
+                {
+                    "name": "syft:location:8:path",
+                    "value": "/var/lib/dpkg/info/adduser.templates"
+                },
+                {
+                    "name": "syft:metadata:installedSize",
+                    "value": "608"
+                }
+            ]
+        },
+        {
+            "bom-ref": "os:ubuntu@22.04",
+            "type": "operating-system",
+            "name": "ubuntu",
+            "version": "22.04",
+            "description": "Ubuntu 22.04.5 LTS",
+            "swid": {
+                "tagId": "ubuntu",
+                "name": "ubuntu",
+                "version": "22.04"
+            },
+            "externalReferences": [
+                {
+                    "url": "https://bugs.launchpad.net/ubuntu/",
+                    "type": "issue-tracker"
+                },
+                {
+                    "url": "https://www.ubuntu.com/",
+                    "type": "website"
+                },
+                {
+                    "url": "https://help.ubuntu.com/",
+                    "comment": "support",
+                    "type": "other"
+                },
+                {
+                    "url": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+                    "comment": "privacyPolicy",
+                    "type": "other"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "syft:distro:extendedSupport",
+                    "value": "false"
+                },
+                {
+                    "name": "syft:distro:id",
+                    "value": "ubuntu"
+                },
+                {
+                    "name": "syft:distro:idLike:0",
+                    "value": "debian"
+                },
+                {
+                    "name": "syft:distro:prettyName",
+                    "value": "Ubuntu 22.04.5 LTS"
+                },
+                {
+                    "name": "syft:distro:versionCodename",
+                    "value": "jammy"
+                },
+                {
+                    "name": "syft:distro:versionID",
+                    "value": "22.04"
+                }
+            ]
+        }
+    ]
+}
