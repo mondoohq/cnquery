@@ -193,8 +193,7 @@ func (fs *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
 	return tarReader, nil
 }
 
-// searches for files and returns the file info
-// regex can be nil
+// Find searches for files and returns the file info, regex can be nil
 func (fs *FS) Find(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int) ([]string, error) {
 	list := []string{}
 	for k := range fs.FileMap {

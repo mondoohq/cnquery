@@ -4,7 +4,7 @@
 //go:build linux || darwin || netbsd || openbsd || freebsd
 // +build linux darwin netbsd openbsd freebsd
 
-package fs
+package fsutil
 
 import (
 	"errors"
