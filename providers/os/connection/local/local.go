@@ -5,6 +5,7 @@ package local
 
 import (
 	"bytes"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -65,6 +66,12 @@ func (p *LocalConnection) UpdateAsset(asset *inventory.Asset) {
 }
 
 func (p *LocalConnection) Capabilities() shared.Capabilities {
+	// local fs has experimental local search support that does not require find command
+	envSearch := os.Getenv("LOCAL_FS_SEARCH")
+	if envSearch == "1" || strings.ToLower(envSearch) == "true" {
+		return shared.Capability_File | shared.Capability_RunCommand | shared.Capability_FindFile
+	}
+
 	return shared.Capability_File | shared.Capability_RunCommand
 }
 
@@ -88,7 +95,7 @@ func (p *LocalConnection) FileSystem() afero.Fs {
 	if p.Sudo != nil && p.Sudo.Active {
 		p.fs = cat.New(p)
 	} else {
-		p.fs = afero.NewOsFs()
+		p.fs = NewFs()
 	}
 
 	return p.fs
