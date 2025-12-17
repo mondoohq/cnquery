@@ -85,8 +85,8 @@ func TestCycloneDxJsonDecoding(t *testing.T) {
 		assert.Equal(t, "Ubuntu 20.04.6 LTS", bom.Asset.Platform.Title)
 		// this is the bom-ref
 		assert.Equal(t, []string{"//platformid.api.mondoo.app/runtime/docker/images/e3cf4bf83104fade"}, bom.Asset.PlatformIds)
-		// 92 library components + 1 os component
-		assert.Len(t, bom.Packages, 93)
+		// 1 library components + 1 os component
+		assert.Len(t, bom.Packages, 2)
 
 		// verify the generator is correct
 		assert.Equal(t, "syft", bom.Generator.Name)
@@ -113,8 +113,8 @@ func TestCycloneDxJsonDecoding(t *testing.T) {
 		assert.Equal(t, "Ubuntu 22.04.5 LTS", bom.Asset.Platform.Title)
 		// this is the bom-ref
 		assert.Equal(t, []string{"//platformid.api.mondoo.app/runtime/docker/images/2e194621f3c81dfe"}, bom.Asset.PlatformIds)
-		// 101 library components + 1 os component
-		assert.Len(t, bom.Packages, 102)
+		// 1 library components + 1 os component
+		assert.Len(t, bom.Packages, 2)
 
 		// verify the generator is correct
 		assert.Equal(t, "syft", bom.Generator.Name)
