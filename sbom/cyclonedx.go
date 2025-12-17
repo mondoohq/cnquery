@@ -6,6 +6,7 @@ package sbom
 import (
 	"errors"
 	"io"
+	"strings"
 	"time"
 
 	cyclonedx "github.com/CycloneDX/cyclonedx-go"
@@ -168,30 +169,59 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 		return nil, errors.New("not a valid cyclone dx BOM")
 	}
 
+	rootComponent := bom.Metadata.Component
 	sbom := &Sbom{
 		Asset: &Asset{
-			Name: bom.Metadata.Component.Name + ":" + bom.Metadata.Component.Version,
+			Name: rootComponent.Name,
+			Platform: &Platform{
+				Version: rootComponent.Version,
+				Title:   rootComponent.Description,
+			},
 		},
 		Packages: make([]*Package, 0),
 	}
 
-	if bom.Metadata.Tools != nil && bom.Metadata.Tools.Components != nil {
-		// last one wins :-) - we only support one tool
-		for _, component := range *bom.Metadata.Tools.Components {
-			sbom.Generator = &Generator{
-				Name:    component.Name,
-				Version: component.Version,
-				Vendor:  component.Author,
+	switch rootComponent.Type {
+	case cyclonedx.ComponentTypeOS:
+		hostnameId := "//platformid.api.mondoo.app/hostname/" + rootComponent.Name
+		sbom.Asset.PlatformIds = append(sbom.Asset.PlatformIds, hostnameId)
+	case cyclonedx.ComponentTypeContainer:
+		// we need to figure out where to get the container ID from properly. For now, we use the BOMRef
+		bomRefId := "//platformid.api.mondoo.app/runtime/docker/images/" + rootComponent.BOMRef
+		sbom.Asset.PlatformIds = append(sbom.Asset.PlatformIds, bomRefId)
+	}
+
+	if bom.Metadata.Tools != nil {
+		if bom.Metadata.Tools.Components != nil {
+			// last one wins :-) - we only support one tool
+			for _, component := range *bom.Metadata.Tools.Components {
+				sbom.Generator = &Generator{
+					Name:    component.Name,
+					Version: component.Version,
+					Vendor:  component.Author,
+				}
+			}
+		}
+
+		// if we have no generator info, fallback to trying tools. these are deprecated
+		// but might still be present
+		if sbom.Generator == nil && bom.Metadata.Tools.Tools != nil {
+			for _, tool := range *bom.Metadata.Tools.Tools {
+				sbom.Generator = &Generator{
+					Name:    tool.Name,
+					Version: tool.Version,
+					Vendor:  tool.Vendor,
+				}
 			}
 		}
 	}
 
-	for i := range *bom.Components {
-		component := (*bom.Components)[i]
+	for _, component := range *bom.Components {
 		pkg := &Package{
-			Name:    component.Name,
-			Version: component.Version,
-			Purl:    component.PackageURL,
+			Name:        component.Name,
+			Version:     component.Version,
+			Purl:        component.PackageURL,
+			Description: component.Description,
 		}
 
 		// parse purl to gather package type
@@ -208,8 +238,7 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 
 		if component.Evidence != nil && component.Evidence.Occurrences != nil && ccx.opts.IncludeEvidence {
 			pkg.EvidenceList = make([]*Evidence, 0)
-			for i := range *component.Evidence.Occurrences {
-				e := (*component.Evidence.Occurrences)[i]
+			for _, e := range *component.Evidence.Occurrences {
 				pkg.EvidenceList = append(pkg.EvidenceList, &Evidence{
 					Type:  EvidenceType_EVIDENCE_TYPE_FILE,
 					Value: e.Location,
@@ -219,17 +248,17 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 
 		switch component.Type {
 		case cyclonedx.ComponentTypeOS:
-			sbom.Asset.Platform = &Platform{
-				Name:    component.Name,
-				Version: component.Version,
-				Title:   component.Description,
-			}
-			sbom.Asset.Platform.Family = familyMap[component.Name]
-
+			sbom.Asset.Platform.Name = component.Name
+			sbom.Asset.Platform.Version = component.Version
+			sbom.Asset.Platform.Title = component.Description
+			sbom.Asset.Platform.Family = familyMap[strings.ToLower(component.Name)]
 			if len(component.CPE) > 0 {
 				sbom.Asset.Platform.Cpes = []string{component.CPE}
 			}
+			sbom.Packages = append(sbom.Packages, pkg)
 		case cyclonedx.ComponentTypeLibrary:
+			sbom.Packages = append(sbom.Packages, pkg)
+		case cyclonedx.ComponentTypeApplication:
 			sbom.Packages = append(sbom.Packages, pkg)
 		}
 	}

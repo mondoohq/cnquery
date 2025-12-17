@@ -43,8 +43,8 @@ func AllFormats() string {
 	return strings.Join(formats, ", ")
 }
 
-func New(fomat string) FormatSpecificationHandler {
-	switch fomat {
+func New(format string) FormatSpecificationHandler {
+	switch format {
 	case FormatJson, "cnquery-json":
 		return &CnqueryBOM{}
 	case FormatCycloneDxJSON:

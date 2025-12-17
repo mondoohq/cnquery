@@ -53,16 +53,74 @@ func TestCycloneDxOutput(t *testing.T) {
 }
 
 func TestCycloneDxJsonDecoding(t *testing.T) {
-	f, err := os.Open("./testdata/alpine-319.cyclone.json")
-	require.NoError(t, err)
+	t.Run("alpine 3.19", func(t *testing.T) {
+		f, err := os.Open("./testdata/alpine-319.cyclone.json")
+		require.NoError(t, err)
 
-	formatHandler := &sbom.CycloneDX{
-		Format: cyclonedx.BOMFileFormatJSON,
-	}
+		formatHandler := &sbom.CycloneDX{
+			Format: cyclonedx.BOMFileFormatJSON,
+		}
 
-	bom, err := formatHandler.Parse(f)
-	require.NoError(t, err)
-	assert.NotNil(t, bom)
+		bom, err := formatHandler.Parse(f)
+		require.NoError(t, err)
+		assert.NotNil(t, bom)
+	})
+
+	t.Run("ubuntu 20.04 container", func(t *testing.T) {
+		f, err := os.Open("./testdata/ubuntu-20.04-cyclonedx.json")
+		require.NoError(t, err)
+
+		formatHandler := &sbom.CycloneDX{
+			Format: cyclonedx.BOMFileFormatJSON,
+		}
+
+		bom, err := formatHandler.Parse(f)
+		require.NoError(t, err)
+		assert.NotNil(t, bom)
+
+		// verify we have the right asset and platform information.
+		assert.Equal(t, "ubuntu", bom.Asset.Platform.Name)
+		assert.Equal(t, "20.04", bom.Asset.Platform.Version)
+		assert.Equal(t, []string{"linux", "unix", "os"}, bom.Asset.Platform.Family)
+		assert.Equal(t, "Ubuntu 20.04.6 LTS", bom.Asset.Platform.Title)
+		// this is the bom-ref
+		assert.Equal(t, []string{"//platformid.api.mondoo.app/runtime/docker/images/e3cf4bf83104fade"}, bom.Asset.PlatformIds)
+		// 92 library components + 1 os component
+		assert.Len(t, bom.Packages, 93)
+
+		// verify the generator is correct
+		assert.Equal(t, "syft", bom.Generator.Name)
+		assert.Equal(t, "1.38.2", bom.Generator.Version)
+		assert.Equal(t, "anchore", bom.Generator.Vendor)
+	})
+
+	t.Run("ubuntu 22.04 container", func(t *testing.T) {
+		f, err := os.Open("./testdata/ubuntu-22.04-cyclonedx.json")
+		require.NoError(t, err)
+
+		formatHandler := &sbom.CycloneDX{
+			Format: cyclonedx.BOMFileFormatJSON,
+		}
+
+		bom, err := formatHandler.Parse(f)
+		require.NoError(t, err)
+		assert.NotNil(t, bom)
+
+		// verify we have the right asset and platform information.
+		assert.Equal(t, "ubuntu", bom.Asset.Platform.Name)
+		assert.Equal(t, "22.04", bom.Asset.Platform.Version)
+		assert.Equal(t, []string{"linux", "unix", "os"}, bom.Asset.Platform.Family)
+		assert.Equal(t, "Ubuntu 22.04.5 LTS", bom.Asset.Platform.Title)
+		// this is the bom-ref
+		assert.Equal(t, []string{"//platformid.api.mondoo.app/runtime/docker/images/2e194621f3c81dfe"}, bom.Asset.PlatformIds)
+		// 101 library components + 1 os component
+		assert.Len(t, bom.Packages, 102)
+
+		// verify the generator is correct
+		assert.Equal(t, "syft", bom.Generator.Name)
+		assert.Equal(t, "1.38.2", bom.Generator.Version)
+		assert.Equal(t, "anchore", bom.Generator.Vendor)
+	})
 }
 
 func TestCycloneDxXmlDecoding(t *testing.T) {
