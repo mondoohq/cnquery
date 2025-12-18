@@ -6,6 +6,7 @@ package resources
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -134,6 +135,12 @@ func (s *mqlSshdConfig) expandGlob(glob string) ([]string, error) {
 		for _, path := range paths {
 			files, err := afs.ReadDir(path)
 			if err != nil {
+				// If the directory doesn't exist, treat it as "no matches" (empty result)
+				// This is consistent with standard glob behavior where a non-existent directory
+				// results in an empty match set, not an error
+				if os.IsNotExist(err) {
+					continue
+				}
 				return nil, err
 			}
 
@@ -165,10 +172,10 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 		file.Path.Data: file,
 	}
 	var allContents strings.Builder
-	globPathContent := func(glob string) (string, error) {
+	globPathContent := func(glob string) (string, []string, error) {
 		paths, err := s.expandGlob(glob)
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 
 		var content strings.Builder
@@ -179,7 +186,7 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 					"path": llx.StringData(path),
 				})
 				if err != nil {
-					return "", err
+					return "", nil, err
 				}
 				file = raw.(*mqlFile)
 				filesIdx[path] = file
@@ -187,7 +194,7 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 
 			fileContent := file.GetContent()
 			if fileContent.Error != nil {
-				return "", fileContent.Error
+				return "", nil, fileContent.Error
 			}
 
 			content.WriteString(fileContent.Data)
@@ -196,7 +203,7 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 
 		res := content.String()
 		allContents.WriteString(res)
-		return res, nil
+		return res, paths, nil
 	}
 
 	matchBlocks, err := sshd.ParseBlocks(file.Path.Data, globPathContent)

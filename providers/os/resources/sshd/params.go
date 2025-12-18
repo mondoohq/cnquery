@@ -112,17 +112,25 @@ func mergeIncludedBlocks(matchConditions map[string]*MatchBlock, blocks MatchBlo
 	}
 }
 
-func ParseBlocks(rootPath string, globPathContent func(string) (string, error)) (MatchBlocks, error) {
-	content, err := globPathContent(rootPath)
+type globPathContentFunc func(string) (content string, paths []string, err error)
+
+func ParseBlocks(rootPath string, globPathContent globPathContentFunc) (MatchBlocks, error) {
+	content, actualPaths, err := globPathContent(rootPath)
 	if err != nil {
 		return nil, err
+	}
+
+	// This ensures that glob patterns use the actual file path instead of the glob pattern
+	actualPath := rootPath
+	if len(actualPaths) > 0 {
+		actualPath = actualPaths[0]
 	}
 
 	curBlock := &MatchBlock{
 		Criteria: "",
 		Params:   map[string]any{},
 		Context: Context{
-			Path:    rootPath,
+			Path:    actualPath,
 			Range:   llx.NewRange(),
 			curLine: 1,
 		},
@@ -179,7 +187,7 @@ func ParseBlocks(rootPath string, globPathContent func(string) (string, error)) 
 					Params:   map[string]any{},
 					Context: Context{
 						curLine: curLineIdx + 1,
-						Path:    rootPath,
+						Path:    actualPath,
 						Range:   llx.NewRange(),
 					},
 				}
