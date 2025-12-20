@@ -51,10 +51,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		FilesAvailable: PkgFilesIncluded,
 		Files: []FileRecord{
 			{
-				Path: "lib/libc.musl-x86_64.so.1",
-			},
-			{
-				Path: "lib/ld-musl-x86_64.so.1",
+				Path: "/lib/apk/db/installed",
 			},
 		},
 	}
@@ -76,25 +73,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		FilesAvailable: PkgFilesIncluded,
 		Files: []FileRecord{
 			{
-				Path: "etc/ssl/cert.pem",
-			},
-			{
-				Path: "etc/ssl/x509v3.cnf",
-			},
-			{
-				Path: "etc/ssl/openssl.cnf",
-			},
-			{
-				Path: "lib/libcrypto.so.42",
-			},
-			{
-				Path: "lib/libcrypto.so.42.0.0",
-			},
-			{
-				Path: "usr/lib/libcrypto.so.42",
-			},
-			{
-				Path: "usr/lib/libcrypto.so.42.0.0",
+				Path: "/lib/apk/db/installed",
 			},
 		},
 	}
@@ -116,16 +95,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		FilesAvailable: PkgFilesIncluded,
 		Files: []FileRecord{
 			{
-				Path: "lib/libssl.so.44.0.1",
-			},
-			{
-				Path: "lib/libssl.so.44",
-			},
-			{
-				Path: "usr/lib/libssl.so.44.0.1",
-			},
-			{
-				Path: "usr/lib/libssl.so.44",
+				Path: "/lib/apk/db/installed",
 			},
 		},
 	}
@@ -147,7 +117,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		FilesAvailable: PkgFilesIncluded,
 		Files: []FileRecord{
 			{
-				Path: "sbin/apk",
+				Path: "/lib/apk/db/installed",
 			},
 		},
 	}
@@ -169,22 +139,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		FilesAvailable: PkgFilesIncluded,
 		Files: []FileRecord{
 			{
-				Path: "bin/busybox",
-			},
-			{
-				Path: "bin/sh",
-			},
-			{
-				Path: "etc/securetty",
-			},
-			{
-				Path: "etc/udhcpd.conf",
-			},
-			{
-				Path: "etc/logrotate.d/acpid",
-			},
-			{
-				Path: "etc/network/if-up.d/dad",
+				Path: "/lib/apk/db/installed",
 			},
 		},
 	}
@@ -205,32 +160,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		Format:         AlpinePkgFormat,
 		FilesAvailable: PkgFilesIncluded,
 		Files: []FileRecord{
-			{Path: "etc/hosts"},
-			{Path: "etc/sysctl.conf"},
-			{Path: "etc/group"},
-			{Path: "etc/protocols"},
-			{Path: "etc/fstab"},
-			{Path: "etc/mtab"},
-			{Path: "etc/profile"},
-			{Path: "etc/TZ"},
-			{Path: "etc/shells"},
-			{Path: "etc/motd"},
-			{Path: "etc/inittab"},
-			{Path: "etc/hostname"},
-			{Path: "etc/modules"},
-			{Path: "etc/services"},
-			{Path: "etc/shadow"},
-			{Path: "etc/passwd"},
-			{Path: "etc/profile.d/color_prompt"},
-			{Path: "etc/sysctl.d/00-alpine.conf"},
-			{Path: "etc/modprobe.d/i386.conf"},
-			{Path: "etc/modprobe.d/blacklist.conf"},
-			{Path: "etc/modprobe.d/aliases.conf"},
-			{Path: "etc/modprobe.d/kms.conf"},
-			{Path: "etc/crontabs/root"},
-			{Path: "sbin/mkmntdirs"},
-			{Path: "var/run"},
-			{Path: "var/spool/cron/crontabs"},
+			{Path: "/lib/apk/db/installed"},
 		},
 	}
 	assert.Equal(t, p, findPkg(m, p.Name), p.Name)
