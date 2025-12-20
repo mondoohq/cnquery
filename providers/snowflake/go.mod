@@ -7,9 +7,9 @@ go 1.25.1
 require (
 	// pin v0.92.0
 	github.com/Snowflake-Labs/terraform-provider-snowflake v0.92.0
-	github.com/jmoiron/sqlx v1.4.0 // indirect
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/snowflakedb/gosnowflake v1.18.0
-	github.com/stretchr/testify v1.11.1 // indirect
+	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/cnquery/v12 v12.13.2
 	go.mondoo.com/ranger-rpc v0.7.1
 	golang.org/x/crypto v0.46.0
