@@ -70,6 +70,9 @@ func TestSpdxJsonDecoder(t *testing.T) {
 	sbomReport, err := decoder.Parse(f)
 	require.NoError(t, err)
 	assert.NotNil(t, sbomReport)
+	assert.Equal(t, "alpine-3.19.1", sbomReport.Asset.Name)
+	assert.Equal(t, "alpine", sbomReport.Asset.Platform.Name)
+	assert.Equal(t, "3.19.1", sbomReport.Asset.Platform.Version)
 }
 
 func TestSpdxJsonDecoder_GitHub_DependecyGraph(t *testing.T) {
@@ -84,4 +87,18 @@ func TestSpdxJsonDecoder_GitHub_DependecyGraph(t *testing.T) {
 	assert.Equal(t, "com.github.vercel/next.js", sbomReport.Asset.Name)
 	assert.Equal(t, "spdx", sbomReport.Asset.Platform.Name)
 	assert.Equal(t, "SPDX-2.3", sbomReport.Asset.Platform.Version)
+}
+
+func TestSpdxJsonDecoder_Alpine_syft(t *testing.T) {
+	f, err := os.Open("testdata/alpine-3.19.syft.spdx.json")
+	require.NoError(t, err)
+
+	decoder := sbom.NewSPDX(sbom.FormatSpdxJSON)
+
+	sbomReport, err := decoder.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, sbomReport)
+	assert.Equal(t, "alpine-3.19.9", sbomReport.Asset.Name)
+	assert.Equal(t, "alpine", sbomReport.Asset.Platform.Name)
+	assert.Equal(t, "3.19.9", sbomReport.Asset.Platform.Version)
 }
