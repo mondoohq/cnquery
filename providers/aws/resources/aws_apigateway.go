@@ -82,7 +82,7 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 							"description": llx.StringData(convert.ToValue(restApi.Description)),
 							"createdDate": llx.TimeDataPtr(restApi.CreatedDate),
 							"region":      llx.StringData(region),
-							"tags":        llx.MapData(strMapToInterface(restApi.Tags), types.String),
+							"tags":        llx.MapData(toInterfaceMap(restApi.Tags), types.String),
 						})
 					if err != nil {
 						return nil, err

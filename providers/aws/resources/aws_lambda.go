@@ -98,7 +98,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 							"dlqTargetArn": llx.StringData(dlqTarget),
 							"vpcConfig":    llx.MapData(vpcConfigJson, types.Any),
 							"region":       llx.StringData(region),
-							"tags":         llx.MapData(strMapToInterface(tags), types.String),
+							"tags":         llx.MapData(toInterfaceMap(tags), types.String),
 						})
 					if err != nil {
 						return nil, err

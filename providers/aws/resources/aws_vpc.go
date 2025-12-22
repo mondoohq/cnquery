@@ -92,7 +92,7 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 							"name":                     llx.StringData(name),
 							"region":                   llx.StringData(region),
 							"state":                    llx.StringData(string(vpc.State)),
-							"tags":                     llx.MapData(Ec2TagsToMap(vpc.Tags), types.String),
+							"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(vpc.Tags)), types.String),
 						})
 					if err != nil {
 						log.Error().Msg(err.Error())
@@ -212,7 +212,7 @@ func (a *mqlAwsVpc) natGateways() ([]any, error) {
 				"createdAt":    llx.TimeDataPtr(gw.CreateTime),
 				"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
 				"state":        llx.StringData(string(gw.State)),
-				"tags":         llx.MapData(Ec2TagsToMap(gw.Tags), types.String),
+				"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
 				"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
 			}
 
@@ -320,7 +320,7 @@ func (a *mqlAwsVpc) serviceEndpoints() ([]any, error) {
 					"id":       llx.StringDataPtr(endpoint.VpcEndpointId),
 					"name":     llx.StringDataPtr(endpoint.ServiceName),
 					"type":     llx.StringData(string(endpoint.VpcEndpointType)),
-					"tags":     llx.MapData(Ec2TagsToMap(endpoint.Tags), types.String),
+					"tags":     llx.MapData(toInterfaceMap(ec2TagsToMap(endpoint.Tags)), types.String),
 					"dnsNames": llx.ArrayData(dnsNames, types.String),
 					"owner":    llx.StringDataPtr(endpoint.OwnerId),
 				},
@@ -463,7 +463,7 @@ func (a *mqlAwsVpc) peeringConnections() ([]any, error) {
 					"expirationTime": llx.TimeDataPtr(peerconn.ExpirationTime),
 					"id":             llx.StringDataPtr(peerconn.VpcPeeringConnectionId),
 					"status":         llx.StringData(status),
-					"tags":           llx.MapData(Ec2TagsToMap(peerconn.Tags), types.String),
+					"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(peerconn.Tags)), types.String),
 				},
 			)
 			if err != nil {
@@ -577,7 +577,7 @@ func (a *mqlAwsVpc) flowLogs() ([]any, error) {
 					"maxAggregationInterval": llx.IntDataDefault(flowLog.MaxAggregationInterval, 0),
 					"region":                 llx.StringData(a.Region.Data),
 					"status":                 llx.StringDataPtr(flowLog.FlowLogStatus),
-					"tags":                   llx.MapData(Ec2TagsToMap(flowLog.Tags), types.String),
+					"tags":                   llx.MapData(toInterfaceMap(ec2TagsToMap(flowLog.Tags)), types.String),
 					"trafficType":            llx.StringData(string(flowLog.TrafficType)),
 					"vpc":                    llx.StringData(vpc),
 				},
@@ -627,7 +627,7 @@ func (a *mqlAwsVpc) routeTables() ([]any, error) {
 				map[string]*llx.RawData{
 					"id":     llx.StringDataPtr(routeTable.RouteTableId),
 					"routes": llx.ArrayData(dictRoutes, types.Any),
-					"tags":   llx.MapData(Ec2TagsToMap(routeTable.Tags), types.String),
+					"tags":   llx.MapData(toInterfaceMap(ec2TagsToMap(routeTable.Tags)), types.String),
 				})
 			if err != nil {
 				return nil, err

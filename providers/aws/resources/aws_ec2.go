@@ -32,19 +32,6 @@ func (e *mqlAwsEc2) id() (string, error) {
 	return ResourceAwsEc2, nil
 }
 
-func Ec2TagsToMap(tags []ec2types.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
-	}
-
-	return tagsMap
-}
-
 func initAwsEc2Eip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -77,7 +64,7 @@ func initAwsEc2Eip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		args["networkInterfaceOwnerId"] = llx.StringDataPtr(add.NetworkInterfaceOwnerId)
 		args["privateIpAddress"] = llx.StringDataPtr(add.PrivateIpAddress)
 		args["publicIpv4Pool"] = llx.StringDataPtr(add.PublicIpv4Pool)
-		args["tags"] = llx.MapData(Ec2TagsToMap(add.Tags), types.String)
+		args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(add.Tags)), types.String)
 		args["region"] = llx.StringData(r)
 		return args, nil, nil
 	}
@@ -169,7 +156,7 @@ func (a *mqlAwsEc2) getEIPs(conn *connection.AwsConnection) []*jobpool.Job {
 					"networkInterfaceOwnerId": llx.StringDataPtr(add.NetworkInterfaceOwnerId),
 					"privateIpAddress":        llx.StringDataPtr(add.PrivateIpAddress),
 					"publicIpv4Pool":          llx.StringDataPtr(add.PublicIpv4Pool),
-					"tags":                    llx.MapData(Ec2TagsToMap(add.Tags), types.String),
+					"tags":                    llx.MapData(toInterfaceMap(ec2TagsToMap(add.Tags)), types.String),
 					"region":                  llx.StringData(region),
 				}
 				mqlAddress, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Eip, args)
@@ -262,7 +249,7 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 							"id":           llx.StringDataPtr(acl.NetworkAclId),
 							"region":       llx.StringData(region),
 							"isDefault":    llx.BoolDataPtr(acl.IsDefault),
-							"tags":         llx.MapData(Ec2TagsToMap(acl.Tags), types.String),
+							"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(acl.Tags)), types.String),
 							"associations": llx.ArrayData(assoc, types.Type(ResourceAwsEc2NetworkaclAssociation)),
 						})
 					if err != nil {
@@ -416,7 +403,7 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 						"id":          llx.StringDataPtr(group.GroupId),
 						"name":        llx.StringDataPtr(group.GroupName),
 						"description": llx.StringDataPtr(group.Description),
-						"tags":        llx.MapData(Ec2TagsToMap(group.Tags), types.String),
+						"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(group.Tags)), types.String),
 						"region":      llx.StringData(region),
 					}
 
@@ -609,7 +596,7 @@ func (a *mqlAwsEc2) getKeypairs(conn *connection.AwsConnection) []*jobpool.Job {
 						"fingerprint": llx.StringDataPtr(kp.KeyFingerprint),
 						"name":        llx.StringDataPtr(kp.KeyName),
 						"type":        llx.StringData(string(kp.KeyType)),
-						"tags":        llx.MapData(Ec2TagsToMap(kp.Tags), types.String),
+						"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(kp.Tags)), types.String),
 						"region":      llx.StringData(region),
 						"createdAt":   llx.TimeDataPtr(kp.CreateTime),
 					})
@@ -664,7 +651,7 @@ func initAwsEc2Keypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		args["fingerprint"] = llx.StringData(convert.ToValue(kp.KeyFingerprint))
 		args["name"] = llx.StringData(convert.ToValue(kp.KeyName))
 		args["type"] = llx.StringData(string(kp.KeyType))
-		args["tags"] = llx.MapData(Ec2TagsToMap(kp.Tags), types.String)
+		args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(kp.Tags)), types.String)
 		args["region"] = llx.StringData(r)
 		args["arn"] = llx.StringData(fmt.Sprintf(keypairArnPattern, conn.AccountId(), r, convert.ToValue(kp.KeyPairId)))
 		args["createdAt"] = llx.TimeDataPtr(kp.CreateTime)
@@ -892,7 +879,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			// "iamInstanceProfile":    llx.MapData(iamInstanceProfile, types.Any),
 			"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
 			"stateTransitionTime":   llx.TimeData(stateTransitionTime),
-			"tags":                  llx.MapData(Ec2TagsToMap(instance.Tags), types.String),
+			"tags":                  llx.MapData(toInterfaceMap(ec2TagsToMap(instance.Tags)), types.String),
 			"tpmSupport":            llx.StringDataPtr(instance.TpmSupport),
 		}
 
@@ -955,7 +942,7 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
 				"requesterManaged": llx.BoolDataPtr(networkingInterface.RequesterManaged),
 				"sourceDestCheck":  llx.BoolDataPtr(networkingInterface.SourceDestCheck),
 				"status":           llx.StringData(string(networkingInterface.Status)),
-				"tags":             llx.MapData(Ec2TagsToMap(networkingInterface.TagSet), types.String),
+				"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(networkingInterface.TagSet)), types.String),
 			}
 			mqlNetworkInterface, err := CreateResource(i.MqlRuntime, ResourceAwsEc2Networkinterface, args)
 			if err != nil {
@@ -1393,7 +1380,7 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 							"region":             llx.StringData(region),
 							"size":               llx.IntDataDefault(vol.Size, 0),
 							"state":              llx.StringData(string(vol.State)),
-							"tags":               llx.MapData(Ec2TagsToMap(vol.Tags), types.String),
+							"tags":               llx.MapData(toInterfaceMap(ec2TagsToMap(vol.Tags)), types.String),
 							"throughput":         llx.IntDataDefault(vol.Throughput, 0),
 							"volumeType":         llx.StringData(string(vol.VolumeType)),
 						})
@@ -1692,7 +1679,7 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 							"startTime":      llx.TimeDataPtr(snapshot.StartTime),
 							"state":          llx.StringData(string(snapshot.State)),
 							"storageTier":    llx.StringData(string(snapshot.StorageTier)),
-							"tags":           llx.MapData(Ec2TagsToMap(snapshot.Tags), types.String),
+							"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(snapshot.Tags)), types.String),
 							"volumeId":       llx.StringDataPtr(snapshot.VolumeId),
 							"volumeSize":     llx.IntDataDefault(snapshot.VolumeSize, 0),
 						})

@@ -113,7 +113,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					"resourcesVpcConfig": llx.MapData(vpcConfig, types.Any),
 					"status":             llx.StringData(string(cluster.Status)),
 					"supportType":        llx.StringData(string(cluster.UpgradePolicy.SupportType)),
-					"tags":               llx.MapData(strMapToInterface(cluster.Tags), types.String),
+					"tags":               llx.MapData(toInterfaceMap(cluster.Tags), types.String),
 					"version":            llx.StringDataPtr(cluster.Version),
 					"deletionProtection": llx.BoolDataPtr(cluster.DeletionProtection),
 				}
