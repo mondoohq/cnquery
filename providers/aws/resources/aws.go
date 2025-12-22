@@ -101,8 +101,8 @@ func Is400InstanceNotFoundError(err error) bool {
 	return false
 }
 
-func strMapToInterface(m map[string]string) map[string]any {
-	res := map[string]any{}
+func toInterfaceMap(m map[string]string) map[string]any {
+	res := make(map[string]any)
 	for k, v := range m {
 		res[k] = v
 	}
@@ -111,8 +111,8 @@ func strMapToInterface(m map[string]string) map[string]any {
 
 func toInterfaceArr(a []string) []any {
 	res := []any{}
-	for i := range a {
-		res = append(res, a[i])
+	for _, v := range a {
+		res = append(res, v)
 	}
 	return res
 }

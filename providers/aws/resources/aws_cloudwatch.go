@@ -591,7 +591,7 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 							log.Debug().Interface("log_group", loggroup.LogGroupName).Msg("excluding log group due to filters")
 							continue
 						}
-						args["tags"] = llx.MapData(strMapToInterface(groupTags.Tags), types.String)
+						args["tags"] = llx.MapData(toInterfaceMap(groupTags.Tags), types.String)
 					} else {
 						log.Warn().Err(err).Interface("log_group", loggroup.LogGroupName).Msg("could not get tags for log group")
 					}

@@ -78,7 +78,7 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) [
 								"status":                 llx.StringData(string(analyzer.Status)),
 								"type":                   llx.StringData(string(analyzer.Type)),
 								"region":                 llx.StringData(region),
-								"tags":                   llx.MapData(strMapToInterface(analyzer.Tags), types.String),
+								"tags":                   llx.MapData(toInterfaceMap(analyzer.Tags), types.String),
 								"createdAt":              llx.TimeDataPtr(analyzer.CreatedAt),
 								"lastResourceAnalyzed":   llx.StringDataPtr(analyzer.LastResourceAnalyzed),
 								"lastResourceAnalyzedAt": llx.TimeDataPtr(analyzer.LastResourceAnalyzedAt),

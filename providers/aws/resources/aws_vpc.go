@@ -92,7 +92,7 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 							"name":                     llx.StringData(name),
 							"region":                   llx.StringData(region),
 							"state":                    llx.StringData(string(vpc.State)),
-							"tags":                     llx.MapData(Ec2TagsToMap(vpc.Tags), types.String),
+							"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(vpc.Tags)), types.String),
 						})
 					if err != nil {
 						log.Error().Msg(err.Error())
@@ -167,14 +167,14 @@ func (a *mqlAwsVpcNatgatewayAddress) publicIp() (*mqlAwsEc2Eip, error) {
 
 func (a *mqlAwsVpc) natGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	vpc := a.Id.Data
+	vpcId := a.Id.Data
 
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
 	endpoints := []any{}
 
 	filters := conn.Filters.General.ToServerSideEc2Filters()
-	filters = append(filters, vpctypes.Filter{Name: aws.String("vpc-id"), Values: []string{vpc}})
+	filters = append(filters, vpcFilter(vpcId))
 	params := &ec2.DescribeNatGatewaysInput{Filter: filters}
 	paginator := ec2.NewDescribeNatGatewaysPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -212,7 +212,7 @@ func (a *mqlAwsVpc) natGateways() ([]any, error) {
 				"createdAt":    llx.TimeDataPtr(gw.CreateTime),
 				"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
 				"state":        llx.StringData(string(gw.State)),
-				"tags":         llx.MapData(Ec2TagsToMap(gw.Tags), types.String),
+				"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
 				"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
 			}
 
@@ -242,7 +242,7 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 	endpoints := []any{}
 
 	filters := conn.Filters.General.ToServerSideEc2Filters()
-	filters = append(filters, vpctypes.Filter{Name: aws.String("vpc-id"), Values: []string{vpcId}})
+	filters = append(filters, vpcFilter(vpcId))
 	params := &ec2.DescribeVpcEndpointsInput{Filters: filters}
 	paginator := ec2.NewDescribeVpcEndpointsPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -298,7 +298,7 @@ func (a *mqlAwsVpc) serviceEndpoints() ([]any, error) {
 	)
 
 	filters := conn.Filters.General.ToServerSideEc2Filters()
-	filters = append(filters, vpctypes.Filter{Name: aws.String("vpc-id"), Values: []string{vpcID}})
+	filters = append(filters, vpcFilter(vpcID))
 	paginator := ec2.NewDescribeVpcEndpointsPaginator(svc, &ec2.DescribeVpcEndpointsInput{Filters: filters})
 	for paginator.HasMorePages() {
 		resp, err := paginator.NextPage(ctx)
@@ -320,7 +320,7 @@ func (a *mqlAwsVpc) serviceEndpoints() ([]any, error) {
 					"id":       llx.StringDataPtr(endpoint.VpcEndpointId),
 					"name":     llx.StringDataPtr(endpoint.ServiceName),
 					"type":     llx.StringData(string(endpoint.VpcEndpointType)),
-					"tags":     llx.MapData(Ec2TagsToMap(endpoint.Tags), types.String),
+					"tags":     llx.MapData(toInterfaceMap(ec2TagsToMap(endpoint.Tags)), types.String),
 					"dnsNames": llx.ArrayData(dnsNames, types.String),
 					"owner":    llx.StringDataPtr(endpoint.OwnerId),
 				},
@@ -458,12 +458,12 @@ func (a *mqlAwsVpc) peeringConnections() ([]any, error) {
 			if peerconn.Status != nil {
 				status = *peerconn.Status.Message
 			}
-			mqlPeerConn, err := CreateResource(a.MqlRuntime, "aws.vpc.peeringConnection",
+			mqlPeerConn, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnection,
 				map[string]*llx.RawData{
 					"expirationTime": llx.TimeDataPtr(peerconn.ExpirationTime),
 					"id":             llx.StringDataPtr(peerconn.VpcPeeringConnectionId),
 					"status":         llx.StringData(status),
-					"tags":           llx.MapData(Ec2TagsToMap(peerconn.Tags), types.String),
+					"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(peerconn.Tags)), types.String),
 				},
 			)
 			if err != nil {
@@ -496,7 +496,7 @@ func (a *mqlAwsVpcPeeringConnection) acceptorVpc() (*mqlAwsVpcPeeringConnectionP
 	for i := range acceptor.Ipv6CidrBlockSet {
 		ipv6 = append(ipv6, *acceptor.Ipv6CidrBlockSet[i].Ipv6CidrBlock)
 	}
-	mql, err := CreateResource(a.MqlRuntime, "aws.vpc.peeringConnection.peeringVpc",
+	mql, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnectionPeeringVpc,
 		map[string]*llx.RawData{
 			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
 			"ipv4CiderBlocks":                 llx.ArrayData(ipv4, types.String),
@@ -515,7 +515,7 @@ func (a *mqlAwsVpcPeeringConnection) acceptorVpc() (*mqlAwsVpcPeeringConnectionP
 
 func (a *mqlAwsVpcPeeringConnectionPeeringVpc) vpc() (*mqlAwsVpc, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.Region.Data, conn.AccountId(), a.VpcId.Data))})
+	res, err := NewResource(a.MqlRuntime, ResourceAwsVpc, map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.Region.Data, conn.AccountId(), a.VpcId.Data))})
 	if err != nil {
 		return nil, err
 	}
@@ -567,7 +567,7 @@ func (a *mqlAwsVpc) flowLogs() ([]any, error) {
 		}
 
 		for _, flowLog := range flowLogsRes.FlowLogs {
-			mqlFlowLog, err := CreateResource(a.MqlRuntime, "aws.vpc.flowlog",
+			mqlFlowLog, err := CreateResource(a.MqlRuntime, ResourceAwsVpcFlowlog,
 				map[string]*llx.RawData{
 					"createdAt":              llx.TimeDataPtr(flowLog.CreationTime),
 					"destination":            llx.StringDataPtr(flowLog.LogDestination),
@@ -577,7 +577,7 @@ func (a *mqlAwsVpc) flowLogs() ([]any, error) {
 					"maxAggregationInterval": llx.IntDataDefault(flowLog.MaxAggregationInterval, 0),
 					"region":                 llx.StringData(a.Region.Data),
 					"status":                 llx.StringDataPtr(flowLog.FlowLogStatus),
-					"tags":                   llx.MapData(Ec2TagsToMap(flowLog.Tags), types.String),
+					"tags":                   llx.MapData(toInterfaceMap(ec2TagsToMap(flowLog.Tags)), types.String),
 					"trafficType":            llx.StringData(string(flowLog.TrafficType)),
 					"vpc":                    llx.StringData(vpc),
 				},
@@ -604,7 +604,7 @@ func (a *mqlAwsVpc) routeTables() ([]any, error) {
 	res := []any{}
 
 	filters := conn.Filters.General.ToServerSideEc2Filters()
-	filters = append(filters, vpctypes.Filter{Name: aws.String("vpc-id"), Values: []string{vpcVal}})
+	filters = append(filters, vpcFilter(vpcVal))
 	params := &ec2.DescribeRouteTablesInput{Filters: filters}
 	paginator := ec2.NewDescribeRouteTablesPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -627,7 +627,7 @@ func (a *mqlAwsVpc) routeTables() ([]any, error) {
 				map[string]*llx.RawData{
 					"id":     llx.StringDataPtr(routeTable.RouteTableId),
 					"routes": llx.ArrayData(dictRoutes, types.Any),
-					"tags":   llx.MapData(Ec2TagsToMap(routeTable.Tags), types.String),
+					"tags":   llx.MapData(toInterfaceMap(ec2TagsToMap(routeTable.Tags)), types.String),
 				})
 			if err != nil {
 				return nil, err
@@ -677,7 +677,7 @@ type mqlAwsVpcRoutetableAssociationInternal struct {
 func (a *mqlAwsVpcRoutetableAssociation) subnet() (*mqlAwsVpcSubnet, error) {
 	if a.cacheSubnetId != nil {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(a.cacheSubnetId)))})
+		res, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(a.cacheSubnetId)))})
 		if err != nil {
 			a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, err
@@ -701,7 +701,7 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 	res := []any{}
 
 	filters := conn.Filters.General.ToServerSideEc2Filters()
-	filters = append(filters, vpctypes.Filter{Name: aws.String("vpc-id"), Values: []string{vpcVal}})
+	filters = append(filters, vpcFilter(vpcVal))
 	params := &ec2.DescribeSubnetsInput{Filters: filters}
 	paginator := ec2.NewDescribeSubnetsPaginator(svc, params)
 	for paginator.HasMorePages() {
@@ -843,4 +843,11 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	}
 
 	return nil, nil, errors.New("vpc does not exist")
+}
+
+func vpcFilter(vpcId string) vpctypes.Filter {
+	return vpctypes.Filter{
+		Name:   aws.String("vpc-id"),
+		Values: []string{vpcId},
+	}
 }
