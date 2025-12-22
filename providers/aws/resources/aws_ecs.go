@@ -408,6 +408,11 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 			name = name + "-" + publicIp
 		}
 
+		if !conn.Filters.Ecs.MatchesOnlyRunningContainers(convert.ToValue(c.LastStatus)) {
+			log.Debug().Str("container", name).Str("state", convert.ToValue(c.LastStatus)).Msg("skipping ecs container due to not being in a running state")
+			continue
+		}
+
 		mqlContainer, err := CreateResource(t.MqlRuntime, "aws.ecs.container",
 			map[string]*llx.RawData{
 				"arn":               llx.StringDataPtr(c.ContainerArn),
