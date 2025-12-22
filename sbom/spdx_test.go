@@ -71,3 +71,17 @@ func TestSpdxJsonDecoder(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, sbomReport)
 }
+
+func TestSpdxJsonDecoder_GitHub_DependecyGraph(t *testing.T) {
+	f, err := os.Open("testdata/vercel_next.js_937412.json")
+	require.NoError(t, err)
+
+	decoder := sbom.NewSPDX(sbom.FormatSpdxJSON)
+
+	sbomReport, err := decoder.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, sbomReport)
+	assert.Equal(t, "com.github.vercel/next.js", sbomReport.Asset.Name)
+	assert.Equal(t, "spdx", sbomReport.Asset.Platform.Name)
+	assert.Equal(t, "SPDX-2.3", sbomReport.Asset.Platform.Version)
+}

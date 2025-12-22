@@ -170,12 +170,17 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 	}
 
 	rootComponent := bom.Metadata.Component
+	title := rootComponent.Description
+	if title == "" {
+		title = "CycloneDX"
+	}
 	sbom := &Sbom{
 		Asset: &Asset{
 			Name: rootComponent.Name,
 			Platform: &Platform{
+				Name:    "cyclonedx",
 				Version: rootComponent.Version,
-				Title:   rootComponent.Description,
+				Title:   title,
 			},
 		},
 		Packages: make([]*Package, 0),

@@ -135,3 +135,19 @@ func TestCycloneDxXmlDecoding(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, bom)
 }
+
+// syft dir:./next.js --source-name next.js_v15.4.1 -o cyclonedx-json > nextjs_v15_4_1.cyclonedx.json
+func TestCycloneDxJsonDecoding_repo(t *testing.T) {
+	f, err := os.Open("./testdata/nextjs_v15_4_1.cyclonedx.json")
+	require.NoError(t, err)
+
+	formatHandler := &sbom.CycloneDX{
+		Format: cyclonedx.BOMFileFormatJSON,
+	}
+
+	bom, err := formatHandler.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, bom)
+	assert.Equal(t, "next.js_v15.4.1", bom.Asset.Name)
+	assert.Equal(t, "cyclonedx", bom.Asset.Platform.Name)
+}
