@@ -109,10 +109,16 @@ packs:
         mql: machine.baseboard.product
       - uid: mondoo-linux-cpu-type
         title: CPU type
+        filters: mondoo.capabilities.contains("run-command")
         mql: |
-          file("/proc/cpuinfo").content.lines.where(_.contains("model name")).first().split(":").last().trim()
+          if (asset.arch == /aarch/) {
+            command("lscpu").stdout.lines.where(_.contains("Model name")).first().split(":").last().trim()
+          } else {
+            file("/proc/cpuinfo").content.lines.where(_.contains("model name")).first().split(":").last().trim()
+          }
       - uid: mondoo-linux-root-volume
         title: Root volume size and filesystem type
+        filters: mondoo.capabilities.contains("run-command")
         mql: |
           command("df -TH / | awk '{ print $3 "+'" "'+" $2 }'").stdout.trim
       - uid: mondoo-linux-physical-memory
