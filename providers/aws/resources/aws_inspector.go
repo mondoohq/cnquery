@@ -120,7 +120,7 @@ func (a *mqlAwsInspectorCoverage) ec2Instance() (*mqlAwsInspectorCoverageInstanc
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		args := map[string]*llx.RawData{
 			"platform": llx.StringData(string(a.cacheCoverage.ResourceMetadata.Ec2.Platform)),
-			"tags":     llx.MapData(mapConversion(a.cacheCoverage.ResourceMetadata.Ec2.Tags), llxtypes.String),
+			"tags":     llx.MapData(toInterfaceMap(a.cacheCoverage.ResourceMetadata.Ec2.Tags), llxtypes.String),
 			"region":   llx.StringData(a.Region.Data),
 		}
 		image, err := NewResource(a.MqlRuntime, "aws.ec2.image", map[string]*llx.RawData{
@@ -137,14 +137,6 @@ func (a *mqlAwsInspectorCoverage) ec2Instance() (*mqlAwsInspectorCoverageInstanc
 	}
 	a.Ec2Instance.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
-}
-
-func mapConversion(m map[string]string) map[string]any {
-	newMap := make(map[string]any)
-	for k, v := range m {
-		newMap[k] = v
-	}
-	return newMap
 }
 
 func listMapConversion(m []string) map[string]any {

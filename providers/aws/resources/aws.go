@@ -102,7 +102,7 @@ func Is400InstanceNotFoundError(err error) bool {
 }
 
 func toInterfaceMap(m map[string]string) map[string]any {
-	res := map[string]any{}
+	res := make(map[string]any)
 	for k, v := range m {
 		res[k] = v
 	}
