@@ -102,34 +102,36 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 			svc := conn.Ecr(region)
 			res := []any{}
 
-			repoResp, err := svc.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{})
-			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-					return res, nil
-				}
-				return nil, err
-			}
-			for i := range repoResp.Repositories {
-				imageScanOnPush := false
-				r := repoResp.Repositories[i]
-				if r.ImageScanningConfiguration != nil {
-					imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
-				}
-				mqlRepoResource, err := CreateResource(a.MqlRuntime, "aws.ecr.repository",
-					map[string]*llx.RawData{
-						"arn":             llx.StringDataPtr(r.RepositoryArn),
-						"name":            llx.StringDataPtr(r.RepositoryName),
-						"uri":             llx.StringDataPtr(r.RepositoryUri),
-						"registryId":      llx.StringDataPtr(r.RegistryId),
-						"public":          llx.BoolData(false),
-						"region":          llx.StringData(region),
-						"imageScanOnPush": llx.BoolData(imageScanOnPush),
-					})
+			paginator := ecr.NewDescribeRepositoriesPaginator(svc, &ecr.DescribeRepositoriesInput{})
+			for paginator.HasMorePages() {
+				repoResp, err := paginator.NextPage(ctx)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
-				res = append(res, mqlRepoResource)
+				for _, r := range repoResp.Repositories {
+					imageScanOnPush := false
+					if r.ImageScanningConfiguration != nil {
+						imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
+					}
+					mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
+						map[string]*llx.RawData{
+							"arn":             llx.StringDataPtr(r.RepositoryArn),
+							"name":            llx.StringDataPtr(r.RepositoryName),
+							"uri":             llx.StringDataPtr(r.RepositoryUri),
+							"registryId":      llx.StringDataPtr(r.RegistryId),
+							"public":          llx.BoolData(false),
+							"region":          llx.StringData(region),
+							"imageScanOnPush": llx.BoolData(imageScanOnPush),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlRepoResource)
+				}
 			}
 
 			return jobpool.JobResult(res), nil
@@ -150,39 +152,42 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 	mqlres := []any{}
 	if public {
 		svc := conn.EcrPublic(region)
-		res, err := svc.DescribeImages(ctx, &ecrpublic.DescribeImagesInput{RepositoryName: &name})
-		if err != nil {
-			if Is400AccessDeniedError(err) {
-				log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-				return nil, nil
-			}
-			return nil, err
-		}
-
-		for _, image := range res.ImageDetails {
-			tags := []any{}
-			for _, imageTag := range image.ImageTags {
-				tags = append(tags, imageTag)
-			}
-			mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
-				map[string]*llx.RawData{
-					"digest":     llx.StringDataPtr(image.ImageDigest),
-					"mediaType":  llx.StringDataPtr(image.ImageManifestMediaType),
-					"tags":       llx.ArrayData(tags, types.String),
-					"registryId": llx.StringDataPtr(image.RegistryId),
-					"repoName":   llx.StringData(name),
-					"region":     llx.StringData(region),
-					"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
-					"uri":        llx.StringData(uri),
-				})
+		paginator := ecrpublic.NewDescribeImagesPaginator(svc, &ecrpublic.DescribeImagesInput{RepositoryName: &name})
+		for paginator.HasMorePages() {
+			res, err := paginator.NextPage(ctx)
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+					return nil, nil
+				}
 				return nil, err
 			}
-			mqlres = append(mqlres, mqlImage)
+			for _, image := range res.ImageDetails {
+				mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
+					map[string]*llx.RawData{
+						"digest":     llx.StringDataPtr(image.ImageDigest),
+						"mediaType":  llx.StringDataPtr(image.ImageManifestMediaType),
+						"tags":       llx.ArrayData(toInterfaceArr(image.ImageTags), types.String),
+						"registryId": llx.StringDataPtr(image.RegistryId),
+						"repoName":   llx.StringData(name),
+						"region":     llx.StringData(region),
+						"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
+						"uri":        llx.StringData(uri),
+					})
+				if err != nil {
+					return nil, err
+				}
+				mqlres = append(mqlres, mqlImage)
+			}
 		}
-	} else {
-		svc := conn.Ecr(region)
-		res, err := svc.DescribeImages(ctx, &ecr.DescribeImagesInput{RepositoryName: &name})
+		return mqlres, nil
+	}
+
+	// private
+	svc := conn.Ecr(region)
+	paginator := ecr.NewDescribeImagesPaginator(svc, &ecr.DescribeImagesInput{RepositoryName: &name})
+	for paginator.HasMorePages() {
+		res, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
 				log.Warn().Str("region", region).Msg("error accessing region for AWS API")
@@ -191,10 +196,6 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 			return nil, err
 		}
 		for _, image := range res.ImageDetails {
-			tags := []any{}
-			for _, itag := range image.ImageTags {
-				tags = append(tags, itag)
-			}
 			mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
 				map[string]*llx.RawData{
 					"arn":                  llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
@@ -206,7 +207,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 					"registryId":           llx.StringDataPtr(image.RegistryId),
 					"repoName":             llx.StringData(name),
 					"sizeInBytes":          llx.IntDataPtr(image.ImageSizeInBytes),
-					"tags":                 llx.ArrayData(tags, types.String),
+					"tags":                 llx.ArrayData(toInterfaceArr(image.ImageTags), types.String),
 					"uri":                  llx.StringData(uri),
 				})
 			if err != nil {
@@ -275,26 +276,29 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 	svc := conn.EcrPublic("us-east-1") // only supported for us-east-1
 	res := []any{}
 
-	// TODO: consider using pagination here
-	repoResp, err := svc.DescribeRepositories(context.TODO(), &ecrpublic.DescribeRepositoriesInput{RegistryId: aws.String(conn.AccountId())})
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range repoResp.Repositories {
-		mqlRepoResource, err := CreateResource(a.MqlRuntime, "aws.ecr.repository",
-			map[string]*llx.RawData{
-				"arn":             llx.StringDataPtr(r.RepositoryArn),
-				"name":            llx.StringDataPtr(r.RepositoryName),
-				"uri":             llx.StringDataPtr(r.RepositoryUri),
-				"registryId":      llx.StringDataPtr(r.RegistryId),
-				"public":          llx.BoolData(true),
-				"region":          llx.StringData("us-east-1"),
-				"imageScanOnPush": llx.BoolData(false),
-			})
+	paginator := ecrpublic.NewDescribeRepositoriesPaginator(svc, &ecrpublic.DescribeRepositoriesInput{RegistryId: aws.String(conn.AccountId())})
+	for paginator.HasMorePages() {
+		repoResp, err := paginator.NextPage(context.TODO())
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlRepoResource)
+
+		for _, r := range repoResp.Repositories {
+			mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
+				map[string]*llx.RawData{
+					"arn":             llx.StringDataPtr(r.RepositoryArn),
+					"name":            llx.StringDataPtr(r.RepositoryName),
+					"uri":             llx.StringDataPtr(r.RepositoryUri),
+					"registryId":      llx.StringDataPtr(r.RegistryId),
+					"public":          llx.BoolData(true),
+					"region":          llx.StringData("us-east-1"),
+					"imageScanOnPush": llx.BoolData(false),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRepoResource)
+		}
 	}
 
 	return res, nil

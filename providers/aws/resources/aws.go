@@ -63,9 +63,11 @@ func (a *mqlAws) regions() ([]any, error) {
 func Is400AccessDeniedError(err error) bool {
 	var respErr *http.ResponseError
 	if errors.As(err, &respErr) {
-		if (respErr.HTTPStatusCode() == 400 || respErr.HTTPStatusCode() == 403) && (strings.Contains(respErr.Error(), "AccessDenied") || strings.Contains(respErr.Error(), "UnauthorizedOperation") || strings.Contains(respErr.Error(), "AuthorizationError")) {
-			return true
-		}
+		statusCodeMatches := respErr.HTTPStatusCode() == 400 || respErr.HTTPStatusCode() == 403
+		errorMessageMatches := strings.Contains(respErr.Error(), "AccessDenied") ||
+			strings.Contains(respErr.Error(), "UnauthorizedOperation") ||
+			strings.Contains(respErr.Error(), "AuthorizationError")
+		return statusCodeMatches && errorMessageMatches
 	}
 	return false
 }
