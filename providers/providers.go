@@ -826,6 +826,112 @@ func readProviderDir(pdir string) (*Provider, error) {
 	}, nil
 }
 
+type runtimeBin struct {
+	name    string
+	version string
+	path    string
+}
+
+func readRuntimeDir(rdir string) (*runtimeBin, error) {
+	name := filepath.Base(rdir)
+	bin := filepath.Join(rdir, name)
+	if runtime.GOOS == "windows" {
+		bin += ".exe"
+	}
+	versionPath := filepath.Join(rdir, "version")
+	version, err := afero.ReadFile(config.AppFs, versionPath)
+	if err != nil {
+		log.Debug().Str("path", versionPath).Msg("ignoring runtime, can't read existing version")
+		return nil, err
+	}
+
+	return &runtimeBin{
+		name:    name,
+		version: string(version),
+		path:    bin,
+	}, nil
+}
+
+func TryRuntimeUpdate(name string, version string, update UpdateProvidersConfig) (*runtimeBin, error) {
+	runtimesPath, _ := config.HomePath("runtimes")
+	rdir := filepath.Join(runtimesPath, "cnquery")
+
+	existing, err := readRuntimeDir(rdir)
+	if err != nil {
+		return nil, err
+	}
+
+	stat, err := os.Stat(existing.path)
+	if err != nil {
+		return nil, err
+	}
+	if update.RefreshInterval > 0 {
+		mtime := stat.ModTime()
+		secs := time.Since(mtime).Seconds()
+		if secs < float64(update.RefreshInterval) {
+			lastRefresh := time.Since(mtime).String()
+			log.Debug().
+				Str("last-refresh", lastRefresh).
+				Str("runtime", "cnquery").
+				Msg("no need to update runtime, using it")
+			return existing, nil
+		}
+	}
+
+	if existing.version == version {
+		return existing, nil
+	}
+
+	semver := semver.Parser{}
+	diff, err := semver.Compare(existing.version, version)
+	if err != nil {
+		return nil, err
+	}
+	if diff >= 0 {
+		return existing, nil
+	}
+
+	ctx := context.Background()
+	logCtx := log.With().Str("provider", name).Str("version", version).Logger()
+
+	res, err := registry.DownloadRuntime(ctx, "cnquery", version, runtime.GOOS, runtime.GOARCH)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	// we have to create new Reader to get rid of the timeouts imposed by the http client
+	var tar []byte
+	if tar, err = io.ReadAll(res); err != nil {
+		logCtx.Debug().Msg("failed to read body of runtime download")
+		return nil, errors.Wrap(err, "failed to install "+name+"-"+version+", failed to read body")
+	}
+
+	reader := io.NopCloser(
+		bytes.NewReader(tar),
+	)
+
+	installed, err := InstallIO(reader, InstallConf{
+		Dst: DefaultPath,
+	})
+	if err != nil {
+		logCtx.Debug().Msg("failed to install runtime")
+		return nil, errors.Wrap(err, "failed to install "+name+"-"+version)
+	}
+
+	if len(installed) == 0 {
+		return nil, errors.New("couldn't find installed provider")
+	}
+	if len(installed) > 1 {
+		logCtx.Warn().Msg("too many providers were installed")
+	}
+	if installed[0].Version != version {
+		return nil, errors.New("version for provider didn't match expected install version: expected " + version + ", installed: " + installed[0].Version)
+	}
+
+	return nil
+}
+
 func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provider, error) {
 	ctx := context.Background()
 	if provider.Path == "" {

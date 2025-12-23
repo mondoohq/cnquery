@@ -42,6 +42,7 @@
       "request": "launch",
       "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
       "cwd": "${workspaceRoot}/",
+      "env": {"FEATURES": "AutoUpdateRuntime"},
       "args": [
         "run",
         // "local",

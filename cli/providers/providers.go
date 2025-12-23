@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"go.mondoo.com/cnquery/v12"
 	"go.mondoo.com/cnquery/v12/cli/components"
 	"go.mondoo.com/cnquery/v12/cli/config"
 	"go.mondoo.com/cnquery/v12/llx"
@@ -40,6 +42,17 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 	}
 
 	connectorName, autoUpdate := detectConnectorName(os.Args, rootCmd, commands, existing)
+
+	var features cnquery.Features
+	conf, err := config.Read()
+	if err == nil {
+		features = conf.GetFeatures()
+	}
+
+	if autoUpdate && features.IsActive(cnquery.AutoUpdateRunner) {
+		tryToUpdateRuntime()
+	}
+
 	if connectorName != "" {
 		if _, err := providers.EnsureProvider(providers.ProviderLookup{ConnName: connectorName}, autoUpdate, existing); err != nil {
 			return err
@@ -52,6 +65,33 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 
 	attachProviders(existing, commands)
 	return nil
+}
+
+func tryToUpdateRuntime() {
+	cnquery.Version = "12.13.0" // FIXME: REMOVE THIS!!
+
+	// Fallback, which should only affect developers
+	if cnquery.Version == "" {
+		return
+	}
+
+	version, err := providers.LatestRuntime(context.Background(), "cnquery")
+	if err != nil {
+		log.Debug().Err(err).Msg("failed to get latest version")
+		return
+	}
+
+	if cnquery.Version == version {
+		return
+	}
+
+	runtime, err := providers.TryRuntimeUpdate("cnquery", version, providers.UpdateProvidersConfig{
+		Enabled:         true,
+		RefreshInterval: 60 * 60,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to upgrade runtime")
+	}
 }
 
 func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Command, existing providers.Providers) (string, bool) {

@@ -78,3 +78,7 @@ Features:
   idx: 13
   start: v12.x
   status: new
+- id: AutoUpdateRunner
+  idx: 14
+  start: v12.14
+  status: new

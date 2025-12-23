@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -28,6 +29,12 @@ func SetProviderRegistry(r ProviderRegistry) {
 // ProviderRegistry defines the interface for provider registries that can
 // fetch provider versions and download provider packages.
 type ProviderRegistry interface {
+	// GetLatestRuntimes returns the latest version available for the given runtime
+	GetLatestRuntime(ctx context.Context, name string) (string, error)
+
+	// DownloadRuntimes downloads a runtime package and returns a ReadCloser for the content
+	DownloadRuntime(ctx context.Context, name, version, os, arch string) (io.ReadCloser, error)
+
 	// GetLatestVersion returns the latest version available for the given provider name
 	GetLatestVersion(ctx context.Context, name string) (string, error)
 
@@ -62,6 +69,51 @@ func NewMondooProviderRegistry(opts ...MondooProviderRegistryOption) *MondooProv
 	}
 
 	return r
+}
+
+func LatestRuntime(ctx context.Context, name string) (string, error) {
+	return registry.GetLatestRuntime(ctx, name)
+}
+
+func (r *MondooProviderRegistry) GetLatestRuntime(ctx context.Context, name string) (string, error) {
+	client, err := httpClientWithRetry()
+	if err != nil {
+		return "", err
+	}
+
+	latestURL, err := url.JoinPath(r.BaseURL, "../"+name+"/latest")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to construct latest version URL")
+	}
+
+	resp, err := client.Get(latestURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Debug().Err(err).Msg("reading latest for runtime failed")
+		return "", errors.New("failed to read response from upstream runtime versions")
+	}
+
+	// FIXME: only temporary, we need a structured approach
+	const ANCHOR = `redirect-link="../`
+	idx := strings.Index(string(data), ANCHOR)
+	if idx == -1 {
+		return "", errors.New("can't detect new runtime version in response")
+	}
+
+	res := []byte{}
+	for i := idx + len(ANCHOR); i < len(data); i++ {
+		if data[i] == '"' {
+			break
+		}
+		res = append(res, data[i])
+	}
+
+	return string(res), nil
 }
 
 func LatestVersion(ctx context.Context, name string) (string, error) {
@@ -115,16 +167,31 @@ func (r *MondooProviderRegistry) GetLatestVersion(ctx context.Context, name stri
 
 // DownloadProvider downloads a provider package from the registry
 func (r *MondooProviderRegistry) DownloadProvider(ctx context.Context, name, version, os, arch string) (io.ReadCloser, error) {
+	return r.downloadBinary(ctx, r.BaseURL, name, version, os, arch)
+}
+
+// DownloadProvider downloads a provider package from the registry
+func (r *MondooProviderRegistry) DownloadRuntime(ctx context.Context, name, version, os, arch string) (io.ReadCloser, error) {
+	// FIXME: proper base url
+	base, err := url.JoinPath(r.BaseURL, "..")
+	if err != nil {
+		return nil, err
+	}
+	return r.downloadBinary(ctx, base, name, version, os, arch)
+}
+
+// DownloadProvider downloads a provider package from the registry
+func (r *MondooProviderRegistry) downloadBinary(ctx context.Context, baseURL, name, version, os, arch string) (io.ReadCloser, error) {
 	// Build the filename using the same pattern as the original
 	filename := fmt.Sprintf("%s_%s_%s_%s.tar.xz", name, version, os, arch)
 
 	// Construct the download URL using url.JoinPath for robust path handling
-	downloadURL, err := url.JoinPath(r.BaseURL, name, version, filename)
+	downloadURL, err := url.JoinPath(baseURL, "..", name, version, filename)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to construct download URL")
 	}
 
-	log.Debug().Str("url", downloadURL).Msg("downloading provider from URL")
+	log.Debug().Str("url", downloadURL).Msg("downloading binary from URL")
 
 	client, err := httpClientWithRetry()
 	if err != nil {
@@ -137,7 +204,7 @@ func (r *MondooProviderRegistry) DownloadProvider(ctx context.Context, name, ver
 	}
 
 	if res.StatusCode == http.StatusNotFound {
-		return nil, errors.New("cannot find provider " + name + "-" + version + " under url " + downloadURL)
+		return nil, errors.New("cannot find " + name + "-" + version + " under url " + downloadURL)
 	} else if res.StatusCode != http.StatusOK {
 		log.Debug().Str("url", downloadURL).Int("status", res.StatusCode).Msg("failed to download from URL (status code)")
 		res.Body.Close()

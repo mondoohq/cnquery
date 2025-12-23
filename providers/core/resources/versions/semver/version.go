@@ -9,6 +9,8 @@ import (
 
 type Parser struct{}
 
+// Compare version a and b with each other. It returns -1, 0, or 1 if
+// a is smaller, equal, or larger than b
 func (p Parser) Compare(a, b string) (int, error) {
 	va, err := mastermind.NewVersion(a)
 	if err != nil {

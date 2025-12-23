@@ -29,8 +29,7 @@ import (
 )
 
 const (
-	askForPasswordValue = ">passwordisnotset<"
-	rootCmdDesc         = "cnquery is a cloud-native tool for querying your entire infrastructure.\n"
+	rootCmdDesc = "cnquery is a cloud-native tool for querying your entire infrastructure.\n"
 
 	// we send a 78 exit code to prevent systemd service from restart
 	ConfigurationErrorCode = 78
