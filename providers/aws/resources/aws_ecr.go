@@ -163,6 +163,10 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 				return nil, err
 			}
 			for _, image := range res.ImageDetails {
+				if conn.Filters.Ecr.IsFilteredOutByTags(image.ImageTags) {
+					log.Debug().Str("repository", name).Strs("tags", image.ImageTags).Msg("skipping ecr public image due to tag filters")
+					continue
+				}
 				mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
 					map[string]*llx.RawData{
 						"digest":     llx.StringDataPtr(image.ImageDigest),
@@ -196,6 +200,10 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 			return nil, err
 		}
 		for _, image := range res.ImageDetails {
+			if conn.Filters.Ecr.IsFilteredOutByTags(image.ImageTags) {
+				log.Debug().Str("repository", name).Strs("tags", image.ImageTags).Msg("skipping ecr private image due to tag filters")
+				continue
+			}
 			mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
 				map[string]*llx.RawData{
 					"arn":                  llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
