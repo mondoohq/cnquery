@@ -170,16 +170,34 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 	}
 
 	rootComponent := bom.Metadata.Component
+	title := rootComponent.Description
+	version := rootComponent.Version
+	if title == "" {
+		title = "CycloneDX"
+	}
+	if version == "" {
+		version = bom.SpecVersion.String()
+	}
 	sbom := &Sbom{
 		Asset: &Asset{
 			Name: rootComponent.Name,
 			Platform: &Platform{
 				Name:    "cyclonedx",
-				Version: bom.SpecVersion.String(),
-				Title:   "CycloneDX",
+				Version: version,
+				Title:   title,
 			},
 		},
 		Packages: make([]*Package, 0),
+	}
+
+	switch rootComponent.Type {
+	case cyclonedx.ComponentTypeOS:
+		hostnameId := "//platformid.api.mondoo.app/hostname/" + rootComponent.Name
+		sbom.Asset.PlatformIds = append(sbom.Asset.PlatformIds, hostnameId)
+	case cyclonedx.ComponentTypeContainer:
+		// we need to figure out where to get the container ID from properly. For now, we use the BOMRef
+		bomRefId := "//platformid.api.mondoo.app/runtime/docker/images/" + rootComponent.BOMRef
+		sbom.Asset.PlatformIds = append(sbom.Asset.PlatformIds, bomRefId)
 	}
 
 	if bom.Metadata.Tools != nil {
@@ -247,15 +265,6 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 				sbom.Asset.Platform.Cpes = []string{component.CPE}
 			}
 			sbom.Packages = append(sbom.Packages, pkg)
-			switch rootComponent.Type {
-			case cyclonedx.ComponentTypeOS:
-				hostnameId := "//platformid.api.mondoo.app/hostname/" + rootComponent.Name
-				sbom.Asset.PlatformIds = append(sbom.Asset.PlatformIds, hostnameId)
-			case cyclonedx.ComponentTypeContainer:
-				// we need to figure out where to get the container ID from properly. For now, we use the BOMRef
-				bomRefId := "//platformid.api.mondoo.app/runtime/docker/images/" + rootComponent.BOMRef
-				sbom.Asset.PlatformIds = append(sbom.Asset.PlatformIds, bomRefId)
-			}
 		case cyclonedx.ComponentTypeLibrary:
 			sbom.Packages = append(sbom.Packages, pkg)
 		case cyclonedx.ComponentTypeApplication:
