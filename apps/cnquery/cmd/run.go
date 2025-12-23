@@ -9,8 +9,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.mondoo.com/cnquery/v12/cli/inventoryloader"
 	"go.mondoo.com/cnquery/v12/providers"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/shared/proto"
 	"go.mondoo.com/cnquery/v12/utils/iox"
@@ -19,20 +19,21 @@ import (
 func init() {
 	rootCmd.AddCommand(RunCmd)
 
-	RunCmd.Flags().StringP("command", "c", "", "MQL query to execute in the shell")
-	RunCmd.Flags().Bool("parse", false, "Parse the query and return the logical structure")
-	RunCmd.Flags().Bool("ast", false, "Parse the query and return the abstract syntax tree (AST)")
-	RunCmd.Flags().Bool("info", false, "Parse the query and provide information about it")
-	RunCmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure")
-	RunCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID")
+	_ = RunCmd.Flags().StringP("command", "c", "", "MQL query to execute in the shell")
+	_ = RunCmd.Flags().Bool("parse", false, "Parse the query and return the logical structure")
+	_ = RunCmd.Flags().Bool("ast", false, "Parse the query and return the abstract syntax tree (AST)")
+	_ = RunCmd.Flags().Bool("info", false, "Parse the query and provide information about it")
+	_ = RunCmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure")
+	_ = RunCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID")
+	_ = RunCmd.Flags().String("inventory-file", "", "Set the path to the inventory file")
 
-	RunCmd.Flags().String("llx", "", "Generate the executable code bundle and save it to the specified file")
-	RunCmd.Flags().MarkHidden("llx")
-	RunCmd.Flags().String("use-llx", "", "Run the code specified in the code bundle on disk")
+	_ = RunCmd.Flags().String("llx", "", "Generate the executable code bundle and save it to the specified file")
+	_ = RunCmd.Flags().MarkHidden("llx")
+	_ = RunCmd.Flags().String("use-llx", "", "Run the code specified in the code bundle on disk")
 	_ = RunCmd.Flags().MarkHidden("use-llx")
-	RunCmd.Flags().StringToString("annotations", nil, "Specify annotations for this run")
+	_ = RunCmd.Flags().StringToString("annotations", nil, "Specify annotations for this run")
 	_ = RunCmd.Flags().MarkHidden("annotations")
-	RunCmd.Flags().Bool("exit-1-on-failure", false, "Exit with error code 1 if one or more query results fail")
+	_ = RunCmd.Flags().Bool("exit-1-on-failure", false, "Exit with error code 1 if one or more query results fail")
 }
 
 var RunCmd = &cobra.Command{
@@ -42,6 +43,7 @@ var RunCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		_ = viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
 		_ = viper.BindPFlag("annotations", cmd.Flags().Lookup("annotations"))
+		_ = viper.BindPFlag("inventory-file", cmd.Flags().Lookup("inventory-file"))
 	},
 	// we have to initialize an empty run so it shows up as a runnable command in --help
 	Run: func(cmd *cobra.Command, args []string) {},
@@ -68,14 +70,13 @@ var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plu
 
 	conf.PlatformId, _ = cmd.Flags().GetString("platform-id")
 	annotations, _ := cmd.Flags().GetStringToString("annotations")
+	if annotations == nil {
+		annotations = map[string]string{}
+	}
 	cliRes.Asset.AddAnnotations(annotations)
 
-	in := &inventory.Inventory{
-		Spec: &inventory.InventorySpec{
-			Assets: []*inventory.Asset{cliRes.Asset},
-		},
-	}
-	err := in.PreProcess() // required to resolve secrets
+	// required to resolve secrets
+	in, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), annotations)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to resolve inventory")
 	}
