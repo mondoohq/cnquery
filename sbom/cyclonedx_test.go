@@ -64,6 +64,11 @@ func TestCycloneDxJsonDecoding(t *testing.T) {
 		bom, err := formatHandler.Parse(f)
 		require.NoError(t, err)
 		assert.NotNil(t, bom)
+		assert.Equal(t, "alpine:3.19", bom.Asset.Name)
+		assert.Equal(t, "alpine", bom.Asset.Platform.Name)
+		assert.Equal(t, "3.19.1", bom.Asset.Platform.Version)
+		// FIXME: support the bomRef property
+		// assert.Equal(t, "//platformid.api.mondoo.app/runtime/docker/images/alpine:3.19", bom.Asset.PlatformIds[0])
 	})
 
 	t.Run("ubuntu 20.04 container", func(t *testing.T) {
@@ -134,4 +139,39 @@ func TestCycloneDxXmlDecoding(t *testing.T) {
 	bom, err := formatHandler.Parse(f)
 	require.NoError(t, err)
 	assert.NotNil(t, bom)
+}
+
+// syft dir:./next.js --source-name next.js_v15.4.1 -o cyclonedx-json > nextjs_v15_4_1.cyclonedx.json
+func TestCycloneDxJsonDecoding_repo(t *testing.T) {
+	f, err := os.Open("./testdata/nextjs_v15_4_1.cyclonedx.json")
+	require.NoError(t, err)
+
+	formatHandler := &sbom.CycloneDX{
+		Format: cyclonedx.BOMFileFormatJSON,
+	}
+
+	bom, err := formatHandler.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, bom)
+	assert.Equal(t, "next.js_v15.4.1", bom.Asset.Name)
+	assert.Equal(t, "cyclonedx", bom.Asset.Platform.Name)
+	assert.Equal(t, "1.6", bom.Asset.Platform.Version)
+	assert.Equal(t, "CycloneDX", bom.Asset.Platform.Title)
+}
+
+func TestCycloneDxJsonDecoding_Alpine_syft(t *testing.T) {
+	f, err := os.Open("./testdata/alpine-3.19.cyclonedx.syft.json")
+	require.NoError(t, err)
+
+	formatHandler := &sbom.CycloneDX{
+		Format: cyclonedx.BOMFileFormatJSON,
+	}
+
+	bom, err := formatHandler.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, bom)
+	assert.Equal(t, "alpine", bom.Asset.Name)
+	assert.Equal(t, "alpine", bom.Asset.Platform.Name)
+	assert.Equal(t, "3.19.9", bom.Asset.Platform.Version)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/docker/images/cd03a8ea6f29f815", bom.Asset.PlatformIds[0])
 }

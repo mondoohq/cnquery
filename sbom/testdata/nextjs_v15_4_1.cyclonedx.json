@@ -1,0 +1,85 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:67ab8490-1980-486b-9f64-5172b630f355",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-12-22T10:59:00+01:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "author": "anchore",
+          "name": "syft",
+          "version": "1.38.2"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "0e00e7c52e97a66a",
+      "type": "file",
+      "name": "next.js_v15.4.1"
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "56655d2fdd03eb37",
+      "type": "library",
+      "name": "./.github/actions/next-integration-stat",
+      "version": "UNKNOWN",
+      "cpe": "cpe:2.3:a:.\\/.github\\/actions\\/next-integration-stat:.\\/.github\\/actions\\/next-integration-stat:*:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "github-actions-usage-cataloger"
+        },
+        { "name": "syft:package:type", "value": "github-action" },
+        {
+          "name": "syft:package:metadataType",
+          "value": "github-actions-use-statement"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:.\\/.github\\/actions\\/next-integration-stat:.\\/.github\\/actions\\/next_integration_stat:*:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:.\\/.github\\/actions\\/next_integration_stat:.\\/.github\\/actions\\/next-integration-stat:*:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:.\\/.github\\/actions\\/next_integration_stat:.\\/.github\\/actions\\/next_integration_stat:*:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:.\\/.github\\/actions\\/next-integration:.\\/.github\\/actions\\/next-integration-stat:*:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:.\\/.github\\/actions\\/next-integration:.\\/.github\\/actions\\/next_integration_stat:*:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:.\\/.github\\/actions\\/next_integration:.\\/.github\\/actions\\/next-integration-stat:*:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:.\\/.github\\/actions\\/next_integration:.\\/.github\\/actions\\/next_integration_stat:*:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:.\\/.github\\/actions\\/next:.\\/.github\\/actions\\/next-integration-stat:*:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:.\\/.github\\/actions\\/next:.\\/.github\\/actions\\/next_integration_stat:*:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.github/workflows/integration_tests_reusable.yml"
+        }
+      ]
+    }
+  ]
+}
