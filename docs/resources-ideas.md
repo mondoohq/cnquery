@@ -23,3 +23,13 @@ To make suggestions, please follow this schema:
 
 We will regularly review this document and cross things off as they get done.
 
+
+## os
+
+- modprobe.d
+  - files: find all files across modprobe, to simplify this:
+    ```
+    file("/etc/modprobe.d/atm.conf").exists &&
+    file("/etc/modprobe.d/atm.conf").content.contains("install atm /bin/false") &&
+    file("/etc/modprobe.d/atm.conf").content.contains("blacklist atm")
+    ```
