@@ -8,6 +8,7 @@ import (
 	"errors"
 	fmt "fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -75,6 +76,10 @@ func (a *Asset) AddPlatformID(ids ...string) {
 	}
 
 	a.PlatformIds = append(a.PlatformIds, ids...)
+
+	// remove duplicates
+	slices.Sort(a.PlatformIds)
+	a.PlatformIds = slices.Compact(a.PlatformIds)
 }
 
 // AddLabels adds the provided labels
