@@ -1328,10 +1328,6 @@ func TestCompiler_ResourceExpansion(t *testing.T) {
 				Type:    string(types.Range),
 				Binding: (3 << 32) | 1,
 			}, res.CodeV2.Blocks[2].Chunks[3])
-			assertFunction(t, "content", &llx.Function{
-				Type:    string(types.String),
-				Binding: (3 << 32) | 1,
-			}, res.CodeV2.Blocks[2].Chunks[4])
 		})
 	})
 

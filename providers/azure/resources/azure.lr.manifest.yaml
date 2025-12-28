@@ -520,7 +520,6 @@ resources:
       url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
   azure.subscription.cloudDefender.securityContact:
     fields:
-      alertNotifications: {}
       emails: {}
       id: {}
       name: {}
@@ -571,7 +570,6 @@ resources:
       url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
   azure.subscription.cloudDefenderService.securityContact:
     fields:
-      alertNotifications: {}
       emails: {}
       id: {}
       name: {}
