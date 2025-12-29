@@ -117,6 +117,7 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/oklog/run v1.2.0 // indirect
+	github.com/pandatix/go-cvss v0.6.2 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pjbgf/sha1cd v0.5.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

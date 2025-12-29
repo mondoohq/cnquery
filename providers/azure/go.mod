@@ -47,6 +47,7 @@ require (
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/moby/moby/api v1.52.0 // indirect
 	github.com/moby/moby/client v0.2.1 // indirect
+	github.com/pandatix/go-cvss v0.6.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20250910181357-589584f1c912 // indirect
 )
 

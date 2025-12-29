@@ -5,11 +5,18 @@ package cvss
 
 import (
 	"errors"
+	fmt "fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
+
+	gocvss20 "github.com/pandatix/go-cvss/20"
+	gocvss30 "github.com/pandatix/go-cvss/30"
+	gocvss31 "github.com/pandatix/go-cvss/31"
+	gocvss40 "github.com/pandatix/go-cvss/40"
 )
 
 //go:generate protoc --plugin=protoc-gen-go=../../../../../scripts/protoc/protoc-gen-go --plugin=protoc-gen-go-vtproto=../../../../../scripts/protoc/protoc-gen-go-vtproto --proto_path=. --go_out=. --go_opt=paths=source_relative --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size cvss.proto
@@ -266,18 +273,27 @@ func (c *Cvss) DetermineScore() float32 {
 	vector := c.Vector
 	pairs := strings.Split(vector, "/")
 
+	var parsedScore float64
 	if len(pairs) < 1 {
-		c.Score = float32(0.0)
+		// No score present, calculate from vector
+		score, err := c.calculateScoreFromVector()
+		if err != nil {
+			return 0.0
+		}
+		parsedScore = score
+	} else {
+		// first entry includes the score
+		if parsedScore, err = strconv.ParseFloat(pairs[0], 32); err != nil {
+			// error handling, fallback to calculating score from vector
+			score, err := c.calculateScoreFromVector()
+			if err != nil {
+				return 0.0
+			}
+			parsedScore = score
+		}
 	}
 
-	// first entry includes the score
-	var score float64
-	if score, err = strconv.ParseFloat(pairs[0], 32); err != nil {
-		// error handling, fallback to default value
-		return float32(0.0)
-	}
-
-	c.Score = float32(score)
+	c.Score = float32(parsedScore)
 	return c.Score
 }
 
@@ -341,20 +357,11 @@ func (c *Cvss) Verify() bool {
 		if !ok {
 			return false
 		}
-		if !contains(values, v) {
+		if !slices.Contains(values, v) {
 			return false
 		}
 	}
 	return true
-}
-
-func contains(slice []string, search string) bool {
-	for _, value := range slice {
-		if value == search {
-			return true
-		}
-	}
-	return false
 }
 
 // Compare returns an integer comparing two cvss scores
@@ -443,4 +450,36 @@ func MaxScore(cvsslist []*Cvss) (*Cvss, error) {
 	}
 
 	return max, nil
+}
+
+func (c *Cvss) calculateScoreFromVector() (float64, error) {
+	version := c.Version()
+	switch version {
+	case "4.0":
+		cvss40, err := gocvss40.ParseVector(c.Vector)
+		if err != nil {
+			return 0.0, err
+		}
+		return cvss40.Score(), nil
+	case "3.0":
+		cvss30, err := gocvss30.ParseVector(c.Vector)
+		if err != nil {
+			return 0.0, err
+		}
+		return cvss30.BaseScore(), nil
+	case "3.1":
+		cvss31, err := gocvss31.ParseVector(c.Vector)
+		if err != nil {
+			return 0.0, err
+		}
+		return cvss31.BaseScore(), nil
+	case "2.0":
+		cvss20, err := gocvss20.ParseVector(c.Vector)
+		if err != nil {
+			return 0.0, err
+		}
+		return cvss20.BaseScore(), nil
+	default:
+		return 0.0, fmt.Errorf("unsupported CVSS version: %s", version)
+	}
 }

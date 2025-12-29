@@ -38,6 +38,15 @@ func TestCvss2Parsing2(t *testing.T) {
 
 	assert.Equal(t, float32(7.5), c.Score, "score properly detected")
 	assert.Equal(t, "High", c.Severity().String(), "severity properly extracted")
+
+	// Parse without explicit base score
+	c, err = New("AV:N/AC:L/Au:N/C:P/I:P/A:P")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "2.0", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(7.5), c.Score, "score properly detected")
+	assert.Equal(t, "High", c.Severity().String(), "severity properly extracted")
 }
 
 func TestCvss2Parsing3(t *testing.T) {
@@ -70,6 +79,13 @@ func TestCvss30Parsing(t *testing.T) {
 	assert.Equal(t, "H", metrics["C"], "C properly detected")
 	assert.Equal(t, "H", metrics["I"], "I properly detected")
 	assert.Equal(t, "H", metrics["A"], "A properly detected")
+
+	// Parse without explicit base score
+	c, err = New("CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+
+	assert.Equal(t, float32(8.8), c.Score, "score properly detected")
 }
 
 func TestCvss30Parsing2(t *testing.T) {
@@ -92,6 +108,13 @@ func TestCvss30Parsing2(t *testing.T) {
 	assert.Equal(t, "H", metrics["C"], "C properly detected")
 	assert.Equal(t, "H", metrics["I"], "I properly detected")
 	assert.Equal(t, "N", metrics["A"], "A properly detected")
+
+	// Parse without explicit base score
+	c, err = New("CVSS:3.0/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+
+	assert.Equal(t, float32(8.1), c.Score, "score properly detected")
 }
 
 func TestCvss30Parsing3(t *testing.T) {
@@ -102,10 +125,27 @@ func TestCvss30Parsing3(t *testing.T) {
 
 	assert.Equal(t, float32(9.8), c.Score, "score properly detected")
 	assert.Equal(t, "Critical", c.Severity().String(), "severity properly extracted")
+
+	// Parse without explicit base score
+	c, err = New("9.8/CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "3.0", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(9.8), c.Score, "score properly detected")
 }
 
 func TestCvss31Parsing1(t *testing.T) {
 	c, err := New("7.5/CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "3.1", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(7.5), c.Score, "score properly detected")
+	assert.Equal(t, "High", c.Severity().String(), "severity properly extracted")
+
+	// Parse without explicit base score
+	c, err = New("CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H")
 	assert.Nil(t, err, "could parse the cvss vector")
 	assert.True(t, c.Verify(), "valid cvss vector")
 	assert.Equal(t, "3.1", c.Version(), "vector format version")
@@ -121,6 +161,15 @@ func TestCvss31Parsing_modifiedbasemetrics(t *testing.T) {
 	assert.Equal(t, "3.1", c.Version(), "vector format version")
 
 	assert.Equal(t, float32(8.1), c.Score, "score properly detected")
+
+	// Parse without explicit base score
+	c, err = New("CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H/E:F/RL:O/RC:C/CR:H/IR:H/AR:H/MAV:N/MAC:L/MPR:N/MUI:N/MS:U/MC:H/MI:H/MA:H")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "3.1", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(8.1), c.Score, "score properly detected")
+	assert.Equal(t, "High", c.Severity().String(), "severity properly extracted")
 }
 
 func TestCvss31WithoutScoreParsing(t *testing.T) {
@@ -129,8 +178,7 @@ func TestCvss31WithoutScoreParsing(t *testing.T) {
 	assert.True(t, c.Verify(), "valid cvss vector")
 	assert.Equal(t, "3.1", c.Version(), "vector format version")
 
-	// TODO: when the score prefix is missing we need to calculate the score
-	// assert.Equal(t, float32(7.5), c.Score, "score properly detected")
+	assert.Equal(t, float32(5.9), c.Score, "score properly detected")
 }
 
 func TestCvss3Comparison(t *testing.T) {
@@ -178,6 +226,14 @@ func TestCvss4Parsing(t *testing.T) {
 	assert.Equal(t, "H", metrics["SC"], "SC properly detected")
 	assert.Equal(t, "H", metrics["SI"], "SI properly detected")
 	assert.Equal(t, "H", metrics["SA"], "SA properly detected")
+
+	// Parse without explicit base score
+	c, err = New("CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "4.0", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(10), c.Score, "score properly detected")
 }
 
 func TestCvss4Parsing2(t *testing.T) {
@@ -188,6 +244,14 @@ func TestCvss4Parsing2(t *testing.T) {
 
 	assert.Equal(t, float32(5.0), c.Score, "score properly detected")
 	assert.Equal(t, "Medium", c.Severity().String(), "severity properly extracted")
+
+	// Parse without explicit base score
+	c, err = New("CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "4.0", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(5.3), c.Score, "score properly detected")
 }
 
 func TestCvss4Parsing3(t *testing.T) {
@@ -198,6 +262,14 @@ func TestCvss4Parsing3(t *testing.T) {
 
 	assert.Equal(t, float32(8.0), c.Score, "score properly detected")
 	assert.Equal(t, "High", c.Severity().String(), "severity properly extracted")
+
+	// Parse without explicit base score
+	c, err = New("CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:A/CR:H/IR:M/AR:L/MAV:A/MAC:L/MAT:N/MPR:N/MUI:A/MVC:H/MVI:L/MVA:H/MSC:N/MSI:S/MSA:L/S:P/AU:Y/R:A/V:C/RE:M/U:Red")
+	assert.Nil(t, err, "could parse the cvss vector")
+	assert.True(t, c.Verify(), "valid cvss vector")
+	assert.Equal(t, "4.0", c.Version(), "vector format version")
+
+	assert.Equal(t, float32(9.2), c.Score, "score properly detected")
 }
 
 func TestCvss4Comparison(t *testing.T) {
