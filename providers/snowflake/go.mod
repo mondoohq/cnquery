@@ -10,7 +10,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/snowflakedb/gosnowflake v1.18.1
 	github.com/stretchr/testify v1.11.1 // indirect
-	go.mondoo.com/cnquery/v12 v12.14.2
+	go.mondoo.com/cnquery/v12 v12.15.0
 	go.mondoo.com/ranger-rpc v0.7.1
 	golang.org/x/crypto v0.46.0
 )
@@ -51,7 +51,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.6 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.6 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.16 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.17 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.18 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.16 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.16 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.4 // indirect
@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.16 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.94.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.95.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.7 // indirect
@@ -72,7 +72,7 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/cloudflare/circl v1.6.2 // indirect
 	github.com/cncf/xds/go v0.0.0-20251022180443-0feb69152e9f // indirect
 	github.com/cockroachdb/errors v1.12.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
@@ -181,7 +181,7 @@ require (
 	golang.org/x/oauth2 v0.34.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
-	golang.org/x/telemetry v0.0.0-20251219171224-e0dd3dd4fbaf // indirect
+	golang.org/x/telemetry v0.0.0-20251222180846-3f2a21fb04ff // indirect
 	golang.org/x/term v0.38.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
@@ -189,9 +189,9 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.248.0 // indirect
 	google.golang.org/genproto v0.0.0-20250826171959-ef028d996bc1 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251022142026-3a174f9686a8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251213004720-97cd9d5aeac2 // indirect
-	google.golang.org/grpc v1.77.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251029180050-ab9386a59fda // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251222181119-0a764e51fe1b // indirect
+	google.golang.org/grpc v1.78.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

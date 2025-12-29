@@ -8,7 +8,7 @@ require (
 	github.com/cockroachdb/errors v1.12.0
 	github.com/ipinfo/go/v2 v2.12.0
 	github.com/rs/zerolog v1.34.0
-	go.mondoo.com/cnquery/v12 v12.14.2
+	go.mondoo.com/cnquery/v12 v12.15.0
 )
 
 require (
@@ -52,7 +52,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/cloudflare/circl v1.6.2 // indirect
 	github.com/cncf/xds/go v0.0.0-20251110193048-8bfbf64dc13e // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
@@ -152,8 +152,8 @@ require (
 	google.golang.org/api v0.256.0 // indirect
 	google.golang.org/genproto v0.0.0-20251111163417-95abcf5c77ba // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251111163417-95abcf5c77ba // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251213004720-97cd9d5aeac2 // indirect
-	google.golang.org/grpc v1.77.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251222181119-0a764e51fe1b // indirect
+	google.golang.org/grpc v1.78.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	moul.io/http2curl v1.0.0 // indirect
