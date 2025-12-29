@@ -22,10 +22,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.8
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.35.8
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.59.9
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.53.5
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.278.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.279.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.8
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.70.0
@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.5
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.37.18
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.4
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.71.0
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.49.4
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.113.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.61.4
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.94.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.95.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.67.2
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.229.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.0
@@ -66,7 +66,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/afero v1.15.0
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/cnquery/v12 v12.14.2
+	go.mondoo.com/cnquery/v12 v12.15.0
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
 	k8s.io/client-go v0.35.0
 )
@@ -101,7 +101,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/anchore/go-struct-converter v0.0.0-20230627203149-c72ef8859ca9 // indirect
+	github.com/anchore/go-struct-converter v0.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.16 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.16 // indirect
@@ -125,7 +125,7 @@ require (
 	github.com/clipperhouse/displaywidth v0.6.2 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
-	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/cloudflare/circl v1.6.2 // indirect
 	github.com/cncf/xds/go v0.0.0-20251022180443-0feb69152e9f // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
@@ -253,7 +253,7 @@ require (
 	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.3.2 // indirect
-	github.com/spdx/tools-golang v0.5.5 // indirect
+	github.com/spdx/tools-golang v0.5.6 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
@@ -261,7 +261,7 @@ require (
 	github.com/vbatts/tar-split v0.12.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20251217000425-e067f1718492 // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20251224000430-5db65c48db4d // indirect
 	go.mondoo.com/ranger-rpc v0.7.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.38.0 // indirect
@@ -287,9 +287,9 @@ require (
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.248.0 // indirect
 	google.golang.org/genproto v0.0.0-20250826171959-ef028d996bc1 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251022142026-3a174f9686a8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251213004720-97cd9d5aeac2 // indirect
-	google.golang.org/grpc v1.77.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251029180050-ab9386a59fda // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251222181119-0a764e51fe1b // indirect
+	google.golang.org/grpc v1.78.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
@@ -302,11 +302,11 @@ require (
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250910181357-589584f1c912 // indirect
 	k8s.io/kubelet v0.34.1 // indirect
-	k8s.io/utils v0.0.0-20251220205832-9d40a56c1308 // indirect
-	modernc.org/libc v1.67.1 // indirect
+	k8s.io/utils v0.0.0-20251222233032-718f0e51e6d2 // indirect
+	modernc.org/libc v1.67.2 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.41.0 // indirect
+	modernc.org/sqlite v1.42.2 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
