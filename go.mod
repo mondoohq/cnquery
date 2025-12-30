@@ -283,6 +283,7 @@ require (
 )
 
 require (
+	github.com/pandatix/go-cvss v0.6.2
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/tliron/commonlog v0.2.21
 	github.com/tliron/glsp v0.2.2
