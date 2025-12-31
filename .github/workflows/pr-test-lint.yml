@@ -1,4 +1,6 @@
 name: Code Test
+permissions:
+  contents: read
 
 ## Only trigger tests if source is changing
 on:
