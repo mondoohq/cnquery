@@ -132,10 +132,46 @@ type EcrDiscoveryFilters struct {
 	ExcludeTags []string
 }
 
+func (f EcrDiscoveryFilters) IsFilteredOutByTags(imageTags []string) bool {
+	return !f.MatchesIncludeTags(imageTags) || f.MatchesExcludeTags(imageTags)
+}
+
+func (f EcrDiscoveryFilters) MatchesIncludeTags(imageTags []string) bool {
+	if len(f.Tags) == 0 {
+		return true
+	}
+
+	for _, filterTag := range f.Tags {
+		if slices.Contains(imageTags, filterTag) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// note: if this function returns `true`, it means that the resource should be skipped
+func (f EcrDiscoveryFilters) MatchesExcludeTags(imageTags []string) bool {
+	for _, filterTag := range f.ExcludeTags {
+		if slices.Contains(imageTags, filterTag) {
+			return true
+		}
+	}
+
+	return false
+}
+
 type EcsDiscoveryFilters struct {
 	OnlyRunningContainers bool
 	DiscoverImages        bool
 	DiscoverInstances     bool
+}
+
+func (f EcsDiscoveryFilters) MatchesOnlyRunningContainers(containerState string) bool {
+	if !f.OnlyRunningContainers {
+		return true
+	}
+	return containerState == "RUNNING"
 }
 
 // Given a key-value pair that matches a key, return the boolean value of the key.

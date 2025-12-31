@@ -94,7 +94,7 @@ func TestMatchesIncludeTags(t *testing.T) {
 }
 
 func TestMatchesExcludeTags(t *testing.T) {
-	t.Run("no exclude tags matches", func(t *testing.T) {
+	t.Run("no exclude tags does not match", func(t *testing.T) {
 		filters := GeneralDiscoveryFilters{
 			ExcludeTags: map[string]string{},
 		}
@@ -151,6 +151,78 @@ func TestMatchesExcludeInstanceIds(t *testing.T) {
 			ExcludeInstanceIds: []string{"i-1234567890abcdef0"},
 		}
 		require.True(t, filters.MatchesExcludeInstanceIds(aws.String("i-1234567890abcdef0")))
+	})
+}
+
+func TestEcsMatchesOnlyRunningContainers(t *testing.T) {
+	t.Run("OnlyRunningContainers is false, any container state matches", func(t *testing.T) {
+		filters := EcsDiscoveryFilters{
+			OnlyRunningContainers: false,
+		}
+		require.True(t, filters.MatchesOnlyRunningContainers("RUNNING"))
+		require.True(t, filters.MatchesOnlyRunningContainers("STOPPED"))
+		require.True(t, filters.MatchesOnlyRunningContainers("PENDING"))
+	})
+
+	t.Run("OnlyRunningContainers is true, only RUNNING container state matches", func(t *testing.T) {
+		filters := EcsDiscoveryFilters{
+			OnlyRunningContainers: true,
+		}
+		require.True(t, filters.MatchesOnlyRunningContainers("RUNNING"))
+		require.False(t, filters.MatchesOnlyRunningContainers("STOPPED"))
+		require.False(t, filters.MatchesOnlyRunningContainers("PENDING"))
+	})
+}
+
+func TestEcrMatchesIncludeTags(t *testing.T) {
+	t.Run("no include tags matches", func(t *testing.T) {
+		filters := EcrDiscoveryFilters{
+			Tags: []string{},
+		}
+		resourceTags := []string{"tag1", "tag2"}
+		require.True(t, filters.MatchesIncludeTags(resourceTags))
+	})
+
+	t.Run("include tags do not match", func(t *testing.T) {
+		filters := EcrDiscoveryFilters{
+			Tags: []string{"tag3", "tag4"},
+		}
+		resourceTags := []string{"tag1", "tag2"}
+		require.False(t, filters.MatchesIncludeTags(resourceTags))
+	})
+
+	t.Run("include tags match", func(t *testing.T) {
+		filters := EcrDiscoveryFilters{
+			Tags: []string{"tag1", "tag3"},
+		}
+		resourceTags := []string{"tag1", "tag2"}
+		require.True(t, filters.MatchesIncludeTags(resourceTags))
+	})
+}
+
+func TestEcrMatchesExcludeTags(t *testing.T) {
+	t.Run("no exclude tags does not match", func(t *testing.T) {
+		filters := EcrDiscoveryFilters{
+			ExcludeTags: []string{},
+		}
+		resourceTags := []string{"tag1", "tag2"}
+		require.False(t, filters.MatchesExcludeTags(resourceTags))
+	})
+
+	t.Run("exclude tags do not match", func(t *testing.T) {
+		filters := EcrDiscoveryFilters{
+			ExcludeTags: []string{"tag3", "tag4"},
+		}
+		resourceTags := []string{"tag1", "tag2"}
+		require.False(t, filters.MatchesExcludeTags(resourceTags))
+	})
+
+	t.Run("exclude tags match", func(t *testing.T) {
+		filters := EcrDiscoveryFilters{
+			ExcludeTags: []string{"tag1", "tag3"},
+		}
+		resourceTags := []string{"tag1", "tag2"}
+		require.True(t, filters.MatchesExcludeTags(resourceTags))
 	})
 }
 

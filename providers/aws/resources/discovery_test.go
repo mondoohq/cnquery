@@ -10,37 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
-
-func TestFilters(t *testing.T) {
-	// image filters
-	require.True(t, imageMatchesFilters(&mqlAwsEcrImage{
-		Tags: plugin.TValue[[]any]{Data: []any{"latest"}},
-	}, connection.EcrDiscoveryFilters{}))
-
-	require.True(t, imageMatchesFilters(&mqlAwsEcrImage{
-		Tags: plugin.TValue[[]any]{Data: []any{"latest"}},
-	}, connection.EcrDiscoveryFilters{Tags: []string{"latest"}}))
-
-	require.False(t, imageMatchesFilters(&mqlAwsEcrImage{
-		Tags: plugin.TValue[[]any]{Data: []any{"ubu", "test"}},
-	}, connection.EcrDiscoveryFilters{Tags: []string{"latest"}}))
-
-	// container filters
-	require.True(t, containerMatchesFilters(&mqlAwsEcsContainer{
-		Status: plugin.TValue[string]{Data: "RUNNING"},
-	}, connection.EcsDiscoveryFilters{}))
-
-	require.True(t, containerMatchesFilters(&mqlAwsEcsContainer{
-		Status: plugin.TValue[string]{Data: "RUNNING"},
-	}, connection.EcsDiscoveryFilters{OnlyRunningContainers: true}))
-
-	require.False(t, containerMatchesFilters(&mqlAwsEcsContainer{
-		Status: plugin.TValue[string]{Data: "STOPPED"},
-	}, connection.EcsDiscoveryFilters{OnlyRunningContainers: true}))
-}
 
 func TestAddConnInfoToEc2Instances(t *testing.T) {
 	info := instanceInfo{}
