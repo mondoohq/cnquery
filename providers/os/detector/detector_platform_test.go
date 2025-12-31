@@ -734,6 +734,20 @@ func TestWindows2025Detector(t *testing.T) {
 	assert.Equal(t, []string{"windows", "os"}, di.Family)
 }
 
+func TestAzureWindows2025Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-azure-windows2025.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "windows", di.Name, "os name should be identified")
+	assert.Equal(t, "Windows Server 2025 Datacenter Azure Edition", di.Title, "os title should be identified")
+	assert.Equal(t, "26311", di.Version, "os version should be identified")
+	assert.Equal(t, "5000", di.Build, "os build version should be identified")
+	assert.Equal(t, "AMD64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"windows", "os"}, di.Family)
+	assert.Equal(t, "ServerTurbine", di.Labels["windows.mondoo.com/edition-id"])
+	assert.Equal(t, "false", di.Labels["windows.mondoo.com/hotpatch"])
+}
+
 func TestPhoton1Detector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-photon1.toml")
 	assert.Nil(t, err, "was able to create the provider")
