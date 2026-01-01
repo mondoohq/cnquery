@@ -317,6 +317,17 @@ var steamos = &PlatformResolver{
 	},
 }
 
+var cachyos = &PlatformResolver{
+	Name:     "cachyos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "cachyos" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var nobara = &PlatformResolver{
 	Name:     "nobara",
 	IsFamily: false,
@@ -1073,7 +1084,7 @@ var suseFamily = &PlatformResolver{
 var archFamily = &PlatformResolver{
 	Name:     "arch",
 	IsFamily: true,
-	Children: []*PlatformResolver{arch, manjaro, endeavouros, steamos},
+	Children: []*PlatformResolver{arch, manjaro, endeavouros, steamos, cachyos},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// if the file exists, we are on arch or one of its derivatives
 		f, err := conn.FileSystem().Open("/etc/arch-release")
