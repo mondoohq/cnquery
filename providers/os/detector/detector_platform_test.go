@@ -1050,3 +1050,13 @@ func TestEulerOSDetector(t *testing.T) {
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"euler", "linux", "unix", "os"}, di.Family)
 }
+
+func TestCachyOSDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-cachyos.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "cachyos", di.Name, "os name should be identified")
+	assert.Equal(t, "CachyOS", di.Title, "os title should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"arch", "linux", "unix", "os"}, di.Family)
+}
