@@ -22,34 +22,23 @@ func localShell() *shell.Shell {
 }
 
 func TestShell_RunOnce(t *testing.T) {
-	shell := localShell()
+	sh := localShell()
 	assert.NotPanics(t, func() {
-		shell.RunOnce("mondoo.build")
+		sh.RunOnce("mondoo.build")
 	}, "should not panic on partial queries")
 
 	assert.NotPanics(t, func() {
-		shell.RunOnce("mondoo { build version }")
+		sh.RunOnce("mondoo { build version }")
 	}, "should not panic on partial queries")
 
 	assert.NotPanics(t, func() {
-		shell.RunOnce("mondoo { _.version }")
+		sh.RunOnce("mondoo { _.version }")
 	}, "should not panic on partial queries")
-}
-
-func TestShell_Help(t *testing.T) {
-	shell := localShell()
-	assert.NotPanics(t, func() {
-		shell.ExecCmd("help")
-	}, "should not panic on help command")
-
-	assert.NotPanics(t, func() {
-		shell.ExecCmd("help platform")
-	}, "should not panic on help subcommand")
 }
 
 func TestShell_Centos8(t *testing.T) {
-	shell := localShell()
+	sh := localShell()
 	assert.NotPanics(t, func() {
-		shell.RunOnce("platform { title name release arch }")
+		sh.RunOnce("platform { title name release arch }")
 	}, "should not panic on partial queries")
 }

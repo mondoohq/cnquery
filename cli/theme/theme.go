@@ -6,32 +6,14 @@ package theme
 import (
 	"fmt"
 
-	"github.com/c-bata/go-prompt"
 	"github.com/muesli/termenv"
 	"go.mondoo.com/cnquery/v12/cli/printer"
 	"go.mondoo.com/cnquery/v12/cli/theme/colors"
 )
 
-type PromptColors struct {
-	PrefixTextColor              prompt.Color
-	PreviewSuggestionTextColor   prompt.Color
-	PreviewSuggestionBGColor     prompt.Color
-	SuggestionTextColor          prompt.Color
-	SuggestionBGColor            prompt.Color
-	SelectedSuggestionTextColor  prompt.Color
-	SelectedSuggestionBGColor    prompt.Color
-	DescriptionTextColor         prompt.Color
-	DescriptionBGColor           prompt.Color
-	SelectedDescriptionTextColor prompt.Color
-	SelectedDescriptionBGColor   prompt.Color
-	ScrollbarBGColor             prompt.Color
-	ScrollbarThumbColor          prompt.Color
-}
-
 // Theme to configure how the shell will look and feel
 type Theme struct {
-	Colors       colors.Theme
-	PromptColors PromptColors
+	Colors colors.Theme
 
 	List          func(...string) string
 	Landing       string

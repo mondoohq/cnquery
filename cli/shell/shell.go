@@ -8,25 +8,15 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"path"
-	"regexp"
-	"sort"
 	"strings"
 
-	prompt "github.com/c-bata/go-prompt"
-	"github.com/mitchellh/go-homedir"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12"
 	"go.mondoo.com/cnquery/v12/cli/theme"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/mql"
 	"go.mondoo.com/cnquery/v12/mqlc"
-	"go.mondoo.com/cnquery/v12/mqlc/parser"
 	"go.mondoo.com/cnquery/v12/providers"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/sortx"
 	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
@@ -75,24 +65,20 @@ func LegacyWithTheme(theme *theme.Theme) ShellOption {
 	}
 }
 
-// Shell is the interactive explorer
+// Shell provides non-interactive query execution
+// For interactive use, use NewShell() which returns a ShellProgram
 type Shell struct {
-	Runtime     llx.Runtime
-	Theme       *theme.Theme
-	History     []string
-	HistoryPath string
-	MaxLines    int
+	Runtime  llx.Runtime
+	Theme    *theme.Theme
+	MaxLines int
 
-	completer       *Completer
-	out             io.Writer
-	features        cnquery.Features
-	onCloseHandler  func()
-	query           string
-	isMultiline     bool
-	multilineIndent int
+	out            io.Writer
+	features       cnquery.Features
+	onCloseHandler func()
 }
 
-// New creates a new Shell
+// New creates a new Shell for non-interactive query execution
+// For interactive shell, use NewShell() instead
 func New(runtime llx.Runtime, opts ...ShellOption) (*Shell, error) {
 	res := &Shell{
 		out:      os.Stdout,
@@ -112,177 +98,7 @@ func New(runtime llx.Runtime, opts ...ShellOption) (*Shell, error) {
 	schema := runtime.Schema()
 	res.Theme.PolicyPrinter.SetSchema(schema)
 
-	res.completer = NewCompleter(runtime.Schema(), res.features, func() string {
-		return res.query
-	})
-
 	return res, nil
-}
-
-func (s *Shell) printWelcome() {
-	if s.Theme.Welcome == "" {
-		return
-	}
-
-	fmt.Fprintln(s.out, s.Theme.Welcome)
-}
-
-// RunInteractive starts a REPL loop
-func (s *Shell) RunInteractive(cmd string) {
-	s.backupTerminalSettings()
-	s.printWelcome()
-
-	s.History = []string{}
-	homeDir, _ := homedir.Dir()
-	s.HistoryPath = path.Join(homeDir, ".mondoo_history")
-	if rawHistory, err := os.ReadFile(s.HistoryPath); err == nil {
-		s.History = strings.Split(string(rawHistory), "\n")
-	}
-
-	if cmd != "" {
-		s.ExecCmd(cmd)
-		s.History = append(s.History, cmd)
-	}
-
-	completer := s.completer.CompletePrompt
-
-	p := prompt.New(
-		s.ExecCmd,
-		completer,
-		prompt.OptionPrefix(s.Theme.Prefix),
-		prompt.OptionPrefixTextColor(s.Theme.PromptColors.PrefixTextColor),
-		prompt.OptionLivePrefix(s.changeLivePrefix),
-		prompt.OptionPreviewSuggestionTextColor(s.Theme.PromptColors.PreviewSuggestionTextColor),
-		prompt.OptionPreviewSuggestionBGColor(s.Theme.PromptColors.PreviewSuggestionBGColor),
-		prompt.OptionSelectedSuggestionTextColor(s.Theme.PromptColors.SelectedSuggestionTextColor),
-		prompt.OptionSelectedSuggestionBGColor(s.Theme.PromptColors.SelectedSuggestionBGColor),
-		prompt.OptionSuggestionTextColor(s.Theme.PromptColors.SuggestionTextColor),
-		prompt.OptionSuggestionBGColor(s.Theme.PromptColors.SuggestionBGColor),
-		prompt.OptionDescriptionTextColor(s.Theme.PromptColors.DescriptionTextColor),
-		prompt.OptionDescriptionBGColor(s.Theme.PromptColors.DescriptionBGColor),
-		prompt.OptionSelectedDescriptionTextColor(s.Theme.PromptColors.SelectedDescriptionTextColor),
-		prompt.OptionSelectedDescriptionBGColor(s.Theme.PromptColors.SelectedDescriptionBGColor),
-		prompt.OptionScrollbarBGColor(s.Theme.PromptColors.ScrollbarBGColor),
-		prompt.OptionScrollbarThumbColor(s.Theme.PromptColors.ScrollbarThumbColor),
-		prompt.OptionAddKeyBind(
-			prompt.KeyBind{
-				Key: prompt.ControlD,
-				Fn: func(buf *prompt.Buffer) {
-					s.handleExit()
-				},
-			},
-			prompt.KeyBind{
-				Key: prompt.ControlZ,
-				Fn: func(buf *prompt.Buffer) {
-					s.suspend()
-				},
-			},
-		),
-		prompt.OptionHistory(s.History),
-		prompt.OptionCompletionWordSeparator(completerSeparator),
-	)
-
-	p.Run()
-
-	s.handleExit()
-}
-
-var helpResource = regexp.MustCompile(`help\s(.*)`)
-
-func (s *Shell) ExecCmd(cmd string) {
-	switch {
-	case s.isMultiline:
-		s.execQuery(cmd)
-	case cmd == "":
-		return
-	case cmd == "quit":
-		fallthrough
-	case cmd == "exit":
-		s.handleExit()
-		return
-	case cmd == "clear":
-		// clear screen
-		s.out.Write([]byte{0x1b, '[', '2', 'J'})
-		// move cursor to home
-		s.out.Write([]byte{0x1b, '[', 'H'})
-		return
-	case cmd == "help":
-		s.listAvailableResources()
-		return
-	case cmd == "nyanya":
-		size := prompt.NewStandardInputParser().GetWinSize()
-		nyago(int(size.Col), int(size.Row))
-		return
-	case helpResource.MatchString(cmd):
-		s.listFilteredResources(cmd)
-		return
-	default:
-		s.execQuery(cmd)
-	}
-}
-
-func (s *Shell) execQuery(cmd string) {
-	s.query += " " + cmd
-
-	// Note: we could optimize the call structure here, since compile
-	// will end up being called twice. However, since we are talking about
-	// the shell and we only deal with one query at a time, with the
-	// compiler being rather fast, the additional time is negligible
-	// and may not be worth coding around.
-	code, err := mqlc.Compile(s.query, nil, mqlc.NewConfig(s.Runtime.Schema(), s.features))
-	if err != nil {
-		if e, ok := err.(*parser.ErrIncomplete); ok {
-			s.isMultiline = true
-			s.multilineIndent = e.Indent
-			return
-		}
-	}
-
-	// at this point we know this is not a multi-line call anymore
-
-	cleanCommand := s.query
-	if code != nil {
-		cleanCommand = code.Source
-	}
-
-	if len(s.History) == 0 || s.History[len(s.History)-1] != cleanCommand {
-		s.History = append(s.History, cleanCommand)
-	}
-
-	code, res, err := s.RunOnce(s.query)
-	// we can safely ignore err != nil, since RunOnce handles most of the printing we need
-	if err == nil {
-		s.PrintResults(code, res)
-	}
-
-	s.isMultiline = false
-	s.query = ""
-}
-
-func (s *Shell) changeLivePrefix() (string, bool) {
-	if s.isMultiline {
-		indent := strings.Repeat(" ", s.multilineIndent*2)
-		return "   .. > " + indent, true
-	}
-	return "", false
-}
-
-// handleExit is called when the user wants to exit the shell, it restores the terminal
-// when the interactive prompt has been used and writes the history to disk. Once that
-// is completed it calls Close() to call the optional close handler for the provider
-func (s *Shell) handleExit() {
-	rawHistory := strings.Join(s.History, "\n")
-	err := os.WriteFile(s.HistoryPath, []byte(rawHistory), 0o640)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to save history")
-	}
-
-	s.restoreTerminalSettings()
-
-	// run onClose handler if set
-	s.Close()
-
-	os.Exit(0)
 }
 
 // Close is called when the shell is closed and calls the onCloseHandler
@@ -315,6 +131,7 @@ func (s *Shell) RunOnceBundle(code *llx.CodeBundle) (map[string]*llx.RawResult, 
 	return mql.ExecuteCode(s.Runtime, code, nil, s.features)
 }
 
+// PrintResults prints the results of a query execution
 func (s *Shell) PrintResults(code *llx.CodeBundle, results map[string]*llx.RawResult) {
 	printedResult := s.Theme.PolicyPrinter.Results(code, results)
 
@@ -326,116 +143,18 @@ func (s *Shell) PrintResults(code *llx.CodeBundle, results map[string]*llx.RawRe
 	fmt.Fprintln(s.out, printedResult)
 }
 
-func indent(indent int) string {
-	indentTxt := ""
-	for i := 0; i < indent; i++ {
-		indentTxt += " "
+func formatSuggestions(suggestions []*llx.Documentation, theme *theme.Theme) string {
+	var res strings.Builder
+	res.WriteString(theme.Secondary("\nsuggestions: \n"))
+	for i := range suggestions {
+		s := suggestions[i]
+		res.WriteString(theme.List(s.Field+": "+s.Title) + "\n")
 	}
-	return indentTxt
+	return res.String()
 }
 
-// listAvailableResources lists resource names and their title
-func (s *Shell) listAvailableResources() {
-	resources := s.Runtime.Schema().AllResources()
-	keys := sortx.Keys(resources)
-	s.renderResources(resources, keys)
-}
-
-// listFilteredResources displays the schema of one or many resources that start with the provided prefix
-func (s *Shell) listFilteredResources(cmd string) {
-	m := helpResource.FindStringSubmatch(cmd)
-	if len(m) == 0 {
-		return
-	}
-
-	search := m[1]
-	resources := s.Runtime.Schema().AllResources()
-
-	// if we find the requested resource, just return it
-	if _, ok := resources[search]; ok {
-		s.renderResources(resources, []string{search})
-		return
-	}
-
-	// otherwise we will look for anything that matches
-	keys := []string{}
-	for k := range resources {
-		if strings.HasPrefix(k, search) {
-			keys = append(keys, k)
-		}
-	}
-	sort.Strings(keys)
-	s.renderResources(resources, keys)
-}
-
-// renderResources renders a set of resources from a given schema
-func (s *Shell) renderResources(resources map[string]*resources.ResourceInfo, keys []string) {
-	// list resources and field
-	type rowEntry struct {
-		key       string
-		keylength int
-		value     string
-	}
-
-	rows := []rowEntry{}
-	maxk := 0
-	const separator = ":"
-
-	for i := range keys {
-		k := keys[i]
-		resource := resources[k]
-
-		keyLength := len(resource.Name) + len(separator)
-		rows = append(rows, rowEntry{
-			s.Theme.PolicyPrinter.Secondary(resource.Name) + separator,
-			keyLength,
-			resource.Title,
-		})
-		if maxk < keyLength {
-			maxk = keyLength
-		}
-
-		fields := sortx.Keys(resource.Fields)
-		for i := range fields {
-			field := resource.Fields[fields[i]]
-			if field.IsPrivate {
-				continue
-			}
-
-			fieldName := "  " + field.Name
-			fieldType := types.Type(field.Type).Label()
-			displayType := ""
-			fieldComment := field.Title
-			if fieldComment == "" && types.Type(field.Type).IsResource() {
-				r, ok := resources[fieldType]
-				if ok {
-					fieldComment = r.Title
-				}
-			}
-			if len(fieldType) > 0 {
-				fieldType = " " + fieldType
-				displayType = s.Theme.PolicyPrinter.Disabled(fieldType)
-			}
-
-			keyLength = len(fieldName) + len(fieldType) + len(separator)
-			rows = append(rows, rowEntry{
-				s.Theme.PolicyPrinter.Secondary(fieldName) + displayType + separator,
-				keyLength,
-				fieldComment,
-			})
-			if maxk < keyLength {
-				maxk = keyLength
-			}
-		}
-	}
-
-	for i := range rows {
-		entry := rows[i]
-		fmt.Fprintln(s.out, entry.key+indent(maxk-entry.keylength+1)+entry.value)
-	}
-}
-
-// capture the interrupt signal (SIGINT) once and notify a given channel
+// captureSIGINTonce captures the interrupt signal (SIGINT) once and notifies a given channel
+// Used by the nyago easter egg
 func captureSIGINTonce(sig chan<- struct{}) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -445,14 +164,4 @@ func captureSIGINTonce(sig chan<- struct{}) {
 		signal.Stop(c)
 		sig <- struct{}{}
 	}()
-}
-
-func formatSuggestions(suggestions []*llx.Documentation, theme *theme.Theme) string {
-	var res strings.Builder
-	res.WriteString(theme.Secondary("\nsuggestions: \n"))
-	for i := range suggestions {
-		s := suggestions[i]
-		res.WriteString(theme.List(s.Field+": "+s.Title) + "\n")
-	}
-	return res.String()
 }
