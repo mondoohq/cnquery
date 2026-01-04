@@ -153,12 +153,12 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 
 		shellOptions := []shell.ShellOption{}
-		shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
-		shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
-		shellOptions = append(shellOptions, shell.WithOutput(out))
+		shellOptions = append(shellOptions, shell.LegacyWithOnCloseListener(onCloseHandler))
+		shellOptions = append(shellOptions, shell.LegacyWithFeatures(conf.Features))
+		shellOptions = append(shellOptions, shell.LegacyWithOutput(out))
 
 		if upstreamConfig != nil {
-			shellOptions = append(shellOptions, shell.WithUpstreamConfig(upstreamConfig))
+			shellOptions = append(shellOptions, shell.LegacyWithUpstreamConfig(upstreamConfig))
 		}
 
 		sh, err := shell.New(asset.Runtime, shellOptions...)

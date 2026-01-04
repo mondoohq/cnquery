@@ -159,19 +159,31 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		providers.Coordinator.Shutdown()
 	}
 
-	shellOptions := []shell.ShellOption{}
-	shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
-	shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
-	shellOptions = append(shellOptions, shell.WithUpstreamConfig(conf.UpstreamConfig))
-
-	sh, err := shell.New(connectAsset.Runtime, shellOptions...)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to initialize interactive shell")
-	}
+	// Create shell theme with custom welcome message if provided
+	shellTheme := shell.DefaultShellTheme
 	if conf.WelcomeMessage != "" {
-		sh.Theme.Welcome = conf.WelcomeMessage
+		// Create a copy with custom welcome message
+		customTheme := *shellTheme
+		customTheme.Welcome = conf.WelcomeMessage
+		shellTheme = &customTheme
 	}
-	sh.RunInteractive(conf.Command)
+
+	// Create and run the new Bubble Tea shell
+	sh := shell.NewShell(
+		connectAsset.Runtime,
+		shell.WithOnClose(onCloseHandler),
+		shell.WithFeatures(conf.Features),
+		shell.WithUpstreamConfig(conf.UpstreamConfig),
+		shell.WithTheme(shellTheme),
+	)
+
+	if err := sh.RunWithCommand(conf.Command); err != nil {
+		if err == shell.ErrNotTTY {
+			log.Fatal().Msg("shell requires an interactive terminal (TTY)")
+		}
+		log.Error().Err(err).Msg("shell error")
+		return err
+	}
 
 	return nil
 }

@@ -30,15 +30,21 @@ import (
 	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
+// ShellOption configures the legacy Shell (for non-interactive use)
+// Deprecated: Use Option with NewShell for interactive shell
 type ShellOption func(c *Shell)
 
-func WithOnCloseListener(onCloseHandler func()) ShellOption {
+// LegacyWithOnCloseListener sets a close handler for the legacy Shell
+// Deprecated: Use WithOnClose with NewShell for interactive shell
+func LegacyWithOnCloseListener(onCloseHandler func()) ShellOption {
 	return func(t *Shell) {
 		t.onCloseHandler = onCloseHandler
 	}
 }
 
-func WithUpstreamConfig(c *upstream.UpstreamConfig) ShellOption {
+// LegacyWithUpstreamConfig sets the upstream config for the legacy Shell
+// Deprecated: Use WithUpstreamConfig with NewShell for interactive shell
+func LegacyWithUpstreamConfig(c *upstream.UpstreamConfig) ShellOption {
 	return func(t *Shell) {
 		if x, ok := t.Runtime.(*providers.Runtime); ok {
 			x.UpstreamConfig = c
@@ -46,19 +52,24 @@ func WithUpstreamConfig(c *upstream.UpstreamConfig) ShellOption {
 	}
 }
 
-func WithFeatures(features cnquery.Features) ShellOption {
+// LegacyWithFeatures sets features for the legacy Shell
+// Deprecated: Use WithFeatures with NewShell for interactive shell
+func LegacyWithFeatures(features cnquery.Features) ShellOption {
 	return func(t *Shell) {
 		t.features = features
 	}
 }
 
-func WithOutput(writer io.Writer) ShellOption {
+// LegacyWithOutput sets the output writer for the legacy Shell
+func LegacyWithOutput(writer io.Writer) ShellOption {
 	return func(t *Shell) {
 		t.out = writer
 	}
 }
 
-func WithTheme(theme *theme.Theme) ShellOption {
+// LegacyWithTheme sets the theme for the legacy Shell
+// Deprecated: Use WithTheme with NewShell for interactive shell
+func LegacyWithTheme(theme *theme.Theme) ShellOption {
 	return func(t *Shell) {
 		t.Theme = theme
 	}
