@@ -1,0 +1,27 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.17.4-1"
+
+[files."/etc/os-release"]
+content = """
+NAME="CachyOS Linux"
+PRETTY_NAME="CachyOS"
+ID=cachyos
+BUILD_ID=rolling
+VERSION_ID=20251228.0.475343
+ANSI_COLOR="38;2;23;147;209"
+HOME_URL="https://cachyos.org/"
+DOCUMENTATION_URL="https://wiki.cachyos.org/"
+SUPPORT_URL="https://discuss.cachyos.org/"
+BUG_REPORT_URL="https://github.com/cachyos"
+PRIVACY_POLICY_URL="https://terms.archlinux.org/docs/privacy-policy/"
+LOGO=cachyos
+"""
+
+[files."/etc/arch-release"]
+content = ""
