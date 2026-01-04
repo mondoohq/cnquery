@@ -179,7 +179,13 @@ var debian = &PlatformResolver{
 			return false, nil
 		}
 
-		pf.Version = strings.TrimSpace(string(c))
+		// gardenlinux identifies itself as debian, but we want to set the proper name / version
+		if osr["GARDENLINUX_VERSION"] != "" {
+			pf.Name = "gardenlinux"
+			pf.Version = osr["GARDENLINUX_VERSION"]
+		} else {
+			pf.Version = strings.TrimSpace(string(c))
+		}
 
 		unamem, err := osrd.unamem()
 		if err == nil {
