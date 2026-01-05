@@ -7,7 +7,7 @@ go 1.25.1
 require (
 	github.com/cloudflare/cloudflare-go v0.116.0
 	github.com/rs/zerolog v1.34.0
-	go.mondoo.com/cnquery/v12 v12.15.0
+	go.mondoo.com/cnquery/v12 v12.16.0
 )
 
 require (
@@ -79,7 +79,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.7 // indirect

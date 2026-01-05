@@ -5,11 +5,11 @@ go 1.25.1
 replace go.mondoo.com/cnquery/v12 => ../..
 
 require (
-	github.com/Ullaakut/nmap/v3 v3.0.6
+	github.com/Ullaakut/nmap/v3 v3.1.0
 	github.com/cockroachdb/errors v1.12.0
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/cnquery/v12 v12.15.0
+	go.mondoo.com/cnquery/v12 v12.16.0
 )
 
 require (

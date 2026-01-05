@@ -8,7 +8,7 @@ require (
 	github.com/cockroachdb/errors v1.12.0
 	github.com/ipinfo/go/v2 v2.12.0
 	github.com/rs/zerolog v1.34.0
-	go.mondoo.com/cnquery/v12 v12.15.0
+	go.mondoo.com/cnquery/v12 v12.16.0
 )
 
 require (

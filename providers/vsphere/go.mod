@@ -10,8 +10,8 @@ require (
 	github.com/stretchr/testify v1.11.1
 	// pin v0.46.3
 	github.com/vmware/govmomi v0.46.3
-	go.mondoo.com/cnquery/v12 v12.15.0
-	go.mondoo.com/mondoo-go v0.0.0-20251224000430-5db65c48db4d
+	go.mondoo.com/cnquery/v12 v12.16.0
+	go.mondoo.com/mondoo-go v0.0.0-20251230082919-30dddec20321
 )
 
 require (

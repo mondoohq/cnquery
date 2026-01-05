@@ -8,7 +8,7 @@ require (
 	github.com/ctreminiom/go-atlassian v1.6.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
-	go.mondoo.com/cnquery/v12 v12.15.0
+	go.mondoo.com/cnquery/v12 v12.16.0
 	go.mondoo.com/ranger-rpc v0.7.1
 )
 

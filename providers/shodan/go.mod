@@ -7,7 +7,7 @@ go 1.25.1
 require (
 	github.com/rs/zerolog v1.34.0
 	github.com/shadowscatcher/shodan v1.0.8
-	go.mondoo.com/cnquery/v12 v12.15.0
+	go.mondoo.com/cnquery/v12 v12.16.0
 )
 
 require (
