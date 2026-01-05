@@ -296,9 +296,15 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Clear screen using ANSI escape codes
 		return m, tea.Println("\033[2J\033[H")
 
-	case "shift+enter":
+	case "ctrl+j":
 		// Insert a newline for manual multiline input
-		m.input.SetValue(m.input.Value() + "\n")
+		// Note: ctrl+j is the traditional Unix newline (LF) character
+		// alt+enter and shift+enter don't work reliably in most terminals
+		// Dismiss completion popup
+		m.showPopup = false
+		m.suggestions = nil
+		// Insert newline at cursor position
+		m.input.InsertString("\n")
 		// Adjust textarea height to fit content
 		lines := strings.Count(m.input.Value(), "\n") + 1
 		m.input.SetHeight(lines)
@@ -602,7 +608,7 @@ func (m *shellModel) renderHelpBar() string {
 	} else {
 		items = []string{
 			m.theme.HelpKey.Render("enter") + m.theme.HelpText.Render(" execute"),
-			m.theme.HelpKey.Render("shift+enter") + m.theme.HelpText.Render(" newline"),
+			m.theme.HelpKey.Render("ctrl+j") + m.theme.HelpText.Render(" newline"),
 			m.theme.HelpKey.Render("↑↓") + m.theme.HelpText.Render(" history"),
 			m.theme.HelpKey.Render("ctrl+d") + m.theme.HelpText.Render(" exit"),
 		}
@@ -628,6 +634,49 @@ func (m *shellModel) renderCompletionPopup() string {
 		startIdx = m.selected - maxItems + 1
 	}
 
+	// Calculate available width and column sizes
+	availableWidth := m.width
+	if availableWidth < 40 {
+		availableWidth = 80 // fallback
+	}
+
+	// Reserve space for: padding (4), separator (3), description (min 20)
+	minDescWidth := 20
+	maxNameWidth := availableWidth - minDescWidth - 7
+
+	// Cap name column width
+	if maxNameWidth > 40 {
+		maxNameWidth = 40
+	}
+	if maxNameWidth < 15 {
+		maxNameWidth = 15
+	}
+
+	// Find the longest name in visible items (for alignment)
+	nameWidth := 0
+	for i := startIdx; i < startIdx+maxItems && i < len(m.suggestions); i++ {
+		nameLen := len(m.suggestions[i].Text)
+		if nameLen > nameWidth {
+			nameWidth = nameLen
+		}
+	}
+	// Clamp to maxNameWidth
+	if nameWidth > maxNameWidth {
+		nameWidth = maxNameWidth
+	}
+	if nameWidth < 10 {
+		nameWidth = 10
+	}
+
+	// Calculate description width
+	descWidth := availableWidth - nameWidth - 7
+	if descWidth < minDescWidth {
+		descWidth = minDescWidth
+	}
+	if descWidth > 50 {
+		descWidth = 50
+	}
+
 	var rows []string
 	for i := startIdx; i < startIdx+maxItems && i < len(m.suggestions); i++ {
 		s := m.suggestions[i]
@@ -641,20 +690,29 @@ func (m *shellModel) renderCompletionPopup() string {
 			descStyle = m.theme.DescriptionNormal
 		}
 
-		// Truncate description if needed
-		desc := s.Description
-		if len(desc) > 40 {
-			desc = desc[:37] + "..."
+		// Truncate name if needed
+		name := s.Text
+		if len(name) > nameWidth {
+			name = name[:nameWidth-1] + "…"
 		}
 
-		row := suggStyle.Render(fmt.Sprintf("%-20s", s.Text)) +
-			descStyle.Render(fmt.Sprintf(" %s", desc))
+		// Truncate description if needed
+		desc := s.Description
+		if len(desc) > descWidth {
+			desc = desc[:descWidth-1] + "…"
+		}
+
+		// Format with proper alignment
+		nameFormatted := fmt.Sprintf("%-*s", nameWidth, name)
+		descFormatted := fmt.Sprintf("%-*s", descWidth, desc)
+
+		row := suggStyle.Render(nameFormatted) + " " + descStyle.Render(descFormatted)
 		rows = append(rows, row)
 	}
 
 	// Add scroll indicator if needed
 	if len(m.suggestions) > maxItems {
-		indicator := fmt.Sprintf(" [%d/%d]", m.selected+1, len(m.suggestions))
+		indicator := fmt.Sprintf(" ↑↓ %d/%d", m.selected+1, len(m.suggestions))
 		rows = append(rows, m.theme.ScrollIndicator.Render(indicator))
 	}
 

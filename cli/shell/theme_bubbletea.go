@@ -71,24 +71,18 @@ var DefaultShellTheme = &ShellTheme{
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(colorPurple),
 	SuggestionNormal: lipgloss.NewStyle().
-		Foreground(lipgloss.Color("252")).
-		Background(colorGray).
-		Padding(0, 1),
+		Foreground(lipgloss.Color("252")),
 	SuggestionSelected: lipgloss.NewStyle().
 		Foreground(colorWhite).
 		Background(colorPurple).
-		Bold(true).
-		Padding(0, 1),
+		Bold(true),
 	DescriptionNormal: lipgloss.NewStyle().
-		Foreground(lipgloss.Color("252")).
-		Background(colorPurple).
-		Padding(0, 1),
+		Foreground(colorDisabled),
 	DescriptionSelected: lipgloss.NewStyle().
 		Foreground(colorWhite).
-		Background(colorFuchsia).
-		Padding(0, 1),
+		Background(colorPurple),
 	ScrollIndicator: lipgloss.NewStyle().
-		Foreground(colorFuchsia),
+		Foreground(colorDisabled),
 
 	// Output
 	OutputArea: lipgloss.NewStyle().
