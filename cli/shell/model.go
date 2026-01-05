@@ -262,6 +262,7 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.isMultiline = false
 			m.query = ""
 			m.input.SetValue("")
+			m.input.SetHeight(1)
 			m.showPopup = false
 			m.suggestions = nil
 			m.updatePrompt()
@@ -278,6 +279,14 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+l":
 		// Clear screen using ANSI escape codes
 		return m, tea.Println("\033[2J\033[H")
+
+	case "shift+enter":
+		// Insert a newline for manual multiline input
+		m.input.SetValue(m.input.Value() + "\n")
+		// Adjust textarea height to fit content
+		lines := strings.Count(m.input.Value(), "\n") + 1
+		m.input.SetHeight(lines)
+		return m, nil
 
 	case "enter":
 		return m.handleSubmit()
@@ -399,6 +408,7 @@ func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
 
 	// Clear input and reset state
 	m.input.SetValue("")
+	m.input.SetHeight(1)
 	m.isMultiline = false
 	m.updatePrompt()
 
