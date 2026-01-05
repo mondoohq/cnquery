@@ -84,12 +84,9 @@ func (s *ShellProgram) RunWithCommand(initialCmd string) error {
 	model := newShellModel(s.runtime, s.theme, s.features, initialCmd)
 
 	// Create and run the Bubble Tea program
-	// Note: We don't use WithAltScreen() to match the behavior of the previous go-prompt shell
-	// which renders inline in the terminal
-	p := tea.NewProgram(
-		model,
-		tea.WithMouseCellMotion(),
-	)
+	// Note: We don't use WithAltScreen() so output stays in terminal scrollback
+	// Note: We don't use WithMouseCellMotion() so terminal handles text selection natively
+	p := tea.NewProgram(model)
 
 	finalModel, err := p.Run()
 	if err != nil {
