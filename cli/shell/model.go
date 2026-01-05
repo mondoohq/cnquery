@@ -70,6 +70,12 @@ type shellModel struct {
 	historyDraft string
 	historyPath  string
 
+	// History search (ctrl+r)
+	searchMode    bool
+	searchQuery   string
+	searchMatches []int // indices into history that match
+	searchIdx     int   // current index into searchMatches
+
 	// Layout
 	width  int
 	height int
@@ -152,6 +158,7 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Feat
 func (m *shellModel) Init() tea.Cmd {
 	return tea.Batch(
 		textarea.Blink,
+		tea.EnableBracketedPaste,
 		m.loadHistory(),
 		// Print welcome message
 		tea.Println(m.theme.Welcome),
@@ -252,31 +259,30 @@ func (m *shellModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleKeyMsg(msg)
 	}
 
-	// Update textarea
-	var cmd tea.Cmd
-	m.input, cmd = m.input.Update(msg)
-	cmds = append(cmds, cmd)
-
 	return m, tea.Batch(cmds...)
 }
 
 // handleKeyMsg processes keyboard input
 func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	// Handle pasted content - insert newlines instead of executing
+	// Handle history search mode (ctrl+r)
+	if m.searchMode {
+		return m.handleSearchKey(msg)
+	}
+
+	// Handle pasted content - let textarea handle it but adjust height after
 	if msg.Paste {
-		if msg.String() == "enter" {
-			// Pasted newline - insert it instead of executing
-			m.showPopup = false
-			m.suggestions = nil
-			m.input.InsertString("\n")
-			m.updateInputHeight()
-			return m, nil
-		}
-		// Let other pasted characters fall through to textarea
+		m.showPopup = false
+		m.suggestions = nil
+		// Let textarea handle the paste
+		var cmd tea.Cmd
+		m.input, cmd = m.input.Update(msg)
+		m.updateInputHeight()
+		m.updateCompletions()
+		return m, cmd
 	}
 
 	// Handle completion popup if visible (but not during paste)
-	if m.showPopup && len(m.suggestions) > 0 && !msg.Paste {
+	if m.showPopup && len(m.suggestions) > 0 {
 		switch msg.String() {
 		case "down", "tab":
 			m.selected = (m.selected + 1) % len(m.suggestions)
@@ -298,7 +304,7 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 
 	// DEBUG: see key name (uncomment to debug)
-	// return m, tea.Println("Key: [" + msg.String() + "]")
+	// return m, tea.Println(fmt.Sprintf("Key: [%s] Paste: %v Runes: %d", msg.String(), msg.Paste, len(msg.Runes)))
 
 	switch msg.String() {
 	case "ctrl+d":
@@ -314,7 +320,6 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.input.SetHeight(1)
 			m.showPopup = false
 			m.suggestions = nil
-			m.updatePrompt()
 			// Print ^C to show the interrupt
 			return m, tea.Println("^C")
 		}
@@ -333,52 +338,39 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Show asset information
 		return m, m.showAssetInfo()
 
+	case "ctrl+r":
+		// Enter history search mode
+		if len(m.history) > 0 {
+			m.searchMode = true
+			m.searchQuery = ""
+			m.searchMatches = nil
+			m.searchIdx = 0
+			// Save current input as draft
+			m.historyDraft = m.input.Value()
+		}
+		return m, nil
+
 	case "ctrl+j":
 		// Insert a newline for manual multiline input
-		// Note: ctrl+j is the traditional Unix newline (LF) character
-		// alt+enter and shift+enter don't work reliably in most terminals
-		// Dismiss completion popup
 		m.showPopup = false
 		m.suggestions = nil
-		// Insert newline at cursor position
 		m.input.InsertString("\n")
 		m.updateInputHeight()
 		return m, nil
 
 	case "enter":
 		return m.handleSubmit()
-
-	case "up":
-		// History navigation only when input is empty or single-line on first line
-		isMultiline := strings.Contains(m.input.Value(), "\n")
-		if m.input.Value() == "" || (!isMultiline && m.input.Line() == 0) {
-			return m.navigateHistory(-1)
-		}
-		// For multi-line, let textarea handle cursor movement
-
-	case "down":
-		// History navigation only when input is empty or single-line while browsing history
-		isMultiline := strings.Contains(m.input.Value(), "\n")
-		if m.input.Value() == "" || (!isMultiline && m.historyIdx < len(m.history)) {
-			return m.navigateHistory(1)
-		}
-		// For multi-line, let textarea handle cursor movement
 	}
 
-	// Update input and trigger completion
+	// Let textarea handle all other keys
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
-
-	// Auto-adjust height for multi-line content (e.g., from paste)
 	m.updateInputHeight()
-
-	// Trigger completion on text change
 	m.updateCompletions()
-
 	return m, cmd
 }
 
-// formatInputWithPrompts formats input with proper prompts for each line
+// formatInputWithPrompts formats input with proper prompts and syntax highlighting for each line
 func (m *shellModel) formatInputWithPrompts(input string) string {
 	lines := strings.Split(input, "\n")
 
@@ -390,7 +382,8 @@ func (m *shellModel) formatInputWithPrompts(input string) string {
 			result.WriteString("\n")
 			result.WriteString(m.theme.MultilinePrompt.Render(". "))
 		}
-		result.WriteString(line)
+		// Apply syntax highlighting to the code
+		result.WriteString(highlightMQL(line))
 	}
 	return result.String()
 }
@@ -492,7 +485,6 @@ func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
 	m.input.SetHeight(1)
 	m.isMultiline = false
 	m.executing = true
-	m.updatePrompt()
 
 	// Execute the query
 	queryToRun := m.query
@@ -516,12 +508,8 @@ func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
 
 // updatePrompt updates the input prompt based on multiline state
 func (m *shellModel) updatePrompt() {
-	if m.isMultiline {
-		indent := strings.Repeat(" ", m.multilineIndent*2)
-		m.input.Prompt = "   .. > " + indent
-	} else {
-		m.input.Prompt = m.theme.Prefix
-	}
+	// The prompt is handled by SetPromptFunc in newShellModel
+	// This function is kept for compatibility but doesn't need to do anything
 }
 
 // addToHistory adds a command to history
@@ -556,42 +544,111 @@ func (m *shellModel) updateInputHeight() {
 	height := m.calculateInputHeight()
 	if height != m.input.Height() {
 		m.input.SetHeight(height)
-		// Reset viewport to show from the beginning
-		// Save cursor position, go to start, restore position
-		m.input.CursorStart()
-		m.input.CursorEnd()
 	}
 }
 
-// navigateHistory moves through command history
-func (m *shellModel) navigateHistory(direction int) (tea.Model, tea.Cmd) {
-	if len(m.history) == 0 {
+// handleSearchKey processes key input during history search mode
+func (m *shellModel) handleSearchKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "ctrl+r":
+		// Find next match (go backwards in history)
+		if len(m.searchMatches) > 0 {
+			m.searchIdx++
+			if m.searchIdx >= len(m.searchMatches) {
+				m.searchIdx = 0 // wrap around
+			}
+			m.applySearchMatch()
+		}
+		return m, nil
+
+	case "ctrl+c", "esc":
+		// Cancel search, restore original input
+		m.searchMode = false
+		m.input.SetValue(m.historyDraft)
+		m.updateInputHeight()
+		return m, nil
+
+	case "enter":
+		// Accept current match and exit search mode
+		m.searchMode = false
+		// Keep the current input value (already set by search)
+		return m, nil
+
+	case "backspace":
+		// Remove last character from search query
+		if len(m.searchQuery) > 0 {
+			m.searchQuery = m.searchQuery[:len(m.searchQuery)-1]
+			m.updateSearchMatches()
+		}
+		return m, nil
+
+	case "ctrl+g":
+		// Abort search (like in emacs)
+		m.searchMode = false
+		m.input.SetValue(m.historyDraft)
+		m.updateInputHeight()
+		return m, nil
+
+	default:
+		// Add typed characters to search query
+		if len(msg.Runes) > 0 {
+			for _, r := range msg.Runes {
+				m.searchQuery += string(r)
+			}
+			m.updateSearchMatches()
+		}
 		return m, nil
 	}
+}
 
-	// Save current input when starting to navigate
-	if m.historyIdx == len(m.history) {
-		m.historyDraft = m.input.Value()
+// updateSearchMatches finds all history entries matching the search query
+func (m *shellModel) updateSearchMatches() {
+	m.searchMatches = nil
+	m.searchIdx = 0
+
+	if m.searchQuery == "" {
+		m.input.SetValue("")
+		m.updateInputHeight()
+		return
 	}
 
-	newIdx := m.historyIdx + direction
-	if newIdx < 0 {
-		newIdx = 0
-	}
-	if newIdx > len(m.history) {
-		newIdx = len(m.history)
-	}
+	query := strings.ToLower(m.searchQuery)
 
-	m.historyIdx = newIdx
-
-	if m.historyIdx == len(m.history) {
-		// Restore draft
-		m.input.SetValue(m.historyDraft)
-	} else {
-		m.input.SetValue(m.history[m.historyIdx])
+	// Search backwards through history (most recent first)
+	for i := len(m.history) - 1; i >= 0; i-- {
+		if strings.Contains(strings.ToLower(m.history[i]), query) {
+			m.searchMatches = append(m.searchMatches, i)
+		}
 	}
 
-	return m, nil
+	m.applySearchMatch()
+}
+
+// applySearchMatch applies the current search match to the input
+func (m *shellModel) applySearchMatch() {
+	if len(m.searchMatches) == 0 {
+		m.input.SetValue("")
+		m.updateInputHeight()
+		return
+	}
+
+	idx := m.searchMatches[m.searchIdx]
+	m.input.SetValue(m.history[idx])
+	m.historyIdx = idx
+	m.updateInputHeight()
+	m.input.CursorStart()
+}
+
+// isBuiltinCommand checks if the input is a built-in shell command
+func isBuiltinCommand(input string) bool {
+	trimmed := strings.TrimSpace(input)
+	switch {
+	case trimmed == "exit", trimmed == "quit", trimmed == "clear", trimmed == "help", trimmed == "nyanya":
+		return true
+	case strings.HasPrefix(trimmed, "help "):
+		return true
+	}
+	return false
 }
 
 // updateCompletions fetches new completions based on current input
@@ -613,6 +670,12 @@ func (m *shellModel) updateCompletions() {
 	} else {
 		m.showPopup = false
 		m.suggestions = nil
+	}
+
+	// Skip compile error checking for built-in shell commands
+	if isBuiltinCommand(input) {
+		m.compileError = ""
+		return
 	}
 
 	// Check for compile errors (for inline feedback)
@@ -673,8 +736,11 @@ func (m *shellModel) View() string {
 	if m.executing {
 		b.WriteString(m.spinner.View())
 		b.WriteString(" Executing query...")
+	} else if m.searchMode {
+		// Show search interface
+		b.WriteString(m.renderSearchView())
 	} else {
-		// Input area - output is printed directly to terminal via tea.Println
+		// Render textarea input
 		b.WriteString(m.input.View())
 
 		// Completion popup
@@ -736,11 +802,51 @@ func (m *shellModel) showAssetInfo() tea.Cmd {
 	}
 }
 
+// renderSearchView renders the history search interface
+func (m *shellModel) renderSearchView() string {
+	var b strings.Builder
+
+	// Show the search prompt
+	searchPrompt := m.theme.Secondary.Render("(reverse-i-search)`") +
+		m.theme.HelpKey.Render(m.searchQuery) +
+		m.theme.Secondary.Render("': ")
+
+	b.WriteString(searchPrompt)
+
+	// Show current match or empty
+	if len(m.searchMatches) > 0 {
+		// Show the matched command (first line only for preview)
+		match := m.history[m.searchMatches[m.searchIdx]]
+		lines := strings.Split(match, "\n")
+		preview := lines[0]
+		if len(lines) > 1 {
+			preview += m.theme.Disabled.Render(" ...")
+		}
+		b.WriteString(preview)
+	} else if m.searchQuery != "" {
+		b.WriteString(m.theme.Disabled.Render("(no match)"))
+	}
+
+	// Show match count
+	if len(m.searchMatches) > 0 {
+		b.WriteString("\n")
+		b.WriteString(m.theme.HelpText.Render(fmt.Sprintf("  [%d/%d matches]", m.searchIdx+1, len(m.searchMatches))))
+	}
+
+	return b.String()
+}
+
 // renderHelpBar renders the help bar with available key bindings
 func (m *shellModel) renderHelpBar() string {
 	var items []string
 
-	if m.showPopup {
+	if m.searchMode {
+		items = []string{
+			m.theme.HelpKey.Render("ctrl+r") + m.theme.HelpText.Render(" next"),
+			m.theme.HelpKey.Render("enter") + m.theme.HelpText.Render(" select"),
+			m.theme.HelpKey.Render("esc") + m.theme.HelpText.Render(" cancel"),
+		}
+	} else if m.showPopup {
 		items = []string{
 			m.theme.HelpKey.Render("↑↓") + m.theme.HelpText.Render(" navigate"),
 			m.theme.HelpKey.Render("tab") + m.theme.HelpText.Render(" select"),
@@ -753,8 +859,8 @@ func (m *shellModel) renderHelpBar() string {
 	} else {
 		items = []string{
 			m.theme.HelpKey.Render("enter") + m.theme.HelpText.Render(" run"),
+			m.theme.HelpKey.Render("ctrl+r") + m.theme.HelpText.Render(" search"),
 			m.theme.HelpKey.Render("ctrl+o") + m.theme.HelpText.Render(" info"),
-			m.theme.HelpKey.Render("ctrl+j") + m.theme.HelpText.Render(" newline"),
 			m.theme.HelpKey.Render("ctrl+d") + m.theme.HelpText.Render(" exit"),
 		}
 	}

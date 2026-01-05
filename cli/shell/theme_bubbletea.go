@@ -16,12 +16,12 @@ type ShellTheme struct {
 	InputText       lipgloss.Style
 
 	// Completion popup
-	PopupBorder           lipgloss.Style
-	SuggestionNormal      lipgloss.Style
-	SuggestionSelected    lipgloss.Style
-	DescriptionNormal     lipgloss.Style
-	DescriptionSelected   lipgloss.Style
-	ScrollIndicator       lipgloss.Style
+	PopupBorder         lipgloss.Style
+	SuggestionNormal    lipgloss.Style
+	SuggestionSelected  lipgloss.Style
+	DescriptionNormal   lipgloss.Style
+	DescriptionSelected lipgloss.Style
+	ScrollIndicator     lipgloss.Style
 
 	// Output
 	OutputArea lipgloss.Style
@@ -48,8 +48,6 @@ type ShellTheme struct {
 var (
 	colorPurple   = lipgloss.Color("133") // Purple for prefix and selected items
 	colorFuchsia  = lipgloss.Color("201") // Fuchsia for accents
-	colorBlue     = lipgloss.Color("69")  // Blue for preview
-	colorGray     = lipgloss.Color("240") // Dark gray for unselected suggestions
 	colorWhite    = lipgloss.Color("15")  // White for selected text
 	colorRed      = lipgloss.Color("196") // Red for errors
 	colorGreen    = lipgloss.Color("82")  // Green for success
