@@ -10,10 +10,10 @@ stdout = "4.18.0-147.5.1.6.h1511.eulerosv2r9.x86_64"
 [files."/etc/os-release"]
 content = """
 NAME="EulerOS"
-VERSION="2.0 (SP9x86_64)"
+VERSION="2.0 (SP5x86_64)"
 ID="euleros"
 VERSION_ID="2.0"
-PRETTY_NAME="EulerOS 2.0 (SP9x86_64)"
+PRETTY_NAME="EulerOS 2.0 (SP5x86_64)"
 ANSI_COLOR="0;31"
 """
 

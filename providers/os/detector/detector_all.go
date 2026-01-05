@@ -468,7 +468,7 @@ var oracle = &PlatformResolver{
 			return true, nil
 		}
 
-		// check if we have /etc/centos-release file
+		// check if we have /etc/oracle-release file
 		f, err := conn.FileSystem().Open("/etc/oracle-release")
 		if err != nil {
 			return false, nil
@@ -838,6 +838,26 @@ var euleros = &PlatformResolver{
 	Name:     "euleros",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		// EulerOS includes /etc/os-release file, but version information in this file is not reliable
+		// So, we need to check whether /etc/euleros-release file exists
+		f, err := conn.FileSystem().Open("/etc/euleros-release")
+		if err != nil {
+			return false, nil
+		}
+		defer f.Close()
+
+		content, err := io.ReadAll(f)
+		if err != nil {
+			return false, err
+		}
+		prettyName := strings.Trim(string(content), "\n")
+		if len(prettyName) > 0 {
+			// align with title from /etc/os-release
+			// EulerOS release 2.0 (SP9x86_64) => EulerOS 2.0 (SP9x86_64)
+			prettyName = strings.Replace(prettyName, " release", "", 1)
+			pf.Title = prettyName
+		}
+
 		if pf.Name == "euleros" {
 			return true, nil
 		}
@@ -1330,7 +1350,6 @@ var aix = &PlatformResolver{
 			m := aixUnameParser.FindStringSubmatch(unamervp)
 			if len(m) == 4 {
 				pf.Version = m[2] + "." + m[1]
-				pf.Version = pf.Version
 				pf.Arch = m[3]
 			}
 		}
