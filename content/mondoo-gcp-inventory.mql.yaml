@@ -37,6 +37,9 @@ queries:
       - uid: mondoo-asset-inventory-gcp-project-info
         title: GCP Project Information
         filters: asset.platform == "gcp-project"
+        docs:
+          desc: |
+            Returns basic GCP project information including name, ID, state, and labels.
         mql: |
           gcp.project {
             name
