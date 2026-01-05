@@ -257,16 +257,23 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case "ctrl+c":
-		if m.isMultiline {
-			// Cancel multiline input
+		// If there's any input or we're in multiline mode, cancel it
+		if m.input.Value() != "" || m.isMultiline {
 			m.isMultiline = false
 			m.query = ""
 			m.input.SetValue("")
+			m.showPopup = false
+			m.suggestions = nil
 			m.updatePrompt()
-			return m, nil
+			// Print ^C to show the interrupt
+			return m, tea.Println("^C")
 		}
+		// No input - quit the shell
 		m.quitting = true
-		return m, tea.Quit
+		return m, tea.Sequence(
+			tea.Println("^C"),
+			tea.Quit,
+		)
 
 	case "ctrl+l":
 		// Clear screen using ANSI escape codes
