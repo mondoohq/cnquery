@@ -108,6 +108,7 @@ func TestWindowsPlatform(t *testing.T) {
 				Labels: map[string]string{
 					"windows.mondoo.com/product-type":    "1",
 					"windows.mondoo.com/display-version": "21H2",
+					"windows.mondoo.com/edition-id":      "Professional",
 				},
 			},
 		},
@@ -133,6 +134,7 @@ func TestWindowsPlatform(t *testing.T) {
 				Labels: map[string]string{
 					"windows.mondoo.com/product-type":    "1",
 					"windows.mondoo.com/display-version": "23H2",
+					"windows.mondoo.com/edition-id":      "Professional",
 				},
 			},
 		},
@@ -158,6 +160,7 @@ func TestWindowsPlatform(t *testing.T) {
 				Labels: map[string]string{
 					"windows.mondoo.com/product-type":    "3",
 					"windows.mondoo.com/display-version": "21H2",
+					"windows.mondoo.com/edition-id":      "ServerStandard",
 				},
 			},
 		},

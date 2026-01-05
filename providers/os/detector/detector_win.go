@@ -28,6 +28,14 @@ func runtimeWindowsDetector(pf *inventory.Platform, conn shared.Connection) (boo
 	current, err := win.GetWindowsOSBuild(conn)
 	if err == nil && current.UBR > 0 {
 		platformFromWinCurrentVersion(pf, current)
+
+		hotpatchEnabled, err := win.GetWindowsHotpatch(conn, pf)
+		if err != nil {
+			// Don't return an error here, as it is expected that this key may not exist
+			log.Debug().Err(err).Msg("could not get windows hotpatch status")
+		}
+
+		pf.Labels["windows.mondoo.com/hotpatch"] = strconv.FormatBool(hotpatchEnabled)
 		return true, nil
 	}
 
@@ -76,6 +84,7 @@ func platformFromWinCurrentVersion(pf *inventory.Platform, current *win.WindowsC
 
 	pf.Labels["windows.mondoo.com/product-type"] = productType
 	pf.Labels["windows.mondoo.com/display-version"] = current.DisplayVersion
+	pf.Labels["windows.mondoo.com/edition-id"] = current.EditionID
 
 	correctForWindows11(pf)
 }
@@ -106,6 +115,18 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 		pf.Title = productName.Value.String
 	}
 
+	editionID, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "EditionID")
+	if err == nil {
+		log.Debug().Str("editionID", editionID.Value.String).Msg("found editionID")
+		pf.Labels["windows.mondoo.com/edition-id"] = editionID.Value.String
+	}
+
+	arch, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "Architecture")
+	if err == nil && arch.Value.String != "" {
+		log.Debug().Str("architecture", arch.Value.String).Msg("found architecture")
+		pf.Arch = arch.Value.String
+	}
+
 	ubr, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "UBR")
 	if err == nil && ubr.Value.String != "" {
 		log.Debug().Str("ubr", ubr.Value.String).Msg("found ubr")
@@ -123,6 +144,28 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 			pf.Version = currentBuildNumber.Value.String
 		}
 	}
+
+	platformArch := "amd64"
+	if pf.Arch != "" {
+		platformArch = strings.ToLower(pf.Arch)
+	}
+	hotpatchPackage, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion\\Update\\TargetingInfo\\DynamicInstalled\\Hotpatch."+platformArch, "Name")
+	if err == nil && hotpatchPackage.Value.String != "" {
+		log.Debug().Str("hotpatchPackage", hotpatchPackage.Value.String).Msg("found hotpatchPackage")
+	}
+
+	enableVirtualizationBasedSecurity, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
+	if err == nil && enableVirtualizationBasedSecurity.Value.String != "" {
+		log.Debug().Str("enableVirtualizationBasedSecurity", enableVirtualizationBasedSecurity.Value.String).Msg("found enableVirtualizationBasedSecurity")
+	}
+
+	hotPatchTableSize, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\Session Manager\\Memory Management", "HotPatchTableSize")
+	if err == nil && enableVirtualizationBasedSecurity.Value.String != "" {
+		log.Debug().Str("hotPatchTableSize", hotPatchTableSize.Value.String).Msg("found hotPatchTableSize")
+	}
+
+	hotpatchEnabled := hotpatchPackage.Value.String == win.HotpatchPackage && enableVirtualizationBasedSecurity.Value.String == "1" && hotPatchTableSize.Value.String != "0"
+	pf.Labels["windows.mondoo.com/hotpatch"] = strconv.FormatBool(hotpatchEnabled)
 
 	correctForWindows11(pf)
 
