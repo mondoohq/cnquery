@@ -298,8 +298,8 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 	case "down":
-		// History navigation (only when at end)
-		if m.input.Value() == "" {
+		// History navigation when browsing history or input is empty
+		if m.input.Value() == "" || m.historyIdx < len(m.history) {
 			return m.navigateHistory(1)
 		}
 	}
