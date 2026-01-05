@@ -75,10 +75,11 @@ type shellModel struct {
 	height int
 
 	// State
-	ready     bool
-	quitting  bool
-	executing bool
-	spinner   spinner.Model
+	ready        bool
+	quitting     bool
+	executing    bool
+	spinner      spinner.Model
+	compileError string // Current compile error (if any)
 }
 
 // newShellModel creates a new shell model
@@ -86,15 +87,23 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Feat
 	// Create textarea for input
 	ta := textarea.New()
 	ta.Placeholder = ""
-	ta.Prompt = theme.Prefix
 	ta.CharLimit = 0 // No limit
 	ta.ShowLineNumbers = false
 	ta.SetHeight(1)
 	ta.SetWidth(80)
 	ta.Focus()
 
+	// Set up dynamic prompt: "> " for first line, ". " for continuation
+	promptWidth := len(theme.Prefix)
+	ta.SetPromptFunc(promptWidth, func(lineIdx int) string {
+		if lineIdx == 0 {
+			return theme.Prompt.Render(theme.Prefix)
+		}
+		return theme.MultilinePrompt.Render(". ")
+	})
+
 	// Style the textarea
-	ta.FocusedStyle.Prompt = theme.Prompt
+	ta.FocusedStyle.Prompt = lipgloss.NewStyle() // Prompt styling handled by SetPromptFunc
 	ta.FocusedStyle.Text = theme.InputText
 	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
 	ta.BlurredStyle = ta.FocusedStyle
@@ -197,7 +206,15 @@ func (m *shellModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.input.SetWidth(msg.Width - 4)
+		// Update textarea width (leave space for prompt)
+		promptLen := len(m.theme.Prefix)
+		inputWidth := msg.Width - promptLen - 2
+		if inputWidth < 20 {
+			inputWidth = 20
+		}
+		m.input.SetWidth(inputWidth)
+		// Recalculate height in case line wrapping changed
+		m.updateInputHeight()
 		m.ready = true
 		return m, nil
 
@@ -245,8 +262,21 @@ func (m *shellModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // handleKeyMsg processes keyboard input
 func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	// Handle completion popup if visible
-	if m.showPopup && len(m.suggestions) > 0 {
+	// Handle pasted content - insert newlines instead of executing
+	if msg.Paste {
+		if msg.String() == "enter" {
+			// Pasted newline - insert it instead of executing
+			m.showPopup = false
+			m.suggestions = nil
+			m.input.InsertString("\n")
+			m.updateInputHeight()
+			return m, nil
+		}
+		// Let other pasted characters fall through to textarea
+	}
+
+	// Handle completion popup if visible (but not during paste)
+	if m.showPopup && len(m.suggestions) > 0 && !msg.Paste {
 		switch msg.String() {
 		case "down", "tab":
 			m.selected = (m.selected + 1) % len(m.suggestions)
@@ -266,6 +296,9 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	}
+
+	// DEBUG: see key name (uncomment to debug)
+	// return m, tea.Println("Key: [" + msg.String() + "]")
 
 	switch msg.String() {
 	case "ctrl+d":
@@ -296,6 +329,10 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Clear screen using ANSI escape codes
 		return m, tea.Println("\033[2J\033[H")
 
+	case "ctrl+o":
+		// Show asset information
+		return m, m.showAssetInfo()
+
 	case "ctrl+j":
 		// Insert a newline for manual multiline input
 		// Note: ctrl+j is the traditional Unix newline (LF) character
@@ -305,35 +342,57 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.suggestions = nil
 		// Insert newline at cursor position
 		m.input.InsertString("\n")
-		// Adjust textarea height to fit content
-		lines := strings.Count(m.input.Value(), "\n") + 1
-		m.input.SetHeight(lines)
+		m.updateInputHeight()
 		return m, nil
 
 	case "enter":
 		return m.handleSubmit()
 
 	case "up":
-		// History navigation (only when input is empty or at start)
-		if m.input.Value() == "" || m.input.Line() == 0 {
+		// History navigation only when input is empty or single-line on first line
+		isMultiline := strings.Contains(m.input.Value(), "\n")
+		if m.input.Value() == "" || (!isMultiline && m.input.Line() == 0) {
 			return m.navigateHistory(-1)
 		}
+		// For multi-line, let textarea handle cursor movement
 
 	case "down":
-		// History navigation when browsing history or input is empty
-		if m.input.Value() == "" || m.historyIdx < len(m.history) {
+		// History navigation only when input is empty or single-line while browsing history
+		isMultiline := strings.Contains(m.input.Value(), "\n")
+		if m.input.Value() == "" || (!isMultiline && m.historyIdx < len(m.history)) {
 			return m.navigateHistory(1)
 		}
+		// For multi-line, let textarea handle cursor movement
 	}
 
 	// Update input and trigger completion
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
 
+	// Auto-adjust height for multi-line content (e.g., from paste)
+	m.updateInputHeight()
+
 	// Trigger completion on text change
 	m.updateCompletions()
 
 	return m, cmd
+}
+
+// formatInputWithPrompts formats input with proper prompts for each line
+func (m *shellModel) formatInputWithPrompts(input string) string {
+	lines := strings.Split(input, "\n")
+
+	var result strings.Builder
+	for i, line := range lines {
+		if i == 0 {
+			result.WriteString(m.theme.Prompt.Render(m.theme.Prefix))
+		} else {
+			result.WriteString("\n")
+			result.WriteString(m.theme.MultilinePrompt.Render(". "))
+		}
+		result.WriteString(line)
+	}
+	return result.String()
 }
 
 // handleSubmit processes the enter key
@@ -346,7 +405,7 @@ func (m *shellModel) handleSubmit() (tea.Model, tea.Cmd) {
 	}
 
 	// Echo the prompt and input so it stays in terminal history
-	echoInput := m.theme.Prompt.Render(m.input.Prompt) + input
+	echoInput := m.formatInputWithPrompts(input)
 
 	// Check for built-in commands (only when not in multiline mode)
 	if !m.isMultiline {
@@ -400,8 +459,8 @@ func (m *shellModel) handleSubmit() (tea.Model, tea.Cmd) {
 
 // executeQuery compiles and runs an MQL query
 func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
-	// Echo the current line input
-	echoInput := m.theme.Prompt.Render(m.input.Prompt) + input
+	// Echo the current line input with proper prompts
+	echoInput := m.formatInputWithPrompts(input)
 
 	// Accumulate query for multiline
 	m.query += " " + input
@@ -479,6 +538,31 @@ func (m *shellModel) addToHistory(cmd string) {
 	m.historyIdx = len(m.history)
 }
 
+// calculateInputHeight returns the height needed for the textarea based on content
+func (m *shellModel) calculateInputHeight() int {
+	lines := strings.Count(m.input.Value(), "\n") + 1
+	// Add extra line for cursor when at end of line with newline
+	if strings.HasSuffix(m.input.Value(), "\n") {
+		lines++
+	}
+	if lines < 1 {
+		lines = 1
+	}
+	return lines
+}
+
+// updateInputHeight adjusts textarea height to fit content
+func (m *shellModel) updateInputHeight() {
+	height := m.calculateInputHeight()
+	if height != m.input.Height() {
+		m.input.SetHeight(height)
+		// Reset viewport to show from the beginning
+		// Save cursor position, go to start, restore position
+		m.input.CursorStart()
+		m.input.CursorEnd()
+	}
+}
+
 // navigateHistory moves through command history
 func (m *shellModel) navigateHistory(direction int) (tea.Model, tea.Cmd) {
 	if len(m.history) == 0 {
@@ -516,9 +600,11 @@ func (m *shellModel) updateCompletions() {
 	if input == "" {
 		m.showPopup = false
 		m.suggestions = nil
+		m.compileError = ""
 		return
 	}
 
+	// Get completions
 	suggestions := m.completer.Complete(input)
 	if len(suggestions) > 0 {
 		m.suggestions = suggestions
@@ -527,6 +613,20 @@ func (m *shellModel) updateCompletions() {
 	} else {
 		m.showPopup = false
 		m.suggestions = nil
+	}
+
+	// Check for compile errors (for inline feedback)
+	fullQuery := m.query + " " + input
+	_, err := mqlc.Compile(fullQuery, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+	if err != nil {
+		// Ignore incomplete errors - those are expected for multi-line
+		if _, ok := err.(*parser.ErrIncomplete); !ok {
+			m.compileError = err.Error()
+		} else {
+			m.compileError = ""
+		}
+	} else {
+		m.compileError = ""
 	}
 }
 
@@ -582,6 +682,18 @@ func (m *shellModel) View() string {
 			b.WriteString("\n")
 			b.WriteString(m.renderCompletionPopup())
 		}
+
+		// Show compile error if any
+		if m.compileError != "" && !m.showPopup {
+			b.WriteString("\n")
+			// Truncate long error messages
+			errMsg := m.compileError
+			maxLen := m.width - 4
+			if maxLen > 0 && len(errMsg) > maxLen {
+				errMsg = errMsg[:maxLen-3] + "..."
+			}
+			b.WriteString(m.theme.Error.Render("⚠ " + errMsg))
+		}
 	}
 
 	// Help bar at the bottom
@@ -589,6 +701,39 @@ func (m *shellModel) View() string {
 	b.WriteString(m.renderHelpBar())
 
 	return b.String()
+}
+
+// showAssetInfo executes a query to display asset information
+func (m *shellModel) showAssetInfo() tea.Cmd {
+	return func() tea.Msg {
+		// Query for asset information using proper MQL syntax
+		query := "asset.name asset.platform asset.version"
+		code, err := mqlc.Compile(query, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+		if err != nil {
+			return printOutputMsg{output: m.theme.ErrorText("Failed to get asset info: " + err.Error())}
+		}
+
+		results, err := mql.ExecuteCode(m.runtime, code, nil, m.features)
+		if err != nil {
+			return printOutputMsg{output: m.theme.ErrorText("Failed to get asset info: " + err.Error())}
+		}
+
+		// Format output nicely
+		var lines []string
+		lines = append(lines, m.theme.SecondaryText("Asset Information"))
+
+		// Extract values from results in order
+		for _, entry := range code.CodeV2.Entrypoints() {
+			checksum := code.CodeV2.Checksums[entry]
+			if result, ok := results[checksum]; ok && result.Data != nil {
+				label := code.Labels.Labels[checksum]
+				value := result.Data.Value
+				lines = append(lines, fmt.Sprintf("  %s: %v", m.theme.HelpKey.Render(label), value))
+			}
+		}
+
+		return printOutputMsg{output: strings.Join(lines, "\n")}
+	}
 }
 
 // renderHelpBar renders the help bar with available key bindings
@@ -607,9 +752,9 @@ func (m *shellModel) renderHelpBar() string {
 		}
 	} else {
 		items = []string{
-			m.theme.HelpKey.Render("enter") + m.theme.HelpText.Render(" execute"),
+			m.theme.HelpKey.Render("enter") + m.theme.HelpText.Render(" run"),
+			m.theme.HelpKey.Render("ctrl+o") + m.theme.HelpText.Render(" info"),
 			m.theme.HelpKey.Render("ctrl+j") + m.theme.HelpText.Render(" newline"),
-			m.theme.HelpKey.Render("↑↓") + m.theme.HelpText.Render(" history"),
 			m.theme.HelpKey.Render("ctrl+d") + m.theme.HelpText.Render(" exit"),
 		}
 	}

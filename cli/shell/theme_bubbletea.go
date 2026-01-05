@@ -109,7 +109,7 @@ var DefaultShellTheme = &ShellTheme{
 
 	// Text
 	Welcome: logo + " interactive shell\n",
-	Prefix:  "cnquery> ",
+	Prefix:  "> ",
 
 	// Printer
 	PolicyPrinter: printer.DefaultPrinter,
