@@ -12,6 +12,25 @@ packs:
     tags:
       mondoo.com/platform: macos
       mondoo.com/category: security
+    docs:
+      desc: |
+        ### Overview
+
+        The macOS Incident Response Pack by Mondoo retrieves configuration data from macOS hosts for investigation during a security incident. This includes platform information, user accounts, kernel details, running processes, mounted devices, installed packages, running services, firewall exceptions, and pending software updates.
+
+        ### Run query pack
+
+        To run this query pack locally on a macOS host:
+
+        ```bash
+        cnquery scan local -f mondoo-macos-incident-response.mql.yaml
+        ```
+
+        To run against a remote macOS host using SSH:
+
+        ```bash
+        cnquery scan ssh <user>@<ip_address> -f mondoo-macos-incident-response.mql.yaml
+        ```
     filters:
       - asset.platform == "macos"
     queries:
