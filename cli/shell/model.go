@@ -10,6 +10,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -74,8 +75,10 @@ type shellModel struct {
 	height int
 
 	// State
-	ready    bool
-	quitting bool
+	ready     bool
+	quitting  bool
+	executing bool
+	spinner   spinner.Model
 }
 
 // newShellModel creates a new shell model
@@ -101,6 +104,11 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Feat
 	theme.PolicyPrinter.SetSchema(schema)
 	completer := NewCompleter(schema, features, nil)
 
+	// Create spinner for query execution
+	sp := spinner.New()
+	sp.Spinner = spinner.Dot
+	sp.Style = theme.Spinner
+
 	m := &shellModel{
 		runtime:     runtime,
 		theme:       theme,
@@ -115,6 +123,7 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Feat
 		historyIdx:  -1,
 		width:       80,
 		height:      24,
+		spinner:     sp,
 	}
 
 	// Set the query prefix callback for completer
@@ -200,6 +209,8 @@ func (m *shellModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case queryResultMsg:
+		// Query finished executing
+		m.executing = false
 		// Print results directly to terminal (outside of Bubble Tea's view)
 		if msg.err != nil {
 			output := m.theme.ErrorText("failed to compile: " + msg.err.Error())
@@ -210,6 +221,11 @@ func (m *shellModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		output := m.formatResults(msg.code, msg.results)
 		return m, tea.Println(output)
+
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
 
 	case printOutputMsg:
 		// Print output directly to terminal
@@ -410,15 +426,17 @@ func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
 	m.input.SetValue("")
 	m.input.SetHeight(1)
 	m.isMultiline = false
+	m.executing = true
 	m.updatePrompt()
 
 	// Execute the query
 	queryToRun := m.query
 	m.query = ""
 
-	// Echo the input first, then execute and return results
-	return m, tea.Sequence(
+	// Echo the input, start spinner, then execute and return results
+	return m, tea.Batch(
 		tea.Println(echoInput),
+		m.spinner.Tick,
 		func() tea.Msg {
 			code, err := mqlc.Compile(queryToRun, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
 			if err != nil {
@@ -545,16 +563,52 @@ func (m *shellModel) View() string {
 
 	var b strings.Builder
 
-	// Input area only - output is printed directly to terminal via tea.Println
-	b.WriteString(m.input.View())
+	// Show spinner when executing, otherwise show input
+	if m.executing {
+		b.WriteString(m.spinner.View())
+		b.WriteString(" Executing query...")
+	} else {
+		// Input area - output is printed directly to terminal via tea.Println
+		b.WriteString(m.input.View())
 
-	// Completion popup
-	if m.showPopup && len(m.suggestions) > 0 {
-		b.WriteString("\n")
-		b.WriteString(m.renderCompletionPopup())
+		// Completion popup
+		if m.showPopup && len(m.suggestions) > 0 {
+			b.WriteString("\n")
+			b.WriteString(m.renderCompletionPopup())
+		}
 	}
 
+	// Help bar at the bottom
+	b.WriteString("\n")
+	b.WriteString(m.renderHelpBar())
+
 	return b.String()
+}
+
+// renderHelpBar renders the help bar with available key bindings
+func (m *shellModel) renderHelpBar() string {
+	var items []string
+
+	if m.showPopup {
+		items = []string{
+			m.theme.HelpKey.Render("↑↓") + m.theme.HelpText.Render(" navigate"),
+			m.theme.HelpKey.Render("tab") + m.theme.HelpText.Render(" select"),
+			m.theme.HelpKey.Render("esc") + m.theme.HelpText.Render(" dismiss"),
+		}
+	} else if m.executing {
+		items = []string{
+			m.theme.HelpText.Render("query running..."),
+		}
+	} else {
+		items = []string{
+			m.theme.HelpKey.Render("enter") + m.theme.HelpText.Render(" execute"),
+			m.theme.HelpKey.Render("shift+enter") + m.theme.HelpText.Render(" newline"),
+			m.theme.HelpKey.Render("↑↓") + m.theme.HelpText.Render(" history"),
+			m.theme.HelpKey.Render("ctrl+d") + m.theme.HelpText.Render(" exit"),
+		}
+	}
+
+	return strings.Join(items, m.theme.HelpText.Render(" • "))
 }
 
 // renderCompletionPopup renders the completion suggestions

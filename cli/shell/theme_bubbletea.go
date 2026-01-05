@@ -30,6 +30,12 @@ type ShellTheme struct {
 	Secondary  lipgloss.Style
 	Disabled   lipgloss.Style
 
+	// Status
+	Spinner  lipgloss.Style
+	HelpBar  lipgloss.Style
+	HelpKey  lipgloss.Style
+	HelpText lipgloss.Style
+
 	// Text content
 	Welcome string
 	Prefix  string
@@ -94,6 +100,17 @@ var DefaultShellTheme = &ShellTheme{
 	Secondary: lipgloss.NewStyle().
 		Foreground(colorPurple),
 	Disabled: lipgloss.NewStyle().
+		Foreground(colorDisabled),
+
+	// Status
+	Spinner: lipgloss.NewStyle().
+		Foreground(colorFuchsia),
+	HelpBar: lipgloss.NewStyle().
+		Foreground(colorDisabled),
+	HelpKey: lipgloss.NewStyle().
+		Foreground(colorPurple).
+		Bold(true),
+	HelpText: lipgloss.NewStyle().
 		Foreground(colorDisabled),
 
 	// Text
