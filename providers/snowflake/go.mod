@@ -10,7 +10,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/snowflakedb/gosnowflake v1.18.1
 	github.com/stretchr/testify v1.11.1 // indirect
-	go.mondoo.com/cnquery/v12 v12.15.0
+	go.mondoo.com/cnquery/v12 v12.16.0
 	go.mondoo.com/ranger-rpc v0.7.1
 	golang.org/x/crypto v0.46.0
 )

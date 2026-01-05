@@ -6,7 +6,7 @@ go 1.25.1
 
 require (
 	github.com/hashicorp/hcl/v2 v2.24.0
-	go.mondoo.com/cnquery/v12 v12.15.0
+	go.mondoo.com/cnquery/v12 v12.16.0
 )
 
 require (
