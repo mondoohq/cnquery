@@ -1,0 +1,114 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "alpine",
+  "documentNamespace": "https://anchore.com/syft/image/alpine-ada2539f-3693-41c8-9e83-a3d4db40411c",
+  "creationInfo": {
+    "licenseListVersion": "3.27",
+    "creators": ["Organization: Anchore, Inc", "Tool: syft-1.38.2"],
+    "created": "2025-12-22T16:01:31Z"
+  },
+  "packages": [
+    {
+      "name": "alpine-baselayout",
+      "SPDXID": "SPDXRef-Package-apk-alpine-baselayout-ae5da50cd31875e4",
+      "versionInfo": "3.4.3-r2",
+      "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
+      "originator": "Person: Natanael Copa (ncopa@alpinelinux.org)",
+      "downloadLocation": "https://git.alpinelinux.org/cgit/aports/tree/main/alpine-baselayout",
+      "filesAnalyzed": true,
+      "packageVerificationCode": {
+        "packageVerificationCodeValue": "6a22bff30e2aed347029eeb9d51c810613705455"
+      },
+      "sourceInfo": "acquired package info from APK DB: /lib/apk/db/installed",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "GPL-2.0-only",
+      "copyrightText": "NOASSERTION",
+      "description": "Alpine base dir structure and init scripts",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:alpine-baselayout:alpine-baselayout:3.4.3-r2:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:alpine-baselayout:alpine_baselayout:3.4.3-r2:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:alpine_baselayout:alpine-baselayout:3.4.3-r2:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:alpine_baselayout:alpine_baselayout:3.4.3-r2:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:alpine:alpine-baselayout:3.4.3-r2:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:alpine:alpine_baselayout:3.4.3-r2:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:apk/alpine/alpine-baselayout@3.4.3-r2?arch=aarch64&distro=alpine-3.19.9"
+        }
+      ]
+    },
+    {
+      "name": "alpine",
+      "SPDXID": "SPDXRef-DocumentRoot-Image-alpine",
+      "versionInfo": "3.19",
+      "supplier": "NOASSERTION",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a8c5e701581b659625e06d6a92383b6f3ac33b7acef6b49260b0b71286bb78c4"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:oci/alpine@sha256%3Aa8c5e701581b659625e06d6a92383b6f3ac33b7acef6b49260b0b71286bb78c4?arch=arm64&tag=3.19"
+        }
+      ],
+      "primaryPackagePurpose": "CONTAINER"
+    }
+  ],
+  "files": [
+    {
+      "fileName": "bin/busybox",
+      "SPDXID": "SPDXRef-File-bin-busybox-ba62bc2090e3865d",
+      "fileTypes": ["APPLICATION", "BINARY"],
+      "checksums": [
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "deb680f885ae960b4219edac60f4b616e10ff605"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "908b56f33efa7fe5f8d9c3a6d297018e6c76cde2ce2115a8f352bf56405cf62f"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseInfoInFiles": ["NOASSERTION"],
+      "copyrightText": "NOASSERTION",
+      "comment": "layerID: sha256:8ff721756ec0097ba331876f1502858f8849716bdf720516fafa96c72a8d7dac"
+    }
+  ]
+}

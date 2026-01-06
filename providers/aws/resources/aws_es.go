@@ -19,7 +19,7 @@ import (
 )
 
 func (a *mqlAwsEs) id() (string, error) {
-	return "aws.es", nil
+	return ResourceAwsEs, nil
 }
 
 func (a *mqlAwsEs) domains() ([]any, error) {
@@ -66,7 +66,7 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 			for _, domain := range domains.DomainNames {
 				// note: the api returns name and region here, so we just use that.
 				// the arn is not returned until we get to the describe call
-				mqlDomain, err := NewResource(a.MqlRuntime, "aws.es.domain",
+				mqlDomain, err := NewResource(a.MqlRuntime, ResourceAwsEsDomain,
 					map[string]*llx.RawData{
 						"name":   llx.StringDataPtr(domain.DomainName),
 						"region": llx.StringData(region),

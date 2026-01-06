@@ -1,0 +1,28 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[files."/etc/os-release"]
+content = """
+PRETTY_NAME="Garden Linux 934.0"
+NAME="Debian GNU/Linux"
+VERSION_CODENAME=bookworm
+ID=debian
+HOME_URL="https://gardenlinux.io/"
+SUPPORT_URL="https://github.com/gardenlinux/gardenlinux"
+BUG_REPORT_URL="https://github.com/gardenlinux/gardenlinux/issues"
+GARDENLINUX_FEATURES=_slim,base,server,cloud,kvm,_nopkg,_prod
+GARDENLINUX_VERSION=934.0
+GARDENLINUX_VERSION_AT_BUILD=934.0
+GARDENLINUX_COMMIT_ID_LONG=86f69dcbf95d0ab9c6909421d4082449cae05e16
+GARDENLINUX_COMMIT_ID=86f69dc
+VERSION_CODENAME=934.0
+"""
+
+[files."/etc/debian_version"]
+content = "bookworm/sid"

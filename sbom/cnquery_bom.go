@@ -9,6 +9,8 @@ import (
 	"io"
 )
 
+var _ Decoder = &CnqueryBOM{}
+
 type CnqueryBOM struct {
 	opts renderOpts
 }
@@ -48,7 +50,7 @@ func (ccx *CnqueryBOM) Render(output io.Writer, bom *Sbom) error {
 	return enc.Encode(bom)
 }
 
-func (ccx *CnqueryBOM) Parse(r io.Reader) (*Sbom, error) {
+func (ccx *CnqueryBOM) Parse(r io.ReadSeeker) (*Sbom, error) {
 	var s Sbom
 	err := json.NewDecoder(r).Decode(&s)
 	if err != nil {

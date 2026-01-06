@@ -63,9 +63,11 @@ func (a *mqlAws) regions() ([]any, error) {
 func Is400AccessDeniedError(err error) bool {
 	var respErr *http.ResponseError
 	if errors.As(err, &respErr) {
-		if (respErr.HTTPStatusCode() == 400 || respErr.HTTPStatusCode() == 403) && (strings.Contains(respErr.Error(), "AccessDenied") || strings.Contains(respErr.Error(), "UnauthorizedOperation") || strings.Contains(respErr.Error(), "AuthorizationError")) {
-			return true
-		}
+		statusCodeMatches := respErr.HTTPStatusCode() == 400 || respErr.HTTPStatusCode() == 403
+		errorMessageMatches := strings.Contains(respErr.Error(), "AccessDenied") ||
+			strings.Contains(respErr.Error(), "UnauthorizedOperation") ||
+			strings.Contains(respErr.Error(), "AuthorizationError")
+		return statusCodeMatches && errorMessageMatches
 	}
 	return false
 }
@@ -101,8 +103,8 @@ func Is400InstanceNotFoundError(err error) bool {
 	return false
 }
 
-func strMapToInterface(m map[string]string) map[string]any {
-	res := map[string]any{}
+func toInterfaceMap(m map[string]string) map[string]any {
+	res := make(map[string]any)
 	for k, v := range m {
 		res[k] = v
 	}
@@ -111,8 +113,8 @@ func strMapToInterface(m map[string]string) map[string]any {
 
 func toInterfaceArr(a []string) []any {
 	res := []any{}
-	for i := range a {
-		res = append(res, a[i])
+	for _, v := range a {
+		res = append(res, v)
 	}
 	return res
 }

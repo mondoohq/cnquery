@@ -734,6 +734,20 @@ func TestWindows2025Detector(t *testing.T) {
 	assert.Equal(t, []string{"windows", "os"}, di.Family)
 }
 
+func TestAzureWindows2025Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-azure-windows2025.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "windows", di.Name, "os name should be identified")
+	assert.Equal(t, "Windows Server 2025 Datacenter Azure Edition", di.Title, "os title should be identified")
+	assert.Equal(t, "26311", di.Version, "os version should be identified")
+	assert.Equal(t, "5000", di.Build, "os build version should be identified")
+	assert.Equal(t, "AMD64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"windows", "os"}, di.Family)
+	assert.Equal(t, "ServerTurbine", di.Labels["windows.mondoo.com/edition-id"])
+	assert.Equal(t, "false", di.Labels["windows.mondoo.com/hotpatch"])
+}
+
 func TestPhoton1Detector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-photon1.toml")
 	assert.Nil(t, err, "was able to create the provider")
@@ -1039,4 +1053,48 @@ func TestHCEDetector(t *testing.T) {
 	assert.Equal(t, "Huawei Cloud EulerOS 2.0 (x86_64)", di.Title, "os title should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"euler", "linux", "unix", "os"}, di.Family)
+}
+
+func TestEulerOSDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-euleros-2.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "euleros", di.Name, "os name should be identified")
+	assert.Equal(t, "EulerOS 2.0 (SP9x86_64)", di.Title, "os title should be identified")
+	assert.Equal(t, "2.0", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"euler", "linux", "unix", "os"}, di.Family)
+}
+
+// Verify /etc/euleros-release overrides the title from /etc/os-release
+func TestEulerOSDetector_withdifferentversion(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-euleros-2_v2.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "euleros", di.Name, "os name should be identified")
+	assert.Equal(t, "EulerOS 2.0 (SP9x86_64)", di.Title, "os title should be identified")
+	assert.Equal(t, "2.0", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"euler", "linux", "unix", "os"}, di.Family)
+}
+
+func TestGardenLinuxDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-gardenlinux.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "gardenlinux", di.Name, "os name should be identified")
+	assert.Equal(t, "Garden Linux 934.0", di.Title, "os title should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+	assert.Equal(t, "934.0", di.Version, "os version should be identified")
+}
+
+func TestCachyOSDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-cachyos.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "cachyos", di.Name, "os name should be identified")
+	assert.Equal(t, "CachyOS", di.Title, "os title should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"arch", "linux", "unix", "os"}, di.Family)
 }

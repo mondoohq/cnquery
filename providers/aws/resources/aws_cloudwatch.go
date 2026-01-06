@@ -585,6 +585,17 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 				}
 				args := make(map[string]*llx.RawData)
 				for _, loggroup := range logGroups.LogGroups {
+					groupTags, err := svc.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{ResourceArn: loggroup.LogGroupArn})
+					if err == nil {
+						if conn.Filters.General.IsFilteredOutByTags(groupTags.Tags) {
+							log.Debug().Interface("log_group", loggroup.LogGroupName).Msg("excluding log group due to filters")
+							continue
+						}
+						args["tags"] = llx.MapData(toInterfaceMap(groupTags.Tags), types.String)
+					} else {
+						log.Warn().Err(err).Interface("log_group", loggroup.LogGroupName).Msg("could not get tags for log group")
+					}
+
 					args["arn"] = llx.StringDataPtr(loggroup.Arn)
 					args["name"] = llx.StringDataPtr(loggroup.LogGroupName)
 					args["region"] = llx.StringData(region)
@@ -592,7 +603,7 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 
 					// add kms key if there is one
 					if loggroup.KmsKeyId != nil {
-						mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
+						mqlKeyResource, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 							map[string]*llx.RawData{
 								"arn": llx.StringDataPtr(loggroup.KmsKeyId),
 							})
@@ -606,7 +617,7 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 						args["kmsKey"] = llx.NilData
 					}
 
-					mqlLogGroup, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.loggroup", args)
+					mqlLogGroup, err := CreateResource(a.MqlRuntime, ResourceAwsCloudwatchLoggroup, args)
 					if err != nil {
 						return nil, err
 					}

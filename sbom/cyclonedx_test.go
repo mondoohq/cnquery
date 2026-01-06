@@ -53,16 +53,79 @@ func TestCycloneDxOutput(t *testing.T) {
 }
 
 func TestCycloneDxJsonDecoding(t *testing.T) {
-	f, err := os.Open("./testdata/alpine-319.cyclone.json")
-	require.NoError(t, err)
+	t.Run("alpine 3.19", func(t *testing.T) {
+		f, err := os.Open("./testdata/alpine-319.cyclone.json")
+		require.NoError(t, err)
 
-	formatHandler := &sbom.CycloneDX{
-		Format: cyclonedx.BOMFileFormatJSON,
-	}
+		formatHandler := &sbom.CycloneDX{
+			Format: cyclonedx.BOMFileFormatJSON,
+		}
 
-	bom, err := formatHandler.Parse(f)
-	require.NoError(t, err)
-	assert.NotNil(t, bom)
+		bom, err := formatHandler.Parse(f)
+		require.NoError(t, err)
+		assert.NotNil(t, bom)
+		assert.Equal(t, "alpine:3.19", bom.Asset.Name)
+		assert.Equal(t, "alpine", bom.Asset.Platform.Name)
+		assert.Equal(t, "3.19.1", bom.Asset.Platform.Version)
+		// FIXME: support the bomRef property
+		// assert.Equal(t, "//platformid.api.mondoo.app/runtime/docker/images/alpine:3.19", bom.Asset.PlatformIds[0])
+	})
+
+	t.Run("ubuntu 20.04 container", func(t *testing.T) {
+		f, err := os.Open("./testdata/ubuntu-20.04-cyclonedx.json")
+		require.NoError(t, err)
+
+		formatHandler := &sbom.CycloneDX{
+			Format: cyclonedx.BOMFileFormatJSON,
+		}
+
+		bom, err := formatHandler.Parse(f)
+		require.NoError(t, err)
+		assert.NotNil(t, bom)
+
+		// verify we have the right asset and platform information.
+		assert.Equal(t, "ubuntu", bom.Asset.Platform.Name)
+		assert.Equal(t, "20.04", bom.Asset.Platform.Version)
+		assert.Equal(t, []string{"linux", "unix", "os"}, bom.Asset.Platform.Family)
+		assert.Equal(t, "Ubuntu 20.04.6 LTS", bom.Asset.Platform.Title)
+		// this is the bom-ref
+		assert.Equal(t, []string{"//platformid.api.mondoo.app/runtime/docker/images/e3cf4bf83104fade"}, bom.Asset.PlatformIds)
+		// 1 library components + 1 os component
+		assert.Len(t, bom.Packages, 2)
+
+		// verify the generator is correct
+		assert.Equal(t, "syft", bom.Generator.Name)
+		assert.Equal(t, "1.38.2", bom.Generator.Version)
+		assert.Equal(t, "anchore", bom.Generator.Vendor)
+	})
+
+	t.Run("ubuntu 22.04 container", func(t *testing.T) {
+		f, err := os.Open("./testdata/ubuntu-22.04-cyclonedx.json")
+		require.NoError(t, err)
+
+		formatHandler := &sbom.CycloneDX{
+			Format: cyclonedx.BOMFileFormatJSON,
+		}
+
+		bom, err := formatHandler.Parse(f)
+		require.NoError(t, err)
+		assert.NotNil(t, bom)
+
+		// verify we have the right asset and platform information.
+		assert.Equal(t, "ubuntu", bom.Asset.Platform.Name)
+		assert.Equal(t, "22.04", bom.Asset.Platform.Version)
+		assert.Equal(t, []string{"linux", "unix", "os"}, bom.Asset.Platform.Family)
+		assert.Equal(t, "Ubuntu 22.04.5 LTS", bom.Asset.Platform.Title)
+		// this is the bom-ref
+		assert.Equal(t, []string{"//platformid.api.mondoo.app/runtime/docker/images/2e194621f3c81dfe"}, bom.Asset.PlatformIds)
+		// 1 library components + 1 os component
+		assert.Len(t, bom.Packages, 2)
+
+		// verify the generator is correct
+		assert.Equal(t, "syft", bom.Generator.Name)
+		assert.Equal(t, "1.38.2", bom.Generator.Version)
+		assert.Equal(t, "anchore", bom.Generator.Vendor)
+	})
 }
 
 func TestCycloneDxXmlDecoding(t *testing.T) {
@@ -76,4 +139,39 @@ func TestCycloneDxXmlDecoding(t *testing.T) {
 	bom, err := formatHandler.Parse(f)
 	require.NoError(t, err)
 	assert.NotNil(t, bom)
+}
+
+// syft dir:./next.js --source-name next.js_v15.4.1 -o cyclonedx-json > nextjs_v15_4_1.cyclonedx.json
+func TestCycloneDxJsonDecoding_repo(t *testing.T) {
+	f, err := os.Open("./testdata/nextjs_v15_4_1.cyclonedx.json")
+	require.NoError(t, err)
+
+	formatHandler := &sbom.CycloneDX{
+		Format: cyclonedx.BOMFileFormatJSON,
+	}
+
+	bom, err := formatHandler.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, bom)
+	assert.Equal(t, "next.js_v15.4.1", bom.Asset.Name)
+	assert.Equal(t, "cyclonedx", bom.Asset.Platform.Name)
+	assert.Equal(t, "1.6", bom.Asset.Platform.Version)
+	assert.Equal(t, "CycloneDX", bom.Asset.Platform.Title)
+}
+
+func TestCycloneDxJsonDecoding_Alpine_syft(t *testing.T) {
+	f, err := os.Open("./testdata/alpine-3.19.cyclonedx.syft.json")
+	require.NoError(t, err)
+
+	formatHandler := &sbom.CycloneDX{
+		Format: cyclonedx.BOMFileFormatJSON,
+	}
+
+	bom, err := formatHandler.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, bom)
+	assert.Equal(t, "alpine", bom.Asset.Name)
+	assert.Equal(t, "alpine", bom.Asset.Platform.Name)
+	assert.Equal(t, "3.19.9", bom.Asset.Platform.Version)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/docker/images/cd03a8ea6f29f815", bom.Asset.PlatformIds[0])
 }

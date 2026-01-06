@@ -297,30 +297,12 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 
 		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary)
 
-		// determine all files attached
-		records := []FileRecord{}
-		files, err := pkg.InstalledFiles()
-		if err == nil {
-			for _, record := range files {
-				records = append(records, FileRecord{
-					Path: record.Path,
-					Digest: PkgDigest{
-						Value:     record.Digest,
-						Algorithm: pkg.DigestAlgorithm.String(),
-					},
-					FileInfo: PkgFileInfo{
-						Mode:  record.Mode,
-						Flags: int32(record.Flags),
-						Owner: record.Username,
-						Group: record.Groupname,
-						Size:  int64(record.Size),
-					},
-				})
-			}
-		}
-
 		rpmPkg.FilesAvailable = PkgFilesIncluded
-		rpmPkg.Files = records
+		rpmPkg.Files = []FileRecord{
+			{
+				Path: detectedPath,
+			},
+		}
 		resultList = append(resultList, rpmPkg)
 	}
 
@@ -338,10 +320,10 @@ func (rpm *RpmPkgManager) Files(name string, version string, arch string) ([]Fil
 		// nothing to do since the data is already attached to the package
 		return nil, nil
 	} else {
-		// we need to fetch the files from the running system
-		cmd, err := rpm.conn.RunCommand("rpm -ql " + name)
+		// This returns the path to the RPM database
+		cmd, err := rpm.conn.RunCommand("rpm -E '%{_dbpath}'")
 		if err != nil {
-			return nil, errors.Wrap(err, "could not read package files")
+			return nil, errors.Wrap(err, "could not rpm database path")
 		}
 		fileRecords := []FileRecord{}
 		scanner := bufio.NewScanner(cmd.Stdout)

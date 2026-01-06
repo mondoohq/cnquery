@@ -12,6 +12,25 @@ packs:
     tags:
       mondoo.com/platform: linux
       mondoo.com/category: security
+    docs:
+      desc: |
+        ### Overview
+
+        The OpenSSL Incident Response Pack by Mondoo retrieves SSL/TLS library information from Linux hosts for investigation during a security incident. This includes platform details, installed SSL libraries, and listening ports that may be using SSL/TLS.
+
+        ### Run query pack
+
+        To run this query pack locally on a Linux host:
+
+        ```bash
+        cnquery scan local -f mondoo-openssl-incident-response.mql.yaml
+        ```
+
+        To run against a remote Linux host using SSH:
+
+        ```bash
+        cnquery scan ssh <user>@<ip_address> -f mondoo-openssl-incident-response.mql.yaml
+        ```
     filters:
       - asset.family.contains("linux")
     queries:

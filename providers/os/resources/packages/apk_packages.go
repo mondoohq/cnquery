@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"path/filepath"
 	"regexp"
 
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
@@ -20,6 +19,7 @@ import (
 
 const (
 	AlpinePkgFormat = "apk"
+	ApkDbInstalled  = "/lib/apk/db/installed"
 )
 
 var APK_REGEX = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
@@ -51,6 +51,11 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 		cpes, _ := cpe2.NewPackage2Cpe(pkg.Vendor, pkg.Name, pkg.Version, "", pf.Arch)
 		pkg.CPEs = cpes
 
+		pkg.FilesAvailable = PkgFilesIncluded
+		pkg.Files = append(pkg.Files, FileRecord{
+			Path: ApkDbInstalled,
+		})
+
 		// do sanitization checks to ensure we have minimal information
 		if pkg.Name != "" && pkg.Version != "" {
 			pkgs = append(pkgs, pkg)
@@ -62,7 +67,6 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 	scanner := bufio.NewScanner(input)
 	pkg := Package{}
 	var key string
-	var dir string
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -100,14 +104,6 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 			pkg.Origin = m[2] // origin
 		case "T":
 			pkg.Description = m[2] // description
-		case "F":
-			dir = m[2]
-		case "R":
-			// files
-			pkg.FilesAvailable = PkgFilesIncluded
-			pkg.Files = append(pkg.Files, FileRecord{
-				Path: filepath.Join(dir, m[2]),
-			})
 		}
 	}
 
@@ -150,7 +146,7 @@ func (apm *AlpinePkgManager) Format() string {
 }
 
 func (apm *AlpinePkgManager) List() ([]Package, error) {
-	fr, err := apm.conn.FileSystem().Open("/lib/apk/db/installed")
+	fr, err := apm.conn.FileSystem().Open(ApkDbInstalled)
 	if err != nil {
 		return nil, fmt.Errorf("could not read apk package list")
 	}

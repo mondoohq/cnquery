@@ -1804,6 +1804,8 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   region string
   // Number of days to retain the log events in the specified log group
   retentionInDays int
+  // Tags for the log group
+  tags map[string]string
 }
 
 // Amazon CloudWatch log group metrics filter

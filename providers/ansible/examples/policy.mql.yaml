@@ -1,0 +1,25 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+policies:
+  - uid: ansible-example-policy
+    name: Ansible Example Policy
+    version: 1.0.0
+    license: BUSL-1.1
+    require:
+      - provider: ansible
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    groups:
+      - title: Insecure permissions
+        filters: |
+          asset.platform == 'ansible-playbook'
+        checks:
+          - uid: ansible-example-policy-yum-validate-cert
+            title: Ensure `validate_certs` is enabled for `ansible.builtin.yum`
+            mql: |
+              ansible.plays.all(
+                tasks.where(action["ansible.builtin.yum"] != empty).all(
+                  action["ansible.builtin.yum"]["validate_certs"] != false 
+                )
+              )

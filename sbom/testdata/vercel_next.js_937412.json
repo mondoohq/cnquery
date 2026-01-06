@@ -1,0 +1,31 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "com.github.vercel/next.js",
+  "documentNamespace": "https://spdx.org/spdxdocs/protobom/7f3aef74-30fe-43d0-aeb2-62c4053ee9a3",
+  "comment": "Exact versions could not be resolved for some packages. For more information: https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-the-dependency-graph#dependencies-included.",
+  "creationInfo": {
+    "creators": [
+      "Tool: protobom-v0.0.0-20251216165153-1f3f3060931e+dirty",
+      "Tool: GitHub.com-Dependency-Graph"
+    ],
+    "created": "2025-12-22T05:28:26Z"
+  },
+  "packages": [
+    {
+      "name": "typescript",
+      "SPDXID": "SPDXRef-npm-typescript-5-2cf6d3",
+      "versionInfo": "^5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/typescript@%5E5"
+        }
+      ]
+    }
+  ]
+}

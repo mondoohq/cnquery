@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/fs"
+	"go.mondoo.com/cnquery/v12/providers/os/mountedfs"
 )
 
 var (
@@ -33,7 +33,7 @@ func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *
 
 	log.Debug().Str("path", path).Msg("load filesystem")
 
-	return NewFileSystemConnectionWithFs(id, conf, asset, path, closeFN, fs.NewMountedFs(path))
+	return NewFileSystemConnectionWithFs(id, conf, asset, path, closeFN, mountedfs.NewMountedFs(path))
 }
 
 func NewFileSystemConnectionWithFs(id uint32, conf *inventory.Config, asset *inventory.Asset, path string, closeFN func(), fs afero.Fs) (*FileSystemConnection, error) {
@@ -69,7 +69,7 @@ func (c *FileSystemConnection) RunCommand(command string) (*shared.Command, erro
 
 func (c *FileSystemConnection) FileSystem() afero.Fs {
 	if c.fs == nil {
-		c.fs = fs.NewMountedFs(c.MountedDir)
+		c.fs = mountedfs.NewMountedFs(c.MountedDir)
 	}
 	return c.fs
 }

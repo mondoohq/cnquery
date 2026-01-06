@@ -40,6 +40,7 @@ func octal2string(o int64) string {
 func (l *mqlFilesFind) id() (string, error) {
 	var id strings.Builder
 	id.WriteString(l.From.Data)
+
 	if !l.Xdev.Data {
 		id.WriteString(" -xdev")
 	}
@@ -53,6 +54,10 @@ func (l *mqlFilesFind) id() (string, error) {
 
 	if l.Name.Data != "" {
 		id.WriteString(" name=" + l.Name.Data)
+	}
+
+	if l.Depth.Data > 0 {
+		id.WriteString(" depth=" + strconv.Itoa(int(l.Depth.Data)))
 	}
 
 	if l.Permissions.Data != 0o777 {

@@ -96,11 +96,13 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 			// general filters
 			"regions",
 			"exclude:regions",
+			"tag:",
+			"exclude:tag:",
 			// ec2 filters
+			"ec2:tag:",         // kept for backward compatibility
+			"ec2:exclude:tag:", // kept for backward compatibility
 			"ec2:instance-ids",
 			"ec2:exclude:instance-ids",
-			"ec2:tag:",
-			"ec2:exclude:tag:",
 			// ecr filters
 			"ecr:tags",
 			"ecr:exclude:tags",

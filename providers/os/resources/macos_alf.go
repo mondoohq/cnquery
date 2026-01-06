@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
 	"go.mondoo.com/cnquery/v12/types"
 )
 
@@ -47,7 +48,7 @@ func initMacosAlf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 	}
 	defer f.Close()
 
-	alfConfig, err := Decode(f)
+	alfConfig, err := plist.Decode(f)
 	if err != nil {
 		return nil, nil, err
 	}

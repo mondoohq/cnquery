@@ -1,0 +1,64 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:dabfae1f-9030-46eb-8864-7a17f5ff8b9c",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-12-22T17:17:40+01:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "author": "anchore",
+          "name": "syft",
+          "version": "1.38.2"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "cd03a8ea6f29f815",
+      "type": "container",
+      "name": "alpine",
+      "version": "3.19"
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "os:alpine@3.19.9",
+      "type": "operating-system",
+      "name": "alpine",
+      "version": "3.19.9",
+      "description": "Alpine Linux v3.19",
+      "swid": { "tagId": "alpine", "name": "alpine", "version": "3.19.9" },
+      "externalReferences": [
+        {
+          "url": "https://gitlab.alpinelinux.org/alpine/aports/-/issues",
+          "type": "issue-tracker"
+        },
+        { "url": "https://alpinelinux.org/", "type": "website" }
+      ],
+      "properties": [
+        { "name": "syft:distro:extendedSupport", "value": "false" },
+        { "name": "syft:distro:id", "value": "alpine" },
+        { "name": "syft:distro:prettyName", "value": "Alpine Linux v3.19" },
+        { "name": "syft:distro:versionID", "value": "3.19.9" }
+      ]
+    },
+    {
+      "bom-ref": "ba62bc2090e3865d",
+      "type": "file",
+      "name": "/bin/busybox",
+      "hashes": [
+        {
+          "alg": "SHA-1",
+          "content": "deb680f885ae960b4219edac60f4b616e10ff605"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "908b56f33efa7fe5f8d9c3a6d297018e6c76cde2ce2115a8f352bf56405cf62f"
+        }
+      ]
+    }
+  ]
+}

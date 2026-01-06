@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>_computerlevel</key>
+    <array>
+      <dict>
+        <key>ProfileDisplayName</key>
+        <string>Energy Saver</string>
+        <key>ProfileIdentifier</key>
+        <string>profile.energysaver.f074d4b3-66cf-488a-bfd5-1ac009876c54</string>
+        <key>ProfileInstallDate</key>
+        <string>2023-11-24 14:36:10 +0000</string>
+        <key>ProfileItems</key>
+        <array>
+          <dict>
+            <key>PayloadContent</key>
+            <dict>
+              <key>com.apple.EnergySaver.desktop.ACPower</key>
+              <dict>
+                <key>DarkWakeBackgroundTasks</key>
+                <integer>0</integer>
+                <key>Wake on LAN</key>
+                <integer>0</integer>
+              </dict>
+              <key>com.apple.EnergySaver.portable.ACPower</key>
+              <dict>
+                <key>DarkWakeBackgroundTasks</key>
+                <integer>0</integer>
+                <key>Wake on LAN</key>
+                <integer>0</integer>
+              </dict>
+              <key>com.apple.EnergySaver.portable.BatteryPower</key>
+              <dict>
+                <key>DarkWakeBackgroundTasks</key>
+                <integer>0</integer>
+              </dict>
+            </dict>
+            <key>PayloadIdentifier</key>
+            <string>profile.energysaver.ba35a34e-0f62-415d-b897-a7476a418bb3.8c4aac00-9011-46f7-acab-457205108c3e</string>
+            <key>PayloadOrganization</key>
+            <string>Example, Inc.</string>
+            <key>PayloadType</key>
+            <string>com.apple.MCX</string>
+            <key>PayloadUUID</key>
+            <string>62d0daa0-7ce4-4b4f-81fa-483957f973c2</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+          </dict>
+        </array>
+        <key>ProfileOrganization</key>
+        <string>Example, Inc.</string>
+        <key>ProfileRemovalDisallowed</key>
+        <string>true</string>
+        <key>ProfileType</key>
+        <string>Configuration</string>
+        <key>ProfileUUID</key>
+        <string>917d4e14-832d-40d7-a90c-8fc00064e23f</string>
+        <key>ProfileVerificationState</key>
+        <string>not verified</string>
+        <key>ProfileVersion</key>
+        <integer>1</integer>
+      </dict>
+    </array>
+  </dict>
+</plist>

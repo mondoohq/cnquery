@@ -179,7 +179,13 @@ var debian = &PlatformResolver{
 			return false, nil
 		}
 
-		pf.Version = strings.TrimSpace(string(c))
+		// gardenlinux identifies itself as debian, but we want to set the proper name / version
+		if osr["GARDENLINUX_VERSION"] != "" {
+			pf.Name = "gardenlinux"
+			pf.Version = osr["GARDENLINUX_VERSION"]
+		} else {
+			pf.Version = strings.TrimSpace(string(c))
+		}
 
 		unamem, err := osrd.unamem()
 		if err == nil {
@@ -305,6 +311,17 @@ var steamos = &PlatformResolver{
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		if pf.Name == "steamos" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
+var cachyos = &PlatformResolver{
+	Name:     "cachyos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "cachyos" {
 			return true, nil
 		}
 		return false, nil
@@ -451,7 +468,7 @@ var oracle = &PlatformResolver{
 			return true, nil
 		}
 
-		// check if we have /etc/centos-release file
+		// check if we have /etc/oracle-release file
 		f, err := conn.FileSystem().Open("/etc/oracle-release")
 		if err != nil {
 			return false, nil
@@ -817,6 +834,37 @@ var hce = &PlatformResolver{
 	},
 }
 
+var euleros = &PlatformResolver{
+	Name:     "euleros",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		// EulerOS includes /etc/os-release file, but version information in this file is not reliable
+		// So, we need to check whether /etc/euleros-release file exists
+		f, err := conn.FileSystem().Open("/etc/euleros-release")
+		if err != nil {
+			return false, nil
+		}
+		defer f.Close()
+
+		content, err := io.ReadAll(f)
+		if err != nil {
+			return false, err
+		}
+		prettyName := strings.Trim(string(content), "\n")
+		if len(prettyName) > 0 {
+			// align with title from /etc/os-release
+			// EulerOS release 2.0 (SP9x86_64) => EulerOS 2.0 (SP9x86_64)
+			prettyName = strings.Replace(prettyName, " release", "", 1)
+			pf.Title = prettyName
+		}
+
+		if pf.Name == "euleros" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 // fallback linux detection, since we do not know the system, the family detection may not be correct
 var defaultLinux = &PlatformResolver{
 	Name:     "generic-linux",
@@ -1056,7 +1104,7 @@ var suseFamily = &PlatformResolver{
 var archFamily = &PlatformResolver{
 	Name:     "arch",
 	IsFamily: true,
-	Children: []*PlatformResolver{arch, manjaro, endeavouros, steamos},
+	Children: []*PlatformResolver{arch, manjaro, endeavouros, steamos, cachyos},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// if the file exists, we are on arch or one of its derivatives
 		f, err := conn.FileSystem().Open("/etc/arch-release")
@@ -1089,7 +1137,7 @@ var archFamily = &PlatformResolver{
 var eulerFamily = &PlatformResolver{
 	Name:     "euler",
 	IsFamily: true,
-	Children: []*PlatformResolver{openeuler, hce},
+	Children: []*PlatformResolver{openeuler, hce, euleros},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},
@@ -1302,7 +1350,6 @@ var aix = &PlatformResolver{
 			m := aixUnameParser.FindStringSubmatch(unamervp)
 			if len(m) == 4 {
 				pf.Version = m[2] + "." + m[1]
-				pf.Version = pf.Version
 				pf.Arch = m[3]
 			}
 		}

@@ -199,7 +199,7 @@ func compileResourceSample(c *compiler, typ types.Type, ref uint64, id string, c
 		return types.Nil, multierr.Wrap(err, "failed to compile "+id)
 	}
 
-	if call == nil {
+	if call == nil || len(call.Function) == 0 {
 		return types.Nil, errors.New("missing argument for calling '" + id + "'")
 	}
 	if len(call.Function) > 1 {
@@ -514,7 +514,7 @@ func compileResourceChildAccess(c *compiler, typ types.Type, ref uint64, id stri
 			},
 		},
 	})
-	return typ, nil
+	return t.Child(), nil
 }
 
 func compileResourceLength(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {

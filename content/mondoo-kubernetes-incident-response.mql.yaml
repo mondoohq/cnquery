@@ -12,6 +12,25 @@ packs:
     tags:
       mondoo.com/platform: kubernetes
       mondoo.com/category: security
+    docs:
+      desc: |
+        ### Overview
+
+        The Kubernetes Incident Response Pack by Mondoo retrieves security-related configuration data from Kubernetes clusters for investigation during a security incident. This includes cluster version, role bindings with cluster-admin permissions, pod security contexts, and container image information across various workload types.
+
+        ### Run query pack
+
+        To run this query pack against a Kubernetes cluster:
+
+        ```bash
+        cnquery scan k8s -f mondoo-kubernetes-incident-response.mql.yaml
+        ```
+
+        To run against a specific namespace:
+
+        ```bash
+        cnquery scan k8s --namespace <namespace> -f mondoo-kubernetes-incident-response.mql.yaml
+        ```
     groups:
       - title: Cluster Incident Response
         filters:

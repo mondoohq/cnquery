@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"maps"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -78,13 +79,17 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					if function.DeadLetterConfig != nil {
 						dlqTarget = convert.ToValue(function.DeadLetterConfig.TargetArn)
 					}
-					tags := make(map[string]any)
+					tags := make(map[string]string)
 					tagsResp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: function.FunctionArn})
 					if err == nil {
-						for k, v := range tagsResp.Tags {
-							tags[k] = v
-						}
+						maps.Copy(tags, tagsResp.Tags)
 					}
+
+					if conn.Filters.General.IsFilteredOutByTags(tags) {
+						log.Debug().Interface("function", function.FunctionArn).Msg("excluding function due to filters")
+						continue
+					}
+
 					mqlFunc, err := CreateResource(a.MqlRuntime, "aws.lambda.function",
 						map[string]*llx.RawData{
 							"arn":          llx.StringDataPtr(function.FunctionArn),
@@ -93,7 +98,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 							"dlqTargetArn": llx.StringData(dlqTarget),
 							"vpcConfig":    llx.MapData(vpcConfigJson, types.Any),
 							"region":       llx.StringData(region),
-							"tags":         llx.MapData(tags, types.String),
+							"tags":         llx.MapData(toInterfaceMap(tags), types.String),
 						})
 					if err != nil {
 						return nil, err

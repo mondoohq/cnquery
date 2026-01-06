@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v74/github"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/github/connection"
 	"sigs.k8s.io/yaml"
@@ -23,15 +24,21 @@ func (g *mqlGithubWorkflow) id() (string, error) {
 }
 
 func (g *mqlGithubWorkflow) configuration() (any, error) {
-	// TODO: to leverage the runtime, get the file resource, how to define the dependency
-	if g.File.Error != nil {
-		return nil, g.File.Error
+	// Use GetFile() to ensure the field is computed
+	fileTValue := g.GetFile()
+	if fileTValue.Error != nil {
+		return nil, fileTValue.Error
 	}
-	file := g.File.Data
-	if file.Content.Error != nil {
-		return nil, file.Content.Error
+	file := fileTValue.Data
+	if file == nil {
+		return nil, errors.New("workflow file not found")
 	}
-	content := file.Content.Data
+
+	contentTValue := file.GetContent()
+	if contentTValue.Error != nil {
+		return nil, contentTValue.Error
+	}
+	content := contentTValue.Data
 
 	data := map[string]any{}
 	err := yaml.Unmarshal([]byte(content), &data)
@@ -58,13 +65,36 @@ func (g *mqlGithubWorkflow) file() (*mqlGithubFile, error) {
 	ownerLogin := fullNameSplit[0]
 	repoName := fullNameSplit[1]
 
-	// TODO: no branch support yet
-	// if we workflow is running for a branch only, we do not see from the response the branch name
-	fileContent, _, _, err := conn.Client().Repositories.GetContents(conn.Context(), ownerLogin, repoName, filePath, &github.RepositoryContentGetOptions{})
+	repo, _, err := conn.Client().Repositories.Get(conn.Context(), ownerLogin, repoName)
 	if err != nil {
-		// TODO: should this be an error
+		return nil, err
+	}
+	defaultBranch := repo.GetDefaultBranch()
+	if defaultBranch == "" {
+		defaultBranch = "main"
+	}
+
+	log.Debug().
+		Str("owner", ownerLogin).
+		Str("repo", repoName).
+		Str("path", filePath).
+		Str("branch", defaultBranch).
+		Msg("fetching workflow file")
+
+	fileContent, _, _, err := conn.Client().Repositories.GetContents(conn.Context(), ownerLogin, repoName, filePath, &github.RepositoryContentGetOptions{
+		Ref: defaultBranch,
+	})
+	if err != nil {
+		log.Debug().
+			Err(err).
+			Str("owner", ownerLogin).
+			Str("repo", repoName).
+			Str("path", filePath).
+			Str("branch", defaultBranch).
+			Msg("failed to get workflow file contents")
+
 		if strings.Contains(err.Error(), "404") {
-			return nil, nil
+			return nil, errors.New("file not found, got 404")
 		}
 		return nil, err
 	}

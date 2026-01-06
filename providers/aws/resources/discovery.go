@@ -100,40 +100,13 @@ var AllAPIResources = []string{
 	DiscoverySagemakerNotebookInstances,
 }
 
-func containsInterfaceSlice(sl []any, s string) bool {
-	for i := range sl {
-		if sl[i].(string) == s {
-			return true
-		}
-	}
-	return false
-}
-
-func imageMatchesFilters(image *mqlAwsEcrImage, filters connection.EcrDiscoveryFilters) bool {
-	for _, t := range filters.Tags {
-		if !containsInterfaceSlice(image.Tags.Data, t) {
-			return false
-		}
-	}
-	for _, t := range filters.ExcludeTags {
-		if containsInterfaceSlice(image.Tags.Data, t) {
-			return false
-		}
-	}
-	return true
-}
-
-func containerMatchesFilters(container *mqlAwsEcsContainer, ecsFilters connection.EcsDiscoveryFilters) bool {
-	return container.Status.Data == "RUNNING" || !ecsFilters.OnlyRunningContainers
-}
-
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
 		Assets: []*inventory.Asset{},
 	}}
 
-	res, err := NewResource(runtime, "aws.account", map[string]*llx.RawData{"id": llx.StringData("aws.account/" + conn.AccountId())})
+	res, err := NewResource(runtime, ResourceAwsAccount, map[string]*llx.RawData{"id": llx.StringData("aws.account/" + conn.AccountId())})
 	if err != nil {
 		return nil, err
 	}
@@ -141,8 +114,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	awsAccount := res.(*mqlAwsAccount)
 
 	targets := getDiscoveryTargets(conn.Conf)
-	for i := range targets {
-		target := targets[i]
+	for _, target := range targets {
 		list, err := discover(runtime, awsAccount, target, conn.Filters)
 		if err != nil {
 			log.Error().Err(err).Msg("error during discovery")
@@ -257,9 +229,6 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range images.Data {
 			a := images.Data[i].(*mqlAwsEcrImage)
-			if !imageMatchesFilters(a, filters.EcrDiscoveryFilters) {
-				continue
-			}
 			ecrAsset := addConnectionInfoToEcrAsset(a, conn)
 			if len(ecrAsset.Connections) > 0 {
 				assetList = append(assetList, ecrAsset)
@@ -282,12 +251,9 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range containers.Data {
 			c := containers.Data[i].(*mqlAwsEcsContainer)
-			if !containerMatchesFilters(c, filters.EcsDiscoveryFilters) {
-				continue
-			}
 			assetList = append(assetList, addConnectionInfoToECSContainerAsset(c, accountId, conn))
 		}
-		if filters.EcsDiscoveryFilters.DiscoverInstances {
+		if filters.Ecs.DiscoverInstances {
 			containerInst := ecs.GetContainerInstances()
 			if containerInst == nil {
 				return assetList, nil
@@ -316,9 +282,6 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range containers.Data {
 			c := containers.Data[i].(*mqlAwsEcsContainer)
-			if !containerMatchesFilters(c, filters.EcsDiscoveryFilters) {
-				continue
-			}
 			assetList = append(assetList, MqlObjectToAsset(accountId,
 				mqlObject{
 					name: c.ContainerName.Data, labels: map[string]string{},
@@ -330,7 +293,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 		}
 
 	case DiscoveryECRImageAPI:
-		res, err := NewResource(runtime, "aws.ecr", map[string]*llx.RawData{})
+		res, err := NewResource(runtime, ResourceAwsEcr, map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}
@@ -344,9 +307,6 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range images.Data {
 			a := images.Data[i].(*mqlAwsEcrImage)
-			if !imageMatchesFilters(a, filters.EcrDiscoveryFilters) {
-				continue
-			}
 			l := make(map[string]string)
 			for i := range a.Tags.Data {
 				l[a.Tags.Data[i].(string)] = ""
@@ -362,7 +322,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				}, conn))
 		}
 	case DiscoveryEC2InstanceAPI:
-		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
+		res, err := NewResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}
@@ -388,7 +348,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				}, conn))
 		}
 	case DiscoverySSMInstanceAPI:
-		res, err := NewResource(runtime, "aws.ssm", map[string]*llx.RawData{})
+		res, err := NewResource(runtime, ResourceAwsSsm, map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}
@@ -413,7 +373,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				}, conn))
 		}
 	case DiscoveryS3Buckets:
-		res, err := NewResource(runtime, "aws.s3", map[string]*llx.RawData{})
+		res, err := NewResource(runtime, ResourceAwsS3, map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}

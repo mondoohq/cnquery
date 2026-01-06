@@ -28,6 +28,8 @@ func NewSPDX(format string) *Spdx {
 	}
 }
 
+var _ Decoder = &Spdx{}
+
 type Spdx struct {
 	opts    renderOpts
 	Version string
@@ -164,7 +166,7 @@ func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
 	}
 }
 
-func (s *Spdx) Parse(r io.Reader) (*Sbom, error) {
+func (s *Spdx) Parse(r io.ReadSeeker) (*Sbom, error) {
 	// try to parse all supported SPDX format
 	if s.Format == FormatSpdxTagValue {
 		doc, err := tagvalue.Read(r)
@@ -189,12 +191,17 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 		},
 		Asset: &Asset{
 			Name: doc.DocumentName,
+			Platform: &Platform{
+				Name:    "spdx",
+				Version: doc.SPDXVersion,
+				Title:   "SPDX",
+			},
 		},
 		Packages: []*Package{},
 	}
 
 	name := ""
-	pf := &Platform{}
+	var pf *Platform
 
 	for i := range doc.Packages {
 		pkg := doc.Packages[i]
@@ -220,6 +227,9 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 					m := pkgUrl.Qualifiers.Map()
 					distroVal, ok := m["distro"]
 					if ok {
+						if pf == nil {
+							pf = &Platform{}
+						}
 						name = distroVal
 						pf.Title = distroVal
 						vals := strings.Split(distroVal, "-")
@@ -250,7 +260,12 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 		bom.Packages = append(bom.Packages, bomPkg)
 	}
 
-	bom.Asset.Name = name
-	bom.Asset.Platform = pf
+	if name != "" {
+		bom.Asset.Name = name
+	}
+	if pf != nil {
+		bom.Asset.Platform = pf
+	}
+
 	return bom
 }

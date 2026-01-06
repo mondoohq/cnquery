@@ -27,7 +27,7 @@ import (
 var nonRdsEngines = []string{"neptune", "docdb"}
 
 func (a *mqlAwsRds) id() (string, error) {
-	return "aws.rds", nil
+	return ResourceAwsRds, nil
 }
 
 // instances returns all RDS instances
@@ -123,7 +123,7 @@ func (a *mqlAwsRds) getClusterParameterGroups(conn *connection.AwsConnection) []
 }
 
 func newMqlAwsRdsClusterParameterGroup(runtime *plugin.Runtime, region string, parameterGroup rds_types.DBClusterParameterGroup) (*mqlAwsRdsClusterParameterGroup, error) {
-	resource, err := CreateResource(runtime, "aws.rds.clusterParameterGroup",
+	resource, err := CreateResource(runtime, ResourceAwsRdsClusterParameterGroup,
 		map[string]*llx.RawData{
 			"__id":        llx.StringData(fmt.Sprintf("%s/%s", *parameterGroup.DBClusterParameterGroupArn, *parameterGroup.DBClusterParameterGroupName)),
 			"arn":         llx.StringDataPtr(parameterGroup.DBClusterParameterGroupArn),
@@ -208,6 +208,11 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 					// we cannot filter it in the api call since the api does not support it negative filters
 					if slices.Contains(nonRdsEngines, *dbInstance.Engine) {
 						log.Debug().Str("engine", *dbInstance.Engine).Msg("skipping non-RDS engine")
+						continue
+					}
+
+					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(rdsTagsToMap(dbInstance.TagList))) {
+						log.Debug().Interface("dbInstance", dbInstance.DBInstanceArn).Msg("skipping rds db instance due to filters")
 						continue
 					}
 
@@ -298,7 +303,7 @@ type mqlAwsRdsDbinstanceInternal struct {
 }
 
 func newMqlAwsParameterGroup(runtime *plugin.Runtime, region string, parameterGroup rds_types.DBParameterGroup) (*mqlAwsRdsParameterGroup, error) {
-	resource, err := CreateResource(runtime, "aws.rds.parameterGroup",
+	resource, err := CreateResource(runtime, ResourceAwsRdsParameterGroup,
 		map[string]*llx.RawData{
 			"__id":        llx.StringData(fmt.Sprintf("%s/%s", *parameterGroup.DBParameterGroupArn, *parameterGroup.DBParameterGroupName)),
 			"arn":         llx.StringDataPtr(parameterGroup.DBParameterGroupArn),
@@ -372,7 +377,7 @@ func newMqlAwsRdsParameterGroupParameter(runtime *plugin.Runtime, parameter rds_
 		engineModes = append(engineModes, engineMode)
 	}
 
-	resource, err := CreateResource(runtime, "aws.rds.parameterGroup.parameter",
+	resource, err := CreateResource(runtime, ResourceAwsRdsParameterGroupParameter,
 		map[string]*llx.RawData{
 			"__id":                 llx.StringDataPtr(parameter.ParameterName),
 			"name":                 llx.StringDataPtr(parameter.ParameterName),
@@ -413,7 +418,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 		certificateExpiration = dbInstance.CertificateDetails.ValidTill
 	}
 
-	resource, err := CreateResource(runtime, "aws.rds.dbinstance",
+	resource, err := CreateResource(runtime, ResourceAwsRdsDbinstance,
 		map[string]*llx.RawData{
 			"arn":                           llx.StringDataPtr(dbInstance.DBInstanceArn),
 			"autoMinorVersionUpgrade":       llx.BoolDataPtr(dbInstance.AutoMinorVersionUpgrade),
@@ -541,7 +546,7 @@ func (a *mqlAwsRdsDbinstance) subnets() ([]any, error) {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		for i := range a.cacheSubnets.Subnets {
 			subnet := a.cacheSubnets.Subnets[i]
-			sub, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(subnet.SubnetIdentifier)))})
+			sub, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(subnet.SubnetIdentifier)))})
 			if err != nil {
 				a.Subnets.State = plugin.StateIsNull | plugin.StateIsSet
 				return nil, err
@@ -627,7 +632,7 @@ func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, resourceArn stri
 		action = *maintenanceAction.Action
 	}
 
-	res, err := CreateResource(runtime, "aws.rds.pendingMaintenanceAction",
+	res, err := CreateResource(runtime, ResourceAwsRdsPendingMaintenanceAction,
 		map[string]*llx.RawData{
 			"__id":                 llx.StringData(fmt.Sprintf("%s/pendingMaintainance/%s", resourceArn, action)),
 			"resourceArn":          llx.StringData(resourceArn),
@@ -646,14 +651,9 @@ func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, resourceArn stri
 
 func rdsTagsToMap(tags []rds_types.Tag) map[string]any {
 	tagsMap := make(map[string]any)
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
+	for _, tag := range tags {
+		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 	}
-
 	return tagsMap
 }
 
@@ -709,6 +709,11 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 						continue
 					}
 
+					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(rdsTagsToMap(cluster.TagList))) {
+						log.Debug().Interface("cluster", cluster.DBClusterArn).Msg("skipping rds cluster due to filters")
+						continue
+					}
+
 					mqlDbCluster, err := newMqlAwsRdsCluster(a.MqlRuntime, region, conn.AccountId(), cluster)
 					if err != nil {
 						return nil, err
@@ -734,7 +739,7 @@ func (a *mqlAwsRdsDbcluster) id() (string, error) {
 func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID string, cluster rds_types.DBCluster) (*mqlAwsRdsDbcluster, error) {
 	mqlRdsDbInstances := []any{}
 	for _, instance := range cluster.DBClusterMembers {
-		mqlInstance, err := NewResource(runtime, "aws.rds.dbinstance",
+		mqlInstance, err := NewResource(runtime, ResourceAwsRdsDbinstance,
 			map[string]*llx.RawData{
 				"arn": llx.StringData(fmt.Sprintf(rdsInstanceArnPattern, region, accountID, convert.ToValue(instance.DBInstanceIdentifier))),
 			})
@@ -759,7 +764,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 		caIdentifier = cluster.CertificateDetails.CAIdentifier
 	}
 
-	resource, err := CreateResource(runtime, "aws.rds.dbcluster",
+	resource, err := CreateResource(runtime, ResourceAwsRdsDbcluster,
 		map[string]*llx.RawData{
 			"activityStreamMode":         llx.StringData(string(cluster.ActivityStreamMode)),
 			"activityStreamStatus":       llx.StringData(string(cluster.ActivityStreamStatus)),
@@ -785,7 +790,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 			"id":                         llx.StringDataPtr(cluster.DBClusterIdentifier),
 			"latestRestorableTime":       llx.TimeDataPtr(cluster.LatestRestorableTime),
 			"masterUsername":             llx.StringDataPtr(cluster.MasterUsername),
-			"members":                    llx.ArrayData(mqlRdsDbInstances, types.Resource("aws.rds.dbinstance")),
+			"members":                    llx.ArrayData(mqlRdsDbInstances, types.Resource(ResourceAwsRdsDbinstance)),
 			"monitoringInterval":         llx.IntDataPtr(cluster.MonitoringInterval),
 			"multiAZ":                    llx.BoolDataPtr(cluster.MultiAZ),
 			"networkType":                llx.StringDataPtr(cluster.NetworkType),
@@ -844,7 +849,7 @@ func (a *mqlAwsRdsDbcluster) snapshots() ([]any, error) {
 // newMqlAwsRdsClusterSnapshot creates a new mqlAwsRdsSnapshot from a rds_types.DBClusterSnapshot which is only
 // used for Aurora clusters not for RDS instances
 func newMqlAwsRdsClusterSnapshot(runtime *plugin.Runtime, region string, snapshot rds_types.DBClusterSnapshot) (*mqlAwsRdsSnapshot, error) {
-	res, err := CreateResource(runtime, "aws.rds.snapshot",
+	res, err := CreateResource(runtime, ResourceAwsRdsSnapshot,
 		map[string]*llx.RawData{
 			"allocatedStorage":  llx.IntDataDefault(snapshot.AllocatedStorage, 0),
 			"arn":               llx.StringDataPtr(snapshot.DBClusterSnapshotArn),
@@ -869,7 +874,7 @@ func newMqlAwsRdsClusterSnapshot(runtime *plugin.Runtime, region string, snapsho
 // newMqlAwsRdsDbSnapshot creates a new mqlAwsRdsSnapshot from a rds_types.DBSnapshot which is only
 // used for Aurora clusters not for RDS instances
 func newMqlAwsRdsDbSnapshot(runtime *plugin.Runtime, region string, snapshot rds_types.DBSnapshot) (*mqlAwsRdsSnapshot, error) {
-	res, err := CreateResource(runtime, "aws.rds.snapshot",
+	res, err := CreateResource(runtime, ResourceAwsRdsSnapshot,
 		map[string]*llx.RawData{
 			"allocatedStorage":  llx.IntDataDefault(snapshot.AllocatedStorage, 0),
 			"arn":               llx.StringDataPtr(snapshot.DBSnapshotArn),
@@ -908,7 +913,7 @@ func (a *mqlAwsRdsBackupsetting) kmsKey() (*mqlAwsKmsKey, error) {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
 			"arn": llx.StringDataPtr(a.kmsKeyId),
 		})
@@ -946,7 +951,7 @@ func (a *mqlAwsRdsDbinstance) backupSettings() ([]any, error) {
 				earliest = backup.RestoreWindow.EarliestTime
 				latest = backup.RestoreWindow.LatestTime
 			}
-			mqlRdsBackup, err := CreateResource(a.MqlRuntime, "aws.rds.backupsetting",
+			mqlRdsBackup, err := CreateResource(a.MqlRuntime, ResourceAwsRdsBackupsetting,
 				map[string]*llx.RawData{
 					"target":                   llx.StringDataPtr(backup.BackupTarget),
 					"retentionPeriod":          llx.IntDataPtr(backup.BackupRetentionPeriod),
@@ -997,7 +1002,7 @@ func (a *mqlAwsRdsDbcluster) backupSettings() ([]any, error) {
 				earliest = backup.RestoreWindow.EarliestTime
 				latest = backup.RestoreWindow.LatestTime
 			}
-			mqlRdsBackup, err := CreateResource(a.MqlRuntime, "aws.rds.backupsetting",
+			mqlRdsBackup, err := CreateResource(a.MqlRuntime, ResourceAwsRdsBackupsetting,
 				map[string]*llx.RawData{
 					"target":                   llx.StringDataPtr(backup.DBClusterIdentifier),
 					"retentionPeriod":          llx.IntDataPtr(backup.BackupRetentionPeriod),

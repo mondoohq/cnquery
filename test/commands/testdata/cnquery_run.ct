@@ -18,18 +18,19 @@ Available Commands:
   winrm       Run a query with a remote system via WinRM
 
 Flags:
-      --ast                    Parse the query and return the abstract syntax tree (AST)
-  -c, --command string         MQL query to execute in the shell
-      --discover strings       Enable the discovery of nested assets. Supports: all, auto, container, container-images
-      --exit-1-on-failure      Exit with error code 1 if one or more query results fail
-  -h, --help                   help for run
-      --info                   Parse the query and provide information about it
-  -j, --json                   Run the query and return the object in a JSON structure
-      --parse                  Parse the query and return the logical structure
-      --platform-id string     Select a specific target asset by providing its platform ID
-      --record string          Record all resource calls and use resources in the recording
-      --sudo                   Elevate privileges with sudo
-      --use-recording string   Use a recording to inject resource data (read-only)
+      --ast                     Parse the query and return the abstract syntax tree (AST)
+  -c, --command string          MQL query to execute in the shell
+      --discover strings        Enable the discovery of nested assets. Supports: all, auto, container, container-images
+      --exit-1-on-failure       Exit with error code 1 if one or more query results fail
+  -h, --help                    help for run
+      --info                    Parse the query and provide information about it
+      --inventory-file string   Set the path to the inventory file
+  -j, --json                    Run the query and return the object in a JSON structure
+      --parse                   Parse the query and return the logical structure
+      --platform-id string      Select a specific target asset by providing its platform ID
+      --record string           Record all resource calls and use resources in the recording
+      --sudo                    Elevate privileges with sudo
+      --use-recording string    Use a recording to inject resource data (read-only)
 
 Global Flags:
       --api-proxy string   Set proxy for communications with Mondoo Platform API

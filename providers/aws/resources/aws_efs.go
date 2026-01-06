@@ -71,6 +71,11 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 				}
 
 				for _, fs := range describeFileSystemsRes.FileSystems {
+					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(efsTagsToMap(fs.Tags))) {
+						log.Debug().Interface("filesystem", fs.FileSystemArn).Msg("skipping efs filesystem due to filters")
+						continue
+					}
+
 					args := map[string]*llx.RawData{
 						"id":               llx.StringDataPtr(fs.FileSystemId),
 						"arn":              llx.StringDataPtr(fs.FileSystemArn),
