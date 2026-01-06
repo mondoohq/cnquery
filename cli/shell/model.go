@@ -86,6 +86,9 @@ type shellModel struct {
 	executing    bool
 	spinner      spinner.Model
 	compileError string // Current compile error (if any)
+
+	// Nyanya animation (easter egg)
+	nyanya *nyanyaState
 }
 
 // newShellModel creates a new shell model
@@ -252,6 +255,23 @@ func (m *shellModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
 
+	case nyanyaTickMsg:
+		// Advance the nyanya animation
+		if m.nyanya != nil {
+			m.nyanya.currentFrame++
+			if m.nyanya.currentFrame >= len(m.nyanya.frames) {
+				m.nyanya.currentFrame = 0
+				m.nyanya.loopCount++
+				if m.nyanya.loopCount >= m.nyanya.maxLoops {
+					// Animation complete
+					m.nyanya = nil
+					return m, nil
+				}
+			}
+			return m, nyanyaTick()
+		}
+		return m, nil
+
 	case printOutputMsg:
 		// Print output directly to terminal
 		return m, tea.Println(msg.output)
@@ -265,6 +285,12 @@ func (m *shellModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // handleKeyMsg processes keyboard input
 func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Handle nyanya animation - any key exits
+	if m.nyanya != nil {
+		m.nyanya = nil
+		return m, nil
+	}
+
 	// Handle history search mode (ctrl+r)
 	if m.searchMode {
 		return m.handleSearchKey(msg)
@@ -424,13 +450,14 @@ func (m *shellModel) handleSubmit() (tea.Model, tea.Cmd) {
 			)
 		case "nyanya":
 			m.input.SetValue("")
-			// Run the nyancat animation
-			return m, tea.Sequence(
+			// Initialize and start the nyancat animation
+			m.nyanya = initNyanya()
+			if m.nyanya == nil {
+				return m, tea.Println(m.theme.ErrorText("Failed to initialize nyanya animation"))
+			}
+			return m, tea.Batch(
 				tea.Println(echoInput),
-				func() tea.Msg {
-					nyago(m.width, m.height)
-					return nil
-				},
+				nyanyaTick(),
 			)
 		}
 
@@ -729,6 +756,11 @@ func (m *shellModel) acceptCompletion() (tea.Model, tea.Cmd) {
 func (m *shellModel) View() string {
 	if !m.ready {
 		return "Loading..."
+	}
+
+	// Render nyanya animation if active (full screen modal)
+	if m.nyanya != nil {
+		return renderNyanya(m.nyanya, m.width, m.height)
 	}
 
 	var b strings.Builder
