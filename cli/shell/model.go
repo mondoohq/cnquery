@@ -170,6 +170,7 @@ func (m *shellModel) loadHistory() tea.Cmd {
 	return func() tea.Msg {
 		homeDir, err := homedir.Dir()
 		if err != nil {
+			log.Warn().Msg("failed to load history")
 			return historyLoadedMsg{history: []string{}}
 		}
 
