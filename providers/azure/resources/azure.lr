@@ -2031,6 +2031,10 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   defenderForKeyVaults() dict
   // Microsoft Defender for Resource Manager configuration
   defenderForResourceManager() dict
+  // Microsoft Defender for APIs configuration
+  defenderForApis() azure.subscription.cloudDefenderService.defenderForApis
+  // Microsoft Defender Cloud Security Posture Management (CSPM) configuration
+  defenderCSPM() azure.subscription.cloudDefenderService.defenderCSPM
   // Defender for Containers components configuration
   defenderForContainers() dict
   // List of configured security contacts
@@ -2055,6 +2059,30 @@ private azure.subscription.cloudDefenderService.settings @defaults("name kind") 
   type string
   // The properties dict (enabled)
   properties dict
+}
+
+// Microsoft Defender for APIs
+private azure.subscription.cloudDefenderService.defenderForApis @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for APIs is enabled
+  enabled bool
+  // Pricing tier for Defender for APIs
+  pricingTier string
+}
+
+// Microsoft Defender Cloud Security Posture Management (CSPM)
+private azure.subscription.cloudDefenderService.defenderCSPM @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender CSPM is enabled
+  enabled bool
+  // Pricing tier for Defender CSPM
+  pricingTier string
+  // Sub-plan for Defender CSPM
+  subPlan string
+  // Extensions configured for Defender CSPM
+  extensions []dict
 }
 
 // Microsoft Defender for Cloud security contact
