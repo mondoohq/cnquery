@@ -661,6 +661,119 @@ func initAwsEc2Keypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	return args, nil, nil
 }
 
+func (a *mqlAwsEc2) images() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	var res []any
+	poolOfJobs := jobpool.CreatePool(a.getImagesJob(conn), 5)
+
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.([]any)...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Str("region", region).Msgf("ec2>getImagesJob>calling aws with region")
+
+			svc := conn.Ec2(region)
+			ctx := context.Background()
+			var res []any
+
+			// Only fetch images owned by this account
+			images, err := svc.DescribeImages(ctx, &ec2.DescribeImagesInput{Owners: []string{"self"}})
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+					return res, nil
+				}
+				return nil, err
+			}
+
+			for _, image := range images.Images {
+				if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(image.Tags)) {
+					log.Debug().Interface("image", image.ImageId).Msg("excluding image due to filters")
+					continue
+				}
+
+				// Convert block device mappings to dict slice
+				blockDeviceMappings, err := convert.JsonToDictSlice(image.BlockDeviceMappings)
+				if err != nil {
+					return nil, err
+				}
+
+				// Compute encrypted status: true if all EBS block devices are encrypted
+				encrypted := isImageEncrypted(image.BlockDeviceMappings)
+
+				// Parse creation date
+				var createdAt *time.Time
+				if image.CreationDate != nil {
+					t, err := time.Parse(time.RFC3339, *image.CreationDate)
+					if err != nil {
+						log.Warn().Str("imageId", convert.ToValue(image.ImageId)).Err(err).
+							Str("bad_value", *image.CreationDate).Msg("failed to parse image CreationDate")
+					} else {
+						createdAt = &t
+					}
+				}
+				// Parse deprecation date
+				var deprecatedAt *time.Time
+				if image.DeprecationTime != nil {
+					t, err := time.Parse(time.RFC3339, *image.DeprecationTime)
+					if err != nil {
+						log.Warn().Str("imageId", convert.ToValue(image.ImageId)).Err(err).
+							Str("bad_value", *image.DeprecationTime).Msg("failed to parse image DeprecationTime")
+					} else {
+						deprecatedAt = &t
+					}
+				}
+				mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Image,
+					map[string]*llx.RawData{
+						"arn":                 llx.StringData(fmt.Sprintf(imageArnPattern, region, conn.AccountId(), convert.ToValue(image.ImageId))),
+						"id":                  llx.StringDataPtr(image.ImageId),
+						"name":                llx.StringDataPtr(image.Name),
+						"architecture":        llx.StringData(string(image.Architecture)),
+						"ownerId":             llx.StringDataPtr(image.OwnerId),
+						"ownerAlias":          llx.StringDataPtr(image.ImageOwnerAlias),
+						"createdAt":           llx.TimeDataPtr(createdAt),
+						"deprecatedAt":        llx.TimeDataPtr(deprecatedAt),
+						"enaSupport":          llx.BoolDataPtr(image.EnaSupport),
+						"tpmSupport":          llx.StringData(string(image.TpmSupport)),
+						"state":               llx.StringData(string(image.State)),
+						"public":              llx.BoolDataPtr(image.Public),
+						"rootDeviceType":      llx.StringData(string(image.RootDeviceType)),
+						"virtualizationType":  llx.StringData(string(image.VirtualizationType)),
+						"blockDeviceMappings": llx.ArrayData(blockDeviceMappings, types.Any),
+						"encrypted":           llx.BoolData(encrypted),
+						"tags":                llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String),
+						"region":              llx.StringData(region),
+					})
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlImage)
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
 func (a *mqlAwsEc2) securityGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -1062,6 +1175,25 @@ func (i *mqlAwsEc2Image) id() (string, error) {
 	return i.Arn.Data, nil
 }
 
+// isImageEncrypted checks if all EBS block devices in the image are encrypted
+func isImageEncrypted(blockDeviceMappings []ec2types.BlockDeviceMapping) bool {
+	if len(blockDeviceMappings) == 0 {
+		return false
+	}
+
+	hasEbsDevices := false
+	for _, mapping := range blockDeviceMappings {
+		if mapping.Ebs != nil {
+			hasEbsDevices = true
+			if mapping.Ebs.Encrypted == nil || !*mapping.Ebs.Encrypted {
+				return false
+			}
+		}
+	}
+
+	return hasEbsDevices
+}
+
 func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -1092,11 +1224,29 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["deprecatedAt"] = llx.NilData
 		args["tpmSupport"] = llx.NilData
 		args["enaSupport"] = llx.NilData
+		args["state"] = llx.NilData
+		args["public"] = llx.NilData
+		args["rootDeviceType"] = llx.NilData
+		args["virtualizationType"] = llx.NilData
+		args["blockDeviceMappings"] = llx.NilData
+		args["encrypted"] = llx.NilData
+		args["tags"] = llx.NilData
+		args["region"] = llx.StringData(arn.Region)
 		return args, nil, nil
 	}
 
 	if len(images.Images) > 0 {
 		image := images.Images[0]
+
+		// Convert block device mappings
+		blockDeviceMappings, err := convert.JsonToDictSlice(image.BlockDeviceMappings)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// Compute encrypted status: true if all EBS block devices are encrypted
+		encrypted := isImageEncrypted(image.BlockDeviceMappings)
+
 		args["arn"] = llx.StringData(arnVal)
 		args["id"] = llx.StringData(resource[1])
 		args["name"] = llx.StringDataPtr(image.Name)
@@ -1105,6 +1255,14 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["ownerAlias"] = llx.StringDataPtr(image.ImageOwnerAlias)
 		args["enaSupport"] = llx.BoolDataPtr(image.EnaSupport)
 		args["tpmSupport"] = llx.StringData(string(image.TpmSupport))
+		args["state"] = llx.StringData(string(image.State))
+		args["public"] = llx.BoolDataPtr(image.Public)
+		args["rootDeviceType"] = llx.StringData(string(image.RootDeviceType))
+		args["virtualizationType"] = llx.StringData(string(image.VirtualizationType))
+		args["blockDeviceMappings"] = llx.ArrayData(blockDeviceMappings, types.Any)
+		args["encrypted"] = llx.BoolData(encrypted)
+		args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String)
+		args["region"] = llx.StringData(arn.Region)
 		if image.CreationDate == nil {
 			args["createdAt"] = llx.NilData
 		} else {

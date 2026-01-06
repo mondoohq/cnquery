@@ -4558,6 +4558,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.eips": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2).GetEips()).ToDataRes(types.Array(types.Resource("aws.ec2.eip")))
 	},
+	"aws.ec2.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2).GetImages()).ToDataRes(types.Array(types.Resource("aws.ec2.image")))
+	},
 	"aws.ec2.eip.publicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Eip).GetPublicIp()).ToDataRes(types.String)
 	},
@@ -5136,6 +5139,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.image.tpmSupport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetTpmSupport()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetState()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetPublic()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.image.rootDeviceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetRootDeviceType()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.virtualizationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetVirtualizationType()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.blockDeviceMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetBlockDeviceMappings()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ec2.image.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.image.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.image.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.ec2.instance.device.deleteOnTermination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceDevice).GetDeleteOnTermination()).ToDataRes(types.Bool)
@@ -11013,6 +11040,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2).Eips, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.eip.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Eip).__id, ok = v.Value.(string)
 		return
@@ -11879,6 +11910,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.image.tpmSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Image).TpmSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.rootDeviceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).RootDeviceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.virtualizationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).VirtualizationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.blockDeviceMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).BlockDeviceMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27371,6 +27434,7 @@ type mqlAwsEc2 struct {
 	NetworkAcls            plugin.TValue[[]any]
 	Keypairs               plugin.TValue[[]any]
 	Eips                   plugin.TValue[[]any]
+	Images                 plugin.TValue[[]any]
 }
 
 // createAwsEc2 creates a new instance of this resource
@@ -27557,6 +27621,22 @@ func (c *mqlAwsEc2) GetEips() *plugin.TValue[[]any] {
 		}
 
 		return c.eips()
+	})
+}
+
+func (c *mqlAwsEc2) GetImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Images, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "images")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.images()
 	})
 }
 
@@ -29780,16 +29860,24 @@ type mqlAwsEc2Image struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEc2ImageInternal it will be used here
-	Arn          plugin.TValue[string]
-	Id           plugin.TValue[string]
-	Name         plugin.TValue[string]
-	Architecture plugin.TValue[string]
-	OwnerId      plugin.TValue[string]
-	OwnerAlias   plugin.TValue[string]
-	CreatedAt    plugin.TValue[*time.Time]
-	DeprecatedAt plugin.TValue[*time.Time]
-	EnaSupport   plugin.TValue[bool]
-	TpmSupport   plugin.TValue[string]
+	Arn                 plugin.TValue[string]
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Architecture        plugin.TValue[string]
+	OwnerId             plugin.TValue[string]
+	OwnerAlias          plugin.TValue[string]
+	CreatedAt           plugin.TValue[*time.Time]
+	DeprecatedAt        plugin.TValue[*time.Time]
+	EnaSupport          plugin.TValue[bool]
+	TpmSupport          plugin.TValue[string]
+	State               plugin.TValue[string]
+	Public              plugin.TValue[bool]
+	RootDeviceType      plugin.TValue[string]
+	VirtualizationType  plugin.TValue[string]
+	BlockDeviceMappings plugin.TValue[[]any]
+	Encrypted           plugin.TValue[bool]
+	Tags                plugin.TValue[map[string]any]
+	Region              plugin.TValue[string]
 }
 
 // createAwsEc2Image creates a new instance of this resource
@@ -29867,6 +29955,38 @@ func (c *mqlAwsEc2Image) GetEnaSupport() *plugin.TValue[bool] {
 
 func (c *mqlAwsEc2Image) GetTpmSupport() *plugin.TValue[string] {
 	return &c.TpmSupport
+}
+
+func (c *mqlAwsEc2Image) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEc2Image) GetPublic() *plugin.TValue[bool] {
+	return &c.Public
+}
+
+func (c *mqlAwsEc2Image) GetRootDeviceType() *plugin.TValue[string] {
+	return &c.RootDeviceType
+}
+
+func (c *mqlAwsEc2Image) GetVirtualizationType() *plugin.TValue[string] {
+	return &c.VirtualizationType
+}
+
+func (c *mqlAwsEc2Image) GetBlockDeviceMappings() *plugin.TValue[[]any] {
+	return &c.BlockDeviceMappings
+}
+
+func (c *mqlAwsEc2Image) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAwsEc2Image) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEc2Image) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsEc2InstanceDevice for the aws.ec2.instance.device resource

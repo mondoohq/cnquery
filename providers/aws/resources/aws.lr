@@ -2953,6 +2953,8 @@ aws.ec2 {
   keypairs() []aws.ec2.keypair
   // List of Elastic IPs (EIPs)
   eips() []aws.ec2.eip
+  // List of AMI images owned by the account
+  images() []aws.ec2.image
 }
 
 // Amazon Elastic IP (EIP)
@@ -3434,6 +3436,22 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   enaSupport bool
   // The supported TPM version. If the image is configured for NitroTPM support, the value is v2.0
   tpmSupport string
+  // Current state of the image (available, pending, failed, etc.)
+  state string
+  // Whether the image is public
+  public bool
+  // Root device type (ebs or instance-store)
+  rootDeviceType string
+  // Virtualization type (hvm or paravirtual)
+  virtualizationType string
+  // Block device mappings for the image
+  blockDeviceMappings []dict
+  // Whether all EBS block devices are encrypted (derived from blockDeviceMappings)
+  encrypted bool
+  // Tags associated with the image
+  tags map[string]string
+  // Region where the image is located
+  region string
 }
 
 // Amazon EC2 instance block device
