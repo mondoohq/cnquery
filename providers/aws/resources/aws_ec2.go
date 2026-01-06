@@ -695,77 +695,83 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 			var res []any
 
 			// Only fetch images owned by this account
-			images, err := svc.DescribeImages(ctx, &ec2.DescribeImagesInput{Owners: []string{"self"}})
-			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-					return res, nil
-				}
-				return nil, err
+			params := &ec2.DescribeImagesInput{
+				Owners: []string{"self"},
 			}
-
-			for _, image := range images.Images {
-				if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(image.Tags)) {
-					log.Debug().Interface("image", image.ImageId).Msg("excluding image due to filters")
-					continue
-				}
-
-				// Convert block device mappings to dict slice
-				blockDeviceMappings, err := convert.JsonToDictSlice(image.BlockDeviceMappings)
+			paginator := ec2.NewDescribeImagesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				images, err := paginator.NextPage(ctx)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 
-				// Compute encrypted status: true if all EBS block devices are encrypted
-				encrypted := isImageEncrypted(image.BlockDeviceMappings)
+				for _, image := range images.Images {
+					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(image.Tags)) {
+						log.Debug().Interface("image", image.ImageId).Msg("excluding image due to filters")
+						continue
+					}
 
-				// Parse creation date
-				var createdAt *time.Time
-				if image.CreationDate != nil {
-					t, err := time.Parse(time.RFC3339, *image.CreationDate)
+					// Convert block device mappings to dict slice
+					blockDeviceMappings, err := convert.JsonToDictSlice(image.BlockDeviceMappings)
 					if err != nil {
-						log.Warn().Str("imageId", convert.ToValue(image.ImageId)).Err(err).
-							Str("bad_value", *image.CreationDate).Msg("failed to parse image CreationDate")
-					} else {
-						createdAt = &t
+						return nil, err
 					}
-				}
-				// Parse deprecation date
-				var deprecatedAt *time.Time
-				if image.DeprecationTime != nil {
-					t, err := time.Parse(time.RFC3339, *image.DeprecationTime)
+
+					// Compute encrypted status: true if all EBS block devices are encrypted
+					encrypted := isImageEncrypted(image.BlockDeviceMappings)
+
+					// Parse creation date
+					var createdAt *time.Time
+					if image.CreationDate != nil {
+						t, err := time.Parse(time.RFC3339, *image.CreationDate)
+						if err != nil {
+							log.Warn().Str("imageId", convert.ToValue(image.ImageId)).Err(err).
+								Str("bad_value", *image.CreationDate).Msg("failed to parse image CreationDate")
+						} else {
+							createdAt = &t
+						}
+					}
+					// Parse deprecation date
+					var deprecatedAt *time.Time
+					if image.DeprecationTime != nil {
+						t, err := time.Parse(time.RFC3339, *image.DeprecationTime)
+						if err != nil {
+							log.Warn().Str("imageId", convert.ToValue(image.ImageId)).Err(err).
+								Str("bad_value", *image.DeprecationTime).Msg("failed to parse image DeprecationTime")
+						} else {
+							deprecatedAt = &t
+						}
+					}
+					mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Image,
+						map[string]*llx.RawData{
+							"arn":                 llx.StringData(fmt.Sprintf(imageArnPattern, region, conn.AccountId(), convert.ToValue(image.ImageId))),
+							"id":                  llx.StringDataPtr(image.ImageId),
+							"name":                llx.StringDataPtr(image.Name),
+							"architecture":        llx.StringData(string(image.Architecture)),
+							"ownerId":             llx.StringDataPtr(image.OwnerId),
+							"ownerAlias":          llx.StringDataPtr(image.ImageOwnerAlias),
+							"createdAt":           llx.TimeDataPtr(createdAt),
+							"deprecatedAt":        llx.TimeDataPtr(deprecatedAt),
+							"enaSupport":          llx.BoolDataPtr(image.EnaSupport),
+							"tpmSupport":          llx.StringData(string(image.TpmSupport)),
+							"state":               llx.StringData(string(image.State)),
+							"public":              llx.BoolDataPtr(image.Public),
+							"rootDeviceType":      llx.StringData(string(image.RootDeviceType)),
+							"virtualizationType":  llx.StringData(string(image.VirtualizationType)),
+							"blockDeviceMappings": llx.ArrayData(blockDeviceMappings, types.Any),
+							"encrypted":           llx.BoolData(encrypted),
+							"tags":                llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String),
+							"region":              llx.StringData(region),
+						})
 					if err != nil {
-						log.Warn().Str("imageId", convert.ToValue(image.ImageId)).Err(err).
-							Str("bad_value", *image.DeprecationTime).Msg("failed to parse image DeprecationTime")
-					} else {
-						deprecatedAt = &t
+						return nil, err
 					}
+					res = append(res, mqlImage)
 				}
-				mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Image,
-					map[string]*llx.RawData{
-						"arn":                 llx.StringData(fmt.Sprintf(imageArnPattern, region, conn.AccountId(), convert.ToValue(image.ImageId))),
-						"id":                  llx.StringDataPtr(image.ImageId),
-						"name":                llx.StringDataPtr(image.Name),
-						"architecture":        llx.StringData(string(image.Architecture)),
-						"ownerId":             llx.StringDataPtr(image.OwnerId),
-						"ownerAlias":          llx.StringDataPtr(image.ImageOwnerAlias),
-						"createdAt":           llx.TimeDataPtr(createdAt),
-						"deprecatedAt":        llx.TimeDataPtr(deprecatedAt),
-						"enaSupport":          llx.BoolDataPtr(image.EnaSupport),
-						"tpmSupport":          llx.StringData(string(image.TpmSupport)),
-						"state":               llx.StringData(string(image.State)),
-						"public":              llx.BoolDataPtr(image.Public),
-						"rootDeviceType":      llx.StringData(string(image.RootDeviceType)),
-						"virtualizationType":  llx.StringData(string(image.VirtualizationType)),
-						"blockDeviceMappings": llx.ArrayData(blockDeviceMappings, types.Any),
-						"encrypted":           llx.BoolData(encrypted),
-						"tags":                llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String),
-						"region":              llx.StringData(region),
-					})
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlImage)
 			}
 			return jobpool.JobResult(res), nil
 		}
