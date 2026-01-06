@@ -35,14 +35,23 @@ packs:
     queries:
       - uid: mondoo-incident-response-github-org-name
         title: GitHub Organization Name
+        docs:
+          desc: |
+            Returns the display name of the GitHub organization.
         mql: |
           github.organization.name
       - uid: mondoo-incident-response-github-org-login
         title: GitHub Organization Login
+        docs:
+          desc: |
+            Returns the login handle (URL slug) of the GitHub organization.
         mql: |
           github.organization.login
       - uid: mondoo-incident-response-github-org-description
         title: GitHub Organization description
+        docs:
+          desc: |
+            Returns the description configured for the GitHub organization.
         mql: |
           github.organization.description
       - uid: mondoo-incident-response-github-org-mfa-status

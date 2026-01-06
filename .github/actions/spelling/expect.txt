@@ -58,6 +58,7 @@ ipsetreferencestatement
 istio
 jira
 jsonbody
+kexts
 kqueue
 labelmatchstatement
 lfs

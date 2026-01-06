@@ -33,6 +33,8 @@ packs:
     queries:
       - uid: mondoo-email-inventory-mail-records
         title: Retrieve reverse IP Lookup PTR record
+        docs:
+          desc: Performs reverse DNS lookup on the domain's IP address to verify PTR record configuration.
         mql: |
           reverseDNSDomain =
             dns.params.A.rData.first.split(".")[3] + "."
@@ -43,12 +45,18 @@ packs:
           dns(reverseDNSDomain).params.PTR
       - uid: mondoo-email-inventory-spf-record
         title: Retrieve SPF record
+        docs:
+          desc: Returns TXT records which include SPF (Sender Policy Framework) configuration for email authentication.
         mql: dns.params.TXT
       - uid: mondoo-email-inventory-dmarc-entry
         title: Retrieve DMARC DNS entry
+        docs:
+          desc: Returns the DMARC (Domain-based Message Authentication) record for email policy enforcement.
         mql: dns("_dmarc."+domainName.fqdn).params.TXT
       - uid: mondoo-email-inventory-dkim-configuration
         title: Retrieve DKIM entry
+        docs:
+          desc: Checks for DKIM (DomainKeys Identified Mail) records using common selectors for email signing verification.
         props:
           - uid: mondooEmailSecurityDkimSelectors
             title: Define a list of valid DKIM selectors

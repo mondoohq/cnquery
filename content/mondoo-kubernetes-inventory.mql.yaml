@@ -33,30 +33,44 @@ packs:
         queries:
           - uid: k8s-cluster-version
             title: Kubernetes cluster version
+            docs:
+              desc: Returns the Kubernetes server version for cluster identification.
             mql: |
               k8s.serverVersion
           - uid: k8s-cluster-namespaces
             title: Kubernetes cluster namespaces
+            docs:
+              desc: Lists all namespaces in the Kubernetes cluster.
             mql: |
               k8s.namespaces
           - uid: k8s-cluster-nodes
             title: Cluster modes
+            docs:
+              desc: Lists all nodes in the Kubernetes cluster with their status.
             mql: |
               k8s.nodes
           - uid: k8s-cluster-clusterroles
             title: Cluster RBAC ClusterRoles
+            docs:
+              desc: Lists all cluster-wide RBAC ClusterRoles for permission auditing.
             mql: |
               k8s.clusterroles
           - uid: k8s-cluster-roles
             title: RBAC Roles
+            docs:
+              desc: Lists all namespace-scoped RBAC Roles for permission auditing.
             mql: |
               k8s.roles
           - uid: k8s-cluster-clusterrolebindings
             title: RBAC cluster-rolebindings
+            docs:
+              desc: Lists all ClusterRoleBindings that grant cluster-wide permissions.
             mql: |
               k8s.clusterrolebindings
           - uid: k8s-cluster-rolebindings
             title: RBAC rolebindings
+            docs:
+              desc: Lists all namespace-scoped RoleBindings for permission auditing.
             mql: |
               k8s.rolebindings
       - title: Pods inventory
@@ -65,10 +79,14 @@ packs:
         queries:
           - uid: k8s-pod
             title: Pod information
+            docs:
+              desc: Returns detailed information about the pod including spec and status.
             mql: |
               k8s.pod
           - uid: k8s-pod-container
             title: Container information
+            docs:
+              desc: Lists all containers in the pod with their configuration.
             mql: |
               k8s.pod.containers
       - title: Deployments inventory
@@ -77,10 +95,14 @@ packs:
         queries:
           - uid: k8s-deployment
             title: Deployment information
+            docs:
+              desc: Returns detailed information about deployments in the cluster.
             mql: |
               k8s.deployments
           - uid: k8s-deployment-container
             title: Container information
+            docs:
+              desc: Lists all containers defined in the deployment with their configuration.
             mql: |
               k8s.deployment.containers { * }
       - title: CronJobs inventory
@@ -89,10 +111,14 @@ packs:
         queries:
           - uid: k8s-cronjob
             title: CronJob information
+            docs:
+              desc: Returns detailed information about the CronJob including schedule and job template.
             mql: |
               k8s.cronjob { * }
           - uid: k8s-cronjob-container
             title: Container information
+            docs:
+              desc: Lists all containers defined in the CronJob with their configuration.
             mql: |
               k8s.cronjob.containers { * }
       - title: Jobs inventory
@@ -101,10 +127,14 @@ packs:
         queries:
           - uid: k8s-job
             title: Job information
+            docs:
+              desc: Returns detailed information about the Job including spec and status.
             mql: |
               k8s.job { * }
           - uid: k8s-job-container
             title: Container information
+            docs:
+              desc: Lists all containers defined in the Job with their configuration.
             mql: |
               k8s.job.containers { * }
       - title: DaemonSets inventory
@@ -113,10 +143,14 @@ packs:
         queries:
           - uid: k8s-daemonset
             title: DaemonSet information
+            docs:
+              desc: Returns detailed information about the DaemonSet including spec and status.
             mql: |
               k8s.daemonset { * }
           - uid: k8s-daemonset-container
             title: Container information
+            docs:
+              desc: Lists all containers defined in the DaemonSet with their configuration.
             mql: |
               k8s.daemonset.containers { * }
       - title: StatefulSets inventory
@@ -125,10 +159,14 @@ packs:
         queries:
           - uid: k8s-statefulset
             title: StatefulSet information
+            docs:
+              desc: Returns detailed information about the StatefulSet including spec and status.
             mql: |
               k8s.statefulset { * }
           - uid: k8s-statefulset-container
             title: Container information
+            docs:
+              desc: Lists all containers defined in the StatefulSet with their configuration.
             mql: |
               k8s.statefulset.containers { * }
       - title: ReplicaSets inventory
@@ -137,10 +175,14 @@ packs:
         queries:
           - uid: k8s-replicaset
             title: ReplicaSet information
+            docs:
+              desc: Returns detailed information about the ReplicaSet including spec and status.
             mql: |
               k8s.replicaset { * }
           - uid: k8s-replicaset-container
             title: Container information
+            docs:
+              desc: Lists all containers defined in the ReplicaSet with their configuration.
             mql: |
               k8s.replicaset.containers { * }
       - title: Ingresses inventory
@@ -149,5 +191,7 @@ packs:
         queries:
           - uid: k8s-ingress
             title: Ingress information
+            docs:
+              desc: Returns detailed information about the Ingress including rules and backend configuration.
             mql: |
               k8s.ingress { * }

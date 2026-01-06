@@ -38,7 +38,11 @@ packs:
     queries:
       - uid: mondoo-okta-incident-response-users
         title: Users
+        docs:
+          desc: Retrieves all Okta users to identify user accounts and their status during incident investigation.
         mql: okta.users
       - uid: mondoo-okta-incident-response-team-id
         title: Installed applications
+        docs:
+          desc: Retrieves all applications integrated with Okta to identify potentially compromised OAuth apps or unauthorized integrations.
         mql: okta.applications
