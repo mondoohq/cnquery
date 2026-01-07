@@ -316,10 +316,25 @@ resources:
       name: {}
       region:
         min_mondoo_version: 9.0.0
+      tagSpecifications:
+        min_mondoo_version: 9.0.0
       tags:
         min_mondoo_version: 5.16.0
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.autoscaling.group.tag:
+    fields:
+      id: {}
+      key: {}
+      propagateAtLaunch: {}
+      resourceId: {}
+      resourceType: {}
+      value: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
