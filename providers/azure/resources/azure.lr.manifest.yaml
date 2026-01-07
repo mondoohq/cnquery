@@ -916,6 +916,8 @@ resources:
       managed: {}
       notBefore: {}
       recoveryLevel: {}
+      rotationPolicy:
+        min_mondoo_version: 9.0.0
       tags: {}
       updated: {}
       version: {}
@@ -932,6 +934,25 @@ resources:
     fields:
       enabled: {}
       kid: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.keyVaultService.key.rotationPolicy:
+    fields:
+      attributes: {}
+      enabled: {}
+      lifetimeActions: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.keyVaultService.key.rotationPolicyObject:
+    fields:
+      attributes: {}
+      enabled: {}
+      lifetimeActions: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

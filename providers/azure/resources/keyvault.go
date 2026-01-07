@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 
 	"go.mondoo.com/cnquery/v12/llx"
@@ -16,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/azure/connection"
 	"go.mondoo.com/cnquery/v12/types"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	keyvault "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates"
@@ -438,6 +440,91 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) rotationPolicy() (*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	id := a.Kid.Data
+	kvid, err := parseKeyVaultId(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if kvid.Type != "keys" {
+		return nil, errors.New("only key ids are supported")
+	}
+
+	client, err := azkeys.NewClient(kvid.BaseUrl, conn.Token(), &azkeys.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	policyResp, err := client.GetKeyRotationPolicy(ctx, kvid.Name, nil)
+	if err != nil {
+		// Only treat 404 (not found) as "policy doesn't exist"
+		// Return actual errors for permissions, network issues, etc.
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+			// Rotation policy doesn't exist, return a resource with enabled=false
+			resource, err := CreateResource(a.MqlRuntime,
+				ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject,
+				map[string]*llx.RawData{
+					"__id":            llx.StringData(id + "/rotationPolicy"),
+					"lifetimeActions": llx.ArrayData([]any{}, types.Dict),
+					"attributes":      llx.DictData(map[string]any{}),
+					"enabled":         llx.BoolData(false),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+			return resource.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject), nil
+		}
+		// Return the actual error for non-404 cases
+		return nil, err
+	}
+
+	lifetimeActions := []any{}
+	rotationEnabled := false
+	if policyResp.LifetimeActions != nil {
+		for _, action := range policyResp.LifetimeActions {
+			actionDict, err := convert.JsonToDict(action)
+			if err != nil {
+				return nil, err
+			}
+			lifetimeActions = append(lifetimeActions, actionDict)
+
+			if action.Action != nil && string(*action.Action.Type) == "Rotate" {
+				rotationEnabled = true
+			}
+		}
+	}
+
+	attributes := map[string]any{}
+	if policyResp.Attributes != nil {
+		attributesDict, err := convert.JsonToDict(policyResp.Attributes)
+		if err != nil {
+			return nil, err
+		}
+		attributes = attributesDict
+	}
+
+	resource, err := CreateResource(a.MqlRuntime,
+		ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject,
+		map[string]*llx.RawData{
+			"__id":            llx.StringData(id + "/rotationPolicy"),
+			"lifetimeActions": llx.ArrayData(lifetimeActions, types.Dict),
+			"attributes":      llx.DictData(attributes),
+			"enabled":         llx.BoolData(rotationEnabled),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject), nil
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) certName() (string, error) {
 	id := a.Id.Data
 	kvid, err := parseKeyVaultId(id)
@@ -627,4 +714,8 @@ func initAzureSubscriptionKeyVaultServiceVault(runtime *plugin.Runtime, args map
 	}
 
 	return nil, nil, errors.New("azure key vault does not exist")
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) id() (string, error) {
+	return a.__id, nil
 }
