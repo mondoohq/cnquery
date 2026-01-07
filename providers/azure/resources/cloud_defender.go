@@ -732,3 +732,11 @@ func argsFromContactProperties(props *armsecurity.ContactProperties) map[string]
 
 	return args
 }
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) id() (string, error) {
+	return ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis + "/" + a.SubscriptionId.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) id() (string, error) {
+	return ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM + "/" + a.SubscriptionId.Data, nil
+}
