@@ -1120,6 +1120,33 @@ resources:
     platform:
       name:
       - aws
+  aws.ec2.image.blockDeviceMapping:
+    fields:
+      deviceName: {}
+      ebs: {}
+      id: {}
+      noDevice: {}
+      virtualName: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ec2.image.ebsBlockDevice:
+    fields:
+      deleteOnTermination: {}
+      encrypted: {}
+      iops: {}
+      kmsKeyId: {}
+      snapshotId: {}
+      throughput: {}
+      volumeSize: {}
+      volumeType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.ec2.instance:
     docs:
       desc: |

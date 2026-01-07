@@ -679,6 +679,52 @@ func (a *mqlAwsEc2) images() ([]any, error) {
 	return res, nil
 }
 
+// createBlockDeviceMappings converts the AWS BlockDeviceMapping slice to MQL resources
+func createBlockDeviceMappings(runtime *plugin.Runtime, imageArn string, mappings []ec2types.BlockDeviceMapping) ([]any, error) {
+	result := make([]any, 0, len(mappings))
+	for _, mapping := range mappings {
+		deviceName := convert.ToValue(mapping.DeviceName)
+		mappingID := fmt.Sprintf("%s/device/%s", imageArn, deviceName)
+
+		args := map[string]*llx.RawData{
+			"id":          llx.StringData(mappingID),
+			"deviceName":  llx.StringDataPtr(mapping.DeviceName),
+			"virtualName": llx.StringDataPtr(mapping.VirtualName),
+			"noDevice":    llx.BoolData(mapping.NoDevice != nil && *mapping.NoDevice != ""),
+		}
+
+		// Create an EBS block device resource if present
+		if mapping.Ebs != nil {
+			ebsID := fmt.Sprintf("%s/ebs", mappingID)
+			mqlEbs, err := CreateResource(runtime, ResourceAwsEc2ImageEbsBlockDevice,
+				map[string]*llx.RawData{
+					"__id":                llx.StringData(ebsID),
+					"encrypted":           llx.BoolDataPtr(mapping.Ebs.Encrypted),
+					"snapshotId":          llx.StringDataPtr(mapping.Ebs.SnapshotId),
+					"volumeSize":          llx.IntDataDefault(mapping.Ebs.VolumeSize, 0),
+					"volumeType":          llx.StringData(string(mapping.Ebs.VolumeType)),
+					"kmsKeyId":            llx.StringDataPtr(mapping.Ebs.KmsKeyId),
+					"iops":                llx.IntDataDefault(mapping.Ebs.Iops, 0),
+					"throughput":          llx.IntDataDefault(mapping.Ebs.Throughput, 0),
+					"deleteOnTermination": llx.BoolDataPtr(mapping.Ebs.DeleteOnTermination),
+				})
+			if err != nil {
+				return nil, err
+			}
+			args["ebs"] = llx.ResourceData(mqlEbs, mqlEbs.MqlName())
+		} else {
+			args["ebs"] = llx.NilData
+		}
+
+		mqlMapping, err := CreateResource(runtime, ResourceAwsEc2ImageBlockDeviceMapping, args)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, mqlMapping)
+	}
+	return result, nil
+}
+
 func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
@@ -715,14 +761,12 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 						continue
 					}
 
-					// Convert block device mappings to dict slice
-					blockDeviceMappings, err := convert.JsonToDictSlice(image.BlockDeviceMappings)
+					// Create block device mapping MQL resources
+					imageArn := fmt.Sprintf(imageArnPattern, region, conn.AccountId(), convert.ToValue(image.ImageId))
+					blockDeviceMappings, err := createBlockDeviceMappings(a.MqlRuntime, imageArn, image.BlockDeviceMappings)
 					if err != nil {
 						return nil, err
 					}
-
-					// Compute encrypted status: true if all EBS block devices are encrypted
-					encrypted := isImageEncrypted(image.BlockDeviceMappings)
 
 					// Parse creation date
 					var createdAt *time.Time
@@ -748,7 +792,7 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 					}
 					mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Image,
 						map[string]*llx.RawData{
-							"arn":                 llx.StringData(fmt.Sprintf(imageArnPattern, region, conn.AccountId(), convert.ToValue(image.ImageId))),
+							"arn":                 llx.StringData(imageArn),
 							"id":                  llx.StringDataPtr(image.ImageId),
 							"name":                llx.StringDataPtr(image.Name),
 							"architecture":        llx.StringData(string(image.Architecture)),
@@ -762,8 +806,7 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 							"public":              llx.BoolDataPtr(image.Public),
 							"rootDeviceType":      llx.StringData(string(image.RootDeviceType)),
 							"virtualizationType":  llx.StringData(string(image.VirtualizationType)),
-							"blockDeviceMappings": llx.ArrayData(blockDeviceMappings, types.Any),
-							"encrypted":           llx.BoolData(encrypted),
+							"blockDeviceMappings": llx.ArrayData(blockDeviceMappings, types.Resource(ResourceAwsEc2ImageBlockDeviceMapping)),
 							"tags":                llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String),
 							"region":              llx.StringData(region),
 						})
@@ -1181,23 +1224,12 @@ func (i *mqlAwsEc2Image) id() (string, error) {
 	return i.Arn.Data, nil
 }
 
-// isImageEncrypted checks if all EBS block devices in the image are encrypted
-func isImageEncrypted(blockDeviceMappings []ec2types.BlockDeviceMapping) bool {
-	if len(blockDeviceMappings) == 0 {
-		return false
-	}
+func (b *mqlAwsEc2ImageBlockDeviceMapping) id() (string, error) {
+	return b.Id.Data, nil
+}
 
-	hasEbsDevices := false
-	for _, mapping := range blockDeviceMappings {
-		if mapping.Ebs != nil {
-			hasEbsDevices = true
-			if mapping.Ebs.Encrypted == nil || !*mapping.Ebs.Encrypted {
-				return false
-			}
-		}
-	}
-
-	return hasEbsDevices
+func (e *mqlAwsEc2ImageEbsBlockDevice) id() (string, error) {
+	return e.__id, nil
 }
 
 func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -1235,7 +1267,6 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["rootDeviceType"] = llx.NilData
 		args["virtualizationType"] = llx.NilData
 		args["blockDeviceMappings"] = llx.NilData
-		args["encrypted"] = llx.NilData
 		args["tags"] = llx.NilData
 		args["region"] = llx.StringData(arn.Region)
 		return args, nil, nil
@@ -1244,14 +1275,11 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	if len(images.Images) > 0 {
 		image := images.Images[0]
 
-		// Convert block device mappings
-		blockDeviceMappings, err := convert.JsonToDictSlice(image.BlockDeviceMappings)
+		// Create block device mapping MQL resources
+		blockDeviceMappings, err := createBlockDeviceMappings(runtime, arnVal, image.BlockDeviceMappings)
 		if err != nil {
 			return nil, nil, err
 		}
-
-		// Compute encrypted status: true if all EBS block devices are encrypted
-		encrypted := isImageEncrypted(image.BlockDeviceMappings)
 
 		args["arn"] = llx.StringData(arnVal)
 		args["id"] = llx.StringData(resource[1])
@@ -1265,8 +1293,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["public"] = llx.BoolDataPtr(image.Public)
 		args["rootDeviceType"] = llx.StringData(string(image.RootDeviceType))
 		args["virtualizationType"] = llx.StringData(string(image.VirtualizationType))
-		args["blockDeviceMappings"] = llx.ArrayData(blockDeviceMappings, types.Any)
-		args["encrypted"] = llx.BoolData(encrypted)
+		args["blockDeviceMappings"] = llx.ArrayData(blockDeviceMappings, types.Resource(ResourceAwsEc2ImageBlockDeviceMapping))
 		args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String)
 		args["region"] = llx.StringData(arn.Region)
 		if image.CreationDate == nil {

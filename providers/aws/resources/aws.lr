@@ -3445,13 +3445,45 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   // Virtualization type (hvm or paravirtual)
   virtualizationType string
   // Block device mappings for the image
-  blockDeviceMappings []dict
-  // Whether all EBS block devices are encrypted (derived from blockDeviceMappings)
-  encrypted bool
+  blockDeviceMappings []aws.ec2.image.blockDeviceMapping
   // Tags associated with the image
   tags map[string]string
   // Region where the image is located
   region string
+}
+
+// Amazon EC2 image block device mapping
+private aws.ec2.image.blockDeviceMapping @defaults("deviceName") {
+  // Internal ID for this block device mapping
+  id string
+  // Device name (e.g., /dev/sda1, /dev/xvda)
+  deviceName string
+  // Virtual device name for instance store (ephemeral0, ephemeral1, etc.)
+  virtualName string
+  // Whether to suppress this device mapping
+  noDevice bool
+  // EBS volume configuration (null for instance store volumes)
+  ebs aws.ec2.image.ebsBlockDevice
+}
+
+// Amazon EC2 image EBS block device configuration
+private aws.ec2.image.ebsBlockDevice @defaults("volumeSize volumeType encrypted") {
+  // Whether the volume is encrypted
+  encrypted bool
+  // ID of the snapshot used to create the volume
+  snapshotId string
+  // Size of the volume in GiB
+  volumeSize int
+  // Volume type (gp2, gp3, io1, io2, etc.)
+  volumeType string
+  // ARN of the KMS key for encryption
+  kmsKeyId string
+  // IOPS for the volume
+  iops int
+  // Throughput in MiB/s
+  throughput int
+  // Whether to delete on instance termination
+  deleteOnTermination bool
 }
 
 // Amazon EC2 instance block device

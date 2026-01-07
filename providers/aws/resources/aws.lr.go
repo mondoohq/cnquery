@@ -200,6 +200,8 @@ const (
 	ResourceAwsEc2Networkinterface                                           string = "aws.ec2.networkinterface"
 	ResourceAwsEc2Keypair                                                    string = "aws.ec2.keypair"
 	ResourceAwsEc2Image                                                      string = "aws.ec2.image"
+	ResourceAwsEc2ImageBlockDeviceMapping                                    string = "aws.ec2.image.blockDeviceMapping"
+	ResourceAwsEc2ImageEbsBlockDevice                                        string = "aws.ec2.image.ebsBlockDevice"
 	ResourceAwsEc2InstanceDevice                                             string = "aws.ec2.instance.device"
 	ResourceAwsEc2Securitygroup                                              string = "aws.ec2.securitygroup"
 	ResourceAwsEc2SecuritygroupIppermission                                  string = "aws.ec2.securitygroup.ippermission"
@@ -958,6 +960,14 @@ func init() {
 		"aws.ec2.image": {
 			Init:   initAwsEc2Image,
 			Create: createAwsEc2Image,
+		},
+		"aws.ec2.image.blockDeviceMapping": {
+			// to override args, implement: initAwsEc2ImageBlockDeviceMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2ImageBlockDeviceMapping,
+		},
+		"aws.ec2.image.ebsBlockDevice": {
+			// to override args, implement: initAwsEc2ImageEbsBlockDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2ImageEbsBlockDevice,
 		},
 		"aws.ec2.instance.device": {
 			// to override args, implement: initAwsEc2InstanceDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5153,16 +5163,52 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsEc2Image).GetVirtualizationType()).ToDataRes(types.String)
 	},
 	"aws.ec2.image.blockDeviceMappings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Image).GetBlockDeviceMappings()).ToDataRes(types.Array(types.Dict))
-	},
-	"aws.ec2.image.encrypted": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Image).GetEncrypted()).ToDataRes(types.Bool)
+		return (r.(*mqlAwsEc2Image).GetBlockDeviceMappings()).ToDataRes(types.Array(types.Resource("aws.ec2.image.blockDeviceMapping")))
 	},
 	"aws.ec2.image.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.ec2.image.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.blockDeviceMapping.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageBlockDeviceMapping).GetId()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.blockDeviceMapping.deviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageBlockDeviceMapping).GetDeviceName()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.blockDeviceMapping.virtualName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageBlockDeviceMapping).GetVirtualName()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.blockDeviceMapping.noDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageBlockDeviceMapping).GetNoDevice()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.image.blockDeviceMapping.ebs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageBlockDeviceMapping).GetEbs()).ToDataRes(types.Resource("aws.ec2.image.ebsBlockDevice"))
+	},
+	"aws.ec2.image.ebsBlockDevice.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.image.ebsBlockDevice.snapshotId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetSnapshotId()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.ebsBlockDevice.volumeSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetVolumeSize()).ToDataRes(types.Int)
+	},
+	"aws.ec2.image.ebsBlockDevice.volumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetVolumeType()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.ebsBlockDevice.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.ebsBlockDevice.iops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetIops()).ToDataRes(types.Int)
+	},
+	"aws.ec2.image.ebsBlockDevice.throughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetThroughput()).ToDataRes(types.Int)
+	},
+	"aws.ec2.image.ebsBlockDevice.deleteOnTermination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetDeleteOnTermination()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.instance.device.deleteOnTermination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceDevice).GetDeleteOnTermination()).ToDataRes(types.Bool)
@@ -11932,16 +11978,72 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Image).BlockDeviceMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.ec2.image.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Image).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"aws.ec2.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Image).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.image.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Image).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.blockDeviceMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageBlockDeviceMapping).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.image.blockDeviceMapping.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageBlockDeviceMapping).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.blockDeviceMapping.deviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageBlockDeviceMapping).DeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.blockDeviceMapping.virtualName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageBlockDeviceMapping).VirtualName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.blockDeviceMapping.noDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageBlockDeviceMapping).NoDevice, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.blockDeviceMapping.ebs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageBlockDeviceMapping).Ebs, ok = plugin.RawToTValue[*mqlAwsEc2ImageEbsBlockDevice](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.ebsBlockDevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageEbsBlockDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.image.ebsBlockDevice.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageEbsBlockDevice).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.ebsBlockDevice.snapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageEbsBlockDevice).SnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.ebsBlockDevice.volumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageEbsBlockDevice).VolumeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.ebsBlockDevice.volumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageEbsBlockDevice).VolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.ebsBlockDevice.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageEbsBlockDevice).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.ebsBlockDevice.iops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageEbsBlockDevice).Iops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.ebsBlockDevice.throughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageEbsBlockDevice).Throughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.ebsBlockDevice.deleteOnTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageEbsBlockDevice).DeleteOnTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29875,7 +29977,6 @@ type mqlAwsEc2Image struct {
 	RootDeviceType      plugin.TValue[string]
 	VirtualizationType  plugin.TValue[string]
 	BlockDeviceMappings plugin.TValue[[]any]
-	Encrypted           plugin.TValue[bool]
 	Tags                plugin.TValue[map[string]any]
 	Region              plugin.TValue[string]
 }
@@ -29977,16 +30078,165 @@ func (c *mqlAwsEc2Image) GetBlockDeviceMappings() *plugin.TValue[[]any] {
 	return &c.BlockDeviceMappings
 }
 
-func (c *mqlAwsEc2Image) GetEncrypted() *plugin.TValue[bool] {
-	return &c.Encrypted
-}
-
 func (c *mqlAwsEc2Image) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
 func (c *mqlAwsEc2Image) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsEc2ImageBlockDeviceMapping for the aws.ec2.image.blockDeviceMapping resource
+type mqlAwsEc2ImageBlockDeviceMapping struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2ImageBlockDeviceMappingInternal it will be used here
+	Id          plugin.TValue[string]
+	DeviceName  plugin.TValue[string]
+	VirtualName plugin.TValue[string]
+	NoDevice    plugin.TValue[bool]
+	Ebs         plugin.TValue[*mqlAwsEc2ImageEbsBlockDevice]
+}
+
+// createAwsEc2ImageBlockDeviceMapping creates a new instance of this resource
+func createAwsEc2ImageBlockDeviceMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2ImageBlockDeviceMapping{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.image.blockDeviceMapping", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2ImageBlockDeviceMapping) MqlName() string {
+	return "aws.ec2.image.blockDeviceMapping"
+}
+
+func (c *mqlAwsEc2ImageBlockDeviceMapping) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2ImageBlockDeviceMapping) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEc2ImageBlockDeviceMapping) GetDeviceName() *plugin.TValue[string] {
+	return &c.DeviceName
+}
+
+func (c *mqlAwsEc2ImageBlockDeviceMapping) GetVirtualName() *plugin.TValue[string] {
+	return &c.VirtualName
+}
+
+func (c *mqlAwsEc2ImageBlockDeviceMapping) GetNoDevice() *plugin.TValue[bool] {
+	return &c.NoDevice
+}
+
+func (c *mqlAwsEc2ImageBlockDeviceMapping) GetEbs() *plugin.TValue[*mqlAwsEc2ImageEbsBlockDevice] {
+	return &c.Ebs
+}
+
+// mqlAwsEc2ImageEbsBlockDevice for the aws.ec2.image.ebsBlockDevice resource
+type mqlAwsEc2ImageEbsBlockDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2ImageEbsBlockDeviceInternal it will be used here
+	Encrypted           plugin.TValue[bool]
+	SnapshotId          plugin.TValue[string]
+	VolumeSize          plugin.TValue[int64]
+	VolumeType          plugin.TValue[string]
+	KmsKeyId            plugin.TValue[string]
+	Iops                plugin.TValue[int64]
+	Throughput          plugin.TValue[int64]
+	DeleteOnTermination plugin.TValue[bool]
+}
+
+// createAwsEc2ImageEbsBlockDevice creates a new instance of this resource
+func createAwsEc2ImageEbsBlockDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2ImageEbsBlockDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.image.ebsBlockDevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) MqlName() string {
+	return "aws.ec2.image.ebsBlockDevice"
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) GetSnapshotId() *plugin.TValue[string] {
+	return &c.SnapshotId
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) GetVolumeSize() *plugin.TValue[int64] {
+	return &c.VolumeSize
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) GetVolumeType() *plugin.TValue[string] {
+	return &c.VolumeType
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) GetIops() *plugin.TValue[int64] {
+	return &c.Iops
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) GetThroughput() *plugin.TValue[int64] {
+	return &c.Throughput
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) GetDeleteOnTermination() *plugin.TValue[bool] {
+	return &c.DeleteOnTermination
 }
 
 // mqlAwsEc2InstanceDevice for the aws.ec2.instance.device resource
