@@ -44,6 +44,7 @@ gistfile
 googleworkplace
 gpu
 gvnic
+hvm
 headerorder
 hostkeys
 iana
@@ -92,6 +93,7 @@ opcplc
 openssh
 openssl
 orstatement
+paravirtual
 PAYG
 Pids
 portgroup

@@ -2953,6 +2953,8 @@ aws.ec2 {
   keypairs() []aws.ec2.keypair
   // List of Elastic IPs (EIPs)
   eips() []aws.ec2.eip
+  // List of AMI images owned by the account
+  images() []aws.ec2.image
 }
 
 // Amazon Elastic IP (EIP)
@@ -3434,6 +3436,52 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   enaSupport bool
   // The supported TPM version. If the image is configured for NitroTPM support, the value is v2.0
   tpmSupport string
+  // Current state of the image (available, pending, failed, etc.)
+  state string
+  // Whether the image is public
+  public bool
+  // Root device type (ebs or instance-store)
+  rootDeviceType string
+  // Virtualization type (hvm or paravirtual)
+  virtualizationType string
+  // Block device mappings for the image
+  blockDeviceMappings []aws.ec2.image.blockDeviceMapping
+  // Tags associated with the image
+  tags map[string]string
+  // Region where the image is located
+  region string
+}
+
+// Amazon EC2 image block device mapping
+private aws.ec2.image.blockDeviceMapping @defaults("deviceName") {
+  // Device name (e.g., /dev/sda1, /dev/xvda)
+  deviceName string
+  // Virtual device name for instance store (ephemeral0, ephemeral1, etc.)
+  virtualName string
+  // Whether to suppress this device mapping
+  noDevice bool
+  // EBS volume configuration (null for instance store volumes)
+  ebs aws.ec2.image.ebsBlockDevice
+}
+
+// Amazon EC2 image EBS block device configuration
+private aws.ec2.image.ebsBlockDevice @defaults("volumeSize volumeType encrypted") {
+  // Whether the volume is encrypted
+  encrypted bool
+  // ID of the snapshot used to create the volume
+  snapshotId string
+  // Size of the volume in GiB
+  volumeSize int
+  // Volume type (gp2, gp3, io1, io2, etc.)
+  volumeType string
+  // ARN of the KMS key for encryption
+  kmsKeyId string
+  // IOPS for the volume
+  iops int
+  // Throughput in MiB/s
+  throughput int
+  // Whether to delete on instance termination
+  deleteOnTermination bool
 }
 
 // Amazon EC2 instance block device

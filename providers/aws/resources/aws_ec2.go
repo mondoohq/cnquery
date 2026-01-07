@@ -661,6 +661,168 @@ func initAwsEc2Keypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	return args, nil, nil
 }
 
+func (a *mqlAwsEc2) images() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	var res []any
+	poolOfJobs := jobpool.CreatePool(a.getImagesJob(conn), 5)
+
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.([]any)...)
+	}
+
+	return res, nil
+}
+
+// createBlockDeviceMappings converts the AWS BlockDeviceMapping slice to MQL resources
+func createBlockDeviceMappings(runtime *plugin.Runtime, imageArn string, mappings []ec2types.BlockDeviceMapping) ([]any, error) {
+	result := make([]any, 0, len(mappings))
+	for _, mapping := range mappings {
+		deviceName := convert.ToValue(mapping.DeviceName)
+		mappingID := fmt.Sprintf("%s/device/%s", imageArn, deviceName)
+
+		args := map[string]*llx.RawData{
+			"__id":        llx.StringData(mappingID),
+			"deviceName":  llx.StringDataPtr(mapping.DeviceName),
+			"virtualName": llx.StringDataPtr(mapping.VirtualName),
+			"noDevice":    llx.BoolData(mapping.NoDevice != nil && *mapping.NoDevice != ""),
+		}
+
+		// Create an EBS block device resource if present
+		if mapping.Ebs != nil {
+			ebsID := fmt.Sprintf("%s/ebs", mappingID)
+			mqlEbs, err := CreateResource(runtime, ResourceAwsEc2ImageEbsBlockDevice,
+				map[string]*llx.RawData{
+					"__id":                llx.StringData(ebsID),
+					"encrypted":           llx.BoolDataPtr(mapping.Ebs.Encrypted),
+					"snapshotId":          llx.StringDataPtr(mapping.Ebs.SnapshotId),
+					"volumeSize":          llx.IntDataDefault(mapping.Ebs.VolumeSize, 0),
+					"volumeType":          llx.StringData(string(mapping.Ebs.VolumeType)),
+					"kmsKeyId":            llx.StringDataPtr(mapping.Ebs.KmsKeyId),
+					"iops":                llx.IntDataDefault(mapping.Ebs.Iops, 0),
+					"throughput":          llx.IntDataDefault(mapping.Ebs.Throughput, 0),
+					"deleteOnTermination": llx.BoolDataPtr(mapping.Ebs.DeleteOnTermination),
+				})
+			if err != nil {
+				return nil, err
+			}
+			args["ebs"] = llx.ResourceData(mqlEbs, mqlEbs.MqlName())
+		} else {
+			args["ebs"] = llx.NilData
+		}
+
+		mqlMapping, err := CreateResource(runtime, ResourceAwsEc2ImageBlockDeviceMapping, args)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, mqlMapping)
+	}
+	return result, nil
+}
+
+func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Str("region", region).Msgf("ec2>getImagesJob>calling aws with region")
+
+			svc := conn.Ec2(region)
+			ctx := context.Background()
+			var res []any
+
+			// Only fetch images owned by this account
+			params := &ec2.DescribeImagesInput{
+				Owners: []string{"self"},
+			}
+			paginator := ec2.NewDescribeImagesPaginator(svc, params)
+			for paginator.HasMorePages() {
+				images, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+
+				for _, image := range images.Images {
+					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(image.Tags)) {
+						log.Debug().Interface("image", image.ImageId).Msg("excluding image due to filters")
+						continue
+					}
+
+					// Create block device mapping MQL resources
+					imageArn := fmt.Sprintf(imageArnPattern, region, conn.AccountId(), convert.ToValue(image.ImageId))
+					blockDeviceMappings, err := createBlockDeviceMappings(a.MqlRuntime, imageArn, image.BlockDeviceMappings)
+					if err != nil {
+						return nil, err
+					}
+
+					// Parse creation date
+					var createdAt *time.Time
+					if image.CreationDate != nil {
+						t, err := time.Parse(time.RFC3339, *image.CreationDate)
+						if err != nil {
+							log.Warn().Str("imageId", convert.ToValue(image.ImageId)).Err(err).
+								Str("bad_value", *image.CreationDate).Msg("failed to parse image CreationDate")
+						} else {
+							createdAt = &t
+						}
+					}
+					// Parse deprecation date
+					var deprecatedAt *time.Time
+					if image.DeprecationTime != nil {
+						t, err := time.Parse(time.RFC3339, *image.DeprecationTime)
+						if err != nil {
+							log.Warn().Str("imageId", convert.ToValue(image.ImageId)).Err(err).
+								Str("bad_value", *image.DeprecationTime).Msg("failed to parse image DeprecationTime")
+						} else {
+							deprecatedAt = &t
+						}
+					}
+					mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Image,
+						map[string]*llx.RawData{
+							"arn":                 llx.StringData(imageArn),
+							"id":                  llx.StringDataPtr(image.ImageId),
+							"name":                llx.StringDataPtr(image.Name),
+							"architecture":        llx.StringData(string(image.Architecture)),
+							"ownerId":             llx.StringDataPtr(image.OwnerId),
+							"ownerAlias":          llx.StringDataPtr(image.ImageOwnerAlias),
+							"createdAt":           llx.TimeDataPtr(createdAt),
+							"deprecatedAt":        llx.TimeDataPtr(deprecatedAt),
+							"enaSupport":          llx.BoolDataPtr(image.EnaSupport),
+							"tpmSupport":          llx.StringData(string(image.TpmSupport)),
+							"state":               llx.StringData(string(image.State)),
+							"public":              llx.BoolDataPtr(image.Public),
+							"rootDeviceType":      llx.StringData(string(image.RootDeviceType)),
+							"virtualizationType":  llx.StringData(string(image.VirtualizationType)),
+							"blockDeviceMappings": llx.ArrayData(blockDeviceMappings, types.Resource(ResourceAwsEc2ImageBlockDeviceMapping)),
+							"tags":                llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String),
+							"region":              llx.StringData(region),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlImage)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
 func (a *mqlAwsEc2) securityGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -1092,11 +1254,25 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["deprecatedAt"] = llx.NilData
 		args["tpmSupport"] = llx.NilData
 		args["enaSupport"] = llx.NilData
+		args["state"] = llx.NilData
+		args["public"] = llx.NilData
+		args["rootDeviceType"] = llx.NilData
+		args["virtualizationType"] = llx.NilData
+		args["blockDeviceMappings"] = llx.NilData
+		args["tags"] = llx.NilData
+		args["region"] = llx.StringData(arn.Region)
 		return args, nil, nil
 	}
 
 	if len(images.Images) > 0 {
 		image := images.Images[0]
+
+		// Create block device mapping MQL resources
+		blockDeviceMappings, err := createBlockDeviceMappings(runtime, arnVal, image.BlockDeviceMappings)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		args["arn"] = llx.StringData(arnVal)
 		args["id"] = llx.StringData(resource[1])
 		args["name"] = llx.StringDataPtr(image.Name)
@@ -1105,6 +1281,13 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["ownerAlias"] = llx.StringDataPtr(image.ImageOwnerAlias)
 		args["enaSupport"] = llx.BoolDataPtr(image.EnaSupport)
 		args["tpmSupport"] = llx.StringData(string(image.TpmSupport))
+		args["state"] = llx.StringData(string(image.State))
+		args["public"] = llx.BoolDataPtr(image.Public)
+		args["rootDeviceType"] = llx.StringData(string(image.RootDeviceType))
+		args["virtualizationType"] = llx.StringData(string(image.VirtualizationType))
+		args["blockDeviceMappings"] = llx.ArrayData(blockDeviceMappings, types.Resource(ResourceAwsEc2ImageBlockDeviceMapping))
+		args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String)
+		args["region"] = llx.StringData(arn.Region)
 		if image.CreationDate == nil {
 			args["createdAt"] = llx.NilData
 		} else {
