@@ -185,13 +185,13 @@ func (a *mqlAwsCloudtrailTrail) logGroup() (*mqlAwsCloudwatchLoggroup, error) {
 func (a *mqlAwsCloudtrailTrail) kmsKey() (*mqlAwsKmsKey, error) {
 	// add kms key if there is one
 	if a.trailCache.KmsKeyId != nil {
-		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		mqlKeyResource, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 			map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.KmsKeyId)},
 		)
 		if err == nil {
 			return mqlKeyResource.(*mqlAwsKmsKey), nil
 		} else {
-			log.Error().Err(err).Msg("cannot get key")
+			log.Error().Err(err).Msg("could not create KMS key resource")
 		}
 	}
 	a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
