@@ -1253,8 +1253,6 @@ private aws.autoscaling.group.tag @defaults("key value propagateAtLaunch") {
   resourceId string
   // Resource type (always "auto-scaling-group")
   resourceType string
-  // Unique identifier for caching
-  id string
 }
 
 // AWS Elastic Load Balancing

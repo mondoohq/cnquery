@@ -27,10 +27,6 @@ func (a *mqlAwsAutoscalingGroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsAutoscalingGroupTag) id() (string, error) {
-	return a.Id.Data, nil
-}
-
 func (a *mqlAwsAutoscaling) groups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -230,7 +226,7 @@ func createTagSpecifications(runtime *plugin.Runtime, tags []ec2types.TagDescrip
 
 		mqlTag, err := CreateResource(runtime, "aws.autoscaling.group.tag",
 			map[string]*llx.RawData{
-				"id":                llx.StringData(tagId),
+				"__id":              llx.StringData(tagId),
 				"key":               llx.StringData(key),
 				"value":             llx.StringData(convert.ToValue(tag.Value)),
 				"propagateAtLaunch": llx.BoolDataPtr(tag.PropagateAtLaunch),

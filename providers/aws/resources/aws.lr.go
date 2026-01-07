@@ -2511,9 +2511,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.autoscaling.group.tag.resourceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroupTag).GetResourceType()).ToDataRes(types.String)
 	},
-	"aws.autoscaling.group.tag.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsAutoscalingGroupTag).GetId()).ToDataRes(types.String)
-	},
 	"aws.elb.classicLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElb).GetClassicLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
 	},
@@ -7973,10 +7970,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.autoscaling.group.tag.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroupTag).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.autoscaling.group.tag.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAutoscalingGroupTag).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19290,7 +19283,6 @@ type mqlAwsAutoscalingGroupTag struct {
 	PropagateAtLaunch plugin.TValue[bool]
 	ResourceId        plugin.TValue[string]
 	ResourceType      plugin.TValue[string]
-	Id                plugin.TValue[string]
 }
 
 // createAwsAutoscalingGroupTag creates a new instance of this resource
@@ -19304,12 +19296,7 @@ func createAwsAutoscalingGroupTag(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.autoscaling.group.tag", res.__id)
@@ -19348,10 +19335,6 @@ func (c *mqlAwsAutoscalingGroupTag) GetResourceId() *plugin.TValue[string] {
 
 func (c *mqlAwsAutoscalingGroupTag) GetResourceType() *plugin.TValue[string] {
 	return &c.ResourceType
-}
-
-func (c *mqlAwsAutoscalingGroupTag) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 // mqlAwsElb for the aws.elb resource
