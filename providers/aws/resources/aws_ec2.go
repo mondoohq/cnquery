@@ -687,7 +687,7 @@ func createBlockDeviceMappings(runtime *plugin.Runtime, imageArn string, mapping
 		mappingID := fmt.Sprintf("%s/device/%s", imageArn, deviceName)
 
 		args := map[string]*llx.RawData{
-			"id":          llx.StringData(mappingID),
+			"__id":        llx.StringData(mappingID),
 			"deviceName":  llx.StringDataPtr(mapping.DeviceName),
 			"virtualName": llx.StringDataPtr(mapping.VirtualName),
 			"noDevice":    llx.BoolData(mapping.NoDevice != nil && *mapping.NoDevice != ""),
@@ -1222,14 +1222,6 @@ func (i *mqlAwsEc2Instance) keypair() (*mqlAwsEc2Keypair, error) {
 
 func (i *mqlAwsEc2Image) id() (string, error) {
 	return i.Arn.Data, nil
-}
-
-func (b *mqlAwsEc2ImageBlockDeviceMapping) id() (string, error) {
-	return b.Id.Data, nil
-}
-
-func (e *mqlAwsEc2ImageEbsBlockDevice) id() (string, error) {
-	return e.__id, nil
 }
 
 func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

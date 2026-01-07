@@ -5171,9 +5171,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.image.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetRegion()).ToDataRes(types.String)
 	},
-	"aws.ec2.image.blockDeviceMapping.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2ImageBlockDeviceMapping).GetId()).ToDataRes(types.String)
-	},
 	"aws.ec2.image.blockDeviceMapping.deviceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ImageBlockDeviceMapping).GetDeviceName()).ToDataRes(types.String)
 	},
@@ -11988,10 +11985,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.image.blockDeviceMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2ImageBlockDeviceMapping).__id, ok = v.Value.(string)
-		return
-	},
-	"aws.ec2.image.blockDeviceMapping.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2ImageBlockDeviceMapping).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.image.blockDeviceMapping.deviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30091,7 +30084,6 @@ type mqlAwsEc2ImageBlockDeviceMapping struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEc2ImageBlockDeviceMappingInternal it will be used here
-	Id          plugin.TValue[string]
 	DeviceName  plugin.TValue[string]
 	VirtualName plugin.TValue[string]
 	NoDevice    plugin.TValue[bool]
@@ -30109,12 +30101,7 @@ func createAwsEc2ImageBlockDeviceMapping(runtime *plugin.Runtime, args map[strin
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.ec2.image.blockDeviceMapping", res.__id)
@@ -30133,10 +30120,6 @@ func (c *mqlAwsEc2ImageBlockDeviceMapping) MqlName() string {
 
 func (c *mqlAwsEc2ImageBlockDeviceMapping) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlAwsEc2ImageBlockDeviceMapping) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlAwsEc2ImageBlockDeviceMapping) GetDeviceName() *plugin.TValue[string] {
@@ -30181,12 +30164,7 @@ func createAwsEc2ImageEbsBlockDevice(runtime *plugin.Runtime, args map[string]*l
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.ec2.image.ebsBlockDevice", res.__id)

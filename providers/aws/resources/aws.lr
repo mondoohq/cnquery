@@ -3454,8 +3454,6 @@ private aws.ec2.image @defaults("ownerAlias id name") {
 
 // Amazon EC2 image block device mapping
 private aws.ec2.image.blockDeviceMapping @defaults("deviceName") {
-  // Internal ID for this block device mapping
-  id string
   // Device name (e.g., /dev/sda1, /dev/xvda)
   deviceName string
   // Virtual device name for instance store (ephemeral0, ephemeral1, etc.)
