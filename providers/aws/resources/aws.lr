@@ -1211,7 +1211,7 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   healthCheckType string
   // Tags for the asg
   tags map[string]string
-  // Full tag specifications including propagation settings
+  // Full tag properties
   tagSpecifications []aws.autoscaling.group.tag
   // Region of the Auto Scaling group
   region string
