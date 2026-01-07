@@ -462,8 +462,6 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) rotationPolicy() (*mqlAzureSubs
 	ctx := context.Background()
 	policyResp, err := client.GetKeyRotationPolicy(ctx, kvid.Name, nil)
 	if err != nil {
-		// Only treat 404 (not found) as "policy doesn't exist"
-		// Return actual errors for permissions, network issues, etc.
 		var respErr *azcore.ResponseError
 		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
 			// Rotation policy doesn't exist, return a resource with enabled=false
@@ -481,7 +479,6 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) rotationPolicy() (*mqlAzureSubs
 			}
 			return resource.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject), nil
 		}
-		// Return the actual error for non-404 cases
 		return nil, err
 	}
 
