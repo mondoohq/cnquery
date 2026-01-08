@@ -2082,7 +2082,15 @@ private azure.subscription.cloudDefenderService.defenderCSPM @defaults("enabled 
   // Sub-plan for Defender CSPM
   subPlan string
   // Extensions configured for Defender CSPM
-  extensions []dict
+  extensions() []azure.subscription.cloudDefenderService.defenderCSPM.extension
+}
+
+// Microsoft Defender CSPM extension
+private azure.subscription.cloudDefenderService.defenderCSPM.extension {
+  // Extension name
+  name string
+  // Whether the extension is enabled
+  isEnabled bool
 }
 
 // Microsoft Defender for Cloud security contact

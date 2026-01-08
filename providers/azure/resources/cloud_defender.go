@@ -407,27 +407,6 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderCSPM() (*mqlAzureSubs
 		subPlan = *cloudPosturePricing.Properties.SubPlan
 	}
 
-	extensions := []any{}
-	for _, ext := range cloudPosturePricing.Properties.Extensions {
-		if ext.Name == nil {
-			continue
-		}
-		isEnabled := "False"
-		if ext.IsEnabled != nil {
-			if *ext.IsEnabled == security.IsEnabledTrue {
-				isEnabled = "True"
-			}
-		}
-		extDict, err := convert.JsonToDict(map[string]string{
-			"name":      *ext.Name,
-			"isEnabled": isEnabled,
-		})
-		if err != nil {
-			return nil, err
-		}
-		extensions = append(extensions, extDict)
-	}
-
 	resource, err := CreateResource(a.MqlRuntime,
 		ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM,
 		map[string]*llx.RawData{
@@ -435,7 +414,6 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderCSPM() (*mqlAzureSubs
 			"enabled":        llx.BoolData(enabled),
 			"pricingTier":    llx.StringData(pricingTier),
 			"subPlan":        llx.StringData(subPlan),
-			"extensions":     llx.ArrayData(extensions, types.Dict),
 			"subscriptionId": llx.StringData(subId),
 		},
 	)
@@ -734,9 +712,58 @@ func argsFromContactProperties(props *armsecurity.ContactProperties) map[string]
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) id() (string, error) {
-	return ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis + "/" + a.SubscriptionId.Data, nil
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) extensions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	cloudPosturePricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "CloudPosture", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	extensions := []any{}
+	if cloudPosturePricing.Properties.Extensions != nil {
+		for _, ext := range cloudPosturePricing.Properties.Extensions {
+			if ext.Name == nil {
+				continue
+			}
+			isEnabled := false
+			if ext.IsEnabled != nil {
+				isEnabled = *ext.IsEnabled == security.IsEnabledTrue
+			}
+
+			extensionResource, err := CreateResource(a.MqlRuntime,
+				"azure.subscription.cloudDefenderService.defenderCSPM.extension",
+				map[string]*llx.RawData{
+					"__id":      llx.StringData(ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM + "/" + subId + "/extension/" + *ext.Name),
+					"name":      llx.StringData(*ext.Name),
+					"isEnabled": llx.BoolData(isEnabled),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+			extensions = append(extensions, extensionResource)
+		}
+	}
+
+	return extensions, nil
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) id() (string, error) {
-	return ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM + "/" + a.SubscriptionId.Data, nil
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) id() (string, error) {
+	return a.__id, nil
 }
