@@ -1879,6 +1879,30 @@ private azure.subscription.keyVaultService.certificate @defaults("id certName") 
   version() string
   // List of certificate versions
   versions() []azure.subscription.keyVaultService.certificate
+  // Certificate policy
+  policy() azure.subscription.keyVaultService.certificate.policy
+}
+
+// Azure Key Vault certificate policy
+private azure.subscription.keyVaultService.certificate.policy @defaults("x509CertificateProperties") {
+  // X.509 certificate properties
+  x509CertificateProperties() azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties
+  // Key properties (keyType, keySize, etc.)
+  keyProperties dict
+  // Issuer parameters (name, etc.)
+  issuerParameters dict
+}
+
+// Azure Key Vault certificate policy X.509 properties
+private azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties {
+  // Certificate subject (e.g., CN=example.com)
+  subject string
+  // Certificate validity period in months
+  validityInMonths int
+  // Key usage types (e.g., digitalSignature, keyEncipherment)
+  keyUsage []string
+  // Extended key usage OIDs
+  ekus []string
 }
 
 // Azure Key Vault secret

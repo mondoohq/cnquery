@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 
 	"go.mondoo.com/cnquery/v12/llx"
@@ -16,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/azure/connection"
 	"go.mondoo.com/cnquery/v12/types"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	keyvault "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates"
@@ -510,6 +512,156 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]any, erro
 	}
 
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	id := a.Id.Data
+	kvid, err := parseKeyVaultId(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if kvid.Type != "certificates" {
+		return nil, errors.New("only certificate ids are supported")
+	}
+
+	client, err := azcertificates.NewClient(kvid.BaseUrl, conn.Token(), &azcertificates.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	policyResp, err := client.GetCertificatePolicy(ctx, kvid.Name, nil)
+	if err != nil {
+		// Only treat 404 (not found) as "policy doesn't exist"
+		// Return actual errors for permissions, network issues, etc.
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+			// Certificate policy doesn't exist, return empty resource
+			x509Props, err := CreateResource(a.MqlRuntime,
+				"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties",
+				map[string]*llx.RawData{
+					"__id":             llx.StringData(id + "/policy/x509CertificateProperties"),
+					"subject":          llx.StringData(""),
+					"validityInMonths": llx.IntData(0),
+					"keyUsage":         llx.ArrayData([]any{}, types.String),
+					"ekus":             llx.ArrayData([]any{}, types.String),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			resource, err := CreateResource(a.MqlRuntime,
+				"azure.subscription.keyVaultService.certificate.policy",
+				map[string]*llx.RawData{
+					"__id":                      llx.StringData(id + "/policy"),
+					"x509CertificateProperties": llx.ResourceData(x509Props, "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"),
+					"keyProperties":             llx.DictData(map[string]any{}),
+					"issuerParameters":          llx.DictData(map[string]any{}),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+			return resource.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy), nil
+		}
+		// Return the actual error for non-404 cases
+		return nil, err
+	}
+
+	// Extract X.509 properties
+	subject := ""
+	validityInMonths := int64(0)
+	keyUsage := []any{}
+	ekus := []any{}
+
+	if policyResp.X509CertificateProperties != nil {
+		if policyResp.X509CertificateProperties.Subject != nil {
+			subject = *policyResp.X509CertificateProperties.Subject
+		}
+		if policyResp.X509CertificateProperties.ValidityInMonths != nil {
+			validityInMonths = int64(*policyResp.X509CertificateProperties.ValidityInMonths)
+		}
+		if policyResp.X509CertificateProperties.KeyUsage != nil {
+			for _, ku := range policyResp.X509CertificateProperties.KeyUsage {
+				if ku != nil {
+					keyUsage = append(keyUsage, string(*ku))
+				}
+			}
+		}
+		if policyResp.X509CertificateProperties.EnhancedKeyUsage != nil {
+			for _, eku := range policyResp.X509CertificateProperties.EnhancedKeyUsage {
+				if eku != nil {
+					ekus = append(ekus, *eku)
+				}
+			}
+		}
+	}
+
+	// Create X.509 properties resource
+	x509Props, err := CreateResource(a.MqlRuntime,
+		"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties",
+		map[string]*llx.RawData{
+			"__id":             llx.StringData(id + "/policy/x509CertificateProperties"),
+			"subject":          llx.StringData(subject),
+			"validityInMonths": llx.IntData(validityInMonths),
+			"keyUsage":         llx.ArrayData(keyUsage, types.String),
+			"ekus":             llx.ArrayData(ekus, types.String),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert keyProperties to dict
+	keyProperties := map[string]any{}
+	if policyResp.KeyProperties != nil {
+		keyPropertiesDict, err := convert.JsonToDict(policyResp.KeyProperties)
+		if err != nil {
+			return nil, err
+		}
+		keyProperties = keyPropertiesDict
+	}
+
+	// Convert issuerParameters to dict
+	issuerParameters := map[string]any{}
+	if policyResp.IssuerParameters != nil {
+		issuerParamsDict, err := convert.JsonToDict(policyResp.IssuerParameters)
+		if err != nil {
+			return nil, err
+		}
+		issuerParameters = issuerParamsDict
+	}
+
+	resource, err := CreateResource(a.MqlRuntime,
+		"azure.subscription.keyVaultService.certificate.policy",
+		map[string]*llx.RawData{
+			"__id":                      llx.StringData(id + "/policy"),
+			"x509CertificateProperties": llx.ResourceData(x509Props, "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"),
+			"keyProperties":             llx.DictData(keyProperties),
+			"issuerParameters":          llx.DictData(issuerParameters),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy), nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) x509CertificateProperties() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties, error) {
+	return a.GetX509CertificateProperties().Data, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties) id() (string, error) {
+	return a.__id, nil
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceSecret) secretName() (string, error) {
