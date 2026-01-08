@@ -57,26 +57,21 @@ func TestSSHParseWithGlob(t *testing.T) {
 	}
 
 	globExpand := func(glob string) ([]string, error) {
-		// Simple glob expansion for test - in real code this would use filepath.Glob
-		// For this test, we'll manually handle the known patterns
+		// For this test we handle the known patterns explicitly.
 		var paths []string
-		if glob == "conf.d/*.conf" {
+		switch glob {
+		case "conf.d/*.conf":
 			paths = []string{
 				"./testdata/conf.d/01_mondoo.conf",
 				"./testdata/conf.d/02_security.conf",
 			}
-		} else if glob == "subdir/01_*.conf" {
-			paths = []string{
-				"./testdata/subdir/01_custom.conf",
-			}
-		} else if glob == "subdir/02_*.conf" {
-			paths = []string{
-				"./testdata/subdir/02_additional.conf",
-			}
-		} else if glob == "./testdata/sshd_config_with_include" {
+		case "subdir/01_*.conf":
+			paths = []string{"./testdata/subdir/01_custom.conf"}
+		case "subdir/02_*.conf":
+			paths = []string{"./testdata/subdir/02_additional.conf"}
+		case "./testdata/sshd_config_with_include":
 			paths = []string{"./testdata/sshd_config_with_include"}
-		} else {
-			// Try to read as a single file
+		default:
 			if _, err := os.Stat(glob); err == nil {
 				paths = []string{glob}
 			}
