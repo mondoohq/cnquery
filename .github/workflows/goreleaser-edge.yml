@@ -3,19 +3,22 @@ name: goreleaser edge containers
 on:
   push:
     branches:
-      - 'main'
+      - "main"
   workflow_dispatch:
 
 env:
   REGISTRY: docker.io
 
+permissions:
+  contents: read
+
 jobs:
   goreleaser:
     permissions:
       # Add "contents" to write release
-      contents: 'write'
+      contents: "write"
       # Add "id-token" for google-github-actions/auth
-      id-token: 'write'
+      id-token: "write"
 
     runs-on:
       group: Default
@@ -40,7 +43,7 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.protoc-version }}
-          
+
       - name: Log in to the Container registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
@@ -52,7 +55,7 @@ jobs:
         run: |
           VERSION=$(make version)
           git tag ${VERSION/\+/-}
-          
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
