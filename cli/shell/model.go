@@ -756,7 +756,41 @@ func (m *shellModel) acceptCompletion() (tea.Model, tea.Cmd) {
 
 	m.showPopup = false
 	m.suggestions = nil
+
+	// Recompile the query to update error display after completion
+	m.recompileForErrors()
+
 	return m, nil
+}
+
+// recompileForErrors recompiles the current query to update the error display
+// without triggering new completion suggestions
+func (m *shellModel) recompileForErrors() {
+	input := m.input.Value()
+	if input == "" {
+		m.compileError = ""
+		return
+	}
+
+	// Skip compile error checking for built-in shell commands
+	if isBuiltinCommand(input) {
+		m.compileError = ""
+		return
+	}
+
+	// Check for compile errors
+	fullQuery := m.query + " " + input
+	_, err := mqlc.Compile(fullQuery, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+	if err != nil {
+		// Ignore incomplete errors - those are expected for multi-line
+		if _, ok := err.(*parser.ErrIncomplete); !ok {
+			m.compileError = err.Error()
+		} else {
+			m.compileError = ""
+		}
+	} else {
+		m.compileError = ""
+	}
 }
 
 // View implements tea.Model
