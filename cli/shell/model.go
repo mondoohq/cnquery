@@ -372,6 +372,13 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Show asset information
 		return m, m.showAssetInfo()
 
+	case "?":
+		// Show keybindings help (only when input is empty to avoid interfering with queries)
+		if m.input.Value() == "" {
+			helpText := m.theme.SecondaryText("Keyboard Shortcuts:") + m.keyMap.FormatFullHelp()
+			return m, tea.Println(helpText)
+		}
+
 	case "ctrl+r":
 		// Enter history search mode
 		if len(m.history) > 0 {
@@ -836,8 +843,8 @@ func (m *shellModel) View() string {
 		}
 	}
 
-	// Help bar at the bottom
-	b.WriteString("\n")
+	// Help bar at the bottom (with empty line separator)
+	b.WriteString("\n\n")
 	b.WriteString(m.renderHelpBar())
 
 	return b.String()
@@ -934,8 +941,8 @@ func (m *shellModel) renderHelpBar() string {
 		items = []string{
 			m.theme.HelpKey.Render("enter") + m.theme.HelpText.Render(" run"),
 			m.theme.HelpKey.Render("ctrl+r") + m.theme.HelpText.Render(" search"),
-			m.theme.HelpKey.Render("ctrl+o") + m.theme.HelpText.Render(" info"),
 			m.theme.HelpKey.Render("ctrl+d") + m.theme.HelpText.Render(" exit"),
+			m.theme.HelpKey.Render("?") + m.theme.HelpText.Render(" help"),
 		}
 	}
 
