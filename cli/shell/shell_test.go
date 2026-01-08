@@ -11,14 +11,9 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
-func localShell() *shell.Shell {
+func localShell() *shell.ShellProgram {
 	runtime := testutils.LinuxMock()
-	res, err := shell.New(runtime)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return res
+	return shell.NewShell(runtime)
 }
 
 func TestShell_RunOnce(t *testing.T) {
