@@ -537,7 +537,6 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubs
 	policyResp, err := client.GetCertificatePolicy(ctx, kvid.Name, nil)
 	if err != nil {
 		// Only treat 404 (not found) as "policy doesn't exist"
-		// Return actual errors for permissions, network issues, etc.
 		var respErr *azcore.ResponseError
 		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
 			// Certificate policy doesn't exist, return empty resource
@@ -617,7 +616,6 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubs
 		return nil, err
 	}
 
-	// Convert keyProperties to dict
 	keyProperties := map[string]any{}
 	if policyResp.KeyProperties != nil {
 		keyPropertiesDict, err := convert.JsonToDict(policyResp.KeyProperties)
@@ -653,7 +651,13 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubs
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) x509CertificateProperties() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties, error) {
-	return a.GetX509CertificateProperties().Data, nil
+	if !a.X509CertificateProperties.IsSet() {
+		return nil, nil
+	}
+	if a.X509CertificateProperties.Error != nil {
+		return nil, a.X509CertificateProperties.Error
+	}
+	return a.X509CertificateProperties.Data, nil
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) id() (string, error) {
