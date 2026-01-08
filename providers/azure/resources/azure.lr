@@ -1894,7 +1894,7 @@ private azure.subscription.keyVaultService.certificate.policy @defaults("x509Cer
 }
 
 // Azure Key Vault certificate policy X.509 properties
-private azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties {
+private azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties @defaults("subject validityInMonths") {
   // Certificate subject (e.g., CN=example.com)
   subject string
   // Certificate validity period in months
