@@ -1211,6 +1211,8 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   healthCheckType string
   // Tags for the asg
   tags map[string]string
+  // Full tag properties
+  tagSpecifications []aws.autoscaling.group.tag
   // Region of the Auto Scaling group
   region string
   // Minimum number of instances to scale down to
@@ -1237,6 +1239,20 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   defaultInstanceWarmup int
   // EC2 instances associated with the group
   instances() []aws.ec2.instance
+}
+
+// AWS Auto Scaling group tag
+private aws.autoscaling.group.tag @defaults("key value propagateAtLaunch") {
+  // Tag key
+  key string
+  // Tag value
+  value string
+  // Whether the tag propagates to instances launched by the ASG
+  propagateAtLaunch bool
+  // Resource ID (ASG name)
+  resourceId string
+  // Resource type (always "auto-scaling-group")
+  resourceType string
 }
 
 // AWS Elastic Load Balancing
