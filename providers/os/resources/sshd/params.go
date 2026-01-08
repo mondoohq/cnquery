@@ -112,25 +112,136 @@ func mergeIncludedBlocks(matchConditions map[string]*MatchBlock, blocks MatchBlo
 	}
 }
 
-type globPathContentFunc func(string) (content string, paths []string, err error)
+type (
+	fileContentFunc func(string) (content string, err error)
+	globExpandFunc  func(string) (paths []string, err error)
+)
 
-func ParseBlocks(rootPath string, globPathContent globPathContentFunc) (MatchBlocks, error) {
-	content, actualPaths, err := globPathContent(rootPath)
-	if err != nil {
-		return nil, err
-	}
-
-	// This ensures that glob patterns use the actual file path instead of the glob pattern
-	actualPath := rootPath
-	if len(actualPaths) > 0 {
-		actualPath = actualPaths[0]
-	}
-
+// ParseBlocks parses a single SSH config file and returns the match blocks.
+// The filePath should be the actual file path (not a glob pattern).
+// For Include directives with glob patterns, use ParseBlocksWithGlob instead.
+func ParseBlocks(filePath string, content string) (MatchBlocks, error) {
 	curBlock := &MatchBlock{
 		Criteria: "",
 		Params:   map[string]any{},
 		Context: Context{
-			Path:    actualPath,
+			Path:    filePath,
+			Range:   llx.NewRange(),
+			curLine: 1,
+		},
+	}
+	matchConditions := map[string]*MatchBlock{
+		"": curBlock,
+	}
+
+	lines := strings.Split(content, "\n")
+	for curLineIdx, textLine := range lines {
+		l, err := ParseLine([]rune(textLine))
+		if err != nil {
+			return nil, err
+		}
+
+		key := l.key
+		if key == "" {
+			continue
+		}
+
+		// handle lower case entries and use proper ssh camel case
+		if sshKey, ok := SSH_Keywords[strings.ToLower(key)]; ok {
+			key = sshKey
+		}
+
+		if key == "Include" {
+			// Include directives are handled by ParseBlocksWithGlob
+			// This function only parses single files
+			log.Warn().Str("file", filePath).Msg("Include directive found in single-file parser, use ParseBlocksWithGlob instead")
+			continue
+		}
+
+		if key == "Match" {
+			// wrap up context on the previous block
+			curBlock.Context.Range = curBlock.Context.Range.AddLineRange(uint32(curBlock.Context.curLine), uint32(curLineIdx))
+			curBlock.Context.curLine = curLineIdx
+
+			// This key is stored in the condition of each block and can be accessed there.
+			condition := l.args
+			if b, ok := matchConditions[condition]; ok {
+				curBlock = b
+			} else {
+				curBlock = &MatchBlock{
+					Criteria: condition,
+					Params:   map[string]any{},
+					Context: Context{
+						curLine: curLineIdx + 1,
+						Path:    filePath,
+						Range:   llx.NewRange(),
+					},
+				}
+				matchConditions[condition] = curBlock
+			}
+			continue
+		}
+
+		setParam(curBlock.Params, key, l.args)
+	}
+
+	keys := sortx.Keys(matchConditions)
+	res := make([]*MatchBlock, len(keys))
+	i := 0
+	for _, key := range keys {
+		res[i] = matchConditions[key]
+		i++
+	}
+
+	curBlock.Context.Range = curBlock.Context.Range.AddLineRange(uint32(curBlock.Context.curLine), uint32(len(lines)))
+
+	return res, nil
+}
+
+// ParseBlocksWithGlob parses SSH config files, expanding glob patterns in Include directives.
+// It expands globs and calls ParseBlocksWithGlobRecursive for each matched file individually,
+func ParseBlocksWithGlob(rootPath string, fileContent fileContentFunc, globExpand globExpandFunc) (MatchBlocks, error) {
+	// First, expand the root path if it's a glob
+	paths, err := globExpand(rootPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// If no paths matched, return empty blocks
+	if len(paths) == 0 {
+		return MatchBlocks{}, nil
+	}
+
+	// Parse each file individually and collect all blocks
+	// Each file maintains its own context (path, line numbers)
+	var allBlocks MatchBlocks
+
+	for _, path := range paths {
+		content, err := fileContent(path)
+		if err != nil {
+			log.Warn().Err(err).Str("path", path).Msg("unable to read file")
+			continue
+		}
+
+		blocks, err := ParseBlocksWithGlobRecursive(path, content, fileContent, globExpand)
+		if err != nil {
+			log.Warn().Err(err).Str("path", path).Msg("unable to parse file")
+			continue
+		}
+
+		allBlocks = append(allBlocks, blocks...)
+	}
+
+	return allBlocks, nil
+}
+
+// ParseBlocksWithGlobRecursive parses a single file and recursively handles Include directives.
+func ParseBlocksWithGlobRecursive(filePath string, content string, fileContent fileContentFunc, globExpand globExpandFunc) (MatchBlocks, error) {
+	curBlock := &MatchBlock{
+		Criteria: "",
+		Params:   map[string]any{},
+		Context: Context{
+			Path:    filePath,
 			Range:   llx.NewRange(),
 			curLine: 1,
 		},
@@ -158,15 +269,31 @@ func ParseBlocks(rootPath string, globPathContent globPathContentFunc) (MatchBlo
 
 		if key == "Include" {
 			// FIXME: parse multi-keys properly
-			paths := strings.Split(l.args, " ")
+			includePaths := strings.Split(l.args, " ")
 
-			for _, path := range paths {
-				subBlocks, err := ParseBlocks(path, globPathContent)
+			for _, includePath := range includePaths {
+				// Expand glob pattern if present
+				expandedPaths, err := globExpand(includePath)
 				if err != nil {
-					log.Warn().Err(err).Msg("unable to parse Include directive")
+					log.Warn().Err(err).Str("path", includePath).Msg("unable to expand Include directive")
 					continue
 				}
-				mergeIncludedBlocks(matchConditions, subBlocks, curBlock.Criteria)
+
+				// Parse each matched file individually
+				for _, expandedPath := range expandedPaths {
+					subContent, err := fileContent(expandedPath)
+					if err != nil {
+						log.Warn().Err(err).Str("path", expandedPath).Msg("unable to read included file")
+						continue
+					}
+
+					subBlocks, err := ParseBlocksWithGlobRecursive(expandedPath, subContent, fileContent, globExpand)
+					if err != nil {
+						log.Warn().Err(err).Str("path", expandedPath).Msg("unable to parse included file")
+						continue
+					}
+					mergeIncludedBlocks(matchConditions, subBlocks, curBlock.Criteria)
+				}
 			}
 			continue
 		}
@@ -187,7 +314,7 @@ func ParseBlocks(rootPath string, globPathContent globPathContentFunc) (MatchBlo
 					Params:   map[string]any{},
 					Context: Context{
 						curLine: curLineIdx + 1,
-						Path:    actualPath,
+						Path:    filePath,
 						Range:   llx.NewRange(),
 					},
 				}

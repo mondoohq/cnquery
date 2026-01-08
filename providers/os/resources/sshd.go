@@ -172,41 +172,37 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 		file.Path.Data: file,
 	}
 	var allContents strings.Builder
-	globPathContent := func(glob string) (string, []string, error) {
-		paths, err := s.expandGlob(glob)
-		if err != nil {
-			return "", nil, err
+
+	// Function to get file content by path
+	fileContent := func(path string) (string, error) {
+		file, ok := filesIdx[path]
+		if !ok {
+			raw, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+				"path": llx.StringData(path),
+			})
+			if err != nil {
+				return "", err
+			}
+			file = raw.(*mqlFile)
+			filesIdx[path] = file
 		}
 
-		var content strings.Builder
-		for _, path := range paths {
-			file, ok := filesIdx[path]
-			if !ok {
-				raw, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
-					"path": llx.StringData(path),
-				})
-				if err != nil {
-					return "", nil, err
-				}
-				file = raw.(*mqlFile)
-				filesIdx[path] = file
-			}
-
-			fileContent := file.GetContent()
-			if fileContent.Error != nil {
-				return "", nil, fileContent.Error
-			}
-
-			content.WriteString(fileContent.Data)
-			content.WriteString("\n")
+		fileContent := file.GetContent()
+		if fileContent.Error != nil {
+			return "", fileContent.Error
 		}
 
-		res := content.String()
-		allContents.WriteString(res)
-		return res, paths, nil
+		content := fileContent.Data + "\n"
+		allContents.WriteString(content)
+		return fileContent.Data, nil
 	}
 
-	matchBlocks, err := sshd.ParseBlocks(file.Path.Data, globPathContent)
+	// Function to expand glob patterns
+	globExpand := func(glob string) ([]string, error) {
+		return s.expandGlob(glob)
+	}
+
+	matchBlocks, err := sshd.ParseBlocksWithGlob(file.Path.Data, fileContent, globExpand)
 	// TODO: check if not ready on I/O
 	if err != nil {
 		s.Params = plugin.TValue[map[string]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
