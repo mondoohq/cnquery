@@ -166,12 +166,17 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	a := args["arn"].Value.(string)
 	conn := runtime.Connection.(*connection.AwsConnection)
 
-	region := ""
-	if arn.IsARN(a) {
-		if val, err := arn.Parse(a); err == nil {
-			region = val.Region
-		}
+	// Validate and parse ARN if provided
+	parsedARN, err := validateAndParseARN(a, "ecs")
+	if err != nil {
+		return nil, nil, err
 	}
+
+	region := ""
+	if parsedARN != nil {
+		region = parsedARN.Region
+	}
+
 	svc := conn.Ecs(region)
 	ctx := context.Background()
 	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{a}, Include: []ecstypes.ClusterField{ecstypes.ClusterFieldTags}})
@@ -317,23 +322,25 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return nil, nil, errors.New("arn required to fetch ecs task")
 	}
 	a := args["arn"].Value.(string)
-
 	conn := runtime.Connection.(*connection.AwsConnection)
+
+	parsedARN, err := validateAndParseARN(a, "ecs")
+	if err != nil {
+		return nil, nil, err
+	}
 
 	region := ""
 	clusterName := ""
-	if arn.IsARN(a) {
-		if val, err := arn.Parse(a); err == nil {
-			region = val.Region
-			if res := strings.Split(val.Resource, "/"); len(res) == 3 {
-				clusterName = res[1]
-			}
+	if parsedARN != nil {
+		region = parsedARN.Region
+		if res := strings.Split(parsedARN.Resource, "/"); len(res) == 3 {
+			clusterName = res[1]
 		}
 	}
+
 	svc := conn.Ecs(region)
 	ctx := context.Background()
 	params := &ecs.DescribeTasksInput{Tasks: []string{a}, Cluster: &clusterName, Include: []ecstypes.TaskField{ecstypes.TaskFieldTags}}
-	params.Cluster = &clusterName
 	taskDetails, err := svc.DescribeTasks(ctx, params)
 	if err != nil {
 		return nil, nil, err
@@ -486,4 +493,26 @@ func ecsTagsToMap(tags []ecstypes.Tag) map[string]any {
 		}
 	}
 	return res
+}
+
+// validateAndParseARN validates that the given string is a valid ECS ARN
+// and returns the parsed ARN structure. Returns an error if the ARN is malformed
+// or does not belong to the expectedService.
+func validateAndParseARN(arnStr, expectedService string) (*arn.ARN, error) {
+	if !strings.HasPrefix(arnStr, "arn:") {
+		// Not an ARN - caller should handle
+		return nil, nil
+	}
+
+	parsedArn, err := arn.Parse(arnStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if parsedArn.Service != expectedService {
+		return nil, errors.Newf("invalid ARN (service is %s, expected %s): %s",
+			parsedArn.Service, expectedService, arnStr)
+	}
+
+	return &parsedArn, nil
 }
