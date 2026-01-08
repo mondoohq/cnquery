@@ -118,8 +118,8 @@ func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		args["name"] = llx.StringDataPtr(group.AutoScalingGroupName)
 		args["region"] = llx.StringData(region)
 		args["tags"] = llx.MapData(autoscalingTagsToMap(group.Tags), types.String)
-		args["tagSpecifications"] = llx.ArrayData(tagSpecs, types.Resource("aws.autoscaling.group.tag"))
-		mqlGroup, err := CreateResource(runtime, "aws.autoscaling.group", args)
+		args["tagSpecifications"] = llx.ArrayData(tagSpecs, types.Resource(ResourceAwsAutoscalingGroupTag))
+		mqlGroup, err := CreateResource(runtime, ResourceAwsAutoscalingGroup, args)
 		if err != nil {
 			return args, nil, err
 		}
@@ -170,7 +170,7 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 						return nil, err
 					}
 
-					mqlGroup, err := CreateResource(a.MqlRuntime, "aws.autoscaling.group",
+					mqlGroup, err := CreateResource(a.MqlRuntime, ResourceAwsAutoscalingGroup,
 						map[string]*llx.RawData{
 							"arn":                     llx.StringData(groupArn),
 							"availabilityZones":       llx.ArrayData(availabilityZones, types.String),
@@ -189,7 +189,7 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 							"name":                    llx.StringDataPtr(group.AutoScalingGroupName),
 							"region":                  llx.StringData(region),
 							"tags":                    llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
-							"tagSpecifications":       llx.ArrayData(tagSpecs, types.Resource("aws.autoscaling.group.tag")),
+							"tagSpecifications":       llx.ArrayData(tagSpecs, types.Resource(ResourceAwsAutoscalingGroupTag)),
 						})
 					if err != nil {
 						return nil, err
@@ -224,7 +224,7 @@ func createTagSpecifications(runtime *plugin.Runtime, tags []ec2types.TagDescrip
 		key := convert.ToValue(tag.Key)
 		tagId := fmt.Sprintf("%s/tag/%s", groupArn, key)
 
-		mqlTag, err := CreateResource(runtime, "aws.autoscaling.group.tag",
+		mqlTag, err := CreateResource(runtime, ResourceAwsAutoscalingGroupTag,
 			map[string]*llx.RawData{
 				"__id":              llx.StringData(tagId),
 				"key":               llx.StringData(key),
