@@ -534,6 +534,10 @@ resources:
       url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
   azure.subscription.cloudDefenderService:
     fields:
+      defenderCSPM:
+        min_mondoo_version: 9.0.0
+      defenderForApis:
+        min_mondoo_version: 9.0.0
       defenderForAppServices:
         min_mondoo_version: 9.0.0
       defenderForContainers: {}
@@ -569,6 +573,37 @@ resources:
     refs:
     - title: Microsoft Defender for Cloud Apps overview
       url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
+  azure.subscription.cloudDefenderService.defenderCSPM:
+    fields:
+      enabled: {}
+      extensions: {}
+      pricingTier: {}
+      subPlan: {}
+      subscriptionId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.cloudDefenderService.defenderCSPM.extension:
+    fields:
+      isEnabled: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.cloudDefenderService.defenderForApis:
+    fields:
+      enabled: {}
+      pricingTier: {}
+      subscriptionId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.cloudDefenderService.securityContact:
     fields:
       alertNotifications: {}
