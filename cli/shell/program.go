@@ -120,8 +120,14 @@ func (s *ShellProgram) RunWithCommand(initialCmd string) error {
 		return ErrNotTTY
 	}
 
+	// Get connected provider IDs to filter autocomplete suggestions
+	var connectedProviderIDs []string
+	if r, ok := s.runtime.(*providers.Runtime); ok {
+		connectedProviderIDs = r.ConnectedProviderIDs()
+	}
+
 	// Create the model
-	model := newShellModel(s.runtime, s.theme, s.features, initialCmd)
+	model := newShellModel(s.runtime, s.theme, s.features, initialCmd, connectedProviderIDs)
 
 	// Create and run the Bubble Tea program
 	// Note: We don't use WithAltScreen() so output stays in terminal scrollback

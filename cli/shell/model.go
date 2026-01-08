@@ -92,7 +92,9 @@ type shellModel struct {
 }
 
 // newShellModel creates a new shell model
-func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Features, initialCmd string) *shellModel {
+// connectedProviderIDs can be provided to filter autocomplete suggestions to only
+// show resources from connected providers. If nil, all resources are shown.
+func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Features, initialCmd string, connectedProviderIDs []string) *shellModel {
 	// Create textarea for input
 	ta := textarea.New()
 	ta.Placeholder = ""
@@ -118,7 +120,12 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Feat
 	ta.BlurredStyle = ta.FocusedStyle
 
 	// Create completer and set up the schema for the printer
+	// If connected provider IDs are provided, use a filtered schema to only
+	// show resources from connected providers in autocomplete
 	schema := runtime.Schema()
+	if len(connectedProviderIDs) > 0 {
+		schema = NewFilteredSchema(schema, connectedProviderIDs)
+	}
 	theme.PolicyPrinter.SetSchema(schema)
 	completer := NewCompleter(schema, features, nil)
 
