@@ -26,8 +26,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.7
 	github.com/aws/smithy-go v1.24.0
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.11.0
-	// pin v0.2.6
-	github.com/c-bata/go-prompt v0.2.6
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
@@ -71,8 +69,6 @@ require (
 	github.com/package-url/packageurl-go v0.1.3
 	github.com/pierrec/lz4/v4 v4.1.23
 	github.com/pkg/sftp v1.13.10
-	// pin v1.2.0-beta.2
-	github.com/pkg/term v1.2.0-beta.2
 	github.com/protobom/protobom v0.5.4
 	github.com/rs/zerolog v1.34.0
 	github.com/segmentio/fasthash v1.0.3
@@ -226,7 +222,6 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
-	github.com/mattn/go-tty v0.0.7 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect

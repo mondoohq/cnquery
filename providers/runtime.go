@@ -133,6 +133,18 @@ func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
 	r.mu.Unlock()
 }
 
+// ConnectedProviderIDs returns the IDs of all connected providers
+func (r *Runtime) ConnectedProviderIDs() []string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	ids := make([]string, 0, len(r.providers))
+	for id := range r.providers {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 func (r *Runtime) setProviderConnection(c *plugin.ConnectRes, err error) {
 	r.mu.Lock()
 	r.Provider.Connection = c
