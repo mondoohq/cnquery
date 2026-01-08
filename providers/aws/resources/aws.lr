@@ -1539,6 +1539,8 @@ private aws.secretsmanager.secret @defaults("arn name") {
   createdAt time
   // Description of the secret
   description string
+  // KMS key used for encryption of the secret
+  kmsKey() aws.kms.key
   // Last date the secret was changed
   lastChangedDate time
   // Last date the secret was automatically rotated
