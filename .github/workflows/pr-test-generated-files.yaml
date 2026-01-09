@@ -4,12 +4,15 @@ name: Generated Code Test
 on:
   push:
     paths:
-      - '**.proto'
-      - '**.lr'
-      - '**.go'
+      - "**.proto"
+      - "**.lr"
+      - "**.go"
 
 env:
   PROTO_VERSION: "21.7"
+
+permissions:
+  contents: read
 
 jobs:
   # Check if there is any dirty change for generated files
@@ -32,10 +35,10 @@ jobs:
       # We do not permit sudo on self-hosted runners
       - name: "Ensure GCC is installed"
         run: |
-          if gcc --version; then 
-            echo "Good to go"; 
-          else 
-            echo "Install GCC on the runner."; 
+          if gcc --version; then
+            echo "Good to go";
+          else
+            echo "Install GCC on the runner.";
           fi
 
         # Note we do not use apt install -y protobuf-compiler` since it is too old
