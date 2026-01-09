@@ -716,7 +716,7 @@ aws.kms @defaults("keys") {
 }
 
 // AWS Key Management Service (KMS) key
-private aws.kms.key @defaults("arn aliases") {
+private aws.kms.key @defaults("id region aliases metadata.Description") {
   // Unique identifier for the key
   id string
   // ARN of the key
