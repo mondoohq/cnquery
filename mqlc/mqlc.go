@@ -252,9 +252,10 @@ func addResourceSuggestions(schema resources.ResourcesSchema, name string, res *
 				continue
 			}
 			res.Suggestions = append(res.Suggestions, &llx.Documentation{
-				Field: field,
-				Title: info.Title,
-				Desc:  info.Desc,
+				Field:    field,
+				Title:    info.Title,
+				Desc:     info.Desc,
+				Provider: info.Provider,
 			})
 		} else {
 			res.Suggestions = append(res.Suggestions, &llx.Documentation{
