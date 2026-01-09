@@ -19,17 +19,15 @@ type Suggestion struct {
 
 // Completer is an auto-complete helper for the shell
 type Completer struct {
-	schema      resources.ResourcesSchema
-	features    cnquery.Features
-	queryPrefix func() string
+	schema   resources.ResourcesSchema
+	features cnquery.Features
 }
 
 // NewCompleter creates a new Mondoo completer object
-func NewCompleter(schema resources.ResourcesSchema, features cnquery.Features, queryPrefix func() string) *Completer {
+func NewCompleter(schema resources.ResourcesSchema, features cnquery.Features, connectedProviders []string) *Completer {
 	return &Completer{
-		schema:      schema,
-		features:    features,
-		queryPrefix: queryPrefix,
+		schema:   schema,
+		features: features,
 	}
 }
 
@@ -49,11 +47,9 @@ func (c *Completer) Complete(text string) []Suggestion {
 	var suggestions []Suggestion
 
 	// Check for matching built-in commands first (only at the start of input)
-	if c.queryPrefix == nil || c.queryPrefix() == "" {
-		for _, cmd := range builtinCommands {
-			if strings.HasPrefix(cmd.Text, text) {
-				suggestions = append(suggestions, cmd)
-			}
+	for _, cmd := range builtinCommands {
+		if strings.HasPrefix(cmd.Text, text) {
+			suggestions = append(suggestions, cmd)
 		}
 	}
 
