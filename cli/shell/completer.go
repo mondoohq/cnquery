@@ -4,11 +4,14 @@
 package shell
 
 import (
+	"slices"
 	"strings"
 
 	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/mqlc"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
 // Suggestion represents a completion suggestion for the shell
@@ -19,15 +22,17 @@ type Suggestion struct {
 
 // Completer is an auto-complete helper for the shell
 type Completer struct {
-	schema   resources.ResourcesSchema
-	features cnquery.Features
+	schema             resources.ResourcesSchema
+	features           cnquery.Features
+	connectedProviders []string
 }
 
 // NewCompleter creates a new Mondoo completer object
 func NewCompleter(schema resources.ResourcesSchema, features cnquery.Features, connectedProviders []string) *Completer {
 	return &Completer{
-		schema:   schema,
-		features: features,
+		schema:             schema,
+		features:           features,
+		connectedProviders: connectedProviders,
 	}
 }
 
@@ -55,6 +60,19 @@ func (c *Completer) Complete(text string) []Suggestion {
 
 	bundle, _ := mqlc.Compile(text, nil, mqlc.NewConfig(c.schema, c.features))
 	if bundle != nil && len(bundle.Suggestions) > 0 {
+		// reorder suggestions to put the ones from connected providers first
+		slices.SortFunc(bundle.Suggestions, func(a, b *llx.Documentation) int {
+			aConnected := stringx.Contains(c.connectedProviders, a.Provider)
+			bConnected := stringx.Contains(c.connectedProviders, b.Provider)
+			if aConnected && !bConnected {
+				return -1
+			} else if !aConnected && bConnected {
+				return 1
+			}
+			return 0
+		})
+
+		// add suggestions from the compiler
 		for i := range bundle.Suggestions {
 			cur := bundle.Suggestions[i]
 			suggestions = append(suggestions, Suggestion{
