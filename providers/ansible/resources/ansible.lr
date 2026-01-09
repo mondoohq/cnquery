@@ -6,6 +6,7 @@ option go_package = "go.mondoo.com/cnquery/v12/providers/ansible/resources"
 
 // Ansible
 ansible {
+  // Ansible Plays
   plays() []ansible.play
 }
 
