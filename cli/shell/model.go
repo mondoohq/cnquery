@@ -123,9 +123,6 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Feat
 	// If connected provider IDs are provided, use a filtered schema to only
 	// show resources from connected providers in autocomplete
 	schema := runtime.Schema()
-	if len(connectedProviderIDs) > 0 {
-		schema = NewFilteredSchema(schema, connectedProviderIDs)
-	}
 	theme.PolicyPrinter.SetSchema(schema)
 	completer := NewCompleter(schema, features, nil)
 

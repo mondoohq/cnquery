@@ -46,7 +46,6 @@ func (c *Completer) Complete(text string) []Suggestion {
 	if text == "" {
 		return nil
 	}
-
 	var suggestions []Suggestion
 
 	// Check for matching built-in commands first (only at the start of input)
@@ -58,14 +57,7 @@ func (c *Completer) Complete(text string) []Suggestion {
 		}
 	}
 
-	// Get MQL suggestions
-	var query string
-	if c.queryPrefix != nil {
-		query = c.queryPrefix()
-	}
-	query += text
-
-	bundle, _ := mqlc.Compile(query, nil, mqlc.NewConfig(c.schema, c.features))
+	bundle, _ := mqlc.Compile(text, nil, mqlc.NewConfig(c.schema, c.features))
 	if bundle != nil && len(bundle.Suggestions) > 0 {
 		for i := range bundle.Suggestions {
 			cur := bundle.Suggestions[i]
