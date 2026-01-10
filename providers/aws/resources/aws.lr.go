@@ -2872,6 +2872,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.secretsmanager.secret.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetDescription()).ToDataRes(types.String)
 	},
+	"aws.secretsmanager.secret.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.secretsmanager.secret.lastChangedDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetLastChangedDate()).ToDataRes(types.Time)
 	},
@@ -8576,6 +8579,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.secretsmanager.secret.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.lastChangedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21006,6 +21013,7 @@ type mqlAwsSecretsmanagerSecret struct {
 	Arn              plugin.TValue[string]
 	CreatedAt        plugin.TValue[*time.Time]
 	Description      plugin.TValue[string]
+	KmsKey           plugin.TValue[*mqlAwsKmsKey]
 	LastChangedDate  plugin.TValue[*time.Time]
 	LastRotatedDate  plugin.TValue[*time.Time]
 	Name             plugin.TValue[string]
@@ -21062,6 +21070,22 @@ func (c *mqlAwsSecretsmanagerSecret) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsSecretsmanagerSecret) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.secretsmanager.secret", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsSecretsmanagerSecret) GetLastChangedDate() *plugin.TValue[*time.Time] {

@@ -3299,6 +3299,8 @@ resources:
         min_mondoo_version: 9.0.0
       description:
         min_mondoo_version: 9.0.0
+      kmsKey:
+        min_mondoo_version: 9.0.0
       lastChangedDate:
         min_mondoo_version: 9.0.0
       lastRotatedDate:
