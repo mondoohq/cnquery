@@ -93,6 +93,7 @@ message Documentation {
   string field = 1;
   string title = 2;
   string desc = 3;
+  string provider = 4;
 }
 
 message CodeBundle {

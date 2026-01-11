@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mattn/go-isatty"
@@ -194,4 +195,14 @@ func (s *ShellProgram) PrintResults(code *llx.CodeBundle, results map[string]*ll
 
 	fmt.Fprint(s.out, "\r")
 	fmt.Fprintln(s.out, printedResult)
+}
+
+func formatSuggestions(suggestions []*llx.Documentation, theme *theme.Theme) string {
+	var res strings.Builder
+	res.WriteString(theme.Secondary("\nsuggestions: \n"))
+	for i := range suggestions {
+		s := suggestions[i]
+		res.WriteString(theme.List(s.Field+": "+s.Title) + "\n")
+	}
+	return res.String()
 }

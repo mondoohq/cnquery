@@ -123,11 +123,8 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Feat
 	// If connected provider IDs are provided, use a filtered schema to only
 	// show resources from connected providers in autocomplete
 	schema := runtime.Schema()
-	if len(connectedProviderIDs) > 0 {
-		schema = NewFilteredSchema(schema, connectedProviderIDs)
-	}
 	theme.PolicyPrinter.SetSchema(schema)
-	completer := NewCompleter(schema, features, nil)
+	completer := NewCompleter(schema, features, connectedProviderIDs)
 
 	// Create spinner for query execution
 	sp := spinner.New()
@@ -149,11 +146,6 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Feat
 		width:       80,
 		height:      24,
 		spinner:     sp,
-	}
-
-	// Set the query prefix callback for completer
-	completer.queryPrefix = func() string {
-		return m.query
 	}
 
 	// Handle initial command
