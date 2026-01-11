@@ -22,17 +22,19 @@ type Suggestion struct {
 
 // Completer is an auto-complete helper for the shell
 type Completer struct {
-	schema             resources.ResourcesSchema
-	features           cnquery.Features
-	connectedProviders []string
+	schema   resources.ResourcesSchema
+	features cnquery.Features
+	sortFn   func(a, b *llx.Documentation) int
 }
 
 // NewCompleter creates a new Mondoo completer object
 func NewCompleter(schema resources.ResourcesSchema, features cnquery.Features, connectedProviders []string) *Completer {
+	sortFn := byProviderSortFn(connectedProviders)
+
 	return &Completer{
-		schema:             schema,
-		features:           features,
-		connectedProviders: connectedProviders,
+		schema:   schema,
+		features: features,
+		sortFn:   sortFn,
 	}
 }
 
@@ -61,16 +63,7 @@ func (c *Completer) Complete(text string) []Suggestion {
 	bundle, _ := mqlc.Compile(text, nil, mqlc.NewConfig(c.schema, c.features))
 	if bundle != nil && len(bundle.Suggestions) > 0 {
 		// reorder suggestions to put the ones from connected providers first
-		slices.SortFunc(bundle.Suggestions, func(a, b *llx.Documentation) int {
-			aConnected := stringx.Contains(c.connectedProviders, a.Provider)
-			bConnected := stringx.Contains(c.connectedProviders, b.Provider)
-			if aConnected && !bConnected {
-				return -1
-			} else if !aConnected && bConnected {
-				return 1
-			}
-			return 0
-		})
+		slices.SortFunc(bundle.Suggestions, c.sortFn)
 
 		// add suggestions from the compiler
 		for i := range bundle.Suggestions {
@@ -83,4 +76,17 @@ func (c *Completer) Complete(text string) []Suggestion {
 	}
 
 	return suggestions
+}
+
+func byProviderSortFn(connectedProviders []string) func(a, b *llx.Documentation) int {
+	return func(a, b *llx.Documentation) int {
+		aConnected := stringx.Contains(connectedProviders, a.Provider)
+		bConnected := stringx.Contains(connectedProviders, b.Provider)
+		if aConnected && !bConnected {
+			return -1
+		} else if !aConnected && bConnected {
+			return 1
+		}
+		return 0
+	}
 }
