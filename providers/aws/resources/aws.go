@@ -216,10 +216,6 @@ func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
 			}
 		}
 	}
-	// Only return an assetIdentifier if we have a valid ARN
-	if arnStr == "" {
-		return nil
-	}
 
 	return &assetIdentifier{name: a.Name, arn: arnStr}
 }
