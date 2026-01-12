@@ -45,6 +45,9 @@ queries:
         filters: |
           asset.platform == "aws"
         title: AWS account ID
+        docs:
+          desc: |
+            Returns the unique AWS account identifier for the scanned account.
         mql: |
           aws.account.id
 
@@ -195,6 +198,9 @@ queries:
 
       - uid: mondoo-asset-inventory-aws-ec2-retrieve-all-data
         title: Running EC2 instances
+        docs:
+          desc: |
+            Lists all running EC2 instances (excluding terminated) with their configuration details.
         variants:
           - uid: mondoo-asset-inventory-aws-ec2-retrieve-all-data-all
           - uid: mondoo-asset-inventory-aws-ec2-retrieve-all-data-single
@@ -214,6 +220,9 @@ queries:
 
       - uid: mondoo-asset-inventory-aws-rds-dbclusters-all-data
         title: RDS database clusters configuration
+        docs:
+          desc: |
+            Lists all RDS database clusters with their configuration for inventory and security review.
         variants:
           - uid: mondoo-asset-inventory-aws-rds-dbclusters-all-data-all
       - uid: mondoo-asset-inventory-aws-rds-dbclusters-all-data-all
@@ -226,6 +235,9 @@ queries:
 
       - uid: mondoo-asset-inventory-aws-rds-dbinstances-all-data
         title: RDS database instances
+        docs:
+          desc: |
+            Lists all RDS database instances with their configuration for inventory and security review.
         variants:
           - uid: mondoo-asset-inventory-aws-rds-dbinstances-all-data-all
           - uid: mondoo-asset-inventory-aws-rds-dbinstances-all-data-single
@@ -244,6 +256,9 @@ queries:
 
       - uid: mondoo-asset-inventory-aws-s3-retrieve-all-data
         title: S3 buckets
+        docs:
+          desc: |
+            Lists all S3 buckets with their configuration for inventory and access policy review.
         variants:
           - uid: mondoo-asset-inventory-aws-s3-retrieve-all-data-all
           - uid: mondoo-asset-inventory-aws-s3-retrieve-all-data-single
@@ -262,6 +277,9 @@ queries:
 
       - uid: mondoo-asset-inventory-aws-eks-clusters
         title: EKS clusters
+        docs:
+          desc: |
+            Lists all EKS Kubernetes clusters with their configuration for inventory.
         variants:
           - uid: mondoo-asset-inventory-aws-eks-clusters-all
       - uid: mondoo-asset-inventory-aws-eks-clusters-all
@@ -274,6 +292,9 @@ queries:
 
       - uid: mondoo-asset-inventory-aws-lambda
         title: Lambda functions
+        docs:
+          desc: |
+            Lists all Lambda serverless functions with their configuration for inventory.
         variants:
           - uid: mondoo-asset-inventory-aws-lambda-all
           - uid: mondoo-asset-inventory-aws-lambda-single
@@ -292,6 +313,9 @@ queries:
 
       - uid: mondoo-asset-inventory-aws-access-analyzer
         title: Access Analyzers
+        docs:
+          desc: |
+            Lists all IAM Access Analyzer instances that help identify unintended resource access.
         variants:
           - uid: mondoo-asset-inventory-aws-access-analyzer-all
       - uid: mondoo-asset-inventory-aws-access-analyzer-all
@@ -304,6 +328,9 @@ queries:
 
       - uid: mondoo-asset-inventory-aws-acm-certificates
         title: Certificate Manager certificates
+        docs:
+          desc: |
+            Lists all ACM SSL/TLS certificates for tracking certificate inventory and expiration.
         variants:
           - uid: mondoo-asset-inventory-aws-acm-certificates-all
       - uid: mondoo-asset-inventory-aws-acm-certificates-all
@@ -316,6 +343,9 @@ queries:
 
       - uid: mondoo-asset-inventory-aws-cloudtrail-trails
         title: CloudTrail trails
+        docs:
+          desc: |
+            Lists all CloudTrail trails configured for API activity logging and auditing.
         variants:
           - uid: mondoo-asset-inventory-aws-cloudtrail-trails-all
           - uid: mondoo-asset-inventory-aws-cloudtrail-trails-single

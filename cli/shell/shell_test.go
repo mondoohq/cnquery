@@ -11,45 +11,29 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
 )
 
-func localShell() *shell.Shell {
+func localShell() *shell.ShellProgram {
 	runtime := testutils.LinuxMock()
-	res, err := shell.New(runtime)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return res
+	return shell.NewShell(runtime)
 }
 
 func TestShell_RunOnce(t *testing.T) {
-	shell := localShell()
+	sh := localShell()
 	assert.NotPanics(t, func() {
-		shell.RunOnce("mondoo.build")
+		_, _, _ = sh.RunOnce("mondoo.build")
 	}, "should not panic on partial queries")
 
 	assert.NotPanics(t, func() {
-		shell.RunOnce("mondoo { build version }")
+		_, _, _ = sh.RunOnce("mondoo { build version }")
 	}, "should not panic on partial queries")
 
 	assert.NotPanics(t, func() {
-		shell.RunOnce("mondoo { _.version }")
+		_, _, _ = sh.RunOnce("mondoo { _.version }")
 	}, "should not panic on partial queries")
-}
-
-func TestShell_Help(t *testing.T) {
-	shell := localShell()
-	assert.NotPanics(t, func() {
-		shell.ExecCmd("help")
-	}, "should not panic on help command")
-
-	assert.NotPanics(t, func() {
-		shell.ExecCmd("help platform")
-	}, "should not panic on help subcommand")
 }
 
 func TestShell_Centos8(t *testing.T) {
-	shell := localShell()
+	sh := localShell()
 	assert.NotPanics(t, func() {
-		shell.RunOnce("platform { title name release arch }")
+		_, _, _ = sh.RunOnce("platform { title name release arch }")
 	}, "should not panic on partial queries")
 }

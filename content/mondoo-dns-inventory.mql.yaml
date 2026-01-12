@@ -34,8 +34,12 @@ packs:
     queries:
       - uid: mondoo-dns-inventory-dns-records
         title: Retrieve information about DNS records
+        docs:
+          desc: Returns all DNS records (A, AAAA, CNAME, MX, TXT, etc.) for the domain.
         mql: dns.params
       - uid: mondoo-dns-inventory-dns-mx-records
         title: Retrieve information about the MX records
+        docs:
+          desc: Returns mail exchanger (MX) records with their domain names and preferences for email routing.
         filters: dns.params.MX.name != empty
         mql:  dns.mx { domainName preference }

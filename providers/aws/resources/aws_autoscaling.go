@@ -94,7 +94,14 @@ func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		for _, zone := range group.AvailabilityZones {
 			availabilityZones = append(availabilityZones, zone)
 		}
-		args["arn"] = llx.StringDataPtr(group.AutoScalingGroupARN)
+
+		groupArn := convert.ToValue(group.AutoScalingGroupARN)
+		tagSpecs, err := createTagSpecifications(runtime, group.Tags, groupArn)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		args["arn"] = llx.StringData(groupArn)
 		args["availabilityZones"] = llx.ArrayData(availabilityZones, types.String)
 		args["capacityRebalance"] = llx.BoolDataPtr(group.CapacityRebalance)
 		args["createdAt"] = llx.TimeDataPtr(group.CreatedTime)
@@ -111,7 +118,8 @@ func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		args["name"] = llx.StringDataPtr(group.AutoScalingGroupName)
 		args["region"] = llx.StringData(region)
 		args["tags"] = llx.MapData(autoscalingTagsToMap(group.Tags), types.String)
-		mqlGroup, err := CreateResource(runtime, "aws.autoscaling.group", args)
+		args["tagSpecifications"] = llx.ArrayData(tagSpecs, types.Resource(ResourceAwsAutoscalingGroupTag))
+		mqlGroup, err := CreateResource(runtime, ResourceAwsAutoscalingGroup, args)
 		if err != nil {
 			return args, nil, err
 		}
@@ -156,9 +164,15 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 						availabilityZones = append(availabilityZones, zone)
 					}
 
-					mqlGroup, err := CreateResource(a.MqlRuntime, "aws.autoscaling.group",
+					groupArn := convert.ToValue(group.AutoScalingGroupARN)
+					tagSpecs, err := createTagSpecifications(a.MqlRuntime, group.Tags, groupArn)
+					if err != nil {
+						return nil, err
+					}
+
+					mqlGroup, err := CreateResource(a.MqlRuntime, ResourceAwsAutoscalingGroup,
 						map[string]*llx.RawData{
-							"arn":                     llx.StringDataPtr(group.AutoScalingGroupARN),
+							"arn":                     llx.StringData(groupArn),
 							"availabilityZones":       llx.ArrayData(availabilityZones, types.String),
 							"capacityRebalance":       llx.BoolDataPtr(group.CapacityRebalance),
 							"createdAt":               llx.TimeDataPtr(group.CreatedTime),
@@ -175,6 +189,7 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 							"name":                    llx.StringDataPtr(group.AutoScalingGroupName),
 							"region":                  llx.StringData(region),
 							"tags":                    llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
+							"tagSpecifications":       llx.ArrayData(tagSpecs, types.Resource(ResourceAwsAutoscalingGroupTag)),
 						})
 					if err != nil {
 						return nil, err
@@ -200,4 +215,29 @@ func autoscalingTagsToMap(tags []ec2types.TagDescription) map[string]any {
 	}
 
 	return tagsMap
+}
+
+func createTagSpecifications(runtime *plugin.Runtime, tags []ec2types.TagDescription, groupArn string) ([]any, error) {
+	tagSpecs := make([]any, 0, len(tags))
+
+	for _, tag := range tags {
+		key := convert.ToValue(tag.Key)
+		tagId := fmt.Sprintf("%s/tag/%s", groupArn, key)
+
+		mqlTag, err := CreateResource(runtime, ResourceAwsAutoscalingGroupTag,
+			map[string]*llx.RawData{
+				"__id":              llx.StringData(tagId),
+				"key":               llx.StringData(key),
+				"value":             llx.StringData(convert.ToValue(tag.Value)),
+				"propagateAtLaunch": llx.BoolDataPtr(tag.PropagateAtLaunch),
+				"resourceId":        llx.StringData(convert.ToValue(tag.ResourceId)),
+				"resourceType":      llx.StringData(convert.ToValue(tag.ResourceType)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		tagSpecs = append(tagSpecs, mqlTag)
+	}
+
+	return tagSpecs, nil
 }

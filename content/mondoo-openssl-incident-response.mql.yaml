@@ -36,6 +36,8 @@ packs:
     queries:
       - uid: mondoo-openssl-incident-response-platform
         title: Platform details
+        docs:
+          desc: Retrieves the operating system platform, version, and architecture to identify the affected system.
         mql: |
           asset {
             platform
@@ -44,12 +46,16 @@ packs:
           }
       - uid: mondoo-openssl-incident-response-installed-version
         title: Installed ssl libraries
+        docs:
+          desc: Lists all installed packages with 'ssl' in their name to identify OpenSSL and related library versions that may be affected by vulnerabilities.
         mql: packages.where(name == /ssl/)
       - uid: mondoo-openssl-incident-response-listening-ports
         title: Listening ports for running systems
+        docs:
+          desc: Lists all listening network ports to identify services that may be using SSL/TLS and could be affected by OpenSSL vulnerabilities.
         mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
-            ports.listening { 
+            ports.listening {
               protocol
               address
               port

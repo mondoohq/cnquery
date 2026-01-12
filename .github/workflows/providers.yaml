@@ -22,6 +22,9 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: read
+
 env:
   BUCKET: releases-us.mondoo.io
   SKIP_PROVIDERS: "core"

@@ -251,7 +251,7 @@ func (dg *mqlAwsCodedeployDeploymentGroup) autoScalingGroups() ([]any, error) {
 		// ARN construction for ASGs is a bit different, usually fetched via name
 		// We'd need a way to link to an existing aws.autoscaling.group resource.
 		// For now, returning basic info. A full resource link would require aws.autoscaling.group to be an init-able resource by name+region.
-		asgRes, err := NewResource(dg.MqlRuntime, "aws.autoscaling.group", map[string]*llx.RawData{
+		asgRes, err := NewResource(dg.MqlRuntime, ResourceAwsAutoscalingGroup, map[string]*llx.RawData{
 			"name":   llx.StringData(*asg.Name),
 			"region": llx.StringData(dg.Region.Data),
 			// ARN might need to be constructed or looked up if not directly available

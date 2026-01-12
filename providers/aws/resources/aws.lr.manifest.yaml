@@ -316,10 +316,25 @@ resources:
       name: {}
       region:
         min_mondoo_version: 9.0.0
+      tagSpecifications:
+        min_mondoo_version: 9.0.0
       tags:
         min_mondoo_version: 5.16.0
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.autoscaling.group.tag:
+    fields:
+      id: {}
+      key: {}
+      propagateAtLaunch: {}
+      resourceId: {}
+      resourceType: {}
+      value: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
@@ -1019,6 +1034,8 @@ resources:
       ebsEncryptionByDefault: {}
       eips:
         min_mondoo_version: 9.0.0
+      images:
+        min_mondoo_version: 9.0.0
       instances: {}
       internetGateways: {}
       keypairs: {}
@@ -1084,21 +1101,64 @@ resources:
     fields:
       architecture: {}
       arn: {}
+      blockDeviceMappings:
+        min_mondoo_version: 9.0.0
       createdAt:
         min_mondoo_version: 9.0.0
       deprecatedAt:
         min_mondoo_version: 9.0.0
       enaSupport:
         min_mondoo_version: 9.0.0
+      encrypted:
+        min_mondoo_version: 9.0.0
       id: {}
       name: {}
       ownerAlias:
         min_mondoo_version: 5.22.0
       ownerId: {}
+      public:
+        min_mondoo_version: 9.0.0
+      region:
+        min_mondoo_version: 9.0.0
+      rootDeviceType:
+        min_mondoo_version: 9.0.0
+      state:
+        min_mondoo_version: 9.0.0
+      tags:
+        min_mondoo_version: 9.0.0
       tpmSupport:
+        min_mondoo_version: 9.0.0
+      virtualizationType:
         min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.ec2.image.blockDeviceMapping:
+    fields:
+      deviceName: {}
+      ebs: {}
+      id: {}
+      noDevice: {}
+      virtualName: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ec2.image.ebsBlockDevice:
+    fields:
+      deleteOnTermination: {}
+      encrypted: {}
+      iops: {}
+      kmsKeyId: {}
+      snapshotId: {}
+      throughput: {}
+      volumeSize: {}
+      volumeType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

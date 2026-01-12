@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
@@ -187,10 +188,10 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	arnVal, err := arn.Parse(a)
 	if arnVal.AccountID != runtime.Connection.(*connection.AwsConnection).AccountId() {
 		// sometimes there are references to keys in other accounts, like the master account of an org
-		return nil, nil, errors.New("no access to key")
+		return nil, nil, fmt.Errorf("cannot access key from different AWS account %q", arnVal.AccountID)
 	}
 
-	obj, err := CreateResource(runtime, "aws.kms", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, ResourceAwsKms, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}

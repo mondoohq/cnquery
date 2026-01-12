@@ -16,7 +16,6 @@ Available Commands:
   help          Help about any command
   login         Register with Mondoo Platform
   logout        Log out from Mondoo Platform
-  lsp           Launch the MQL Language Server
   providers     Providers add connectivity to all assets
   run           Run an MQL query
   sbom          Experimental: Generate a software bill of materials (SBOM) for a given asset

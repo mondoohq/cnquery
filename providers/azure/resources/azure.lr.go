@@ -118,6 +118,9 @@ const (
 	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                           string = "azure.subscription.monitorService.diagnosticsetting"
 	ResourceAzureSubscriptionCloudDefenderService                                      string = "azure.subscription.cloudDefenderService"
 	ResourceAzureSubscriptionCloudDefenderServiceSettings                              string = "azure.subscription.cloudDefenderService.settings"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis                       string = "azure.subscription.cloudDefenderService.defenderForApis"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                          string = "azure.subscription.cloudDefenderService.defenderCSPM"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension                 string = "azure.subscription.cloudDefenderService.defenderCSPM.extension"
 	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                       string = "azure.subscription.cloudDefenderService.securityContact"
 	ResourceAzureSubscriptionAuthorizationService                                      string = "azure.subscription.authorizationService"
 	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                        string = "azure.subscription.authorizationService.roleDefinition"
@@ -545,6 +548,18 @@ func init() {
 		"azure.subscription.cloudDefenderService.settings": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCloudDefenderServiceSettings,
+		},
+		"azure.subscription.cloudDefenderService.defenderForApis": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForApis(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForApis,
+		},
+		"azure.subscription.cloudDefenderService.defenderCSPM": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderCSPM(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderCSPM,
+		},
+		"azure.subscription.cloudDefenderService.defenderCSPM.extension": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension,
 		},
 		"azure.subscription.cloudDefenderService.securityContact": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSecurityContact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3143,6 +3158,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.defenderForResourceManager": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForResourceManager()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.cloudDefenderService.defenderForApis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForApis()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForApis"))
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderCSPM()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderCSPM"))
+	},
 	"azure.subscription.cloudDefenderService.defenderForContainers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForContainers()).ToDataRes(types.Dict)
 	},
@@ -3172,6 +3193,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.settings.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetExtensions()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.defenderCSPM.extension")))
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).GetIsEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.cloudDefenderService.securityContact.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetId()).ToDataRes(types.String)
@@ -7193,6 +7244,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForResourceManager, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cloudDefenderService.defenderForApis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForApis, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderCSPM, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cloudDefenderService.defenderForContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForContainers, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -7235,6 +7294,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.settings.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.securityContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17723,6 +17834,8 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	DefenderForStorageAccounts      plugin.TValue[any]
 	DefenderForKeyVaults            plugin.TValue[any]
 	DefenderForResourceManager      plugin.TValue[any]
+	DefenderForApis                 plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis]
+	DefenderCSPM                    plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM]
 	DefenderForContainers           plugin.TValue[any]
 	SecurityContacts                plugin.TValue[[]any]
 	SettingsMCAS                    plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
@@ -17828,6 +17941,38 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForKeyVaults() *pl
 func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForResourceManager() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.DefenderForResourceManager, func() (any, error) {
 		return c.defenderForResourceManager()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForApis() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis](&c.DefenderForApis, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForApis")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis), nil
+			}
+		}
+
+		return c.defenderForApis()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderCSPM() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM](&c.DefenderCSPM, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderCSPM")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM), nil
+			}
+		}
+
+		return c.defenderCSPM()
 	})
 }
 
@@ -17968,6 +18113,200 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetType() *plugin.TVa
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceSettings) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForApis for the azure.subscription.cloudDefenderService.defenderForApis resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForApis struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForApisInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Enabled        plugin.TValue[bool]
+	PricingTier    plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForApis creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForApis(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForApis{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForApis", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForApis"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM for the azure.subscription.cloudDefenderService.defenderCSPM resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Enabled        plugin.TValue[bool]
+	PricingTier    plugin.TValue[string]
+	SubPlan        plugin.TValue[string]
+	Extensions     plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderCSPM creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderCSPM(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderCSPM", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderCSPM"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService.defenderCSPM", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension for the azure.subscription.cloudDefenderService.defenderCSPM.extension resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtensionInternal it will be used here
+	Name      plugin.TValue[string]
+	IsEnabled plugin.TValue[bool]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderCSPM.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderCSPM.extension"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceSecurityContact for the azure.subscription.cloudDefenderService.securityContact resource

@@ -6,7 +6,6 @@ package theme
 import (
 	"strings"
 
-	prompt "github.com/c-bata/go-prompt"
 	"github.com/muesli/termenv"
 	"go.mondoo.com/cnquery/v12/cli/printer"
 	"go.mondoo.com/cnquery/v12/cli/theme/colors"
@@ -15,22 +14,6 @@ import (
 // OperatingSystemTheme for windows shell
 var OperatingSystemTheme = &Theme{
 	Colors: colors.DefaultColorTheme,
-	// NOTE: windows cmd does not render purple well
-	PromptColors: PromptColors{
-		PrefixTextColor:              prompt.Fuchsia,
-		PreviewSuggestionTextColor:   prompt.Fuchsia,
-		PreviewSuggestionBGColor:     prompt.DefaultColor,
-		SuggestionTextColor:          prompt.Black,
-		SuggestionBGColor:            prompt.White,
-		SelectedSuggestionTextColor:  prompt.White,
-		SelectedSuggestionBGColor:    prompt.Fuchsia,
-		DescriptionTextColor:         prompt.DefaultColor,
-		DescriptionBGColor:           prompt.Fuchsia,
-		SelectedDescriptionTextColor: prompt.Fuchsia,
-		SelectedDescriptionBGColor:   prompt.White,
-		ScrollbarBGColor:             prompt.Fuchsia,
-		ScrollbarThumbColor:          prompt.White,
-	},
 	List: func(items ...string) string {
 		var w strings.Builder
 		for i := range items {

@@ -25,7 +25,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"ansible": {
 		Provider: &plugin.Provider{
 			Name:            "ansible",
@@ -40,7 +39,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"arista": {
 		Provider: &plugin.Provider{
 			Name:            "arista",
@@ -55,7 +53,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"atlassian": {
 		Provider: &plugin.Provider{
 			Name:            "atlassian",
@@ -70,7 +67,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"aws": {
 		Provider: &plugin.Provider{
 			Name:            "aws",
@@ -85,7 +81,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"azure": {
 		Provider: &plugin.Provider{
 			Name:            "azure",
@@ -100,7 +95,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"cloudflare": {
 		Provider: &plugin.Provider{
 			Name:            "cloudformation",
@@ -115,7 +109,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"cloudformation": {
 		Provider: &plugin.Provider{
 			Name:            "cloudflare",
@@ -130,7 +123,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"core": {
 		Provider: &plugin.Provider{
 			Name:            "core",
@@ -139,7 +131,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors:      []plugin.Connector{},
 		},
 	},
-
 	"equinix": {
 		Provider: &plugin.Provider{
 			Name:            "equinix",
@@ -154,7 +145,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"gcp": {
 		Provider: &plugin.Provider{
 			Name:            "gcp",
@@ -169,7 +159,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"github": {
 		Provider: &plugin.Provider{
 			Name:            "github",
@@ -184,7 +173,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"gitlab": {
 		Provider: &plugin.Provider{
 			Name:            "gitlab",
@@ -199,7 +187,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"google-workspace": {
 		Provider: &plugin.Provider{
 			Name:            "google-workspace",
@@ -214,7 +201,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"ipmi": {
 		Provider: &plugin.Provider{
 			Name:            "ipmi",
@@ -229,7 +215,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"k8s": {
 		Provider: &plugin.Provider{
 			Name:            "k8s",
@@ -244,7 +229,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"mondoo": {
 		Provider: &plugin.Provider{
 			Name:            "mondoo",
@@ -259,7 +243,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"ms365": {
 		Provider: &plugin.Provider{
 			Name:            "ms365",
@@ -274,7 +257,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"network": {
 		Provider: &plugin.Provider{
 			Name:            "network",
@@ -289,7 +271,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"nmap": {
 		Provider: &plugin.Provider{
 			Name:            "nmap",
@@ -304,7 +285,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"oci": {
 		Provider: &plugin.Provider{
 			Name:            "oci",
@@ -319,7 +299,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"okta": {
 		Provider: &plugin.Provider{
 			Name:            "okta",
@@ -334,7 +313,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"opcua": {
 		Provider: &plugin.Provider{
 			Name:            "opcua",
@@ -349,7 +327,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"os": {
 		Provider: &plugin.Provider{
 			Name:            "os",
@@ -412,7 +389,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"shodan": {
 		Provider: &plugin.Provider{
 			Name:            "shodan",
@@ -427,7 +403,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"slack": {
 		Provider: &plugin.Provider{
 			Name:            "slack",
@@ -442,7 +417,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"snowflake": {
 		Provider: &plugin.Provider{
 			Name:            "snowflake",
@@ -457,7 +431,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"tailscale": {
 		Provider: &plugin.Provider{
 			Name:            "tailscale",
@@ -472,7 +445,6 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
-
 	"terraform": {
 		Provider: &plugin.Provider{
 			Name:            "terraform",
@@ -592,6 +564,14 @@ var DefaultProviders Providers = map[string]*Provider{
 					Short: "a remote PAN-OS system",
 				},
 			},
+		},
+	},
+	"yara": {
+		Provider: &plugin.Provider{
+			Name:            "yara",
+			ID:              "go.mondoo.com/cnquery/providers/yara",
+			ConnectionTypes: []string(nil),
+			Connectors:      []plugin.Connector{},
 		},
 	},
 }

@@ -152,8 +152,8 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			// m.StoreRecording(viper.GetString("record-file"))
 		}
 
-		shellOptions := []shell.ShellOption{}
-		shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
+		shellOptions := []shell.Option{}
+		shellOptions = append(shellOptions, shell.WithOnClose(onCloseHandler))
 		shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
 		shellOptions = append(shellOptions, shell.WithOutput(out))
 
@@ -161,10 +161,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			shellOptions = append(shellOptions, shell.WithUpstreamConfig(upstreamConfig))
 		}
 
-		sh, err := shell.New(asset.Runtime, shellOptions...)
-		if err != nil {
-			return errors.Wrap(err, "failed to initialize the shell")
-		}
+		sh := shell.NewShell(asset.Runtime, shellOptions...)
 		defer func() {
 			// prevent the recording from being closed multiple times
 			err = asset.Runtime.SetRecording(recording.Null{})

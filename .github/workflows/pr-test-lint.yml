@@ -4,12 +4,15 @@ name: Code Test
 on:
   push:
     paths:
-      - '**.go'
-      - '**.mod'
-      - 'go.sum'
-      - 'Makefile'
-      - '.github/workflows/pr-test-lint.yml'
-      - '**.toml' # run tests when any recording changed
+      - "**.go"
+      - "**.mod"
+      - "go.sum"
+      - "Makefile"
+      - ".github/workflows/pr-test-lint.yml"
+      - "**.toml" # run tests when any recording changed
+
+permissions:
+  contents: read
 
 jobs:
   # Check if there is any dirty change for go mod tidy
@@ -77,8 +80,8 @@ jobs:
           go-version: ">=${{ env.golang-version }}"
           cache: false
 
-      - name: 'Set up gcloud CLI'
-        uses: 'google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db' # v3.0.1
+      - name: "Set up gcloud CLI"
+        uses: "google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db" # v3.0.1
 
       - name: Set provider env
         run: echo "PROVIDERS_PATH=${PWD}/.providers" >> $GITHUB_ENV
@@ -92,10 +95,10 @@ jobs:
         run: make providers/test
 
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        if: success() || failure()        # run this step even if previous step failed
+        if: success() || failure() # run this step even if previous step failed
         with:
           name: test-results
-          path: '*.xml'
+          path: "*.xml"
 
   go-test-integration:
     runs-on:
@@ -114,8 +117,8 @@ jobs:
           go-version: ">=${{ env.golang-version }}"
           cache: false
 
-      - name: 'Set up gcloud CLI'
-        uses: 'google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db' # v3.0.1
+      - name: "Set up gcloud CLI"
+        uses: "google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db" # v3.0.1
 
       - name: Set provider env
         run: echo "PROVIDERS_PATH=${PWD}/.providers" >> $GITHUB_ENV
@@ -126,7 +129,7 @@ jobs:
         run: make test/integration
 
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        if: success() || failure()        # run this step even if previous step failed
+        if: success() || failure() # run this step even if previous step failed
         with:
           name: test-results-cli
           path: report.xml
@@ -182,7 +185,7 @@ jobs:
         uses: benchmark-action/github-action-benchmark@4bdcce38c94cec68da58d012ac24b7b1155efe8b # v1.20.7
         with:
           # What benchmark tool the output.txt came from
-          tool: 'go'
+          tool: "go"
           # Where the output from the benchmark tool is stored
           output-file-path: benchmark.txt
           # Where the previous data file is stored
@@ -192,7 +195,7 @@ jobs:
           summary-always: true
           fail-on-alert: true
           save-data-file: false
-          alert-threshold: '150%'
+          alert-threshold: "150%"
 
   go-auto-approve:
     runs-on: ubuntu-latest
@@ -228,13 +231,13 @@ jobs:
           gh pr merge ${{ steps.pr.outputs.number }} --squash
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-          
+
   event_file:
     name: "Store event file"
     runs-on: ubuntu-latest
     steps:
-    - name: Upload
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-      with:
-        name: Event File
-        path: ${{ github.event_path }}
+      - name: Upload
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: Event File
+          path: ${{ github.event_path }}

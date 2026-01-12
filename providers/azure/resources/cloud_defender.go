@@ -340,6 +340,89 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForResourceManager() 
 	return convert.JsonToDict(resp)
 }
 
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForApis() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	apiPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "Api", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	enabled := false
+	pricingTier := ""
+	if apiPricing.Properties.PricingTier != nil {
+		pricingTier = string(*apiPricing.Properties.PricingTier)
+		// Check if the pricing tier is set to 'Standard' which indicates that Defender for APIs is enabled
+		enabled = *apiPricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
+	resource, err := CreateResource(a.MqlRuntime,
+		ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis,
+		map[string]*llx.RawData{
+			"__id":           llx.StringData(ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis + "/" + subId),
+			"enabled":        llx.BoolData(enabled),
+			"pricingTier":    llx.StringData(pricingTier),
+			"subscriptionId": llx.StringData(subId),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis), nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderCSPM() (*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	cloudPosturePricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "CloudPosture", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	enabled := false
+	pricingTier := ""
+	if cloudPosturePricing.Properties.PricingTier != nil {
+		pricingTier = string(*cloudPosturePricing.Properties.PricingTier)
+		enabled = *cloudPosturePricing.Properties.PricingTier == security.PricingTierStandard
+	}
+
+	subPlan := ""
+	if cloudPosturePricing.Properties.SubPlan != nil {
+		subPlan = *cloudPosturePricing.Properties.SubPlan
+	}
+
+	resource, err := CreateResource(a.MqlRuntime,
+		ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM,
+		map[string]*llx.RawData{
+			"__id":           llx.StringData(ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM + "/" + subId),
+			"enabled":        llx.BoolData(enabled),
+			"pricingTier":    llx.StringData(pricingTier),
+			"subPlan":        llx.StringData(subPlan),
+			"subscriptionId": llx.StringData(subId),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM), nil
+}
+
 func (a *mqlAzureSubscriptionCloudDefenderService) monitoringAgentAutoProvision() (bool, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -626,4 +709,61 @@ func argsFromContactProperties(props *armsecurity.ContactProperties) map[string]
 	args["emails"] = llx.ArrayData(convert.SliceAnyToInterface(mailsArr), types.String)
 
 	return args
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) extensions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	cloudPosturePricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "CloudPosture", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	extensions := []any{}
+	if cloudPosturePricing.Properties.Extensions != nil {
+		for _, ext := range cloudPosturePricing.Properties.Extensions {
+			if ext.Name == nil {
+				continue
+			}
+			isEnabled := false
+			if ext.IsEnabled != nil {
+				isEnabled = *ext.IsEnabled == security.IsEnabledTrue
+			}
+
+			extensionResource, err := CreateResource(a.MqlRuntime,
+				"azure.subscription.cloudDefenderService.defenderCSPM.extension",
+				map[string]*llx.RawData{
+					"__id":      llx.StringData(ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM + "/" + subId + "/extension/" + *ext.Name),
+					"name":      llx.StringData(*ext.Name),
+					"isEnabled": llx.BoolData(isEnabled),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+			extensions = append(extensions, extensionResource)
+		}
+	}
+
+	return extensions, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) id() (string, error) {
+	return a.__id, nil
 }

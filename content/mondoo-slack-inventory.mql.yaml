@@ -60,10 +60,14 @@ packs:
     queries:
       - uid: mondoo-slack-inventory-team-domain
         title: Slack Team Domain
+        docs:
+          desc: Returns the workspace domain name for the Slack team.
         mql: |
           slack.team.domain
       - uid: mondoo-slack-inventory-team-id
         title: Slack Team ID
+        docs:
+          desc: Returns the unique identifier for the Slack workspace.
         mql: |
           slack.team.id
       - uid: mondoo-slack-inventory-mfa-status
