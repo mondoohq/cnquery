@@ -217,8 +217,16 @@ func ParseBlocksWithGlob(rootPath string, fileContent fileContentFunc, globExpan
 		return nil, err
 	}
 
-	// If no paths matched, return empty blocks
+	// If no paths matched, check if rootPath was a single file (not a glob) or return empty blocks
 	if len(paths) == 0 {
+		// Check if rootPath contains a glob pattern
+		hasGlob := strings.Contains(rootPath, "*") || strings.Contains(rootPath, "?") || strings.Contains(rootPath, "[")
+		if !hasGlob {
+			_, err := fileContent(rootPath)
+			if err != nil {
+				return nil, err
+			}
+		}
 		return MatchBlocks{}, nil
 	}
 
@@ -226,9 +234,12 @@ func ParseBlocksWithGlob(rootPath string, fileContent fileContentFunc, globExpan
 	// Each file maintains its own context (path, line numbers)
 	var allBlocks MatchBlocks
 
-	for _, path := range paths {
+	for i, path := range paths {
 		content, err := fileContent(path)
 		if err != nil {
+			if i == 0 && (len(paths) == 1 || path == rootPath) {
+				return nil, err
+			}
 			log.Warn().Err(err).Str("path", path).Msg("unable to read file")
 			continue
 		}
