@@ -111,5 +111,5 @@ func (cat *Fs) Chown(name string, uid, gid int) error {
 func (cat *Fs) ReadDir(name string) ([]os.FileInfo, error) {
 	file := NewFile(cat, name, false)
 	defer file.Close()
-	return file.Readdir(-1)
+	return file.Readdir(-1) // -1 is ignored, we read all files
 }
