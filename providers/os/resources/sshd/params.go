@@ -93,15 +93,25 @@ func mergeIncludedBlocks(matchConditions map[string]*MatchBlock, blocks MatchBlo
 			continue
 		}
 
-		var existing *MatchBlock
+		existing, ok := matchConditions[block.Criteria]
 		if block.Criteria == "" {
 			existing = matchConditions[curBlock]
-		} else {
-			existing := matchConditions[block.Criteria]
-			if existing == nil {
-				matchConditions[block.Criteria] = block
-				continue
+		} else if !ok {
+			existing = block
+			matchConditions[block.Criteria] = existing
+		}
+
+		if existing == nil {
+			existing = &MatchBlock{
+				Criteria: block.Criteria,
+				Params:   map[string]any{},
+				Context:  block.Context,
 			}
+			matchConditions[block.Criteria] = existing
+		}
+
+		if existing.Params == nil {
+			existing.Params = map[string]any{}
 		}
 
 		for k, v := range block.Params {

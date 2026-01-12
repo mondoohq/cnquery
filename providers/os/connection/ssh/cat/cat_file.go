@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -95,7 +96,13 @@ func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
 
 	res = make([]os.FileInfo, len(names))
 	for i, name := range names {
-		res[i], err = f.catfs.Stat(name)
+		var statPath string
+		if filepath.IsAbs(name) {
+			statPath = name
+		} else {
+			statPath = filepath.Join(f.path, name)
+		}
+		res[i], err = f.catfs.Stat(statPath)
 		if err != nil {
 			return nil, err
 		}
