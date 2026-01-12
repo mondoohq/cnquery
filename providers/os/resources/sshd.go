@@ -194,7 +194,7 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 
 		content := fileContent.Data + "\n"
 		allContents.WriteString(content)
-		return fileContent.Data, nil
+		return content, nil
 	}
 
 	// Function to expand glob patterns
