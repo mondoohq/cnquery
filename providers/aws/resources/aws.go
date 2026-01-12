@@ -14,6 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/smithy-go/transport/http"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
@@ -204,13 +205,19 @@ func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
 	if a == nil {
 		return nil
 	}
-	arn := ""
+
+	arnStr := ""
 	for _, id := range a.PlatformIds {
 		if strings.HasPrefix(id, "arn:aws:") {
-			arn = id
+			if _, err := arn.Parse(id); err == nil {
+				arnStr = id
+			} else {
+				log.Debug().Str("invalid_arn", id).Err(err).Msg("skipping invalid ARN in asset PlatformIds")
+			}
 		}
 	}
-	return &assetIdentifier{name: a.Name, arn: arn}
+
+	return &assetIdentifier{name: a.Name, arn: arnStr}
 }
 
 func mapStringInterfaceToStringString(m map[string]any) map[string]string {
