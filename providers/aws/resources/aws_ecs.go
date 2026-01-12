@@ -172,10 +172,7 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return nil, nil, err
 	}
 
-	region := ""
-	if parsedARN != nil {
-		region = parsedARN.Region
-	}
+	region := parsedARN.Region
 
 	svc := conn.Ecs(region)
 	ctx := context.Background()
@@ -329,13 +326,10 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return nil, nil, err
 	}
 
-	region := ""
+	region := parsedARN.Region
 	clusterName := ""
-	if parsedARN != nil {
-		region = parsedARN.Region
-		if res := strings.Split(parsedARN.Resource, "/"); len(res) == 3 {
-			clusterName = res[1]
-		}
+	if res := strings.Split(parsedARN.Resource, "/"); len(res) == 3 {
+		clusterName = res[1]
 	}
 
 	svc := conn.Ecs(region)
@@ -500,8 +494,7 @@ func ecsTagsToMap(tags []ecstypes.Tag) map[string]any {
 // or does not belong to the expectedService.
 func validateAndParseARN(arnStr, expectedService string) (*arn.ARN, error) {
 	if !strings.HasPrefix(arnStr, "arn:") {
-		// Not an ARN - caller should handle
-		return nil, nil
+		return nil, errors.Newf("invalid ARN format: %s", arnStr)
 	}
 
 	parsedArn, err := arn.Parse(arnStr)
