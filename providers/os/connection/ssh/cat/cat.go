@@ -107,3 +107,9 @@ func (cat *Fs) Chtimes(name string, atime time.Time, mtime time.Time) error {
 func (cat *Fs) Chown(name string, uid, gid int) error {
 	return NotImplemented
 }
+
+func (cat *Fs) ReadDir(name string) ([]os.FileInfo, error) {
+	file := NewFile(cat, name, false)
+	defer file.Close()
+	return file.Readdir(-1)
+}
