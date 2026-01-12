@@ -43,6 +43,8 @@ func Resolve(conn shared.Connection) (OSCloud, error) {
 		return &vmware{conn}, nil
 	case clouddetect.IBM:
 		return &ibm{conn}, nil
+	case clouddetect.HETZNER:
+		return &hetzner{conn}, nil
 	default:
 		return &none{}, nil
 	}
@@ -57,6 +59,7 @@ type none struct{}
 func (n *none) Provider() Provider {
 	return UNKNOWN
 }
+
 func (n *none) Instance() (*InstanceMetadata, error) {
 	return nil, errors.New("unknown provider information")
 }
