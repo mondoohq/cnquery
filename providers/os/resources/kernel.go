@@ -110,6 +110,28 @@ func (k *mqlKernel) installed() ([]any, error) {
 					})
 				}
 			}
+		} else if platform.Name == "oraclelinux" {
+			// ORacleLinux is an rpm based systems, but might be running the UEK kernel
+			// kernel version is  "6.12.0-105.51.5.el9uek.x86_64"
+			// filter by packages named "kernel" OR "kernel-uek"
+			filterKernel = func(pkg *mqlPackage) {
+				if pkg.Name.Data == "kernel" || pkg.Name.Data == "kernel-uek" {
+					version := pkg.Version.Data
+					arch := pkg.Arch.Data
+
+					kernelName := version + "." + arch
+					running := false
+					if kernelName == runningKernelVersion {
+						running = true
+					}
+
+					res = append(res, KernelVersion{
+						Name:    pkg.Name.Data,
+						Version: version,
+						Running: running,
+					})
+				}
+			}
 		} else if platform.IsFamily("redhat") || platform.Name == "amazonlinux" {
 			// rpm based systems
 			// kernel version is  "3.10.0-1160.11.1.el7.x86_64"
