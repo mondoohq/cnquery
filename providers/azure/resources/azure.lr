@@ -1026,6 +1026,8 @@ private azure.subscription.storageService.account @defaults("id name location") 
   blobProperties() azure.subscription.storageService.account.service.blobProperties
   // Storage account data protection
   dataProtection() azure.subscription.storageService.account.dataProtection
+  // Storage account file properties
+  fileProperties() azure.subscription.storageService.account.fileProperties
 }
 
 // Azure Storage account data protection
@@ -1040,6 +1042,48 @@ private azure.subscription.storageService.account.dataProtection @defaults("blob
   containerSoftDeletionEnabled bool
    // Retention period in days for deleted containers
   containerRetentionDays int
+}
+
+// Azure Storage account file properties
+private azure.subscription.storageService.account.fileProperties @defaults("storageAccountId") {
+  // ID of the storage account
+  storageAccountId string
+  // File share delete retention policy
+  shareDeleteRetentionPolicy azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicy
+  // Protocol settings for file service
+  protocolSettings azure.subscription.storageService.account.fileProperties.protocolSettings
+}
+
+// Azure Storage account file properties share delete retention policy
+private azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicy @defaults("enabled days") {
+  // ID of the retention policy
+  id string
+  // Whether share delete retention is enabled
+  enabled bool
+  // Retention period in days for deleted file shares
+  days int
+}
+
+// Azure Storage account file properties protocol settings
+private azure.subscription.storageService.account.fileProperties.protocolSettings @defaults("id") {
+  // ID of the protocol settings
+  id string
+  // SMB protocol settings
+  smb azure.subscription.storageService.account.fileProperties.protocolSettings.smb
+}
+
+// Azure Storage account file properties protocol settings SMB
+private azure.subscription.storageService.account.fileProperties.protocolSettings.smb @defaults("id") {
+  // ID of the SMB settings
+  id string
+  // Supported SMB versions (e.g., "SMB3.0;SMB3.1.1")
+  versions string
+  // Supported channel encryption methods (e.g., "AES-128-CCM;AES-128-GCM;AES-256-GCM")
+  channelEncryption string
+  // Supported authentication methods (e.g., "NTLMv2;Kerberos")
+  authenticationMethods string
+  // Supported Kerberos ticket encryption methods (e.g., "RC4-HMAC;AES-256")
+  kerberosTicketEncryption string
 }
 
 // Azure Storage account service properties
