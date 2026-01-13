@@ -109,6 +109,7 @@ const (
 	ResourceAzureSubscriptionKeyVaultServiceVault                                      string = "azure.subscription.keyVaultService.vault"
 	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                            string = "azure.subscription.keyVaultService.key.autorotation"
 	ResourceAzureSubscriptionKeyVaultServiceKey                                        string = "azure.subscription.keyVaultService.key"
+	ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject                    string = "azure.subscription.keyVaultService.key.rotationPolicyObject"
 	ResourceAzureSubscriptionKeyVaultServiceCertificate                                string = "azure.subscription.keyVaultService.certificate"
 	ResourceAzureSubscriptionKeyVaultServiceSecret                                     string = "azure.subscription.keyVaultService.secret"
 	ResourceAzureSubscriptionMonitorService                                            string = "azure.subscription.monitorService"
@@ -513,6 +514,10 @@ func init() {
 		"azure.subscription.keyVaultService.key": {
 			// to override args, implement: initAzureSubscriptionKeyVaultServiceKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionKeyVaultServiceKey,
+		},
+		"azure.subscription.keyVaultService.key.rotationPolicyObject": {
+			// to override args, implement: initAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject,
 		},
 		"azure.subscription.keyVaultService.certificate": {
 			// to override args, implement: initAzureSubscriptionKeyVaultServiceCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2961,6 +2966,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.keyVaultService.key.versions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceKey).GetVersions()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.key")))
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKey).GetRotationPolicy()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key.rotationPolicyObject"))
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.lifetimeActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).GetLifetimeActions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).GetAttributes()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).GetEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.keyVaultService.certificate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificate).GetId()).ToDataRes(types.String)
@@ -6962,6 +6979,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.keyVaultService.key.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceKey).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKey).RotationPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.lifetimeActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).LifetimeActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).Attributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17043,18 +17080,19 @@ type mqlAzureSubscriptionKeyVaultServiceKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionKeyVaultServiceKeyInternal it will be used here
-	Kid           plugin.TValue[string]
-	Tags          plugin.TValue[map[string]any]
-	Managed       plugin.TValue[bool]
-	Enabled       plugin.TValue[bool]
-	NotBefore     plugin.TValue[*time.Time]
-	Expires       plugin.TValue[*time.Time]
-	Created       plugin.TValue[*time.Time]
-	Updated       plugin.TValue[*time.Time]
-	RecoveryLevel plugin.TValue[string]
-	KeyName       plugin.TValue[string]
-	Version       plugin.TValue[string]
-	Versions      plugin.TValue[[]any]
+	Kid            plugin.TValue[string]
+	Tags           plugin.TValue[map[string]any]
+	Managed        plugin.TValue[bool]
+	Enabled        plugin.TValue[bool]
+	NotBefore      plugin.TValue[*time.Time]
+	Expires        plugin.TValue[*time.Time]
+	Created        plugin.TValue[*time.Time]
+	Updated        plugin.TValue[*time.Time]
+	RecoveryLevel  plugin.TValue[string]
+	KeyName        plugin.TValue[string]
+	Version        plugin.TValue[string]
+	Versions       plugin.TValue[[]any]
+	RotationPolicy plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject]
 }
 
 // createAzureSubscriptionKeyVaultServiceKey creates a new instance of this resource
@@ -17156,6 +17194,81 @@ func (c *mqlAzureSubscriptionKeyVaultServiceKey) GetVersions() *plugin.TValue[[]
 
 		return c.versions()
 	})
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKey) GetRotationPolicy() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject](&c.RotationPolicy, func() (*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.key", c.__id, "rotationPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject), nil
+			}
+		}
+
+		return c.rotationPolicy()
+	})
+}
+
+// mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject for the azure.subscription.keyVaultService.key.rotationPolicyObject resource
+type mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectInternal it will be used here
+	LifetimeActions plugin.TValue[[]any]
+	Attributes      plugin.TValue[any]
+	Enabled         plugin.TValue[bool]
+}
+
+// createAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject creates a new instance of this resource
+func createAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.keyVaultService.key.rotationPolicyObject", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) MqlName() string {
+	return "azure.subscription.keyVaultService.key.rotationPolicyObject"
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) GetLifetimeActions() *plugin.TValue[[]any] {
+	return &c.LifetimeActions
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) GetAttributes() *plugin.TValue[any] {
+	return &c.Attributes
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
 }
 
 // mqlAzureSubscriptionKeyVaultServiceCertificate for the azure.subscription.keyVaultService.certificate resource
