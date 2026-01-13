@@ -2955,6 +2955,18 @@ resources:
     refs:
     - title: Azure Storage documentation
       url: https://learn.microsoft.com/en-us/azure/storage/
+  azure.subscription.storageService.account.service.blobProperties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      isVersioningEnabled: {}
+      logging: {}
+      minuteMetrics: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.storageService.account.service.properties:
     fields:
       hourMetrics: {}

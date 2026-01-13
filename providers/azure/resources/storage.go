@@ -73,6 +73,10 @@ func (a *mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics) id()
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionStorageService) accounts() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -176,13 +180,39 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) tableProperties() (*mqlAzure
 	return toMqlServiceStorageProperties(a.MqlRuntime, props.ServiceProperties, "table", id)
 }
 
-func (a *mqlAzureSubscriptionStorageServiceAccount) blobProperties() (*mqlAzureSubscriptionStorageServiceAccountServiceProperties, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) blobProperties() (*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := resourceID.Component("storageAccounts")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := storage.NewBlobServicesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	blobProps, err := client.GetServiceProperties(ctx, resourceID.ResourceGroup, account, &storage.BlobServicesClientGetServicePropertiesOptions{})
+	if err != nil {
+		return nil, err
+	}
+
 	props, err := a.getServiceStorageProperties("blob")
 	if err != nil {
 		return nil, err
 	}
-	id := a.Id.Data
-	return toMqlServiceStorageProperties(a.MqlRuntime, props.ServiceProperties, "blob", id)
+
+	return toMqlBlobServiceStorageProperties(a.MqlRuntime, props.ServiceProperties, blobProps.BlobServiceProperties, "blob", id)
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureSubscriptionStorageServiceAccountDataProtection, error) {
@@ -346,6 +376,89 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 		return nil, err
 	}
 	return settings.(*mqlAzureSubscriptionStorageServiceAccountServiceProperties), nil
+}
+
+func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceProperties, blobProps storage.BlobServiceProperties, serviceType, parentId string) (*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties, error) {
+	loggingRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
+		map[string]*llx.RawData{
+			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType)),
+			"retentionDays": llx.IntDataDefault(props.Logging.RetentionPolicy.Days, 0),
+			"enabled":       llx.BoolDataPtr(props.Logging.RetentionPolicy.Enabled),
+		})
+	if err != nil {
+		return nil, err
+	}
+	logging, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.logging",
+		map[string]*llx.RawData{
+			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/logging", parentId, serviceType)),
+			"retentionPolicy": llx.ResourceData(loggingRetentionPolicy, "retentionPolicy"),
+			"delete":          llx.BoolDataPtr(props.Logging.Delete),
+			"write":           llx.BoolDataPtr(props.Logging.Write),
+			"read":            llx.BoolDataPtr(props.Logging.Read),
+			"version":         llx.StringDataPtr(props.Logging.Version),
+		})
+	if err != nil {
+		return nil, err
+	}
+	minuteMetricsRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
+		map[string]*llx.RawData{
+			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/retentionPolicy", parentId, serviceType)),
+			"retentionDays": llx.IntDataDefault(props.MinuteMetrics.RetentionPolicy.Days, 0),
+			"enabled":       llx.BoolDataPtr(props.MinuteMetrics.RetentionPolicy.Enabled),
+		})
+	if err != nil {
+		return nil, err
+	}
+	minuteMetrics, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.metrics",
+		map[string]*llx.RawData{
+			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/", parentId, serviceType)),
+			"retentionPolicy": llx.ResourceData(minuteMetricsRetentionPolicy, "retentionPolicy"),
+			"enabled":         llx.BoolDataPtr(props.MinuteMetrics.Enabled),
+			"includeAPIs":     llx.BoolDataPtr(props.MinuteMetrics.IncludeAPIs),
+			"version":         llx.StringDataPtr(props.MinuteMetrics.Version),
+		})
+	if err != nil {
+		return nil, err
+	}
+	hourMetricsRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
+		map[string]*llx.RawData{
+			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics/retentionPolicy", parentId, serviceType)),
+			"retentionDays": llx.IntDataDefault(props.HourMetrics.RetentionPolicy.Days, 0),
+			"enabled":       llx.BoolDataPtr(props.HourMetrics.RetentionPolicy.Enabled),
+		})
+	if err != nil {
+		return nil, err
+	}
+	hourMetrics, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.metrics",
+		map[string]*llx.RawData{
+			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics", parentId, serviceType)),
+			"retentionPolicy": llx.ResourceData(hourMetricsRetentionPolicy, "retentionPolicy"),
+			"enabled":         llx.BoolDataPtr(props.HourMetrics.Enabled),
+			"includeAPIs":     llx.BoolDataPtr(props.HourMetrics.IncludeAPIs),
+			"version":         llx.StringDataPtr(props.HourMetrics.Version),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract versioning enabled from blob properties
+	var isVersioningEnabled bool
+	if blobProps.BlobServiceProperties != nil && blobProps.BlobServiceProperties.IsVersioningEnabled != nil {
+		isVersioningEnabled = convert.ToValue(blobProps.BlobServiceProperties.IsVersioningEnabled)
+	}
+
+	settings, err := CreateResource(runtime, "azure.subscription.storageService.account.service.blobProperties",
+		map[string]*llx.RawData{
+			"id":                  llx.StringData(fmt.Sprintf("%s/%s/properties", parentId, serviceType)),
+			"minuteMetrics":       llx.ResourceData(minuteMetrics, "minuteMetrics"),
+			"hourMetrics":         llx.ResourceData(hourMetrics, "hourMetrics"),
+			"logging":             llx.ResourceData(logging, "logging"),
+			"isVersioningEnabled": llx.BoolData(isVersioningEnabled),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return settings.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties), nil
 }
 
 func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mqlAzureSubscriptionStorageServiceAccount, error) {

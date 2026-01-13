@@ -67,6 +67,7 @@ const (
 	ResourceAzureSubscriptionStorageServiceAccount                                     string = "azure.subscription.storageService.account"
 	ResourceAzureSubscriptionStorageServiceAccountDataProtection                       string = "azure.subscription.storageService.account.dataProtection"
 	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                    string = "azure.subscription.storageService.account.service.properties"
+	ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties                string = "azure.subscription.storageService.account.service.blobProperties"
 	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics             string = "azure.subscription.storageService.account.service.properties.metrics"
 	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy     string = "azure.subscription.storageService.account.service.properties.retentionPolicy"
 	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging             string = "azure.subscription.storageService.account.service.properties.logging"
@@ -344,6 +345,10 @@ func init() {
 		"azure.subscription.storageService.account.service.properties": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountServiceProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionStorageServiceAccountServiceProperties,
+		},
+		"azure.subscription.storageService.account.service.blobProperties": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountServiceBlobProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountServiceBlobProperties,
 		},
 		"azure.subscription.storageService.account.service.properties.metrics": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountServicePropertiesMetrics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1956,7 +1961,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetTableProperties()).ToDataRes(types.Resource("azure.subscription.storageService.account.service.properties"))
 	},
 	"azure.subscription.storageService.account.blobProperties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetBlobProperties()).ToDataRes(types.Resource("azure.subscription.storageService.account.service.properties"))
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetBlobProperties()).ToDataRes(types.Resource("azure.subscription.storageService.account.service.blobProperties"))
 	},
 	"azure.subscription.storageService.account.dataProtection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetDataProtection()).ToDataRes(types.Resource("azure.subscription.storageService.account.dataProtection"))
@@ -1987,6 +1992,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.service.properties.logging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountServiceProperties).GetLogging()).ToDataRes(types.Resource("azure.subscription.storageService.account.service.properties.logging"))
+	},
+	"azure.subscription.storageService.account.service.blobProperties.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.service.blobProperties.hourMetrics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).GetHourMetrics()).ToDataRes(types.Resource("azure.subscription.storageService.account.service.properties.metrics"))
+	},
+	"azure.subscription.storageService.account.service.blobProperties.minuteMetrics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).GetMinuteMetrics()).ToDataRes(types.Resource("azure.subscription.storageService.account.service.properties.metrics"))
+	},
+	"azure.subscription.storageService.account.service.blobProperties.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).GetLogging()).ToDataRes(types.Resource("azure.subscription.storageService.account.service.properties.logging"))
+	},
+	"azure.subscription.storageService.account.service.blobProperties.isVersioningEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).GetIsVersioningEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.storageService.account.service.properties.metrics.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics).GetId()).ToDataRes(types.String)
@@ -5433,7 +5453,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.storageService.account.blobProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionStorageServiceAccount).BlobProperties, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionStorageServiceAccount).BlobProperties, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.dataProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5482,6 +5502,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.service.properties.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountServiceProperties).Logging, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesLogging](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.service.blobProperties.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.service.blobProperties.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.service.blobProperties.hourMetrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).HourMetrics, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.service.blobProperties.minuteMetrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).MinuteMetrics, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.service.blobProperties.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).Logging, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesLogging](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.service.blobProperties.isVersioningEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).IsVersioningEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.service.properties.metrics.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12714,7 +12758,7 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	Containers      plugin.TValue[[]any]
 	QueueProperties plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties]
 	TableProperties plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties]
-	BlobProperties  plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties]
+	BlobProperties  plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties]
 	DataProtection  plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountDataProtection]
 }
 
@@ -12839,15 +12883,15 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetTableProperties() *plugin
 	})
 }
 
-func (c *mqlAzureSubscriptionStorageServiceAccount) GetBlobProperties() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties] {
-	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccountServiceProperties](&c.BlobProperties, func() (*mqlAzureSubscriptionStorageServiceAccountServiceProperties, error) {
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetBlobProperties() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties](&c.BlobProperties, func() (*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "blobProperties")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlAzureSubscriptionStorageServiceAccountServiceProperties), nil
+				return d.Value.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties), nil
 			}
 		}
 
@@ -13002,6 +13046,75 @@ func (c *mqlAzureSubscriptionStorageServiceAccountServiceProperties) GetMinuteMe
 
 func (c *mqlAzureSubscriptionStorageServiceAccountServiceProperties) GetLogging() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesLogging] {
 	return &c.Logging
+}
+
+// mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties for the azure.subscription.storageService.account.service.blobProperties resource
+type mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountServiceBlobPropertiesInternal it will be used here
+	Id                  plugin.TValue[string]
+	HourMetrics         plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics]
+	MinuteMetrics       plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics]
+	Logging             plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesLogging]
+	IsVersioningEnabled plugin.TValue[bool]
+}
+
+// createAzureSubscriptionStorageServiceAccountServiceBlobProperties creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountServiceBlobProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.service.blobProperties", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) MqlName() string {
+	return "azure.subscription.storageService.account.service.blobProperties"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) GetHourMetrics() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics] {
+	return &c.HourMetrics
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) GetMinuteMetrics() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics] {
+	return &c.MinuteMetrics
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) GetLogging() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesLogging] {
+	return &c.Logging
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) GetIsVersioningEnabled() *plugin.TValue[bool] {
+	return &c.IsVersioningEnabled
 }
 
 // mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics for the azure.subscription.storageService.account.service.properties.metrics resource
