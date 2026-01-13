@@ -85,23 +85,32 @@ func (m MatchBlocks) Flatten() map[string]any {
 
 func mergeIncludedBlocks(matchConditions map[string]*MatchBlock, blocks MatchBlocks, curBlock string) {
 	for _, block := range blocks {
-		// meaning:
-		// 1. curBlock == "", we can always add all subblocks
-		// 2. if block == "", we can add it to whatever current block is
-		// 3. in all other cases the block criteria must match, or we move on
-		if block.Criteria != curBlock && curBlock != "" && block.Criteria != "" {
+		if block.Criteria == "" {
+			// Default block: merge into the current block
+			existing := matchConditions[curBlock]
+			if existing == nil {
+				existing = &MatchBlock{
+					Criteria: curBlock,
+					Params:   map[string]any{},
+					Context:  block.Context,
+				}
+				matchConditions[curBlock] = existing
+			}
+			if existing.Params == nil {
+				existing.Params = map[string]any{}
+			}
+			for k, v := range block.Params {
+				if _, ok := existing.Params[k]; !ok {
+					existing.Params[k] = v
+				}
+			}
 			continue
 		}
 
+		// Match block: always add to global map
 		existing, ok := matchConditions[block.Criteria]
-		if block.Criteria == "" {
-			existing = matchConditions[curBlock]
-		} else if !ok {
-			existing = block
-			matchConditions[block.Criteria] = existing
-		}
-
-		if existing == nil {
+		if !ok {
+			// Create a new Match block
 			existing = &MatchBlock{
 				Criteria: block.Criteria,
 				Params:   map[string]any{},

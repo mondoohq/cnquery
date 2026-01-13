@@ -145,3 +145,67 @@ func TestSSHParseWithGlob(t *testing.T) {
 	assert.Equal(t, "no", adminBlock.Params["PasswordAuthentication"])
 	assert.Contains(t, adminBlock.Context.Path, "02_security.conf")
 }
+
+func TestSSHParseIncludeInsideMatchBlock(t *testing.T) {
+	// Test edge case: Include directive inside a Match block
+	// The included file has a different Match block - both should be present
+	// This verifies that Match blocks from included files are always added
+	// to the global map, regardless of where the Include directive appears.
+
+	fileContent := func(path string) (string, error) {
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return "", err
+		}
+		return string(content), nil
+	}
+
+	globExpand := func(glob string) ([]string, error) {
+		// Handle the nested include file
+		if glob == "match_include_nested.conf" {
+			return []string{"./testdata/match_include_nested.conf"}, nil
+		}
+		// For other paths, check if file exists
+		if _, err := os.Stat(glob); err == nil {
+			return []string{glob}, nil
+		}
+		return []string{glob}, nil
+	}
+
+	mainConfigPath := "./testdata/match_include_main.conf"
+	blocks, err := ParseBlocksWithGlob(mainConfigPath, fileContent, globExpand)
+	require.NoError(t, err)
+	assert.NotNil(t, blocks)
+
+	// Find both Match blocks
+	var specialBlock *MatchBlock
+	var adminBlock *MatchBlock
+	var defaultBlock *MatchBlock
+
+	for _, block := range blocks {
+		switch block.Criteria {
+		case "Group special":
+			specialBlock = block
+		case "User admin":
+			adminBlock = block
+		case "":
+			defaultBlock = block
+		}
+	}
+
+	// Verify default block exists
+	require.NotNil(t, defaultBlock, "should have default block")
+	assert.Equal(t, "22", defaultBlock.Params["Port"])
+
+	// Verify the Match block containing the Include exists
+	require.NotNil(t, specialBlock, "should have 'Group special' match block")
+	assert.Equal(t, "30", specialBlock.Params["ClientAliveInterval"])
+
+	// Verify the Match block from the included file exists (this is the edge case)
+	// Before the fix, this block would be filtered out because Include was inside
+	// a Match block with different criteria.
+	require.NotNil(t, adminBlock, "should have 'User admin' match block from included file")
+	assert.Equal(t, "yes", adminBlock.Params["PermitRootLogin"])
+	assert.Equal(t, "no", adminBlock.Params["PasswordAuthentication"])
+	assert.Contains(t, adminBlock.Context.Path, "match_include_nested.conf")
+}
