@@ -57,6 +57,22 @@ func (a *mqlAzureSubscriptionStorageServiceAccountDataProtection) id() (string, 
 	return a.StorageAccountId.Data + "/dataProtection", nil
 }
 
+func (a *mqlAzureSubscriptionStorageServiceAccountFileProperties) id() (string, error) {
+	return a.StorageAccountId.Data + "/fileProperties", nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettings) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmb) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionStorageServiceAccountServiceProperties) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -258,7 +274,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureS
 		containerRetentionDays = properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Days
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.dataProtection",
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountDataProtection,
 		map[string]*llx.RawData{
 			"storageAccountId":             llx.StringData(id),
 			"blobSoftDeletionEnabled":      llx.BoolData(blobSoftDeletionEnabled),
@@ -270,6 +286,96 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureS
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionStorageServiceAccountDataProtection), nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) fileProperties() (*mqlAzureSubscriptionStorageServiceAccountFileProperties, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := resourceID.Component("storageAccounts")
+	if err != nil {
+		return nil, err
+	}
+	client, err := storage.NewFileServicesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	properties, err := client.GetServiceProperties(ctx, resourceID.ResourceGroup, account, &storage.FileServicesClientGetServicePropertiesOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Build share delete retention policy
+	var shareDeleteRetentionPolicyEnabled bool
+	var shareDeleteRetentionPolicyDays *int32
+	policyFromClient := properties.FileServiceProperties.FileServiceProperties.ShareDeleteRetentionPolicy
+	if policyFromClient != nil {
+		shareDeleteRetentionPolicyEnabled = convert.ToValue(policyFromClient.Enabled)
+		shareDeleteRetentionPolicyDays = policyFromClient.Days
+	}
+
+	shareDeleteRetentionPolicy, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicy,
+		map[string]*llx.RawData{
+			"id":      llx.StringData(fmt.Sprintf("%s/fileProperties/shareDeleteRetentionPolicy", id)),
+			"enabled": llx.BoolData(shareDeleteRetentionPolicyEnabled),
+			"days":    llx.IntDataDefault(shareDeleteRetentionPolicyDays, 0),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	// Build protocol settings SMB
+	var smbVersions, smbChannelEncryption, smbAuthenticationMethods, smbKerberosTicketEncryption *string
+	protocolSettingsFromClient := properties.FileServiceProperties.FileServiceProperties.ProtocolSettings
+	if protocolSettingsFromClient != nil && protocolSettingsFromClient.Smb != nil {
+		smb := protocolSettingsFromClient.Smb
+		smbVersions = smb.Versions
+		smbChannelEncryption = smb.ChannelEncryption
+		smbAuthenticationMethods = smb.AuthenticationMethods
+		smbKerberosTicketEncryption = smb.KerberosTicketEncryption
+	}
+
+	smb, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmb,
+		map[string]*llx.RawData{
+			"id":                       llx.StringData(fmt.Sprintf("%s/fileProperties/protocolSettings/smb", id)),
+			"versions":                 llx.StringDataPtr(smbVersions),
+			"channelEncryption":        llx.StringDataPtr(smbChannelEncryption),
+			"authenticationMethods":    llx.StringDataPtr(smbAuthenticationMethods),
+			"kerberosTicketEncryption": llx.StringDataPtr(smbKerberosTicketEncryption),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	protocolSettings, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettings,
+		map[string]*llx.RawData{
+			"id":  llx.StringData(fmt.Sprintf("%s/fileProperties/protocolSettings", id)),
+			"smb": llx.ResourceData(smb, "smb"),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountFileProperties,
+		map[string]*llx.RawData{
+			"storageAccountId":           llx.StringData(id),
+			"shareDeleteRetentionPolicy": llx.ResourceData(shareDeleteRetentionPolicy, "shareDeleteRetentionPolicy"),
+			"protocolSettings":           llx.ResourceData(protocolSettings, "protocolSettings"),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.(*mqlAzureSubscriptionStorageServiceAccountFileProperties), nil
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) getServiceStorageProperties(serviceType string) (table.GetPropertiesResponse, error) {
