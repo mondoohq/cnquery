@@ -1841,6 +1841,8 @@ private ms365.teams.tenantFederationConfig {
   sharedSipAddressSpace bool
   // Whether to restrict Teams consumer to external user profiles
   restrictTeamsConsumerToExternalUserProfiles bool
+  // Whether external access with trial tenants is allowed (Allowed or Blocked)
+  externalAccessWithTrialTenants string
 }
 
 // Microsoft 365 Teams meeting policy configuration

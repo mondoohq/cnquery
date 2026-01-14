@@ -2757,6 +2757,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.tenantFederationConfig.restrictTeamsConsumerToExternalUserProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTenantFederationConfig).GetRestrictTeamsConsumerToExternalUserProfiles()).ToDataRes(types.Bool)
 	},
+	"ms365.teams.tenantFederationConfig.externalAccessWithTrialTenants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetExternalAccessWithTrialTenants()).ToDataRes(types.String)
+	},
 	"ms365.teams.teamsMeetingPolicyConfig.allowAnonymousUsersToJoinMeeting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowAnonymousUsersToJoinMeeting()).ToDataRes(types.Bool)
 	},
@@ -6040,6 +6043,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.teams.tenantFederationConfig.restrictTeamsConsumerToExternalUserProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTenantFederationConfig).RestrictTeamsConsumerToExternalUserProfiles, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.externalAccessWithTrialTenants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).ExternalAccessWithTrialTenants, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"ms365.teams.teamsMeetingPolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15162,6 +15169,7 @@ type mqlMs365TeamsTenantFederationConfig struct {
 	TreatDiscoveredPartnersAsUnverified         plugin.TValue[bool]
 	SharedSipAddressSpace                       plugin.TValue[bool]
 	RestrictTeamsConsumerToExternalUserProfiles plugin.TValue[bool]
+	ExternalAccessWithTrialTenants              plugin.TValue[string]
 }
 
 // createMs365TeamsTenantFederationConfig creates a new instance of this resource
@@ -15234,6 +15242,10 @@ func (c *mqlMs365TeamsTenantFederationConfig) GetSharedSipAddressSpace() *plugin
 
 func (c *mqlMs365TeamsTenantFederationConfig) GetRestrictTeamsConsumerToExternalUserProfiles() *plugin.TValue[bool] {
 	return &c.RestrictTeamsConsumerToExternalUserProfiles
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetExternalAccessWithTrialTenants() *plugin.TValue[string] {
+	return &c.ExternalAccessWithTrialTenants
 }
 
 // mqlMs365TeamsTeamsMeetingPolicyConfig for the ms365.teams.teamsMeetingPolicyConfig resource
