@@ -716,7 +716,7 @@ aws.kms @defaults("keys") {
 }
 
 // AWS Key Management Service (KMS) key
-private aws.kms.key @defaults("id region metadata.Description") {
+private aws.kms.key @defaults("id region aliases metadata.Description") {
   // Unique identifier for the key
   id string
   // ARN of the key
@@ -1555,6 +1555,8 @@ private aws.secretsmanager.secret @defaults("arn name") {
   createdAt time
   // Description of the secret
   description string
+  // KMS key used for encryption of the secret
+  kmsKey() aws.kms.key
   // Last date the secret was changed
   lastChangedDate time
   // Last date the secret was automatically rotated
