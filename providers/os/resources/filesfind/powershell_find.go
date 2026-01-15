@@ -11,6 +11,10 @@ import (
 func BuildPowershellCmd(from string, xdev bool, fileType string, regex string, permission int64, search string, depth *int64) string {
 	var script strings.Builder
 
+	// ensure we strip any \n and \r since those are not allowed for paths
+	from = strings.ReplaceAll(from, "\n", " ")
+	from = strings.ReplaceAll(from, "\r", " ")
+
 	// Use here-strings to safely embed all user input
 	script.WriteString("$Path = @'\n")
 	script.WriteString(from)
