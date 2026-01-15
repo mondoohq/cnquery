@@ -6,7 +6,6 @@ resources:
     docs:
       desc: |
         The `atlassian` resource can be used to assess the configuration of Atlassian accounts.
-    fields: {}
     min_mondoo_version: 9.0.0
     refs:
     - title: What is an Atlassian account?
@@ -108,7 +107,6 @@ resources:
       type: {}
     min_mondoo_version: 9.0.0
   atlassian.admin.user.products:
-    fields: {}
     min_mondoo_version: 9.0.0
   atlassian.confluence:
     fields:
