@@ -29,10 +29,11 @@ const (
 	RpmPkgFormat = "rpm"
 )
 
-var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,/<>:\.|\(none\)]+)__(.*)$`)
+var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,/<>:\.|\(none\)]+?)__(.*?)(?:__(.+))?$`)
 
 // ParseRpmPackages parses output from:
-// rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\n'
+// %{MODULARITYLABEL} is only added on supported systems
+// rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{MODULARITYLABEL}\n'
 func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
 	scanner := bufio.NewScanner(input)
@@ -60,7 +61,12 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 
 			vendor := cleanupVendorName(m[5])
 
-			pkg := newRpmPackage(pf, name, version, arch, epoch, vendor, m[6])
+			modularity := ""
+			if len(m) > 6 {
+				modularity = m[7]
+			}
+
+			pkg := newRpmPackage(pf, name, version, arch, epoch, vendor, m[6], modularity)
 			pkg.FilesAvailable = PkgFilesAsync // when we use commands we need to fetch the files async
 			pkgs = append(pkgs, pkg)
 
@@ -69,7 +75,7 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	return pkgs
 }
 
-func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, description string) Package {
+func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, description, modularity string) Package {
 	// NOTE that we do not have the vendor of the package itself, we could try to parse it from the vendor
 	// but that will also not be reliable. We may incorporate the cpe dictionary in the future but that would
 	// increase the binary.
@@ -86,6 +92,10 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, d
 	cpesWithoutEpochAndArch, _ := cpe.NewPackage2Cpe(vendor, name, version, "", "")
 	cpes = append(cpes, cpesWithoutEpoch...)
 	cpes = append(cpes, cpesWithoutEpochAndArch...)
+	qualifiers := map[string]string{}
+	if modularity != "" && modularity != "(none)" {
+		qualifiers["rpmmod"] = modularity
+	}
 	return Package{
 		Name:        name,
 		Version:     version,
@@ -98,6 +108,7 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, d
 		PUrl: purl.NewPackageURL(pf, purl.TypeRPM, name, version,
 			purl.WithArch(arch),
 			purl.WithEpoch(epoch),
+			purl.WithQualifiers(qualifiers),
 		).String(),
 	}
 }
@@ -180,17 +191,22 @@ func (rpm *RpmPkgManager) Available() (map[string]PackageUpdate, error) {
 }
 
 func (rpm *RpmPkgManager) queryFormat() string {
+	modularity := ""
+	// Not all rpm based distros support modules, only query when applicable, otherwise we get an error
+	if modularitySupportedByPlatform(rpm.platform) {
+		modularity = "__%{MODULARITYLABEL}"
+	}
 	// this format should work everywhere
 	// fall-back to epoch instead of epochnum for 6 ish platforms, latest 6 platforms also support epochnum, but we
 	// save 1 call by not detecting the available keyword via rpm --querytags
-	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\\n"
+	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}" + modularity + "\\n"
 
 	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
 	// we can only expect if for rhel 7+, therefore we need to run an extra test
 	// be aware that this method is also used for non-redhat systems like suse
 	i, err := strconv.ParseInt(rpm.platform.Version, 0, 32)
 	if err == nil && (rpm.platform.Name == "centos" || rpm.platform.Name == "redhat") && i >= 7 {
-		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\\n"
+		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}" + modularity + "\\n"
 	}
 
 	return format
@@ -295,7 +311,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 			version = version + "-" + pkg.Release
 		}
 
-		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary)
+		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary, pkg.Modularitylabel)
 
 		rpmPkg.FilesAvailable = PkgFilesIncluded
 		rpmPkg.Files = []FileRecord{
@@ -352,4 +368,19 @@ func (spm *SusePkgManager) Available() (map[string]PackageUpdate, error) {
 		return nil, fmt.Errorf("could not read rpm package update list")
 	}
 	return ParseZypperUpdates(cmd.Stdout)
+}
+
+// modularitySupportedByPlatform checks if the platform supports modularity
+// Not every rpm based distro supports modules.
+// E.g. SLES and Amazon Linux 2023 do not support modularity.
+// Amazon Linux 2 supports modularity.
+func modularitySupportedByPlatform(platform *inventory.Platform) bool {
+	supported := false
+
+	switch platform.Name {
+	case "oraclelinux":
+		supported = true
+	}
+
+	return supported
 }

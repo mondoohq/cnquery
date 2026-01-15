@@ -389,3 +389,42 @@ func TestVendorNameCleanup(t *testing.T) {
 	actual = cleanupVendorName(vendorFromRpm)
 	require.Equal(t, "SUSE LLC", actual)
 }
+
+func TestOracleParser(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/packages_oracle.toml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pf := &inventory.Platform{
+		Name:    "oraclelinux",
+		Version: "9",
+		Arch:    "x86_64",
+		Family:  []string{"redhat", "linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "oraclelinux",
+		},
+	}
+
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{MODULARITYLABEL}\\n'")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m := ParseRpmPackages(pf, c.Stdout)
+	assert.Equal(t, 4, len(m), "detected the right amount of packages")
+
+	p := Package{
+		Name: "ruby",
+		PUrl: "pkg:rpm/oraclelinux/ruby@3.1.7-146.module%2Bel9.5.0%2B90564%2B273a1edd?arch=x86_64&distro=oraclelinux-9&rpmmod=ruby%3A3.1%3A9050020250506050702%3A2e2f0e1c",
+	}
+	fPkg := findPkg(m, p.Name)
+	assert.Equal(t, p.PUrl, fPkg.PUrl)
+
+	p = Package{
+		Name: "adcli",
+		PUrl: "pkg:rpm/oraclelinux/adcli@0.9.2-1.el9?arch=x86_64&distro=oraclelinux-9",
+	}
+	fPkg = findPkg(m, p.Name)
+	assert.Equal(t, p.PUrl, fPkg.PUrl)
+}
