@@ -7,6 +7,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
@@ -37,18 +38,21 @@ func ResolveManager(conn shared.Connection) (OSContainerManager, error) {
 	// Try Docker first
 	dockerMgr := &DockerManager{conn: conn}
 	if dockerMgr.IsAvailable() {
+		log.Debug().Str("manager", "docker").Msg("detected docker container runtime")
 		return dockerMgr, nil
 	}
 
 	// Try Podman
 	podmanMgr := &PodmanManager{conn: conn}
 	if podmanMgr.IsAvailable() {
+		log.Debug().Str("manager", "podman").Msg("detected podman container runtime")
 		return podmanMgr, nil
 	}
 
 	// Try containerd
 	containerdMgr := &ContainerdManager{conn: conn}
 	if containerdMgr.IsAvailable() {
+		log.Debug().Str("manager", "containerd").Msg("detected containerd container runtime")
 		return containerdMgr, nil
 	}
 

@@ -28,13 +28,13 @@ func (p *PodmanManager) IsAvailable() bool {
 }
 
 type podmanContainer struct {
-	ID         string            `json:"Id"`
-	Names      []string          `json:"Names"`
-	Image      string            `json:"Image"`
-	Status     string            `json:"Status"`
-	State      string            `json:"State"`
-	Created    string            `json:"Created"`
-	Labels     map[string]string `json:"Labels"`
+	ID      string            `json:"Id"`
+	Names   []string          `json:"Names"`
+	Image   string            `json:"Image"`
+	Status  string            `json:"Status"`
+	State   string            `json:"State"`
+	Created string            `json:"Created"`
+	Labels  map[string]string `json:"Labels"`
 }
 
 func (p *PodmanManager) List() ([]*OSContainer, error) {
