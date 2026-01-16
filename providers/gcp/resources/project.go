@@ -68,11 +68,9 @@ func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	args["id"] = llx.StringData(project.ProjectId)
-	args["number"] = llx.StringData(strings.TrimPrefix(project.Name, "projects/")[0:10])
 	args["name"] = llx.StringData(project.DisplayName)
 	args["parentId"] = llx.StringData(project.Parent)
 	args["state"] = llx.StringData(project.State)
-	args["lifecycleState"] = llx.StringData(project.State)
 	args["createTime"] = llx.TimeDataPtr(parseTime(project.CreateTime))
 	args["labels"] = llx.MapData(convert.MapToInterfaceMap(project.Labels), types.String)
 	// TODO: add organization gcp.organization
@@ -95,19 +93,7 @@ func (g *mqlGcpProject) parentId() (string, error) {
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcpProject) number() (string, error) {
-	// placeholder to convince MQL that this is an optional field
-	// should never be called since the data is initialized in init
-	return "", errors.New("not implemented")
-}
-
 func (g *mqlGcpProject) state() (string, error) {
-	// placeholder to convince MQL that this is an optional field
-	// should never be called since the data is initialized in init
-	return "", errors.New("not implemented")
-}
-
-func (g *mqlGcpProject) lifecycleState() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")

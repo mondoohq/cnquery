@@ -25,7 +25,6 @@ const (
 	ResourceAuditCvss               string = "audit.cvss"
 	ResourceVsphere                 string = "vsphere"
 	ResourceVsphereLicense          string = "vsphere.license"
-	ResourceEsxi                    string = "esxi"
 	ResourceVsphereDatacenter       string = "vsphere.datacenter"
 	ResourceVsphereCluster          string = "vsphere.cluster"
 	ResourceVsphereHost             string = "vsphere.host"
@@ -35,6 +34,7 @@ const (
 	ResourceVsphereVswitchPortgroup string = "vsphere.vswitch.portgroup"
 	ResourceVsphereVmnic            string = "vsphere.vmnic"
 	ResourceVsphereVmknic           string = "vsphere.vmknic"
+	ResourceEsxi                    string = "esxi"
 	ResourceEsxiCommand             string = "esxi.command"
 	ResourceEsxiVib                 string = "esxi.vib"
 	ResourceEsxiKernelmodule        string = "esxi.kernelmodule"
@@ -79,10 +79,6 @@ func init() {
 			// to override args, implement: initVsphereLicense(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereLicense,
 		},
-		"esxi": {
-			// to override args, implement: initEsxi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createEsxi,
-		},
 		"vsphere.datacenter": {
 			// to override args, implement: initVsphereDatacenter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereDatacenter,
@@ -118,6 +114,10 @@ func init() {
 		"vsphere.vmknic": {
 			// to override args, implement: initVsphereVmknic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereVmknic,
+		},
+		"esxi": {
+			// to override args, implement: initEsxi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createEsxi,
 		},
 		"esxi.command": {
 			Init:   initEsxiCommand,
@@ -318,12 +318,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.license.used": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereLicense).GetUsed()).ToDataRes(types.Int)
-	},
-	"esxi.host": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlEsxi).GetHost()).ToDataRes(types.Resource("vsphere.host"))
-	},
-	"esxi.vm": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlEsxi).GetVm()).ToDataRes(types.Resource("vsphere.vm"))
 	},
 	"vsphere.datacenter.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatacenter).GetMoid()).ToDataRes(types.String)
@@ -773,18 +767,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereLicense).Used, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"esxi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxi).__id, ok = v.Value.(string)
-		return
-	},
-	"esxi.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxi).Host, ok = plugin.RawToTValue[*mqlVsphereHost](v.Value, v.Error)
-		return
-	},
-	"esxi.vm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlEsxi).Vm, ok = plugin.RawToTValue[*mqlVsphereVm](v.Value, v.Error)
-		return
-	},
 	"vsphere.datacenter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereDatacenter).__id, ok = v.Value.(string)
 		return
@@ -1051,6 +1033,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vmknic.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVmknic).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"esxi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxi).__id, ok = v.Value.(string)
 		return
 	},
 	"esxi.command.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1817,84 +1803,6 @@ func (c *mqlVsphereLicense) GetTotal() *plugin.TValue[int64] {
 
 func (c *mqlVsphereLicense) GetUsed() *plugin.TValue[int64] {
 	return &c.Used
-}
-
-// mqlEsxi for the esxi resource
-type mqlEsxi struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlEsxiInternal it will be used here
-	Host plugin.TValue[*mqlVsphereHost]
-	Vm   plugin.TValue[*mqlVsphereVm]
-}
-
-// createEsxi creates a new instance of this resource
-func createEsxi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlEsxi{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("esxi", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlEsxi) MqlName() string {
-	return "esxi"
-}
-
-func (c *mqlEsxi) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlEsxi) GetHost() *plugin.TValue[*mqlVsphereHost] {
-	return plugin.GetOrCompute[*mqlVsphereHost](&c.Host, func() (*mqlVsphereHost, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("esxi", c.__id, "host")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlVsphereHost), nil
-			}
-		}
-
-		return c.host()
-	})
-}
-
-func (c *mqlEsxi) GetVm() *plugin.TValue[*mqlVsphereVm] {
-	return plugin.GetOrCompute[*mqlVsphereVm](&c.Vm, func() (*mqlVsphereVm, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("esxi", c.__id, "vm")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlVsphereVm), nil
-			}
-		}
-
-		return c.vm()
-	})
 }
 
 // mqlVsphereDatacenter for the vsphere.datacenter resource
@@ -2801,6 +2709,50 @@ func (c *mqlVsphereVmknic) GetIpv6() *plugin.TValue[[]any] {
 
 func (c *mqlVsphereVmknic) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
+}
+
+// mqlEsxi for the esxi resource
+type mqlEsxi struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlEsxiInternal it will be used here
+}
+
+// createEsxi creates a new instance of this resource
+func createEsxi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlEsxi{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("esxi", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlEsxi) MqlName() string {
+	return "esxi"
+}
+
+func (c *mqlEsxi) MqlID() string {
+	return c.__id
 }
 
 // mqlEsxiCommand for the esxi.command resource
