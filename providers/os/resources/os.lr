@@ -337,6 +337,34 @@ command {
   exitcode(command) int
 }
 
+// Container on this system
+container @defaults("id name image status") {
+  init(id string)
+  // Container ID
+  id string
+  // Container name
+  name string
+  // Image used by this container
+  image string
+  // Container status (e.g., running, exited, paused)
+  status string
+  // Container state (running, paused, restarting, dead)
+  state string
+  // When the container was created
+  createdAt time
+  // Container runtime (docker, podman, containerd)
+  runtime string
+  // Container labels
+  labels map[string]string
+}
+
+// Containers on this system
+containers {
+  []container
+  // All running containers
+  running() []container
+}
+
 // Results of running a PowerShell script on the system
 powershell {
   init(script string)

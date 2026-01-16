@@ -1,0 +1,11 @@
+[commands."docker --version"]
+stdout = "Docker version 29.1.3, build f52814d"
+exit = 0
+
+[commands."docker ps -a --format '{{json .}}'"]
+stdout = """
+{"Command":"\"/bin/bash\"","CreatedAt":"2026-01-15 09:23:12 -0800 PST","ID":"fc6f8b5ccaba","Image":"amazonlinux:2023","Labels":"desktop.docker.io/ports.scheme=v2","LocalVolumes":"0","Mounts":"","Names":"reverent_lewin","Networks":"bridge","Platform":{"architecture":"arm64","os":"linux","variant":"v8"},"Ports":"","RunningFor":"10 hours ago","Size":"4.1kB (virtual 199MB)","State":"exited","Status":"Exited (0) 10 hours ago"}
+{"Command":"\"/bin/bash\"","CreatedAt":"2026-01-15 09:22:25 -0800 PST","ID":"2fe1c726e5bb","Image":"amazonlinux:2","Labels":"desktop.docker.io/ports.scheme=v2","LocalVolumes":"0","Mounts":"","Names":"hopeful_keldysh","Networks":"bridge","Platform":{"architecture":"arm64","os":"linux","variant":"v8"},"Ports":"","RunningFor":"10 hours ago","Size":"376MB (virtual 594MB)","State":"running","Status":"Up 10 hours"}
+{"Command":"\"/bin/bash\"","CreatedAt":"2026-01-03 15:51:47 -0800 PST","ID":"2a13e2b1a2ee","Image":"ghcr.io/gardenlinux/gardenlinux:latest","Labels":"desktop.docker.io/ports.scheme=v2","LocalVolumes":"0","Mounts":"","Names":"jolly_villani","Networks":"bridge","Platform":{"architecture":"arm64","os":"linux","variant":"v8"},"Ports":"","RunningFor":"12 days ago","Size":"4.1kB (virtual 32.8kB)","State":"created","Status":"Created"}
+"""
+exit = 0

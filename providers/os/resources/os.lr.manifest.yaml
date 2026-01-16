@@ -146,6 +146,17 @@ resources:
       stderr: {}
       stdout: {}
     min_mondoo_version: 5.15.0
+  container:
+    fields:
+      createdAt: {}
+      id: {}
+      image: {}
+      labels: {}
+      name: {}
+      runtime: {}
+      state: {}
+      status: {}
+    min_mondoo_version: 9.0.0
   container.image:
     fields:
       identifier: {}
@@ -162,6 +173,11 @@ resources:
       registry: {}
       scheme: {}
     min_mondoo_version: 5.31.0
+  containers:
+    fields:
+      list: {}
+      running: {}
+    min_mondoo_version: 9.0.0
   docker:
     fields:
       containers: {}
