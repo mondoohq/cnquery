@@ -3380,6 +3380,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   tpmSupport string
   // List of network interfaces for the instance
   networkInterfaces() []aws.ec2.networkinterface
+  // Whether API termination protection is enabled for the instance
+  disableApiTermination() bool
 }
 
 // AWS EC2 network interface
