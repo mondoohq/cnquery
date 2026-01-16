@@ -1026,6 +1026,8 @@ private azure.subscription.storageService.account @defaults("id name location") 
   blobProperties() azure.subscription.storageService.account.service.blobProperties
   // Storage account data protection
   dataProtection() azure.subscription.storageService.account.dataProtection
+  // Storage account file properties
+  fileProperties() azure.subscription.storageService.account.filePropertiesConfig
 }
 
 // Azure Storage account data protection
@@ -1040,6 +1042,40 @@ private azure.subscription.storageService.account.dataProtection @defaults("blob
   containerSoftDeletionEnabled bool
    // Retention period in days for deleted containers
   containerRetentionDays int
+}
+
+// Azure Storage account file properties
+private azure.subscription.storageService.account.filePropertiesConfig {
+  // File share delete retention policy
+  shareDeleteRetentionPolicy azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig
+  // Protocol settings for file service
+  protocolSettings azure.subscription.storageService.account.fileProperties.protocolSettingsConfig
+}
+
+// Azure Storage account file properties share delete retention policy
+private azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig @defaults("enabled days") {
+  // Whether share delete retention is enabled
+  enabled bool
+  // Retention period in days for deleted file shares
+  days int
+}
+
+// Azure Storage account file properties protocol settings
+private azure.subscription.storageService.account.fileProperties.protocolSettingsConfig {
+  // SMB protocol settings
+  smb azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig
+}
+
+// Azure Storage account file properties protocol settings SMB
+private azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig {
+  // Supported SMB versions (e.g., "SMB3.0;SMB3.1.1")
+  versions string
+  // Supported channel encryption methods (e.g., "AES-128-CCM;AES-128-GCM;AES-256-GCM")
+  channelEncryption string
+  // Supported authentication methods (e.g., "NTLMv2;Kerberos")
+  authenticationMethods string
+  // Supported Kerberos ticket encryption methods (e.g., "RC4-HMAC;AES-256")
+  kerberosTicketEncryption string
 }
 
 // Azure Storage account service properties
