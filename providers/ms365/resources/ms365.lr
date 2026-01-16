@@ -822,7 +822,7 @@ private microsoft.group.owner @defaults("id displayName ownerType") {
 }
 
 // Microsoft group lifecycle policy
-private microsoft.groupLifecyclePolicy @defaults("groupLifetimeInDays managedGroupTypes alternateNotificationEmails") {
+private microsoft.groupLifecyclePolicy @defaults("groupLifetimeInDays managedGroupTypes alternateNotificationEmails groupIdsToMonitorExpirations") {
   // Policy ID
   id string
   // Number of days before a group expires and is automatically deleted
@@ -831,6 +831,8 @@ private microsoft.groupLifecyclePolicy @defaults("groupLifetimeInDays managedGro
   managedGroupTypes string
   // List of email addresses to send notifications for groups without owners
   alternateNotificationEmails string
+  // List of group IDs to monitor for expiration
+  groupIdsToMonitorExpirations []string
 }
 
 // List of Microsoft Entra devices
