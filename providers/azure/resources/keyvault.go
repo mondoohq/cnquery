@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
@@ -365,6 +366,119 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]any, error)
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) diagnosticSettings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	vaultName, err := resourceID.Component("vaults")
+	if err != nil {
+		return nil, err
+	}
+	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{ClientOptions: conn.ClientOptions()})
+	if err != nil {
+		return nil, err
+	}
+
+	vault, err := client.Get(ctx, resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	if vault.Properties == nil || vault.Properties.PrivateEndpointConnections == nil {
+		return res, nil
+	}
+
+	for _, entry := range vault.Properties.PrivateEndpointConnections {
+		if entry == nil {
+			continue
+		}
+
+		// Extract name and type from ID
+		var name, resType string
+		if entry.ID != nil {
+			connResourceID, err := ParseResourceID(*entry.ID)
+			if err == nil {
+				if nameComp, err := connResourceID.Component("privateEndpointConnections"); err == nil {
+					name = nameComp
+				}
+				// Construct type from provider and path components
+				if connResourceID.Provider != "" {
+					resType = connResourceID.Provider + "/vaults/privateEndpointConnections"
+				}
+			}
+			// Fallback: extract name from ID if Component fails
+			if name == "" && entry.ID != nil {
+				parts := strings.Split(*entry.ID, "/")
+				if len(parts) > 0 {
+					name = parts[len(parts)-1]
+				}
+			}
+		}
+		if resType == "" {
+			resType = "Microsoft.KeyVault/vaults/privateEndpointConnections"
+		}
+
+		privateEndpoint := map[string]*llx.RawData{
+			"id": llx.StringDataPtr(entry.ID),
+		}
+		if name != "" {
+			privateEndpoint["name"] = llx.StringData(name)
+		}
+		privateEndpoint["type"] = llx.StringData(resType)
+
+		if entry.Properties != nil {
+			props := entry.Properties
+			propsMap, err := convert.JsonToDict(props)
+			if err != nil {
+				return nil, err
+			}
+
+			privateEndpoint["properties"] = llx.DictData(propsMap)
+
+			if props.PrivateEndpoint != nil {
+				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+			}
+			if props.PrivateLinkServiceConnectionState != nil {
+				stateArgs := map[string]*llx.RawData{}
+				if props.PrivateLinkServiceConnectionState.ActionsRequired != nil {
+					stateArgs["actionsRequired"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.ActionsRequired))
+				}
+				if props.PrivateLinkServiceConnectionState.Description != nil {
+					stateArgs["description"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description)
+				}
+				if props.PrivateLinkServiceConnectionState.Status != nil {
+					stateArgs["status"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.Status))
+				}
+				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				if err != nil {
+					return nil, err
+				}
+				privateEndpoint["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
+			}
+			if props.ProvisioningState != nil {
+				privateEndpoint["provisioningState"] = llx.StringData(string(*props.ProvisioningState))
+			}
+		}
+
+		mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, privateEndpoint)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, mqlRes)
+	}
+
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceKey) keyName() (string, error) {

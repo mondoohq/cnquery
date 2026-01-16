@@ -2925,6 +2925,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.keyVaultService.vault.autorotation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetAutorotation()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.key.autorotation")))
 	},
+	"azure.subscription.keyVaultService.vault.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
 	"azure.subscription.keyVaultService.key.autorotation.kid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyAutorotation).GetKid()).ToDataRes(types.String)
 	},
@@ -6915,6 +6918,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.keyVaultService.vault.autorotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceVault).Autorotation, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.vault.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceVault).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.key.autorotation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16851,19 +16858,20 @@ type mqlAzureSubscriptionKeyVaultServiceVault struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionKeyVaultServiceVaultInternal it will be used here
-	Id                       plugin.TValue[string]
-	VaultName                plugin.TValue[string]
-	Type                     plugin.TValue[string]
-	Location                 plugin.TValue[string]
-	Tags                     plugin.TValue[map[string]any]
-	VaultUri                 plugin.TValue[string]
-	Properties               plugin.TValue[any]
-	RbacAuthorizationEnabled plugin.TValue[bool]
-	Keys                     plugin.TValue[[]any]
-	Certificates             plugin.TValue[[]any]
-	Secrets                  plugin.TValue[[]any]
-	DiagnosticSettings       plugin.TValue[[]any]
-	Autorotation             plugin.TValue[[]any]
+	Id                         plugin.TValue[string]
+	VaultName                  plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	VaultUri                   plugin.TValue[string]
+	Properties                 plugin.TValue[any]
+	RbacAuthorizationEnabled   plugin.TValue[bool]
+	Keys                       plugin.TValue[[]any]
+	Certificates               plugin.TValue[[]any]
+	Secrets                    plugin.TValue[[]any]
+	DiagnosticSettings         plugin.TValue[[]any]
+	Autorotation               plugin.TValue[[]any]
+	PrivateEndpointConnections plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionKeyVaultServiceVault creates a new instance of this resource
@@ -17018,6 +17026,22 @@ func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetAutorotation() *plugin.TVa
 		}
 
 		return c.autorotation()
+	})
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.vault", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
 	})
 }
 
