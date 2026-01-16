@@ -5083,6 +5083,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("aws.ec2.networkinterface")))
 	},
+	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetDisableApiTermination()).ToDataRes(types.Bool)
+	},
 	"aws.ec2.networkinterface.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetId()).ToDataRes(types.String)
 	},
@@ -11875,6 +11878,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.instance.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).DisableApiTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkinterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29605,6 +29612,7 @@ type mqlAwsEc2Instance struct {
 	Architecture          plugin.TValue[string]
 	TpmSupport            plugin.TValue[string]
 	NetworkInterfaces     plugin.TValue[[]any]
+	DisableApiTermination plugin.TValue[bool]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -29867,6 +29875,12 @@ func (c *mqlAwsEc2Instance) GetNetworkInterfaces() *plugin.TValue[[]any] {
 		}
 
 		return c.networkInterfaces()
+	})
+}
+
+func (c *mqlAwsEc2Instance) GetDisableApiTermination() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableApiTermination, func() (bool, error) {
+		return c.disableApiTermination()
 	})
 }
 
