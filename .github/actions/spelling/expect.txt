@@ -90,7 +90,7 @@ nsrecord
 nullgroup
 nullstring
 oidc
-oids
+OIDs
 opcplc
 openssh
 openssl
