@@ -2983,7 +2983,6 @@ resources:
       protocolSettings: {}
       shareDeleteRetentionPolicy: {}
       storageAccountId: {}
-    is_private: true
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -2992,7 +2991,6 @@ resources:
     fields:
       id: {}
       smb: {}
-    is_private: true
     min_mondoo_version: 9.0.0
     platform:
       name:
@@ -3004,6 +3002,24 @@ resources:
       id: {}
       kerberosTicketEncryption: {}
       versions: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig:
+    fields:
+      authenticationMethods: {}
+      channelEncryption: {}
+      kerberosTicketEncryption: {}
+      versions: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.protocolSettingsConfig:
+    fields:
+      smb: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
@@ -3014,6 +3030,23 @@ resources:
       days: {}
       enabled: {}
       id: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig:
+    fields:
+      days: {}
+      enabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.filePropertiesConfig:
+    fields:
+      protocolSettings: {}
+      shareDeleteRetentionPolicy: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

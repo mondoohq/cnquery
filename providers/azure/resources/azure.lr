@@ -1027,7 +1027,7 @@ private azure.subscription.storageService.account @defaults("id name location") 
   // Storage account data protection
   dataProtection() azure.subscription.storageService.account.dataProtection
   // Storage account file properties
-  fileProperties() azure.subscription.storageService.account.fileProperties
+  fileProperties() azure.subscription.storageService.account.filePropertiesConfig
 }
 
 // Azure Storage account data protection
@@ -1045,19 +1045,15 @@ private azure.subscription.storageService.account.dataProtection @defaults("blob
 }
 
 // Azure Storage account file properties
-private azure.subscription.storageService.account.fileProperties @defaults("storageAccountId") {
-  // ID of the storage account
-  storageAccountId string
+private azure.subscription.storageService.account.filePropertiesConfig {
   // File share delete retention policy
-  shareDeleteRetentionPolicy azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicy
+  shareDeleteRetentionPolicy azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig
   // Protocol settings for file service
-  protocolSettings azure.subscription.storageService.account.fileProperties.protocolSettings
+  protocolSettings azure.subscription.storageService.account.fileProperties.protocolSettingsConfig
 }
 
 // Azure Storage account file properties share delete retention policy
-private azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicy @defaults("enabled days") {
-  // ID of the retention policy
-  id string
+private azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig @defaults("enabled days") {
   // Whether share delete retention is enabled
   enabled bool
   // Retention period in days for deleted file shares
@@ -1065,17 +1061,13 @@ private azure.subscription.storageService.account.fileProperties.shareDeleteRete
 }
 
 // Azure Storage account file properties protocol settings
-private azure.subscription.storageService.account.fileProperties.protocolSettings @defaults("id") {
-  // ID of the protocol settings
-  id string
+private azure.subscription.storageService.account.fileProperties.protocolSettingsConfig {
   // SMB protocol settings
-  smb azure.subscription.storageService.account.fileProperties.protocolSettings.smb
+  smb azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig
 }
 
 // Azure Storage account file properties protocol settings SMB
-private azure.subscription.storageService.account.fileProperties.protocolSettings.smb @defaults("id") {
-  // ID of the SMB settings
-  id string
+private azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig {
   // Supported SMB versions (e.g., "SMB3.0;SMB3.1.1")
   versions string
   // Supported channel encryption methods (e.g., "AES-128-CCM;AES-128-GCM;AES-256-GCM")
