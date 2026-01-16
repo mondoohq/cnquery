@@ -232,9 +232,10 @@ func (i RawIP) Subnet() string {
 
 func (i RawIP) prefix() net.IP {
 	var b []byte
-	if i.Version == 4 {
+	switch i.Version {
+	case 4:
 		b = createMask(i.PrefixLength, 0, 4)
-	} else if i.Version == 6 {
+	case 6:
 		b = createMask(i.PrefixLength, 0, 16)
 	}
 	if len(b) == 0 {
@@ -257,9 +258,10 @@ func flipMask(b []byte) []byte {
 
 func (i RawIP) Suffix() string {
 	var b []byte
-	if i.Version == 4 {
+	switch i.Version {
+	case 4:
 		b = createMask(i.PrefixLength, 0, 4)
-	} else if i.Version == 6 {
+	case 6:
 		if i.PrefixLength < 64 {
 			b = createMask(65, 0, 16)
 		} else {
