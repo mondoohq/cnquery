@@ -35,6 +35,7 @@ dlv
 eas
 eip
 ekm
+ekus
 elbv
 exo
 gcfs
@@ -89,6 +90,7 @@ nsrecord
 nullgroup
 nullstring
 oidc
+oids
 opcplc
 openssh
 openssl
