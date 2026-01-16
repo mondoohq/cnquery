@@ -338,7 +338,7 @@ command {
 }
 
 // Container on this system
-container @defaults("id name image status") {
+private container @defaults("id name image status") {
   init(id string)
   // Container ID
   id string
