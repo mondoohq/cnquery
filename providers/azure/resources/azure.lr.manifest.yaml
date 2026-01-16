@@ -918,6 +918,28 @@ resources:
     platform:
       name:
       - azure
+  azure.subscription.keyVaultService.certificate.policy.issuerParameters:
+    fields:
+      certificateTransparency: {}
+      certificateType: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.keyVaultService.certificate.policy.keyProperties:
+    fields:
+      curve: {}
+      exportable: {}
+      keySize: {}
+      keyType: {}
+      reuseKey: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties:
     fields:
       ekus: {}

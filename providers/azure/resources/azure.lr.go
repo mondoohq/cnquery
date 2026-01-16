@@ -110,6 +110,8 @@ const (
 	ResourceAzureSubscriptionKeyVaultServiceKey                                        string = "azure.subscription.keyVaultService.key"
 	ResourceAzureSubscriptionKeyVaultServiceCertificate                                string = "azure.subscription.keyVaultService.certificate"
 	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicy                          string = "azure.subscription.keyVaultService.certificate.policy"
+	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties             string = "azure.subscription.keyVaultService.certificate.policy.keyProperties"
+	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters          string = "azure.subscription.keyVaultService.certificate.policy.issuerParameters"
 	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties string = "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"
 	ResourceAzureSubscriptionKeyVaultServiceSecret                                     string = "azure.subscription.keyVaultService.secret"
 	ResourceAzureSubscriptionMonitorService                                            string = "azure.subscription.monitorService"
@@ -515,6 +517,14 @@ func init() {
 		"azure.subscription.keyVaultService.certificate.policy": {
 			// to override args, implement: initAzureSubscriptionKeyVaultServiceCertificatePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionKeyVaultServiceCertificatePolicy,
+		},
+		"azure.subscription.keyVaultService.certificate.policy.keyProperties": {
+			// to override args, implement: initAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties,
+		},
+		"azure.subscription.keyVaultService.certificate.policy.issuerParameters": {
+			// to override args, implement: initAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters,
 		},
 		"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties": {
 			// to override args, implement: initAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2980,10 +2990,34 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy).GetX509CertificateProperties()).ToDataRes(types.Resource("azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"))
 	},
 	"azure.subscription.keyVaultService.certificate.policy.keyProperties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy).GetKeyProperties()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy).GetKeyProperties()).ToDataRes(types.Resource("azure.subscription.keyVaultService.certificate.policy.keyProperties"))
 	},
 	"azure.subscription.keyVaultService.certificate.policy.issuerParameters": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy).GetIssuerParameters()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy).GetIssuerParameters()).ToDataRes(types.Resource("azure.subscription.keyVaultService.certificate.policy.issuerParameters"))
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.curve": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).GetCurve()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.exportable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).GetExportable()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.keySize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).GetKeySize()).ToDataRes(types.Int)
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.keyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).GetKeyType()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.reuseKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).GetReuseKey()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.keyVaultService.certificate.policy.issuerParameters.certificateTransparency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters).GetCertificateTransparency()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.keyVaultService.certificate.policy.issuerParameters.certificateType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters).GetCertificateType()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.certificate.policy.issuerParameters.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters).GetName()).ToDataRes(types.String)
 	},
 	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.subject": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).GetSubject()).ToDataRes(types.String)
@@ -6968,11 +7002,51 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.keyVaultService.certificate.policy.keyProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy).KeyProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy).KeyProperties, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.certificate.policy.issuerParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy).IssuerParameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy).IssuerParameters, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.curve": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).Curve, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.exportable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).Exportable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.keySize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).KeySize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.keyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).KeyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.keyProperties.reuseKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties).ReuseKey, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.issuerParameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.issuerParameters.certificateTransparency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters).CertificateTransparency, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.issuerParameters.certificateType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters).CertificateType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.issuerParameters.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17151,8 +17225,8 @@ type mqlAzureSubscriptionKeyVaultServiceCertificatePolicy struct {
 	__id       string
 	// optional: if you define mqlAzureSubscriptionKeyVaultServiceCertificatePolicyInternal it will be used here
 	X509CertificateProperties plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties]
-	KeyProperties             plugin.TValue[any]
-	IssuerParameters          plugin.TValue[any]
+	KeyProperties             plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties]
+	IssuerParameters          plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters]
 }
 
 // createAzureSubscriptionKeyVaultServiceCertificatePolicy creates a new instance of this resource
@@ -17208,12 +17282,164 @@ func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) GetX509Certificat
 	})
 }
 
-func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) GetKeyProperties() *plugin.TValue[any] {
-	return &c.KeyProperties
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) GetKeyProperties() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties](&c.KeyProperties, func() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.certificate.policy", c.__id, "keyProperties")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties), nil
+			}
+		}
+
+		return c.keyProperties()
+	})
 }
 
-func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) GetIssuerParameters() *plugin.TValue[any] {
-	return &c.IssuerParameters
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) GetIssuerParameters() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters](&c.IssuerParameters, func() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.certificate.policy", c.__id, "issuerParameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters), nil
+			}
+		}
+
+		return c.issuerParameters()
+	})
+}
+
+// mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties for the azure.subscription.keyVaultService.certificate.policy.keyProperties resource
+type mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyPropertiesInternal it will be used here
+	Curve      plugin.TValue[string]
+	Exportable plugin.TValue[bool]
+	KeySize    plugin.TValue[int64]
+	KeyType    plugin.TValue[string]
+	ReuseKey   plugin.TValue[bool]
+}
+
+// createAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties creates a new instance of this resource
+func createAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.keyVaultService.certificate.policy.keyProperties", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties) MqlName() string {
+	return "azure.subscription.keyVaultService.certificate.policy.keyProperties"
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties) GetCurve() *plugin.TValue[string] {
+	return &c.Curve
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties) GetExportable() *plugin.TValue[bool] {
+	return &c.Exportable
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties) GetKeySize() *plugin.TValue[int64] {
+	return &c.KeySize
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties) GetKeyType() *plugin.TValue[string] {
+	return &c.KeyType
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties) GetReuseKey() *plugin.TValue[bool] {
+	return &c.ReuseKey
+}
+
+// mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters for the azure.subscription.keyVaultService.certificate.policy.issuerParameters resource
+type mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParametersInternal it will be used here
+	CertificateTransparency plugin.TValue[bool]
+	CertificateType         plugin.TValue[string]
+	Name                    plugin.TValue[string]
+}
+
+// createAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters creates a new instance of this resource
+func createAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.keyVaultService.certificate.policy.issuerParameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters) MqlName() string {
+	return "azure.subscription.keyVaultService.certificate.policy.issuerParameters"
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters) GetCertificateTransparency() *plugin.TValue[bool] {
+	return &c.CertificateTransparency
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters) GetCertificateType() *plugin.TValue[string] {
+	return &c.CertificateType
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
 
 // mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties for the azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties resource

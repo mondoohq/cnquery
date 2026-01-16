@@ -1888,9 +1888,33 @@ private azure.subscription.keyVaultService.certificate.policy @defaults("x509Cer
   // X.509 certificate properties
   x509CertificateProperties() azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties
   // Key properties (keyType, keySize, etc.)
-  keyProperties dict
+  keyProperties() azure.subscription.keyVaultService.certificate.policy.keyProperties
   // Issuer parameters (name, etc.)
-  issuerParameters dict
+  issuerParameters() azure.subscription.keyVaultService.certificate.policy.issuerParameters
+}
+
+// Azure Key Vault certificate policy key properties
+private azure.subscription.keyVaultService.certificate.policy.keyProperties {
+  // Elliptic curve name (for EC keys)
+  curve string
+  // Whether the private key can be exported
+  exportable bool
+  // The key size in bits (e.g., 2048, 3072, 4096 for RSA)
+  keySize int
+  // The type of key pair (e.g., RSA, EC)
+  keyType string
+  // Whether the same key pair will be used on certificate renewal
+  reuseKey bool
+}
+
+// Azure Key Vault certificate policy issuer parameters
+private azure.subscription.keyVaultService.certificate.policy.issuerParameters {
+  // Whether certificates should be published to certificate transparency logs
+  certificateTransparency bool
+  // Certificate type as supported by the provider (e.g., OV-SSL, EV-SSL)
+  certificateType string
+  // Name of the referenced issuer object or reserved names (e.g., Self, Unknown)
+  name string
 }
 
 // Azure Key Vault certificate policy X.509 properties
