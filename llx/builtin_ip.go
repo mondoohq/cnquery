@@ -446,13 +446,13 @@ func ipIsPublic(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	// - interface-local multicast (IPv6)
 	// - link-local multicast (IPv6)
 
-	isPublic := !v.IP.IsLoopback() &&
-		!v.IP.IsPrivate() &&
-		!v.IP.IsLinkLocalUnicast() &&
-		!v.IP.IsMulticast() &&
-		!v.IP.IsUnspecified() &&
-		!v.IP.IsLinkLocalMulticast() &&
-		!v.IP.IsInterfaceLocalMulticast()
+	isPublic := !v.IsLoopback() &&
+		!v.IsPrivate() &&
+		!v.IsLinkLocalUnicast() &&
+		!v.IsMulticast() &&
+		!v.IsUnspecified() &&
+		!v.IsLinkLocalMulticast() &&
+		!v.IsInterfaceLocalMulticast()
 
 	return BoolData(isPublic), 0, nil
 }
