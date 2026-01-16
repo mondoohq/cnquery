@@ -469,7 +469,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 }
 
 func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceProperties, blobProps storage.BlobServiceProperties, serviceType, parentId string) (*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties, error) {
-	loggingRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
+	loggingRetentionPolicy, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy,
 		map[string]*llx.RawData{
 			"__id":          llx.StringData(fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntDataDefault(props.Logging.RetentionPolicy.Days, 0),
@@ -478,7 +478,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	if err != nil {
 		return nil, err
 	}
-	logging, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.logging",
+	logging, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging,
 		map[string]*llx.RawData{
 			"__id":            llx.StringData(fmt.Sprintf("%s/%s/properties/logging", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(loggingRetentionPolicy, "retentionPolicy"),
@@ -490,7 +490,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	if err != nil {
 		return nil, err
 	}
-	minuteMetricsRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
+	minuteMetricsRetentionPolicy, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy,
 		map[string]*llx.RawData{
 			"__id":          llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntDataDefault(props.MinuteMetrics.RetentionPolicy.Days, 0),
@@ -499,7 +499,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	if err != nil {
 		return nil, err
 	}
-	minuteMetrics, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.metrics",
+	minuteMetrics, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics,
 		map[string]*llx.RawData{
 			"__id":            llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(minuteMetricsRetentionPolicy, "retentionPolicy"),
@@ -510,7 +510,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	if err != nil {
 		return nil, err
 	}
-	hourMetricsRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
+	hourMetricsRetentionPolicy, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy,
 		map[string]*llx.RawData{
 			"__id":          llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntDataDefault(props.HourMetrics.RetentionPolicy.Days, 0),
@@ -519,7 +519,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	if err != nil {
 		return nil, err
 	}
-	hourMetrics, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.metrics",
+	hourMetrics, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics,
 		map[string]*llx.RawData{
 			"__id":            llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(hourMetricsRetentionPolicy, "retentionPolicy"),
@@ -537,7 +537,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 		isVersioningEnabled = convert.ToValue(blobProps.BlobServiceProperties.IsVersioningEnabled)
 	}
 
-	settings, err := CreateResource(runtime, "azure.subscription.storageService.account.service.blobProperties",
+	settings, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties,
 		map[string]*llx.RawData{
 			"__id":                llx.StringData(fmt.Sprintf("%s/%s/properties", parentId, serviceType)),
 			"minuteMetrics":       llx.ResourceData(minuteMetrics, "minuteMetrics"),
