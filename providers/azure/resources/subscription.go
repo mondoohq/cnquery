@@ -99,6 +99,17 @@ func (a *mqlAzureSubscription) batch() (*mqlAzureSubscriptionBatchService, error
 	return batchSvc, nil
 }
 
+func (a *mqlAzureSubscription) databricks() (*mqlAzureSubscriptionDatabricksService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionDatabricksService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	databricksSvc := svc.(*mqlAzureSubscriptionDatabricksService)
+	return databricksSvc, nil
+}
+
 func (a *mqlAzureSubscription) network() (*mqlAzureSubscriptionNetworkService, error) {
 	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkService, map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
