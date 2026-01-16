@@ -97,6 +97,7 @@ const (
 	ResourceMicrosoftGraphAccessReviewReviewerScope                                                          string = "microsoft.graph.accessReviewReviewerScope"
 	ResourceMicrosoftPoliciesAuthenticationMethodsPolicy                                                     string = "microsoft.policies.authenticationMethodsPolicy"
 	ResourceMicrosoftPoliciesAuthenticationMethodConfiguration                                               string = "microsoft.policies.authenticationMethodConfiguration"
+	ResourceMicrosoftPoliciesSystemCredentialPreferences                                                     string = "microsoft.policies.systemCredentialPreferences"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefault                                                  string = "microsoft.policies.crossTenantAccessPolicyDefault"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings                      string = "microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting                                        string = "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting"
@@ -455,6 +456,10 @@ func init() {
 		"microsoft.policies.authenticationMethodConfiguration": {
 			// to override args, implement: initMicrosoftPoliciesAuthenticationMethodConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPoliciesAuthenticationMethodConfiguration,
+		},
+		"microsoft.policies.systemCredentialPreferences": {
+			// to override args, implement: initMicrosoftPoliciesSystemCredentialPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesSystemCredentialPreferences,
 		},
 		"microsoft.policies.crossTenantAccessPolicyDefault": {
 			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2150,6 +2155,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.policies.authenticationMethodsPolicy.authenticationMethodConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetAuthenticationMethodConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.policies.authenticationMethodConfiguration")))
 	},
+	"microsoft.policies.authenticationMethodsPolicy.systemCredentialPreferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetSystemCredentialPreferences()).ToDataRes(types.Resource("microsoft.policies.systemCredentialPreferences"))
+	},
 	"microsoft.policies.authenticationMethodConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).GetId()).ToDataRes(types.String)
 	},
@@ -2158,6 +2166,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.policies.authenticationMethodConfiguration.excludeTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).GetExcludeTargets()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.policies.systemCredentialPreferences.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).GetState()).ToDataRes(types.String)
+	},
+	"microsoft.policies.systemCredentialPreferences.includeTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).GetIncludeTargets()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.policies.systemCredentialPreferences.excludeTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).GetExcludeTargets()).ToDataRes(types.Array(types.Dict))
 	},
 	"microsoft.policies.crossTenantAccessPolicyDefault.isServiceDefault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetIsServiceDefault()).ToDataRes(types.Bool)
@@ -5084,6 +5101,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).AuthenticationMethodConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.policies.authenticationMethodsPolicy.systemCredentialPreferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).SystemCredentialPreferences, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesSystemCredentialPreferences](v.Value, v.Error)
+		return
+	},
 	"microsoft.policies.authenticationMethodConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).__id, ok = v.Value.(string)
 		return
@@ -5098,6 +5119,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.policies.authenticationMethodConfiguration.excludeTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).ExcludeTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.systemCredentialPreferences.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.policies.systemCredentialPreferences.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.systemCredentialPreferences.includeTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).IncludeTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.systemCredentialPreferences.excludeTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).ExcludeTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.crossTenantAccessPolicyDefault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12380,6 +12417,7 @@ type mqlMicrosoftPoliciesAuthenticationMethodsPolicy struct {
 	LastModifiedDateTime               plugin.TValue[*time.Time]
 	PolicyVersion                      plugin.TValue[string]
 	AuthenticationMethodConfigurations plugin.TValue[[]any]
+	SystemCredentialPreferences        plugin.TValue[*mqlMicrosoftPoliciesSystemCredentialPreferences]
 }
 
 // createMicrosoftPoliciesAuthenticationMethodsPolicy creates a new instance of this resource
@@ -12438,6 +12476,22 @@ func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetAuthenticationMetho
 	return &c.AuthenticationMethodConfigurations
 }
 
+func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetSystemCredentialPreferences() *plugin.TValue[*mqlMicrosoftPoliciesSystemCredentialPreferences] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesSystemCredentialPreferences](&c.SystemCredentialPreferences, func() (*mqlMicrosoftPoliciesSystemCredentialPreferences, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.authenticationMethodsPolicy", c.__id, "systemCredentialPreferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftPoliciesSystemCredentialPreferences), nil
+			}
+		}
+
+		return c.systemCredentialPreferences()
+	})
+}
+
 // mqlMicrosoftPoliciesAuthenticationMethodConfiguration for the microsoft.policies.authenticationMethodConfiguration resource
 type mqlMicrosoftPoliciesAuthenticationMethodConfiguration struct {
 	MqlRuntime *plugin.Runtime
@@ -12489,6 +12543,60 @@ func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) GetState() *plug
 }
 
 func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) GetExcludeTargets() *plugin.TValue[[]any] {
+	return &c.ExcludeTargets
+}
+
+// mqlMicrosoftPoliciesSystemCredentialPreferences for the microsoft.policies.systemCredentialPreferences resource
+type mqlMicrosoftPoliciesSystemCredentialPreferences struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftPoliciesSystemCredentialPreferencesInternal it will be used here
+	State          plugin.TValue[string]
+	IncludeTargets plugin.TValue[[]any]
+	ExcludeTargets plugin.TValue[[]any]
+}
+
+// createMicrosoftPoliciesSystemCredentialPreferences creates a new instance of this resource
+func createMicrosoftPoliciesSystemCredentialPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesSystemCredentialPreferences{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.policies.systemCredentialPreferences", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPoliciesSystemCredentialPreferences) MqlName() string {
+	return "microsoft.policies.systemCredentialPreferences"
+}
+
+func (c *mqlMicrosoftPoliciesSystemCredentialPreferences) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPoliciesSystemCredentialPreferences) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMicrosoftPoliciesSystemCredentialPreferences) GetIncludeTargets() *plugin.TValue[[]any] {
+	return &c.IncludeTargets
+}
+
+func (c *mqlMicrosoftPoliciesSystemCredentialPreferences) GetExcludeTargets() *plugin.TValue[[]any] {
 	return &c.ExcludeTargets
 }
 

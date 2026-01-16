@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
 	"go.mondoo.com/cnquery/v12/llx"
@@ -104,25 +105,22 @@ func (a *mqlMicrosoftPolicies) consentPolicySettings() (any, error) {
 
 func (a *mqlMicrosoftPolicies) authenticationMethodsPolicy() (*mqlMicrosoftPoliciesAuthenticationMethodsPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
+	betaGraphClient, err := conn.BetaGraphClient()
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
-	// expand authenticationMethodConfigurations to get all the details in one call
-	requestConfiguration := &policies.AuthenticationMethodsPolicyRequestBuilderGetRequestConfiguration{
-		QueryParameters: &policies.AuthenticationMethodsPolicyRequestBuilderGetQueryParameters{
-			Expand: []string{"authenticationMethodConfigurations"},
-		},
-	}
-
-	resp, err := graphClient.Policies().AuthenticationMethodsPolicy().Get(ctx, requestConfiguration)
+	policy, err := betaGraphClient.Policies().AuthenticationMethodsPolicy().Get(ctx, nil)
 	if err != nil {
 		return nil, transformError(err)
 	}
 
-	return newAuthenticationMethodsPolicy(a.MqlRuntime, resp)
+	if policy == nil {
+		return nil, nil
+	}
+
+	return newAuthenticationMethodsPolicy(a.MqlRuntime, policy)
 }
 
 func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]any, error) {
@@ -157,7 +155,7 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]any, error) {
 	return activityBasedTimeoutPolicies, nil
 }
 
-func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.AuthenticationMethodsPolicyable) (*mqlMicrosoftPoliciesAuthenticationMethodsPolicy, error) {
+func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy betamodels.AuthenticationMethodsPolicyable) (*mqlMicrosoftPoliciesAuthenticationMethodsPolicy, error) {
 	authMethodConfigs, err := newAuthenticationMethodConfigurations(runtime, policy.GetAuthenticationMethodConfigurations())
 	if err != nil {
 		return nil, err
@@ -180,7 +178,7 @@ func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Authe
 	return mqlAuthenticationMethodsPolicy.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy), nil
 }
 
-func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []models.AuthenticationMethodConfigurationable) ([]any, error) {
+func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []betamodels.AuthenticationMethodConfigurationable) ([]any, error) {
 	var configResources []any
 	for _, config := range configs {
 		excludeTargets := []any{}
@@ -195,10 +193,15 @@ func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []mo
 			excludeTargets = append(excludeTargets, targetDict)
 		}
 
+		state := ""
+		if config.GetState() != nil {
+			state = config.GetState().String()
+		}
+
 		configData := map[string]*llx.RawData{
 			"__id":           llx.StringDataPtr(config.GetId()),
 			"id":             llx.StringDataPtr(config.GetId()),
-			"state":          llx.StringData(config.GetState().String()),
+			"state":          llx.StringData(state),
 			"excludeTargets": llx.ArrayData(excludeTargets, types.Dict),
 		}
 
@@ -211,6 +214,71 @@ func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []mo
 	}
 
 	return configResources, nil
+}
+
+func (a *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) systemCredentialPreferences() (*mqlMicrosoftPoliciesSystemCredentialPreferences, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	betaGraphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	policy, err := betaGraphClient.Policies().AuthenticationMethodsPolicy().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	systemCredPrefs := policy.GetSystemCredentialPreferences()
+	if systemCredPrefs == nil {
+		return nil, nil
+	}
+
+	// Convert include targets to []dict
+	var includeTargets []any
+	for _, target := range systemCredPrefs.GetIncludeTargets() {
+		targetDict := map[string]any{}
+		if target.GetId() != nil {
+			targetDict["id"] = *target.GetId()
+		}
+		if target.GetTargetType() != nil {
+			targetDict["targetType"] = target.GetTargetType().String()
+		}
+		includeTargets = append(includeTargets, targetDict)
+	}
+
+	// Convert exclude targets to []dict
+	var excludeTargets []any
+	for _, target := range systemCredPrefs.GetExcludeTargets() {
+		targetDict := map[string]any{}
+		if target.GetId() != nil {
+			targetDict["id"] = *target.GetId()
+		}
+		if target.GetTargetType() != nil {
+			targetDict["targetType"] = target.GetTargetType().String()
+		}
+		excludeTargets = append(excludeTargets, targetDict)
+	}
+
+	state := ""
+	if systemCredPrefs.GetState() != nil {
+		state = systemCredPrefs.GetState().String()
+	}
+
+	policyId := a.Id.Data
+
+	mqlSystemCredPrefs, err := CreateResource(a.MqlRuntime, ResourceMicrosoftPoliciesSystemCredentialPreferences,
+		map[string]*llx.RawData{
+			"__id":           llx.StringData(policyId + "/systemCredentialPreferences"),
+			"state":          llx.StringData(state),
+			"includeTargets": llx.ArrayData(includeTargets, types.Dict),
+			"excludeTargets": llx.ArrayData(excludeTargets, types.Dict),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlSystemCredPrefs.(*mqlMicrosoftPoliciesSystemCredentialPreferences), nil
 }
 
 // https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-
