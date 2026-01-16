@@ -582,6 +582,7 @@ resources:
       id: {}
       lastModifiedDateTime: {}
       policyVersion: {}
+      systemCredentialPreferences: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.policies.crossTenantAccessPolicyDefault:
@@ -640,6 +641,13 @@ resources:
       description: {}
       displayName: {}
       id: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.policies.systemCredentialPreferences:
+    fields:
+      excludeTargets: {}
+      includeTargets: {}
+      state: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.rolemanagement:

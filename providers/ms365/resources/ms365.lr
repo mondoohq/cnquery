@@ -1315,6 +1315,8 @@ private microsoft.policies.authenticationMethodsPolicy @defaults("displayName") 
   policyVersion string
   // Configurations for specific authentication methods
   authenticationMethodConfigurations []microsoft.policies.authenticationMethodConfiguration
+  // System credential preferences for the authentication methods policy
+  systemCredentialPreferences() microsoft.policies.systemCredentialPreferences
 }
 
 // Configuration for a specific authentication method
@@ -1324,6 +1326,16 @@ private microsoft.policies.authenticationMethodConfiguration @defaults("state") 
   // The state of the policy. Possible values are: enabled, disabled.
   state string
   // Groups of users that are excluded from a policy.
+  excludeTargets []dict
+}
+
+// System credential preferences for authentication methods policy
+private microsoft.policies.systemCredentialPreferences @defaults("state") {
+  // The state of the system credential preferences. Possible values are: enabled, disabled, default.
+  state string
+  // Groups of users that are included in the policy
+  includeTargets []dict
+  // Groups of users that are excluded from the policy
   excludeTargets []dict
 }
 
