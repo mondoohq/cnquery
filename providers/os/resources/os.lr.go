@@ -43,6 +43,8 @@ const (
 	ResourceOsLinux                    string = "os.linux"
 	ResourceOsRootCertificates         string = "os.rootCertificates"
 	ResourceCommand                    string = "command"
+	ResourceContainer                  string = "container"
+	ResourceContainers                 string = "containers"
 	ResourcePowershell                 string = "powershell"
 	ResourceFile                       string = "file"
 	ResourceFileContext                string = "file.context"
@@ -266,6 +268,14 @@ func init() {
 		"command": {
 			// to override args, implement: initCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCommand,
+		},
+		"container": {
+			Init:   initContainer,
+			Create: createContainer,
+		},
+		"containers": {
+			// to override args, implement: initContainers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createContainers,
 		},
 		"powershell": {
 			// to override args, implement: initPowershell(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1141,6 +1151,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"command.exitcode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCommand).GetExitcode()).ToDataRes(types.Int)
+	},
+	"container.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainer).GetId()).ToDataRes(types.String)
+	},
+	"container.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainer).GetName()).ToDataRes(types.String)
+	},
+	"container.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainer).GetImage()).ToDataRes(types.String)
+	},
+	"container.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainer).GetStatus()).ToDataRes(types.String)
+	},
+	"container.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainer).GetState()).ToDataRes(types.String)
+	},
+	"container.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainer).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"container.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainer).GetRuntime()).ToDataRes(types.String)
+	},
+	"container.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainer).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"containers.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainers).GetRunning()).ToDataRes(types.Array(types.Resource("container")))
+	},
+	"containers.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainers).GetList()).ToDataRes(types.Array(types.Resource("container")))
 	},
 	"powershell.script": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPowershell).GetScript()).ToDataRes(types.String)
@@ -3433,6 +3473,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"command.exitcode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCommand).Exitcode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainer).__id, ok = v.Value.(string)
+		return
+	},
+	"container.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainer).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainer).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainer).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"container.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainer).Runtime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainer).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"containers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainers).__id, ok = v.Value.(string)
+		return
+	},
+	"containers.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainers).Running, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"containers.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainers).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"powershell.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8176,6 +8264,163 @@ func (c *mqlCommand) GetExitcode() *plugin.TValue[int64] {
 		}
 
 		return c.exitcode(vargCommand.Data)
+	})
+}
+
+// mqlContainer for the container resource
+type mqlContainer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlContainerInternal it will be used here
+	Id        plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Image     plugin.TValue[string]
+	Status    plugin.TValue[string]
+	State     plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	Runtime   plugin.TValue[string]
+	Labels    plugin.TValue[map[string]any]
+}
+
+// createContainer creates a new instance of this resource
+func createContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlContainer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("container", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlContainer) MqlName() string {
+	return "container"
+}
+
+func (c *mqlContainer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlContainer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlContainer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlContainer) GetImage() *plugin.TValue[string] {
+	return &c.Image
+}
+
+func (c *mqlContainer) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlContainer) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlContainer) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlContainer) GetRuntime() *plugin.TValue[string] {
+	return &c.Runtime
+}
+
+func (c *mqlContainer) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+// mqlContainers for the containers resource
+type mqlContainers struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlContainersInternal it will be used here
+	Running plugin.TValue[[]any]
+	List    plugin.TValue[[]any]
+}
+
+// createContainers creates a new instance of this resource
+func createContainers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlContainers{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("containers", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlContainers) MqlName() string {
+	return "containers"
+}
+
+func (c *mqlContainers) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlContainers) GetRunning() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Running, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("containers", c.__id, "running")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.running()
+	})
+}
+
+func (c *mqlContainers) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("containers", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
 	})
 }
 

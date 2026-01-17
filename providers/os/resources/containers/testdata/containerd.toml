@@ -1,0 +1,21 @@
+[commands."ctr version"]
+stdout = """
+Client:
+  Version:  v2.2.1
+  Revision: dea7da592f5d1d2b7755e3a161be07f43fad8f75
+  Go version: go1.24.11
+
+Server:
+  Version:  v2.2.1
+  Revision: dea7da592f5d1d2b7755e3a161be07f43fad8f75
+  UUID: a9b38544-9174-4978-be59-c705eba73558
+"""
+exit = 0
+
+[commands."ctr containers list"]
+stdout = """
+ID                  IMAGE                                RUNTIME
+test-container      docker.io/library/nginx:latest       io.containerd.runc.v2
+database_service_v2 docker.io/library/postgres:latest    io.containerd.runc.v2
+"""
+exit = 0
