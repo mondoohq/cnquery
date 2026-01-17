@@ -36,6 +36,7 @@ func init() {
 	rootCmd.AddCommand(LoginCmd)
 	LoginCmd.Flags().StringP("token", "t", "", "Set a client registration token")
 	LoginCmd.Flags().StringToString("annotation", nil, "Set the client annotations")
+	LoginCmd.Flags().String("providers-url", "", "Set the providers URL")
 	LoginCmd.Flags().String("name", "", "Set asset name")
 	LoginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint")
 	LoginCmd.Flags().Int("timer", 0, "Set the scan interval in minutes")
@@ -64,10 +65,11 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		defer cnquery_providers.Coordinator.Shutdown()
 		token, _ := cmd.Flags().GetString("token")
 		annotations, _ := cmd.Flags().GetStringToString("annotation")
+		providersURL, _ := cmd.Flags().GetString("providers-url")
 		timer, _ := cmd.Flags().GetInt("timer")
 		splay, _ := cmd.Flags().GetInt("splay")
 		apiEndpointOverride, _ := cmd.Flags().GetString("api-endpoint")
-		err := register(token, annotations, timer, splay, apiEndpointOverride)
+		err := register(token, annotations, providersURL, timer, splay, apiEndpointOverride)
 		if err != nil {
 			if err == tokenValidationErr {
 				log.Error().Msg(err.Error())
@@ -110,7 +112,7 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 	},
 }
 
-func register(token string, annotations map[string]string, timer int, splay int, apiEndpointOverride string) error {
+func register(token string, annotations map[string]string, providersURL string, timer int, splay int, apiEndpointOverride string) error {
 	var err error
 	var credential *upstream.ServiceAccountCredentials
 
@@ -208,6 +210,9 @@ func register(token string, annotations map[string]string, timer int, splay int,
 		viper.Set("private_key", confirmation.Credential.PrivateKey)
 		viper.Set("certificate", confirmation.Credential.Certificate)
 		viper.Set("annotations", annotations)
+		if providersURL != "" {
+			viper.Set("providers_url", providersURL)
+		}
 		if timer > 0 {
 			viper.Set("scan_interval.timer", timer)
 		}
