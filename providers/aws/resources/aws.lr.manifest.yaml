@@ -1112,6 +1112,8 @@ resources:
       encrypted:
         min_mondoo_version: 9.0.0
       id: {}
+      launchPermissions:
+        min_mondoo_version: latest
       name: {}
       ownerAlias:
         min_mondoo_version: 5.22.0
