@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"os"
 
-	v2 "github.com/ctreminiom/go-atlassian/jira/v2"
+	v2 "github.com/ctreminiom/go-atlassian/v2/jira/v2"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/atlassian/connection/shared"
