@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v74/github"
+	"github.com/google/go-github/v75/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/internal/workerpool"
 	"go.mondoo.com/cnquery/v12/llx"
