@@ -3470,6 +3470,8 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   tags map[string]string
   // Region where the image is located
   region string
+  // Launch permissions for the image (user IDs and groups that can launch instances from this AMI)
+  launchPermissions() []dict
 }
 
 // Amazon EC2 image block device mapping

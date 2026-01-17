@@ -1224,6 +1224,43 @@ func (i *mqlAwsEc2Image) id() (string, error) {
 	return i.Arn.Data, nil
 }
 
+func (i *mqlAwsEc2Image) launchPermissions() ([]interface{}, error) {
+	imageId := i.Id.Data
+	region := i.Region.Data
+	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+
+	result, err := svc.DescribeImageAttribute(ctx, &ec2.DescribeImageAttributeInput{
+		ImageId:   aws.String(imageId),
+		Attribute: ec2types.ImageAttributeNameLaunchPermission,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := make([]interface{}, 0)
+	for _, perm := range result.LaunchPermissions {
+		permMap := make(map[string]interface{})
+		if perm.UserId != nil {
+			permMap["userId"] = *perm.UserId
+		}
+		if perm.Group != "" {
+			permMap["group"] = string(perm.Group)
+		}
+		if perm.OrganizationArn != nil {
+			permMap["organizationArn"] = *perm.OrganizationArn
+		}
+		if perm.OrganizationalUnitArn != nil {
+			permMap["organizationalUnitArn"] = *perm.OrganizationalUnitArn
+		}
+		permissions = append(permissions, permMap)
+	}
+
+	return permissions, nil
+}
+
 func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil

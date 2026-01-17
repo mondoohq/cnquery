@@ -5200,6 +5200,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.image.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.ec2.image.launchPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetLaunchPermissions()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.ec2.image.blockDeviceMapping.deviceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ImageBlockDeviceMapping).GetDeviceName()).ToDataRes(types.String)
 	},
@@ -12046,6 +12049,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.image.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Image).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).LaunchPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.image.blockDeviceMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30130,6 +30137,7 @@ type mqlAwsEc2Image struct {
 	BlockDeviceMappings plugin.TValue[[]any]
 	Tags                plugin.TValue[map[string]any]
 	Region              plugin.TValue[string]
+	LaunchPermissions   plugin.TValue[[]any]
 }
 
 // createAwsEc2Image creates a new instance of this resource
@@ -30235,6 +30243,12 @@ func (c *mqlAwsEc2Image) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsEc2Image) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsEc2Image) GetLaunchPermissions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LaunchPermissions, func() ([]any, error) {
+		return c.launchPermissions()
+	})
 }
 
 // mqlAwsEc2ImageBlockDeviceMapping for the aws.ec2.image.blockDeviceMapping resource
