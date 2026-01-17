@@ -352,7 +352,7 @@ private container @defaults("id name image status") {
   state string
   // When the container was created
   createdAt time
-  // Container runtime (docker, podman, containerd)
+  // Container runtime (docker, containerd)
   runtime string
   // Container labels
   labels map[string]string

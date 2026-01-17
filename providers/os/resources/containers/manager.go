@@ -42,13 +42,6 @@ func ResolveManager(conn shared.Connection) (OSContainerManager, error) {
 		return dockerMgr, nil
 	}
 
-	// Try Podman
-	podmanMgr := &PodmanManager{conn: conn}
-	if podmanMgr.IsAvailable() {
-		log.Debug().Str("manager", "podman").Msg("detected podman container runtime")
-		return podmanMgr, nil
-	}
-
 	// Try containerd
 	containerdMgr := &ContainerdManager{conn: conn}
 	if containerdMgr.IsAvailable() {
