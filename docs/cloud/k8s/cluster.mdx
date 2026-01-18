@@ -1,0 +1,348 @@
+---
+title: Query Kubernetes Clusters
+sidebar_label: Query Kubernetes Clusters
+displayed_sidebar: cnquery
+sidebar_position: 20
+description: Explore and analyze the configuration of Kubernetes clusters
+image: /img/cnquery/mondoo-kubernetes.jpg
+---
+
+Once you've ensured that [cnquery can access your Kubernetes environment](/cnquery/cloud/k8s/), you can begin exploring and analyzing your infrastructure. The method you choose depends on your goals:
+
+- To answer any question about your environment, use cnquery's interactive shell. It has auto-complete to guide you, which is especially helpful when you're new to cnquery and learning MQL.
+- For widescale analysis of your Kubernetes infrastructure, scan using query packs. These collections of queries work together to present a whole picture.
+
+## Explore with the cnquery shell
+
+To launch a shell into your Kubernetes environment, enter:
+
+```bash
+cnquery shell k8s
+```
+
+cnquery automatically discovers all the Kubernetes assets available to query:
+
+```coffeescript
+    Available assets
+
+  > 1. K8s Cluster prod-k8s (Kubernetes Cluster)
+    2. kube-system (Kubernetes Namespace)
+    3. kube-node-lease (Kubernetes Namespace)
+    4. kube-public (Kubernetes Namespace)
+    5. default/kubernetes (Kubernetes Service)
+    6. mondoo-operator (Kubernetes Namespace)
+    7. kube-system/etcd-prod-k8s (Kubernetes Pod)
+
+    ••••
+
+    ↑/k up • ↓/j down • q quit • ? more
+```
+
+Arrow through the list and select Enter to choose the asset you want to explore. To query the entire Kubernetes cluster as well as all workloads running on the cluster make sure to select a "Kubernetes Cluster" asset.
+
+### Discover capabilities with the `help` command
+
+Once inside the shell, use the `help` command to learn what Kubernetes resources you can query. This command lists all the Kubernetes resources:
+
+```coffeescript
+help k8s
+```
+
+From the resulting list, you can drill down further. For example, enter this command to list all the Kubernetes IAM resources you can query:
+
+```coffeescript
+help k8s.pod
+```
+
+From the resulting list, you can drill down even further. You can also learn about available Kubernetes resources in the [Mondoo Kubernetes Resource Pack Reference](/mql/resources/k8s/).
+
+### Answer questions in the cnquery shell
+
+Now that you know how to discover what's possible with cnquery, let's run some actual queries in the shell.
+
+#### Query namespaces
+
+This query asks for a list of namespaces in the cluster:
+
+```coffeescript
+k8s.namespaces
+```
+
+cnquery returns a list of all the namespaces in the cluster and their creation dates.
+
+```coffeescript
+k8s.namespaces: [
+  0: k8s.namespace name="default" created=2025-01-29 17:37:00 -0800 PST
+  1: k8s.namespace name="kube-node-lease" created=2025-01-29 17:37:00 -0800 PST
+  2: k8s.namespace name="kube-public" created=2025-01-29 17:37:00 -0800 PST
+  3: k8s.namespace name="kube-system" created=2025-01-29 17:36:59 -0800 PST
+  4: k8s.namespace name="luna" created=2025-01-29 17:38:15 -0800 PST
+]
+```
+
+Add `{ * }` to request a full report that includes all the data available for each namespace:
+
+```coffeescript
+k8s.namespaces { * }
+```
+
+cnquery groups the information by namespace:
+
+```coffeescript
+k8s.namespaces: [
+  0: {
+    labels: {
+      kubernetes.io/metadata.name: "default"
+    }
+    uid: "a6809146-53e4-4086-b289-0d368ba298d4"
+    id: "namespace:default"
+    created: 2025-01-29 17:37:00 -0800 PST
+    kind: "Namespace"
+    annotations: {}
+    manifest: {
+      apiVersion: "v1"
+      kind: "Namespace"
+      metadata: {
+        creationTimestamp: "2025-01-30T01:37:00Z"
+        labels: {
+          kubernetes.io/metadata.name: "default"
+        }
+        managedFields: [
+          0: {
+            apiVersion: "v1"
+            fieldsType: "FieldsV1"
+            fieldsV1: {
+              f:metadata: {
+                f:labels: {
+                  .: {}
+                  f:kubernetes.io/metadata.name: {}
+                }
+              }
+            }
+            manager: "kube-apiserver"
+            operation: "Update"
+            time: "2025-01-30T01:37:00Z"
+          }
+        ]
+        name: "default"
+        resourceVersion: "67"
+        uid: "a6809146-53e4-4086-b289-0d368ba298d4"
+      }
+      spec: {
+        finalizers: [
+          0: "kubernetes"
+        ]
+      }
+      status: {
+        phase: "Active"
+      }
+    }
+    name: "default"
+  }
+  1: {
+    labels: {
+      kubernetes.io/metadata.name: "kube-node-lease"
+    }
+    uid: "ff713841-9c94-478f-ab0d-0ff534199eca"
+    id: "namespace:kube-node-lease"
+    created: 2025-01-29 17:37:00 -0800 PST
+    kind: "Namespace"
+    annotations: {}
+    manifest: {
+      apiVersion: "v1"
+      kind: "Namespace"
+      metadata: {
+        creationTimestamp: "2025-01-30T01:37:00Z"
+        labels: {
+          kubernetes.io/metadata.name: "kube-node-lease"
+        }
+        managedFields: [
+          0: {
+            apiVersion: "v1"
+            fieldsType: "FieldsV1"
+            fieldsV1: {
+              f:metadata: {
+                f:labels: {
+                  .: {}
+                  f:kubernetes.io/metadata.name: {}
+                }
+              }
+            }
+            manager: "kube-apiserver"
+            operation: "Update"
+            time: "2025-01-30T01:37:00Z"
+          }
+        ]
+        name: "kube-node-lease"
+        resourceVersion: "69"
+        uid: "ff713841-9c94-478f-ab0d-0ff534199eca"
+      }
+      spec: {
+        finalizers: [
+          0: "kubernetes"
+        ]
+      }
+      status: {
+        phase: "Active"
+      }
+    }
+    name: "kube-node-lease"
+  }
+
+...
+```
+
+You can also request specific data for each namespace:
+
+```coffeescript
+k8s.namespaces { uid name }
+```
+
+cnquery returns only the information you requested:
+
+```coffeescript
+k8s.namespaces: [
+  0: {
+    uid: "a6809146-53e4-4086-b289-0d368ba298d4"
+    name: "default"
+  }
+  1: {
+    uid: "ff713841-9c94-478f-ab0d-0ff534199eca"
+    name: "kube-node-lease"
+  }
+  2: {
+    uid: "bf23cfde-b05e-4cc4-8c81-ed7bf1d6e47f"
+    name: "kube-public"
+  }
+  3: {
+    uid: "73ce97b9-b3d7-42ad-bf4f-a9fef35d6f67"
+    name: "kube-system"
+  }
+  4: {
+    uid: "33792a74-e541-4c71-8e18-f3e0dab7ddee"
+    name: "luna"
+  }
+]
+```
+
+#### Filter results
+
+You can filter results based on any fields. Specify the criteria using the `where` function and standard boolean operators.
+
+For example, this filters results based on namespace:
+
+```coffeescript
+k8s.services.where(namespace == "luna"){
+        name
+        spec['type']
+        spec['clusterIP']
+        spec['ports']{
+          _['port']
+        }
+}
+```
+
+cnquery returns the requested details for each service in the `luna` namespace:
+
+```coffeescript
+k8s.services.where: [
+  0: {
+    spec[ports]: [
+      0: {
+        [port]: 443.000000
+      }
+    ]
+    spec[clusterIP]: "10.43.0.1"
+    spec[type]: "ClusterIP"
+    name: "kubernetes"
+  }
+  1: {
+    spec[ports]: [
+      0: {
+        [port]: 80.000000
+      }
+    ]
+    spec[clusterIP]: "10.43.211.176"
+    spec[type]: "ClusterIP"
+    name: "wiki"
+  }
+  2: {
+    spec[ports]: [
+      0: {
+        [port]: 80.000000
+      }
+    ]
+    spec[clusterIP]: "10.43.196.249"
+    spec[type]: "ClusterIP"
+    name: "wordpress"
+  }
+  3: {
+    spec[ports]: [
+      0: {
+        [port]: 3306.000000
+      }
+    ]
+    spec[clusterIP]: "10.43.111.72"
+    spec[type]: "ClusterIP"
+    name: "mysql"
+  }
+  4: {
+    spec[ports]: [
+      0: {
+        [port]: 80.000000
+      }
+    ]
+    spec[clusterIP]: "10.43.242.48"
+    spec[type]: "ClusterIP"
+    name: "webserver"
+  }
+  5: {
+    spec[ports]: [
+      0: {
+        [port]: 10250.000000
+      }
+      1: {
+        [port]: 10255.000000
+      }
+      2: {
+        [port]: 4194.000000
+      }
+    ]
+    spec[clusterIP]: "None"
+    spec[type]: "ClusterIP"
+    name: "kubelet"
+  }
+]
+```
+
+### Learn more about querying Kubernetes
+
+- To learn more about how the MQL query language works, read [Write Effective MQL](/mql/mql-write).
+- For a list of all the Kubernetes resources and fields you can query, read the [Mondoo Kubernetes (K8s) Resource Pack Reference](/mql/resources/k8s/).
+
+### Exit the cnquery shell
+
+To exit the cnquery shell, either press `Ctrl + D` or type `exit`.
+
+## Analyze your environment with Kubernetes query packs
+
+Mondoo makes these [core Kubernetes query packs](https://github.com/mondoohq/cnquery) available in GitHub:
+
+- [Mondoo Kubernetes Cluster Inventory](https://github.com/mondoohq/cnquery/blob/main/content/mondoo-kubernetes-inventory.mql.yaml) provides information about all your Kubernetes assets and their configuration.
+- [Mondoo Kubernetes Cluster Incident Response](https://github.com/mondoohq/cnquery/blob/main/content/mondoo-kubernetes-incident-response.mql.yaml) helps you investigate and minimize damage when a security incident occurs.
+
+To run one of these purpose-built collections of Kubernetes-specific queries:
+
+1. In Mondoo's [cnquery GitHub repo](https://github.com/mondoohq/cnquery), go to the `content` directory and find the Kubernetes query pack you want to run.
+
+2. Download the YAML file to a local directory and, in your terminal, move to that directory.
+
+3. Use the `cnquery scan` command, specifying the file and the query pack:
+
+```bash
+cnquery scan k8s -f mondoo-kubernetes-incident-response.mql.yaml --querypack mondoo-incident-response-kubernetes
+```
+
+You can also create your own query packs to meet your specific needs. To learn more about query packs, read [Run a Query Pack](/cnquery/cnquery-run-pack/).
+
+---

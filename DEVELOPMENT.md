@@ -369,7 +369,7 @@ When debugging `cnquery`, you can monitor and profile memory and CPU usage using
 
 You should start seeing data in Grafana!
 
-![Grafana_dashboard](images/Grafana-dashboard.png)
+![Grafana_dashboard](.github/images/Grafana-dashboard.png)
 
 ## Contribute changes
 

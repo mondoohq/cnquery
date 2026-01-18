@@ -1,0 +1,126 @@
+---
+title: Query Snowflake Configuration and Identities
+sidebar_label: Snowflake
+sidebar_position: 50
+displayed_sidebar: cnquery
+description: Query Snowflake account and database configuration and identities with cnquery
+image: /img/cnquery/mondoo-feature.jpg
+---
+
+Mondoo's `snowflake` provider lets you query critical data in your Snowflake account.
+
+## Requirements
+
+To analyze and explore your Snowflake account with cnquery, you must have:
+
+- [cnquery installed on your workstation](/cnquery/).
+- Administrative access to a Snowflake account.
+
+## Connect to Snowflake
+
+To explore Snowflake with cnquery, you must first authenticate with Snowflake. To do so, create a RSA key pair and assign the public key to your user account using Snowsight. To learn how, read [Key-pair authentication and key-pair rotation](https://docs.snowflake.com/en/user-guide/key-pair-auth) in the Snowflake documentation.
+
+In your shell, run:
+
+```shell
+shell snowflake --account ACCOUNT-ID --region REGION --user YOUR-ID  --role YOUR-ROLE --private-key YOUR-KEY
+```
+
+| For...       | Substitute...                                                                                                                                                                                                                                                                            |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ACCOUNT-ID   | The ID of the Snowflake account to explore (To learn how to get your Snowflake account ID, read [Finding the organization and account name for an account](https://docs.snowflake.com/en/user-guide/admin-account-identifier#finding-the-organization-and-account-name-for-an-account).) |
+| REGION       | Your account's region                                                                                                                                                                                                                                                                    |
+| YOUR-USER-ID | The ID you use to log into Snowflake                                                                                                                                                                                                                                                     |
+| YOUR-ROLE    | The role you use (To learn about roles, read [System-defined roles](https://docs.snowflake.com/en/user-guide/security-access-control-overview#system-defined-roles).)                                                                                                                    |
+| YOUR-KEY     | The path to your private key you generated and assigned to your account                                                                                                                                                                                                                  |
+
+For example, run:
+
+```shell
+shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS --role ACCOUNTADMIN --private-key ~/.ssh/id_rsa
+```
+
+## Explore a Snowflake account with cnquery shell
+
+Use this command to open cnquery shell and query your Snowflake configuration and identities:
+
+```shell
+cnquery shell snowflake --account ACCOUNT-ID --region REGION --user YOUR-USER-ID --role YOUR-ROLE --private-key ~/.ssh/id_rsa
+```
+
+| For...       | Substitute...                                                                                                                                                                                                                                                                            |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ACCOUNT-ID   | The ID of the Snowflake account to explore (To learn how to get your Snowflake account ID, read [Finding the organization and account name for an account](https://docs.snowflake.com/en/user-guide/admin-account-identifier#finding-the-organization-and-account-name-for-an-account).) |
+| REGION       | Your account's region                                                                                                                                                                                                                                                                    |
+| YOUR-USER-ID | The ID you use to log into Snowflake                                                                                                                                                                                                                                                     |
+| YOUR-ROLE    | The role you use (To learn about roles, read [System-defined roles](https://docs.snowflake.com/en/user-guide/security-access-control-overview#system-defined-roles).)                                                                                                                    |
+| YOUR-KEY     | The path to your private key you generated and assigned to your account                                                                                                                                                                                                                  |
+
+```shell
+cnquery shell snowflake --account zc74621 --region us-central1.gcp --user STELLA --role ACCOUNTADMIN --private-key ~/.ssh/id_rsa
+```
+
+### Example queries
+
+This query retrieves all users:
+
+```shell
+cnquery> snowflake.account.users
+snowflake.account.users: [
+  0: snowflake.user name="STELLA"
+  1: snowflake.user name="MWEZI"
+  2: snowflake.user name="SNOWFLAKE"
+]
+```
+
+This query retrieves all users that have no MFA:
+
+```shell
+cnquery> snowflake.account.users.where(extAuthnDuo == false)
+snowflake.account.users.where: [
+  0: snowflake.user name="MWEZI"
+  1: snowflake.user name="SNOWFLAKE"
+]
+```
+
+This query retrieves all users that have password authentication:
+
+```shell
+cnquery> snowflake.account.users.where(hasPassword)
+snowflake.account.users.where: [
+  0: snowflake.user name="STELLA"
+  1: snowflake.user name="MWEZI"
+  2: snowflake.user name="SNOWFLAKE"
+]
+
+```
+
+This query retrieves all users that have certificate authentication:
+
+```shell
+cnquery> snowflake.account.users.where(hasRsaPublicKey)
+snowflake.account.users.where: [
+  0: snowflake.user name="STELLA"
+]
+```
+
+This query retrieves all databases:
+
+```shell
+cnquery> snowflake.account.databases
+snowflake.account.databases: [
+  0: snowflake.database name="MARS_SAMPLES"
+  1: snowflake.database name="SECURITY_EXPORTS"
+  2: snowflake.database name="VELOCITY"
+]
+```
+
+### Exit the cnquery shell
+
+To exit the cnquery shell, either press `Ctrl + D` or type `exit`.
+
+## Learn more about querying Snowflake
+
+- To learn more about how the MQL query language works, read [Write Effective MQL](/mql/mql-write).
+
+- For a list of all the Snowflake resources and fields you can query, read the [Snowflake Resource Pack Reference](/mql/resources/snowflake/).

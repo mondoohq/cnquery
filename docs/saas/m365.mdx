@@ -1,0 +1,210 @@
+---
+title: Query Microsoft 365
+sidebar_label: Microsoft 365
+displayed_sidebar: cnquery
+sidebar_position: 20
+description: Use cnquery to inventory and Microsoft 365
+image: /img/cnquery/mondoo-365.jpg
+---
+
+cnquery can provide answers about your Microsoft 365 environment. It can query any aspect of your Microsoft 365 configuration. For a list of Microsoft 365 resources you can query, read [Mondoo Microsoft 365 (M365) Resource Pack Reference](/mql/resources/ms365/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+## Connect cnquery with your Microsoft 365 environment
+
+### Requirements
+
+To test your Microsoft 365 environment with cnquery, you must have:
+
+- [cnquery installed on your workstation](/cnquery/).
+- A [Microsoft 365 subscription](https://www.microsoft.com/en-us/microsoft-365)
+- The [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) installed
+
+### Give cnquery access through the Microsoft 365 API
+
+To remotely scan your Microsoft 365 environment, cnquery must have API credentials with access to the subscription. Follow these steps to give cnquery access:
+
+1.  Log into the Azure CLI:
+
+```bash
+az login --allow-no-subscriptions
+```
+
+2. Create a new service principal and certificate:
+
+```bash
+az ad sp create-for-rbac --name "mondoo-m365" --create-cert
+```
+
+3. Record the `appId` and `tenant` values to use later. Copy the newly created certificate file to a safe location.
+
+4. Log into the [Azure portal](https://portal.azure.com), navigate to **App Registrations**, select the **All applications** tab, and select the application you just created.
+
+5. In the sidebar, expand **Manage** and select **API Permissions**.
+
+   ![Azure Admin Center App Registrations](/img/cnquery/m365/aad.portal.azure.registration.complete.png)
+
+   By default, Microsoft grants your new application with `User.Read` permission for Microsoft Graph. It's not required for Mondoo, so you can remove it.
+
+6. Select **Add a permission**.
+
+   ![Azure Admin Center App Registrations](/img/cnquery/m365/aad.portal.azure.apipermissions.add.png)
+
+7. From the list of **Commonly used Microsoft APIs**, select **Microsoft Graph**.
+
+   ![Azure Admin Center App Registrations](/img/cnquery/m365/aad.portal.azure.apipermissions.graph.png)
+
+8. Because Mondoo acts as a service, select **Application permissions**. Then select the following API permissions:
+
+   <details>
+   <summary>Show or hide required API permissions.</summary>
+
+   | Microsoft Graph                         | Type        | Description                                                       |
+   | --------------------------------------- | ----------- | ----------------------------------------------------------------- |
+   | Application.Read.All                    | Application | Read all applications                                             |
+   | AuditLog.Read.All                       | Application | Read all audit log data                                           |
+   | Calendars.Read                          | Application | Read calendars in all mailboxes                                   |
+   | Device.Read.All                         | Application | Read all devices                                                  |
+   | DeviceManagementApps.Read.All           | Application | Read Microsoft Intune apps                                        |
+   | DeviceManagementConfiguration.Read.All  | Application | Read Microsoft Intune device configuration and policies           |
+   | DeviceManagementManagedDevices.Read.All | Application | Read Microsoft Intune devices                                     |
+   | DeviceManagementRBAC.Read.All           | Application | Read Microsoft Intune RBAC settings                               |
+   | DeviceManagementServiceConfig.Read.All  | Application | Read Microsoft Intune configuration                               |
+   | Directory.Read.All                      | Application | Read directory data                                               |
+   | Domain.Read.All                         | Application | Read domains                                                      |
+   | IdentityProvider.Read.All               | Application | Read identity providers                                           |
+   | IdentityRiskEvent.Read.All              | Application | Read all identity risk event information                          |
+   | IdentityRiskyUser.Read.All              | Application | Read all identity risky user information                          |
+   | InformationProtectionPolicy.Read.All    | Application | Read all published labels and label policies for an organization. |
+   | MailboxSettings.Read                    | Application | Read all user mailbox settings                                    |
+   | Organization.Read.All                   | Application | Read organization information                                     |
+   | OrgContact.Read.All                     | Application | Read organizational contacts                                      |
+   | Policy.Read.All                         | Application | Read your organization's policies                                 |
+   | Policy.Read.ConditionalAccess           | Application | Read your organization's conditional access policies              |
+   | Policy.Read.PermissionGrant             | Application | Read consent and permission grant policies                        |
+   | RoleManagement.Read.All                 | Application | Read role management data for all RBAC providers                  |
+   | SecurityActions.Read.All                | Application | Read your organization's security actions                         |
+   | SecurityEvents.Read.All                 | Application | Read your organization's security events                          |
+   | TeamsAppInstallation.ReadForUser.All    | Application | Read all users' installed Teams apps                              |
+   | TeamSettings.Read.All                   | Application | Read all teams' settings                                          |
+   | ThreatAssessment.Read.All               | Application | Read threat assessment requests                                   |
+   | ThreatIndicators.Read.All               | Application | Read all threat indicators                                        |
+
+   </details>
+
+   Once each API permission is selected, confirm the permissions by selecting **Add permissions**.
+
+   ![Azure Admin Center App Registrations](/img/cnquery/m365/aad.portal.azure.apipermissions.select.png)
+
+9. Select **Add a permission** again, and this time select **Office 365 Management APIs**.
+
+   ![Azure Admin Center App Registrations - API permissions](/img/cnquery/m365/aad.portal.azure.apipermissions.o365.png)
+
+10. Select **Application permissions** and then add the following API permissions:
+
+    | Office 365 Management APIs | Type        | Description                                              |
+    | -------------------------- | ----------- | -------------------------------------------------------- |
+    | ActivityFeed.Read          | Application | Read activity data for your organization                 |
+    | ActivityFeed.ReadDlp       | Application | Read DLP policy events including detected sensitive data |
+    | ServiceHealth.Read         | Application | Read service health information for your organization    |
+
+    Once each API permission is selected, confirm the permissions by selecting **Add permissions**.
+
+11. To complete the process, select **Grant admin consent for TENANT_NAME**.
+
+    ![Azure Admin Center App Registrations](/img/cnquery/m365/aad.portal.azure.apipermissions.confirm.png)
+
+### Verify with a quick Microsoft 365 query
+
+To quickly confirm that cnquery has access to your Microsoft 365 environment, run this check from your terminal:
+
+```bash
+cnquery run ms365 -c 'microsoft.organizations { id }' --tenant-id TENANT_ID_HERE
+```
+
+cnquery lists your Microsoft organizations' IDs.
+
+You've successfully used cnquery to query your Microsoft 365 environment. Now you're ready to explore. The method you choose depends on your goals:
+
+## Query Microsoft 365
+
+To answer any question about your environment, use cnquery's interactive shell. It has auto-complete to guide you, which is especially helpful when you're new to cnquery and learning MQL.
+
+To launch a shell into your Azure environment, enter:
+
+```bash
+cnquery shell ms365 --tenant-id TENANT_ID_HERE
+```
+
+### Discover capabilities with the `help` command
+
+Once inside the shell, use the `help` command to learn what Microsoft 365 resources you can query. This command lists all the Microsoft 365 resources:
+
+```coffeescript
+help ms365
+```
+
+To see all microsoft resources run:
+
+```coffeescript
+help microsoft
+```
+
+From the resulting list, you can drill down further. For example, enter this command to list all the Microsoft domain resources you can query:
+
+```coffeescript
+help microsoft.domain
+```
+
+From the resulting list, you can drill down even further. You can also learn about available Azure resources in the [Mondoo Microsoft 365 (M365) Resource Pack Reference](/mql/resources/ms365/).
+
+### Query storage accounts
+
+Now that you know how to discover what's possible with cnquery, let's run some actual queries in the shell.
+
+This query lists all the current domains:
+
+```coffeescript
+microsoft.domains
+```
+
+#### Request full details in results
+
+For a more detailed report, you can specify that you want all fields:
+
+```coffeescript
+microsoft.domains { * }
+```
+
+For each domain, cnquery lists type, availability, supported services, and more.
+
+#### Specify fields to include in results
+
+If you're interested in only some details, specify the fields you want in braces. For example, this query asks for each domain's ID, password validity period, and whether the domain is admin managed:
+
+```coffeescript
+microsoft.domains { id passwordValidityPeriodInDays isAdminManaged }
+```
+
+#### Filter results
+
+You can filter results based on any fields. Specify the criteria using the `where` function and standard boolean operators.
+
+For example, this filters results to show only domains that have passwords that expire:
+
+```coffeescript
+microsoft.domains.where(passwordValidityPeriodInDays != 2147483647) { id availabilityStatus }
+```
+
+cnquery returns all domains with passwords that can expire. It includes the ID and availability status for each one.
+
+### Exit the cnquery shell
+
+To exit the cnquery shell, either press `Ctrl + D` or type `exit`.
+
+## Learn more about querying Microsoft 365
+
+- To learn more about how the MQL query language works, read [Write Effective MQL](/mql/mql-write).
+
+- For a list of all the Microsoft 365 resources and fields you can query, read the [Mondoo Microsoft 365 (M365) Resource Pack Reference](/mql/resources/ms365/).
+
+---
