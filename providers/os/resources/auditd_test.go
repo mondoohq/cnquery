@@ -71,4 +71,8 @@ func TestResource_AuditdRules(t *testing.T) {
 			},
 		})
 	})
+
+	// Note: comparisons field testing requires updating the mock data to include
+	// rules with -C flags. The field is properly defined and will be populated
+	// when parsing actual rules files containing -C switches.
 }
