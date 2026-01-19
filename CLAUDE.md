@@ -2,289 +2,526 @@
 
 This directory contains information to help Claude AI assistants understand and work effectively with the cnquery codebase.
 
-## Project Overview
+## 1. Project Context
 
-**cnquery** is an open source, cloud-native asset inventory and discovery tool built by Mondoo. It's designed to query infrastructure across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
+**cnquery** is a cloud-native infrastructure querying tool. It uses **MQL (Mondoo Query Language)** to query over 850 resources across cloud accounts (AWS, Azure, GCP), Kubernetes, containers, OS internals, and APIs.
 
-### Key Technologies
-- **Language**: Go (Golang)
-- **License**: BUSL 1.1
-- **Purpose**: Infrastructure querying and asset discovery
-- **Query Language**: MQL (Mondoo Query Language)
+### Critical Distinction
+*   **cnquery**: The core inventory tool. Defines resources, implements MQL, and handles **data gathering**.
+*   **cnspec**: The security scanning tool built *on top* of cnquery. It implements **policy assertions** and vulnerability checks.
+*   **Rule of Thumb:** For resource development (adding fields, new assets), you only need to work within **cnquery**.
 
-## Architecture
+## 2. Resource Development Guide
 
-### Core Components
+The primary task in this repo is adding or modifying resources. Follow this lifecycle:
 
-1. **Providers** ([providers/](../providers/))
-   - Provider implementations for different platforms (AWS, Azure, K8s, OS, etc.)
-   - Each provider implements resource types and data collection
-   - Located in `providers/os/resources/containers/manager.go` and similar paths
+### Step 1: Definition (`.lr` schema)
+Resources are defined in `.lr` files (e.g., `providers/aws/resources/aws.lr`). This acts as the GraphQL-like schema.
+*   **Action**: Edit the `.lr` file to add new resources or fields.
 
-2. **MQL Query Engine**
-   - Custom query language for infrastructure
-   - Compiles and executes queries against various targets
-   - Supports 850+ resources
+### Step 2: Code Generation
+**Crucial:** You must generate Go interfaces after modifying `.lr` files.
+```bash
+# Generate all code (slow)
+make cnquery/generate
 
-3. **CLI Interface**
-   - Main commands: `shell`, `run`, `scan`
-   - Interactive REPL with auto-complete
-   - Support for multiple output formats (JSON, YAML, etc.)
+# Generate specific provider resources (fast - recommended)
+# (if the mqlr binary is not there:)
+make providers/mqlr 
+./mqlr generate providers/aws/resources/aws.lr --docs-file providers/aws/resources/aws.lr.manifest.yaml --dist providers/aws/resources
+```
 
-4. **Target Support**
-   - Local systems, remote SSH/WinRM
-   - Cloud platforms (AWS, Azure, GCP, OCI)
-   - Containers and Kubernetes
-   - SaaS platforms (GitHub, GitLab, Slack, Okta, etc.)
+### Step 3: Implementation Strategies
+Implement the generated interfaces in the provider's Go code. Use one of these patterns:
 
-## Development Workflow
+**Pattern A: Immediate Mapping (`CreateResource`)**
+*Best for:* Listing APIs where you get data immediately.
+1.  Call the Cloud API.
+2.  Loop over results.
+3.  Map to MQL using `CreateResource(runtime, "aws.ec2.instance", map[string]*llx.RawData{...})`.
+4.  **Requirement:** Set `__id` (e.g., ARN, UUID) for caching.
+
+**Pattern B: Lazy Loading (`NewResource` + `init`)**
+*Best for:* Resolving references (e.g., `aws.ec2.instance("i-123")`) or expensive calls.
+1.  Return a reference: `NewResource(runtime, "aws.ec2.instance", map[string]*llx.RawData{"__id": ...})`.
+2.  Implement an `init` function (e.g., `initAwsEc2Instance`) that checks for the `__id`, fetches data on-demand, and populates the resource.
+
+**Pattern C: Cross-References**
+*Best for:* Linking resources (e.g., GCP Address -> Network).
+*   Use an `init` function to cache all instances and filter in memory to avoid N+1 API calls.
+
+### Step 4: Verification (Interactive)
+Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard.**
+
+1.  **Install**: `make cnquery/install` (one-time, or when changing cnquery core).
+2.  **Provider**: `make providers/build/<provider> && make providers/install/<provider>` (after each provider change).
+3.  **Test**: Use your installed `cnquery` binary directly (e.g., `cnquery run aws -c "aws.ec2.instances { __id, tags }"`).
+
+**Note:** Only use `go run apps/cnquery/cnquery.go run ...` when you're also modifying cnquery core code (not just the provider). For provider-only changes, just rebuild/install the provider and use your installed cnquery binary.
+
+## 3. Build & Operations
 
 ### Prerequisites
+*   Go 1.25.0+
+*   Protocol Buffers v21+
+*   **Install development tools first:** `make prep/tools` (installs protolint, mockgen, gotestsum, golangci-lint, copywrite)
 
-- **Go 1.25.0+** (install via `brew install go@1.25` on macOS)
-- **Protocol Buffers v21+** (install via `brew install protobuf` on macOS)
-
-### Building the Project
-
+### Building cnquery
 ```bash
-# Initial setup - build pre-req tools
-make prep/tools
-
-# Build all providers
+# Build all providers and generate code
 make providers
+
+# Build the cnquery binary
+make cnquery/build
 
 # Install cnquery to $GOBIN
 make cnquery/install
 
-# When changing resources, providers, or protos
-make prep                    # Install necessary tools
-make cnquery/generate        # Generate and update required files
+# Build for specific platform
+make cnquery/build/linux
+make cnquery/build/darwin
+make cnquery/build/windows
 ```
 
-### Building Individual Providers
-
-When you update a provider's `.lr` file:
-
+### Working with Providers
 ```bash
-# Generate go files for a specific provider (e.g., AWS)
-make providers/mqlr
-./mqlr generate providers/aws/resources/aws.lr \
-  --docs-file providers/aws/resources/aws.lr.manifest.yaml \
-  --dist providers/aws/resources
+# Build a specific provider
+make providers/build/aws
+make providers/build/k8s
 
-# Quick install changed provider
+# Install provider to local config (~/.config/mondoo/providers/) so it can be used by cnquery
+make providers/install/aws
+
+# Build provider for distribution (production build)
+make providers/dist
+
+# Quick rebuild and install after changing a provider
 make providers/build/aws && make providers/install/aws
 ```
 
-See [docs/development.md](../docs/development.md) for detailed build instructions.
+### Testing Commands
+```bash
+# Run all tests (excludes providers and integration tests)
+make test/go/plain
 
-### Project Structure
+# Run tests with CI output (generates JUnit XML report)
+make test/go/plain-ci
 
+# Run integration tests
+make test/integration
+
+# Test all providers
+make providers/test
+
+# Run linting
+make test/lint
+
+# Extended linting (more comprehensive)
+make test/lint/extended
+
+# Run benchmarks
+make benchmark/go
+
+# Race condition detection
+make race/go
+```
+
+### Running a Single Test
+```bash
+# Run a specific test file
+go test ./llx/builtin_array_test.go
+
+# Run a specific test function
+go test ./llx -run TestArrayContains
+
+# Run tests in a specific package with verbose output
+go test -v ./providers/core/...
+```
+
+### Tips
+*   **MCP Tools**: Use the GitHub MCP to check tickets/PRs. Use Notion MCP for internal docs. We're going to be talking about tickets and PRs (so that's github mcp), and there's also notion for company-wide docs (focus on Engineering stuff, infra, dev env, etc)
+*   **Auth**: The environment usually has AWS/Azure CLI tools authenticated (so you can use them when needed). If they're not present or logged in, stop and let me know so I can setup the provider's needs (tools, auth, whatever)
+*   **Tickets**: If the ticket body contains queries to run in cnquery, make use of them during exploration/dev/testing/verification.
+*   **Provider READMEs**: Many providers have detailed README files with authentication methods, prerequisites, usage examples, and troubleshooting. Always check `providers/<provider-name>/README.md` when working with a specific provider.
+
+## 4. Debugging & Profiling
+
+### Local Provider Debugging (main dev workflow for provider changes)
+
+**Why builtin mode exists:** Providers normally run as **separate subprocesses** (via `hashicorp/go-plugin` + gRPC). This isolation is great for production:
+- Crash isolation (provider crash doesn't kill cnquery)
+- Separate memory spaces
+- Dynamic loading without recompilation
+
+**But debuggers can't step into subprocess code.** Marking a provider as `builtin` in `providers.yaml` **compiles it directly into the main cnquery binary**, enabling seamless debugging.
+
+**Workflow:**
+1.  **Edit `providers.yaml`**: Add provider to `builtin` (e.g., `builtin: [aws]`).
+2.  **Config**: `make providers/config` (generates `builtin_dev.go` with in-process provider loading).
+3.  **Build/Install**: `make cnquery/install`.
+4.  **Run/Debug**:
+    ```bash
+    go run apps/cnquery/cnquery.go run aws -c "aws.ec2.instances"
+    # Or use your IDE debugger with entry point: apps/cnquery/cnquery.go
+    ```
+5.  **Revert**: Clean up `providers.yaml` (set `builtin: []`) and run `make providers/config`.
+
+Step 3 is the core of the work here (e.g. doing the ticket's local dev work). The start and end should wrap 3.
+
+### Performance Monitoring with Prometheus and Grafana
+When debugging performance issues, you can monitor memory and CPU usage:
+1. Install Prometheus (macOS: `brew install prometheus`)
+2. Start monitoring stack: `make metrics/start`
+3. Configure Grafana at http://localhost:3000 (one-time setup):
+    - Add Prometheus data source (URL: `http://host.docker.internal:9009`)
+    - Import a Go profiling dashboard (e.g., Grafana dashboard #10826)
+4. Run cnquery with metrics enabled: `DEBUG=1 cnquery scan local`
+
+### Remote Debugging
+For providers that need to run on specific VMs (e.g., GCP snapshot scanning):
+1. Install Go and Delve on the remote VM
+2. Configure provider as builtin locally (see "Debugging Providers" above)
+3. Copy source to remote VM (use `rsync` for easier iteration)
+4. Allow ingress traffic to debugger port in firewall
+5. Start debugger on remote VM:
+   ```bash
+   dlv debug apps/cnquery/cnquery.go --headless --listen=:12345 -- run gcp snapshot --project-id xyz-123 --verbose
+   ```
+
+## 5. Architecture Deep Dive
+
+### High-Level Component Structure
 ```
 cnquery/
-├── providers/          # Provider implementations (AWS, OS, K8s, etc.)
-├── docs/              # Documentation
-├── examples/          # Example query packs
-├── cli/               # CLI command implementations
-├── motor/             # Connection and transport layer
-├── resources/         # MQL resource definitions
-└── mqlc/              # MQL compiler
+├── cli/                    # CLI commands and execution runtime
+├── mql/                    # MQL executor (high-level query interface)
+├── mqlc/                   # MQL compiler (parses MQL to bytecode)
+├── llx/                    # Low-level execution engine (bytecode VM)
+├── providers/              # Provider coordinator and built-in providers
+├── providers-sdk/v1/       # SDK for building provider plugins
+├── explorer/               # Query bundles, packs, and execution orchestration
+├── content/                # Built-in query packs and policies
+└── apps/cnquery/           # Main cnquery CLI application
 ```
 
-## Common Tasks
+### Detailed Query Execution Flow
+1. **User Query (MQL string)** → `mqlc.Compile()` (MQL Compiler)
+2. **Compiled to `llx.CodeBundle`** (Protobuf-serialized bytecode + metadata)
+3. **Wrapped in `explorer.ExecutionQuery`** (execution context)
+4. **Executed by `executor.Executor`** (runs bytecode against runtime)
+5. **Returns `llx.RawResult`** (typed data + code IDs)
+6. **Formatted output** (JSON, YAML, table, etc.)
 
-### Adding New Resources
+### Provider System Architecture
 
-When adding a new resource to a provider:
-1. Define the resource schema in the `.lr` file
-2. Implement data collection methods
-3. Run `make cnquery/generate` to regenerate files
-4. Add tests
-5. Update documentation
+**Core Concepts:**
+- **Providers** are plugins that connect cnquery to different infrastructure backends (AWS, K8s, Docker, etc.)
+- Each provider is a separate Go module with its own dependencies
+- Providers communicate with cnquery via gRPC using hashicorp/go-plugin
+- The **Core Provider** is always built-in and provides universal resources like `asset`, `time`, `regex`
 
-### Working with Providers
+**Provider Lifecycle:**
+1. `providers.Coordinator` spawns provider as subprocess via `exec.Command`
+2. gRPC connection established via `hashicorp/go-plugin`
+3. Provider implements: `ParseCLI()`, `Connect()`, `GetData()`, `StoreData()`, `Disconnect()`
+4. `providers.Runtime` manages active providers for each asset
+5. Providers can discover child assets (e.g., K8s discovers pods)
 
-Providers are located in `providers/` and follow a consistent structure:
-- `resources/` - Resource definitions (`.lr` files) and implementations
-- `config/` - Provider configuration
-- `connection/` - Connection handling
-- `README.md` - Provider-specific documentation (authentication, examples, prerequisites)
+**Resource Data Flow:**
+1. Query compiler requests resource field
+2. Executor calls `provider.GetData(connection, resource, field, args)`
+3. Provider fetches data from backend (cloud API, SSH, etc.)
+4. Data converted to `llx.Primitive` → `llx.RawData`
+5. Result cached in executor for subsequent access
 
-Each provider is a separate Go module with its own dependencies, compiled as a plugin.
+### MQL, MQLC, and LLX Relationship
+- **MQL** (`mql/`): High-level query executor API
+- **MQLC** (`mqlc/`): Compiler that parses MQL text and generates bytecode
+- **LLX** (`llx/`): Low-level virtual machine that executes bytecode
 
-**Important**: Many providers have their own README files with valuable information:
-- Authentication methods and environment variables
-- Prerequisites (e.g., ms365 requires PowerShell)
-- Usage examples and common queries
-- Troubleshooting guides
+Think of it as: MQL (like SQL or even better GraphQL) → MQLC (compiler) → LLX (runtime VM)
 
-Always check `providers/<provider-name>/README.md` when working with a specific provider.
+### Resources and Code Generation
+- Resources are defined in `.lr` files (e.g., `aws.lr`, `k8s.lr`)
+- The `lr` tool generates Go code from these definitions:
+    - Resource structs
+    - Schema definitions
+    - Data accessor methods
+- Generated files: `*.lr.go`, `*.lr.manifest.yaml`, `*.resources.json`
 
-### Debugging Providers
+### Resource Caching & __id
+**How caching works:**
+- Each resource instance has a unique cache key: `resourceName + "\x00" + __id`
+- Example: `"aws.ec2.instance\x00arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0"`
+- The runtime checks cache before fetching: `if x, ok := runtime.Resources.Get(id); ok { return x, nil }`
+- Results are cached automatically after first fetch
 
-Since providers use a plugin mechanism, debugging requires special configuration:
+**Why `__id` matters:**
+- Prevents redundant API calls for the same resource
+- Enables resource sharing across queries
+- Must be unique and stable (ARN, UUID, or composite key)
+- If `__id` is empty or duplicate, caching breaks and performance degrades
 
-1. **Local debugging**: Add the provider to `builtin` in `providers.yaml`:
-   ```yaml
-   builtin: [aws]
+### Code Generation Dependencies
+The build process has several code generation steps:
+1. Protocol buffers (`.proto` → `.pb.go`)
+2. Resource definitions (`.lr` → `.lr.go`)
+3. Provider configurations (`providers.yaml` → `builtin_dev.go`)
+
+Always run `make cnquery/generate` after modifying any of these source files.
+
+### Key Data Structures
+When navigating the codebase, these are the critical types you'll encounter:
+- **`llx.CodeBundle`** - Compiled MQL bytecode ready for execution
+- **`llx.RawData`** - Typed data wrapper for resource fields
+- **`llx.RawResult`** - Execution results with type information
+- **`plugin.Runtime`** - Execution context linking assets to providers
+- **`explorer.Explorer`** - High-level query orchestration
+- **`explorer.ExecutionQuery`** - Query wrapped with execution context
+- **`providers.Coordinator`** - Manages provider lifecycle and spawning
+- **`providers.Runtime`** - Active provider management per asset
+
+## 6. Development Workflow Patterns
+
+See "Local Provider Debugging" above. That pattern should be used for most development (start, bulk of the work and verification, end).
+
+But this also works:
+
+### Adding a New Resource to a Provider
+1. Edit the provider's `.lr` file (e.g., `providers/aws/resources/aws.lr`)
+2. Run code generation:
+   ```bash
+   make providers/mqlr # if mqlr is not already available
+   ./mqlr generate providers/aws/resources/aws.lr --docs-file providers/aws/resources/aws.lr.manifest.yaml --dist providers/aws/resources
    ```
-2. Run `make providers/config` to rebuild with the provider built-in
-3. Debug using `apps/cnquery/cnquery.go` as the main entry point
-4. Restore `providers.yaml` when done: `builtin: []`
+3. Implement the resource methods in Go
+4. Rebuild and install the provider:
+   ```bash
+   make providers/build/aws && make providers/install/aws
+   ```
 
-Example debug arguments: `run aws -c "aws.ec2.instances"`
+### Implementing Resource Cross-References
+When one resource references another (e.g., GCP address → network), use an init function to cache all instances and filter in memory. This avoids excessive N+1 API calls.
 
-**Remote debugging** (for VMs): See [docs/development.md](../docs/development.md) for Delve setup instructions.
-
-### Testing
-
-Run provider-specific tests:
+### Provider Version Updates
+Use the version utility to check and update provider versions:
 ```bash
-cd providers/<provider-name>
-go test ./...
-```
-
-### Updating Provider Versions
-
-Providers use semantic versioning. Use the version utility:
-
-```bash
-# Alias for convenience
+# Set up alias (recommended)
 alias version="go run providers-sdk/v1/util/version/version.go"
 
 # Check which providers need version updates
 version check providers/*/
 
-# Update versions interactively
+# Update provider versions interactively
 version update providers/*/
 
-# Auto-increment patch version and commit
-version update providers/*/ --increment=patch --commit --fast
+# Auto-increment and commit
+version update providers/*/ --increment=patch --commit
 ```
 
-### Using Go Workspaces
-
-For simultaneous development on cnquery, cnspec, and providers, create a `go.work` file:
-
+### Using Go Workspaces for Multi-Repo Development
+If developing cnquery alongside cnspec or providers, create a `go.work` file in a parent directory:
 ```go
 go 1.25
 
 use (
    ./cnquery
    ./cnquery/providers/aws
-   ./cnquery/providers/azure
-   // ... add other providers as needed
+   ./cnquery/providers/k8s
+   // add other providers as needed
    ./cnspec
 )
 ```
 
-This allows using latest updates across repos without committing/pushing.
+## 7. Important Implementation Details
 
-## Key Concepts
+### Resource Caching & Performance
+- Resource field access is lazy: fields are only fetched when needed
+- Results are cached automatically by the executor using `__id` as cache key
+- Cross-references should leverage this caching to avoid redundant API calls
+- Use `init` functions for expensive operations to enable result sharing across queries
 
-### MQL (Mondoo Query Language)
-- Declarative query language for infrastructure
-- Examples:
-  ```mql
-  # Query running services
-  services { name running }
+### Provider Connection Management
+- Implement proper connection lifecycle: `Connect()`, `GetData()`, `StoreData()`, `Disconnect()`
+- Handle authentication failures gracefully with `Is400AccessDeniedError()` checks
+- Use connection pooling where possible to optimize API calls
+- Implement timeout handling for long-running API operations
 
-  # Query AWS EC2 instances
-  aws.ec2.instances { * }
+### Error Handling Patterns
+- Use `Is400AccessDeniedError(err)` for permission issues (returns `nil` result, not error)
+- Return actual errors for temporary failures (rate limits, network issues)
+- Log warnings for region/permission issues but continue with accessible resources
+- Avoid failing entire queries due to single resource access issues
 
-  # Query with filters
-  ports.listening.where(port == 22) { process }
-  ```
-
-### Query Packs
-- Collections of related queries
-- Can be bundled and shared
-- Support multiple target systems
-- Located in `examples/` directory
-
-### Asset Discovery
-- Automatic detection of infrastructure components
-- Multi-cloud support
-- Container and Kubernetes workload discovery
-
-### Provider Development Best Practices
-
-**Cross-referencing MQL Resources**: When referencing top-level resources from other resources, use init functions and caching to minimize API calls:
-
-1. Create an `init` function for the referenced resource
-2. Use `CreateResource()` to leverage MQL caching
-3. Filter results in memory rather than making multiple API calls
-
-Example: Instead of calling the GCP API 10 times for 10 addresses to get their networks, call it once to get all networks, cache them, and filter in memory.
-
-See the GCP network/address example in [docs/development.md](../docs/development.md#referencing-mql-resources) for detailed implementation patterns.
-
-## Important Notes
-
-### Code Style
-- Follow standard Go conventions
-- Use `gofmt` for formatting
-
-### Security Considerations
-- Be cautious with credentials and API tokens
-- Follow OWASP guidelines when adding new features
-- Validate inputs at system boundaries
-- When cross-referencing MQL resources, use caching to minimize API calls
-
-### Dependencies
-- Managed via Go modules (`go.mod`)
-- Each provider has separate dependencies
-- Keep dependencies up to date
-- Check for security vulnerabilities
-
-### Performance Monitoring
-
-Debug performance issues using Prometheus and Grafana:
-
-```bash
-# Install prometheus (macOS)
-brew install prometheus
-
-# Start monitoring stack
-make metrics/start
-
-# Run cnquery with metrics enabled
-DEBUG=1 cnquery scan local
+### Pagination Handling
+When fetching resources from cloud APIs, **always handle pagination** if the API supports it:
+```go
+var marker *string
+for {
+    result, err := svc.DescribeDBParameterGroups(ctx, &rds.DescribeDBParameterGroupsInput{Marker: marker})
+    if err != nil {
+        return nil, err
+    }
+    
+    for _, item := range result.Items {
+        // Process each item
+    }
+    
+    // Check if more pages exist
+    if result.Marker == nil {
+        break
+    }
+    marker = result.Marker
+}
 ```
 
-Access Grafana at http://localhost:3000 and connect to Prometheus at `http://host.docker.internal:9009`.
+### Resource Field Naming & Constraints
+- Properties named "id" or "url" (case insensitive) must be prefixed with "userDefined:" (e.g., "userDefined:URL")
+- Date fields use expanded format: "date:{property}:start", "date:{property}:end", "date:{property}:is_datetime"
+- Place fields split into multiple properties: name, address, latitude, longitude, google_place_id
+- Use JavaScript number types for numeric fields, not strings
 
-## Resources
+### Provider Modules & Dependencies
+- Each provider in `providers/` has its own `go.mod` for isolation
+- Core cnquery has dependencies that providers don't need (and vice versa)
+- This keeps provider binaries smaller and dependency trees isolated
+- Update provider versions using the version utility to maintain compatibility
 
+### Built-in vs External Providers
+- Core provider is always compiled into cnquery (provides universal resources)
+- Other providers can be:
+    - External plugins (default): separate binaries loaded at runtime via gRPC
+    - Built-in (for debugging): compiled into cnquery by modifying `providers.yaml`
+- Built-in mode enables easier debugging but requires provider cleanup before commits
+- And speaking of debugging: use a debugger mcp if available, so you set breakpoints instead of stdout debugging.
+
+### Code Generation Gotchas
+- Always run `make cnquery/generate` after modifying `.lr`, `.proto`, or `providers.yaml` files
+- Generated code includes resource structs, schema definitions, and accessor methods
+- Never manually edit generated `.lr.go` files - they get overwritten
+- Use `make providers/mqlr` for faster provider-specific regeneration
+
+### Testing & Verification
+- If you want to test simple changes, build and install the provider and use cnquery run .... 
+- Otherwise set it as builtin and use go run ...
+- Use `demo.agent.credentials.json` for local development with service accounts
+- Verify credentials exist before testing: `~/.aws/credentials`, etc.
+- Test error conditions and edge cases during development.
+- Use `providers-sdk/v1/testutils` for mock providers in unit tests
+- Recording/replay system available for reproducible provider tests
+
+### Provider Structure
+Each provider follows a standard directory layout:
+- **`config/`** - Provider configuration and settings
+- **`connection/`** - Connection management and authentication
+- **`provider/`** - Provider implementation (ParseCLI, Connect, GetData, etc.)
+- **`resources/`** - Resource implementations and .lr files
+- **`main.go`** - Provider binary entry point
+- **`gen/main.go`** - Generates CLI configuration JSON
+
+### CLI and Output
+Key directories for user-facing functionality:
+- **`apps/cnquery/cmd/`** - CLI command implementations
+- **`cli/shell/`** - Interactive shell with auto-completion
+- **`cli/reporter/`** - Output formatting (JSON, CSV, YAML, table, etc.)
+
+**Always use the codebase's patterns.**
+
+## 8. Pre-PR Checklist
+
+When work appears complete, present this checklist to the user for local verification:
+
+### Essential Checks (Run These)
+```bash
+# 1. Ensure generated code is up-to-date
+make cnquery/generate
+git diff --exit-code  # Should show no changes
+
+# 2. Verify go.mod is clean
+go mod tidy
+git diff go.mod go.sum  # Should show no changes
+
+# 3. Run linting
+make test/lint
+
+# 4. Run unit tests
+make test/go/plain
+```
+
+### Provider-Specific Checks
+If you modified a provider:
+```bash
+# 1. Build and install the provider
+make providers/build/<provider> && make providers/install/<provider>
+
+# 2. Interactive verification
+cnquery shell <provider>
+# Run relevant MQL queries from the ticket
+
+# 3. Run provider tests (if they exist)
+go test -v ./providers/<provider>/...
+```
+
+### Optional (Performance-Sensitive or Core Changes)
+```bash
+# Race condition detection (if touching concurrency)
+make race/go
+
+# Benchmark tests (if performance-sensitive)
+make benchmark/go
+
+# Integration tests (if changing core execution)
+make test/integration
+```
+
+### Quick Pre-Commit Checklist
+- [ ] Generated files are up-to-date (`.lr.go`, `.pb.go`)
+- [ ] Linting passes (`make test/lint`)
+- [ ] Changes work interactively (`cnquery shell <provider>`)
+- [ ] `go.mod` is clean (`go mod tidy`)
+- [ ] No spelling errors in new comments/docs
+
+**Note:** CI runs comprehensive checks. Run them locally only if you want to verify before pushing or if changing core/performance-critical code.
+
+## 9. Commit Conventions
+
+Use emojis in commit messages (but don't worry about it, since you're NEVER going to commit anything; that's my job):
+- 🛑 breaking changes
+- 🐛 bugfix
+- 🧹 cleanup/internals
+- ⚡ speed improvements
+- 📄 docs
+- ✨⭐🌟🌠 features (smaller to larger)
+- 🌈 visual changes
+- 🐎 race condition fixes
+- 🌙 MQL changes
+- 🟢 fix tests
+- 🎫 auth
+- 🐳 container
+
+## 10. Additional Resources
+
+### External Documentation
 - [Official Documentation](https://mondoo.com/docs/cnquery/home/)
 - [MQL Introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL Language Reference](https://mondoo.com/docs/mql/resources/)
 - [GitHub Repository](https://github.com/mondoohq/cnquery)
 - [Community Discussions](https://github.com/orgs/mondoohq/discussions)
 
-## Related Projects
-
-- **cnspec**: Cloud-native security scanner built on cnquery
-- **Mondoo Platform**: Web-based console for infrastructure exploration
-
-## Provider-Specific Documentation
-
+### Provider-Specific Documentation
 Many providers include detailed README files with authentication, examples, and troubleshooting:
-
-- [ansible](../providers/ansible/README.md) - Playbook scanning with query/policy examples
-- [ipinfo](../providers/ipinfo/README.md) - IP address information and geolocation
-- [ms365](../providers/ms365/README.md) - Microsoft 365 with PowerShell requirements
-- [os](../providers/os/README.md) - Operating system provider (Linux, macOS, Windows)
-- [shodan](../providers/shodan/README.md) - Shodan search engine integration
-- [snowflake](../providers/snowflake/README.md) - Snowflake data warehouse
-- [tailscale](../providers/tailscale/README.md) - Tailscale network information
+- [ansible](providers/ansible/README.md) - Playbook scanning with query/policy examples
+- [ipinfo](providers/ipinfo/README.md) - IP address information and geolocation
+- [ms365](providers/ms365/README.md) - Microsoft 365 with PowerShell requirements
+- [os](providers/os/README.md) - Operating system provider (Linux, macOS, Windows)
+- [shodan](providers/shodan/README.md) - Shodan search engine integration
+- [snowflake](providers/snowflake/README.md) - Snowflake data warehouse
+- [tailscale](providers/tailscale/README.md) - Tailscale network information
 
 Run `find providers -name "README.md" -type f` to discover all provider documentation.
 
-## Contributing
+### Related Projects
+- **cnspec**: Cloud-native security scanner built on cnquery
+- **Mondoo Platform**: Web-based console for infrastructure exploration
 
-See [docs/development.md](../docs/development.md) for contribution guidelines.
-
----
-
-*This context file helps AI assistants understand the cnquery project structure and make appropriate decisions when assisting with development tasks.*
+Anticipate needs, offer options when it applies, think in the context of ticket-solution-in-codebase.
