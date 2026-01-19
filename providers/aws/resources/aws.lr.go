@@ -213,6 +213,7 @@ const (
 	ResourceAwsEc2Networkinterface                                              string = "aws.ec2.networkinterface"
 	ResourceAwsEc2Keypair                                                       string = "aws.ec2.keypair"
 	ResourceAwsEc2Image                                                         string = "aws.ec2.image"
+	ResourceAwsEc2ImageLaunchPermission                                         string = "aws.ec2.image.launchPermission"
 	ResourceAwsEc2ImageBlockDeviceMapping                                       string = "aws.ec2.image.blockDeviceMapping"
 	ResourceAwsEc2ImageEbsBlockDevice                                           string = "aws.ec2.image.ebsBlockDevice"
 	ResourceAwsEc2InstanceDevice                                                string = "aws.ec2.instance.device"
