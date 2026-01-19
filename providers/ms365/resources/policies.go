@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
 	"go.mondoo.com/cnquery/v12/llx"
@@ -105,22 +104,25 @@ func (a *mqlMicrosoftPolicies) consentPolicySettings() (any, error) {
 
 func (a *mqlMicrosoftPolicies) authenticationMethodsPolicy() (*mqlMicrosoftPoliciesAuthenticationMethodsPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	betaGraphClient, err := conn.BetaGraphClient()
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
-	policy, err := betaGraphClient.Policies().AuthenticationMethodsPolicy().Get(ctx, nil)
+	// expand authenticationMethodConfigurations to get all the details in one call
+	requestConfiguration := &policies.AuthenticationMethodsPolicyRequestBuilderGetRequestConfiguration{
+		QueryParameters: &policies.AuthenticationMethodsPolicyRequestBuilderGetQueryParameters{
+			Expand: []string{"authenticationMethodConfigurations"},
+		},
+	}
+
+	resp, err := graphClient.Policies().AuthenticationMethodsPolicy().Get(ctx, requestConfiguration)
 	if err != nil {
 		return nil, transformError(err)
 	}
 
-	if policy == nil {
-		return nil, nil
-	}
-
-	return newAuthenticationMethodsPolicy(a.MqlRuntime, policy)
+	return newAuthenticationMethodsPolicy(a.MqlRuntime, resp)
 }
 
 func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]any, error) {
@@ -155,7 +157,7 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]any, error) {
 	return activityBasedTimeoutPolicies, nil
 }
 
-func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy betamodels.AuthenticationMethodsPolicyable) (*mqlMicrosoftPoliciesAuthenticationMethodsPolicy, error) {
+func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.AuthenticationMethodsPolicyable) (*mqlMicrosoftPoliciesAuthenticationMethodsPolicy, error) {
 	authMethodConfigs, err := newAuthenticationMethodConfigurations(runtime, policy.GetAuthenticationMethodConfigurations())
 	if err != nil {
 		return nil, err
@@ -178,7 +180,7 @@ func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy betamodels.A
 	return mqlAuthenticationMethodsPolicy.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy), nil
 }
 
-func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []betamodels.AuthenticationMethodConfigurationable) ([]any, error) {
+func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []models.AuthenticationMethodConfigurationable) ([]any, error) {
 	var configResources []any
 	for _, config := range configs {
 		excludeTargets := []any{}
