@@ -17,130 +17,134 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAzure                                                                      string = "azure"
-	ResourceAzureSubscription                                                          string = "azure.subscription"
-	ResourceAzureSubscriptionWebServiceFunction                                        string = "azure.subscription.webService.function"
-	ResourceAzureSubscriptionResourcegroup                                             string = "azure.subscription.resourcegroup"
-	ResourceAzureSubscriptionResource                                                  string = "azure.subscription.resource"
-	ResourceAzureSubscriptionComputeService                                            string = "azure.subscription.computeService"
-	ResourceAzureSubscriptionComputeServiceVm                                          string = "azure.subscription.computeService.vm"
-	ResourceAzureSubscriptionComputeServiceDisk                                        string = "azure.subscription.computeService.disk"
-	ResourceAzureSubscriptionBatchService                                              string = "azure.subscription.batchService"
-	ResourceAzureSubscriptionBatchServiceAccount                                       string = "azure.subscription.batchService.account"
-	ResourceAzureSubscriptionBatchServiceAccountPool                                   string = "azure.subscription.batchService.account.pool"
-	ResourceAzureSubscriptionNetworkService                                            string = "azure.subscription.networkService"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                       string = "azure.subscription.networkService.virtualNetworkGateway"
-	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                            string = "azure.subscription.networkService.appSecurityGroup"
-	ResourceAzureSubscriptionNetworkServiceFirewall                                    string = "azure.subscription.networkService.firewall"
-	ResourceAzureSubscriptionNetworkServiceFirewallIpConfig                            string = "azure.subscription.networkService.firewall.ipConfig"
-	ResourceAzureSubscriptionNetworkServiceFirewallNetworkRule                         string = "azure.subscription.networkService.firewall.networkRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallApplicationRule                     string = "azure.subscription.networkService.firewall.applicationRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallNatRule                             string = "azure.subscription.networkService.firewall.natRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallPolicy                              string = "azure.subscription.networkService.firewallPolicy"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig               string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection             string = "azure.subscription.networkService.virtualNetworkGateway.connection"
-	ResourceAzureSubscriptionNetworkServiceBgpSettings                                 string = "azure.subscription.networkService.bgpSettings"
-	ResourceAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress string = "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress"
-	ResourceAzureSubscriptionNetworkServiceNatGateway                                  string = "azure.subscription.networkService.natGateway"
-	ResourceAzureSubscriptionNetworkServiceSubnet                                      string = "azure.subscription.networkService.subnet"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetwork                              string = "azure.subscription.networkService.virtualNetwork"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions                   string = "azure.subscription.networkService.virtualNetwork.dhcpOptions"
-	ResourceAzureSubscriptionNetworkServiceLoadBalancer                                string = "azure.subscription.networkService.loadBalancer"
-	ResourceAzureSubscriptionNetworkServiceProbe                                       string = "azure.subscription.networkService.probe"
-	ResourceAzureSubscriptionNetworkServiceBackendAddressPool                          string = "azure.subscription.networkService.backendAddressPool"
-	ResourceAzureSubscriptionNetworkServiceInboundNatPool                              string = "azure.subscription.networkService.inboundNatPool"
-	ResourceAzureSubscriptionNetworkServiceInboundNatRule                              string = "azure.subscription.networkService.inboundNatRule"
-	ResourceAzureSubscriptionNetworkServiceFrontendIpConfig                            string = "azure.subscription.networkService.frontendIpConfig"
-	ResourceAzureSubscriptionNetworkServiceLoadBalancerRule                            string = "azure.subscription.networkService.loadBalancerRule"
-	ResourceAzureSubscriptionNetworkServiceOutboundRule                                string = "azure.subscription.networkService.outboundRule"
-	ResourceAzureSubscriptionNetworkServiceInterface                                   string = "azure.subscription.networkService.interface"
-	ResourceAzureSubscriptionNetworkServiceIpAddress                                   string = "azure.subscription.networkService.ipAddress"
-	ResourceAzureSubscriptionNetworkServiceBastionHost                                 string = "azure.subscription.networkService.bastionHost"
-	ResourceAzureSubscriptionNetworkServiceSecurityGroup                               string = "azure.subscription.networkService.securityGroup"
-	ResourceAzureSubscriptionNetworkServiceSecurityrule                                string = "azure.subscription.networkService.securityrule"
-	ResourceAzureSubscriptionNetworkServiceWatcher                                     string = "azure.subscription.networkService.watcher"
-	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                              string = "azure.subscription.networkService.watcher.flowlog"
-	ResourceAzureSubscriptionNetworkServiceApplicationGateway                          string = "azure.subscription.networkService.applicationGateway"
-	ResourceAzureSubscriptionNetworkServiceWafConfig                                   string = "azure.subscription.networkService.wafConfig"
-	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                   string = "azure.subscription.networkService.applicationFirewallPolicy"
-	ResourceAzureSubscriptionStorageService                                            string = "azure.subscription.storageService"
-	ResourceAzureSubscriptionStorageServiceAccount                                     string = "azure.subscription.storageService.account"
-	ResourceAzureSubscriptionStorageServiceAccountDataProtection                       string = "azure.subscription.storageService.account.dataProtection"
-	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                    string = "azure.subscription.storageService.account.service.properties"
-	ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties                string = "azure.subscription.storageService.account.service.blobProperties"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics             string = "azure.subscription.storageService.account.service.properties.metrics"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy     string = "azure.subscription.storageService.account.service.properties.retentionPolicy"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging             string = "azure.subscription.storageService.account.service.properties.logging"
-	ResourceAzureSubscriptionStorageServiceAccountContainer                            string = "azure.subscription.storageService.account.container"
-	ResourceAzureSubscriptionWebService                                                string = "azure.subscription.webService"
-	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                 string = "azure.subscription.webService.appRuntimeStack"
-	ResourceAzureSubscriptionWebServiceAppsite                                         string = "azure.subscription.webService.appsite"
-	ResourceAzureSubscriptionPrivateEndpointConnection                                 string = "azure.subscription.privateEndpointConnection"
-	ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState                  string = "azure.subscription.privateEndpointConnection.connectionState"
-	ResourceAzureSubscriptionWebServiceAppslot                                         string = "azure.subscription.webService.appslot"
-	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies       string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
-	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                             string = "azure.subscription.webService.appsiteauthsettings"
-	ResourceAzureSubscriptionWebServiceAppsiteconfig                                   string = "azure.subscription.webService.appsiteconfig"
-	ResourceAzureSubscriptionWebServiceHostingEnvironment                              string = "azure.subscription.webService.hostingEnvironment"
-	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
-	ResourceAzureSubscriptionSqlService                                                string = "azure.subscription.sqlService"
-	ResourceAzureSubscriptionSqlServiceServer                                          string = "azure.subscription.sqlService.server"
-	ResourceAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings           string = "azure.subscription.sqlService.server.vulnerabilityassessmentsettings"
-	ResourceAzureSubscriptionSqlServiceServerAdministrator                             string = "azure.subscription.sqlService.server.administrator"
-	ResourceAzureSubscriptionSqlServiceDatabase                                        string = "azure.subscription.sqlService.database"
-	ResourceAzureSubscriptionSqlServiceDatabaseusage                                   string = "azure.subscription.sqlService.databaseusage"
-	ResourceAzureSubscriptionPostgreSqlService                                         string = "azure.subscription.postgreSqlService"
-	ResourceAzureSubscriptionPostgreSqlServiceFlexibleServer                           string = "azure.subscription.postgreSqlService.flexibleServer"
-	ResourceAzureSubscriptionPostgreSqlServiceServer                                   string = "azure.subscription.postgreSqlService.server"
-	ResourceAzureSubscriptionPostgreSqlServiceDatabase                                 string = "azure.subscription.postgreSqlService.database"
-	ResourceAzureSubscriptionSqlServiceConfiguration                                   string = "azure.subscription.sqlService.configuration"
-	ResourceAzureSubscriptionSqlServiceFirewallrule                                    string = "azure.subscription.sqlService.firewallrule"
-	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                              string = "azure.subscription.sqlService.virtualNetworkRule"
-	ResourceAzureSubscriptionMySqlService                                              string = "azure.subscription.mySqlService"
-	ResourceAzureSubscriptionMySqlServiceServer                                        string = "azure.subscription.mySqlService.server"
-	ResourceAzureSubscriptionMySqlServiceDatabase                                      string = "azure.subscription.mySqlService.database"
-	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                string = "azure.subscription.mySqlService.flexibleServer"
-	ResourceAzureSubscriptionMariaDbService                                            string = "azure.subscription.mariaDbService"
-	ResourceAzureSubscriptionMariaDbServiceServer                                      string = "azure.subscription.mariaDbService.server"
-	ResourceAzureSubscriptionMariaDbServiceDatabase                                    string = "azure.subscription.mariaDbService.database"
-	ResourceAzureSubscriptionCosmosDbService                                           string = "azure.subscription.cosmosDbService"
-	ResourceAzureSubscriptionCosmosDbServiceAccount                                    string = "azure.subscription.cosmosDbService.account"
-	ResourceAzureSubscriptionKeyVaultService                                           string = "azure.subscription.keyVaultService"
-	ResourceAzureSubscriptionKeyVaultServiceVault                                      string = "azure.subscription.keyVaultService.vault"
-	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                            string = "azure.subscription.keyVaultService.key.autorotation"
-	ResourceAzureSubscriptionKeyVaultServiceKey                                        string = "azure.subscription.keyVaultService.key"
-	ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject                    string = "azure.subscription.keyVaultService.key.rotationPolicyObject"
-	ResourceAzureSubscriptionKeyVaultServiceCertificate                                string = "azure.subscription.keyVaultService.certificate"
-	ResourceAzureSubscriptionKeyVaultServiceSecret                                     string = "azure.subscription.keyVaultService.secret"
-	ResourceAzureSubscriptionMonitorService                                            string = "azure.subscription.monitorService"
-	ResourceAzureSubscriptionMonitorServiceActivityLog                                 string = "azure.subscription.monitorService.activityLog"
-	ResourceAzureSubscriptionMonitorServiceApplicationInsight                          string = "azure.subscription.monitorService.applicationInsight"
-	ResourceAzureSubscriptionMonitorServiceActivityLogAlert                            string = "azure.subscription.monitorService.activityLog.alert"
-	ResourceAzureSubscriptionMonitorServiceLogprofile                                  string = "azure.subscription.monitorService.logprofile"
-	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                           string = "azure.subscription.monitorService.diagnosticsetting"
-	ResourceAzureSubscriptionCloudDefenderService                                      string = "azure.subscription.cloudDefenderService"
-	ResourceAzureSubscriptionCloudDefenderServiceSettings                              string = "azure.subscription.cloudDefenderService.settings"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis                       string = "azure.subscription.cloudDefenderService.defenderForApis"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                          string = "azure.subscription.cloudDefenderService.defenderCSPM"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension                 string = "azure.subscription.cloudDefenderService.defenderCSPM.extension"
-	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                       string = "azure.subscription.cloudDefenderService.securityContact"
-	ResourceAzureSubscriptionAuthorizationService                                      string = "azure.subscription.authorizationService"
-	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                        string = "azure.subscription.authorizationService.roleDefinition"
-	ResourceAzureSubscriptionAuthorizationServiceRoleDefinitionPermission              string = "azure.subscription.authorizationService.roleDefinition.permission"
-	ResourceAzureSubscriptionAuthorizationServiceRoleAssignment                        string = "azure.subscription.authorizationService.roleAssignment"
-	ResourceAzureSubscriptionManagedIdentity                                           string = "azure.subscription.managedIdentity"
-	ResourceAzureSubscriptionAksService                                                string = "azure.subscription.aksService"
-	ResourceAzureSubscriptionAksServiceCluster                                         string = "azure.subscription.aksService.cluster"
-	ResourceAzureSubscriptionAdvisorService                                            string = "azure.subscription.advisorService"
-	ResourceAzureSubscriptionAdvisorServiceRecommendation                              string = "azure.subscription.advisorService.recommendation"
-	ResourceAzureSubscriptionAdvisorServiceScore                                       string = "azure.subscription.advisorService.score"
-	ResourceAzureSubscriptionAdvisorServiceTimeSeries                                  string = "azure.subscription.advisorService.timeSeries"
-	ResourceAzureSubscriptionAdvisorServiceSecurityScore                               string = "azure.subscription.advisorService.securityScore"
-	ResourceAzureSubscriptionPolicy                                                    string = "azure.subscription.policy"
-	ResourceAzureSubscriptionPolicyAssignment                                          string = "azure.subscription.policy.assignment"
-	ResourceAzureSubscriptionIotService                                                string = "azure.subscription.iotService"
-	ResourceAzureSubscriptionCacheService                                              string = "azure.subscription.cacheService"
-	ResourceAzureSubscriptionCacheServiceRedisInstance                                 string = "azure.subscription.cacheService.redisInstance"
+	ResourceAzure                                                                                string = "azure"
+	ResourceAzureSubscription                                                                    string = "azure.subscription"
+	ResourceAzureSubscriptionWebServiceFunction                                                  string = "azure.subscription.webService.function"
+	ResourceAzureSubscriptionResourcegroup                                                       string = "azure.subscription.resourcegroup"
+	ResourceAzureSubscriptionResource                                                            string = "azure.subscription.resource"
+	ResourceAzureSubscriptionComputeService                                                      string = "azure.subscription.computeService"
+	ResourceAzureSubscriptionComputeServiceVm                                                    string = "azure.subscription.computeService.vm"
+	ResourceAzureSubscriptionComputeServiceDisk                                                  string = "azure.subscription.computeService.disk"
+	ResourceAzureSubscriptionBatchService                                                        string = "azure.subscription.batchService"
+	ResourceAzureSubscriptionBatchServiceAccount                                                 string = "azure.subscription.batchService.account"
+	ResourceAzureSubscriptionBatchServiceAccountPool                                             string = "azure.subscription.batchService.account.pool"
+	ResourceAzureSubscriptionNetworkService                                                      string = "azure.subscription.networkService"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                                 string = "azure.subscription.networkService.virtualNetworkGateway"
+	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                                      string = "azure.subscription.networkService.appSecurityGroup"
+	ResourceAzureSubscriptionNetworkServiceFirewall                                              string = "azure.subscription.networkService.firewall"
+	ResourceAzureSubscriptionNetworkServiceFirewallIpConfig                                      string = "azure.subscription.networkService.firewall.ipConfig"
+	ResourceAzureSubscriptionNetworkServiceFirewallNetworkRule                                   string = "azure.subscription.networkService.firewall.networkRule"
+	ResourceAzureSubscriptionNetworkServiceFirewallApplicationRule                               string = "azure.subscription.networkService.firewall.applicationRule"
+	ResourceAzureSubscriptionNetworkServiceFirewallNatRule                                       string = "azure.subscription.networkService.firewall.natRule"
+	ResourceAzureSubscriptionNetworkServiceFirewallPolicy                                        string = "azure.subscription.networkService.firewallPolicy"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig                         string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection                       string = "azure.subscription.networkService.virtualNetworkGateway.connection"
+	ResourceAzureSubscriptionNetworkServiceBgpSettings                                           string = "azure.subscription.networkService.bgpSettings"
+	ResourceAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress           string = "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress"
+	ResourceAzureSubscriptionNetworkServiceNatGateway                                            string = "azure.subscription.networkService.natGateway"
+	ResourceAzureSubscriptionNetworkServiceSubnet                                                string = "azure.subscription.networkService.subnet"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetwork                                        string = "azure.subscription.networkService.virtualNetwork"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions                             string = "azure.subscription.networkService.virtualNetwork.dhcpOptions"
+	ResourceAzureSubscriptionNetworkServiceLoadBalancer                                          string = "azure.subscription.networkService.loadBalancer"
+	ResourceAzureSubscriptionNetworkServiceProbe                                                 string = "azure.subscription.networkService.probe"
+	ResourceAzureSubscriptionNetworkServiceBackendAddressPool                                    string = "azure.subscription.networkService.backendAddressPool"
+	ResourceAzureSubscriptionNetworkServiceInboundNatPool                                        string = "azure.subscription.networkService.inboundNatPool"
+	ResourceAzureSubscriptionNetworkServiceInboundNatRule                                        string = "azure.subscription.networkService.inboundNatRule"
+	ResourceAzureSubscriptionNetworkServiceFrontendIpConfig                                      string = "azure.subscription.networkService.frontendIpConfig"
+	ResourceAzureSubscriptionNetworkServiceLoadBalancerRule                                      string = "azure.subscription.networkService.loadBalancerRule"
+	ResourceAzureSubscriptionNetworkServiceOutboundRule                                          string = "azure.subscription.networkService.outboundRule"
+	ResourceAzureSubscriptionNetworkServiceInterface                                             string = "azure.subscription.networkService.interface"
+	ResourceAzureSubscriptionNetworkServiceIpAddress                                             string = "azure.subscription.networkService.ipAddress"
+	ResourceAzureSubscriptionNetworkServiceBastionHost                                           string = "azure.subscription.networkService.bastionHost"
+	ResourceAzureSubscriptionNetworkServiceSecurityGroup                                         string = "azure.subscription.networkService.securityGroup"
+	ResourceAzureSubscriptionNetworkServiceSecurityrule                                          string = "azure.subscription.networkService.securityrule"
+	ResourceAzureSubscriptionNetworkServiceWatcher                                               string = "azure.subscription.networkService.watcher"
+	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                                        string = "azure.subscription.networkService.watcher.flowlog"
+	ResourceAzureSubscriptionNetworkServiceApplicationGateway                                    string = "azure.subscription.networkService.applicationGateway"
+	ResourceAzureSubscriptionNetworkServiceWafConfig                                             string = "azure.subscription.networkService.wafConfig"
+	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                             string = "azure.subscription.networkService.applicationFirewallPolicy"
+	ResourceAzureSubscriptionStorageService                                                      string = "azure.subscription.storageService"
+	ResourceAzureSubscriptionStorageServiceAccount                                               string = "azure.subscription.storageService.account"
+	ResourceAzureSubscriptionStorageServiceAccountDataProtection                                 string = "azure.subscription.storageService.account.dataProtection"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesConfig                           string = "azure.subscription.storageService.account.filePropertiesConfig"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig string = "azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig           string = "azure.subscription.storageService.account.fileProperties.protocolSettingsConfig"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig        string = "azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig"
+	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                              string = "azure.subscription.storageService.account.service.properties"
+	ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties                          string = "azure.subscription.storageService.account.service.blobProperties"
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics                       string = "azure.subscription.storageService.account.service.properties.metrics"
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy               string = "azure.subscription.storageService.account.service.properties.retentionPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging                       string = "azure.subscription.storageService.account.service.properties.logging"
+	ResourceAzureSubscriptionStorageServiceAccountContainer                                      string = "azure.subscription.storageService.account.container"
+	ResourceAzureSubscriptionWebService                                                          string = "azure.subscription.webService"
+	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                           string = "azure.subscription.webService.appRuntimeStack"
+	ResourceAzureSubscriptionWebServiceAppsite                                                   string = "azure.subscription.webService.appsite"
+	ResourceAzureSubscriptionPrivateEndpointConnection                                           string = "azure.subscription.privateEndpointConnection"
+	ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState                            string = "azure.subscription.privateEndpointConnection.connectionState"
+	ResourceAzureSubscriptionWebServiceAppslot                                                   string = "azure.subscription.webService.appslot"
+	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies                 string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
+	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                                       string = "azure.subscription.webService.appsiteauthsettings"
+	ResourceAzureSubscriptionWebServiceAppsiteconfig                                             string = "azure.subscription.webService.appsiteconfig"
+	ResourceAzureSubscriptionWebServiceHostingEnvironment                                        string = "azure.subscription.webService.hostingEnvironment"
+	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                          string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
+	ResourceAzureSubscriptionSqlService                                                          string = "azure.subscription.sqlService"
+	ResourceAzureSubscriptionSqlServiceServer                                                    string = "azure.subscription.sqlService.server"
+	ResourceAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings                     string = "azure.subscription.sqlService.server.vulnerabilityassessmentsettings"
+	ResourceAzureSubscriptionSqlServiceServerAdministrator                                       string = "azure.subscription.sqlService.server.administrator"
+	ResourceAzureSubscriptionSqlServiceDatabase                                                  string = "azure.subscription.sqlService.database"
+	ResourceAzureSubscriptionSqlServiceDatabaseusage                                             string = "azure.subscription.sqlService.databaseusage"
+	ResourceAzureSubscriptionPostgreSqlService                                                   string = "azure.subscription.postgreSqlService"
+	ResourceAzureSubscriptionPostgreSqlServiceFlexibleServer                                     string = "azure.subscription.postgreSqlService.flexibleServer"
+	ResourceAzureSubscriptionPostgreSqlServiceServer                                             string = "azure.subscription.postgreSqlService.server"
+	ResourceAzureSubscriptionPostgreSqlServiceDatabase                                           string = "azure.subscription.postgreSqlService.database"
+	ResourceAzureSubscriptionSqlServiceConfiguration                                             string = "azure.subscription.sqlService.configuration"
+	ResourceAzureSubscriptionSqlServiceFirewallrule                                              string = "azure.subscription.sqlService.firewallrule"
+	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                                        string = "azure.subscription.sqlService.virtualNetworkRule"
+	ResourceAzureSubscriptionMySqlService                                                        string = "azure.subscription.mySqlService"
+	ResourceAzureSubscriptionMySqlServiceServer                                                  string = "azure.subscription.mySqlService.server"
+	ResourceAzureSubscriptionMySqlServiceDatabase                                                string = "azure.subscription.mySqlService.database"
+	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                          string = "azure.subscription.mySqlService.flexibleServer"
+	ResourceAzureSubscriptionMariaDbService                                                      string = "azure.subscription.mariaDbService"
+	ResourceAzureSubscriptionMariaDbServiceServer                                                string = "azure.subscription.mariaDbService.server"
+	ResourceAzureSubscriptionMariaDbServiceDatabase                                              string = "azure.subscription.mariaDbService.database"
+	ResourceAzureSubscriptionCosmosDbService                                                     string = "azure.subscription.cosmosDbService"
+	ResourceAzureSubscriptionCosmosDbServiceAccount                                              string = "azure.subscription.cosmosDbService.account"
+	ResourceAzureSubscriptionKeyVaultService                                                     string = "azure.subscription.keyVaultService"
+	ResourceAzureSubscriptionKeyVaultServiceVault                                                string = "azure.subscription.keyVaultService.vault"
+	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                                      string = "azure.subscription.keyVaultService.key.autorotation"
+	ResourceAzureSubscriptionKeyVaultServiceKey                                                  string = "azure.subscription.keyVaultService.key"
+	ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject                              string = "azure.subscription.keyVaultService.key.rotationPolicyObject"
+	ResourceAzureSubscriptionKeyVaultServiceCertificate                                          string = "azure.subscription.keyVaultService.certificate"
+	ResourceAzureSubscriptionKeyVaultServiceSecret                                               string = "azure.subscription.keyVaultService.secret"
+	ResourceAzureSubscriptionMonitorService                                                      string = "azure.subscription.monitorService"
+	ResourceAzureSubscriptionMonitorServiceActivityLog                                           string = "azure.subscription.monitorService.activityLog"
+	ResourceAzureSubscriptionMonitorServiceApplicationInsight                                    string = "azure.subscription.monitorService.applicationInsight"
+	ResourceAzureSubscriptionMonitorServiceActivityLogAlert                                      string = "azure.subscription.monitorService.activityLog.alert"
+	ResourceAzureSubscriptionMonitorServiceLogprofile                                            string = "azure.subscription.monitorService.logprofile"
+	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                     string = "azure.subscription.monitorService.diagnosticsetting"
+	ResourceAzureSubscriptionCloudDefenderService                                                string = "azure.subscription.cloudDefenderService"
+	ResourceAzureSubscriptionCloudDefenderServiceSettings                                        string = "azure.subscription.cloudDefenderService.settings"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis                                 string = "azure.subscription.cloudDefenderService.defenderForApis"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                                    string = "azure.subscription.cloudDefenderService.defenderCSPM"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension                           string = "azure.subscription.cloudDefenderService.defenderCSPM.extension"
+	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                                 string = "azure.subscription.cloudDefenderService.securityContact"
+	ResourceAzureSubscriptionAuthorizationService                                                string = "azure.subscription.authorizationService"
+	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                                  string = "azure.subscription.authorizationService.roleDefinition"
+	ResourceAzureSubscriptionAuthorizationServiceRoleDefinitionPermission                        string = "azure.subscription.authorizationService.roleDefinition.permission"
+	ResourceAzureSubscriptionAuthorizationServiceRoleAssignment                                  string = "azure.subscription.authorizationService.roleAssignment"
+	ResourceAzureSubscriptionManagedIdentity                                                     string = "azure.subscription.managedIdentity"
+	ResourceAzureSubscriptionAksService                                                          string = "azure.subscription.aksService"
+	ResourceAzureSubscriptionAksServiceCluster                                                   string = "azure.subscription.aksService.cluster"
+	ResourceAzureSubscriptionAdvisorService                                                      string = "azure.subscription.advisorService"
+	ResourceAzureSubscriptionAdvisorServiceRecommendation                                        string = "azure.subscription.advisorService.recommendation"
+	ResourceAzureSubscriptionAdvisorServiceScore                                                 string = "azure.subscription.advisorService.score"
+	ResourceAzureSubscriptionAdvisorServiceTimeSeries                                            string = "azure.subscription.advisorService.timeSeries"
+	ResourceAzureSubscriptionAdvisorServiceSecurityScore                                         string = "azure.subscription.advisorService.securityScore"
+	ResourceAzureSubscriptionPolicy                                                              string = "azure.subscription.policy"
+	ResourceAzureSubscriptionPolicyAssignment                                                    string = "azure.subscription.policy.assignment"
+	ResourceAzureSubscriptionIotService                                                          string = "azure.subscription.iotService"
+	ResourceAzureSubscriptionCacheService                                                        string = "azure.subscription.cacheService"
+	ResourceAzureSubscriptionCacheServiceRedisInstance                                           string = "azure.subscription.cacheService.redisInstance"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -342,6 +346,22 @@ func init() {
 		"azure.subscription.storageService.account.dataProtection": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountDataProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionStorageServiceAccountDataProtection,
+		},
+		"azure.subscription.storageService.account.filePropertiesConfig": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountFilePropertiesConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountFilePropertiesConfig,
+		},
+		"azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig,
+		},
+		"azure.subscription.storageService.account.fileProperties.protocolSettingsConfig": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig,
+		},
+		"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig,
 		},
 		"azure.subscription.storageService.account.service.properties": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountServiceProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1971,6 +1991,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.dataProtection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetDataProtection()).ToDataRes(types.Resource("azure.subscription.storageService.account.dataProtection"))
 	},
+	"azure.subscription.storageService.account.fileProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetFileProperties()).ToDataRes(types.Resource("azure.subscription.storageService.account.filePropertiesConfig"))
+	},
 	"azure.subscription.storageService.account.dataProtection.storageAccountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountDataProtection).GetStorageAccountId()).ToDataRes(types.String)
 	},
@@ -1985,6 +2008,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.dataProtection.containerRetentionDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountDataProtection).GetContainerRetentionDays()).ToDataRes(types.Int)
+	},
+	"azure.subscription.storageService.account.filePropertiesConfig.shareDeleteRetentionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig).GetShareDeleteRetentionPolicy()).ToDataRes(types.Resource("azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig"))
+	},
+	"azure.subscription.storageService.account.filePropertiesConfig.protocolSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig).GetProtocolSettings()).ToDataRes(types.Resource("azure.subscription.storageService.account.fileProperties.protocolSettingsConfig"))
+	},
+	"azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig.days": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig).GetDays()).ToDataRes(types.Int)
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettingsConfig.smb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig).GetSmb()).ToDataRes(types.Resource("azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig"))
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).GetVersions()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.channelEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).GetChannelEncryption()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.authenticationMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).GetAuthenticationMethods()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.kerberosTicketEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).GetKerberosTicketEncryption()).ToDataRes(types.String)
 	},
 	"azure.subscription.storageService.account.service.properties.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountServiceProperties).GetId()).ToDataRes(types.String)
@@ -5477,6 +5527,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccount).DataProtection, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountDataProtection](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.fileProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).FileProperties, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.dataProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountDataProtection).__id, ok = v.Value.(string)
 		return
@@ -5499,6 +5553,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.dataProtection.containerRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountDataProtection).ContainerRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.filePropertiesConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.filePropertiesConfig.shareDeleteRetentionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig).ShareDeleteRetentionPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.filePropertiesConfig.protocolSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig).ProtocolSettings, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig.days": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig).Days, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettingsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettingsConfig.smb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig).Smb, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).Versions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.channelEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).ChannelEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.authenticationMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).AuthenticationMethods, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.kerberosTicketEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).KerberosTicketEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.service.properties.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12797,6 +12903,7 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	TableProperties plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties]
 	BlobProperties  plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties]
 	DataProtection  plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountDataProtection]
+	FileProperties  plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig]
 }
 
 // createAzureSubscriptionStorageServiceAccount creates a new instance of this resource
@@ -12952,6 +13059,22 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetDataProtection() *plugin.
 	})
 }
 
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetFileProperties() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig](&c.FileProperties, func() (*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "fileProperties")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig), nil
+			}
+		}
+
+		return c.fileProperties()
+	})
+}
+
 // mqlAzureSubscriptionStorageServiceAccountDataProtection for the azure.subscription.storageService.account.dataProtection resource
 type mqlAzureSubscriptionStorageServiceAccountDataProtection struct {
 	MqlRuntime *plugin.Runtime
@@ -13019,6 +13142,207 @@ func (c *mqlAzureSubscriptionStorageServiceAccountDataProtection) GetContainerSo
 
 func (c *mqlAzureSubscriptionStorageServiceAccountDataProtection) GetContainerRetentionDays() *plugin.TValue[int64] {
 	return &c.ContainerRetentionDays
+}
+
+// mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig for the azure.subscription.storageService.account.filePropertiesConfig resource
+type mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfigInternal it will be used here
+	ShareDeleteRetentionPolicy plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig]
+	ProtocolSettings           plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig]
+}
+
+// createAzureSubscriptionStorageServiceAccountFilePropertiesConfig creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountFilePropertiesConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.filePropertiesConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig) MqlName() string {
+	return "azure.subscription.storageService.account.filePropertiesConfig"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig) GetShareDeleteRetentionPolicy() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig] {
+	return &c.ShareDeleteRetentionPolicy
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig) GetProtocolSettings() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig] {
+	return &c.ProtocolSettings
+}
+
+// mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig for the azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig resource
+type mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfigInternal it will be used here
+	Enabled plugin.TValue[bool]
+	Days    plugin.TValue[int64]
+}
+
+// createAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig) MqlName() string {
+	return "azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig) GetDays() *plugin.TValue[int64] {
+	return &c.Days
+}
+
+// mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig for the azure.subscription.storageService.account.fileProperties.protocolSettingsConfig resource
+type mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfigInternal it will be used here
+	Smb plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig]
+}
+
+// createAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.fileProperties.protocolSettingsConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig) MqlName() string {
+	return "azure.subscription.storageService.account.fileProperties.protocolSettingsConfig"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig) GetSmb() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig] {
+	return &c.Smb
+}
+
+// mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig for the azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig resource
+type mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfigInternal it will be used here
+	Versions                 plugin.TValue[string]
+	ChannelEncryption        plugin.TValue[string]
+	AuthenticationMethods    plugin.TValue[string]
+	KerberosTicketEncryption plugin.TValue[string]
+}
+
+// createAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig) MqlName() string {
+	return "azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig) GetVersions() *plugin.TValue[string] {
+	return &c.Versions
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig) GetChannelEncryption() *plugin.TValue[string] {
+	return &c.ChannelEncryption
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig) GetAuthenticationMethods() *plugin.TValue[string] {
+	return &c.AuthenticationMethods
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig) GetKerberosTicketEncryption() *plugin.TValue[string] {
+	return &c.KerberosTicketEncryption
 }
 
 // mqlAzureSubscriptionStorageServiceAccountServiceProperties for the azure.subscription.storageService.account.service.properties resource
