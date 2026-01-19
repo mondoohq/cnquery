@@ -42,6 +42,9 @@ jobs:
           version mod-update . --latest
           version mod-update providers/*/ --latest
           version mod-tidy providers/*/
+          # This is first updated and later downgraded by another dependency
+          # Unless this is fixed, bump it back up
+          go get github.com/google/go-containerregistry@v0.20.7
           version mod-tidy .
 
       - name: Prepare title and branch name
