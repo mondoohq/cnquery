@@ -1,0 +1,44 @@
+---
+title: Query AWS
+sidebar_label: Get Started
+id: cnquery-aws-intro
+displayed_sidebar: cnquery
+sidebar_position: 1
+description: Explore and analyze your AWS infrastructure with cnquery
+image: /img/cnquery/mondoo-aws.jpg
+---
+
+With cnquery, you can explore and interrogate your entire AWS infrastructure. It's like having a powerful search engine for your AWS environment. For example, you can analyze IAM practices, identify containers running across all EKS clusters, or find S3 buckets that don't use encryption... all with a single tool.
+
+cnquery provides the answers you need about every AWS configuration. For a list of AWS resources you can query, read [Mondoo Amazon Web Services (AWS) Resource Pack Reference](/mql/resources/aws/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+## Connect cnquery with your AWS environment
+
+### Requirements
+
+To analyze and explore your AWS environment with cnquery, you must have:
+
+- [cnquery installed on your workstation](/cnquery/).
+- [An AWS account](https://aws.amazon.com/free/).
+- Your AWS credentials. To learn about creating a new access key pair, read [Creating new access keys for an IAM user](https://docs.aws.amazon.com/keyspaces/latest/devguide/access.credentials.html#create.keypair) in the AWS documentation.
+- The `AWS_REGION` environment variable configured. To learn how to set your region, read [How to set environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html#envvars-set) in the AWS documentation.
+
+### Verify with a quick AWS query
+
+To quickly confirm that cnquery has access to your AWS environment, run this query from your terminal:
+
+```bash
+cnquery run aws -c aws.account
+```
+
+cnquery returns the AWS account ID:
+
+```shell
+> aws.account: aws.account id="123456789000"
+```
+
+## Next step
+
+You've successfully used cnquery to answer your first question about your AWS account. Now you're ready to [explore your AWS environment.](/cnquery/cloud/aws/account/)
+
+---

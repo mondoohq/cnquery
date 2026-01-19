@@ -1,0 +1,250 @@
+---
+title: Query macOS
+id: macos
+sidebar_label: macOS
+displayed_sidebar: cnquery
+sidebar_position: 2
+description: Explore and analyze your macOS assets with cnquery
+image: /img/cnquery/mondoo-feature.jpg
+---
+
+cnquery provides the answers you need about every macOS configuration. For example, you can retrieve the platform version, user information, or whether remote login is enabled.
+
+For a list of macOS resources you can query, read [Mondoo Operating Systems (OS) Resource Pack Reference](/mql/resources/os/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+## Requirements
+
+To explore a macOS asset with cnquery, you must have:
+
+- [cnquery installed on your workstation](/cnquery/)
+- Access to the asset
+
+## Query a macOS asset
+
+To answer any question about your environment, use cnquery's interactive shell. It has auto-complete to guide you, which is especially helpful when you're new to cnquery and learning MQL.
+
+To launch a shell into your local macOS environment, enter:
+
+```bash
+cnquery shell
+```
+
+To launch a shell into a remote macOS environment, enter:
+
+```bash
+cnquery shell ssh user@IP_ADDRESS
+```
+
+For `IP_ADDRESS`, substitute the IP address of the remote macOS asset.
+
+### Discover capabilities with the `help` command
+
+Once inside the shell, use the `help` command to learn what macOS resources you can query. This command lists all the macOS resources:
+
+```coffeescript
+help macos
+```
+
+From the resulting list, you can drill down further. For example, enter this command to list all the macOS machine settings you can query:
+
+```coffeescript
+help macos.systemsetup
+```
+
+From the resulting list, you can drill down even further. You can also learn about available macOS resources in the [Mondoo Operating Systems (OS) Resource Pack Reference](/mql/resources/os/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+### Query macOS application layer firewall (ALF)
+
+Now that you know how to discover what's possible with cnquery, let's run some actual queries in the shell.
+
+This query ask whether the firewall is enabled:
+
+```coffeescript
+macos.alf.globalState
+```
+
+cnquery returns `0` for no and `1` for yes.
+
+### Query users
+
+To request a list of all users on a machine, enter this query in the shell:
+
+```coffeescript
+users
+```
+
+<Callout>
+  In this query, you don't specify `macos`. That's because the `user` resource is in the [Mondoo
+  Core Resource Pack](/mql/resources/core/).
+</Callout>
+cnquery returns a list of all users on the system:
+
+```coffeescript
+users.list: [
+  0: user name="_nsurlsessiond" uid=242 gid=242
+  1: user name="_logd" uid=272 gid=272
+  2: user name="_mailman" uid=78 gid=78
+  3: user name="_jabber" uid=84 gid=84
+  4: user name="_cyrus" uid=77 gid=6
+  5: user name="_scsd" uid=31 gid=31
+  6: user name="_installassistant" uid=25 gid=25
+  7: user name="_ftp" uid=98 gid=-2
+  8: user name="_appstore" uid=33 gid=33
+  9: user name="_installer" uid=96 gid=-2
+  10: user name="_cvmsroot" uid=212 gid=212
+  11: user name="_screensaver" uid=203 gid=203
+
+  ...
+
+]
+```
+
+### Request full details in results
+
+For a more detailed report, you can specify that you want all fields:
+
+```coffeescript
+users { * }
+```
+
+For every user, cnquery provides information about their settings:
+
+```coffeescript
+users.list: [
+  0: {
+    sid: ""
+    enabled: false
+    gid: 242
+    shell: "/usr/bin/false"
+    uid: 242
+    authorizedkeys.list: stat /var/db/nsurlsessiond/.ssh/authorized_keys: permission denied
+    home: "/var/db/nsurlsessiond"
+    name: "_nsurlsessiond"
+    group: group name="_nsurlsessiond" gid=242
+    sshkeys: stat /var/db/nsurlsessiond/.ssh: permission denied
+  }
+  1: {
+    sid: ""
+    enabled: false
+    gid: 272
+    shell: "/usr/bin/false"
+    uid: 272
+    authorizedkeys.list: []
+    home: "/var/db/diagnostics"
+    name: "_logd"
+    group: group name="_logd" gid=272
+    sshkeys: []
+  }
+  2: {
+    sid: ""
+    enabled: false
+    gid: 78
+    shell: "/usr/bin/false"
+    uid: 78
+    authorizedkeys.list: []
+    home: "/var/empty"
+    name: "_mailman"
+    group: group name="_mailman" gid=78
+    sshkeys: []
+  }
+
+...
+
+]
+```
+
+### Specify fields to include in results
+
+If you're interested in only some details, specify the fields you want in braces. For example, this query asks for each user's name, group, and whether it's a shell user:
+
+```coffeescript
+users { name group shell }
+```
+
+cnquery returns results like this:
+
+```coffeescript
+users.list: [
+  0: {
+    shell: "/usr/bin/false"
+    name: "_nsurlsessiond"
+    group: group name="_nsurlsessiond" gid=242
+  }
+  1: {
+    shell: "/usr/bin/false"
+    name: "_logd"
+    group: group name="_logd" gid=272
+  }
+  2: {
+    shell: "/usr/bin/false"
+    name: "_mailman"
+    group: group name="_mailman" gid=78
+  }
+
+...
+
+]
+```
+
+### Filter results
+
+You can filter results based on any fields. Specify the criteria using the `where` function and standard boolean operators.
+
+For example, this filters results based on group name:
+
+```coffeescript
+users.where(group.name == "nobody") { name uid home }
+```
+
+cnquery returns all users in the `nobody` group. It includes the name, UID, and home directory for each user.
+
+```coffeescript
+users.where.list: [
+  0: {
+    uid: 98
+    name: "_ftp"
+    home: "/var/empty"
+  }
+  1: {
+    uid: 96
+    name: "_installer"
+    home: "/var/empty"
+  }
+  2: {
+    uid: 234
+    name: "_krb_anonymous"
+    home: "/var/empty"
+  }
+
+  ...
+
+]
+```
+
+## Learn more about querying macOS
+
+- To learn more about how the MQL query language works, read [Write Effective MQL](/mql/mql-write).
+- For a list of all the macOS resources and fields you can query, read the [Mondoo Operating Systems (OS) Resource Pack Reference](/mql/resources/os/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+## Analyze your environment with query packs
+
+Mondoo makes these [core macOS query packs](https://github.com/mondoohq/cnquery) available in GitHub:
+
+- [macOS Inventory Pack](https://github.com/mondoohq/cnquery/blob/main/content/mondoo-macos-inventory.mql.yaml) provides information about all your macOS assets and their configuration.
+- [macOS Incident Response Pack](https://github.com/mondoohq/cnquery/blob/main/content/mondoo-macos-incident-response.mql.yaml) helps you investigate and minimize damage when a security incident occurs.
+
+To run one of these purpose-built collections of macOS-specific queries:
+
+1. In Mondoo's [cnquery GitHub repo](https://github.com/mondoohq/cnquery), go to the `content` directory and find the macOS query pack you want to run.
+
+2. Download the YAML file to a local directory and, in your terminal, move to that directory.
+
+3. Use the `cnquery scan` command, specifying the file and the query pack:
+
+```bash
+cnquery scan -f mondoo-linux-incident-response.mql.yaml --querypack mondoo-incident-response-macos
+```
+
+You can also create your own query packs to meet your specific needs. To learn more about query packs, read [Run a Query Pack](/cnquery/cnquery-run-pack/).
+
+---

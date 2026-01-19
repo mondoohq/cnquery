@@ -1,0 +1,111 @@
+---
+title: Query Azure
+sidebar_label: Azure
+displayed_sidebar: cnquery
+sidebar_position: 1
+description: Explore and analyze your Azure infrastructure with cnquery
+image: /img/cnquery/mondoo-azure.jpg
+---
+
+With cnquery, you can explore and interrogate your entire Azure tenant. It's like having a powerful search engine for your Azure environment. For example, you can analyze databases or search for Azure Network Interface configuration details... all with a single tool.
+
+cnquery provides the answers you need about every Azure configuration. For a list of Azure resources you can query, read [Mondoo Azure Resource Pack Reference](/mql/resources/azure/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+## Connect cnquery with your Azure environment
+
+### Requirements
+
+To explore your Azure environment with cnquery, you must have:
+
+- [cnquery installed on your workstation](/cnquery/)
+- An [Azure subscription](https://cloud.google.com/free)
+- The [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) installed
+
+### Log into Azure
+
+Using the Azure CLI, log into your subscription:
+
+```bash
+az login
+```
+
+### Verify with an Azure query
+
+To quickly confirm that cnquery has access to your Azure environment, run this query from your terminal:
+
+```bash
+cnquery run azure -c 'azure.resources'
+```
+
+## Query an Azure project
+
+To answer any question about your environment, use cnquery's interactive shell. It has auto-complete to guide you, which is especially helpful when you're new to cnquery and learning MQL.
+
+To launch a shell into your Azure environment, enter:
+
+```bash
+cnquery shell azure
+```
+
+### Discover capabilities with the `help` command
+
+Once inside the shell, use the `help` command to learn what Azure subscription resources you can query. This command lists all the Azure subscription resources:
+
+```coffeescript
+help azure.subscription
+```
+
+From the resulting list, you can drill down further. For example, enter this command to list all the Azure PostgreSQL resources you can query:
+
+```coffeescript
+help azure.subscription.postgreSql
+```
+
+From the resulting list, you can drill down even further. You can also learn about available Azure resources in the [Mondoo Azure Resource Pack Reference](/mql/resources/azure/).
+
+### Query storage accounts
+
+Now that you know how to discover what's possible with cnquery, let's run some actual queries in the shell.
+
+This query lists all the storage accounts in the project:
+
+```coffeescript
+azure.subscription.storage.accounts
+```
+
+#### Request full details in results
+
+For a more detailed report, you can specify that you want all fields:
+
+```coffeescript
+azure.subscription.storage.accounts { * }
+```
+
+For every account, cnquery provides information about their status and settings.
+
+#### Specify fields to include in results
+
+If you're interested in only some details, specify the fields you want in braces. For example, this query asks for each user's ARN, when they last changed their password, and whether they have MFA enabled:
+
+```coffeescript
+azure.subscription.storage.accounts { id type properties }
+```
+
+#### Filter results
+
+You can filter results based on any fields. Specify the criteria using the `where` function and standard boolean operators.
+
+For example, this filters results based on status:
+
+```coffeescript
+azure.subscription.storage.accounts.where(kind == "BlobStorage") { id name type }
+```
+
+cnquery returns all BlobStorage accounts. It includes the ID, name and type for each one.
+
+## Learn more about querying Azure
+
+- To learn more about how the MQL query language works, read [Write Effective MQL](/mql/mql-write).
+- For a list of all the Azure resources and fields you can query, read the [Mondoo Azure Resource Pack Reference](/mql/resources/azure/).
+
+---

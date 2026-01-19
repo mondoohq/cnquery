@@ -1,13 +1,13 @@
 # cnquery
 
-![cnquery light-mode logo](docs/images/cnquery-light.svg#gh-light-mode-only)
-![cnquery dark-mode logo](docs/images/cnquery-dark.svg#gh-dark-mode-only)
+![cnquery light-mode logo](.github/images/cnquery-light.svg#gh-light-mode-only)
+![cnquery dark-mode logo](.github/images/cnquery-dark.svg#gh-dark-mode-only)
 
 **Open source, cloud-native asset inventory and discovery**
 
 cnquery is a cloud-native tool for querying your entire infrastructure. Built upon Mondoo's security data fabric, it answers thousands of questions about your infrastructure and integrates with over 850 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
 
-![cnquery run example](docs/images/cnquery-run.gif)
+![cnquery run example](.github/images/cnquery-run.gif)
 
 Here are a few more examples:
 
@@ -112,7 +112,7 @@ cnquery scan -f examples/example-os.mql.yaml
 
 Like all other commands, you can specify different providers like `k8s`, `aws`, `docker`, and many more. Run `--help` to see the full list of supported providers.
 
-![cnquery scan example](docs/images/cnquery-scan.gif)
+![cnquery scan example](.github/images/cnquery-scan.gif)
 
 These files can also contain multiple query packs for many different target systems.
 

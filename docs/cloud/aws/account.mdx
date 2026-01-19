@@ -1,0 +1,247 @@
+---
+title: Query an AWS Account
+sidebar_label: Query an AWS Account
+displayed_sidebar: cnquery
+sidebar_position: 20
+description: Explore and analyze the configuration of AWS accounts
+image: /img/cnquery/mondoo-aws.jpg
+---
+
+Once you've ensured that [cnquery can access your AWS environment](/cnquery/cloud/aws/), you can begin exploring and analyzing your infrastructure. The method you choose depends on your goals:
+
+- To answer any question about your environment, use cnquery's interactive shell. It has auto-complete to guide you, which is especially helpful when you're new to cnquery and learning MQL.
+- For widescale analysis of your AWS infrastructure, scan using query packs. These collections of queries work together to present a whole picture.
+
+## Explore with the cnquery shell
+
+To launch a shell into your AWS environment, enter:
+
+```bash
+cnquery shell aws
+```
+
+### Discover capabilities with the `help` command
+
+Once inside the shell, use the `help` command to learn what AWS resources you can query. This command lists all the AWS resources:
+
+```coffeescript
+help aws
+```
+
+From the resulting list, you can drill down further. For example, enter this command to list all the AWS IAM resources you can query:
+
+```coffeescript
+help aws.iam
+```
+
+From the resulting list, you can drill down even further. You can also learn about available AWS resources in the [Mondoo Amazon Web Services (AWS) Resource Pack Reference](/mql/resources/aws/).
+
+### Answer questions in the cnquery shell
+
+Now that you know how to discover what's possible with cnquery, let's run some actual queries in the shell.
+
+#### Query configuration recorders
+
+This query identifies which (potentially expensive) configuration recorders are turned on:
+
+```coffeescript
+aws.config { recorders { * } rules { * } }
+```
+
+cnquery returns complete and detailed lists of rules and recorders:
+
+```coffeescript
+aws.config: {
+  rules: [
+    0: {
+      state: "ACTIVE"
+      source: {
+        CustomPolicyDetails: null
+        Owner: "AWS"
+        SourceDetails: null
+        SourceIdentifier: "EIP_ATTACHED"
+      }
+      arn: "arn:aws:config:us-east-1:921877552404:config-rule/config-rule-eam93q"
+    }
+  ]
+  recorders: [
+    0: {
+      recording: false
+      includeGlobalResourceTypes: false
+      name: "default"
+      allSupported: true
+      roleArn: "arn:aws:iam::921877552404:role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig"
+      lastStatus: ""
+      region: "us-east-1"
+    }
+    1: {
+      recording: false
+      includeGlobalResourceTypes: false
+      name: "default"
+      allSupported: true
+      roleArn: "arn:aws:iam::921877552404:role/Config-Recorder"
+      lastStatus: ""
+      region: "us-east-2"
+    }
+  ]
+}
+```
+
+#### Query credentials
+
+When we explored the help for `aws.iam`, we learned that cnquery can access your account's IAM credential report. To gather basic information from the report, enter:
+
+```coffeescript
+aws.iam.credentialReport
+```
+
+cnquery lists the ARNs of all users, like this:
+
+```coffeescript
+aws.iam.credentialReport: [
+  0: aws.iam.usercredentialreportentry arn="arn:aws:iam::921877552404:root"
+  1: aws.iam.usercredentialreportentry arn="arn:aws:iam::921877552404:user/shiro"
+  2: aws.iam.usercredentialreportentry arn="arn:aws:iam::921877552404:user/hanna"
+  3: aws.iam.usercredentialreportentry arn="arn:aws:iam::921877552404:user/abel"
+  4: aws.iam.usercredentialreportentry arn="arn:aws:iam::921877552404:user/suki"
+  5: aws.iam.usercredentialreportentry arn="arn:aws:iam::921877552404:user/tembe"
+
+  ...
+
+]
+```
+
+For a more detailed report, you can specify that you want all fields:
+
+```coffeescript
+aws.iam.credentialReport { * }
+```
+
+For every user, cnquery provides information about their IAM activity and settings:
+
+```coffeescript
+    {
+    accessKey1LastUsedRegion: "eu-north-1"
+    passwordNextRotation: Never
+    user: aws.iam.user arn="arn:aws:iam::921877552404:user/suki"
+    properties: {
+      access_key_1_active: "true"
+      access_key_1_last_rotated: "2025-01-15T07:11:58+00:00"
+      access_key_1_last_used_date: "2025-05-02T04:33:00+00:00"
+      access_key_1_last_used_region: "eu-north-1"
+      access_key_1_last_used_service: "ec2"
+      access_key_2_active: "false"
+      access_key_2_last_rotated: "N/A"
+      access_key_2_last_used_date: "N/A"
+      access_key_2_last_used_region: "N/A"
+      access_key_2_last_used_service: "N/A"
+      arn: "arn:aws:iam::921877552404:user/suki"
+      cert_1_active: "false"
+      cert_1_last_rotated: "N/A"
+      cert_2_active: "false"
+      cert_2_last_rotated: "N/A"
+      mfa_active: "false"
+      password_enabled: "false"
+      password_last_changed: "N/A"
+      password_last_used: "N/A"
+      password_next_rotation: "N/A"
+      user: "suki-m1"
+      user_creation_time: "2025-01-15T07:11:58+00:00"
+    }
+    cert1Active: false
+    accessKey2LastUsedRegion: "N/A"
+    passwordLastChanged: Never
+    accessKey1LastUsedService: "ec2"
+    passwordLastUsed: Never
+    accessKey1Active: true
+    cert2Active: false
+    accessKey2Active: false
+    accessKey2LastUsedService: "N/A"
+    accessKey1LastRotated: 2025-01-15 07:11:58 +0000 +0000
+    cert2LastRotated: Never
+    cert1LastRotated: Never
+    accessKey1LastUsedDate: 2025-05-02 04:33:00 +0000 +0000
+    accessKey2LastRotated: Never
+    arn: "arn:aws:iam::921877552404:user/suki"
+    mfaActive: false
+    userCreationTime: 2025-01-15 07:11:58 +0000 +0000
+    accessKey2LastUsedDate: Never
+    passwordEnabled: false
+  }
+```
+
+#### Specify fields to include in results
+
+If you're interested in only some details, specify the fields you want in braces. For example, this query asks for each user's ARN, when they last changed their password, and whether they have MFA enabled:
+
+```coffeescript
+aws.iam.credentialReport { arn passwordLastChanged mfaActive }
+```
+
+cnquery returns results like this:
+
+```coffeescript
+aws.iam.credentialReport: [
+  0: {
+    passwordLastChanged: 2025-01-30 12:15:58 +0000 +0000
+    arn: "arn:aws:iam::921877552404:user/suki"
+    mfaActive: true
+  }
+  1: {
+    passwordLastChanged: 2025-02-25 20:40:44 +0000 +0000
+    arn: "arn:aws:iam::921877552404:user/tembe"
+    mfaActive: true
+  }
+  2: {
+    passwordLastChanged: 2025-05-01 20:58:11 +0000 +0000
+    arn: "arn:aws:iam::921877552404:user/amos"
+    mfaActive: true
+  }
+  3: {
+    passwordLastChanged: Never
+    arn: "arn:aws:iam::921877552404:user/hanna"
+    mfaActive: false
+  }
+]
+```
+
+#### Filter results
+
+You can filter results based on any fields. Specify the criteria using the `where` function and standard boolean operators.
+
+For example, this filters results based on ARN:
+
+```coffeescript
+aws.iam.credentialReport.where(arn == /hanna/) { * }
+```
+
+### Exit the cnquery shell
+
+To exit the cnquery shell, either press `Ctrl + D` or type `exit`.
+
+## Analyze your environment with AWS query packs
+
+Mondoo makes these [core AWS query packs](https://github.com/mondoohq/cnquery) available in GitHub:
+
+- [Mondoo AWS Asset Inventory](https://github.com/mondoohq/cnquery/blob/main/content/mondoo-aws-inventory.mql.yaml) provides information about all your AWS assets and their configuration.
+- [Mondoo AWS Incident Response](https://github.com/mondoohq/cnquery/blob/main/content/mondoo-aws-incident-response.mql.yaml) helps you investigate and minimize damage when a security incident occurs.
+
+To run one of these purpose-built collections of AWS-specific queries:
+
+1. In Mondoo's [cnquery GitHub repo](https://github.com/mondoohq/cnquery), go to the `content` directory and find the AWS query pack you want to run.
+
+2. Download the YAML file to a local directory and, in your terminal, move to that directory.
+
+3. Use the `cnquery scan` command, specifying the file and the query pack:
+
+```bash
+cnquery scan aws -f mondoo-aws-incident-response.mql.yaml --querypack mondoo-incident-response-aws
+```
+
+You can also create your own query packs to meet your specific needs. To learn more about query packs, read [Run a Query Pack](/cnquery/cnquery-run-pack/).
+
+## Next step
+
+Now that you've explored your AWS environment using the cnquery shell, you're ready to dive deeper and [query your EC2 instances](/cnquery/cloud/aws/ec2/).
+
+---
