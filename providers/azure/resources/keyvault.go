@@ -429,7 +429,8 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() 
 		}
 
 		privateEndpoint := map[string]*llx.RawData{
-			"id": llx.StringDataPtr(entry.ID),
+			"__id": llx.StringDataPtr(entry.ID),
+			"id":   llx.StringDataPtr(entry.ID),
 		}
 		if name != "" {
 			privateEndpoint["name"] = llx.StringData(name)
