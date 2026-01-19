@@ -1240,25 +1240,44 @@ func (i *mqlAwsEc2Image) launchPermissions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	permissions := make([]interface{}, 0)
+	permissions := make([]interface{}, 0, len(result.LaunchPermissions))
 	for _, perm := range result.LaunchPermissions {
-		permMap := make(map[string]interface{})
-		if perm.UserId != nil {
-			permMap["userId"] = *perm.UserId
+		mqlPermission, err := CreateResource(i.MqlRuntime, "aws.ec2.image.launchPermission",
+			map[string]*llx.RawData{
+				"userId":                llx.StringDataPtr(perm.UserId),
+				"group":                 llx.StringData(string(perm.Group)),
+				"organizationArn":       llx.StringDataPtr(perm.OrganizationArn),
+				"organizationalUnitArn": llx.StringDataPtr(perm.OrganizationalUnitArn),
+			})
+		if err != nil {
+			return nil, err
 		}
-		if perm.Group != "" {
-			permMap["group"] = string(perm.Group)
-		}
-		if perm.OrganizationArn != nil {
-			permMap["organizationArn"] = *perm.OrganizationArn
-		}
-		if perm.OrganizationalUnitArn != nil {
-			permMap["organizationalUnitArn"] = *perm.OrganizationalUnitArn
-		}
-		permissions = append(permissions, permMap)
+		permissions = append(permissions, mqlPermission)
 	}
 
 	return permissions, nil
+}
+
+func (p *mqlAwsEc2ImageLaunchPermission) id() (string, error) {
+	userId := p.UserId.Data
+	group := p.Group.Data
+	orgArn := p.OrganizationArn.Data
+	ouArn := p.OrganizationalUnitArn.Data
+
+	// Create a unique ID based on which field is set
+	if userId != "" {
+		return "user/" + userId, nil
+	}
+	if group != "" {
+		return "group/" + group, nil
+	}
+	if orgArn != "" {
+		return "org/" + orgArn, nil
+	}
+	if ouArn != "" {
+		return "ou/" + ouArn, nil
+	}
+	return "unknown", nil
 }
 
 func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

@@ -1164,6 +1164,17 @@ resources:
     platform:
       name:
       - aws
+  aws.ec2.image.launchPermission:
+    fields:
+      group: {}
+      organizationArn: {}
+      organizationalUnitArn: {}
+      userId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
   aws.ec2.instance:
     docs:
       desc: |

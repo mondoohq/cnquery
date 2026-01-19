@@ -3471,7 +3471,19 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   // Region where the image is located
   region string
   // Launch permissions for the image (user IDs and groups that can launch instances from this AMI)
-  launchPermissions() []dict
+  launchPermissions() []aws.ec2.image.launchPermission
+}
+
+// Amazon EC2 image launch permission
+private aws.ec2.image.launchPermission @defaults("userId group") {
+  // AWS account ID that has launch permission
+  userId string
+  // Group that has launch permission ("all" for public AMIs)
+  group string
+  // AWS Organization ARN that has launch permission
+  organizationArn string
+  // AWS Organizational Unit ARN that has launch permission
+  organizationalUnitArn string
 }
 
 // Amazon EC2 image block device mapping
