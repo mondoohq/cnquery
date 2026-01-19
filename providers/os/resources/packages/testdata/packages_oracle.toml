@@ -1,0 +1,13 @@
+[commands."command -v rpm"]
+stdout="/usr/bin/rpm"
+
+[commands."rpm -E '%{_dbpath}'"]
+stdout="/var/lib/rpm"
+
+[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{MODULARITYLABEL}\\n'"]
+stdout="""
+adcli 0:0.9.2-1.el9 x86_64__Oracle America__Active Directory enrollment__(none)
+at 0:3.1.23-12.el9_6 x86_64__Oracle America__Job spooling tools__(none)
+ruby 0:3.1.7-146.module+el9.5.0+90564+273a1edd x86_64__Oracle America__An interpreter of object-oriented scripting language__ruby:3.1:9050020250506050702:2e2f0e1c
+ruby-default-gems 0:3.1.7-146.module+el9.5.0+90564+273a1edd noarch__Oracle America__Default gems which are part of Ruby StdLib__ruby:3.1:9050020250506050702:2e2f0e1c
+"""

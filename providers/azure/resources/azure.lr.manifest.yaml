@@ -1024,6 +1024,8 @@ resources:
       id: {}
       keys: {}
       location: {}
+      privateEndpointConnections:
+        min_mondoo_version: 9.0.0
       properties: {}
       rbacAuthorizationEnabled: {}
       secrets: {}
@@ -2927,6 +2929,8 @@ resources:
       blobProperties: {}
       containers: {}
       dataProtection: {}
+      fileProperties:
+        min_mondoo_version: 9.0.0
       id: {}
       identity: {}
       kind: {}
@@ -2976,6 +2980,80 @@ resources:
     refs:
     - title: Azure Storage documentation
       url: https://learn.microsoft.com/en-us/azure/storage/
+  azure.subscription.storageService.account.fileProperties:
+    fields:
+      protocolSettings: {}
+      shareDeleteRetentionPolicy: {}
+      storageAccountId: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.protocolSettings:
+    fields:
+      id: {}
+      smb: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.protocolSettings.smb:
+    fields:
+      authenticationMethods: {}
+      channelEncryption: {}
+      id: {}
+      kerberosTicketEncryption: {}
+      versions: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig:
+    fields:
+      authenticationMethods: {}
+      channelEncryption: {}
+      kerberosTicketEncryption: {}
+      versions: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.protocolSettingsConfig:
+    fields:
+      smb: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicy:
+    fields:
+      days: {}
+      enabled: {}
+      id: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig:
+    fields:
+      days: {}
+      enabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.filePropertiesConfig:
+    fields:
+      protocolSettings: {}
+      shareDeleteRetentionPolicy: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.storageService.account.service.blobProperties:
     fields:
       hourMetrics: {}

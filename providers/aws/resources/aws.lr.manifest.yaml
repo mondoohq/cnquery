@@ -1112,6 +1112,8 @@ resources:
       encrypted:
         min_mondoo_version: 9.0.0
       id: {}
+      launchPermissions:
+        min_mondoo_version: latest
       name: {}
       ownerAlias:
         min_mondoo_version: 5.22.0
@@ -1162,6 +1164,17 @@ resources:
     platform:
       name:
       - aws
+  aws.ec2.image.launchPermission:
+    fields:
+      group: {}
+      organizationArn: {}
+      organizationalUnitArn: {}
+      userId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
   aws.ec2.instance:
     docs:
       desc: |
@@ -1172,6 +1185,8 @@ resources:
       arn: {}
       detailedMonitoring: {}
       deviceMappings: {}
+      disableApiTermination:
+        min_mondoo_version: latest
       ebsOptimized: {}
       enaSupported:
         min_mondoo_version: 9.0.0
@@ -3437,6 +3452,8 @@ resources:
       createdAt:
         min_mondoo_version: 9.0.0
       description:
+        min_mondoo_version: 9.0.0
+      kmsKey:
         min_mondoo_version: 9.0.0
       lastChangedDate:
         min_mondoo_version: 9.0.0

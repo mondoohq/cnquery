@@ -232,9 +232,10 @@ func (i RawIP) Subnet() string {
 
 func (i RawIP) prefix() net.IP {
 	var b []byte
-	if i.Version == 4 {
+	switch i.Version {
+	case 4:
 		b = createMask(i.PrefixLength, 0, 4)
-	} else if i.Version == 6 {
+	case 6:
 		b = createMask(i.PrefixLength, 0, 16)
 	}
 	if len(b) == 0 {
@@ -257,9 +258,10 @@ func flipMask(b []byte) []byte {
 
 func (i RawIP) Suffix() string {
 	var b []byte
-	if i.Version == 4 {
+	switch i.Version {
+	case 4:
 		b = createMask(i.PrefixLength, 0, 4)
-	} else if i.Version == 6 {
+	case 6:
 		if i.PrefixLength < 64 {
 			b = createMask(65, 0, 16)
 		} else {
@@ -424,6 +426,35 @@ func ipUnspecified(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		return nil, 0, errors.New("incorrect internal data for IP type")
 	}
 	return BoolData(v.IP.IsUnspecified()), 0, nil
+}
+
+func ipIsPublic(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
+	}
+	v, ok := bind.Value.(RawIP)
+	if !ok {
+		return nil, 0, errors.New("incorrect internal data for IP type")
+	}
+
+	// An IP is considered public if it is NOT any of:
+	// - loopback
+	// - private (RFC 1918, RFC 4193)
+	// - link-local
+	// - multicast
+	// - unspecified
+	// - interface-local multicast (IPv6)
+	// - link-local multicast (IPv6)
+
+	isPublic := !v.IsLoopback() &&
+		!v.IsPrivate() &&
+		!v.IsLinkLocalUnicast() &&
+		!v.IsMulticast() &&
+		!v.IsUnspecified() &&
+		!v.IsLinkLocalMulticast() &&
+		!v.IsInterfaceLocalMulticast()
+
+	return BoolData(isPublic), 0, nil
 }
 
 func ipAddress(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {

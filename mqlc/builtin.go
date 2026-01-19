@@ -180,6 +180,7 @@ func init() {
 			"address":       {typ: stringType, signature: FunctionSignature{}},
 			"cidr":          {typ: stringType, signature: FunctionSignature{}},
 			"inRange":       {typ: intType, compile: compileIpInRange},
+			"isPublic":      {typ: boolType, signature: FunctionSignature{}},
 			"isUnspecified": {typ: boolType, signature: FunctionSignature{}},
 			"prefix":        {typ: stringType, signature: FunctionSignature{}},
 			"prefixLength":  {typ: intType, signature: FunctionSignature{}},

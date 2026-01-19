@@ -1026,6 +1026,10 @@ func init() {
 			Init:   initAwsEc2Image,
 			Create: createAwsEc2Image,
 		},
+		"aws.ec2.image.launchPermission": {
+			// to override args, implement: initAwsEc2ImageLaunchPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2ImageLaunchPermission,
+		},
 		"aws.ec2.image.blockDeviceMapping": {
 			// to override args, implement: initAwsEc2ImageBlockDeviceMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2ImageBlockDeviceMapping,
@@ -2931,6 +2935,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.secretsmanager.secret.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.secretsmanager.secret.lastChangedDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetLastChangedDate()).ToDataRes(types.Time)
@@ -5302,6 +5309,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("aws.ec2.networkinterface")))
 	},
+	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetDisableApiTermination()).ToDataRes(types.Bool)
+	},
 	"aws.ec2.networkinterface.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetId()).ToDataRes(types.String)
 	},
@@ -5415,6 +5425,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.image.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.launchPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetLaunchPermissions()).ToDataRes(types.Array(types.Resource("aws.ec2.image.launchPermission")))
+	},
+	"aws.ec2.image.launchPermission.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageLaunchPermission).GetUserId()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.launchPermission.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageLaunchPermission).GetGroup()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.launchPermission.organizationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageLaunchPermission).GetOrganizationArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.launchPermission.organizationalUnitArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageLaunchPermission).GetOrganizationalUnitArn()).ToDataRes(types.String)
 	},
 	"aws.ec2.image.blockDeviceMapping.deviceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ImageBlockDeviceMapping).GetDeviceName()).ToDataRes(types.String)
@@ -8798,6 +8823,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.secretsmanager.secret.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.lastChangedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12356,6 +12385,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Instance).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).DisableApiTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.networkinterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Networkinterface).__id, ok = v.Value.(string)
 		return
@@ -12518,6 +12551,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.image.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Image).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).LaunchPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageLaunchPermission).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.image.launchPermission.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageLaunchPermission).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermission.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageLaunchPermission).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermission.organizationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageLaunchPermission).OrganizationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermission.organizationalUnitArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageLaunchPermission).OrganizationalUnitArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.image.blockDeviceMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21492,6 +21549,7 @@ type mqlAwsSecretsmanagerSecret struct {
 	Arn              plugin.TValue[string]
 	CreatedAt        plugin.TValue[*time.Time]
 	Description      plugin.TValue[string]
+	KmsKey           plugin.TValue[*mqlAwsKmsKey]
 	LastChangedDate  plugin.TValue[*time.Time]
 	LastRotatedDate  plugin.TValue[*time.Time]
 	Name             plugin.TValue[string]
@@ -21548,6 +21606,22 @@ func (c *mqlAwsSecretsmanagerSecret) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsSecretsmanagerSecret) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.secretsmanager.secret", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsSecretsmanagerSecret) GetLastChangedDate() *plugin.TValue[*time.Time] {
@@ -31009,6 +31083,7 @@ type mqlAwsEc2Instance struct {
 	Architecture          plugin.TValue[string]
 	TpmSupport            plugin.TValue[string]
 	NetworkInterfaces     plugin.TValue[[]any]
+	DisableApiTermination plugin.TValue[bool]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -31274,6 +31349,12 @@ func (c *mqlAwsEc2Instance) GetNetworkInterfaces() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsEc2Instance) GetDisableApiTermination() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableApiTermination, func() (bool, error) {
+		return c.disableApiTermination()
+	})
+}
+
 // mqlAwsEc2Networkinterface for the aws.ec2.networkinterface resource
 type mqlAwsEc2Networkinterface struct {
 	MqlRuntime *plugin.Runtime
@@ -31520,6 +31601,7 @@ type mqlAwsEc2Image struct {
 	BlockDeviceMappings plugin.TValue[[]any]
 	Tags                plugin.TValue[map[string]any]
 	Region              plugin.TValue[string]
+	LaunchPermissions   plugin.TValue[[]any]
 }
 
 // createAwsEc2Image creates a new instance of this resource
@@ -31625,6 +31707,81 @@ func (c *mqlAwsEc2Image) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsEc2Image) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsEc2Image) GetLaunchPermissions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LaunchPermissions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.image", c.__id, "launchPermissions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.launchPermissions()
+	})
+}
+
+// mqlAwsEc2ImageLaunchPermission for the aws.ec2.image.launchPermission resource
+type mqlAwsEc2ImageLaunchPermission struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2ImageLaunchPermissionInternal it will be used here
+	UserId                plugin.TValue[string]
+	Group                 plugin.TValue[string]
+	OrganizationArn       plugin.TValue[string]
+	OrganizationalUnitArn plugin.TValue[string]
+}
+
+// createAwsEc2ImageLaunchPermission creates a new instance of this resource
+func createAwsEc2ImageLaunchPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2ImageLaunchPermission{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.image.launchPermission", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) MqlName() string {
+	return "aws.ec2.image.launchPermission"
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) GetOrganizationArn() *plugin.TValue[string] {
+	return &c.OrganizationArn
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) GetOrganizationalUnitArn() *plugin.TValue[string] {
+	return &c.OrganizationalUnitArn
 }
 
 // mqlAwsEc2ImageBlockDeviceMapping for the aws.ec2.image.blockDeviceMapping resource

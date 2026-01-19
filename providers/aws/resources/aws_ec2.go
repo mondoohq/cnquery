@@ -1224,6 +1224,57 @@ func (i *mqlAwsEc2Image) id() (string, error) {
 	return i.Arn.Data, nil
 }
 
+func (i *mqlAwsEc2Image) launchPermissions() ([]interface{}, error) {
+	imageId := i.Id.Data
+	region := i.Region.Data
+	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+
+	result, err := svc.DescribeImageAttribute(ctx, &ec2.DescribeImageAttributeInput{
+		ImageId:   aws.String(imageId),
+		Attribute: ec2types.ImageAttributeNameLaunchPermission,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	imageArn := i.Arn.Data
+	permissions := make([]interface{}, 0, len(result.LaunchPermissions))
+	for _, perm := range result.LaunchPermissions {
+		// Build unique ID based on which field is set
+		var permId string
+		switch {
+		case perm.UserId != nil:
+			permId = fmt.Sprintf("%s/user/%s", imageArn, *perm.UserId)
+		case perm.Group != "":
+			permId = fmt.Sprintf("%s/group/%s", imageArn, string(perm.Group))
+		case perm.OrganizationArn != nil:
+			permId = fmt.Sprintf("%s/org/%s", imageArn, *perm.OrganizationArn)
+		case perm.OrganizationalUnitArn != nil:
+			permId = fmt.Sprintf("%s/ou/%s", imageArn, *perm.OrganizationalUnitArn)
+		default:
+			permId = fmt.Sprintf("%s/unknown", imageArn)
+		}
+
+		mqlPermission, err := CreateResource(i.MqlRuntime, ResourceAwsEc2ImageLaunchPermission,
+			map[string]*llx.RawData{
+				"__id":                  llx.StringData(permId),
+				"userId":                llx.StringDataPtr(perm.UserId),
+				"group":                 llx.StringData(string(perm.Group)),
+				"organizationArn":       llx.StringDataPtr(perm.OrganizationArn),
+				"organizationalUnitArn": llx.StringDataPtr(perm.OrganizationalUnitArn),
+			})
+		if err != nil {
+			return nil, err
+		}
+		permissions = append(permissions, mqlPermission)
+	}
+
+	return permissions, nil
+}
+
 func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -1470,6 +1521,29 @@ func (a *mqlAwsEc2Instance) instanceStatus() (any, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlAwsEc2Instance) disableApiTermination() (bool, error) {
+	instanceId := a.InstanceId.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+
+	result, err := svc.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		InstanceId: aws.String(instanceId),
+		Attribute:  ec2types.InstanceAttributeNameDisableApiTermination,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if result.DisableApiTermination != nil && result.DisableApiTermination.Value != nil {
+		return *result.DisableApiTermination.Value, nil
+	}
+
+	return false, nil
 }
 
 // # go.mondoo.com/cnquery/v12/providers/aws/resources
