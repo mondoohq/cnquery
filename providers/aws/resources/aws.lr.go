@@ -30320,12 +30320,7 @@ func createAwsEc2ImageLaunchPermission(runtime *plugin.Runtime, args map[string]
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.ec2.image.launchPermission", res.__id)
