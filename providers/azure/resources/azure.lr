@@ -1865,6 +1865,8 @@ private azure.subscription.keyVaultService.vault @defaults("vaultName type vault
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // Auto-rotation enabled status for all keys
   autorotation() []azure.subscription.keyVaultService.key.autorotation
+  // Private endpoint connections for the vault
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
 }
 
 // Azure Key Vault key auto-rotation

@@ -1024,6 +1024,8 @@ resources:
       id: {}
       keys: {}
       location: {}
+      privateEndpointConnections:
+        min_mondoo_version: 9.0.0
       properties: {}
       rbacAuthorizationEnabled: {}
       secrets: {}
