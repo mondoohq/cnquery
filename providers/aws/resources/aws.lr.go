@@ -201,6 +201,7 @@ const (
 	ResourceAwsEc2Networkinterface                                           string = "aws.ec2.networkinterface"
 	ResourceAwsEc2Keypair                                                    string = "aws.ec2.keypair"
 	ResourceAwsEc2Image                                                      string = "aws.ec2.image"
+	ResourceAwsEc2ImageLaunchPermission                                      string = "aws.ec2.image.launchPermission"
 	ResourceAwsEc2ImageBlockDeviceMapping                                    string = "aws.ec2.image.blockDeviceMapping"
 	ResourceAwsEc2ImageEbsBlockDevice                                        string = "aws.ec2.image.ebsBlockDevice"
 	ResourceAwsEc2InstanceDevice                                             string = "aws.ec2.instance.device"
@@ -965,6 +966,10 @@ func init() {
 		"aws.ec2.image": {
 			Init:   initAwsEc2Image,
 			Create: createAwsEc2Image,
+		},
+		"aws.ec2.image.launchPermission": {
+			// to override args, implement: initAwsEc2ImageLaunchPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2ImageLaunchPermission,
 		},
 		"aws.ec2.image.blockDeviceMapping": {
 			// to override args, implement: initAwsEc2ImageBlockDeviceMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5199,6 +5204,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.image.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.launchPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetLaunchPermissions()).ToDataRes(types.Array(types.Resource("aws.ec2.image.launchPermission")))
+	},
+	"aws.ec2.image.launchPermission.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageLaunchPermission).GetUserId()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.launchPermission.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageLaunchPermission).GetGroup()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.launchPermission.organizationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageLaunchPermission).GetOrganizationArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.launchPermission.organizationalUnitArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageLaunchPermission).GetOrganizationalUnitArn()).ToDataRes(types.String)
 	},
 	"aws.ec2.image.blockDeviceMapping.deviceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ImageBlockDeviceMapping).GetDeviceName()).ToDataRes(types.String)
@@ -12046,6 +12066,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.image.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Image).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).LaunchPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageLaunchPermission).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.image.launchPermission.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageLaunchPermission).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermission.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageLaunchPermission).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermission.organizationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageLaunchPermission).OrganizationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.launchPermission.organizationalUnitArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageLaunchPermission).OrganizationalUnitArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.image.blockDeviceMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30130,6 +30174,7 @@ type mqlAwsEc2Image struct {
 	BlockDeviceMappings plugin.TValue[[]any]
 	Tags                plugin.TValue[map[string]any]
 	Region              plugin.TValue[string]
+	LaunchPermissions   plugin.TValue[[]any]
 }
 
 // createAwsEc2Image creates a new instance of this resource
@@ -30235,6 +30280,81 @@ func (c *mqlAwsEc2Image) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsEc2Image) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsEc2Image) GetLaunchPermissions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LaunchPermissions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.image", c.__id, "launchPermissions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.launchPermissions()
+	})
+}
+
+// mqlAwsEc2ImageLaunchPermission for the aws.ec2.image.launchPermission resource
+type mqlAwsEc2ImageLaunchPermission struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2ImageLaunchPermissionInternal it will be used here
+	UserId                plugin.TValue[string]
+	Group                 plugin.TValue[string]
+	OrganizationArn       plugin.TValue[string]
+	OrganizationalUnitArn plugin.TValue[string]
+}
+
+// createAwsEc2ImageLaunchPermission creates a new instance of this resource
+func createAwsEc2ImageLaunchPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2ImageLaunchPermission{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.image.launchPermission", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) MqlName() string {
+	return "aws.ec2.image.launchPermission"
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) GetOrganizationArn() *plugin.TValue[string] {
+	return &c.OrganizationArn
+}
+
+func (c *mqlAwsEc2ImageLaunchPermission) GetOrganizationalUnitArn() *plugin.TValue[string] {
+	return &c.OrganizationalUnitArn
 }
 
 // mqlAwsEc2ImageBlockDeviceMapping for the aws.ec2.image.blockDeviceMapping resource
