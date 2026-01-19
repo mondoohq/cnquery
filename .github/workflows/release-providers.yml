@@ -5,6 +5,9 @@ on:
     types: [published]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   update-deps:
     runs-on: ubuntu-latest
@@ -12,11 +15,11 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-# https://github.com/peter-evans/create-pull-request/issues/48
-# https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#push-using-ssh-deploy-keys
-# tl;dr:
-# The GITHUB_TOKEN is limited when creating PRs from a workflow
-# becasue of that we use a ssh key for which the limitations do not apply
+      # https://github.com/peter-evans/create-pull-request/issues/48
+      # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#push-using-ssh-deploy-keys
+      # tl;dr:
+      # The GITHUB_TOKEN is limited when creating PRs from a workflow
+      # becasue of that we use a ssh key for which the limitations do not apply
       - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
@@ -53,7 +56,7 @@ jobs:
           echo "COMMIT_TITLE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
           echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
 
-# We have to use this extensions, becasuse `gh pr create` does not support the ssh key case
+      # We have to use this extensions, becasuse `gh pr create` does not support the ssh key case
       - name: Create pull request
         id: cpr
         uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # v8.0.0

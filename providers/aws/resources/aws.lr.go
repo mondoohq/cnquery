@@ -93,6 +93,7 @@ const (
 	ResourceAwsAcmCertificate                                                string = "aws.acm.certificate"
 	ResourceAwsAutoscaling                                                   string = "aws.autoscaling"
 	ResourceAwsAutoscalingGroup                                              string = "aws.autoscaling.group"
+	ResourceAwsAutoscalingGroupTag                                           string = "aws.autoscaling.group.tag"
 	ResourceAwsElb                                                           string = "aws.elb"
 	ResourceAwsElbTargetgroup                                                string = "aws.elb.targetgroup"
 	ResourceAwsElbLoadbalancer                                               string = "aws.elb.loadbalancer"
@@ -532,6 +533,10 @@ func init() {
 		"aws.autoscaling.group": {
 			Init:   initAwsAutoscalingGroup,
 			Create: createAwsAutoscalingGroup,
+		},
+		"aws.autoscaling.group.tag": {
+			// to override args, implement: initAwsAutoscalingGroupTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAutoscalingGroupTag,
 		},
 		"aws.elb": {
 			// to override args, implement: initAwsElb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2459,6 +2464,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.autoscaling.group.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.autoscaling.group.tagSpecifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetTagSpecifications()).ToDataRes(types.Array(types.Resource("aws.autoscaling.group.tag")))
+	},
 	"aws.autoscaling.group.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetRegion()).ToDataRes(types.String)
 	},
@@ -2497,6 +2505,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.autoscaling.group.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
+	},
+	"aws.autoscaling.group.tag.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroupTag).GetKey()).ToDataRes(types.String)
+	},
+	"aws.autoscaling.group.tag.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroupTag).GetValue()).ToDataRes(types.String)
+	},
+	"aws.autoscaling.group.tag.propagateAtLaunch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroupTag).GetPropagateAtLaunch()).ToDataRes(types.Bool)
+	},
+	"aws.autoscaling.group.tag.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroupTag).GetResourceId()).ToDataRes(types.String)
+	},
+	"aws.autoscaling.group.tag.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroupTag).GetResourceType()).ToDataRes(types.String)
 	},
 	"aws.elb.classicLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElb).GetClassicLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
@@ -2848,6 +2871,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.secretsmanager.secret.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.secretsmanager.secret.lastChangedDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetLastChangedDate()).ToDataRes(types.Time)
@@ -5056,6 +5082,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.instance.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("aws.ec2.networkinterface")))
+	},
+	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetDisableApiTermination()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.networkinterface.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetId()).ToDataRes(types.String)
@@ -7939,6 +7968,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAutoscalingGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.autoscaling.group.tagSpecifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).TagSpecifications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.autoscaling.group.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7989,6 +8022,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.autoscaling.group.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.tag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroupTag).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.autoscaling.group.tag.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroupTag).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.tag.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroupTag).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.tag.propagateAtLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroupTag).PropagateAtLaunch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.tag.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroupTag).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.tag.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroupTag).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8525,6 +8582,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.secretsmanager.secret.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.lastChangedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11817,6 +11878,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.instance.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).DisableApiTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkinterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19239,6 +19304,7 @@ type mqlAwsAutoscalingGroup struct {
 	LoadBalancerNames       plugin.TValue[[]any]
 	HealthCheckType         plugin.TValue[string]
 	Tags                    plugin.TValue[map[string]any]
+	TagSpecifications       plugin.TValue[[]any]
 	Region                  plugin.TValue[string]
 	MinSize                 plugin.TValue[int64]
 	MaxSize                 plugin.TValue[int64]
@@ -19311,6 +19377,10 @@ func (c *mqlAwsAutoscalingGroup) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
+func (c *mqlAwsAutoscalingGroup) GetTagSpecifications() *plugin.TValue[[]any] {
+	return &c.TagSpecifications
+}
+
 func (c *mqlAwsAutoscalingGroup) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
@@ -19373,6 +19443,70 @@ func (c *mqlAwsAutoscalingGroup) GetInstances() *plugin.TValue[[]any] {
 
 		return c.instances()
 	})
+}
+
+// mqlAwsAutoscalingGroupTag for the aws.autoscaling.group.tag resource
+type mqlAwsAutoscalingGroupTag struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAutoscalingGroupTagInternal it will be used here
+	Key               plugin.TValue[string]
+	Value             plugin.TValue[string]
+	PropagateAtLaunch plugin.TValue[bool]
+	ResourceId        plugin.TValue[string]
+	ResourceType      plugin.TValue[string]
+}
+
+// createAwsAutoscalingGroupTag creates a new instance of this resource
+func createAwsAutoscalingGroupTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAutoscalingGroupTag{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.autoscaling.group.tag", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAutoscalingGroupTag) MqlName() string {
+	return "aws.autoscaling.group.tag"
+}
+
+func (c *mqlAwsAutoscalingGroupTag) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAutoscalingGroupTag) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAwsAutoscalingGroupTag) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlAwsAutoscalingGroupTag) GetPropagateAtLaunch() *plugin.TValue[bool] {
+	return &c.PropagateAtLaunch
+}
+
+func (c *mqlAwsAutoscalingGroupTag) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAwsAutoscalingGroupTag) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
 }
 
 // mqlAwsElb for the aws.elb resource
@@ -20886,6 +21020,7 @@ type mqlAwsSecretsmanagerSecret struct {
 	Arn              plugin.TValue[string]
 	CreatedAt        plugin.TValue[*time.Time]
 	Description      plugin.TValue[string]
+	KmsKey           plugin.TValue[*mqlAwsKmsKey]
 	LastChangedDate  plugin.TValue[*time.Time]
 	LastRotatedDate  plugin.TValue[*time.Time]
 	Name             plugin.TValue[string]
@@ -20942,6 +21077,22 @@ func (c *mqlAwsSecretsmanagerSecret) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsSecretsmanagerSecret) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.secretsmanager.secret", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsSecretsmanagerSecret) GetLastChangedDate() *plugin.TValue[*time.Time] {
@@ -29461,6 +29612,7 @@ type mqlAwsEc2Instance struct {
 	Architecture          plugin.TValue[string]
 	TpmSupport            plugin.TValue[string]
 	NetworkInterfaces     plugin.TValue[[]any]
+	DisableApiTermination plugin.TValue[bool]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -29723,6 +29875,12 @@ func (c *mqlAwsEc2Instance) GetNetworkInterfaces() *plugin.TValue[[]any] {
 		}
 
 		return c.networkInterfaces()
+	})
+}
+
+func (c *mqlAwsEc2Instance) GetDisableApiTermination() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableApiTermination, func() (bool, error) {
+		return c.disableApiTermination()
 	})
 }
 

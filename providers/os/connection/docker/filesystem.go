@@ -90,3 +90,7 @@ func (fs *FS) Chtimes(name string, atime time.Time, mtime time.Time) error {
 func (fs *FS) Chown(name string, uid, gid int) error {
 	return errors.New("chown not implemented")
 }
+
+func (fs *FS) ReadDir(name string) ([]os.FileInfo, error) {
+	return fs.catFS.ReadDir(name)
+}

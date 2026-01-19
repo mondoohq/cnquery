@@ -4,9 +4,12 @@ name: Extended Linting
 on:
   pull_request:
     paths:
-      - '**.go'
-      - '**.mod'
-      - 'go.sum'
+      - "**.go"
+      - "**.mod"
+      - "go.sum"
+
+permissions:
+  contents: read
 
 jobs:
   golangci-lint:
@@ -27,7 +30,7 @@ jobs:
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version: ">=${{ env.golang-version }}"
-          cache: false      
+          cache: false
       - name: Generate test files
         run: make test/generate
       - name: Run golangci-lint

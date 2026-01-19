@@ -1023,9 +1023,11 @@ private azure.subscription.storageService.account @defaults("id name location") 
   // Storage account table properties
   tableProperties() azure.subscription.storageService.account.service.properties
   // Storage account blob properties
-  blobProperties() azure.subscription.storageService.account.service.properties
+  blobProperties() azure.subscription.storageService.account.service.blobProperties
   // Storage account data protection
   dataProtection() azure.subscription.storageService.account.dataProtection
+  // Storage account file properties
+  fileProperties() azure.subscription.storageService.account.filePropertiesConfig
 }
 
 // Azure Storage account data protection
@@ -1042,6 +1044,40 @@ private azure.subscription.storageService.account.dataProtection @defaults("blob
   containerRetentionDays int
 }
 
+// Azure Storage account file properties
+private azure.subscription.storageService.account.filePropertiesConfig {
+  // File share delete retention policy
+  shareDeleteRetentionPolicy azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig
+  // Protocol settings for file service
+  protocolSettings azure.subscription.storageService.account.fileProperties.protocolSettingsConfig
+}
+
+// Azure Storage account file properties share delete retention policy
+private azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig @defaults("enabled days") {
+  // Whether share delete retention is enabled
+  enabled bool
+  // Retention period in days for deleted file shares
+  days int
+}
+
+// Azure Storage account file properties protocol settings
+private azure.subscription.storageService.account.fileProperties.protocolSettingsConfig {
+  // SMB protocol settings
+  smb azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig
+}
+
+// Azure Storage account file properties protocol settings SMB
+private azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig {
+  // Supported SMB versions (e.g., "SMB3.0;SMB3.1.1")
+  versions string
+  // Supported channel encryption methods (e.g., "AES-128-CCM;AES-128-GCM;AES-256-GCM")
+  channelEncryption string
+  // Supported authentication methods (e.g., "NTLMv2;Kerberos")
+  authenticationMethods string
+  // Supported Kerberos ticket encryption methods (e.g., "RC4-HMAC;AES-256")
+  kerberosTicketEncryption string
+}
+
 // Azure Storage account service properties
 private azure.subscription.storageService.account.service.properties @defaults("id") {
   // ID of the service
@@ -1052,6 +1088,20 @@ private azure.subscription.storageService.account.service.properties @defaults("
   minuteMetrics azure.subscription.storageService.account.service.properties.metrics
   // Logging properties
   logging azure.subscription.storageService.account.service.properties.logging
+}
+
+// Azure Storage account blob service properties
+private azure.subscription.storageService.account.service.blobProperties @defaults("id") {
+  // ID of the service
+  id string
+  // Hourly metrics properties
+  hourMetrics azure.subscription.storageService.account.service.properties.metrics
+  // Minute metrics properties
+  minuteMetrics azure.subscription.storageService.account.service.properties.metrics
+  // Logging properties
+  logging azure.subscription.storageService.account.service.properties.logging
+  // Whether versioning is enabled for blobs
+  isVersioningEnabled bool
 }
 
 // Azure Storage account service properties metrics
@@ -1851,6 +1901,18 @@ private azure.subscription.keyVaultService.key @defaults("kid keyName") {
   version() string
   // List of key versions
   versions() []azure.subscription.keyVaultService.key
+  // Key rotation policy
+  rotationPolicy() azure.subscription.keyVaultService.key.rotationPolicyObject
+}
+
+// Azure Key Vault key rotation policy
+private azure.subscription.keyVaultService.key.rotationPolicyObject @defaults("enabled") {
+  // Lifetime actions for the rotation policy
+  lifetimeActions []dict
+  // Attributes of the rotation policy (e.g., expiryTime)
+  attributes dict
+  // Whether automatic key rotation is enabled (true if rotationPolicy exists with Rotate action)
+  enabled bool
 }
 
 // Azure Key Vault certificate
@@ -2079,6 +2141,10 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   defenderForKeyVaults() dict
   // Microsoft Defender for Resource Manager configuration
   defenderForResourceManager() dict
+  // Microsoft Defender for APIs configuration
+  defenderForApis() azure.subscription.cloudDefenderService.defenderForApis
+  // Microsoft Defender Cloud Security Posture Management (CSPM) configuration
+  defenderCSPM() azure.subscription.cloudDefenderService.defenderCSPM
   // Defender for Containers components configuration
   defenderForContainers() dict
   // List of configured security contacts
@@ -2103,6 +2169,38 @@ private azure.subscription.cloudDefenderService.settings @defaults("name kind") 
   type string
   // The properties dict (enabled)
   properties dict
+}
+
+// Microsoft Defender for APIs
+private azure.subscription.cloudDefenderService.defenderForApis @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for APIs is enabled
+  enabled bool
+  // Pricing tier for Defender for APIs
+  pricingTier string
+}
+
+// Microsoft Defender Cloud Security Posture Management (CSPM)
+private azure.subscription.cloudDefenderService.defenderCSPM @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender CSPM is enabled
+  enabled bool
+  // Pricing tier for Defender CSPM
+  pricingTier string
+  // Sub-plan for Defender CSPM
+  subPlan string
+  // Extensions configured for Defender CSPM
+  extensions() []azure.subscription.cloudDefenderService.defenderCSPM.extension
+}
+
+// Microsoft Defender CSPM extension
+private azure.subscription.cloudDefenderService.defenderCSPM.extension {
+  // Extension name
+  name string
+  // Whether the extension is enabled
+  isEnabled bool
 }
 
 // Microsoft Defender for Cloud security contact

@@ -6,6 +6,9 @@ name: Link Checking
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   md-links:
     name: Run markdown link check

@@ -21,7 +21,7 @@ const (
 	DiscoveryECS          = "ecs"
 
 	DiscoveryAll  = "all"  // resources, accounts, instances, ecr, ecs, everything
-	DiscoveryAuto = "auto" // just the account for now
+	DiscoveryAuto = "auto" // account + resources
 
 	// API scan
 	DiscoveryAccounts                   = "accounts"
@@ -69,6 +69,28 @@ func allDiscovery() []string {
 
 var Auto = []string{
 	DiscoveryAccounts,
+	DiscoveryS3Buckets,
+	DiscoveryEKSClusters,
+	DiscoveryCloudtrailTrails,
+	DiscoveryRdsDbInstances,
+	DiscoveryRdsDbClusters,
+	DiscoveryVPCs,
+	DiscoverySecurityGroups,
+	DiscoveryIAMUsers,
+	DiscoveryIAMGroups,
+	DiscoveryCloudwatchLoggroups,
+	DiscoveryLambdaFunctions,
+	DiscoveryDynamoDBTables,
+	DiscoveryDynamoDBGlobalTables,
+	DiscoveryRedshiftClusters,
+	DiscoveryVolumes,
+	DiscoverySnapshots,
+	DiscoveryEFSFilesystems,
+	DiscoveryAPIGatewayRestAPIs,
+	DiscoveryELBLoadBalancers,
+	DiscoveryESDomains,
+	DiscoveryKMSKeys,
+	DiscoverySagemakerNotebookInstances,
 }
 
 var AllAPIResources = []string{

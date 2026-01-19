@@ -610,6 +610,7 @@ func init() {
 			"address":                  {f: ipAddress},
 			"cidr":                     {f: ipCIDR},
 			"inRange":                  {f: ipInRange},
+			"isPublic":                 {f: ipIsPublic},
 			"isUnspecified":            {f: ipUnspecified},
 			"prefix":                   {f: ipPrefix},
 			"prefixLength":             {f: ipPrefixLength},

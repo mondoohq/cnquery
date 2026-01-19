@@ -716,7 +716,7 @@ aws.kms @defaults("keys") {
 }
 
 // AWS Key Management Service (KMS) key
-private aws.kms.key @defaults("id region metadata.Description") {
+private aws.kms.key @defaults("id region aliases metadata.Description") {
   // Unique identifier for the key
   id string
   // ARN of the key
@@ -1211,6 +1211,8 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   healthCheckType string
   // Tags for the asg
   tags map[string]string
+  // Full tag properties
+  tagSpecifications []aws.autoscaling.group.tag
   // Region of the Auto Scaling group
   region string
   // Minimum number of instances to scale down to
@@ -1237,6 +1239,20 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   defaultInstanceWarmup int
   // EC2 instances associated with the group
   instances() []aws.ec2.instance
+}
+
+// AWS Auto Scaling group tag
+private aws.autoscaling.group.tag @defaults("key value propagateAtLaunch") {
+  // Tag key
+  key string
+  // Tag value
+  value string
+  // Whether the tag propagates to instances launched by the ASG
+  propagateAtLaunch bool
+  // Resource ID (ASG name)
+  resourceId string
+  // Resource type (always "auto-scaling-group")
+  resourceType string
 }
 
 // AWS Elastic Load Balancing
@@ -1539,6 +1555,8 @@ private aws.secretsmanager.secret @defaults("arn name") {
   createdAt time
   // Description of the secret
   description string
+  // KMS key used for encryption of the secret
+  kmsKey() aws.kms.key
   // Last date the secret was changed
   lastChangedDate time
   // Last date the secret was automatically rotated
@@ -3362,6 +3380,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   tpmSupport string
   // List of network interfaces for the instance
   networkInterfaces() []aws.ec2.networkinterface
+  // Whether API termination protection is enabled for the instance
+  disableApiTermination() bool
 }
 
 // AWS EC2 network interface

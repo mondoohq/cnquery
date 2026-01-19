@@ -1284,6 +1284,48 @@ func TestIP(t *testing.T) {
 			{Code: "ip('2001:db8:3c4d:15::1a2f:1a2b').inRange('2001:db8:3c4e::', '2001:db8:3c4f::')", Expectation: false},
 		})
 	})
+
+	t.Run("ipv4 isPublic", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			// Public IPs
+			{Code: "ip('8.8.8.8').isPublic", Expectation: true},
+			{Code: "ip('1.1.1.1').isPublic", Expectation: true},
+			{Code: "ip('13.107.42.14').isPublic", Expectation: true},
+			// Private IPs (RFC 1918)
+			{Code: "ip('10.0.0.1').isPublic", Expectation: false},
+			{Code: "ip('172.16.0.1').isPublic", Expectation: false},
+			{Code: "ip('192.168.1.1').isPublic", Expectation: false},
+			// Loopback
+			{Code: "ip('127.0.0.1').isPublic", Expectation: false},
+			// Link-local
+			{Code: "ip('169.254.1.1').isPublic", Expectation: false},
+			// Multicast
+			{Code: "ip('224.0.0.1').isPublic", Expectation: false},
+			{Code: "ip('239.255.255.255').isPublic", Expectation: false},
+			// Unspecified
+			{Code: "ip('0.0.0.0').isPublic", Expectation: false},
+		})
+	})
+
+	t.Run("ipv6 isPublic", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			// Public IPs
+			{Code: "ip('2001:4860:4860::8888').isPublic", Expectation: true},
+			{Code: "ip('2606:4700:4700::1111').isPublic", Expectation: true},
+			// Private IPs (RFC 4193)
+			{Code: "ip('fd00::1').isPublic", Expectation: false},
+			{Code: "ip('fc00::1').isPublic", Expectation: false},
+			// Loopback
+			{Code: "ip('::1').isPublic", Expectation: false},
+			// Link-local
+			{Code: "ip('fe80::1').isPublic", Expectation: false},
+			// Multicast
+			{Code: "ip('ff02::1').isPublic", Expectation: false},
+			{Code: "ip('ff01::1').isPublic", Expectation: false},
+			// Unspecified
+			{Code: "ip('::').isPublic", Expectation: false},
+		})
+	})
 }
 
 func TestResource_Default(t *testing.T) {

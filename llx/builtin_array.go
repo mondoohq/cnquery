@@ -435,6 +435,9 @@ func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	}
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		var anyError multierr.Errors
+		anyError.Add(errs...)
+
 		mappedType := types.Unset
 		resList := []any{}
 		f := e.ctx.code.Block(fref)
@@ -452,6 +455,7 @@ func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 		data := &RawData{
 			Type:  types.Array(mappedType),
 			Value: resList,
+			Error: anyError.Deduplicate(),
 		}
 		e.cache.Store(ref, &stepCache{
 			Result:   data,

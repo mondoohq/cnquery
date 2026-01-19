@@ -1,0 +1,14 @@
+# Main SSH config file with Include directives
+Port 22
+AddressFamily any
+
+# Include all config files from conf.d directory
+Include conf.d/*.conf
+
+# Include files from subdirectory
+Include subdir/01_*.conf subdir/02_*.conf
+
+# Some additional config
+UsePAM yes
+X11Forwarding yes
+

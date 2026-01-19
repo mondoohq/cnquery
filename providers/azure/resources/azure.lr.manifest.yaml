@@ -534,6 +534,10 @@ resources:
       url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
   azure.subscription.cloudDefenderService:
     fields:
+      defenderCSPM:
+        min_mondoo_version: 9.0.0
+      defenderForApis:
+        min_mondoo_version: 9.0.0
       defenderForAppServices:
         min_mondoo_version: 9.0.0
       defenderForContainers: {}
@@ -569,6 +573,37 @@ resources:
     refs:
     - title: Microsoft Defender for Cloud Apps overview
       url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
+  azure.subscription.cloudDefenderService.defenderCSPM:
+    fields:
+      enabled: {}
+      extensions: {}
+      pricingTier: {}
+      subPlan: {}
+      subscriptionId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.cloudDefenderService.defenderCSPM.extension:
+    fields:
+      isEnabled: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.cloudDefenderService.defenderForApis:
+    fields:
+      enabled: {}
+      pricingTier: {}
+      subscriptionId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.cloudDefenderService.securityContact:
     fields:
       alertNotifications: {}
@@ -961,6 +996,8 @@ resources:
       managed: {}
       notBefore: {}
       recoveryLevel: {}
+      rotationPolicy:
+        min_mondoo_version: 9.0.0
       tags: {}
       updated: {}
       version: {}
@@ -977,6 +1014,25 @@ resources:
     fields:
       enabled: {}
       kid: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.keyVaultService.key.rotationPolicy:
+    fields:
+      attributes: {}
+      enabled: {}
+      lifetimeActions: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.keyVaultService.key.rotationPolicyObject:
+    fields:
+      attributes: {}
+      enabled: {}
+      lifetimeActions: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
@@ -2916,6 +2972,8 @@ resources:
       blobProperties: {}
       containers: {}
       dataProtection: {}
+      fileProperties:
+        min_mondoo_version: 9.0.0
       id: {}
       identity: {}
       kind: {}
@@ -2965,6 +3023,92 @@ resources:
     refs:
     - title: Azure Storage documentation
       url: https://learn.microsoft.com/en-us/azure/storage/
+  azure.subscription.storageService.account.fileProperties:
+    fields:
+      protocolSettings: {}
+      shareDeleteRetentionPolicy: {}
+      storageAccountId: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.protocolSettings:
+    fields:
+      id: {}
+      smb: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.protocolSettings.smb:
+    fields:
+      authenticationMethods: {}
+      channelEncryption: {}
+      id: {}
+      kerberosTicketEncryption: {}
+      versions: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig:
+    fields:
+      authenticationMethods: {}
+      channelEncryption: {}
+      kerberosTicketEncryption: {}
+      versions: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.protocolSettingsConfig:
+    fields:
+      smb: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicy:
+    fields:
+      days: {}
+      enabled: {}
+      id: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig:
+    fields:
+      days: {}
+      enabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.filePropertiesConfig:
+    fields:
+      protocolSettings: {}
+      shareDeleteRetentionPolicy: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.service.blobProperties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      isVersioningEnabled: {}
+      logging: {}
+      minuteMetrics: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
   azure.subscription.storageService.account.service.properties:
     fields:
       hourMetrics: {}

@@ -84,7 +84,7 @@ func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
 }
 
 func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
-	return nil, errors.New("not implemented")
+	return f.catFs.ReadDir(f.path)
 }
 
 func (f *File) Readdirnames(n int) ([]string, error) {

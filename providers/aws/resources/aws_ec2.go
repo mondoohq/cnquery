@@ -1472,6 +1472,29 @@ func (a *mqlAwsEc2Instance) instanceStatus() (any, error) {
 	return res, nil
 }
 
+func (a *mqlAwsEc2Instance) disableApiTermination() (bool, error) {
+	instanceId := a.InstanceId.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+
+	result, err := svc.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+		InstanceId: aws.String(instanceId),
+		Attribute:  ec2types.InstanceAttributeNameDisableApiTermination,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if result.DisableApiTermination != nil && result.DisableApiTermination.Value != nil {
+		return *result.DisableApiTermination.Value, nil
+	}
+
+	return false, nil
+}
+
 // # go.mondoo.com/cnquery/v12/providers/aws/resources
 // resources/aws.lr.go:15420:12: c.iamRole undefined (type *mqlAwsIamInstanceProfile has no field or method iamRole, but does have field IamRole)
 // make[1]: *** [providers/build/aws] Error 1

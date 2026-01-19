@@ -72,7 +72,7 @@ func TestGetDiscoveryTargets(t *testing.T) {
 		{
 			name:    "auto and resources",
 			targets: []string{"auto", "resources"},
-			want:    append(Auto, AllAPIResources...),
+			want:    Auto,
 		},
 		{
 			name:    "all and resources",
@@ -92,7 +92,7 @@ func TestGetDiscoveryTargets(t *testing.T) {
 		{
 			name:    "duplicates",
 			targets: []string{"auto", "s3-buckets", "iam-users", "s3-buckets", "auto"},
-			want:    append(Auto, []string{DiscoveryS3Buckets, DiscoveryIAMUsers}...),
+			want:    Auto,
 		},
 	}
 
