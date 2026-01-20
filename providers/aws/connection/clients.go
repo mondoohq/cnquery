@@ -28,6 +28,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -550,7 +551,7 @@ func (t *AwsConnection) Efs(region string) *efs.Client {
 	// check for cached client and return it if it exists
 	c, ok := t.clientcache.Load(cacheVal)
 	if ok {
-		log.Debug().Msg("use cached ssm client")
+		log.Debug().Msg("use cached efs client")
 		return c.Data.(*efs.Client)
 	}
 
@@ -558,6 +559,30 @@ func (t *AwsConnection) Efs(region string) *efs.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := efs.NewFromConfig(cfg)
+
+	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Fsx(region string) *fsx.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_fsx_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached fsx client")
+		return c.Data.(*fsx.Client)
+	}
+
+	// create the client
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := fsx.NewFromConfig(cfg)
 
 	// cache it
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})

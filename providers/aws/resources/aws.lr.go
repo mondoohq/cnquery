@@ -63,6 +63,10 @@ const (
 	ResourceAwsWafIpset                                                      string = "aws.waf.ipset"
 	ResourceAwsEfs                                                           string = "aws.efs"
 	ResourceAwsEfsFilesystem                                                 string = "aws.efs.filesystem"
+	ResourceAwsFsx                                                           string = "aws.fsx"
+	ResourceAwsFsxFilesystem                                                 string = "aws.fsx.filesystem"
+	ResourceAwsFsxCache                                                      string = "aws.fsx.cache"
+	ResourceAwsFsxBackup                                                     string = "aws.fsx.backup"
 	ResourceAwsKms                                                           string = "aws.kms"
 	ResourceAwsKmsKey                                                        string = "aws.kms.key"
 	ResourceAwsIam                                                           string = "aws.iam"
@@ -414,6 +418,22 @@ func init() {
 		"aws.efs.filesystem": {
 			Init:   initAwsEfsFilesystem,
 			Create: createAwsEfsFilesystem,
+		},
+		"aws.fsx": {
+			// to override args, implement: initAwsFsx(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsFsx,
+		},
+		"aws.fsx.filesystem": {
+			Init:   initAwsFsxFilesystem,
+			Create: createAwsFsxFilesystem,
+		},
+		"aws.fsx.cache": {
+			Init:   initAwsFsxCache,
+			Create: createAwsFsxCache,
+		},
+		"aws.fsx.backup": {
+			Init:   initAwsFsxBackup,
+			Create: createAwsFsxBackup,
 		},
 		"aws.kms": {
 			// to override args, implement: initAwsKms(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1907,6 +1927,114 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.efs.filesystem.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.fsx.fileSystems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsx).GetFileSystems()).ToDataRes(types.Array(types.Resource("aws.fsx.filesystem")))
+	},
+	"aws.fsx.caches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsx).GetCaches()).ToDataRes(types.Array(types.Resource("aws.fsx.cache")))
+	},
+	"aws.fsx.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsx).GetBackups()).ToDataRes(types.Array(types.Resource("aws.fsx.backup")))
+	},
+	"aws.fsx.filesystem.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetId()).ToDataRes(types.String)
+	},
+	"aws.fsx.filesystem.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetArn()).ToDataRes(types.String)
+	},
+	"aws.fsx.filesystem.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetType()).ToDataRes(types.String)
+	},
+	"aws.fsx.filesystem.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetLifecycle()).ToDataRes(types.String)
+	},
+	"aws.fsx.filesystem.storageCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetStorageCapacity()).ToDataRes(types.Int)
+	},
+	"aws.fsx.filesystem.storageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetStorageType()).ToDataRes(types.String)
+	},
+	"aws.fsx.filesystem.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.fsx.filesystem.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.fsx.filesystem.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.fsx.filesystem.subnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.fsx.filesystem.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.fsx.filesystem.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.fsx.filesystem.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.fsx.filesystem.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.fsx.cache.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetId()).ToDataRes(types.String)
+	},
+	"aws.fsx.cache.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetArn()).ToDataRes(types.String)
+	},
+	"aws.fsx.cache.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetLifecycle()).ToDataRes(types.String)
+	},
+	"aws.fsx.cache.storageCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetStorageCapacity()).ToDataRes(types.Int)
+	},
+	"aws.fsx.cache.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.fsx.cache.subnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.fsx.cache.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.fsx.cache.lustreConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetLustreConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.fsx.cache.dataRepositoryAssociations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetDataRepositoryAssociations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.fsx.cache.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.fsx.backup.backupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetBackupId()).ToDataRes(types.String)
+	},
+	"aws.fsx.backup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.fsx.backup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetType()).ToDataRes(types.String)
+	},
+	"aws.fsx.backup.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetLifecycle()).ToDataRes(types.String)
+	},
+	"aws.fsx.backup.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.fsx.backup.fileSystemType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetFileSystemType()).ToDataRes(types.String)
+	},
+	"aws.fsx.backup.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.fsx.backup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.fsx.backup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.kms.keys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKms).GetKeys()).ToDataRes(types.Array(types.Resource("aws.kms.key")))
@@ -7118,6 +7246,166 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.efs.filesystem.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystem).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsx).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fsx.fileSystems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsx).FileSystems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.caches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsx).Caches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsx).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fsx.filesystem.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).Lifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.storageCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).StorageCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fsx.cache.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).Lifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.storageCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).StorageCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.lustreConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).LustreConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.dataRepositoryAssociations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).DataRepositoryAssociations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fsx.backup.backupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).BackupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).Lifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.fileSystemType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).FileSystemType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.kms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16668,6 +16956,393 @@ func (c *mqlAwsEfsFilesystem) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsEfsFilesystem) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+// mqlAwsFsx for the aws.fsx resource
+type mqlAwsFsx struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFsxInternal it will be used here
+	FileSystems plugin.TValue[[]any]
+	Caches      plugin.TValue[[]any]
+	Backups     plugin.TValue[[]any]
+}
+
+// createAwsFsx creates a new instance of this resource
+func createAwsFsx(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFsx{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fsx", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFsx) MqlName() string {
+	return "aws.fsx"
+}
+
+func (c *mqlAwsFsx) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFsx) GetFileSystems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FileSystems, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx", c.__id, "fileSystems")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fileSystems()
+	})
+}
+
+func (c *mqlAwsFsx) GetCaches() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Caches, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx", c.__id, "caches")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.caches()
+	})
+}
+
+func (c *mqlAwsFsx) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+// mqlAwsFsxFilesystem for the aws.fsx.filesystem resource
+type mqlAwsFsxFilesystem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFsxFilesystemInternal it will be used here
+	Id               plugin.TValue[string]
+	Arn              plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Lifecycle        plugin.TValue[string]
+	StorageCapacity  plugin.TValue[int64]
+	StorageType      plugin.TValue[string]
+	Encrypted        plugin.TValue[bool]
+	KmsKeyId         plugin.TValue[string]
+	VpcId            plugin.TValue[string]
+	SubnetIds        plugin.TValue[[]any]
+	SecurityGroupIds plugin.TValue[[]any]
+	Tags             plugin.TValue[map[string]any]
+	CreatedAt        plugin.TValue[*time.Time]
+	Region           plugin.TValue[string]
+}
+
+// createAwsFsxFilesystem creates a new instance of this resource
+func createAwsFsxFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFsxFilesystem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fsx.filesystem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFsxFilesystem) MqlName() string {
+	return "aws.fsx.filesystem"
+}
+
+func (c *mqlAwsFsxFilesystem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFsxFilesystem) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsFsxFilesystem) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsFsxFilesystem) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsFsxFilesystem) GetLifecycle() *plugin.TValue[string] {
+	return &c.Lifecycle
+}
+
+func (c *mqlAwsFsxFilesystem) GetStorageCapacity() *plugin.TValue[int64] {
+	return &c.StorageCapacity
+}
+
+func (c *mqlAwsFsxFilesystem) GetStorageType() *plugin.TValue[string] {
+	return &c.StorageType
+}
+
+func (c *mqlAwsFsxFilesystem) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAwsFsxFilesystem) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlAwsFsxFilesystem) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsFsxFilesystem) GetSubnetIds() *plugin.TValue[[]any] {
+	return &c.SubnetIds
+}
+
+func (c *mqlAwsFsxFilesystem) GetSecurityGroupIds() *plugin.TValue[[]any] {
+	return &c.SecurityGroupIds
+}
+
+func (c *mqlAwsFsxFilesystem) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsFsxFilesystem) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsFsxFilesystem) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsFsxCache for the aws.fsx.cache resource
+type mqlAwsFsxCache struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFsxCacheInternal it will be used here
+	Id                         plugin.TValue[string]
+	Arn                        plugin.TValue[string]
+	Lifecycle                  plugin.TValue[string]
+	StorageCapacity            plugin.TValue[int64]
+	VpcId                      plugin.TValue[string]
+	SubnetIds                  plugin.TValue[[]any]
+	SecurityGroupIds           plugin.TValue[[]any]
+	LustreConfiguration        plugin.TValue[any]
+	DataRepositoryAssociations plugin.TValue[[]any]
+	Tags                       plugin.TValue[map[string]any]
+}
+
+// createAwsFsxCache creates a new instance of this resource
+func createAwsFsxCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFsxCache{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fsx.cache", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFsxCache) MqlName() string {
+	return "aws.fsx.cache"
+}
+
+func (c *mqlAwsFsxCache) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFsxCache) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsFsxCache) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsFsxCache) GetLifecycle() *plugin.TValue[string] {
+	return &c.Lifecycle
+}
+
+func (c *mqlAwsFsxCache) GetStorageCapacity() *plugin.TValue[int64] {
+	return &c.StorageCapacity
+}
+
+func (c *mqlAwsFsxCache) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsFsxCache) GetSubnetIds() *plugin.TValue[[]any] {
+	return &c.SubnetIds
+}
+
+func (c *mqlAwsFsxCache) GetSecurityGroupIds() *plugin.TValue[[]any] {
+	return &c.SecurityGroupIds
+}
+
+func (c *mqlAwsFsxCache) GetLustreConfiguration() *plugin.TValue[any] {
+	return &c.LustreConfiguration
+}
+
+func (c *mqlAwsFsxCache) GetDataRepositoryAssociations() *plugin.TValue[[]any] {
+	return &c.DataRepositoryAssociations
+}
+
+func (c *mqlAwsFsxCache) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsFsxBackup for the aws.fsx.backup resource
+type mqlAwsFsxBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFsxBackupInternal it will be used here
+	BackupId       plugin.TValue[string]
+	Arn            plugin.TValue[string]
+	Type           plugin.TValue[string]
+	Lifecycle      plugin.TValue[string]
+	FileSystemId   plugin.TValue[string]
+	FileSystemType plugin.TValue[string]
+	KmsKeyId       plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	Tags           plugin.TValue[map[string]any]
+}
+
+// createAwsFsxBackup creates a new instance of this resource
+func createAwsFsxBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFsxBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fsx.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFsxBackup) MqlName() string {
+	return "aws.fsx.backup"
+}
+
+func (c *mqlAwsFsxBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFsxBackup) GetBackupId() *plugin.TValue[string] {
+	return &c.BackupId
+}
+
+func (c *mqlAwsFsxBackup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsFsxBackup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsFsxBackup) GetLifecycle() *plugin.TValue[string] {
+	return &c.Lifecycle
+}
+
+func (c *mqlAwsFsxBackup) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAwsFsxBackup) GetFileSystemType() *plugin.TValue[string] {
+	return &c.FileSystemType
+}
+
+func (c *mqlAwsFsxBackup) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlAwsFsxBackup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsFsxBackup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 // mqlAwsKms for the aws.kms resource
