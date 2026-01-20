@@ -55,10 +55,22 @@ private microsoft.identityAndAccess.accessReviewDefinition @defaults("id display
   // The status of the access review. Possible values are:
   // Initializing, NotStarted, Starting, InProgress, Completing, Completed, AutoReviewing, and AutoReviewed
   status string
+  // Defines the entities whose access is reviewed
+  scope microsoft.identityAndAccess.accessReviewDefinition.scope
   // This collection of access review scopes is used to define who are the reviewers
   reviewers dict
   // The settings for an access review series, see type definition below
   settings microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings
+}
+
+// Defines the scope of entities whose access is being reviewed
+private microsoft.identityAndAccess.accessReviewDefinition.scope @defaults("query queryType") {
+  // Query string defining which entities are in scope for the review
+  query string
+  // Type of query being used (e.g., "MicrosoftGraph")
+  queryType string
+  // Optional query root path
+  queryRoot string
 }
 
 // Configures the recurrence, notifications, and decision-handling for an access review series.

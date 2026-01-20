@@ -443,6 +443,7 @@ resources:
       displayName: {}
       id: {}
       reviewers: {}
+      scope: {}
       settings: {}
       status: {}
     is_private: true
@@ -459,6 +460,13 @@ resources:
       recommendationsEnabled: {}
       recurrence: {}
       reminderNotificationsEnabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.accessReviewDefinition.scope:
+    fields:
+      query: {}
+      queryRoot: {}
+      queryType: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.identityAndAccess.accessReviews:
