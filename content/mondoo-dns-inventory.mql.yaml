@@ -42,4 +42,4 @@ packs:
         docs:
           desc: Returns mail exchanger (MX) records with their domain names and preferences for email routing.
         filters: dns.params.MX.name != empty
-        mql:  dns.mx { domainName preference }
+        mql: dns.mx { domainName preference }
