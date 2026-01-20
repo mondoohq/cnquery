@@ -91,6 +91,8 @@ const (
 	ResourceMicrosoftSecurityExchange                                                                        string = "microsoft.security.exchange"
 	ResourceMicrosoftSecurityExchangeAntispam                                                                string = "microsoft.security.exchange.antispam"
 	ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy                                    string = "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy"
+	ResourceMicrosoftSecurityInformationProtection                                                           string = "microsoft.security.informationProtection"
+	ResourceMicrosoftSecurityInformationProtectionSensitivityLabel                                           string = "microsoft.security.informationProtection.sensitivityLabel"
 	ResourceMicrosoftPolicies                                                                                string = "microsoft.policies"
 	ResourceMicrosoftPoliciesExternalIdentitiesPolicy                                                        string = "microsoft.policies.externalIdentitiesPolicy"
 	ResourceMicrosoftPoliciesActivityBasedTimeoutPolicy                                                      string = "microsoft.policies.activityBasedTimeoutPolicy"
@@ -433,6 +435,14 @@ func init() {
 		"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy": {
 			// to override args, implement: initMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy,
+		},
+		"microsoft.security.informationProtection": {
+			// to override args, implement: initMicrosoftSecurityInformationProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSecurityInformationProtection,
+		},
+		"microsoft.security.informationProtection.sensitivityLabel": {
+			// to override args, implement: initMicrosoftSecurityInformationProtectionSensitivityLabel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSecurityInformationProtectionSensitivityLabel,
 		},
 		"microsoft.policies": {
 			// to override args, implement: initMicrosoftPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1998,6 +2008,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.security.exchange": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurity).GetExchange()).ToDataRes(types.Resource("microsoft.security.exchange"))
 	},
+	"microsoft.security.informationProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurity).GetInformationProtection()).ToDataRes(types.Resource("microsoft.security.informationProtection"))
+	},
 	"microsoft.security.securityscore.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecuritySecurityscore).GetId()).ToDataRes(types.String)
 	},
@@ -2075,6 +2088,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.enableSafeList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).GetEnableSafeList()).ToDataRes(types.Bool)
+	},
+	"microsoft.security.informationProtection.sensitivityLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtection).GetSensitivityLabels()).ToDataRes(types.Array(types.Resource("microsoft.security.informationProtection.sensitivityLabel")))
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.toolTip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetToolTip()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.color": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetColor()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.contentFormats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetContentFormats()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.isAppliable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetIsAppliable()).ToDataRes(types.Bool)
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.hasProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetHasProtection()).ToDataRes(types.Bool)
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.isActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetIsActive()).ToDataRes(types.Bool)
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.sensitivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetSensitivity()).ToDataRes(types.Int)
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.parent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetParent()).ToDataRes(types.Resource("microsoft.security.informationProtection.sensitivityLabel"))
 	},
 	"microsoft.policies.authorizationPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetAuthorizationPolicy()).ToDataRes(types.Dict)
@@ -4865,6 +4914,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftSecurity).Exchange, ok = plugin.RawToTValue[*mqlMicrosoftSecurityExchange](v.Value, v.Error)
 		return
 	},
+	"microsoft.security.informationProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurity).InformationProtection, ok = plugin.RawToTValue[*mqlMicrosoftSecurityInformationProtection](v.Value, v.Error)
+		return
+	},
 	"microsoft.security.securityscore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecuritySecurityscore).__id, ok = v.Value.(string)
 		return
@@ -4987,6 +5040,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy.enableSafeList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy).EnableSafeList, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtection).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtection).SensitivityLabels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.toolTip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).ToolTip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.color": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).Color, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.contentFormats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).ContentFormats, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.isAppliable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).IsAppliable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.hasProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).HasProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.isActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).IsActive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.sensitivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).Sensitivity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.sensitivityLabel.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).Parent, ok = plugin.RawToTValue[*mqlMicrosoftSecurityInformationProtectionSensitivityLabel](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11648,10 +11757,11 @@ type mqlMicrosoftSecurity struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftSecurityInternal it will be used here
-	SecureScores       plugin.TValue[[]any]
-	LatestSecureScores plugin.TValue[*mqlMicrosoftSecuritySecurityscore]
-	RiskyUsers         plugin.TValue[[]any]
-	Exchange           plugin.TValue[*mqlMicrosoftSecurityExchange]
+	SecureScores          plugin.TValue[[]any]
+	LatestSecureScores    plugin.TValue[*mqlMicrosoftSecuritySecurityscore]
+	RiskyUsers            plugin.TValue[[]any]
+	Exchange              plugin.TValue[*mqlMicrosoftSecurityExchange]
+	InformationProtection plugin.TValue[*mqlMicrosoftSecurityInformationProtection]
 }
 
 // createMicrosoftSecurity creates a new instance of this resource
@@ -11747,6 +11857,22 @@ func (c *mqlMicrosoftSecurity) GetExchange() *plugin.TValue[*mqlMicrosoftSecurit
 		}
 
 		return c.exchange()
+	})
+}
+
+func (c *mqlMicrosoftSecurity) GetInformationProtection() *plugin.TValue[*mqlMicrosoftSecurityInformationProtection] {
+	return plugin.GetOrCompute[*mqlMicrosoftSecurityInformationProtection](&c.InformationProtection, func() (*mqlMicrosoftSecurityInformationProtection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security", c.__id, "informationProtection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftSecurityInformationProtection), nil
+			}
+		}
+
+		return c.informationProtection()
 	})
 }
 
@@ -12114,6 +12240,161 @@ func (c *mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy) GetIp
 
 func (c *mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy) GetEnableSafeList() *plugin.TValue[bool] {
 	return &c.EnableSafeList
+}
+
+// mqlMicrosoftSecurityInformationProtection for the microsoft.security.informationProtection resource
+type mqlMicrosoftSecurityInformationProtection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftSecurityInformationProtectionInternal it will be used here
+	SensitivityLabels plugin.TValue[[]any]
+}
+
+// createMicrosoftSecurityInformationProtection creates a new instance of this resource
+func createMicrosoftSecurityInformationProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecurityInformationProtection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.informationProtection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecurityInformationProtection) MqlName() string {
+	return "microsoft.security.informationProtection"
+}
+
+func (c *mqlMicrosoftSecurityInformationProtection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecurityInformationProtection) GetSensitivityLabels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SensitivityLabels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security.informationProtection", c.__id, "sensitivityLabels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sensitivityLabels()
+	})
+}
+
+// mqlMicrosoftSecurityInformationProtectionSensitivityLabel for the microsoft.security.informationProtection.sensitivityLabel resource
+type mqlMicrosoftSecurityInformationProtectionSensitivityLabel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftSecurityInformationProtectionSensitivityLabelInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	ToolTip        plugin.TValue[string]
+	Color          plugin.TValue[string]
+	ContentFormats plugin.TValue[[]any]
+	IsAppliable    plugin.TValue[bool]
+	HasProtection  plugin.TValue[bool]
+	IsActive       plugin.TValue[bool]
+	Sensitivity    plugin.TValue[int64]
+	Parent         plugin.TValue[*mqlMicrosoftSecurityInformationProtectionSensitivityLabel]
+}
+
+// createMicrosoftSecurityInformationProtectionSensitivityLabel creates a new instance of this resource
+func createMicrosoftSecurityInformationProtectionSensitivityLabel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecurityInformationProtectionSensitivityLabel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.informationProtection.sensitivityLabel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) MqlName() string {
+	return "microsoft.security.informationProtection.sensitivityLabel"
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetToolTip() *plugin.TValue[string] {
+	return &c.ToolTip
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetColor() *plugin.TValue[string] {
+	return &c.Color
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetContentFormats() *plugin.TValue[[]any] {
+	return &c.ContentFormats
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetIsAppliable() *plugin.TValue[bool] {
+	return &c.IsAppliable
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetHasProtection() *plugin.TValue[bool] {
+	return &c.HasProtection
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetIsActive() *plugin.TValue[bool] {
+	return &c.IsActive
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetSensitivity() *plugin.TValue[int64] {
+	return &c.Sensitivity
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionSensitivityLabel) GetParent() *plugin.TValue[*mqlMicrosoftSecurityInformationProtectionSensitivityLabel] {
+	return &c.Parent
 }
 
 // mqlMicrosoftPolicies for the microsoft.policies resource
