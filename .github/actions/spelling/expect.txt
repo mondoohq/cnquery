@@ -7,7 +7,10 @@ auditlog
 Auths
 autoaccept
 autoclose
+autoprovision
 autoprovisioned
+awslogs
+awsvpc
 backupconfiguration
 backupsetting
 bigquery
@@ -50,6 +53,7 @@ hostkeys
 iana
 iap
 iccid
+ipc
 ilb
 imei
 ingresstls
