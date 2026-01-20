@@ -741,8 +741,6 @@ private aws.fsx.filesystem @defaults("id type region") {
   vpcId string
   // Subnet IDs for file system
   subnetIds []string
-  // Security group IDs
-  securityGroupIds []string
   // Resource tags
   tags map[string]string
   // Creation timestamp
@@ -765,8 +763,6 @@ private aws.fsx.cache @defaults("id lifecycle") {
   vpcId string
   // Subnet IDs
   subnetIds []string
-  // Security group IDs
-  securityGroupIds []string
   // Lustre-specific configuration
   lustreConfiguration dict
   // S3 data repository associations

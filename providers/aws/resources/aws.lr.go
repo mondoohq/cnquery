@@ -1967,9 +1967,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.fsx.filesystem.subnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxFilesystem).GetSubnetIds()).ToDataRes(types.Array(types.String))
 	},
-	"aws.fsx.filesystem.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsFsxFilesystem).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
-	},
 	"aws.fsx.filesystem.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxFilesystem).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -1996,9 +1993,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.fsx.cache.subnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetSubnetIds()).ToDataRes(types.Array(types.String))
-	},
-	"aws.fsx.cache.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsFsxCache).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
 	},
 	"aws.fsx.cache.lustreConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetLustreConfiguration()).ToDataRes(types.Dict)
@@ -7308,10 +7302,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsFsxFilesystem).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.fsx.filesystem.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsFsxFilesystem).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"aws.fsx.filesystem.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxFilesystem).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -7350,10 +7340,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.fsx.cache.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxCache).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"aws.fsx.cache.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsFsxCache).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.cache.lustreConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16979,7 +16965,12 @@ func createAwsFsx(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.fsx", res.__id)
@@ -17053,20 +17044,19 @@ type mqlAwsFsxFilesystem struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsFsxFilesystemInternal it will be used here
-	Id               plugin.TValue[string]
-	Arn              plugin.TValue[string]
-	Type             plugin.TValue[string]
-	Lifecycle        plugin.TValue[string]
-	StorageCapacity  plugin.TValue[int64]
-	StorageType      plugin.TValue[string]
-	Encrypted        plugin.TValue[bool]
-	KmsKeyId         plugin.TValue[string]
-	VpcId            plugin.TValue[string]
-	SubnetIds        plugin.TValue[[]any]
-	SecurityGroupIds plugin.TValue[[]any]
-	Tags             plugin.TValue[map[string]any]
-	CreatedAt        plugin.TValue[*time.Time]
-	Region           plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Arn             plugin.TValue[string]
+	Type            plugin.TValue[string]
+	Lifecycle       plugin.TValue[string]
+	StorageCapacity plugin.TValue[int64]
+	StorageType     plugin.TValue[string]
+	Encrypted       plugin.TValue[bool]
+	KmsKeyId        plugin.TValue[string]
+	VpcId           plugin.TValue[string]
+	SubnetIds       plugin.TValue[[]any]
+	Tags            plugin.TValue[map[string]any]
+	CreatedAt       plugin.TValue[*time.Time]
+	Region          plugin.TValue[string]
 }
 
 // createAwsFsxFilesystem creates a new instance of this resource
@@ -17146,10 +17136,6 @@ func (c *mqlAwsFsxFilesystem) GetSubnetIds() *plugin.TValue[[]any] {
 	return &c.SubnetIds
 }
 
-func (c *mqlAwsFsxFilesystem) GetSecurityGroupIds() *plugin.TValue[[]any] {
-	return &c.SecurityGroupIds
-}
-
 func (c *mqlAwsFsxFilesystem) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
@@ -17173,7 +17159,6 @@ type mqlAwsFsxCache struct {
 	StorageCapacity            plugin.TValue[int64]
 	VpcId                      plugin.TValue[string]
 	SubnetIds                  plugin.TValue[[]any]
-	SecurityGroupIds           plugin.TValue[[]any]
 	LustreConfiguration        plugin.TValue[any]
 	DataRepositoryAssociations plugin.TValue[[]any]
 	Tags                       plugin.TValue[map[string]any]
@@ -17238,10 +17223,6 @@ func (c *mqlAwsFsxCache) GetVpcId() *plugin.TValue[string] {
 
 func (c *mqlAwsFsxCache) GetSubnetIds() *plugin.TValue[[]any] {
 	return &c.SubnetIds
-}
-
-func (c *mqlAwsFsxCache) GetSecurityGroupIds() *plugin.TValue[[]any] {
-	return &c.SecurityGroupIds
 }
 
 func (c *mqlAwsFsxCache) GetLustreConfiguration() *plugin.TValue[any] {

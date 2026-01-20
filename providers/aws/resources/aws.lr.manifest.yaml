@@ -2122,7 +2122,6 @@ resources:
       id: {}
       lifecycle: {}
       lustreConfiguration: {}
-      securityGroupIds: {}
       storageCapacity: {}
       subnetIds: {}
       tags: {}
@@ -2144,7 +2143,6 @@ resources:
       kmsKeyId: {}
       lifecycle: {}
       region: {}
-      securityGroupIds: {}
       storageCapacity: {}
       storageType: {}
       subnetIds: {}

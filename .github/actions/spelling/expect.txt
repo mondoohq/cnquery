@@ -22,9 +22,9 @@ Clusterwide
 cmek
 cpe
 cryptokey
-cyclonedx
 CUSTOMERID
 customresources
+cyclonedx
 databricks
 datapath
 DATAUSER
@@ -39,7 +39,9 @@ eip
 ekm
 elbv
 exo
+filecache
 frontmatter
+fsx
 fumadocs
 gcfs
 gcs
@@ -70,6 +72,7 @@ lfs
 liveanalytics
 loggingservice
 lsp
+lustre
 manageddevice
 managedrulegroupstatement
 managedzone
@@ -93,9 +96,11 @@ nsrecord
 nullgroup
 nullstring
 oidc
+ontap
 opcplc
 openssh
 openssl
+openzfs
 orstatement
 paravirtual
 PAYG
@@ -112,12 +117,12 @@ rtsp
 rulegroup
 rulegroupreferencestatement
 saas
-sbom
-SECRETID
-SECRETVALUE
 Sas
+sbom
 scim
 scm
+SECRETID
+SECRETVALUE
 serviceprincipals
 signin
 singlequeryargument

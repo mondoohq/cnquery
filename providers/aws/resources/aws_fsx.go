@@ -90,25 +90,20 @@ func (a *mqlAwsFsx) getFileSystems(conn *connection.AwsConnection) []*jobpool.Jo
 						kmsKeyIdStr = *fs.KmsKeyId
 					}
 
-					// Note: Security group IDs are not directly exposed by the FSx API
-					// They can be retrieved via the associated network interfaces if needed
-					var securityGroupIds []string
-
 					args := map[string]*llx.RawData{
-						"id":               llx.StringDataPtr(fs.FileSystemId),
-						"arn":              llx.StringDataPtr(fs.ResourceARN),
-						"type":             llx.StringData(string(fs.FileSystemType)),
-						"lifecycle":        llx.StringData(string(fs.Lifecycle)),
-						"storageCapacity":  llx.IntDataDefault(fs.StorageCapacity, 0),
-						"storageType":      llx.StringData(string(fs.StorageType)),
-						"encrypted":        llx.BoolData(fs.KmsKeyId != nil), // If KmsKeyId is set, it's encrypted
-						"kmsKeyId":         llx.StringData(kmsKeyIdStr),
-						"vpcId":            llx.StringDataPtr(fs.VpcId),
-						"subnetIds":        llx.ArrayData(convert.SliceAnyToInterface(fs.SubnetIds), types.String),
-						"securityGroupIds": llx.ArrayData(convert.SliceAnyToInterface(securityGroupIds), types.String),
-						"tags":             llx.MapData(fsxTagsToMap(fs.Tags), types.String),
-						"createdAt":        llx.TimeDataPtr(fs.CreationTime),
-						"region":           llx.StringData(regionVal),
+						"id":              llx.StringDataPtr(fs.FileSystemId),
+						"arn":             llx.StringDataPtr(fs.ResourceARN),
+						"type":            llx.StringData(string(fs.FileSystemType)),
+						"lifecycle":       llx.StringData(string(fs.Lifecycle)),
+						"storageCapacity": llx.IntDataDefault(fs.StorageCapacity, 0),
+						"storageType":     llx.StringData(string(fs.StorageType)),
+						"encrypted":       llx.BoolData(fs.KmsKeyId != nil), // If KmsKeyId is set, it's encrypted
+						"kmsKeyId":        llx.StringData(kmsKeyIdStr),
+						"vpcId":           llx.StringDataPtr(fs.VpcId),
+						"subnetIds":       llx.ArrayData(convert.SliceAnyToInterface(fs.SubnetIds), types.String),
+						"tags":            llx.MapData(fsxTagsToMap(fs.Tags), types.String),
+						"createdAt":       llx.TimeDataPtr(fs.CreationTime),
+						"region":          llx.StringData(regionVal),
 					}
 					mqlFilesystem, err := CreateResource(a.MqlRuntime, ResourceAwsFsxFilesystem, args)
 					if err != nil {
@@ -234,9 +229,6 @@ func (a *mqlAwsFsx) getCaches(conn *connection.AwsConnection) []*jobpool.Job {
 						dataRepoAssocs = append(dataRepoAssocs, map[string]any{"id": assocId})
 					}
 
-					// Note: Security group IDs are not directly exposed by the File Cache API
-					var securityGroupIds []string
-
 					args := map[string]*llx.RawData{
 						"id":                         llx.StringDataPtr(cache.FileCacheId),
 						"arn":                        llx.StringDataPtr(cache.ResourceARN),
@@ -244,7 +236,6 @@ func (a *mqlAwsFsx) getCaches(conn *connection.AwsConnection) []*jobpool.Job {
 						"storageCapacity":            llx.IntDataDefault(cache.StorageCapacity, 0),
 						"vpcId":                      llx.StringDataPtr(cache.VpcId),
 						"subnetIds":                  llx.ArrayData(convert.SliceAnyToInterface(cache.SubnetIds), types.String),
-						"securityGroupIds":           llx.ArrayData(convert.SliceAnyToInterface(securityGroupIds), types.String),
 						"lustreConfiguration":        llx.DictData(lustreConfig),
 						"dataRepositoryAssociations": llx.ArrayData(dataRepoAssocs, types.Dict),
 						"tags":                       llx.MapData(make(map[string]any), types.String), // FileCache doesn't have Tags
@@ -356,7 +347,7 @@ func (a *mqlAwsFsx) getBackups(conn *connection.AwsConnection) []*jobpool.Job {
 				}
 
 				for _, backup := range page.Backups {
-					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(fsxBackupTagsToMap(backup.Tags))) {
+					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(fsxTagsToMap(backup.Tags))) {
 						log.Debug().Interface("backup", backup.BackupId).Msg("skipping fsx backup due to filters")
 						continue
 					}
@@ -384,7 +375,7 @@ func (a *mqlAwsFsx) getBackups(conn *connection.AwsConnection) []*jobpool.Job {
 						"fileSystemType": llx.StringData(fileSystemType),
 						"kmsKeyId":       llx.StringData(kmsKeyIdStr),
 						"createdAt":      llx.TimeDataPtr(backup.CreationTime),
-						"tags":           llx.MapData(fsxBackupTagsToMap(backup.Tags), types.String),
+						"tags":           llx.MapData(fsxTagsToMap(backup.Tags), types.String),
 					}
 					mqlBackup, err := CreateResource(a.MqlRuntime, ResourceAwsFsxBackup, args)
 					if err != nil {
@@ -451,8 +442,4 @@ func fsxTagsToMap(tags []fsxtypes.Tag) map[string]any {
 		}
 	}
 	return tagsMap
-}
-
-func fsxBackupTagsToMap(tags []fsxtypes.Tag) map[string]any {
-	return fsxTagsToMap(tags)
 }
