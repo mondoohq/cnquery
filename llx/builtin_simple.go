@@ -2552,9 +2552,12 @@ func DurationToTime(i int64) time.Time {
 }
 
 func timeSecondsV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int}, 0, nil
+	}
 	t := bind.Value.(*time.Time)
 	if t == nil {
-		return &RawData{Type: types.Array(types.Time)}, 0, nil
+		return &RawData{Type: types.Int}, 0, nil
 	}
 
 	if t.Equal(NeverPastTime) {
@@ -2569,9 +2572,12 @@ func timeSecondsV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 }
 
 func timeMinutesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int}, 0, nil
+	}
 	t := bind.Value.(*time.Time)
 	if t == nil {
-		return &RawData{Type: types.Array(types.Time)}, 0, nil
+		return &RawData{Type: types.Int}, 0, nil
 	}
 
 	if t.Equal(NeverPastTime) {
@@ -2586,9 +2592,12 @@ func timeMinutesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 }
 
 func timeHoursV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int}, 0, nil
+	}
 	t := bind.Value.(*time.Time)
 	if t == nil {
-		return &RawData{Type: types.Array(types.Time)}, 0, nil
+		return &RawData{Type: types.Int}, 0, nil
 	}
 
 	if t.Equal(NeverPastTime) {
@@ -2603,9 +2612,12 @@ func timeHoursV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 }
 
 func timeDaysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int}, 0, nil
+	}
 	t := bind.Value.(*time.Time)
 	if t == nil {
-		return &RawData{Type: types.Array(types.Time)}, 0, nil
+		return &RawData{Type: types.Int}, 0, nil
 	}
 
 	if t.Equal(NeverPastTime) {
@@ -2620,6 +2632,9 @@ func timeDaysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 }
 
 func timeUnixV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int}, 0, nil
+	}
 	t := bind.Value.(*time.Time)
 	if t == nil {
 		return &RawData{Type: types.Int}, 0, nil
@@ -2630,9 +2645,12 @@ func timeUnixV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 }
 
 func timeInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool}, 0, nil
+	}
 	val := bind.Value.(*time.Time)
 	if val == nil {
-		return &RawData{Type: types.Array(types.Time)}, 0, nil
+		return &RawData{Type: types.Bool}, 0, nil
 	}
 
 	minRef := chunk.Function.Args[0]
