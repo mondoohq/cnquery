@@ -72,4 +72,3 @@ packs:
               ]
         mql: |
           props.mondooEmailSecurityDkimSelectors{ dns(_+"._domainkey."+domainName.fqdn).params['TXT'] }
-          

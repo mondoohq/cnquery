@@ -202,4 +202,4 @@ packs:
         filters: |
           package('Microsoft Exchange Server').installed
         mql: |
-         powershell('(Get-Command ExSetup.exe | ForEach-Object { $_.FileVersionInfo } | Select-Object -First 1).FileVersion').stdout
+          powershell('(Get-Command ExSetup.exe | ForEach-Object { $_.FileVersionInfo } | Select-Object -First 1).FileVersion').stdout

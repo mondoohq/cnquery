@@ -124,4 +124,3 @@ packs:
         filters: asset.platform == "vmware-esxi"
         mql: |
           vsphere.host.standardSwitch
-
