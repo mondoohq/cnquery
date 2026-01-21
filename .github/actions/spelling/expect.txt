@@ -20,14 +20,17 @@ clcerts
 cloudflare
 Clusterwide
 cmek
+copywrite
 cpe
 cryptokey
+ctx
 CUSTOMERID
 customresources
 cyclonedx
 databricks
 datapath
 DATAUSER
+datetime
 Ddos
 deliverychannel
 dfw
@@ -48,6 +51,7 @@ gcs
 geomatchstatement
 gistfile
 googleworkplace
+gotestsum
 gpu
 gvnic
 headerorder
@@ -76,6 +80,7 @@ lustre
 manageddevice
 managedrulegroupstatement
 managedzone
+mcp
 mcr
 meid
 messagestoragepolicy
