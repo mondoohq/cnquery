@@ -65,9 +65,30 @@ func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
 	}
+
+	// Check if key exists in the map
+	value, exists := m[key]
+	if !exists {
+		// Key doesn't exist - check for case-insensitive matches to provide helpful error
+		// This helps catch common typos like "UniformBucketLevelAccess" vs "uniformBucketLevelAccess"
+		for k := range m {
+			if strings.EqualFold(k, key) {
+				return &RawData{
+					Type:  childType,
+					Error: errors.New("key '" + key + "' not found, did you mean '" + k + "'? (keys are case-sensitive)"),
+				}, 0, nil
+			}
+		}
+		// Key doesn't exist and no similar keys found - return nil for backward compatibility
+		return &RawData{
+			Type:  childType,
+			Value: nil,
+		}, 0, nil
+	}
+
 	return &RawData{
 		Type:  childType,
-		Value: m[key],
+		Value: value,
 	}, 0, nil
 }
 
@@ -411,8 +432,27 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 		// ^^ TODO
 
 		key := string(args[0].Value)
+		// Check if key exists in the map
+		value, exists := x[key]
+		if !exists {
+			// Key doesn't exist - check for case-insensitive matches to provide helpful error
+			// This helps catch common typos like "UniformBucketLevelAccess" vs "uniformBucketLevelAccess"
+			for k := range x {
+				if strings.EqualFold(k, key) {
+					return &RawData{
+						Type:  bind.Type,
+						Error: errors.New("key '" + key + "' not found, did you mean '" + k + "'? (keys are case-sensitive)"),
+					}, 0, nil
+				}
+			}
+			// Key doesn't exist and no similar keys found - return nil for backward compatibility
+			return &RawData{
+				Type:  bind.Type,
+				Value: nil,
+			}, 0, nil
+		}
 		return &RawData{
-			Value: x[key],
+			Value: value,
 			Type:  bind.Type,
 		}, 0, nil
 	default:
