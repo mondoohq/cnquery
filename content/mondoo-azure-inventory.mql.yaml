@@ -61,7 +61,6 @@ queries:
         This query retrieves data for all role definitions in the subscription
     mql: azure.subscription.iam.roles
 
-
   - uid: mondoo-asset-inventory-azure-cloudDefender
     title: Microsoft Defender for Cloud configuration
     filters: asset.platform == "azure"
@@ -69,7 +68,6 @@ queries:
       desc: |
         This query retrieves data for Microsoft Defender for Cloud
     mql: azure.subscription.cloudDefender { defenderForServers defenderForContainers securityContacts { name notificationSources }  }
-
 
   - uid: mondoo-asset-inventory-azure-storageAccounts
     title: Azure Storage accounts
@@ -86,7 +84,6 @@ queries:
     filters: asset.platform == "azure"
     mql: azure.subscription.storage.accounts
 
-
   - uid: mondoo-asset-inventory-azure-storageAccounts-containers
     title: Azure Storage account containers
     docs:
@@ -101,7 +98,6 @@ queries:
   - uid: mondoo-asset-inventory-azure-storageAccounts-containers-single
     filters: asset.platform == "azure-storage-account" && azure.subscription.storage.account.containers != empty
     mql: azure.subscription.storage.account.containers
-
 
   - uid: mondoo-asset-inventory-azure-storageAccounts-blobs
     title: Azure storage accounts blobs
@@ -118,7 +114,6 @@ queries:
     filters: asset.platform == "azure-storage-account"
     mql: azure.subscription.storage.account.blobProperties
 
-
   - uid: mondoo-asset-inventory-azure-storageAccounts-tables
     title: Azure Storage accounts tables
     docs:
@@ -133,7 +128,6 @@ queries:
   - uid: mondoo-asset-inventory-azure-storageAccounts-tables-single
     filters: asset.platform == "azure-storage-account"
     mql: azure.subscription.storage.account.tableProperties
-
 
   - uid: mondoo-asset-inventory-azure-sqlServers
     title: Azure SQL Database servers
@@ -150,7 +144,6 @@ queries:
     filters: asset.platform == "azure-sql-server"
     mql: azure.subscription.sql.server
 
-
   - uid: mondoo-asset-inventory-azure-sqlServers-firewallrules
     title: Azure SQL Database server firewall rules
     docs:
@@ -166,7 +159,6 @@ queries:
     filters: asset.platform == "azure-sql-server"
     mql: azure.subscription.sql.server.firewallRules
 
-
   - uid: mondoo-asset-inventory-azure-sqlServers-databases
     title: Azure SQL Database server databases
     docs:
@@ -181,7 +173,6 @@ queries:
   - uid: mondoo-asset-inventory-azure-sqlServers-databases-single
     filters: asset.platform == "azure-sql-server"
     mql: azure.subscription.sql.server.databases
-
 
   - uid: mondoo-asset-inventory-azure-postgresql
     title: Azure PostgreSQL servers
@@ -204,7 +195,6 @@ queries:
     filters: asset.platform == "azure-postgresql-flexible-server"
     mql: azure.subscription.postgreSql.flexibleServer
 
-
   - uid: mondoo-asset-inventory-azure-postgresql-firewallrules
     title: Azure PostgreSQL server firewall rules
     docs:
@@ -225,7 +215,6 @@ queries:
   - uid: mondoo-asset-inventory-azure-postgresql-firewallrules-flexible
     filters: asset.platform == "azure-postgresql-flexible-server"
     mql: azure.subscription.postgreSql.flexibleServer.firewallRules
-
 
   - uid: mondoo-asset-inventory-azure-mysql-firewallrules
     title: Azure MySQL servers
@@ -248,7 +237,6 @@ queries:
     filters: asset.platform == "azure-mysql-flexible-server"
     mql: azure.subscription.mySql.flexibleServer.firewallRules
 
-
   - uid: mondoo-asset-inventory-azure-mysql
     title: Azure MySQL servers
     docs:
@@ -270,7 +258,6 @@ queries:
     filters: asset.platform == "azure-mysql-flexible-server"
     mql: azure.subscription.mySql.flexibleServer
 
-
   - uid: mondoo-asset-inventory-azure-mariaDb
     title: Azure MariaDB servers
     docs:
@@ -286,7 +273,6 @@ queries:
     filters: asset.platform == "azure-mariadb-server"
     mql: azure.subscription.mariaDb.server
 
-
   - uid: mondoo-asset-inventory-azure-diagnosticSettings
     title: Azure diagnostic settings
     filters: asset.platform == "azure"
@@ -294,7 +280,6 @@ queries:
       desc: |
         This query retrieves data for all diagnostic settings
     mql: azure.subscription.monitor.diagnosticSettings
-
 
   - uid: mondoo-asset-inventory-azure-keyVaults
     title: Azure Key Vault vaults
@@ -311,7 +296,6 @@ queries:
     filters: asset.platform == "azure-keyvault-vault"
     mql: azure.subscription.keyVault.vault
 
-
   - uid: mondoo-asset-inventory-azure-keyVaults-keys
     title: Azure Key Vault vault keys
     docs:
@@ -326,7 +310,6 @@ queries:
   - uid: mondoo-asset-inventory-azure-keyVaults-keys-single
     filters: asset.platform == "azure-keyvault-vault"
     mql: azure.subscription.keyVault.vault.keys
-
 
   - uid: mondoo-asset-inventory-azure-keyVaults-secrets
     title: Azure Key Vault vault secrets
@@ -343,7 +326,6 @@ queries:
     filters: asset.platform == "azure-keyvault-vault"
     mql: azure.subscription.keyVault.vault.secrets
 
-
   - uid: mondoo-asset-inventory-azure-keyVaults-certificates
     title: Azure Key Vault vault certificates
     docs:
@@ -359,7 +341,6 @@ queries:
     filters: asset.platform == "azure-keyvault-vault"
     mql: azure.subscription.keyVault.vault.certificates
 
-
   - uid: mondoo-asset-inventory-azure-activitylogs
     title: Azure activity logs
     filters: asset.platform == "azure"
@@ -367,7 +348,6 @@ queries:
       desc: |
         This query retrieves data for all activity logs
     mql: azure.subscription.monitor.activityLog
-
 
   - uid: mondoo-asset-inventory-azure-networkSecurityGroups
     title: Azure network security groups
@@ -384,7 +364,6 @@ queries:
     filters: asset.platform == "azure-network-security-group"
     mql: azure.subscription.network.securityGroup
 
-
   - uid: mondoo-asset-inventory-azure-publicip
     title: Azure public IP addresses
     filters: asset.platform == "azure"
@@ -392,7 +371,6 @@ queries:
       desc: |
         This query retrieves all public IP addresses in your subscription
     mql: azure.subscription.networkService.publicIpAddresses{ name location ipAddress }
-
 
   - uid: mondoo-asset-inventory-azure-virtualmachines
     title: Azure virtual machines
@@ -409,7 +387,6 @@ queries:
     filters: asset.platform == "azure-compute-vm-api"
     mql: azure.subscription.compute.vm
 
-
   - uid: mondoo-asset-inventory-azure-virtualmachines-managedDisk
     title: Azure virtual machines with managed disks
     docs:
@@ -425,7 +402,6 @@ queries:
     filters: asset.platform == "azure-compute-vm-api" && azure.subscription.compute.vm.properties["storageProfile"]["osDisk"]["managedDisk"] != empty
     mql: azure.subscription.compute.vm.properties["storageProfile"]["osDisk"]["managedDisk"] != empty
 
-
   - uid: mondoo-asset-inventory-azure-webapp
     title: Azure web apps
     filters: asset.platform == "azure"
@@ -433,7 +409,6 @@ queries:
       desc: |
         This query retrieves data for all web apps
     mql: azure.subscription.web.apps
-
 
   - uid: mondoo-asset-inventory-azure-cosmosDb
     title: Azure Cosmos DB accounts
@@ -443,7 +418,6 @@ queries:
         This query retrieves data for all Cosmos DB accounts
     mql: azure.subscription.cosmosDb.accounts
 
-
   - uid: mondoo-asset-inventory-azure-applicationInsight
     title: Azure Monitor Application Insights
     filters: asset.platform == "azure"
@@ -451,7 +425,6 @@ queries:
       desc: |
         This query retrieves data for all Application Insights
     mql: azure.subscription.monitor.applicationInsights
-
 
   - uid: mondoo-asset-inventory-azure-networkWatcher
     title: Azure Network Watchers
@@ -461,7 +434,6 @@ queries:
         This query retrieves data for Azure Network Watchers
     mql: azure.subscription.network.watchers
 
-
   - uid: mondoo-asset-inventory-azure-bastionHosts
     title: Azure Bastion hosts
     filters: asset.platform == "azure"
@@ -469,7 +441,6 @@ queries:
       desc: |
         This query retrieves data for all Bastion hosts
     mql: azure.subscription.network.bastionHosts
-
 
   - uid: mondoo-asset-inventory-azure-compute-disks
     title: Compute disks
@@ -479,7 +450,6 @@ queries:
         This query retrieves data for all compute disks available in the subscription
     mql: azure.subscription.compute.disks
 
-
   - uid: mondoo-asset-inventory-azure-network-interfaces
     title: Network interfaces
     filters: asset.platform == "azure"
@@ -488,7 +458,6 @@ queries:
         This query retrieves data for all network interfaces
     mql: azure.subscription.network.interfaces{ name location properties['nicType'] properties['nicType'] properties['macAddress'] properties['virtualMachine']['id'] }
 
-
   - uid: mondoo-asset-inventory-azure-resourcegroups
     title: Azure subscription resource groups
     filters: asset.platform == "azure"
@@ -496,7 +465,6 @@ queries:
       desc: |
         This query retrieves data for all resource groups inside the subscription
     mql: azure.subscription.resourceGroups
-
 
   - uid: mondoo-asset-inventory-azure-resources
     title: Azure subscription resources

@@ -143,3 +143,6 @@ cnquery shell.*
 
 # Ip.Foo is an acceptable value
 Ip\..*
+
+# FSx file system types
+\b(LUSTRE|WINDOWS|ONTAP|OPENZFS)\b

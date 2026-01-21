@@ -2050,6 +2050,110 @@ resources:
     platform:
       name:
       - aws
+  aws.fsx:
+    docs:
+      desc: |
+        Use the `aws.fsx` resource to assess the configuration of Amazon FSx file systems, caches, and backups.
+    fields:
+      backups: {}
+      caches: {}
+      fileSystems: {}
+    min_mondoo_version: 12.0.0
+    platform:
+      name:
+      - aws
+    refs:
+    - title: Amazon FSx Documentation
+      url: https://docs.aws.amazon.com/fsx/
+    - title: Security in Amazon FSx
+      url: https://docs.aws.amazon.com/fsx/latest/WindowsGuide/security.html
+    snippets:
+    - query: |
+        aws.fsx.fileSystems {
+          id
+          arn
+          type
+          lifecycle
+          storageCapacity
+          encrypted
+          kmsKey
+          vpcId
+          region
+        }
+      title: Return a list of FSx file systems with their key properties
+    - query: |
+        aws.fsx.fileSystems.all(encrypted == true)
+      title: Check whether all FSx file systems are encrypted at rest
+    - query: |
+        aws.fsx.backups {
+          backupId
+          type
+          lifecycle
+          fileSystemId
+          kmsKey
+        }
+      title: Return a list of FSx backups with their properties
+  aws.fsx.backup:
+    docs:
+      desc: |
+        The `aws.fsx.backup` resource provides fields for assessing the configuration of FSx backups. For usage, read the `aws.fsx` resource documentation.
+    fields:
+      arn: {}
+      backupId: {}
+      createdAt: {}
+      fileSystemId: {}
+      fileSystemType: {}
+      kmsKeyId: {}
+      lifecycle: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 12.0.0
+    platform:
+      name:
+      - aws
+  aws.fsx.cache:
+    docs:
+      desc: |
+        The `aws.fsx.cache` resource provides fields for assessing the configuration of Amazon File Cache instances. For usage, read the `aws.fsx` resource documentation.
+    fields:
+      arn: {}
+      dataRepositoryAssociations: {}
+      id: {}
+      lifecycle: {}
+      lustreConfiguration: {}
+      storageCapacity: {}
+      subnetIds: {}
+      tags: {}
+      vpcId: {}
+    is_private: true
+    min_mondoo_version: 12.0.0
+    platform:
+      name:
+      - aws
+  aws.fsx.filesystem:
+    docs:
+      desc: |
+        The `aws.fsx.filesystem` resource provides fields for assessing the configuration of individual FSx file systems. For usage, read the `aws.fsx` resource documentation.
+    fields:
+      arn: {}
+      createdAt: {}
+      encrypted: {}
+      id: {}
+      kmsKeyId: {}
+      lifecycle: {}
+      region: {}
+      storageCapacity: {}
+      storageType: {}
+      subnetIds: {}
+      tags: {}
+      type: {}
+      vpcId: {}
+    is_private: true
+    min_mondoo_version: 12.0.0
+    platform:
+      name:
+      - aws
   aws.guardduty:
     docs:
       desc: |

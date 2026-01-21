@@ -5,12 +5,12 @@ package resources
 
 import (
 	"context"
-	"os"
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/types"
@@ -142,8 +142,10 @@ func (p *mqlDockerContainer) hostConfig() (any, error) {
 }
 
 func dockerClient() (*client.Client, error) {
-	// set docker api version for macos
-	os.Setenv("DOCKER_API_VERSION", "1.26")
-	// Start new docker container
-	return client.NewClientWithOpts(client.FromEnv)
+	cl, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, err
+	}
+	log.Debug().Msgf("docker client> negotiated API version %s", cl.ClientVersion())
+	return cl, nil
 }

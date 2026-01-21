@@ -12,13 +12,18 @@ import (
 var Config = plugin.Provider{
 	Name:            "oci",
 	ID:              "go.mondoo.com/cnquery/v9/providers/oci",
-	Version:         "11.0.129",
+	Version:         "11.0.130",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "oci",
-			Use:       "oci",
-			Short:     "an Oracle Cloud Infrastructure tenancy",
+			Name:  "oci",
+			Use:   "oci",
+			Short: "an Oracle Cloud Infrastructure tenancy",
+			Long: `Use the oci provider to query resources in an Oracle Cloud Infrastructure tenancy.
+
+Example:
+  cnquery shell oci --tenancy <tenancy_ocid> --user <user_ocid> --region <region> --key-path <path_to_private_key> --fingerprint <key_fingerprint>
+`,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{

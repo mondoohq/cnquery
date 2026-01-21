@@ -20,6 +20,7 @@ const (
 	ResourceMicrosoft                                                                                        string = "microsoft"
 	ResourceMicrosoftIdentityAndAccessAccessReviews                                                          string = "microsoft.identityAndAccess.accessReviews"
 	ResourceMicrosoftIdentityAndAccessAccessReviewDefinition                                                 string = "microsoft.identityAndAccess.accessReviewDefinition"
+	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionScope                                            string = "microsoft.identityAndAccess.accessReviewDefinition.scope"
 	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings                     string = "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"
 	ResourceMicrosoftGroups                                                                                  string = "microsoft.groups"
 	ResourceMicrosoftSetting                                                                                 string = "microsoft.setting"
@@ -97,6 +98,7 @@ const (
 	ResourceMicrosoftGraphAccessReviewReviewerScope                                                          string = "microsoft.graph.accessReviewReviewerScope"
 	ResourceMicrosoftPoliciesAuthenticationMethodsPolicy                                                     string = "microsoft.policies.authenticationMethodsPolicy"
 	ResourceMicrosoftPoliciesAuthenticationMethodConfiguration                                               string = "microsoft.policies.authenticationMethodConfiguration"
+	ResourceMicrosoftPoliciesSystemCredentialPreferences                                                     string = "microsoft.policies.systemCredentialPreferences"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefault                                                  string = "microsoft.policies.crossTenantAccessPolicyDefault"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings                      string = "microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings"
 	ResourceMicrosoftPoliciesCrossTenantAccessPolicyDefaultB2bSetting                                        string = "microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting"
@@ -147,6 +149,10 @@ func init() {
 		"microsoft.identityAndAccess.accessReviewDefinition": {
 			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessAccessReviewDefinition,
+		},
+		"microsoft.identityAndAccess.accessReviewDefinition.scope": {
+			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinitionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessAccessReviewDefinitionScope,
 		},
 		"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings": {
 			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -456,6 +462,10 @@ func init() {
 			// to override args, implement: initMicrosoftPoliciesAuthenticationMethodConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPoliciesAuthenticationMethodConfiguration,
 		},
+		"microsoft.policies.systemCredentialPreferences": {
+			// to override args, implement: initMicrosoftPoliciesSystemCredentialPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPoliciesSystemCredentialPreferences,
+		},
 		"microsoft.policies.crossTenantAccessPolicyDefault": {
 			// to override args, implement: initMicrosoftPoliciesCrossTenantAccessPolicyDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPoliciesCrossTenantAccessPolicyDefault,
@@ -725,11 +735,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess.accessReviewDefinition.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetStatus()).ToDataRes(types.String)
 	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetScope()).ToDataRes(types.Resource("microsoft.identityAndAccess.accessReviewDefinition.scope"))
+	},
 	"microsoft.identityAndAccess.accessReviewDefinition.reviewers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetReviewers()).ToDataRes(types.Dict)
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetSettings()).ToDataRes(types.Resource("microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"))
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.query": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).GetQuery()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.queryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).GetQueryType()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.queryRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).GetQueryRoot()).ToDataRes(types.String)
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.autoApplyDecisionsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetAutoApplyDecisionsEnabled()).ToDataRes(types.Bool)
@@ -2150,6 +2172,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.policies.authenticationMethodsPolicy.authenticationMethodConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetAuthenticationMethodConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.policies.authenticationMethodConfiguration")))
 	},
+	"microsoft.policies.authenticationMethodsPolicy.systemCredentialPreferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).GetSystemCredentialPreferences()).ToDataRes(types.Resource("microsoft.policies.systemCredentialPreferences"))
+	},
 	"microsoft.policies.authenticationMethodConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).GetId()).ToDataRes(types.String)
 	},
@@ -2158,6 +2183,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.policies.authenticationMethodConfiguration.excludeTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).GetExcludeTargets()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.policies.systemCredentialPreferences.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).GetState()).ToDataRes(types.String)
+	},
+	"microsoft.policies.systemCredentialPreferences.includeTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).GetIncludeTargets()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.policies.systemCredentialPreferences.excludeTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).GetExcludeTargets()).ToDataRes(types.Array(types.Dict))
 	},
 	"microsoft.policies.crossTenantAccessPolicyDefault.isServiceDefault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault).GetIsServiceDefault()).ToDataRes(types.Bool)
@@ -2723,6 +2757,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.tenantFederationConfig.restrictTeamsConsumerToExternalUserProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTenantFederationConfig).GetRestrictTeamsConsumerToExternalUserProfiles()).ToDataRes(types.Bool)
 	},
+	"ms365.teams.tenantFederationConfig.externalAccessWithTrialTenants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetExternalAccessWithTrialTenants()).ToDataRes(types.String)
+	},
 	"ms365.teams.teamsMeetingPolicyConfig.allowAnonymousUsersToJoinMeeting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowAnonymousUsersToJoinMeeting()).ToDataRes(types.Bool)
 	},
@@ -2880,12 +2917,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Scope, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope](v.Value, v.Error)
+		return
+	},
 	"microsoft.identityAndAccess.accessReviewDefinition.reviewers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Reviewers, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Settings, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.query": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).Query, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.queryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).QueryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.queryRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).QueryRoot, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5084,6 +5141,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).AuthenticationMethodConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.policies.authenticationMethodsPolicy.systemCredentialPreferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesAuthenticationMethodsPolicy).SystemCredentialPreferences, ok = plugin.RawToTValue[*mqlMicrosoftPoliciesSystemCredentialPreferences](v.Value, v.Error)
+		return
+	},
 	"microsoft.policies.authenticationMethodConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).__id, ok = v.Value.(string)
 		return
@@ -5098,6 +5159,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.policies.authenticationMethodConfiguration.excludeTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPoliciesAuthenticationMethodConfiguration).ExcludeTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.systemCredentialPreferences.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.policies.systemCredentialPreferences.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.systemCredentialPreferences.includeTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).IncludeTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.systemCredentialPreferences.excludeTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPoliciesSystemCredentialPreferences).ExcludeTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.policies.crossTenantAccessPolicyDefault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5968,6 +6045,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365TeamsTenantFederationConfig).RestrictTeamsConsumerToExternalUserProfiles, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"ms365.teams.tenantFederationConfig.externalAccessWithTrialTenants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).ExternalAccessWithTrialTenants, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"ms365.teams.teamsMeetingPolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).__id, ok = v.Value.(string)
 		return
@@ -6410,6 +6491,7 @@ type mqlMicrosoftIdentityAndAccessAccessReviewDefinition struct {
 	Id          plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Status      plugin.TValue[string]
+	Scope       plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope]
 	Reviewers   plugin.TValue[any]
 	Settings    plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings]
 }
@@ -6458,12 +6540,70 @@ func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetStatus() *plugi
 	return &c.Status
 }
 
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetScope() *plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope] {
+	return &c.Scope
+}
+
 func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetReviewers() *plugin.TValue[any] {
 	return &c.Reviewers
 }
 
 func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetSettings() *plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings] {
 	return &c.Settings
+}
+
+// mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope for the microsoft.identityAndAccess.accessReviewDefinition.scope resource
+type mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScopeInternal it will be used here
+	Query     plugin.TValue[string]
+	QueryType plugin.TValue[string]
+	QueryRoot plugin.TValue[string]
+}
+
+// createMicrosoftIdentityAndAccessAccessReviewDefinitionScope creates a new instance of this resource
+func createMicrosoftIdentityAndAccessAccessReviewDefinitionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.accessReviewDefinition.scope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope) MqlName() string {
+	return "microsoft.identityAndAccess.accessReviewDefinition.scope"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope) GetQuery() *plugin.TValue[string] {
+	return &c.Query
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope) GetQueryType() *plugin.TValue[string] {
+	return &c.QueryType
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope) GetQueryRoot() *plugin.TValue[string] {
+	return &c.QueryRoot
 }
 
 // mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings for the microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings resource
@@ -12380,6 +12520,7 @@ type mqlMicrosoftPoliciesAuthenticationMethodsPolicy struct {
 	LastModifiedDateTime               plugin.TValue[*time.Time]
 	PolicyVersion                      plugin.TValue[string]
 	AuthenticationMethodConfigurations plugin.TValue[[]any]
+	SystemCredentialPreferences        plugin.TValue[*mqlMicrosoftPoliciesSystemCredentialPreferences]
 }
 
 // createMicrosoftPoliciesAuthenticationMethodsPolicy creates a new instance of this resource
@@ -12438,6 +12579,22 @@ func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetAuthenticationMetho
 	return &c.AuthenticationMethodConfigurations
 }
 
+func (c *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) GetSystemCredentialPreferences() *plugin.TValue[*mqlMicrosoftPoliciesSystemCredentialPreferences] {
+	return plugin.GetOrCompute[*mqlMicrosoftPoliciesSystemCredentialPreferences](&c.SystemCredentialPreferences, func() (*mqlMicrosoftPoliciesSystemCredentialPreferences, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies.authenticationMethodsPolicy", c.__id, "systemCredentialPreferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftPoliciesSystemCredentialPreferences), nil
+			}
+		}
+
+		return c.systemCredentialPreferences()
+	})
+}
+
 // mqlMicrosoftPoliciesAuthenticationMethodConfiguration for the microsoft.policies.authenticationMethodConfiguration resource
 type mqlMicrosoftPoliciesAuthenticationMethodConfiguration struct {
 	MqlRuntime *plugin.Runtime
@@ -12489,6 +12646,60 @@ func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) GetState() *plug
 }
 
 func (c *mqlMicrosoftPoliciesAuthenticationMethodConfiguration) GetExcludeTargets() *plugin.TValue[[]any] {
+	return &c.ExcludeTargets
+}
+
+// mqlMicrosoftPoliciesSystemCredentialPreferences for the microsoft.policies.systemCredentialPreferences resource
+type mqlMicrosoftPoliciesSystemCredentialPreferences struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftPoliciesSystemCredentialPreferencesInternal it will be used here
+	State          plugin.TValue[string]
+	IncludeTargets plugin.TValue[[]any]
+	ExcludeTargets plugin.TValue[[]any]
+}
+
+// createMicrosoftPoliciesSystemCredentialPreferences creates a new instance of this resource
+func createMicrosoftPoliciesSystemCredentialPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPoliciesSystemCredentialPreferences{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.policies.systemCredentialPreferences", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPoliciesSystemCredentialPreferences) MqlName() string {
+	return "microsoft.policies.systemCredentialPreferences"
+}
+
+func (c *mqlMicrosoftPoliciesSystemCredentialPreferences) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPoliciesSystemCredentialPreferences) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMicrosoftPoliciesSystemCredentialPreferences) GetIncludeTargets() *plugin.TValue[[]any] {
+	return &c.IncludeTargets
+}
+
+func (c *mqlMicrosoftPoliciesSystemCredentialPreferences) GetExcludeTargets() *plugin.TValue[[]any] {
 	return &c.ExcludeTargets
 }
 
@@ -14958,6 +15169,7 @@ type mqlMs365TeamsTenantFederationConfig struct {
 	TreatDiscoveredPartnersAsUnverified         plugin.TValue[bool]
 	SharedSipAddressSpace                       plugin.TValue[bool]
 	RestrictTeamsConsumerToExternalUserProfiles plugin.TValue[bool]
+	ExternalAccessWithTrialTenants              plugin.TValue[string]
 }
 
 // createMs365TeamsTenantFederationConfig creates a new instance of this resource
@@ -15030,6 +15242,10 @@ func (c *mqlMs365TeamsTenantFederationConfig) GetSharedSipAddressSpace() *plugin
 
 func (c *mqlMs365TeamsTenantFederationConfig) GetRestrictTeamsConsumerToExternalUserProfiles() *plugin.TValue[bool] {
 	return &c.RestrictTeamsConsumerToExternalUserProfiles
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetExternalAccessWithTrialTenants() *plugin.TValue[string] {
+	return &c.ExternalAccessWithTrialTenants
 }
 
 // mqlMs365TeamsTeamsMeetingPolicyConfig for the ms365.teams.teamsMeetingPolicyConfig resource

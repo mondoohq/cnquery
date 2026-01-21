@@ -195,10 +195,15 @@ func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []mo
 			excludeTargets = append(excludeTargets, targetDict)
 		}
 
+		state := ""
+		if config.GetState() != nil {
+			state = config.GetState().String()
+		}
+
 		configData := map[string]*llx.RawData{
 			"__id":           llx.StringDataPtr(config.GetId()),
 			"id":             llx.StringDataPtr(config.GetId()),
-			"state":          llx.StringData(config.GetState().String()),
+			"state":          llx.StringData(state),
 			"excludeTargets": llx.ArrayData(excludeTargets, types.Dict),
 		}
 
@@ -211,6 +216,71 @@ func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []mo
 	}
 
 	return configResources, nil
+}
+
+func (a *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) systemCredentialPreferences() (*mqlMicrosoftPoliciesSystemCredentialPreferences, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	betaGraphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	policy, err := betaGraphClient.Policies().AuthenticationMethodsPolicy().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	systemCredPrefs := policy.GetSystemCredentialPreferences()
+	if systemCredPrefs == nil {
+		return nil, nil
+	}
+
+	// Convert include targets to []dict
+	var includeTargets []any
+	for _, target := range systemCredPrefs.GetIncludeTargets() {
+		targetDict := map[string]any{}
+		if target.GetId() != nil {
+			targetDict["id"] = *target.GetId()
+		}
+		if target.GetTargetType() != nil {
+			targetDict["targetType"] = target.GetTargetType().String()
+		}
+		includeTargets = append(includeTargets, targetDict)
+	}
+
+	// Convert exclude targets to []dict
+	var excludeTargets []any
+	for _, target := range systemCredPrefs.GetExcludeTargets() {
+		targetDict := map[string]any{}
+		if target.GetId() != nil {
+			targetDict["id"] = *target.GetId()
+		}
+		if target.GetTargetType() != nil {
+			targetDict["targetType"] = target.GetTargetType().String()
+		}
+		excludeTargets = append(excludeTargets, targetDict)
+	}
+
+	state := ""
+	if systemCredPrefs.GetState() != nil {
+		state = systemCredPrefs.GetState().String()
+	}
+
+	policyId := a.Id.Data
+
+	mqlSystemCredPrefs, err := CreateResource(a.MqlRuntime, ResourceMicrosoftPoliciesSystemCredentialPreferences,
+		map[string]*llx.RawData{
+			"__id":           llx.StringData(policyId + "/systemCredentialPreferences"),
+			"state":          llx.StringData(state),
+			"includeTargets": llx.ArrayData(includeTargets, types.Dict),
+			"excludeTargets": llx.ArrayData(excludeTargets, types.Dict),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlSystemCredPrefs.(*mqlMicrosoftPoliciesSystemCredentialPreferences), nil
 }
 
 // https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-
