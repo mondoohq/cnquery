@@ -1,0 +1,425 @@
+---
+title: Query VMware
+sidebar_label: VMware
+displayed_sidebar: cnquery
+sidebar_position: 1
+description: Explore and analyze your VMware infrastructure with cnquery
+image: /img/cnquery/mondoo-vmware.jpg
+---
+
+Rely on cnquery to explore and analyze VMware vSphere data centers, hosts, and clusters, Cloud Director deployments, and ESXI hosts.
+
+cnquery provides the answers you need about every VMware environment. For a list of VMware resources you can query, read [Mondoo VMware vSphere Resource Pack Reference](/mql/resources/vsphere/), [Mondoo VMware Cloud Director Resource Pack Reference](/mql/resources/vcd/), and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+## Requirements
+
+To analyze and explore your VMware environment with cnquery, you must have [cnquery installed on your workstation](/cnquery/) and access to the VMware environment.
+
+## Explore vSphere with the cnquery shell
+
+To launch a shell into your vSphere environment, enter:
+
+```bash
+cnquery shell vsphere USER@DOMAIN@HOST --ask-pass
+```
+
+| For... | Substitute...          |
+| ------ | ---------------------- |
+| USER   | Your vSphere user ID   |
+| DOMAIN | The vSphere domain     |
+| HOST   | The vSphere IP address |
+
+For example:
+
+```bash
+cnquery shell vsphere mwezi@vsphere.local@192.167.5.25 --ask-pass
+Enter password:
+→ loaded configuration from /Users/mwezi/.config/mondoo/mondoo.yml using source default
+
+    Available assets
+
+  > 1. 192.168.5.24 (vmware-vsphere)
+    2. esxi-host2.localdomain (vmware-esxi)
+    3. esxi-host3.localdomain (vmware-esxi)
+    4. esxi-host1.localdomain (vmware-esxi)
+```
+
+When prompted, provide your password. When cnquery lists the available assets to query, choose one. You're now in the cnquery shell.
+
+### Discover capabilities with the `help` command
+
+Once inside the shell, use the `help` command to learn what vSphere resources you can query. This command lists all the vSphere resources:
+
+```coffeescript
+help vsphere
+```
+
+From the resulting list, you can drill down further. For example, enter this command to list all the vSphere cluster resources you can query:
+
+```coffeescript
+help vsphere.cluster
+```
+
+From the resulting list, you can drill down even further. You can also learn about available vSphere resources in the [Mondoo VMware vSphere Resource Pack Reference](/mql/resources/vsphere/).
+
+### Answer questions in the cnquery shell
+
+Now that you know how to discover what's possible with cnquery, let's run some actual queries in the shell.
+
+This query asks for a list of data centers, including their names and managed object IDs:
+
+```coffeescript
+vsphere.datacenters { name moid}
+vsphere.datacenters: [
+  0: {
+    name: "Luna Datacenter-2"
+    moid: "Datacenter-datacenter-2"
+  }
+  1: {
+    name: "Luna Datacenter-1"
+    moid: "Datacenter-datacenter-1"
+  }
+]
+```
+
+This query asks for the maximum number of failed login attempts before an ESXi user is locked out:
+
+```coffeescript
+esxi.host.advancedSettings['Security.AccountLockFailures']
+esxi.host.advancedSettings[Security.AccountLockFailures]: "5"
+```
+
+This query returns ESXi port group configuration data:
+
+```coffeescript
+esxi.host.properties['config']['network']['portgroup']
+esxi.host.properties.config.network.portgroup: [
+  0: {
+    computedPolicy: {
+      nicTeaming: {
+        failureCriteria: {
+          checkBeacon: false
+          checkDuplex: false
+          checkErrorPercent: false
+          checkSpeed: "minimum"
+          fullDuplex: false
+          speed: 10.000000
+        }
+        nicOrder: {
+          activeNic: [
+            0: "vmnic1"
+          ]
+        }
+        notifySwitches: true
+        policy: "loadbalance_srcid"
+        reversePolicy: true
+        rollingOrder: false
+      }
+      offloadPolicy: {
+        csumOffload: true
+        tcpSegmentation: true
+        zeroCopyXmit: true
+      }
+      security: {
+        allowPromiscuous: false
+        forgedTransmits: false
+        macChanges: false
+      }
+      shapingPolicy: {
+        enabled: false
+      }
+    }
+    key: "key-vim.host.PortGroup-Network-for-virtual-machines"
+    spec: {
+      name: "Network-for-virtual-machines"
+      policy: {
+        nicTeaming: {
+          failureCriteria: {}
+        }
+        offloadPolicy: {}
+        security: {}
+        shapingPolicy: {}
+      }
+      vlanId: 0.000000
+      vswitchName: "vSwitch-Vlan6"
+    }
+    vswitch: "key-vim.host.VirtualSwitch-vSwitch-Vlan6"
+  }
+  1: {
+    computedPolicy: {
+      nicTeaming: {
+        failureCriteria: {
+          checkBeacon: false
+          checkDuplex: false
+          checkErrorPercent: false
+          checkSpeed: "minimum"
+          fullDuplex: false
+          speed: 10.000000
+        }
+        nicOrder: {
+          activeNic: [
+            0: "vmnic0"
+          ]
+        }
+        notifySwitches: true
+        policy: "loadbalance_srcid"
+        reversePolicy: true
+        rollingOrder: false
+      }
+      offloadPolicy: {
+        csumOffload: true
+        tcpSegmentation: true
+        zeroCopyXmit: true
+      }
+      security: {
+        allowPromiscuous: false
+        forgedTransmits: false
+        macChanges: false
+      }
+      shapingPolicy: {
+        enabled: false
+      }
+    }
+    key: "key-vim.host.PortGroup-test2"
+    spec: {
+      name: "test2"
+      policy: {
+        nicTeaming: {
+          failureCriteria: {}
+        }
+        offloadPolicy: {}
+        security: {}
+        shapingPolicy: {}
+      }
+      vlanId: 100.000000
+      vswitchName: "vSwitch0"
+    }
+    vswitch: "key-vim.host.VirtualSwitch-vSwitch0"
+  }
+  2: {
+    computedPolicy: {
+      nicTeaming: {
+        failureCriteria: {
+          checkBeacon: false
+          checkDuplex: false
+          checkErrorPercent: false
+          checkSpeed: "minimum"
+          fullDuplex: false
+          speed: 10.000000
+        }
+        nicOrder: {
+          activeNic: [
+            0: "vmnic0"
+          ]
+        }
+        notifySwitches: true
+        policy: "loadbalance_srcid"
+        reversePolicy: true
+        rollingOrder: false
+      }
+      offloadPolicy: {
+        csumOffload: true
+        tcpSegmentation: true
+        zeroCopyXmit: true
+      }
+      security: {
+        allowPromiscuous: false
+        forgedTransmits: false
+        macChanges: false
+      }
+      shapingPolicy: {
+        enabled: false
+      }
+    }
+    key: "key-vim.host.PortGroup-test"
+    spec: {
+      name: "test"
+      policy: {
+        nicTeaming: {
+          failureCriteria: {}
+        }
+        offloadPolicy: {}
+        security: {}
+        shapingPolicy: {}
+      }
+      vlanId: 0.000000
+      vswitchName: "vSwitch0"
+    }
+    vswitch: "key-vim.host.VirtualSwitch-vSwitch0"
+  }
+  3: {
+    computedPolicy: {
+      nicTeaming: {
+        failureCriteria: {
+          checkBeacon: false
+          checkDuplex: false
+          checkErrorPercent: false
+          checkSpeed: "minimum"
+          fullDuplex: false
+          speed: 10.000000
+        }
+        nicOrder: {
+          activeNic: [
+            0: "vmnic0"
+          ]
+        }
+        notifySwitches: true
+        policy: "loadbalance_srcid"
+        reversePolicy: true
+        rollingOrder: false
+      }
+      offloadPolicy: {
+        csumOffload: true
+        tcpSegmentation: true
+        zeroCopyXmit: true
+      }
+      security: {
+        allowPromiscuous: false
+        forgedTransmits: false
+        macChanges: false
+      }
+      shapingPolicy: {
+        enabled: false
+      }
+    }
+    key: "key-vim.host.PortGroup-VM Network"
+    port: [
+      0: {
+        key: "key-vim.host.PortGroup.Port-100663307"
+        mac: [
+          0: "00:50:56:b0:24:4d"
+        ]
+        type: "virtualMachine"
+      }
+      1: {
+        key: "key-vim.host.PortGroup.Port-100663308"
+        mac: [
+          0: "00:50:56:b0:a5:4d"
+        ]
+        type: "virtualMachine"
+      }
+      2: {
+        key: "key-vim.host.PortGroup.Port-100663309"
+        mac: [
+          0: "00:50:56:91:80:24"
+        ]
+        type: "virtualMachine"
+      }
+      3: {
+        key: "key-vim.host.PortGroup.Port-100663310"
+        mac: [
+          0: "00:50:56:b0:9d:c9"
+        ]
+        type: "virtualMachine"
+      }
+      4: {
+        key: "key-vim.host.PortGroup.Port-100663311"
+        mac: [
+          0: "00:50:56:b0:9a:a5"
+        ]
+        type: "virtualMachine"
+      }
+      5: {
+        key: "key-vim.host.PortGroup.Port-100663314"
+        mac: [
+          0: "00:50:56:91:17:cf"
+        ]
+        type: "virtualMachine"
+      }
+    ]
+    spec: {
+      name: "VM Network"
+      policy: {
+        nicTeaming: {
+          failureCriteria: {}
+        }
+        offloadPolicy: {}
+        security: {}
+        shapingPolicy: {}
+      }
+      vlanId: 0.000000
+      vswitchName: "vSwitch0"
+    }
+    vswitch: "key-vim.host.VirtualSwitch-vSwitch0"
+  }
+  4: {
+    computedPolicy: {
+      nicTeaming: {
+        failureCriteria: {
+          checkBeacon: false
+          checkDuplex: false
+          checkErrorPercent: false
+          checkSpeed: "minimum"
+          fullDuplex: false
+          speed: 10.000000
+        }
+        nicOrder: {
+          activeNic: [
+            0: "vmnic0"
+          ]
+        }
+        notifySwitches: true
+        policy: "loadbalance_srcid"
+        reversePolicy: true
+        rollingOrder: false
+      }
+      offloadPolicy: {
+        csumOffload: true
+        tcpSegmentation: true
+        zeroCopyXmit: true
+      }
+      security: {
+        allowPromiscuous: false
+        forgedTransmits: false
+        macChanges: false
+      }
+      shapingPolicy: {
+        enabled: false
+      }
+    }
+    key: "key-vim.host.PortGroup-Management Network"
+    port: [
+      0: {
+        key: "key-vim.host.PortGroup.Port-100663306"
+        mac: [
+          0: "00:0c:29:77:7e:9f"
+        ]
+        type: "host"
+      }
+    ]
+    spec: {
+      name: "Management Network"
+      policy: {
+        nicTeaming: {
+          failureCriteria: {
+            checkBeacon: false
+          }
+          nicOrder: {
+            activeNic: [
+              0: "vmnic0"
+            ]
+          }
+          notifySwitches: true
+          policy: "loadbalance_srcid"
+          rollingOrder: false
+        }
+        offloadPolicy: {}
+        security: {}
+        shapingPolicy: {}
+      }
+      vlanId: 0.000000
+      vswitchName: "vSwitch0"
+    }
+    vswitch: "key-vim.host.VirtualSwitch-vSwitch0"
+  }
+]
+```
+
+### Exit the cnquery shell
+
+To exit the cnquery shell, either press `Ctrl + D` or type `exit`.
+
+### Learn more
+
+- To learn more about how the MQL query language works, read [Write Effective MQL](/mql/mql-write).
+- For a list of VMware resources you can query, read [Mondoo VMware vSphere Resource Pack Reference](/mql/resources/vsphere/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).

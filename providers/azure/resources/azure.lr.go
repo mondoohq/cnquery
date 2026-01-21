@@ -28,6 +28,8 @@ const (
 	ResourceAzureSubscriptionBatchService                                                        string = "azure.subscription.batchService"
 	ResourceAzureSubscriptionBatchServiceAccount                                                 string = "azure.subscription.batchService.account"
 	ResourceAzureSubscriptionBatchServiceAccountPool                                             string = "azure.subscription.batchService.account.pool"
+	ResourceAzureSubscriptionDatabricksService                                                   string = "azure.subscription.databricksService"
+	ResourceAzureSubscriptionDatabricksServiceWorkspace                                          string = "azure.subscription.databricksService.workspace"
 	ResourceAzureSubscriptionNetworkService                                                      string = "azure.subscription.networkService"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                                 string = "azure.subscription.networkService.virtualNetworkGateway"
 	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                                      string = "azure.subscription.networkService.appSecurityGroup"
@@ -198,6 +200,14 @@ func init() {
 		"azure.subscription.batchService.account.pool": {
 			// to override args, implement: initAzureSubscriptionBatchServiceAccountPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionBatchServiceAccountPool,
+		},
+		"azure.subscription.databricksService": {
+			Init:   initAzureSubscriptionDatabricksService,
+			Create: createAzureSubscriptionDatabricksService,
+		},
+		"azure.subscription.databricksService.workspace": {
+			// to override args, implement: initAzureSubscriptionDatabricksServiceWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionDatabricksServiceWorkspace,
 		},
 		"azure.subscription.networkService": {
 			Init:   initAzureSubscriptionNetworkService,
@@ -802,6 +812,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.batch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetBatch()).ToDataRes(types.Resource("azure.subscription.batchService"))
 	},
+	"azure.subscription.databricks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetDatabricks()).ToDataRes(types.Resource("azure.subscription.databricksService"))
+	},
 	"azure.subscription.network": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetNetwork()).ToDataRes(types.Resource("azure.subscription.networkService"))
 	},
@@ -1119,6 +1132,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.batchService.account.pool.virtualMachineConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetVirtualMachineConfiguration()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.databricksService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.databricksService.workspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksService).GetWorkspaces()).ToDataRes(types.Array(types.Resource("azure.subscription.databricksService.workspace")))
+	},
+	"azure.subscription.databricksService.workspace.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.databricksService.workspace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.databricksService.workspace.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.databricksService.workspace.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.databricksService.workspace.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.databricksService.workspace.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.databricksService.workspace.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetSku()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.networkService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetSubscriptionId()).ToDataRes(types.String)
@@ -2995,6 +3035,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.keyVaultService.vault.autorotation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetAutorotation()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.key.autorotation")))
 	},
+	"azure.subscription.keyVaultService.vault.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
 	"azure.subscription.keyVaultService.key.autorotation.kid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyAutorotation).GetKid()).ToDataRes(types.String)
 	},
@@ -3799,6 +3842,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscription).Batch, ok = plugin.RawToTValue[*mqlAzureSubscriptionBatchService](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.databricks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).Databricks, ok = plugin.RawToTValue[*mqlAzureSubscriptionDatabricksService](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).Network, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkService](v.Value, v.Error)
 		return
@@ -4257,6 +4304,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.batchService.account.pool.virtualMachineConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionBatchServiceAccountPool).VirtualMachineConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.databricksService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksService).Workspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.databricksService.workspace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7091,6 +7182,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionKeyVaultServiceVault).Autorotation, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.keyVaultService.vault.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceVault).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.keyVaultService.key.autorotation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceKeyAutorotation).__id, ok = v.Value.(string)
 		return
@@ -8300,6 +8395,7 @@ type mqlAzureSubscription struct {
 	ResourceGroups        plugin.TValue[[]any]
 	Compute               plugin.TValue[*mqlAzureSubscriptionComputeService]
 	Batch                 plugin.TValue[*mqlAzureSubscriptionBatchService]
+	Databricks            plugin.TValue[*mqlAzureSubscriptionDatabricksService]
 	Network               plugin.TValue[*mqlAzureSubscriptionNetworkService]
 	Storage               plugin.TValue[*mqlAzureSubscriptionStorageService]
 	Web                   plugin.TValue[*mqlAzureSubscriptionWebService]
@@ -8453,6 +8549,22 @@ func (c *mqlAzureSubscription) GetBatch() *plugin.TValue[*mqlAzureSubscriptionBa
 		}
 
 		return c.batch()
+	})
+}
+
+func (c *mqlAzureSubscription) GetDatabricks() *plugin.TValue[*mqlAzureSubscriptionDatabricksService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionDatabricksService](&c.Databricks, func() (*mqlAzureSubscriptionDatabricksService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "databricks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionDatabricksService), nil
+			}
+		}
+
+		return c.databricks()
 	})
 }
 
@@ -9657,6 +9769,151 @@ func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetDeploymentConfiguration
 
 func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetVirtualMachineConfiguration() *plugin.TValue[any] {
 	return &c.VirtualMachineConfiguration
+}
+
+// mqlAzureSubscriptionDatabricksService for the azure.subscription.databricksService resource
+type mqlAzureSubscriptionDatabricksService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionDatabricksServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Workspaces     plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionDatabricksService creates a new instance of this resource
+func createAzureSubscriptionDatabricksService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionDatabricksService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.databricksService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionDatabricksService) MqlName() string {
+	return "azure.subscription.databricksService"
+}
+
+func (c *mqlAzureSubscriptionDatabricksService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDatabricksService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionDatabricksService) GetWorkspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workspaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.databricksService", c.__id, "workspaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workspaces()
+	})
+}
+
+// mqlAzureSubscriptionDatabricksServiceWorkspace for the azure.subscription.databricksService.workspace resource
+type mqlAzureSubscriptionDatabricksServiceWorkspace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionDatabricksServiceWorkspaceInternal it will be used here
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Location   plugin.TValue[string]
+	Tags       plugin.TValue[map[string]any]
+	Type       plugin.TValue[string]
+	Properties plugin.TValue[any]
+	Sku        plugin.TValue[any]
+}
+
+// createAzureSubscriptionDatabricksServiceWorkspace creates a new instance of this resource
+func createAzureSubscriptionDatabricksServiceWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionDatabricksServiceWorkspace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.databricksService.workspace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) MqlName() string {
+	return "azure.subscription.databricksService.workspace"
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetSku() *plugin.TValue[any] {
+	return &c.Sku
 }
 
 // mqlAzureSubscriptionNetworkService for the azure.subscription.networkService resource
@@ -17323,19 +17580,20 @@ type mqlAzureSubscriptionKeyVaultServiceVault struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionKeyVaultServiceVaultInternal it will be used here
-	Id                       plugin.TValue[string]
-	VaultName                plugin.TValue[string]
-	Type                     plugin.TValue[string]
-	Location                 plugin.TValue[string]
-	Tags                     plugin.TValue[map[string]any]
-	VaultUri                 plugin.TValue[string]
-	Properties               plugin.TValue[any]
-	RbacAuthorizationEnabled plugin.TValue[bool]
-	Keys                     plugin.TValue[[]any]
-	Certificates             plugin.TValue[[]any]
-	Secrets                  plugin.TValue[[]any]
-	DiagnosticSettings       plugin.TValue[[]any]
-	Autorotation             plugin.TValue[[]any]
+	Id                         plugin.TValue[string]
+	VaultName                  plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	VaultUri                   plugin.TValue[string]
+	Properties                 plugin.TValue[any]
+	RbacAuthorizationEnabled   plugin.TValue[bool]
+	Keys                       plugin.TValue[[]any]
+	Certificates               plugin.TValue[[]any]
+	Secrets                    plugin.TValue[[]any]
+	DiagnosticSettings         plugin.TValue[[]any]
+	Autorotation               plugin.TValue[[]any]
+	PrivateEndpointConnections plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionKeyVaultServiceVault creates a new instance of this resource
@@ -17490,6 +17748,22 @@ func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetAutorotation() *plugin.TVa
 		}
 
 		return c.autorotation()
+	})
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.vault", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
 	})
 }
 

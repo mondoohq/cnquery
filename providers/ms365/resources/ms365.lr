@@ -55,10 +55,22 @@ private microsoft.identityAndAccess.accessReviewDefinition @defaults("id display
   // The status of the access review. Possible values are:
   // Initializing, NotStarted, Starting, InProgress, Completing, Completed, AutoReviewing, and AutoReviewed
   status string
+  // Defines the entities whose access is reviewed
+  scope microsoft.identityAndAccess.accessReviewDefinition.scope
   // This collection of access review scopes is used to define who are the reviewers
   reviewers dict
   // The settings for an access review series, see type definition below
   settings microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings
+}
+
+// Defines the scope of entities whose access is being reviewed
+private microsoft.identityAndAccess.accessReviewDefinition.scope @defaults("query queryType") {
+  // Query string defining which entities are in scope for the review
+  query string
+  // Type of query being used (e.g., "MicrosoftGraph")
+  queryType string
+  // Optional query root path
+  queryRoot string
 }
 
 // Configures the recurrence, notifications, and decision-handling for an access review series.
@@ -1315,6 +1327,8 @@ private microsoft.policies.authenticationMethodsPolicy @defaults("displayName") 
   policyVersion string
   // Configurations for specific authentication methods
   authenticationMethodConfigurations []microsoft.policies.authenticationMethodConfiguration
+  // System credential preferences for the authentication methods policy
+  systemCredentialPreferences() microsoft.policies.systemCredentialPreferences
 }
 
 // Configuration for a specific authentication method
@@ -1324,6 +1338,16 @@ private microsoft.policies.authenticationMethodConfiguration @defaults("state") 
   // The state of the policy. Possible values are: enabled, disabled.
   state string
   // Groups of users that are excluded from a policy.
+  excludeTargets []dict
+}
+
+// System credential preferences for authentication methods policy
+private microsoft.policies.systemCredentialPreferences @defaults("state") {
+  // The state of the system credential preferences. Possible values are: enabled, disabled, default.
+  state string
+  // Groups of users that are included in the policy
+  includeTargets []dict
+  // Groups of users that are excluded from the policy
   excludeTargets []dict
 }
 
@@ -1817,6 +1841,8 @@ private ms365.teams.tenantFederationConfig {
   sharedSipAddressSpace bool
   // Whether to restrict Teams consumer to external user profiles
   restrictTeamsConsumerToExternalUserProfiles bool
+  // Whether external access with trial tenants is allowed (Allowed or Blocked)
+  externalAccessWithTrialTenants string
 }
 
 // Microsoft 365 Teams meeting policy configuration

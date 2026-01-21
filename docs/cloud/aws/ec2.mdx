@@ -1,0 +1,139 @@
+---
+title: Query EC2 Instances
+sidebar_label: Query AWS EC2 Instances
+displayed_sidebar: cnquery
+sidebar_position: 30
+description: Explore and analyze the configuration of AWS EC2 instances
+image: /img/cnquery/mondoo-aws.jpg
+---
+
+Now that you have an introduction to [querying your AWS account](/cnquery/cloud/aws/account/) with cnquery, let's dive deeper and explore EC2 instances.
+
+We'll continue working in the cnquery shell, which makes running individual queries easy. If it's not already open, enter `cnquery shell aws` in your terminal. To learn about accessing your AWS account with cnquery, read [Query AWS Infrastructure](/cnquery/cloud/aws/).
+
+## EC2 resources
+
+To launch a shell into your AWS environment, enter:
+
+```bash
+cnquery shell aws
+```
+
+Once you're in the shell, cnquery provides answers to any question about your EC2 instances. To discover all the resources and fields you can query, read [aws.ec2](/mql/resources/aws#aws.ec2). You can also use the `help` command in the shell:
+
+```coffeescript
+help aws.ec2
+```
+
+In this tutorial we'll explore just a few of the possibilities.
+
+## Run simple queries on EC2 instances
+
+This query gathers all your EC2 instances:
+
+```coffeescript
+aws.ec2.instances
+```
+
+It returns information on all your EC2 instances, including their ID, type, and state:
+
+```coffeescript
+aws.ec2.instances: [
+  0: aws.ec2.instance instanceId="i-0684b0bfd6464a123" region="us-east-1" state="running" instanceType="t2.large" architecture="x86_64" platformDetails="Linux/UNIX"
+  1: aws.ec2.instance instanceId="i-0568d8a10045a2456" region="us-east-1" state="running" instanceType="t3.small" architecture="x86_64" platformDetails="Linux/UNIX"
+  2: aws.ec2.instance instanceId="i-037bfef314c571789" region="us-east-1" state="running" instanceType="t3.small" architecture="x86_64" platformDetails="Linux/UNIX"
+  3: aws.ec2.instance instanceId="i-028f66fe019847abc" region="us-east-1" state="running" instanceType="m3.medium" architecture="x86_64" platformDetails="Windows"
+  4: aws.ec2.instance instanceId="i-0f6e7f42454f4cdef" region="us-east-1" state="running" instanceType="t3.small" architecture="x86_64" platformDetails="Linux/UNIX"
+]
+```
+
+## Specify fields to include in results
+
+You can request specific data by including the field names. For example, this query collects the ARN and any assigned tags for each instance:
+
+```coffeescript
+aws.ec2.instances { arn tags }
+```
+
+It returns a list with only the information you asked for:
+
+```coffeescript
+aws.ec2.instances: [
+  0: {
+    tags: {
+      Name: "k8s-operator01"
+      owner: "suki@lunalectric.com"
+    }
+    arn: "arn:aws:ec2:us-east-1:921877552404:instance/i-06e2eaa19a4fa883e"
+  }
+  1: {
+    tags: {
+      Name: "vm-with-ebs-iam-role"
+    }
+    arn: "arn:aws:ec2:us-east-1:921877552404:instance/i-0facc86d89af823af"
+  }
+  2: {
+    tags: {
+      Name: "amazonlinux2-for-ebs-volume-scan"
+      owner: "kembe@lunalectric.com"
+    }
+    arn: "arn:aws:ec2:us-east-1:921877552404:instance/i-0b24443c8d18fdbab"
+  }
+  3: {
+    tags: {}
+    arn: "arn:aws:ec2:us-west-1:921877552404:instance/i-020eed3b1e4965d8d"
+  }
+  4: {
+    tags: {
+      Name: "amos-linux"
+    }
+    arn: "arn:aws:ec2:us-west-1:921877552404:instance/i-08f2ba2424027454a"
+  }
+]
+```
+
+## Filter results
+
+You can filter results based on any fields. Specify the criteria using the `where` function and standard boolean operators.
+
+For example, this query requests only EC2 instances that do not have an `owner` tag:
+
+```coffeescript
+aws.ec2.instances.where(tags['owner'] == null)
+```
+
+It lists each instance's ARN and status:
+
+```coffeescript
+aws.ec2.instances.where: [
+  0: aws.ec2.instance instanceId="i-0684b0bfd6464a123" region="us-east-1" state="running" instanceType="t2.large" architecture="x86_64" platformDetails="Linux/UNIX"
+  1: aws.ec2.instance instanceId="i-0568d8a10045a2456" region="us-east-1" state="running" instanceType="t3.small" architecture="x86_64" platformDetails="Linux/UNIX"
+  2: aws.ec2.instance instanceId="i-037bfef314c571789" region="us-east-1" state="running" instanceType="t3.small" architecture="x86_64" platformDetails="Linux/UNIX"
+  3: aws.ec2.instance instanceId="i-028f66fe019847abc" region="us-east-1" state="running" instanceType="m3.medium" architecture="x86_64" platformDetails="Windows"
+]
+```
+
+This finds large (more expensive) EC2 instances:
+
+```coffeescript
+aws.ec2.instances.where(instanceType == /^.*.large$/) { arn instanceType }
+```
+
+It returns a list of all instances that have an `instanceType` with `large` in the name.
+
+This similar query finds T-type instances (such as T2, or T4g):
+
+```coffeescript
+aws.ec2.instances.where(instanceType == /^[t].*/) { instanceType }
+```
+
+## Learn more about querying EC2 instances
+
+- To learn more about how the MQL query language works, read [Write Effective MQL](/mql/mql-write).
+- For a list of all the AWS resources and fields you can query, read [aws.ec2](/mql/resources/aws#aws.ec2).
+
+## Next step
+
+To discover more of cnquery's AWS capabilities, [query your EKS clusters](/cnquery/cloud/aws/eks/).
+
+---

@@ -73,6 +73,18 @@ func Is400AccessDeniedError(err error) bool {
 	return false
 }
 
+// isBadRequestError checks if the error is a 400 Bad Request error
+// This is used to handle cases where a feature is not enabled for an AWS account
+func isBadRequestError(err error) bool {
+	var respErr *http.ResponseError
+	if errors.As(err, &respErr) {
+		return respErr.HTTPStatusCode() == 400 &&
+			(strings.Contains(respErr.Error(), "BadRequest") ||
+				strings.Contains(respErr.Error(), "feature is not enabled"))
+	}
+	return false
+}
+
 // IsMacieNotEnabledError checks if the error indicates Macie is not enabled in the region
 func IsMacieNotEnabledError(err error) bool {
 	if err == nil {

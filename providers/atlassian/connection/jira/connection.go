@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/url"
 	"os"
+	"strings"
 
 	v2 "github.com/ctreminiom/go-atlassian/jira/v2"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
@@ -27,9 +28,32 @@ type JiraConnection struct {
 	name   string
 }
 
-func isValidHostValue(val string) bool {
+// normalizeAndValidateHost normalizes the host to https:// format and validates it's a proper domain
+func normalizeAndValidateHost(val string) (string, error) {
+	if val == "" {
+		return "", errors.New("host cannot be empty")
+	}
+
+	// Add https:// scheme if not present
+	if !strings.HasPrefix(val, "http://") && !strings.HasPrefix(val, "https://") {
+		val = "https://" + val
+	}
+
+	// Parse the URL to validate it
 	u, err := url.Parse(val)
-	return err == nil && u.Scheme != "" && u.Host != ""
+	if err != nil {
+		return "", errors.New("invalid host format")
+	}
+
+	// Ensure we have a valid scheme and host
+	if u.Scheme == "" || u.Host == "" {
+		return "", errors.New("invalid host format")
+	}
+
+	// Force https scheme
+	u.Scheme = "https"
+
+	return u.String(), nil
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*JiraConnection, error) {
@@ -37,9 +61,12 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	if host == "" {
 		host = os.Getenv("ATLASSIAN_HOST")
 	}
-	if host == "" || !isValidHostValue(host) {
-		return nil, errors.New("you must provide an Atlassian host e.g. via ATLASSIAN_HOST env or via the --host flag. Host must be prefixed with https://")
+
+	normalizedHost, err := normalizeAndValidateHost(host)
+	if err != nil {
+		return nil, errors.New("you must provide a valid Atlassian host e.g. via ATLASSIAN_HOST env or via the --host flag (e.g., 'foo.atlassian.net' or 'https://foo.atlassian.net')")
 	}
+	host = normalizedHost
 
 	user := conf.Options["user"]
 	if user == "" {

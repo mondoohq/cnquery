@@ -1,0 +1,297 @@
+---
+title: Query Google Cloud
+sidebar_label: Google Cloud (GCP)
+displayed_sidebar: cnquery
+sidebar_position: 1
+description: Explore and analyze your Google Cloud infrastructure with cnquery
+image: /img/cnquery/mondoo-gcp.jpg
+---
+
+With cnquery, you can explore and interrogate your entire Google Cloud (GCP) project, including its compute instances. It's like having a powerful search engine for your Google Cloud environment. For example, you can analyze firewalls, search for Compute Engine instance configuration details, or find all Cloud Storage buckets that anonymous or public users can access... all with a single tool.
+
+cnquery provides the answers you need about every Google Cloud configuration. For a list of Google Cloud resources you can query, read [Mondoo Google Cloud (GCP) Resource Pack Reference](/mql/resources/gcp/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+## Connect cnquery with your Google Cloud environment
+
+### Requirements
+
+To explore your Google Cloud environment with cnquery, you must have:
+
+- [cnquery installed on your workstation](/cnquery/)
+- A [Google Platform account](https://cloud.google.com/free)
+- [Google Cloud SDK](https://cloud.google.com/sdk/install) installed
+
+### Provide access credentials
+
+In your terminal, log into Google Cloud with this command:
+
+```bash
+gcloud auth login  --update-adc
+```
+
+### Configure the Google Cloud project you want explore
+
+To query a Google Cloud project, you must set up the project:
+
+```bash
+gcloud config set project PROJECTID
+```
+
+For `PROJECTID`, substitute the ID of the project you want to query.
+
+Google Cloud confirms the setup:
+
+```bash
+Updated property [core/project].
+```
+
+To verify your configuration, enter:
+
+```bash
+gcloud config list
+```
+
+Google Cloud returns results similar to these:
+
+```ini
+[core]
+account = suki@lunalectric.com
+disable_usage_reporting = True
+project = gcp-project-id
+
+Your active configuration is: [default]
+```
+
+### Verify with a quick Google Cloud query
+
+To quickly confirm that cnquery has access to your Google Cloud environment, run this query from your terminal, substituting your project ID for YOUR_PROJECT_ID:
+
+```bash
+cnquery run gcp project YOUR_PROJECT_ID -c gcp.project
+```
+
+cnquery returns the name of the project:
+
+```shell
+→ discover related assets for 1 asset(s)
+→ resolved assets resolved-assets=1
+gcp.project: gcp.project name="lune-edge"
+```
+
+You've successfully used cnquery to answer your first question about your Google Cloud environment. Now you're ready to explore.
+
+## Query a Google Cloud project
+
+To answer any question about your environment, use cnquery's interactive shell. It has auto-complete to guide you, which is especially helpful when you're new to cnquery and learning MQL.
+
+To launch a shell into your Google Cloud environment to run queries, substitute ORGANIZATION-ID with the ID of the organization you want to access and run:
+
+```bash
+cnquery shell gcp org ORGANIZATION-ID
+```
+
+To launch a shell into your Google Cloud environment on the project level, substitute PROJECT-ID with the ID of the project you want to access and run:
+
+```bash
+cnquery shell gcp project PROJECT-ID
+```
+
+To launch a shell into your Google Cloud environment on the folder level, substitute FOLDER-ID with the ID of the folder you want to access and run:
+
+```bash
+cnquery shell gcp folder FOLDER-ID
+```
+
+### Discover capabilities with the `help` command
+
+Once inside the shell, use the `help` command to learn what Google Cloud resources you can query. This command lists all the Google Cloud resources:
+
+```coffeescript
+help gcp
+```
+
+From the resulting list, you can drill down further. For example, enter this command to list all the Google Cloud DNS resources you can query:
+
+```coffeescript
+help gcp.dns
+```
+
+From the resulting list, you can drill down even further. You can also learn about available Google Cloud resources in the [Mondoo Google Cloud Platform (GCP) Resource Pack Reference](/mql/resources/gcp/).
+
+### Query Compute Engine instances
+
+Now that you know how to discover what's possible with cnquery, let's run some actual queries in the shell.
+
+This query lists all the Compute Engine instances in the project:
+
+```coffeescript
+gcp.project.computeService.instances
+```
+
+cnquery returns a list of instances:
+
+```coffeescript
+gcp.project.computeService.instances: [
+  0: gcp.project.computeService.instance name="amos-test-instance1"
+  1: gcp.project.computeService.instance name="ansible-centos"
+  2: gcp.project.computeService.instance name="centos7-latest"
+  3: gcp.project.computeService.instance name="debian10"
+  4: gcp.project.computeService.instance name="luna-dev"
+  5: gcp.project.computeService.instance name="luna-edge"
+ 6: gcp.project.computeService.instance name="luna-service"
+
+...
+
+]
+```
+
+#### Request full details in results
+
+For a more detailed report, you can specify that you want all fields:
+
+```coffeescript
+gcp.project.computeService.instances { * }
+```
+
+For every instance, cnquery provides information about their status and settings:
+
+```coffeescript
+  0: {
+    lastStopTimestamp: 2022-07-04 08:33:12.127 -0700 PDT
+    fingerprint: "Qls1P6_JjQE="
+    minCpuPlatform: ""
+    metadata: {}
+    status: "TERMINATED"
+    scheduling: {
+      automaticRestart: true
+      onHostMaintenance: "MIGRATE"
+      provisioningModel: "STANDARD"
+    }
+    zone: gcp.project.computeService.zone name="us-central1-a"
+    tags: []
+    id: "5894326198680570314"
+    labels: {}
+    machineType: gcp.project.computeService.machineType name="e2-medium"
+    lastSuspendedTimestamp: null
+    canIpForward: false
+    projectId: "luna-edge-262317"
+    physicalHostResourceStatus: ""
+    privateIpv6GoogleAccess: ""
+    enableVtpm: true
+    cpuPlatform: "Unknown CPU Platform"
+    serviceAccounts: [
+  0: gcp.project.computeService.serviceaccount email="458067389847-compute@developer.gserviceaccount.com"
+    ]
+    reservationAffinity: {
+      consumeReservationType: "ANY_RESERVATION"
+    }
+    totalEgressBandwidthTier: ""
+    lastStartTimestamp: 2022-06-21 02:30:50.334 -0700 PDT
+    resourcePolicies: []
+    deletionProtection: false
+    guestAccelerators: []
+    created: 2021-01-26 03:04:05.663 -0800 PST
+    sourceMachineImage: ""
+    enableDisplay: false
+    statusMessage: ""
+    disks: [
+      0: gcp.project.computeService.attachedDisk id = gcp.project.computeService.attachedDisk/mondoo-dev-262313/5894326198680570314/0
+    ]
+    hostname: ""
+    enableIntegrityMonitoring: true
+    startRestricted: false
+    name: "ansible-centos"
+    enableSecureBoot: false
+    description: ""
+    networkInterfaces: [
+      0: {
+        accessConfigs: [
+          0: {
+            kind: "compute#accessConfig"
+            name: "External NAT"
+            networkTier: "PREMIUM"
+            type: "ONE_TO_ONE_NAT"
+          }
+        ]
+        fingerprint: "3Sj4hQQO1UU="
+        kind: "compute#networkInterface"
+        name: "nic0"
+        network: "https://www.googleapis.com/compute/v1/projects/luna-edge-262317/global/networks/default"
+        networkIP: "10.128.15.215"
+        subnetwork: "https://www.googleapis.com/compute/v1/projects/luna-edge-262317/regions/us-central1/subnetworks/default"
+      }
+    ]
+    keyRevocationActionType: ""
+  }
+```
+
+#### Specify fields to include in results
+
+If you're interested in only some details, specify the fields you want in braces. For example, this query asks for each user's ARN, when they last changed their password, and whether they have MFA enabled:
+
+```coffeescript
+gcp.project.computeService.instances { name status scheduling }
+```
+
+cnquery returns results like this:
+
+```coffeescript
+gcp.project.computeService.instances: [
+
+...
+
+  12: {
+    status: "TERMINATED"
+    scheduling: {
+      automaticRestart: true
+      onHostMaintenance: "MIGRATE"
+      provisioningModel: "STANDARD"
+    }
+    name: "luna-test"
+  }
+  13: {
+    status: "RUNNING"
+    scheduling: {
+      automaticRestart: true
+      onHostMaintenance: "MIGRATE"
+      provisioningModel: "STANDARD"
+    }
+    name: "luna-edge"
+  }
+
+...
+
+]
+```
+
+#### Filter results
+
+You can filter results based on any fields. Specify the criteria using the `where` function and standard boolean operators.
+
+For example, this filters results based on status:
+
+```coffeescript
+gcp.project.computeService.instances.where(status == "RUNNING") { name lastStartTimestamp }
+```
+
+cnquery returns all running instances. It includes the name and last start for each one.
+
+```coffeescript
+gcp.project.computeService.instances.where: [
+  0: {
+    name: "luna-edge"
+    lastStartTimestamp: 2025-01-17 02:58:31.254 -0800 PST
+  }
+  1: {
+    name: "windows-gitlab"
+    lastStartTimestamp: 2025-04-05 11:39:20.217 -0700 PDT
+  }
+]
+```
+
+## Learn more about querying Google Cloud
+
+- To learn more about how the MQL query language works, read [Write Effective MQL](/mql/mql-write).
+- For a list of all the Google Cloud resources and fields you can query, read the [Mondoo Google Cloud (GCP) Resource Pack Reference](/mql/resources/gcp/).
+
+---

@@ -1,0 +1,187 @@
+---
+title: Query AWS EKS Clusters
+sidebar_label: Query AWS EKS Clusters
+displayed_sidebar: cnquery
+sidebar_position: 40
+description: Explore and analyze the configuration of AWS EKS clusters
+image: /img/cnquery/mondoo-aws.jpg
+---
+
+Now that you have an introduction to [querying your AWS account](/cnquery/cloud/aws/) with cnquery and have explored [EC2 queries](/cnquery/cloud/aws/ec2), let's dive deeper and explore EKS clusters.
+
+We'll continue working in the cnquery shell, which makes running individual queries easy. If it's not already open, enter `cnquery shell aws` in your terminal. To learn about accessing your AWS account with cnquery, read [Query AWS Infrastructure](/cnquery/cloud/aws/).
+
+## EKS resources
+
+To launch a shell into your AWS environment, enter:
+
+```bash
+cnquery shell aws
+```
+
+Once you're in the shell, cnquery provides answers to any question about your EKS clusters. To discover all the resources and fields you can query, read [aws.eks](/mql/resources/aws#aws.eks). You can also use the `help` command in the shell:
+
+```coffeescript
+help aws.eks
+```
+
+In this tutorial we'll explore just a few of the possibilities.
+
+## Run simple queries on EKS clusters
+
+This query gathers all your EKS clusters:
+
+```coffeescript
+aws.eks.clusters
+```
+
+It returns each cluster's ARN, version, and current state:
+
+```coffeescript
+aws.eks.clusters: [
+  0: aws.eks.cluster arn="arn:aws:eks:us-east-1:177048008586:cluster/eks-cluster" version="1.30" status="FAILED"
+  1: aws.eks.cluster arn="arn:aws:eks:us-east-2:177048008586:cluster/online-shop-eks-cluster-byh8" version="1.30" status="ACTIVE"
+]
+```
+
+For all details on a single cluster, specify the cluster's number in the output sequence and include `{ * }`:
+
+```coffeescript
+aws.eks.clusters[1] { * }
+```
+
+cnquery returns the cluster's version, logging, encryption, and more:
+
+```coffeescript
+aws.eks.clusters[1]: {
+  logging: {
+    ClusterLogging: [
+      0: {
+        Enabled: true
+        Types: [
+          0: "api"
+          1: "audit"
+          2: "authenticator"
+        ]
+      }
+      1: {
+        Enabled: false
+        Types: [
+          0: "controllerManager"
+          1: "scheduler"
+        ]
+      }
+    ]
+  }
+  encryptionConfig: [
+    0: {
+      Provider: {
+        KeyArn: "arn:aws:kms:us-east-2:177048008586:key/35f97e4d-3076-494e-bd27-9e9936c9f3ba"
+      }
+      Resources: [
+        0: "secrets"
+      ]
+    }
+  ]
+  tags: {
+    GitHubOrg: "lunalectric"
+    GitHubRepo: "online-shop"
+    Name: "scottford-dev-online-shop-eks-byh8"
+    Terraform: "true"
+  }
+  resourcesVpcConfig: {
+    ClusterSecurityGroupId: "sg-0ad9d888e7bfba23b"
+    EndpointPrivateAccess: false
+    EndpointPublicAccess: true
+    PublicAccessCidrs: [
+      0: "0.0.0.0/0"
+    ]
+    SecurityGroupIds: [
+      0: "sg-0563bb225870357ef"
+    ]
+    SubnetIds: [
+      0: "subnet-032c68d4a5e512171"
+      1: "subnet-0fdd8fcbf1ca3f071"
+      2: "subnet-0d87da610b71436de"
+    ]
+    VpcId: "vpc-05905b857f7424833"
+  }
+  version: "1.30"
+  name: "online-shop-eks-cluster-byh8"
+  networkConfig: {
+    IpFamily: "ipv4"
+    ServiceIpv4Cidr: "172.20.0.0/16"
+    ServiceIpv6Cidr: null
+  }
+  createdAt: 2024-01-23 23:12:54.304 +0000 UTC
+  arn: "arn:aws:eks:us-east-2:177048008586:cluster/online-shop-eks-cluster-byh8"
+  region: "us-east-2"
+  endpoint: "https://8D2087DAD267CF9F24358D00F7553B84.gr7.us-east-2.eks.amazonaws.com"
+  platformVersion: "eks.2"
+  status: "ACTIVE",
+  addons: [
+    0: aws.eks.addon name="aws-efs-csi-driver" addonVersion="v2.0.4-eksbuild.1" status="ACTIVE"
+    1: aws.eks.addon name="aws-mountpoint-s3-csi-driver" addonVersion="v1.7.0-eksbuild.1" status="ACTIVE"
+    2: aws.eks.addon name="coredns" addonVersion="v1.11.1-eksbuild.9" status="ACTIVE"
+    3: aws.eks.addon name="eks-pod-identity-agent" addonVersion="v1.3.0-eksbuild.1" status="ACTIVE"
+    4: aws.eks.addon name="kube-proxy" addonVersion="v1.30.0-eksbuild.3" status="ACTIVE"
+    5: aws.eks.addon name="vpc-cni" addonVersion="v1.18.2-eksbuild.1" status="ACTIVE"
+  ],
+  authenticationMode: "API_AND_CONFIG_MAP"
+}
+```
+
+## Specify fields to include in results
+
+You can request specific data by including the field names. For example, this query collects the ARN and any assigned tags for each cluster:
+
+```coffeescript
+aws.eks.clusters { arn createdAt }
+```
+
+It returns a list with only the information you asked for:
+
+```coffeescript
+aws.eks.clusters: [
+  0: {
+    arn: "arn:aws:eks:us-east-1:177048008586:cluster/eks-cluster"
+    createdAt: 2023-09-08 09:41:11.26 +0000 UTC
+  }
+  1: {
+    arn: "arn:aws:eks:us-east-2:177048008586:cluster/online-shop-eks-cluster-byh8"
+    createdAt: 2024-01-23 23:12:54.304 +0000 UTC
+  }
+]
+```
+
+## Filter results
+
+You can filter results based on any fields. Specify the criteria using the `where` function and standard boolean operators.
+
+For example, this query requests only EKS clusters created more than 60 days ago:
+
+```coffeescript
+aws.eks.clusters.where(createdAt < time.today - 60*time.day) { arn createdAt }
+```
+
+It lists each cluster's ARN and creation date:
+
+```coffeescript
+aws.eks.clusters.where: [
+  0: {
+    createdAt: 2023-09-08 09:41:11.26 +0000 UTC
+    arn: "arn:aws:eks:us-east-1:177048008586:cluster/eks-cluster"
+  }
+  1: {
+    createdAt: 2024-01-23 23:12:54.304 +0000 UTC
+    arn: "arn:aws:eks:us-east-2:177048008586:cluster/online-shop-eks-cluster-byh8"
+  }
+]
+```
+
+## Learn more about querying EKS clusters
+
+- To learn more about how the MQL query language works, read [Write Effective MQL](/mql/mql-write).
+- For a list of all the AWS resources and fields you can query, read the [Mondoo Amazon Web Services (AWS) Resource Pack Reference](/mql/resources/aws/).
+
+---

@@ -1,0 +1,102 @@
+---
+title: Query GitLab organizations and repositories with cnquery
+sidebar_label: GitLab
+sidebar_position: 10
+displayed_sidebar: cnquery
+description: Gather information about GitLab organizations and repositories with Mondoo's open source CLI, cnquery.
+image: /img/cnquery/mondoo-feature.jpg
+---
+
+Use cnquery to gather information about GitLab organizations and repositories.
+
+## Give cnquery access using a GitLab personal access token
+
+To query GitLab groups and projects, cnquery needs access. You give cnquery the access it needs through the GitLab API. First you create a GitLab personal access token. Then you provide that token when you enter cnquery commands. The token's level of access determines how much information cnquery can retrieve.
+
+To learn how to create a personal access token, read [Personal access tokens](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) in the GitLab documentation. Give the personal access token these scopes:
+
+- read_api
+
+- read_repository
+
+Save the GitLab personal access token in a safe place. You need it each time you access GitLab using cnquery.
+
+## Query GitLab groups and projects
+
+To open the cnquery interactive shell, run:
+
+```bash
+cnquery shell --token <YOUR_TOKEN>
+```
+
+If you want to query a specific project, include the group and project in the `cnquery shell` command:
+
+```bash
+cnquery shell --token <YOUR_TOKEN> --group <YOUR_GROUP_NAME> --project <YOUR_PROJECT_NAME>
+```
+
+For example:
+
+```bash
+cnquery shell --token glpat-ixth1515fak3 --group lunalectric --project mars
+```
+
+### Discover capabilities with the `help` command
+
+Once inside the shell, use the `help` command to learn what GitLab resources you can query. This command lists all the GitLab resources:
+
+```coffeescript
+help gitlab
+```
+
+From the resulting list, you can drill down further. For example, enter this command to list all the GitLab group resources you can query:
+
+```coffeescript
+help gitlab.group
+```
+
+### Example queries
+
+Query your GitLab group name and whether it's publicly visible:
+
+```coffeescript
+cnquery> gitlab.group { name visibility }
+[gitlab.group: {
+  name: "lunalectric"
+  visibility: "private"
+}
+```
+
+List all projects in your group:
+
+```coffeescript
+cnquery> gitlab.group { projects }
+gitlab.group: {
+  projects: [
+    0: gitlab.project fullName="lunalectric / mars" visibility="private" webURL="https://gitlab.com/lunalectric/mars"
+    1: gitlab.project fullName="lunalectric / saturn" visibility="private" webURL="https://gitlab.com/lunalectric/saturn"
+    2: gitlab.project fullName="lunalectric / venus" visibility="private" webURL="https://gitlab.com/lunalectric/venus"
+  ]
+}
+```
+
+Query your project's merge policy for discussions (if you provided a project name when you opened the cnquery shell):
+
+```coffeescript
+cnquery> gitlab.project { onlyAllowMergeIfAllDiscussionsAreResolved }
+gitlab.project: {
+  onlyAllowMergeIfAllDiscussionsAreResolved: false
+}
+```
+
+### Exit the cnquery shell
+
+To exit the cnquery shell, either press `Ctrl + D` or type `exit`.
+
+## Learn more
+
+- To learn about all the GitLab resources and properties, read the [Mondoo GitLab Resource Pack Reference](/mql/resources/gitlab/).
+
+- To learn how to write checks, read [Write Effective MQL](/mql/mql-write).
+
+---

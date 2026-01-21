@@ -66,7 +66,7 @@ ConvertTo-Json -Depth 4 $msteams
 `
 
 type MsTeamsReport struct {
-	CsTeamsClientConfiguration      any                      `json:"CsTeamsClientConfiguration"`
+	CsTeamsClientConfiguration      any                              `json:"CsTeamsClientConfiguration"`
 	CsTenantFederationConfiguration *CsTenantFederationConfiguration `json:"CsTenantFederationConfiguration"`
 	CsTeamsMeetingPolicy            *CsTeamsMeetingPolicy            `json:"CsTeamsMeetingPolicy"`
 	CsTeamsMessagingPolicy          *CsTeamsMessagingPolicy          `json:"CsTeamsMessagingPolicy"`
@@ -81,6 +81,7 @@ type CsTenantFederationConfiguration struct {
 	TreatDiscoveredPartnersAsUnverified         bool     `json:"TreatDiscoveredPartnersAsUnverified"`
 	SharedSipAddressSpace                       bool     `json:"SharedSipAddressSpace"`
 	RestrictTeamsConsumerToExternalUserProfiles bool     `json:"RestrictTeamsConsumerToExternalUserProfiles"`
+	ExternalAccessWithTrialTenants              string   `json:"ExternalAccessWithTrialTenants"`
 	AllowedDomains                              []string `json:"AllowedDomains"`
 	// TODO: we need to figure out how to get this right when using Convert-ToJson
 	// it currently comes back as an empty json object {} but the pwsh cmdlet spits out a string-looking value
@@ -200,6 +201,7 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 				"treatDiscoveredPartnersAsUnverified":         llx.BoolData(tenantConfig.TreatDiscoveredPartnersAsUnverified),
 				"sharedSipAddressSpace":                       llx.BoolData(tenantConfig.SharedSipAddressSpace),
 				"restrictTeamsConsumerToExternalUserProfiles": llx.BoolData(tenantConfig.RestrictTeamsConsumerToExternalUserProfiles),
+				"externalAccessWithTrialTenants":              llx.StringData(tenantConfig.ExternalAccessWithTrialTenants),
 			})
 		if mqlTenantConfigErr != nil {
 			r.CsTenantFederationConfiguration = plugin.TValue[*mqlMs365TeamsTenantFederationConfig]{State: plugin.StateIsSet, Error: mqlTenantConfigErr}

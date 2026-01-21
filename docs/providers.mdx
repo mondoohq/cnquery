@@ -1,0 +1,307 @@
+---
+title: Manage cnquery Providers
+sidebar_label: Manage cnquery Providers
+sidebar_position: 9
+displayed_sidebar: cnquery
+description: Learn about providers and special considerations for containers and air-gapped or limited access assets
+image: /img/cnquery/mondoo-feature.jpg
+---
+
+cnquery can query and inventory dozens of different platforms, from AWS accounts to Windows hosts. _Providers_ are the components of cnquery that allow it to query specific platforms. When you download and install cnquery, you don't download or install any providers. Instead, when you run a cnquery command, cnquery automatically downloads and installs the provider(s) you need. This approach saves you download time, memory, and disk space. Each time you use cnquery, it ensures that you have the latest version of the necessary provider(s).
+
+For example, suppose you download cnquery and install it on a Linux workstation. There are no providers installed on the workstation. When you run a local query, cnquery checks and finds that the provider it needs, the operating systems (`os`) provider isn't present. cnquery automatically downloads and installs the `os` provider and then runs the scan. The `os` provider remains on your workstation for the next time you use cnquery for your operating system.
+
+Continuing the example, suppose you then run `cnquery shell aws` to run some queries against your AWS account settings. cnquery downloads and installs the `aws` provider and opens the shell. The `aws` provider remains on your workstation for the next time you use cnquery for AWS.
+
+Most users don't need to think about providers. cnquery manages them for you. However, there are some situations where you might want to manage providers yourself:
+
+- Containers
+
+- Read-only mode
+
+- Air-gapped environments
+
+## Provider considerations for containers
+
+By default, when you spin up a container with cnquery installed and run any cnquery command, cnquery retrieves the latest version of the providers it needs. When the container is destroyed, the providers are destroyed. Therefore, the next time you spin up a container based on the same image, the download and installation repeat.
+
+You can eliminate the unnecessary processing by:
+
+- Installing the provider(s) on the image. To learn how, read [Install, update, and remove providers](#install-update-and-remove-providers) below.
+
+- Turning off provider auto-update. To learn how, read [Turn off provider auto-update](#turn-off-provider-auto-update) below.
+
+## Provider considerations for read-only mode
+
+Some security situations dictate that cnquery must not be allowed to write to the machine on which it's installed. cnquery does operate in read-only mode, however, it can't download and install the providers it needs. Therefore, when you install cnquery on a machine on which cnquery won't have write access, you must also install the provider. To learn how, read [Install, update, and remove providers](#install-update-and-remove-providers) below.
+
+<Callout>
+  If you install cnquery in an environment where it can't automatically update providers, you're
+  responsible for installing provider updates.
+</Callout>
+To prevent error messages from displaying when you run commands in read-only mode, turn off provider
+auto-update. To learn how, read [Turn off provider auto-update](#turn-off-provider-auto-update)
+below.
+
+## Provider considerations air-gapped environments
+
+In an air-gapped environment, cnquery can't download the providers needed to query or inventory the system. Therefore, when you install cnquery to an air-gapped machine, you must also install the provider. To learn how, read [Install, update, and remove providers](#install-update-and-remove-providers) below.
+
+<Callout>
+  If you install cnquery in an air-gapped environment, you're responsible for installing provider
+  updates.
+</Callout>
+To prevent error messages from displaying when you run commands, turn off provider auto-update.
+
+## Turn off provider auto-update
+
+By default, each time you run a cnquery command, cnquery downloads and installs the latest version of the provider needed to execute the command (unless the latest version of the provider is already installed). You can change this behavior by disabling auto-update for cnquery.
+
+If you disable auto-update, cnquery doesn't check whether the latest version of the necessary provider is installed. It uses the version of the necessary provider that is currently installed. If the provider isn't installed, the command fails.
+
+### Turn off provider auto-update for all cnquery commands and Mondoo scans
+
+To never automatically update providers, set the auto-update value in the cnquery configuration file to `false`.
+
+On a Linux or macOS host, cnquery configuration is stored in one of these locations:
+
+- `/etc/opt/mondoo/mondoo.yml` configures cnquery for all user accounts.
+
+- `~/.config/mondoo/mondoo.yml` configures cnquery for a single user.
+
+On a Windows host, cnquery configuration is stored in one of these locations:
+
+- `C:\ProgramData\mondoo\mondoo.yml` configures cnquery for all users.
+
+- `C:\Users\{username}\.config\mondoo\mondoo.yml` configures cnquery for a single user.
+
+To configure cnquery to never update providers, set the configuration:
+
+```yaml
+auto-update: false
+```
+
+<Callout>
+  If you disable auto-update, be sure to check regularly for new versions of providers. To learn
+  more, read [Install, update, and remove providers](#install-update-and-remove-providers) below.
+</Callout>
+### Turn provider auto-update on or off for a single cnquery command
+
+To skip checking for, downloading, and installing the latest provider just once (for a single cnquery command), add the '--auto-update=false' flag to the command. For example, this scans the local machine without updating to the latest provider:
+
+```bash
+cnquery scan --auto-update=false
+```
+
+The command line flag overrides the `mondoo.yml` config file setting.
+
+## Install, update, and remove providers
+
+You can download the latest versions of providers at [https://releases.mondoo.com/providers/](https://releases.mondoo.com/providers/). Past versions are always available at the same location.
+
+These are the available cnquery providers:
+
+| Provider         | Target                                    |
+| ---------------- | ----------------------------------------- |
+| ai               | MCP Servers                               |
+| ansible          | Ansible IaC code                          |
+| arista           | Arista network devices                    |
+| atlassian        | Atlassian Cloud                           |
+| aws              | Amazon Web Services                       |
+| azure            | Microsoft Azure                           |
+| cloudflare       | Cloudflare CDN                            |
+| cloudformation   | AWS CloudFormation                        |
+| equinix          | Equinix Metal                             |
+| gcp              | Google Cloud                              |
+| github           | GitHub                                    |
+| gitlab           | GitLab                                    |
+| google-workspace | Google Workspace                          |
+| ipinfo           | ipinfo.io address information             |
+| ipmi             | Intelligent Platform Management Interface |
+| k8s              | Kubernetes                                |
+| mondoo           | Mondoo Platform                           |
+| ms365            | Microsoft 365                             |
+| network          | HTTP/HTTPS Hosts                          |
+| networkdevices   | Cisco IOS / NX-OS devices                 |
+| networkdiscovery | Subdomains from a host                    |
+| nmap             | Nmap host scan                            |
+| oci              | Oracle Cloud Infrastructure               |
+| okta             | Okta                                      |
+| opcua            | OPC Unified Architecture                  |
+| os               | Operating systems                         |
+| shodan           | Shodan Search Engine                      |
+| slack            | Slack                                     |
+| snowflake        | Snowflake                                 |
+| tailscale        | Tailscale networks                        |
+| terraform        | HashiCorp Terraform IaC code              |
+| vcd              | VMware Cloud Director                     |
+| vsphere          | VMware vSphere                            |
+
+To learn what providers are installed, run:
+
+```bash
+cnquery providers
+```
+
+For help on the `providers` subcommand, run:
+
+```bash
+cnquery providers -h
+```
+
+### Manually install a provider
+
+To install a provider, run:
+
+```bash
+cnquery providers install NAME
+```
+
+For `NAME`, substitute the provider name (as shown in the table above). For example:
+
+```bash
+cnquery providers install k8s
+```
+
+For help on manual provider installation, run:
+
+```bash
+cnquery providers install -h
+```
+
+To install a provider from a file, run:
+
+```bash
+cnquery providers install -f PATH
+```
+
+For `PATH`, substitute the path and name of the provider file. For example:
+
+```bash
+cnquery providers install -f providers/os/dist/os.tar.xz
+```
+
+To install a provider from a URL, run:
+
+```bash
+cnquery providers install --url URL
+```
+
+For `URL`, substitute the location and name of the provider file. For example:
+
+```bash
+cnquery providers install --url https://releases.mondoo.com/providers/os/9.0.7/os_9.0.7_linux_arm.tar.xz
+```
+
+### Manually update providers
+
+To update to the latest version of all installed providers, run:
+
+```bash
+cnquery providers update
+```
+
+To update to the latest version of a specific provider, run:
+
+```bash
+cnquery providers update NAME
+```
+
+For `NAME`, substitute the name of the provider (as shown in the table above). For example:
+
+```bash
+cnquery providers update vsphere
+```
+
+### Remove providers
+
+To remove a provider, run:
+
+```bash
+cnquery providers remove NAME
+```
+
+For `NAME`, substitute the name of the provider you want to uninstall. For example:
+
+```bash
+cnquery providers remove terraform
+```
+
+## Custom providers
+
+You can create your own custom providers for any MQL runtime, including cnquery and cnspec. Providers can be created in any language or framework as long as they adhere to the plugin structure and API.
+
+### Provider structure
+
+Provider plugins are located by default in either the system or user location. They consist of a folder containing a set of required files. For example, for a provider `mypro` you would see the following structure:
+
+```
+./mypro/                    Folder containing the provider and additional files
+├── mypro                   Executable used to start the provider plugin
+├── mypro.json              Provider metadata
+└── mypro.resources.json    Resources and fields schema
+```
+
+- **Provider folder**
+  The folder that must contain at least the binary, metadata, and schema. Additionally, providers may contain other custom files.
+
+- **Provider binary**
+  The binary is spawned when a new provider instance is created.
+
+  It must adhere to the plugin behavior defined in [go-plugin](https://github.com/hashicorp/go-plugin), i.e. it must create a blocking process that communicates via GRPC with the caller and implements the provider plugin proto API.
+
+  Due to these specifications, providers can be created in any language or stack, as long as they offer a callable binary (that is executable on the target system) and communicates via the GRPC interface.
+
+- **Provider metadata**
+  This file contains information about the provider like its name, UID, version, connections, and connectors. It is also used to build the CLI interface. The structure is defined in the [Provider struct](https://github.com/mondoohq/cnquery/blob/main/providers-sdk/v1/plugin/start.go).
+
+- **Resources and fields schema**
+  The schema contains all resources and fields that are offered by this provider. This includes version constraints for compatibility, field types, and basic documentation. It is defined in the [Schema message](https://github.com/mondoohq/cnquery/blob/main/providers-sdk/v1/resources/resources.proto) in the resources proto. Provider schemas can be auto-generated (see scaffolding below).
+
+Providers are distributed as `tar.xz` files which contain the above structure. They can be installed using these compressed archives via:
+
+```bash
+cnquery providers install -f provider.tar.xz
+```
+
+Providers can also be installed manually by creating the above structure in the user system provider location.
+
+### Provider scaffolding
+
+To ease the creation of providers, cnquery comes with a scaffolding utility.
+
+To install it:
+
+```bash
+go install apps/provider-scaffold/provider-scaffold.go
+```
+
+To create a new provider (let's call it `mypro` in this example) run:
+
+```bash
+provider-scaffold --path mypro --provider-id mypro --provider-name "My Provider" --go-package github.com/myuser/mql-provider-mypro/mypro
+```
+
+The current provider scaffolding is geared towards golang. Contributions to extend it to other stacks are very welcome.
+
+### Builtin providers
+
+If you prefer not to have separate provider binaries that are spawned, it is possible to build any MQL runtime with Go-based providers directly into the binary. This means that no additional files are installed, or update, nor processes spawned.
+
+To manually configure builtin providers, you can modify the list of [`builtinProviders`](https://github.com/mondoohq/cnquery/blob/main/providers/builtin.go). Once added, you will see it in the list of builtin providers for any binary you build, for example:
+
+```bash
+> cnquery providers
+
+→ builtin (found 3 providers)
+
+  core 11.0.98
+  mock 9.0.0 with connectors: mock, upstream
+  mypro 0.0.1 with connectors: mytarget
+
+...
+```
+
+Any MQL runtime can be built into a binary that contains these providers. Please note that they cannot be updated without creating a new build and increase the file-size of the runtime. This may still be advantageous in cases where you want an overall smaller footprint and tighter security profile.
+
+---

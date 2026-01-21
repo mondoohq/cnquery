@@ -160,7 +160,7 @@ queries:
     docs:
       desc: Returns the number of virtual machines in each vSphere datacenter.
     mql: |
-     vsphere.datacenters { vms.length }
+      vsphere.datacenters { vms.length }
 
   - uid: mondoo-asset-count-azure-resource-groups
     title: Azure Resource Groups count

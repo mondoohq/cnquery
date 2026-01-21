@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "snowflake",
 	ID:              "go.mondoo.com/cnquery/v12/providers/snowflake",
-	Version:         "11.0.115",
+	Version:         "11.0.116",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
@@ -20,15 +20,13 @@ var Config = plugin.Provider{
 			Short: "a Snowflake account",
 			Long: `Use the snowflake provider to query a Snowflake account.
 
-To access a Snowflake account, you must first authenticate with Snowflake. To do so, create an RSA key pair and assign the public key to your user account using Snowsight. To learn how, read https://docs.snowflake.com/en/user-guide/key-pair-auth. Then, in your shell, run:
-
-shell snowflake --account <account id> --region <region> --user <your id>  --role <the role you use> --private-key <path to your private RSA key>
+To access a Snowflake account, you must first authenticate with Snowflake. To do so, create an RSA key pair and assign the public key to your user account using Snowsight. To learn how, read https://docs.snowflake.com/en/user-guide/key-pair-auth.
 
 Once you successfully authenticate, you can scan or query the Snowflake account.
 
-Examples:
-  cnquery shell snowflake --account <account id> --region <region> --user <your id>  --role <the role you use> --private-key <path to your private RSA key>
-  cnspec scan snowflake --account <account id> --region <region> --user <your id>  --role <the role you use> --private-key <path to your private RSA key>
+Example:
+  cnquery shell snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --identity-file <path to your private RSA key>
+  cnspec scan snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --identity-file <path to your private RSA key>
 `,
 			Discovery: []string{},
 			Flags: []plugin.Flag{

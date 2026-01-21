@@ -709,6 +709,90 @@ private aws.efs.filesystem @defaults("name id region") {
   createdAt time
 }
 
+// AWS FSx service
+aws.fsx @defaults("fileSystems") {
+  // A list of FSx file systems
+  fileSystems() []aws.fsx.filesystem
+  // A list of Amazon File Cache instances
+  caches() []aws.fsx.cache
+  // A list of FSx backups
+  backups() []aws.fsx.backup
+}
+
+// AWS FSx file system
+private aws.fsx.filesystem @defaults("id type region") {
+  // File system ID
+  id string
+  // File system ARN
+  arn string
+  // File system type (LUSTRE, WINDOWS, ONTAP, OPENZFS)
+  type string
+  // Lifecycle status
+  lifecycle string
+  // Storage capacity in GiB
+  storageCapacity int
+  // Storage type (SSD, HDD)
+  storageType string
+  // Whether file system is encrypted at rest (true if kmsKeyId is set)
+  encrypted() bool
+  // KMS key ID used for encryption
+  kmsKeyId string
+  // VPC ID where file system resides
+  vpcId string
+  // Subnet IDs for file system
+  subnetIds []string
+  // Resource tags
+  tags map[string]string
+  // Creation timestamp
+  createdAt time
+  // Region where the file system exists
+  region string
+}
+
+// AWS Amazon File Cache instance
+private aws.fsx.cache @defaults("id lifecycle") {
+  // Cache ID
+  id string
+  // Cache ARN
+  arn string
+  // Lifecycle status
+  lifecycle string
+  // Storage capacity in TiB
+  storageCapacity int
+  // VPC ID
+  vpcId string
+  // Subnet IDs
+  subnetIds []string
+  // Lustre-specific configuration
+  lustreConfiguration dict
+  // S3 data repository associations
+  dataRepositoryAssociations []dict
+  // Resource tags
+  tags map[string]string
+}
+
+// AWS FSx backup
+private aws.fsx.backup @defaults("backupId type lifecycle") {
+  // Backup ID
+  backupId string
+  // Backup ARN
+  arn string
+  // Backup type (USER_INITIATED, AUTOMATIC, AWS_BACKUP)
+  type string
+  // Lifecycle status
+  lifecycle string
+  // Associated file system ID
+  fileSystemId string
+  // File system type
+  fileSystemType string
+  // KMS key ID used for encryption
+  kmsKeyId string
+  // Creation timestamp
+  createdAt time
+  // Resource tags
+  tags map[string]string
+}
+
 // AWS Key Management Service (KMS)
 aws.kms @defaults("keys") {
   // A list of all customer master keys (CMKs) in the caller's AWS account (across all regions)
@@ -3470,6 +3554,20 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   tags map[string]string
   // Region where the image is located
   region string
+  // Launch permissions for the image (user IDs and groups that can launch instances from this AMI)
+  launchPermissions() []aws.ec2.image.launchPermission
+}
+
+// Amazon EC2 image launch permission
+private aws.ec2.image.launchPermission @defaults("userId group") {
+  // AWS account ID that has launch permission
+  userId string
+  // Group that has launch permission ("all" for public AMIs)
+  group string
+  // AWS Organization ARN that has launch permission
+  organizationArn string
+  // AWS Organizational Unit ARN that has launch permission
+  organizationalUnitArn string
 }
 
 // Amazon EC2 image block device mapping
