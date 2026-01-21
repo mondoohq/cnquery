@@ -131,7 +131,7 @@ func (a *mqlAwsDrs) createSourceServerResource(server drstypes.SourceServer, reg
 		tags[k] = v
 	}
 
-	mqlServer, err := CreateResource(a.MqlRuntime, "aws.drs.sourceServer",
+	mqlServer, err := CreateResource(a.MqlRuntime, ResourceAwsDrsSourceServer,
 		map[string]*llx.RawData{
 			"sourceServerID":       llx.StringDataPtr(server.SourceServerID),
 			"arn":                  llx.StringDataPtr(server.Arn),
@@ -183,7 +183,7 @@ func (a *mqlAwsDrsSourceServer) replicationConfiguration() (*mqlAwsDrsReplicatio
 		replicatedDisks = append(replicatedDisks, diskMap)
 	}
 
-	mqlConfig, err := CreateResource(a.MqlRuntime, "aws.drs.replicationConfiguration",
+	mqlConfig, err := CreateResource(a.MqlRuntime, ResourceAwsDrsReplicationConfiguration,
 		map[string]*llx.RawData{
 			"sourceServerID":                llx.StringDataPtr(resp.SourceServerID),
 			"stagingAreaSubnetId":           llx.StringDataPtr(resp.StagingAreaSubnetId),
@@ -230,7 +230,7 @@ func (a *mqlAwsDrsSourceServer) launchConfiguration() (*mqlAwsDrsLaunchConfigura
 		return nil, err
 	}
 
-	mqlConfig, err := CreateResource(a.MqlRuntime, "aws.drs.launchConfiguration",
+	mqlConfig, err := CreateResource(a.MqlRuntime, ResourceAwsDrsLaunchConfiguration,
 		map[string]*llx.RawData{
 			"sourceServerID":                      llx.StringDataPtr(resp.SourceServerID),
 			"targetInstanceTypeRightSizingMethod": llx.StringData(string(resp.TargetInstanceTypeRightSizingMethod)),
@@ -351,7 +351,7 @@ func (a *mqlAwsDrs) createJobResource(job drstypes.Job, region string) (*mqlAwsD
 		}
 	}
 
-	mqlJob, err := CreateResource(a.MqlRuntime, "aws.drs.job",
+	mqlJob, err := CreateResource(a.MqlRuntime, ResourceAwsDrsJob,
 		map[string]*llx.RawData{
 			"jobID":                llx.StringDataPtr(job.JobID),
 			"arn":                  llx.StringData(jobArn),
