@@ -398,6 +398,22 @@ func newMqlAccessReviewDefinition(runtime *plugin.Runtime, d models.AccessReview
 		}
 	}
 
+	var mqlScope plugin.Resource
+	if scope := d.GetScope(); scope != nil {
+		if queryScope, ok := scope.(models.AccessReviewQueryScopeable); ok {
+			var err error
+			mqlScope, err = CreateResource(runtime, ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionScope, map[string]*llx.RawData{
+				"__id":      llx.StringData(*d.GetId() + "_scope"),
+				"query":     llx.StringDataPtr(queryScope.GetQuery()),
+				"queryType": llx.StringDataPtr(queryScope.GetQueryType()),
+				"queryRoot": llx.StringDataPtr(queryScope.GetQueryRoot()),
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	var mqlAccessReviewScheduleSettings plugin.Resource
 	var err error
 
@@ -423,9 +439,9 @@ func newMqlAccessReviewDefinition(runtime *plugin.Runtime, d models.AccessReview
 			}
 		}
 
-		recurrenceDict := map[string]*llx.RawData{
-			"pattern": llx.DictData(patternDict),
-			"range":   llx.DictData(rangeDict),
+		recurrenceDict := map[string]any{
+			"pattern": patternDict,
+			"range":   rangeDict,
 		}
 
 		targetData := map[string]*llx.RawData{
@@ -435,6 +451,7 @@ func newMqlAccessReviewDefinition(runtime *plugin.Runtime, d models.AccessReview
 			"defaultDecision":                      llx.StringDataPtr(d.GetSettings().GetDefaultDecision()),
 			"defaultDecisionEnabled":               llx.BoolDataPtr(d.GetSettings().GetDefaultDecisionEnabled()),
 			"instanceDurationInDays":               llx.IntDataPtr(d.GetSettings().GetInstanceDurationInDays()),
+			"reminderNotificationsEnabled":         llx.BoolDataPtr(d.GetSettings().GetReminderNotificationsEnabled()),
 			"justificationRequiredOnApproval":      llx.BoolDataPtr(d.GetSettings().GetJustificationRequiredOnApproval()),
 			"mailNotificationsEnabled":             llx.BoolDataPtr(d.GetSettings().GetMailNotificationsEnabled()),
 			"recommendationsEnabled":               llx.BoolDataPtr(d.GetSettings().GetRecommendationsEnabled()),
@@ -453,6 +470,7 @@ func newMqlAccessReviewDefinition(runtime *plugin.Runtime, d models.AccessReview
 			"id":          llx.StringDataPtr(d.GetId()),
 			"displayName": llx.StringDataPtr(d.GetDisplayName()),
 			"status":      llx.StringDataPtr(d.GetStatus()),
+			"scope":       llx.ResourceData(mqlScope, ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionScope),
 			"reviewers":   llx.DictData(reviewersDict),
 			"settings":    llx.ResourceData(mqlAccessReviewScheduleSettings, "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"),
 		})

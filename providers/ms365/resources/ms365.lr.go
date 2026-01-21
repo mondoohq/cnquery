@@ -20,6 +20,7 @@ const (
 	ResourceMicrosoft                                                                                        string = "microsoft"
 	ResourceMicrosoftIdentityAndAccessAccessReviews                                                          string = "microsoft.identityAndAccess.accessReviews"
 	ResourceMicrosoftIdentityAndAccessAccessReviewDefinition                                                 string = "microsoft.identityAndAccess.accessReviewDefinition"
+	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionScope                                            string = "microsoft.identityAndAccess.accessReviewDefinition.scope"
 	ResourceMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings                     string = "microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"
 	ResourceMicrosoftGroups                                                                                  string = "microsoft.groups"
 	ResourceMicrosoftSetting                                                                                 string = "microsoft.setting"
@@ -147,6 +148,10 @@ func init() {
 		"microsoft.identityAndAccess.accessReviewDefinition": {
 			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessAccessReviewDefinition,
+		},
+		"microsoft.identityAndAccess.accessReviewDefinition.scope": {
+			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinitionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessAccessReviewDefinitionScope,
 		},
 		"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings": {
 			// to override args, implement: initMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -725,11 +730,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess.accessReviewDefinition.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetStatus()).ToDataRes(types.String)
 	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetScope()).ToDataRes(types.Resource("microsoft.identityAndAccess.accessReviewDefinition.scope"))
+	},
 	"microsoft.identityAndAccess.accessReviewDefinition.reviewers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetReviewers()).ToDataRes(types.Dict)
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).GetSettings()).ToDataRes(types.Resource("microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings"))
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.query": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).GetQuery()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.queryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).GetQueryType()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.queryRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).GetQueryRoot()).ToDataRes(types.String)
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.autoApplyDecisionsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetAutoApplyDecisionsEnabled()).ToDataRes(types.Bool)
@@ -2880,12 +2897,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Scope, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope](v.Value, v.Error)
+		return
+	},
 	"microsoft.identityAndAccess.accessReviewDefinition.reviewers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Reviewers, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition).Settings, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.query": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).Query, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.queryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).QueryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.accessReviewDefinition.scope.queryRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope).QueryRoot, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6410,6 +6447,7 @@ type mqlMicrosoftIdentityAndAccessAccessReviewDefinition struct {
 	Id          plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	Status      plugin.TValue[string]
+	Scope       plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope]
 	Reviewers   plugin.TValue[any]
 	Settings    plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings]
 }
@@ -6458,12 +6496,70 @@ func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetStatus() *plugi
 	return &c.Status
 }
 
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetScope() *plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope] {
+	return &c.Scope
+}
+
 func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetReviewers() *plugin.TValue[any] {
 	return &c.Reviewers
 }
 
 func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinition) GetSettings() *plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings] {
 	return &c.Settings
+}
+
+// mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope for the microsoft.identityAndAccess.accessReviewDefinition.scope resource
+type mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScopeInternal it will be used here
+	Query     plugin.TValue[string]
+	QueryType plugin.TValue[string]
+	QueryRoot plugin.TValue[string]
+}
+
+// createMicrosoftIdentityAndAccessAccessReviewDefinitionScope creates a new instance of this resource
+func createMicrosoftIdentityAndAccessAccessReviewDefinitionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.accessReviewDefinition.scope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope) MqlName() string {
+	return "microsoft.identityAndAccess.accessReviewDefinition.scope"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope) GetQuery() *plugin.TValue[string] {
+	return &c.Query
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope) GetQueryType() *plugin.TValue[string] {
+	return &c.QueryType
+}
+
+func (c *mqlMicrosoftIdentityAndAccessAccessReviewDefinitionScope) GetQueryRoot() *plugin.TValue[string] {
+	return &c.QueryRoot
 }
 
 // mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings for the microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings resource
