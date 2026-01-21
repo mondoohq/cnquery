@@ -733,8 +733,8 @@ private aws.fsx.filesystem @defaults("id type region") {
   storageCapacity int
   // Storage type (SSD, HDD)
   storageType string
-  // Whether file system is encrypted at rest
-  encrypted bool
+  // Whether file system is encrypted at rest (true if kmsKeyId is set)
+  encrypted() bool
   // KMS key ID used for encryption
   kmsKeyId string
   // VPC ID where file system resides

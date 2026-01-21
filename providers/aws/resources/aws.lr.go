@@ -17121,7 +17121,9 @@ func (c *mqlAwsFsxFilesystem) GetStorageType() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsFsxFilesystem) GetEncrypted() *plugin.TValue[bool] {
-	return &c.Encrypted
+	return plugin.GetOrCompute[bool](&c.Encrypted, func() (bool, error) {
+		return c.encrypted()
+	})
 }
 
 func (c *mqlAwsFsxFilesystem) GetKmsKeyId() *plugin.TValue[string] {

@@ -97,7 +97,6 @@ func (a *mqlAwsFsx) getFileSystems(conn *connection.AwsConnection) []*jobpool.Jo
 						"lifecycle":       llx.StringData(string(fs.Lifecycle)),
 						"storageCapacity": llx.IntDataDefault(fs.StorageCapacity, 0),
 						"storageType":     llx.StringData(string(fs.StorageType)),
-						"encrypted":       llx.BoolData(fs.KmsKeyId != nil), // If KmsKeyId is set, it's encrypted
 						"kmsKeyId":        llx.StringData(kmsKeyIdStr),
 						"vpcId":           llx.StringDataPtr(fs.VpcId),
 						"subnetIds":       llx.ArrayData(convert.SliceAnyToInterface(fs.SubnetIds), types.String),
@@ -156,6 +155,10 @@ func initAwsFsxFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		}
 	}
 	return nil, nil, errors.New("fsx filesystem does not exist")
+}
+
+func (a *mqlAwsFsxFilesystem) encrypted() (bool, error) {
+	return a.KmsKeyId.Data != "", nil
 }
 
 // ========================
