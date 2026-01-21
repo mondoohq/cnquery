@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 // mapFunctions are all the handlers for builtin array methods
@@ -199,6 +200,10 @@ func _mapWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inve
 	}
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		// Propagate any errors from block execution (e.g., case-mismatch errors in dict access)
+		var anyError multierr.Errors
+		anyError.Add(errs...)
+
 		resMap := map[string]any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
@@ -209,6 +214,7 @@ func _mapWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inve
 		data := &RawData{
 			Type:  bind.Type,
 			Value: resMap,
+			Error: anyError.Deduplicate(),
 		}
 		e.cache.Store(ref, &stepCache{
 			Result:   data,
@@ -804,6 +810,10 @@ func _dictArrayWhere(e *blockExecutor, list []any, chunk *Chunk, ref uint64, inv
 	}
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		// Propagate any errors from block execution (e.g., case-mismatch errors in dict access)
+		var anyError multierr.Errors
+		anyError.Add(errs...)
+
 		resList := []any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
@@ -815,6 +825,7 @@ func _dictArrayWhere(e *blockExecutor, list []any, chunk *Chunk, ref uint64, inv
 		data := &RawData{
 			Type:  types.Dict,
 			Value: resList,
+			Error: anyError.Deduplicate(),
 		}
 		e.cache.Store(ref, &stepCache{
 			Result:   data,
@@ -899,6 +910,10 @@ func _dictWhere(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inver
 	}
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		// Propagate any errors from block execution (e.g., case-mismatch errors in dict access)
+		var anyError multierr.Errors
+		anyError.Add(errs...)
+
 		resMap := map[string]any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
@@ -909,6 +924,7 @@ func _dictWhere(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inver
 		data := &RawData{
 			Type:  bind.Type,
 			Value: resMap,
+			Error: anyError.Deduplicate(),
 		}
 		e.cache.Store(ref, &stepCache{
 			Result:   data,
@@ -986,6 +1002,10 @@ func filterList(e *blockExecutor, list []any, chunk *Chunk, ref uint64, invert b
 
 	var res []any
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		// Note: filterList is used by _dictRecurse which iterates through nested structures
+		// of varying types. Type-related errors (e.g., "dict value does not support accessor")
+		// are expected and should be silently handled. We don't propagate errors here to
+		// maintain backward compatibility with recurse operations.
 		resList := []any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
