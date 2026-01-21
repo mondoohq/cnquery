@@ -13,13 +13,13 @@ import (
 var Config = plugin.Provider{
 	Name:            "nmap",
 	ID:              "go.mondoo.com/cnquery/v12/providers/nmap",
-	Version:         "11.0.85",
+	Version:         "11.0.86",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:    "nmap",
-			Use:     "nmap",
-			Short:   "a Nmap network scanner",
+			Name:  "nmap",
+			Use:   "nmap",
+			Short: "a Nmap network scanner",
 			Long: `Use the nmap provider to query network information using the Nmap network scanner. Nmap must be installed on the system.
 
 Example:
