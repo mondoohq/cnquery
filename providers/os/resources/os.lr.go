@@ -384,7 +384,7 @@ func init() {
 			Create: createAuditdConfig,
 		},
 		"auditd.rules": {
-			// to override args, implement: initAuditdRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAuditdRules,
 			Create: createAuditdRules,
 		},
 		"auditd.rule": {
@@ -10773,7 +10773,7 @@ func (c *mqlAuditdConfig) GetParams() *plugin.TValue[map[string]any] {
 type mqlAuditdRules struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAuditdRulesInternal
+	// optional: if you define mqlAuditdRulesInternal it will be used here
 	Path     plugin.TValue[string]
 	Controls plugin.TValue[[]any]
 	Files    plugin.TValue[[]any]

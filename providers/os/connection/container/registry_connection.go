@@ -17,11 +17,19 @@ var _ shared.Connection = &RegistryConnection{}
 
 type RegistryConnection struct {
 	plugin.Connection
-	asset *inventory.Asset
+	asset         *inventory.Asset
+	auditProvider *shared.AuditRuleProvider
 }
 
 func (r *RegistryConnection) Capabilities() shared.Capabilities {
 	return shared.Capabilities(0)
+}
+
+func (r *RegistryConnection) AuditRuleProvider() *shared.AuditRuleProvider {
+	if r.auditProvider == nil {
+		r.auditProvider = shared.NewAuditRuleProvider(r)
+	}
+	return r.auditProvider
 }
 
 func (r *RegistryConnection) FileInfo(path string) (shared.FileInfoDetails, error) {

@@ -188,6 +188,10 @@ func (p *DeviceConnection) Capabilities() shared.Capabilities {
 	return p.FileSystemConnection.Capabilities()
 }
 
+func (p *DeviceConnection) AuditRuleProvider() *shared.AuditRuleProvider {
+	return p.FileSystemConnection.AuditRuleProvider()
+}
+
 func (p *DeviceConnection) RunCommand(command string) (*shared.Command, error) {
 	return nil, plugin.ErrRunCommandNotImplemented
 }

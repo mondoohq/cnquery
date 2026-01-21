@@ -65,10 +65,11 @@ type MockFileData struct {
 
 type Connection struct {
 	plugin.Connection
-	data    *TomlData
-	asset   *inventory.Asset
-	mutex   sync.Mutex
-	missing map[string]map[string]bool
+	data          *TomlData
+	asset         *inventory.Asset
+	mutex         sync.Mutex
+	missing       map[string]map[string]bool
+	auditProvider *shared.AuditRuleProvider
 }
 
 type mockConfigOptions struct {
@@ -168,6 +169,13 @@ func (p *Connection) UpdateAsset(asset *inventory.Asset) {
 
 func (c *Connection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_RunCommand
+}
+
+func (c *Connection) AuditRuleProvider() *shared.AuditRuleProvider {
+	if c.auditProvider == nil {
+		c.auditProvider = shared.NewAuditRuleProvider(c)
+	}
+	return c.auditProvider
 }
 
 func hashCmd(message string) string {
