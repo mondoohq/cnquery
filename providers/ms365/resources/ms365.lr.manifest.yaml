@@ -1207,6 +1207,7 @@ resources:
       allowTeamsConsumerInbound: {}
       allowedDomains: {}
       blockedDomains: {}
+      externalAccessWithTrialTenants: {}
       identity: {}
       restrictTeamsConsumerToExternalUserProfiles: {}
       sharedSipAddressSpace: {}
