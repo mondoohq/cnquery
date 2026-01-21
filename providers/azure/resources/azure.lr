@@ -36,6 +36,8 @@ azure.subscription @defaults ("name") {
   compute() azure.subscription.computeService
   // Batch resources in the subscription
   batch() azure.subscription.batchService
+  // Databricks resources in the subscription
+  databricks() azure.subscription.databricksService
   // Network resources in the subscription
   network() azure.subscription.networkService
   // Storage resources in the subscription
@@ -284,6 +286,32 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   deploymentConfiguration dict
   // Pool virtual machine configuration
   virtualMachineConfiguration dict
+}
+
+// Azure Databricks
+private azure.subscription.databricksService {
+  // Subscription identifier
+  subscriptionId string
+  // Databricks workspaces in the subscription
+  workspaces() []azure.subscription.databricksService.workspace
+}
+
+// Azure Databricks workspace
+azure.subscription.databricksService.workspace @defaults("id name location") {
+  // Workspace ID
+  id string
+  // Workspace name
+  name string
+  // Workspace location
+  location string
+  // Workspace tags
+  tags map[string]string
+  // Workspace type
+  type string
+  // Workspace properties
+  properties dict
+  // Workspace SKU
+  sku dict
 }
 
 // Azure network
