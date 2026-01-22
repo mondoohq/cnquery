@@ -1843,8 +1843,6 @@ private aws.ecs.taskDefinition.volume.dockerVolumeConfiguration {
 private aws.ecs.taskDefinition.ephemeralStorage {
   // Size (in GiB) of ephemeral storage
   sizeInGiB int
-  // KMS key ID used to encrypt ephemeral storage
-  kmsKeyId string
 }
 
 // Amazon EMR

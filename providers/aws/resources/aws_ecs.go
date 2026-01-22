@@ -572,7 +572,25 @@ func (a *mqlAwsEcs) getECSTaskDefinitions(conn *connection.AwsConnection) []*job
 					}
 
 					td := describeResp.TaskDefinition
-					mqlTaskDef, err := a.createTaskDefinitionResource(region, td)
+
+					// Fetch tags using ListTagsForResource API
+					tags := make(map[string]any)
+					if td.TaskDefinitionArn != nil {
+						tagsResp, err := svc.ListTagsForResource(ctx, &ecsservice.ListTagsForResourceInput{
+							ResourceArn: td.TaskDefinitionArn,
+						})
+						if err != nil {
+							if Is400AccessDeniedError(err) {
+								log.Warn().Str("region", region).Str("taskDef", *td.TaskDefinitionArn).Msg("access denied when fetching tags for task definition")
+							} else {
+								log.Warn().Err(err).Str("taskDef", *td.TaskDefinitionArn).Msg("could not fetch tags for task definition")
+							}
+						} else if tagsResp != nil && tagsResp.Tags != nil {
+							tags = ecsTagsToMap(tagsResp.Tags)
+						}
+					}
+
+					mqlTaskDef, err := a.createTaskDefinitionResource(region, td, tags)
 					if err != nil {
 						return nil, err
 					}
@@ -586,7 +604,7 @@ func (a *mqlAwsEcs) getECSTaskDefinitions(conn *connection.AwsConnection) []*job
 	return tasks
 }
 
-func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.TaskDefinition) (any, error) {
+func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.TaskDefinition, tags map[string]any) (any, error) {
 	// Extract basic fields
 	arn := ""
 	if td.TaskDefinitionArn != nil {
@@ -653,7 +671,6 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 			map[string]*llx.RawData{
 				"__id":      llx.StringData(arn + "/ephemeralStorage"),
 				"sizeInGiB": llx.IntData(0),
-				"kmsKeyId":  llx.StringData(""),
 			})
 		if err != nil {
 			return nil, err
@@ -661,9 +678,7 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 		ephemeralStorage = mqlEphemeralStorage
 	}
 
-	// Extract tags - TaskDefinition doesn't have Tags field directly, need to get from DescribeTaskDefinition response
-	// For now, use empty map - tags would need to be fetched separately
-	tags := make(map[string]any)
+	// Tags are passed as parameter (fetched via ListTagsForResource)
 
 	// Type assert ephemeralStorage to Resource
 	ephemeralStorageResource, ok := ephemeralStorage.(plugin.Resource)
@@ -1063,15 +1078,11 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 
 func (a *mqlAwsEcs) createEphemeralStorageResource(es *ecstypes.EphemeralStorage) (any, error) {
 	sizeInGiB := int64(es.SizeInGiB)
-	kmsKeyId := ""
-	// EphemeralStorage doesn't have KmsKeyId field in the AWS SDK
-	// KMS encryption is handled at the task level, not ephemeral storage level
 
 	return CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.ephemeralStorage",
 		map[string]*llx.RawData{
 			"__id":      llx.StringData("ephemeralStorage"),
 			"sizeInGiB": llx.IntData(sizeInGiB),
-			"kmsKeyId":  llx.StringData(kmsKeyId),
 		})
 }
 
