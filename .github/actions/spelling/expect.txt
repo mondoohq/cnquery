@@ -7,7 +7,7 @@ auditlog
 Auths
 autoaccept
 autoclose
-autoprovisioned
+autoprovision
 awslogs
 awsvpc
 backupconfiguration
@@ -64,11 +64,11 @@ hvm
 iana
 iap
 iccid
-ipc
 ilb
 imei
 ingresstls
 iotedge
+ipc
 ipsetforwardedipconfig
 ipsetreferencestatement
 istio
