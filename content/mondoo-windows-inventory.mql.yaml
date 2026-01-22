@@ -194,7 +194,7 @@ packs:
         docs:
           desc: Lists currently logged-in users by checking Explorer processes.
         mql: |
-          parse.json(content: powershell("Get-Process -IncludeUserName explorer | Select-Object Username | ConvertTo-Json").stdout).params
+          parse.json(content: powershell("Get-Process -IncludeUserName explorer | Select-Object Username | ConvertTo-Json").stdout).params.UserName
       - uid: mondoo-windows-exchange-server-version
         title: Exchange Server Version
         docs:
