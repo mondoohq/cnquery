@@ -640,7 +640,7 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 	// Create container definitions
 	containerDefs := []any{}
 	for i := range td.ContainerDefinitions {
-		mqlContainerDef, err := a.createContainerDefinitionResource(&td.ContainerDefinitions[i])
+		mqlContainerDef, err := a.createContainerDefinitionResource(arn, &td.ContainerDefinitions[i])
 		if err != nil {
 			return nil, err
 		}
@@ -679,7 +679,6 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 	}
 
 	// Tags are passed as parameter (fetched via ListTagsForResource)
-
 	// Type assert ephemeralStorage to Resource
 	ephemeralStorageResource, ok := ephemeralStorage.(plugin.Resource)
 	if !ok {
@@ -706,7 +705,7 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 		})
 }
 
-func (a *mqlAwsEcs) createContainerDefinitionResource(cd *ecstypes.ContainerDefinition) (any, error) {
+func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecstypes.ContainerDefinition) (any, error) {
 	name := ""
 	if cd.Name != nil {
 		name = *cd.Name
@@ -745,9 +744,9 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(cd *ecstypes.ContainerDefi
 			if env.Value != nil {
 				envValue = *env.Value
 			}
-			mqlEnv, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.containerDefinition.environmentVariable",
+			mqlEnv, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable,
 				map[string]*llx.RawData{
-					"__id":  llx.StringData(name + "/env/" + envName),
+					"__id":  llx.StringData(taskDefArn + "/container/" + name + "/env/" + envName),
 					"name":  llx.StringData(envName),
 					"value": llx.StringData(envValue),
 				})
@@ -770,9 +769,9 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(cd *ecstypes.ContainerDefi
 			if secret.ValueFrom != nil {
 				valueFrom = *secret.ValueFrom
 			}
-			mqlSecret, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.containerDefinition.secret",
+			mqlSecret, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinitionSecret,
 				map[string]*llx.RawData{
-					"__id":      llx.StringData(name + "/secret/" + secretName),
+					"__id":      llx.StringData(taskDefArn + "/container/" + name + "/secret/" + secretName),
 					"name":      llx.StringData(secretName),
 					"valueFrom": llx.StringData(valueFrom),
 				})
@@ -793,9 +792,9 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(cd *ecstypes.ContainerDefi
 				options[k] = v
 			}
 		}
-		mqlLogConfig, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.containerDefinition.logConfiguration",
+		mqlLogConfig, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinitionLogConfiguration,
 			map[string]*llx.RawData{
-				"__id":      llx.StringData(name + "/logConfiguration"),
+				"__id":      llx.StringData(taskDefArn + "/container/" + name + "/logConfiguration"),
 				"logDriver": llx.StringData(logDriver),
 				"options":   llx.MapData(options, types.String),
 			})
@@ -805,9 +804,9 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(cd *ecstypes.ContainerDefi
 		logConfig = mqlLogConfig
 	} else {
 		// Create empty log configuration
-		mqlLogConfig, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.containerDefinition.logConfiguration",
+		mqlLogConfig, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinitionLogConfiguration,
 			map[string]*llx.RawData{
-				"__id":      llx.StringData(name + "/logConfiguration"),
+				"__id":      llx.StringData(taskDefArn + "/container/" + name + "/logConfiguration"),
 				"logDriver": llx.StringData(""),
 				"options":   llx.MapData(map[string]any{}, types.String),
 			})
@@ -830,9 +829,9 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(cd *ecstypes.ContainerDefi
 				hostPort = int64(*pm.HostPort)
 			}
 			protocol := string(pm.Protocol)
-			mqlPortMapping, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.containerDefinition.portMapping",
+			mqlPortMapping, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinitionPortMapping,
 				map[string]*llx.RawData{
-					"__id":          llx.StringData(fmt.Sprintf("%s/port/%d", name, containerPort)),
+					"__id":          llx.StringData(fmt.Sprintf("%s/container/%s/port/%d", taskDefArn, name, containerPort)),
 					"containerPort": llx.IntData(containerPort),
 					"hostPort":      llx.IntData(hostPort),
 					"protocol":      llx.StringData(protocol),
@@ -850,9 +849,9 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(cd *ecstypes.ContainerDefi
 		return nil, errors.New("failed to convert logConfig to Resource")
 	}
 
-	return CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.containerDefinition",
+	return CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinition,
 		map[string]*llx.RawData{
-			"__id":                   llx.StringData(name),
+			"__id":                   llx.StringData(taskDefArn + "/container/" + name),
 			"name":                   llx.StringData(name),
 			"image":                  llx.StringData(image),
 			"privileged":             llx.BoolData(privileged),
