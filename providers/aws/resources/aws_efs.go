@@ -192,3 +192,207 @@ func efsTagsToMap(tags []efstypes.Tag) map[string]any {
 
 	return tagsMap
 }
+
+func (a *mqlAwsEfsFilesystem) mountTargets() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	id := a.Id.Data
+	region := a.Region.Data
+
+	svc := conn.Efs(region)
+	ctx := context.Background()
+
+	res := []any{}
+	params := &efs.DescribeMountTargetsInput{
+		FileSystemId: &id,
+	}
+	paginator := efs.NewDescribeMountTargetsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Str("fileSystemId", id).Msg("error accessing EFS mount targets")
+				return res, nil
+			}
+			return nil, err
+		}
+
+		for _, mt := range page.MountTargets {
+			// Fetch security groups for this mount target
+			sgRes, err := svc.DescribeMountTargetSecurityGroups(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
+				MountTargetId: mt.MountTargetId,
+			})
+			if err != nil {
+				log.Warn().Str("mountTargetId", convert.ToValue(mt.MountTargetId)).Msg("error fetching security groups for mount target")
+			}
+
+			args := map[string]*llx.RawData{
+				"__id":               llx.StringDataPtr(mt.MountTargetId),
+				"mountTargetId":      llx.StringDataPtr(mt.MountTargetId),
+				"fileSystemId":       llx.StringDataPtr(mt.FileSystemId),
+				"subnetId":           llx.StringDataPtr(mt.SubnetId),
+				"availabilityZone":   llx.StringDataPtr(mt.AvailabilityZoneName),
+				"ipAddress":          llx.StringDataPtr(mt.IpAddress),
+				"lifecycleState":     llx.StringData(string(mt.LifeCycleState)),
+				"networkInterfaceId": llx.StringDataPtr(mt.NetworkInterfaceId),
+				"region":             llx.StringData(region),
+			}
+
+			mqlMountTarget, err := CreateResource(a.MqlRuntime, ResourceAwsEfsMountTarget, args)
+			if err != nil {
+				return nil, err
+			}
+
+			// Cache the security group IDs for lazy loading
+			if sgRes != nil && len(sgRes.SecurityGroups) > 0 {
+				mqlMountTarget.(*mqlAwsEfsMountTarget).cacheSecurityGroupIDs = sgRes.SecurityGroups
+			}
+
+			res = append(res, mqlMountTarget)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsEfsFilesystem) accessPoints() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	id := a.Id.Data
+	region := a.Region.Data
+
+	svc := conn.Efs(region)
+	ctx := context.Background()
+
+	res := []any{}
+	params := &efs.DescribeAccessPointsInput{
+		FileSystemId: &id,
+	}
+	paginator := efs.NewDescribeAccessPointsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Str("fileSystemId", id).Msg("error accessing EFS access points")
+				return res, nil
+			}
+			return nil, err
+		}
+
+		for _, ap := range page.AccessPoints {
+			// Convert POSIX user to dict
+			var posixUser map[string]any
+			if ap.PosixUser != nil {
+				posixUser = map[string]any{
+					"uid": convert.ToValue(ap.PosixUser.Uid),
+					"gid": convert.ToValue(ap.PosixUser.Gid),
+				}
+				if len(ap.PosixUser.SecondaryGids) > 0 {
+					secondaryGids := make([]any, len(ap.PosixUser.SecondaryGids))
+					for i, gid := range ap.PosixUser.SecondaryGids {
+						secondaryGids[i] = gid
+					}
+					posixUser["secondaryGids"] = secondaryGids
+				}
+			}
+
+			// Convert root directory to dict
+			var rootDirectory map[string]any
+			if ap.RootDirectory != nil {
+				rootDirectory = map[string]any{
+					"path": convert.ToValue(ap.RootDirectory.Path),
+				}
+				if ap.RootDirectory.CreationInfo != nil {
+					rootDirectory["creationInfo"] = map[string]any{
+						"ownerUid":    convert.ToValue(ap.RootDirectory.CreationInfo.OwnerUid),
+						"ownerGid":    convert.ToValue(ap.RootDirectory.CreationInfo.OwnerGid),
+						"permissions": convert.ToValue(ap.RootDirectory.CreationInfo.Permissions),
+					}
+				}
+			}
+
+			args := map[string]*llx.RawData{
+				"__id":           llx.StringDataPtr(ap.AccessPointArn),
+				"accessPointId":  llx.StringDataPtr(ap.AccessPointId),
+				"arn":            llx.StringDataPtr(ap.AccessPointArn),
+				"fileSystemId":   llx.StringDataPtr(ap.FileSystemId),
+				"name":           llx.StringDataPtr(ap.Name),
+				"lifecycleState": llx.StringData(string(ap.LifeCycleState)),
+				"region":         llx.StringData(region),
+				"tags":           llx.MapData(efsTagsToMap(ap.Tags), types.String),
+			}
+
+			if posixUser != nil {
+				args["posixUser"] = llx.DictData(posixUser)
+			}
+			if rootDirectory != nil {
+				args["rootDirectory"] = llx.DictData(rootDirectory)
+			}
+
+			mqlAccessPoint, err := CreateResource(a.MqlRuntime, ResourceAwsEfsAccessPoint, args)
+			if err != nil {
+				return nil, err
+			}
+
+			res = append(res, mqlAccessPoint)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsEfsFilesystem) fileSystemPolicy() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	id := a.Id.Data
+	region := a.Region.Data
+
+	svc := conn.Efs(region)
+	ctx := context.Background()
+
+	policyRes, err := svc.DescribeFileSystemPolicy(ctx, &efs.DescribeFileSystemPolicyInput{
+		FileSystemId: &id,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			log.Warn().Str("region", region).Str("fileSystemId", id).Msg("error accessing EFS file system policy")
+			return "", nil
+		}
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+			// No policy exists
+			return "", nil
+		}
+		return "", err
+	}
+
+	if policyRes != nil && policyRes.Policy != nil {
+		return *policyRes.Policy, nil
+	}
+
+	return "", nil
+}
+
+// Mount Target implementation
+type mqlAwsEfsMountTargetInternal struct {
+	cacheSecurityGroupIDs []string
+}
+
+func (a *mqlAwsEfsMountTarget) securityGroups() ([]any, error) {
+	if len(a.cacheSecurityGroupIDs) == 0 {
+		return []any{}, nil
+	}
+
+	region := a.Region.Data
+
+	res := []any{}
+	for _, sgID := range a.cacheSecurityGroupIDs {
+		mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup", map[string]*llx.RawData{
+			"id":     llx.StringData(sgID),
+			"region": llx.StringData(region),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSg)
+	}
+
+	return res, nil
+}

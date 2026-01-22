@@ -707,6 +707,56 @@ private aws.efs.filesystem @defaults("name id region") {
   tags map[string]string
   // Creation timestamp
   createdAt time
+  // Mount targets for the file system
+  mountTargets() []aws.efs.mountTarget
+  // Access points for the file system
+  accessPoints() []aws.efs.accessPoint
+  // Resource-based policy document (JSON)
+  fileSystemPolicy() string
+}
+
+// AWS EFS mount target
+private aws.efs.mountTarget @defaults("mountTargetId subnetId") {
+  // Mount target ID
+  mountTargetId string
+  // Associated file system ID
+  fileSystemId string
+  // Subnet ID where mount target resides
+  subnetId string
+  // Availability zone
+  availabilityZone string
+  // IP address of mount target
+  ipAddress string
+  // Security groups attached to mount target
+  securityGroups() []aws.ec2.securitygroup
+  // Mount target state (creating, available, deleting)
+  lifecycleState string
+  // Network interface ID
+  networkInterfaceId string
+  // Region where the mount target exists
+  region string
+}
+
+// AWS EFS access point
+private aws.efs.accessPoint @defaults("accessPointId name") {
+  // Access point ID
+  accessPointId string
+  // Access point ARN
+  arn string
+  // Associated file system ID
+  fileSystemId string
+  // Access point name
+  name string
+  // POSIX user identity (uid, gid, secondaryGids)
+  posixUser dict
+  // Root directory configuration (path, creationInfo)
+  rootDirectory dict
+  // Access point state
+  lifecycleState string
+  // Resource tags
+  tags map[string]string
+  // Region where the access point exists
+  region string
 }
 
 // AWS FSx service

@@ -17,6 +17,7 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
+<<<<<<< HEAD
 	ResourceAws                                                                 string = "aws"
 	ResourceAwsAccount                                                          string = "aws.account"
 	ResourceAwsAccountAlternateContact                                          string = "aws.account.alternateContact"
@@ -246,6 +247,227 @@ const (
 	ResourceAwsCodedeployApplication                                            string = "aws.codedeploy.application"
 	ResourceAwsCodedeployDeploymentGroup                                        string = "aws.codedeploy.deploymentGroup"
 	ResourceAwsCodedeployDeployment                                             string = "aws.codedeploy.deployment"
+=======
+	ResourceAws                                                              string = "aws"
+	ResourceAwsAccount                                                       string = "aws.account"
+	ResourceAwsAccountAlternateContact                                       string = "aws.account.alternateContact"
+	ResourceAwsOrganization                                                  string = "aws.organization"
+	ResourceAwsVpc                                                           string = "aws.vpc"
+	ResourceAwsVpcRoutetable                                                 string = "aws.vpc.routetable"
+	ResourceAwsVpcRoutetableAssociation                                      string = "aws.vpc.routetable.association"
+	ResourceAwsVpcSubnet                                                     string = "aws.vpc.subnet"
+	ResourceAwsVpcEndpoint                                                   string = "aws.vpc.endpoint"
+	ResourceAwsVpcFlowlog                                                    string = "aws.vpc.flowlog"
+	ResourceAwsWaf                                                           string = "aws.waf"
+	ResourceAwsWafAcl                                                        string = "aws.waf.acl"
+	ResourceAwsWafRulegroup                                                  string = "aws.waf.rulegroup"
+	ResourceAwsWafRule                                                       string = "aws.waf.rule"
+	ResourceAwsWafRuleAction                                                 string = "aws.waf.rule.action"
+	ResourceAwsWafRuleStatement                                              string = "aws.waf.rule.statement"
+	ResourceAwsWafRuleStatementGeomatchstatement                             string = "aws.waf.rule.statement.geomatchstatement"
+	ResourceAwsWafRuleStatementIpsetreferencestatement                       string = "aws.waf.rule.statement.ipsetreferencestatement"
+	ResourceAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig string = "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig"
+	ResourceAwsWafRuleStatementLabelmatchstatement                           string = "aws.waf.rule.statement.labelmatchstatement"
+	ResourceAwsWafRuleStatementManagedrulegroupstatement                     string = "aws.waf.rule.statement.managedrulegroupstatement"
+	ResourceAwsWafRuleStatementAndstatement                                  string = "aws.waf.rule.statement.andstatement"
+	ResourceAwsWafRuleStatementNotstatement                                  string = "aws.waf.rule.statement.notstatement"
+	ResourceAwsWafRuleStatementOrstatement                                   string = "aws.waf.rule.statement.orstatement"
+	ResourceAwsWafRuleStatementRatebasedstatement                            string = "aws.waf.rule.statement.ratebasedstatement"
+	ResourceAwsWafRuleStatementRegexpatternsetreferencestatement             string = "aws.waf.rule.statement.regexpatternsetreferencestatement"
+	ResourceAwsWafRuleStatementRulegroupreferencestatement                   string = "aws.waf.rule.statement.rulegroupreferencestatement"
+	ResourceAwsWafRuleStatementSizeconstraintstatement                       string = "aws.waf.rule.statement.sizeconstraintstatement"
+	ResourceAwsWafRuleStatementRegexmatchstatement                           string = "aws.waf.rule.statement.regexmatchstatement"
+	ResourceAwsWafRuleStatementBytematchstatement                            string = "aws.waf.rule.statement.bytematchstatement"
+	ResourceAwsWafRuleFieldtomatch                                           string = "aws.waf.rule.fieldtomatch"
+	ResourceAwsWafRuleFieldtomatchBody                                       string = "aws.waf.rule.fieldtomatch.body"
+	ResourceAwsWafRuleFieldtomatchCookie                                     string = "aws.waf.rule.fieldtomatch.cookie"
+	ResourceAwsWafRuleFieldtomatchHeaderorder                                string = "aws.waf.rule.fieldtomatch.headerorder"
+	ResourceAwsWafRuleFieldtomatchSingleheader                               string = "aws.waf.rule.fieldtomatch.singleheader"
+	ResourceAwsWafRuleFieldtomatchSinglequeryargument                        string = "aws.waf.rule.fieldtomatch.singlequeryargument"
+	ResourceAwsWafRuleFieldtomatchJa3fingerprint                             string = "aws.waf.rule.fieldtomatch.ja3fingerprint"
+	ResourceAwsWafRuleFieldtomatchJsonbody                                   string = "aws.waf.rule.fieldtomatch.jsonbody"
+	ResourceAwsWafRuleFieldtomatchJsonbodyMatchpattern                       string = "aws.waf.rule.fieldtomatch.jsonbody.matchpattern"
+	ResourceAwsWafRuleFieldtomatchHeaders                                    string = "aws.waf.rule.fieldtomatch.headers"
+	ResourceAwsWafRuleFieldtomatchHeadersMatchpattern                        string = "aws.waf.rule.fieldtomatch.headers.matchpattern"
+	ResourceAwsWafRuleStatementXssmatchstatement                             string = "aws.waf.rule.statement.xssmatchstatement"
+	ResourceAwsWafRuleStatementSqlimatchstatement                            string = "aws.waf.rule.statement.sqlimatchstatement"
+	ResourceAwsWafIpset                                                      string = "aws.waf.ipset"
+	ResourceAwsEfs                                                           string = "aws.efs"
+	ResourceAwsEfsFilesystem                                                 string = "aws.efs.filesystem"
+	ResourceAwsEfsMountTarget                                                string = "aws.efs.mountTarget"
+	ResourceAwsEfsAccessPoint                                                string = "aws.efs.accessPoint"
+	ResourceAwsFsx                                                           string = "aws.fsx"
+	ResourceAwsFsxFilesystem                                                 string = "aws.fsx.filesystem"
+	ResourceAwsFsxCache                                                      string = "aws.fsx.cache"
+	ResourceAwsFsxBackup                                                     string = "aws.fsx.backup"
+	ResourceAwsKms                                                           string = "aws.kms"
+	ResourceAwsKmsKey                                                        string = "aws.kms.key"
+	ResourceAwsIam                                                           string = "aws.iam"
+	ResourceAwsIamUsercredentialreportentry                                  string = "aws.iam.usercredentialreportentry"
+	ResourceAwsIamUser                                                       string = "aws.iam.user"
+	ResourceAwsIamInstanceProfile                                            string = "aws.iam.instanceProfile"
+	ResourceAwsIamLoginProfile                                               string = "aws.iam.loginProfile"
+	ResourceAwsIamPolicy                                                     string = "aws.iam.policy"
+	ResourceAwsIamPolicyversion                                              string = "aws.iam.policyversion"
+	ResourceAwsIamRole                                                       string = "aws.iam.role"
+	ResourceAwsIamGroup                                                      string = "aws.iam.group"
+	ResourceAwsIamVirtualmfadevice                                           string = "aws.iam.virtualmfadevice"
+	ResourceAwsIamSamlProvider                                               string = "aws.iam.samlProvider"
+	ResourceAwsIamOidcProvider                                               string = "aws.iam.oidcProvider"
+	ResourceAwsIamAccessAnalyzer                                             string = "aws.iam.accessAnalyzer"
+	ResourceAwsIamAccessanalyzerAnalyzer                                     string = "aws.iam.accessanalyzer.analyzer"
+	ResourceAwsIamAccessanalyzerFinding                                      string = "aws.iam.accessanalyzer.finding"
+	ResourceAwsSagemaker                                                     string = "aws.sagemaker"
+	ResourceAwsSagemakerNotebookinstance                                     string = "aws.sagemaker.notebookinstance"
+	ResourceAwsSagemakerNotebookinstancedetails                              string = "aws.sagemaker.notebookinstancedetails"
+	ResourceAwsSagemakerEndpoint                                             string = "aws.sagemaker.endpoint"
+	ResourceAwsSns                                                           string = "aws.sns"
+	ResourceAwsSnsTopic                                                      string = "aws.sns.topic"
+	ResourceAwsSnsSubscription                                               string = "aws.sns.subscription"
+	ResourceAwsEs                                                            string = "aws.es"
+	ResourceAwsEsDomain                                                      string = "aws.es.domain"
+	ResourceAwsAcm                                                           string = "aws.acm"
+	ResourceAwsAcmCertificate                                                string = "aws.acm.certificate"
+	ResourceAwsAutoscaling                                                   string = "aws.autoscaling"
+	ResourceAwsAutoscalingGroup                                              string = "aws.autoscaling.group"
+	ResourceAwsAutoscalingGroupTag                                           string = "aws.autoscaling.group.tag"
+	ResourceAwsElb                                                           string = "aws.elb"
+	ResourceAwsElbTargetgroup                                                string = "aws.elb.targetgroup"
+	ResourceAwsElbLoadbalancer                                               string = "aws.elb.loadbalancer"
+	ResourceAwsCodebuild                                                     string = "aws.codebuild"
+	ResourceAwsCodebuildProject                                              string = "aws.codebuild.project"
+	ResourceAwsGuardduty                                                     string = "aws.guardduty"
+	ResourceAwsGuarddutyDetector                                             string = "aws.guardduty.detector"
+	ResourceAwsGuarddutyFinding                                              string = "aws.guardduty.finding"
+	ResourceAwsMacie                                                         string = "aws.macie"
+	ResourceAwsMacieSession                                                  string = "aws.macie.session"
+	ResourceAwsMacieClassificationJob                                        string = "aws.macie.classificationJob"
+	ResourceAwsMacieFinding                                                  string = "aws.macie.finding"
+	ResourceAwsMacieCustomDataIdentifier                                     string = "aws.macie.customDataIdentifier"
+	ResourceAwsSecurityhub                                                   string = "aws.securityhub"
+	ResourceAwsSecurityhubHub                                                string = "aws.securityhub.hub"
+	ResourceAwsSecretsmanager                                                string = "aws.secretsmanager"
+	ResourceAwsSecretsmanagerSecret                                          string = "aws.secretsmanager.secret"
+	ResourceAwsEcs                                                           string = "aws.ecs"
+	ResourceAwsEcsCluster                                                    string = "aws.ecs.cluster"
+	ResourceAwsEcsInstance                                                   string = "aws.ecs.instance"
+	ResourceAwsEcsTask                                                       string = "aws.ecs.task"
+	ResourceAwsEcsContainer                                                  string = "aws.ecs.container"
+	ResourceAwsEmr                                                           string = "aws.emr"
+	ResourceAwsEmrCluster                                                    string = "aws.emr.cluster"
+	ResourceAwsCloudwatch                                                    string = "aws.cloudwatch"
+	ResourceAwsCloudwatchMetricsalarm                                        string = "aws.cloudwatch.metricsalarm"
+	ResourceAwsCloudwatchMetric                                              string = "aws.cloudwatch.metric"
+	ResourceAwsCloudwatchMetricdimension                                     string = "aws.cloudwatch.metricdimension"
+	ResourceAwsCloudwatchMetricstatistics                                    string = "aws.cloudwatch.metricstatistics"
+	ResourceAwsCloudwatchMetricDatapoint                                     string = "aws.cloudwatch.metric.datapoint"
+	ResourceAwsCloudwatchLoggroup                                            string = "aws.cloudwatch.loggroup"
+	ResourceAwsCloudwatchLoggroupMetricsfilter                               string = "aws.cloudwatch.loggroup.metricsfilter"
+	ResourceAwsCloudfront                                                    string = "aws.cloudfront"
+	ResourceAwsCloudfrontDistribution                                        string = "aws.cloudfront.distribution"
+	ResourceAwsCloudfrontDistributionOrigin                                  string = "aws.cloudfront.distribution.origin"
+	ResourceAwsCloudfrontFunction                                            string = "aws.cloudfront.function"
+	ResourceAwsCloudtrail                                                    string = "aws.cloudtrail"
+	ResourceAwsCloudtrailTrail                                               string = "aws.cloudtrail.trail"
+	ResourceAwsS3control                                                     string = "aws.s3control"
+	ResourceAwsS3                                                            string = "aws.s3"
+	ResourceAwsS3Bucket                                                      string = "aws.s3.bucket"
+	ResourceAwsS3BucketGrant                                                 string = "aws.s3.bucket.grant"
+	ResourceAwsS3BucketCorsrule                                              string = "aws.s3.bucket.corsrule"
+	ResourceAwsS3BucketPolicy                                                string = "aws.s3.bucket.policy"
+	ResourceAwsApplicationAutoscaling                                        string = "aws.applicationAutoscaling"
+	ResourceAwsApplicationAutoscalingTarget                                  string = "aws.applicationAutoscaling.target"
+	ResourceAwsDrs                                                           string = "aws.drs"
+	ResourceAwsDrsSourceServer                                               string = "aws.drs.sourceServer"
+	ResourceAwsDrsJob                                                        string = "aws.drs.job"
+	ResourceAwsDrsReplicationConfiguration                                   string = "aws.drs.replicationConfiguration"
+	ResourceAwsDrsLaunchConfiguration                                        string = "aws.drs.launchConfiguration"
+	ResourceAwsBackup                                                        string = "aws.backup"
+	ResourceAwsBackupVault                                                   string = "aws.backup.vault"
+	ResourceAwsBackupVaultRecoveryPoint                                      string = "aws.backup.vaultRecoveryPoint"
+	ResourceAwsDynamodb                                                      string = "aws.dynamodb"
+	ResourceAwsDynamodbExport                                                string = "aws.dynamodb.export"
+	ResourceAwsDynamodbLimit                                                 string = "aws.dynamodb.limit"
+	ResourceAwsDynamodbGlobaltable                                           string = "aws.dynamodb.globaltable"
+	ResourceAwsDynamodbTable                                                 string = "aws.dynamodb.table"
+	ResourceAwsSqs                                                           string = "aws.sqs"
+	ResourceAwsSqsQueue                                                      string = "aws.sqs.queue"
+	ResourceAwsRds                                                           string = "aws.rds"
+	ResourceAwsRdsBackupsetting                                              string = "aws.rds.backupsetting"
+	ResourceAwsRdsDbcluster                                                  string = "aws.rds.dbcluster"
+	ResourceAwsRdsSnapshot                                                   string = "aws.rds.snapshot"
+	ResourceAwsRdsDbinstance                                                 string = "aws.rds.dbinstance"
+	ResourceAwsRdsPendingMaintenanceAction                                   string = "aws.rds.pendingMaintenanceAction"
+	ResourceAwsRdsClusterParameterGroup                                      string = "aws.rds.clusterParameterGroup"
+	ResourceAwsRdsParameterGroup                                             string = "aws.rds.parameterGroup"
+	ResourceAwsRdsParameterGroupParameter                                    string = "aws.rds.parameterGroup.parameter"
+	ResourceAwsElasticache                                                   string = "aws.elasticache"
+	ResourceAwsElasticacheCluster                                            string = "aws.elasticache.cluster"
+	ResourceAwsElasticacheServerlessCache                                    string = "aws.elasticache.serverlessCache"
+	ResourceAwsRedshift                                                      string = "aws.redshift"
+	ResourceAwsRedshiftCluster                                               string = "aws.redshift.cluster"
+	ResourceAwsEcr                                                           string = "aws.ecr"
+	ResourceAwsEcrRepository                                                 string = "aws.ecr.repository"
+	ResourceAwsEcrImage                                                      string = "aws.ecr.image"
+	ResourceAwsDms                                                           string = "aws.dms"
+	ResourceAwsApigateway                                                    string = "aws.apigateway"
+	ResourceAwsApigatewayRestapi                                             string = "aws.apigateway.restapi"
+	ResourceAwsApigatewayStage                                               string = "aws.apigateway.stage"
+	ResourceAwsLambda                                                        string = "aws.lambda"
+	ResourceAwsLambdaFunction                                                string = "aws.lambda.function"
+	ResourceAwsSsm                                                           string = "aws.ssm"
+	ResourceAwsSsmParameter                                                  string = "aws.ssm.parameter"
+	ResourceAwsSsmInstance                                                   string = "aws.ssm.instance"
+	ResourceAwsEc2                                                           string = "aws.ec2"
+	ResourceAwsEc2Eip                                                        string = "aws.ec2.eip"
+	ResourceAwsVpcNatgateway                                                 string = "aws.vpc.natgateway"
+	ResourceAwsVpcNatgatewayAddress                                          string = "aws.vpc.natgateway.address"
+	ResourceAwsVpcServiceEndpoint                                            string = "aws.vpc.serviceEndpoint"
+	ResourceAwsVpcPeeringConnection                                          string = "aws.vpc.peeringConnection"
+	ResourceAwsVpcPeeringConnectionPeeringVpc                                string = "aws.vpc.peeringConnection.peeringVpc"
+	ResourceAwsEc2Networkacl                                                 string = "aws.ec2.networkacl"
+	ResourceAwsEc2NetworkaclAssociation                                      string = "aws.ec2.networkacl.association"
+	ResourceAwsEc2NetworkaclEntry                                            string = "aws.ec2.networkacl.entry"
+	ResourceAwsEc2NetworkaclEntryPortrange                                   string = "aws.ec2.networkacl.entry.portrange"
+	ResourceAwsEc2Vpnconnection                                              string = "aws.ec2.vpnconnection"
+	ResourceAwsEc2Vgwtelemetry                                               string = "aws.ec2.vgwtelemetry"
+	ResourceAwsEc2Internetgateway                                            string = "aws.ec2.internetgateway"
+	ResourceAwsEc2Snapshot                                                   string = "aws.ec2.snapshot"
+	ResourceAwsEc2Volume                                                     string = "aws.ec2.volume"
+	ResourceAwsInspector                                                     string = "aws.inspector"
+	ResourceAwsInspectorCoverage                                             string = "aws.inspector.coverage"
+	ResourceAwsInspectorCoverageInstance                                     string = "aws.inspector.coverage.instance"
+	ResourceAwsInspectorCoverageImage                                        string = "aws.inspector.coverage.image"
+	ResourceAwsInspectorCoverageRepository                                   string = "aws.inspector.coverage.repository"
+	ResourceAwsEc2Instance                                                   string = "aws.ec2.instance"
+	ResourceAwsEc2Networkinterface                                           string = "aws.ec2.networkinterface"
+	ResourceAwsEc2Keypair                                                    string = "aws.ec2.keypair"
+	ResourceAwsEc2Image                                                      string = "aws.ec2.image"
+	ResourceAwsEc2ImageLaunchPermission                                      string = "aws.ec2.image.launchPermission"
+	ResourceAwsEc2ImageBlockDeviceMapping                                    string = "aws.ec2.image.blockDeviceMapping"
+	ResourceAwsEc2ImageEbsBlockDevice                                        string = "aws.ec2.image.ebsBlockDevice"
+	ResourceAwsEc2InstanceDevice                                             string = "aws.ec2.instance.device"
+	ResourceAwsEc2Securitygroup                                              string = "aws.ec2.securitygroup"
+	ResourceAwsEc2SecuritygroupIppermission                                  string = "aws.ec2.securitygroup.ippermission"
+	ResourceAwsConfig                                                        string = "aws.config"
+	ResourceAwsConfigRule                                                    string = "aws.config.rule"
+	ResourceAwsConfigRecorder                                                string = "aws.config.recorder"
+	ResourceAwsConfigDeliverychannel                                         string = "aws.config.deliverychannel"
+	ResourceAwsEks                                                           string = "aws.eks"
+	ResourceAwsEksNodegroup                                                  string = "aws.eks.nodegroup"
+	ResourceAwsEksAddon                                                      string = "aws.eks.addon"
+	ResourceAwsEksCluster                                                    string = "aws.eks.cluster"
+	ResourceAwsNeptune                                                       string = "aws.neptune"
+	ResourceAwsNeptuneCluster                                                string = "aws.neptune.cluster"
+	ResourceAwsNeptuneInstance                                               string = "aws.neptune.instance"
+	ResourceAwsTimestreamLiveanalytics                                       string = "aws.timestream.liveanalytics"
+	ResourceAwsTimestreamLiveanalyticsDatabase                               string = "aws.timestream.liveanalytics.database"
+	ResourceAwsTimestreamLiveanalyticsTable                                  string = "aws.timestream.liveanalytics.table"
+	ResourceAwsCodedeploy                                                    string = "aws.codedeploy"
+	ResourceAwsCodedeployApplication                                         string = "aws.codedeploy.application"
+	ResourceAwsCodedeployDeploymentGroup                                     string = "aws.codedeploy.deploymentGroup"
+	ResourceAwsCodedeployDeployment                                          string = "aws.codedeploy.deployment"
+>>>>>>> f3d0931104ecf58945212b510dcfeaee051f3557
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -435,6 +657,14 @@ func init() {
 		"aws.efs.filesystem": {
 			Init:   initAwsEfsFilesystem,
 			Create: createAwsEfsFilesystem,
+		},
+		"aws.efs.mountTarget": {
+			// to override args, implement: initAwsEfsMountTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsMountTarget,
+		},
+		"aws.efs.accessPoint": {
+			// to override args, implement: initAwsEfsAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsAccessPoint,
 		},
 		"aws.fsx": {
 			// to override args, implement: initAwsFsx(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2012,6 +2242,69 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.efs.filesystem.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.efs.filesystem.mountTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetMountTargets()).ToDataRes(types.Array(types.Resource("aws.efs.mountTarget")))
+	},
+	"aws.efs.filesystem.accessPoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetAccessPoints()).ToDataRes(types.Array(types.Resource("aws.efs.accessPoint")))
+	},
+	"aws.efs.filesystem.fileSystemPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetFileSystemPolicy()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.mountTargetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetMountTargetId()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.subnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetSubnetId()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetIpAddress()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.efs.mountTarget.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.networkInterfaceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetNetworkInterfaceId()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.accessPointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetAccessPointId()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetArn()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetName()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.posixUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetPosixUser()).ToDataRes(types.Dict)
+	},
+	"aws.efs.accessPoint.rootDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectory()).ToDataRes(types.Dict)
+	},
+	"aws.efs.accessPoint.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.efs.accessPoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.fsx.fileSystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsx).GetFileSystems()).ToDataRes(types.Array(types.Resource("aws.fsx.filesystem")))
@@ -7604,6 +7897,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.efs.filesystem.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystem).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.mountTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).MountTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.accessPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).AccessPoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.fileSystemPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).FileSystemPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.mountTarget.mountTargetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).MountTargetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.networkInterfaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).NetworkInterfaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.accessPoint.accessPointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).AccessPointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.posixUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).PosixUser, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.rootDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).RootDirectory, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17655,6 +18040,9 @@ type mqlAwsEfsFilesystem struct {
 	AvailabilityZone plugin.TValue[string]
 	Tags             plugin.TValue[map[string]any]
 	CreatedAt        plugin.TValue[*time.Time]
+	MountTargets     plugin.TValue[[]any]
+	AccessPoints     plugin.TValue[[]any]
+	FileSystemPolicy plugin.TValue[string]
 }
 
 // createAwsEfsFilesystem creates a new instance of this resource
@@ -17746,6 +18134,224 @@ func (c *mqlAwsEfsFilesystem) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsEfsFilesystem) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsEfsFilesystem) GetMountTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MountTargets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "mountTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mountTargets()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetAccessPoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessPoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "accessPoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessPoints()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetFileSystemPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FileSystemPolicy, func() (string, error) {
+		return c.fileSystemPolicy()
+	})
+}
+
+// mqlAwsEfsMountTarget for the aws.efs.mountTarget resource
+type mqlAwsEfsMountTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEfsMountTargetInternal
+	MountTargetId      plugin.TValue[string]
+	FileSystemId       plugin.TValue[string]
+	SubnetId           plugin.TValue[string]
+	AvailabilityZone   plugin.TValue[string]
+	IpAddress          plugin.TValue[string]
+	SecurityGroups     plugin.TValue[[]any]
+	LifecycleState     plugin.TValue[string]
+	NetworkInterfaceId plugin.TValue[string]
+	Region             plugin.TValue[string]
+}
+
+// createAwsEfsMountTarget creates a new instance of this resource
+func createAwsEfsMountTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsMountTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.mountTarget", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsMountTarget) MqlName() string {
+	return "aws.efs.mountTarget"
+}
+
+func (c *mqlAwsEfsMountTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsMountTarget) GetMountTargetId() *plugin.TValue[string] {
+	return &c.MountTargetId
+}
+
+func (c *mqlAwsEfsMountTarget) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAwsEfsMountTarget) GetSubnetId() *plugin.TValue[string] {
+	return &c.SubnetId
+}
+
+func (c *mqlAwsEfsMountTarget) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsEfsMountTarget) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlAwsEfsMountTarget) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.mountTarget", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsEfsMountTarget) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlAwsEfsMountTarget) GetNetworkInterfaceId() *plugin.TValue[string] {
+	return &c.NetworkInterfaceId
+}
+
+func (c *mqlAwsEfsMountTarget) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsEfsAccessPoint for the aws.efs.accessPoint resource
+type mqlAwsEfsAccessPoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEfsAccessPointInternal it will be used here
+	AccessPointId  plugin.TValue[string]
+	Arn            plugin.TValue[string]
+	FileSystemId   plugin.TValue[string]
+	Name           plugin.TValue[string]
+	PosixUser      plugin.TValue[any]
+	RootDirectory  plugin.TValue[any]
+	LifecycleState plugin.TValue[string]
+	Tags           plugin.TValue[map[string]any]
+	Region         plugin.TValue[string]
+}
+
+// createAwsEfsAccessPoint creates a new instance of this resource
+func createAwsEfsAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsAccessPoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.accessPoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsAccessPoint) MqlName() string {
+	return "aws.efs.accessPoint"
+}
+
+func (c *mqlAwsEfsAccessPoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsAccessPoint) GetAccessPointId() *plugin.TValue[string] {
+	return &c.AccessPointId
+}
+
+func (c *mqlAwsEfsAccessPoint) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEfsAccessPoint) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAwsEfsAccessPoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEfsAccessPoint) GetPosixUser() *plugin.TValue[any] {
+	return &c.PosixUser
+}
+
+func (c *mqlAwsEfsAccessPoint) GetRootDirectory() *plugin.TValue[any] {
+	return &c.RootDirectory
+}
+
+func (c *mqlAwsEfsAccessPoint) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlAwsEfsAccessPoint) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEfsAccessPoint) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsFsx for the aws.fsx resource

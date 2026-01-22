@@ -1924,12 +1924,33 @@ resources:
         \n)\n"
       title: Check whether all EFS systems are configured to encrypt file data using
         KMS
+  aws.efs.accessPoint:
+    docs:
+      desc: |
+        The `aws.efs.accessPoint` resource provides fields for assessing the configuration of EFS access points. Access points are application-specific entry points into an EFS file system that make it easier to manage application access to shared datasets.
+    fields:
+      accessPointId: {}
+      arn: {}
+      fileSystemId: {}
+      lifecycleState: {}
+      name: {}
+      posixUser: {}
+      region: {}
+      rootDirectory: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.efs.filesystem:
     docs:
       desc: "The `aws.efs.filesystem` resource provides fields for assessing the configuration
         of individual EFS deployments. For usage, read the `aws.efs` resource documentation.
         \n"
     fields:
+      accessPoints:
+        min_mondoo_version: 9.0.0
       arn: {}
       availabilityZone:
         min_mondoo_version: 9.0.0
@@ -1937,13 +1958,36 @@ resources:
       createdAt:
         min_mondoo_version: 9.0.0
       encrypted: {}
+      fileSystemPolicy:
+        min_mondoo_version: 9.0.0
       id: {}
       kmsKey: {}
+      mountTargets:
+        min_mondoo_version: 9.0.0
       name: {}
       region: {}
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.efs.mountTarget:
+    docs:
+      desc: |
+        The `aws.efs.mountTarget` resource provides fields for assessing the configuration of EFS mount targets. Mount targets provide network access to EFS file systems within a VPC.
+    fields:
+      availabilityZone: {}
+      fileSystemId: {}
+      ipAddress: {}
+      lifecycleState: {}
+      mountTargetId: {}
+      networkInterfaceId: {}
+      region: {}
+      securityGroups: {}
+      subnetId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
