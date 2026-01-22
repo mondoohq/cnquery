@@ -1716,6 +1716,8 @@ aws.ecs  @defaults("clusters containers containerInstances") {
   containers() []aws.ecs.container
   // List of AWS ECS Container Instances
   containerInstances() []aws.ecs.instance
+  // List of AWS ECS Task Definitions
+  taskDefinitions() []aws.ecs.taskDefinition
 }
 
 // Amazon ECS cluster
@@ -1823,6 +1825,158 @@ private aws.ecs.container @defaults("containerName runtimeId clusterName region"
   memoryHardLimit string
   // Short (1024 characters max) description of the running or stopped container
   reason string
+}
+
+// Amazon ECS Task Definition
+private aws.ecs.taskDefinition @defaults("arn family revision") {
+  // ARN of the task definition
+  arn string
+  // Family name of the task definition
+  family string
+  // Revision number of the task definition
+  revision int
+  // Status of the task definition (ACTIVE, INACTIVE)
+  status string
+  // Network mode for the task (bridge, host, awsvpc, none)
+  networkMode string
+  // Process namespace mode for the task (host, task)
+  pidMode string
+  // IPC resource namespace mode for the task (host, task, none)
+  ipcMode string
+  // ARN of the IAM role that containers in this task can assume
+  taskRoleArn string
+  // ARN of the IAM role that the Amazon ECS container agent can assume
+  executionRoleArn string
+  // List of container definitions in the task
+  containerDefinitions() []aws.ecs.taskDefinition.containerDefinition
+  // List of volumes configured for the task
+  volumes() []aws.ecs.taskDefinition.volume
+  // Ephemeral storage settings for the task
+  ephemeralStorage() aws.ecs.taskDefinition.ephemeralStorage
+  // Tags associated with the task definition
+  tags map[string]string
+  // Region where the task definition is located
+  region string
+}
+
+// Amazon ECS Task Definition Container Definition
+private aws.ecs.taskDefinition.containerDefinition @defaults("name image") {
+  // Name of the container
+  name string
+  // Docker image used for the container
+  image string
+  // Whether the container is given elevated privileges on the host container instance
+  privileged bool
+  // Whether the container is given read-only access to its root filesystem
+  readonlyRootFilesystem bool
+  // User to run the container as
+  user string
+  // Environment variables for the container
+  environment() []aws.ecs.taskDefinition.containerDefinition.environmentVariable
+  // Secrets to pass to the container
+  secrets() []aws.ecs.taskDefinition.containerDefinition.secret
+  // Log configuration for the container
+  logConfiguration() aws.ecs.taskDefinition.containerDefinition.logConfiguration
+  // Memory limit (in MiB) for the container
+  memory int
+  // CPU units for the container
+  cpu int
+  // Port mappings for the container
+  portMappings() []aws.ecs.taskDefinition.containerDefinition.portMapping
+}
+
+// Amazon ECS Task Definition Container Environment Variable
+private aws.ecs.taskDefinition.containerDefinition.environmentVariable {
+  // Name of the environment variable
+  name string
+  // Value of the environment variable
+  value string
+}
+
+// Amazon ECS Task Definition Container Secret
+private aws.ecs.taskDefinition.containerDefinition.secret {
+  // Name of the secret
+  name string
+  // ARN or name of the secret from AWS Secrets Manager or Systems Manager Parameter Store
+  valueFrom string
+}
+
+// Amazon ECS Task Definition Container Log Configuration
+private aws.ecs.taskDefinition.containerDefinition.logConfiguration {
+  // Log driver to use (e.g., awslogs, json-file, syslog)
+  logDriver string
+  // Options for the log driver
+  options map[string]string
+}
+
+// Amazon ECS Task Definition Container Port Mapping
+private aws.ecs.taskDefinition.containerDefinition.portMapping {
+  // Port number on the container
+  containerPort int
+  // Port number on the host
+  hostPort int
+  // Protocol used (tcp, udp)
+  protocol string
+}
+
+// Amazon ECS Task Definition Volume
+private aws.ecs.taskDefinition.volume {
+  // Name of the volume
+  name string
+  // EFS volume configuration
+  efsVolumeConfiguration() aws.ecs.taskDefinition.volume.efsVolumeConfiguration
+  // Host volume configuration
+  host() aws.ecs.taskDefinition.volume.host
+  // Docker volume configuration
+  dockerVolumeConfiguration() aws.ecs.taskDefinition.volume.dockerVolumeConfiguration
+}
+
+// Amazon ECS Task Definition Volume EFS Configuration
+private aws.ecs.taskDefinition.volume.efsVolumeConfiguration {
+  // ID of the EFS file system
+  fileSystemId string
+  // Directory within the EFS file system to mount
+  rootDirectory string
+  // Whether to enable encryption in transit (ENABLED, DISABLED)
+  transitEncryption string
+  // Port to use for transit encryption
+  transitEncryptionPort int
+  // Authorization configuration for EFS access
+  authorizationConfig() aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig
+}
+
+// Amazon ECS Task Definition Volume EFS Authorization Configuration
+private aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig {
+  // Access point ID to use
+  accessPointId string
+  // Whether to use IAM authorization (ENABLED, DISABLED)
+  iam string
+}
+
+// Amazon ECS Task Definition Volume Host Configuration
+private aws.ecs.taskDefinition.volume.host {
+  // Path on the host container instance
+  sourcePath string
+}
+
+// Amazon ECS Task Definition Volume Docker Configuration
+private aws.ecs.taskDefinition.volume.dockerVolumeConfiguration {
+  // Scope of the volume (shared, task)
+  scope string
+  // Whether the Docker volume is configured to be created automatically
+  autoprovision bool
+  // Docker volume driver to use
+  driver string
+  // Driver-specific options
+  driverOpts map[string]string
+  // Labels for the Docker volume
+  labels map[string]string
+}
+
+// Amazon ECS Task Definition Ephemeral Storage
+private aws.ecs.taskDefinition.ephemeralStorage {
+  // Size (in GiB) of ephemeral storage
+  sizeInGiB int
 }
 
 // Amazon EMR

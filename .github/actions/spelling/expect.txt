@@ -7,7 +7,9 @@ auditlog
 Auths
 autoaccept
 autoclose
-autoprovisioned
+autoprovision
+awslogs
+awsvpc
 backupconfiguration
 backupsetting
 bigquery
@@ -66,6 +68,7 @@ ilb
 imei
 ingresstls
 iotedge
+ipc
 ipsetforwardedipconfig
 ipsetreferencestatement
 istio

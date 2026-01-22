@@ -17,225 +17,237 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAws                                                              string = "aws"
-	ResourceAwsAccount                                                       string = "aws.account"
-	ResourceAwsAccountAlternateContact                                       string = "aws.account.alternateContact"
-	ResourceAwsOrganization                                                  string = "aws.organization"
-	ResourceAwsVpc                                                           string = "aws.vpc"
-	ResourceAwsVpcRoutetable                                                 string = "aws.vpc.routetable"
-	ResourceAwsVpcRoutetableAssociation                                      string = "aws.vpc.routetable.association"
-	ResourceAwsVpcSubnet                                                     string = "aws.vpc.subnet"
-	ResourceAwsVpcEndpoint                                                   string = "aws.vpc.endpoint"
-	ResourceAwsVpcFlowlog                                                    string = "aws.vpc.flowlog"
-	ResourceAwsWaf                                                           string = "aws.waf"
-	ResourceAwsWafAcl                                                        string = "aws.waf.acl"
-	ResourceAwsWafRulegroup                                                  string = "aws.waf.rulegroup"
-	ResourceAwsWafRule                                                       string = "aws.waf.rule"
-	ResourceAwsWafRuleAction                                                 string = "aws.waf.rule.action"
-	ResourceAwsWafRuleStatement                                              string = "aws.waf.rule.statement"
-	ResourceAwsWafRuleStatementGeomatchstatement                             string = "aws.waf.rule.statement.geomatchstatement"
-	ResourceAwsWafRuleStatementIpsetreferencestatement                       string = "aws.waf.rule.statement.ipsetreferencestatement"
-	ResourceAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig string = "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig"
-	ResourceAwsWafRuleStatementLabelmatchstatement                           string = "aws.waf.rule.statement.labelmatchstatement"
-	ResourceAwsWafRuleStatementManagedrulegroupstatement                     string = "aws.waf.rule.statement.managedrulegroupstatement"
-	ResourceAwsWafRuleStatementAndstatement                                  string = "aws.waf.rule.statement.andstatement"
-	ResourceAwsWafRuleStatementNotstatement                                  string = "aws.waf.rule.statement.notstatement"
-	ResourceAwsWafRuleStatementOrstatement                                   string = "aws.waf.rule.statement.orstatement"
-	ResourceAwsWafRuleStatementRatebasedstatement                            string = "aws.waf.rule.statement.ratebasedstatement"
-	ResourceAwsWafRuleStatementRegexpatternsetreferencestatement             string = "aws.waf.rule.statement.regexpatternsetreferencestatement"
-	ResourceAwsWafRuleStatementRulegroupreferencestatement                   string = "aws.waf.rule.statement.rulegroupreferencestatement"
-	ResourceAwsWafRuleStatementSizeconstraintstatement                       string = "aws.waf.rule.statement.sizeconstraintstatement"
-	ResourceAwsWafRuleStatementRegexmatchstatement                           string = "aws.waf.rule.statement.regexmatchstatement"
-	ResourceAwsWafRuleStatementBytematchstatement                            string = "aws.waf.rule.statement.bytematchstatement"
-	ResourceAwsWafRuleFieldtomatch                                           string = "aws.waf.rule.fieldtomatch"
-	ResourceAwsWafRuleFieldtomatchBody                                       string = "aws.waf.rule.fieldtomatch.body"
-	ResourceAwsWafRuleFieldtomatchCookie                                     string = "aws.waf.rule.fieldtomatch.cookie"
-	ResourceAwsWafRuleFieldtomatchHeaderorder                                string = "aws.waf.rule.fieldtomatch.headerorder"
-	ResourceAwsWafRuleFieldtomatchSingleheader                               string = "aws.waf.rule.fieldtomatch.singleheader"
-	ResourceAwsWafRuleFieldtomatchSinglequeryargument                        string = "aws.waf.rule.fieldtomatch.singlequeryargument"
-	ResourceAwsWafRuleFieldtomatchJa3fingerprint                             string = "aws.waf.rule.fieldtomatch.ja3fingerprint"
-	ResourceAwsWafRuleFieldtomatchJsonbody                                   string = "aws.waf.rule.fieldtomatch.jsonbody"
-	ResourceAwsWafRuleFieldtomatchJsonbodyMatchpattern                       string = "aws.waf.rule.fieldtomatch.jsonbody.matchpattern"
-	ResourceAwsWafRuleFieldtomatchHeaders                                    string = "aws.waf.rule.fieldtomatch.headers"
-	ResourceAwsWafRuleFieldtomatchHeadersMatchpattern                        string = "aws.waf.rule.fieldtomatch.headers.matchpattern"
-	ResourceAwsWafRuleStatementXssmatchstatement                             string = "aws.waf.rule.statement.xssmatchstatement"
-	ResourceAwsWafRuleStatementSqlimatchstatement                            string = "aws.waf.rule.statement.sqlimatchstatement"
-	ResourceAwsWafIpset                                                      string = "aws.waf.ipset"
-	ResourceAwsEfs                                                           string = "aws.efs"
-	ResourceAwsEfsFilesystem                                                 string = "aws.efs.filesystem"
-	ResourceAwsEfsMountTarget                                                string = "aws.efs.mountTarget"
-	ResourceAwsEfsAccessPoint                                                string = "aws.efs.accessPoint"
-	ResourceAwsFsx                                                           string = "aws.fsx"
-	ResourceAwsFsxFilesystem                                                 string = "aws.fsx.filesystem"
-	ResourceAwsFsxCache                                                      string = "aws.fsx.cache"
-	ResourceAwsFsxBackup                                                     string = "aws.fsx.backup"
-	ResourceAwsKms                                                           string = "aws.kms"
-	ResourceAwsKmsKey                                                        string = "aws.kms.key"
-	ResourceAwsIam                                                           string = "aws.iam"
-	ResourceAwsIamUsercredentialreportentry                                  string = "aws.iam.usercredentialreportentry"
-	ResourceAwsIamUser                                                       string = "aws.iam.user"
-	ResourceAwsIamInstanceProfile                                            string = "aws.iam.instanceProfile"
-	ResourceAwsIamLoginProfile                                               string = "aws.iam.loginProfile"
-	ResourceAwsIamPolicy                                                     string = "aws.iam.policy"
-	ResourceAwsIamPolicyversion                                              string = "aws.iam.policyversion"
-	ResourceAwsIamRole                                                       string = "aws.iam.role"
-	ResourceAwsIamGroup                                                      string = "aws.iam.group"
-	ResourceAwsIamVirtualmfadevice                                           string = "aws.iam.virtualmfadevice"
-	ResourceAwsIamSamlProvider                                               string = "aws.iam.samlProvider"
-	ResourceAwsIamOidcProvider                                               string = "aws.iam.oidcProvider"
-	ResourceAwsIamAccessAnalyzer                                             string = "aws.iam.accessAnalyzer"
-	ResourceAwsIamAccessanalyzerAnalyzer                                     string = "aws.iam.accessanalyzer.analyzer"
-	ResourceAwsIamAccessanalyzerFinding                                      string = "aws.iam.accessanalyzer.finding"
-	ResourceAwsSagemaker                                                     string = "aws.sagemaker"
-	ResourceAwsSagemakerNotebookinstance                                     string = "aws.sagemaker.notebookinstance"
-	ResourceAwsSagemakerNotebookinstancedetails                              string = "aws.sagemaker.notebookinstancedetails"
-	ResourceAwsSagemakerEndpoint                                             string = "aws.sagemaker.endpoint"
-	ResourceAwsSns                                                           string = "aws.sns"
-	ResourceAwsSnsTopic                                                      string = "aws.sns.topic"
-	ResourceAwsSnsSubscription                                               string = "aws.sns.subscription"
-	ResourceAwsEs                                                            string = "aws.es"
-	ResourceAwsEsDomain                                                      string = "aws.es.domain"
-	ResourceAwsAcm                                                           string = "aws.acm"
-	ResourceAwsAcmCertificate                                                string = "aws.acm.certificate"
-	ResourceAwsAutoscaling                                                   string = "aws.autoscaling"
-	ResourceAwsAutoscalingGroup                                              string = "aws.autoscaling.group"
-	ResourceAwsAutoscalingGroupTag                                           string = "aws.autoscaling.group.tag"
-	ResourceAwsElb                                                           string = "aws.elb"
-	ResourceAwsElbTargetgroup                                                string = "aws.elb.targetgroup"
-	ResourceAwsElbLoadbalancer                                               string = "aws.elb.loadbalancer"
-	ResourceAwsCodebuild                                                     string = "aws.codebuild"
-	ResourceAwsCodebuildProject                                              string = "aws.codebuild.project"
-	ResourceAwsGuardduty                                                     string = "aws.guardduty"
-	ResourceAwsGuarddutyDetector                                             string = "aws.guardduty.detector"
-	ResourceAwsGuarddutyFinding                                              string = "aws.guardduty.finding"
-	ResourceAwsMacie                                                         string = "aws.macie"
-	ResourceAwsMacieSession                                                  string = "aws.macie.session"
-	ResourceAwsMacieClassificationJob                                        string = "aws.macie.classificationJob"
-	ResourceAwsMacieFinding                                                  string = "aws.macie.finding"
-	ResourceAwsMacieCustomDataIdentifier                                     string = "aws.macie.customDataIdentifier"
-	ResourceAwsSecurityhub                                                   string = "aws.securityhub"
-	ResourceAwsSecurityhubHub                                                string = "aws.securityhub.hub"
-	ResourceAwsSecretsmanager                                                string = "aws.secretsmanager"
-	ResourceAwsSecretsmanagerSecret                                          string = "aws.secretsmanager.secret"
-	ResourceAwsEcs                                                           string = "aws.ecs"
-	ResourceAwsEcsCluster                                                    string = "aws.ecs.cluster"
-	ResourceAwsEcsInstance                                                   string = "aws.ecs.instance"
-	ResourceAwsEcsTask                                                       string = "aws.ecs.task"
-	ResourceAwsEcsContainer                                                  string = "aws.ecs.container"
-	ResourceAwsEmr                                                           string = "aws.emr"
-	ResourceAwsEmrCluster                                                    string = "aws.emr.cluster"
-	ResourceAwsCloudwatch                                                    string = "aws.cloudwatch"
-	ResourceAwsCloudwatchMetricsalarm                                        string = "aws.cloudwatch.metricsalarm"
-	ResourceAwsCloudwatchMetric                                              string = "aws.cloudwatch.metric"
-	ResourceAwsCloudwatchMetricdimension                                     string = "aws.cloudwatch.metricdimension"
-	ResourceAwsCloudwatchMetricstatistics                                    string = "aws.cloudwatch.metricstatistics"
-	ResourceAwsCloudwatchMetricDatapoint                                     string = "aws.cloudwatch.metric.datapoint"
-	ResourceAwsCloudwatchLoggroup                                            string = "aws.cloudwatch.loggroup"
-	ResourceAwsCloudwatchLoggroupMetricsfilter                               string = "aws.cloudwatch.loggroup.metricsfilter"
-	ResourceAwsCloudfront                                                    string = "aws.cloudfront"
-	ResourceAwsCloudfrontDistribution                                        string = "aws.cloudfront.distribution"
-	ResourceAwsCloudfrontDistributionOrigin                                  string = "aws.cloudfront.distribution.origin"
-	ResourceAwsCloudfrontFunction                                            string = "aws.cloudfront.function"
-	ResourceAwsCloudtrail                                                    string = "aws.cloudtrail"
-	ResourceAwsCloudtrailTrail                                               string = "aws.cloudtrail.trail"
-	ResourceAwsS3control                                                     string = "aws.s3control"
-	ResourceAwsS3                                                            string = "aws.s3"
-	ResourceAwsS3Bucket                                                      string = "aws.s3.bucket"
-	ResourceAwsS3BucketGrant                                                 string = "aws.s3.bucket.grant"
-	ResourceAwsS3BucketCorsrule                                              string = "aws.s3.bucket.corsrule"
-	ResourceAwsS3BucketPolicy                                                string = "aws.s3.bucket.policy"
-	ResourceAwsApplicationAutoscaling                                        string = "aws.applicationAutoscaling"
-	ResourceAwsApplicationAutoscalingTarget                                  string = "aws.applicationAutoscaling.target"
-	ResourceAwsDrs                                                           string = "aws.drs"
-	ResourceAwsDrsSourceServer                                               string = "aws.drs.sourceServer"
-	ResourceAwsDrsJob                                                        string = "aws.drs.job"
-	ResourceAwsDrsReplicationConfiguration                                   string = "aws.drs.replicationConfiguration"
-	ResourceAwsDrsLaunchConfiguration                                        string = "aws.drs.launchConfiguration"
-	ResourceAwsBackup                                                        string = "aws.backup"
-	ResourceAwsBackupVault                                                   string = "aws.backup.vault"
-	ResourceAwsBackupVaultRecoveryPoint                                      string = "aws.backup.vaultRecoveryPoint"
-	ResourceAwsDynamodb                                                      string = "aws.dynamodb"
-	ResourceAwsDynamodbExport                                                string = "aws.dynamodb.export"
-	ResourceAwsDynamodbLimit                                                 string = "aws.dynamodb.limit"
-	ResourceAwsDynamodbGlobaltable                                           string = "aws.dynamodb.globaltable"
-	ResourceAwsDynamodbTable                                                 string = "aws.dynamodb.table"
-	ResourceAwsSqs                                                           string = "aws.sqs"
-	ResourceAwsSqsQueue                                                      string = "aws.sqs.queue"
-	ResourceAwsRds                                                           string = "aws.rds"
-	ResourceAwsRdsBackupsetting                                              string = "aws.rds.backupsetting"
-	ResourceAwsRdsDbcluster                                                  string = "aws.rds.dbcluster"
-	ResourceAwsRdsSnapshot                                                   string = "aws.rds.snapshot"
-	ResourceAwsRdsDbinstance                                                 string = "aws.rds.dbinstance"
-	ResourceAwsRdsPendingMaintenanceAction                                   string = "aws.rds.pendingMaintenanceAction"
-	ResourceAwsRdsClusterParameterGroup                                      string = "aws.rds.clusterParameterGroup"
-	ResourceAwsRdsParameterGroup                                             string = "aws.rds.parameterGroup"
-	ResourceAwsRdsParameterGroupParameter                                    string = "aws.rds.parameterGroup.parameter"
-	ResourceAwsElasticache                                                   string = "aws.elasticache"
-	ResourceAwsElasticacheCluster                                            string = "aws.elasticache.cluster"
-	ResourceAwsElasticacheServerlessCache                                    string = "aws.elasticache.serverlessCache"
-	ResourceAwsRedshift                                                      string = "aws.redshift"
-	ResourceAwsRedshiftCluster                                               string = "aws.redshift.cluster"
-	ResourceAwsEcr                                                           string = "aws.ecr"
-	ResourceAwsEcrRepository                                                 string = "aws.ecr.repository"
-	ResourceAwsEcrImage                                                      string = "aws.ecr.image"
-	ResourceAwsDms                                                           string = "aws.dms"
-	ResourceAwsApigateway                                                    string = "aws.apigateway"
-	ResourceAwsApigatewayRestapi                                             string = "aws.apigateway.restapi"
-	ResourceAwsApigatewayStage                                               string = "aws.apigateway.stage"
-	ResourceAwsLambda                                                        string = "aws.lambda"
-	ResourceAwsLambdaFunction                                                string = "aws.lambda.function"
-	ResourceAwsSsm                                                           string = "aws.ssm"
-	ResourceAwsSsmParameter                                                  string = "aws.ssm.parameter"
-	ResourceAwsSsmInstance                                                   string = "aws.ssm.instance"
-	ResourceAwsEc2                                                           string = "aws.ec2"
-	ResourceAwsEc2Eip                                                        string = "aws.ec2.eip"
-	ResourceAwsVpcNatgateway                                                 string = "aws.vpc.natgateway"
-	ResourceAwsVpcNatgatewayAddress                                          string = "aws.vpc.natgateway.address"
-	ResourceAwsVpcServiceEndpoint                                            string = "aws.vpc.serviceEndpoint"
-	ResourceAwsVpcPeeringConnection                                          string = "aws.vpc.peeringConnection"
-	ResourceAwsVpcPeeringConnectionPeeringVpc                                string = "aws.vpc.peeringConnection.peeringVpc"
-	ResourceAwsEc2Networkacl                                                 string = "aws.ec2.networkacl"
-	ResourceAwsEc2NetworkaclAssociation                                      string = "aws.ec2.networkacl.association"
-	ResourceAwsEc2NetworkaclEntry                                            string = "aws.ec2.networkacl.entry"
-	ResourceAwsEc2NetworkaclEntryPortrange                                   string = "aws.ec2.networkacl.entry.portrange"
-	ResourceAwsEc2Vpnconnection                                              string = "aws.ec2.vpnconnection"
-	ResourceAwsEc2Vgwtelemetry                                               string = "aws.ec2.vgwtelemetry"
-	ResourceAwsEc2Internetgateway                                            string = "aws.ec2.internetgateway"
-	ResourceAwsEc2Snapshot                                                   string = "aws.ec2.snapshot"
-	ResourceAwsEc2Volume                                                     string = "aws.ec2.volume"
-	ResourceAwsInspector                                                     string = "aws.inspector"
-	ResourceAwsInspectorCoverage                                             string = "aws.inspector.coverage"
-	ResourceAwsInspectorCoverageInstance                                     string = "aws.inspector.coverage.instance"
-	ResourceAwsInspectorCoverageImage                                        string = "aws.inspector.coverage.image"
-	ResourceAwsInspectorCoverageRepository                                   string = "aws.inspector.coverage.repository"
-	ResourceAwsEc2Instance                                                   string = "aws.ec2.instance"
-	ResourceAwsEc2Networkinterface                                           string = "aws.ec2.networkinterface"
-	ResourceAwsEc2Keypair                                                    string = "aws.ec2.keypair"
-	ResourceAwsEc2Image                                                      string = "aws.ec2.image"
-	ResourceAwsEc2ImageLaunchPermission                                      string = "aws.ec2.image.launchPermission"
-	ResourceAwsEc2ImageBlockDeviceMapping                                    string = "aws.ec2.image.blockDeviceMapping"
-	ResourceAwsEc2ImageEbsBlockDevice                                        string = "aws.ec2.image.ebsBlockDevice"
-	ResourceAwsEc2InstanceDevice                                             string = "aws.ec2.instance.device"
-	ResourceAwsEc2Securitygroup                                              string = "aws.ec2.securitygroup"
-	ResourceAwsEc2SecuritygroupIppermission                                  string = "aws.ec2.securitygroup.ippermission"
-	ResourceAwsConfig                                                        string = "aws.config"
-	ResourceAwsConfigRule                                                    string = "aws.config.rule"
-	ResourceAwsConfigRecorder                                                string = "aws.config.recorder"
-	ResourceAwsConfigDeliverychannel                                         string = "aws.config.deliverychannel"
-	ResourceAwsEks                                                           string = "aws.eks"
-	ResourceAwsEksNodegroup                                                  string = "aws.eks.nodegroup"
-	ResourceAwsEksAddon                                                      string = "aws.eks.addon"
-	ResourceAwsEksCluster                                                    string = "aws.eks.cluster"
-	ResourceAwsNeptune                                                       string = "aws.neptune"
-	ResourceAwsNeptuneCluster                                                string = "aws.neptune.cluster"
-	ResourceAwsNeptuneInstance                                               string = "aws.neptune.instance"
-	ResourceAwsTimestreamLiveanalytics                                       string = "aws.timestream.liveanalytics"
-	ResourceAwsTimestreamLiveanalyticsDatabase                               string = "aws.timestream.liveanalytics.database"
-	ResourceAwsTimestreamLiveanalyticsTable                                  string = "aws.timestream.liveanalytics.table"
-	ResourceAwsCodedeploy                                                    string = "aws.codedeploy"
-	ResourceAwsCodedeployApplication                                         string = "aws.codedeploy.application"
-	ResourceAwsCodedeployDeploymentGroup                                     string = "aws.codedeploy.deploymentGroup"
-	ResourceAwsCodedeployDeployment                                          string = "aws.codedeploy.deployment"
+	ResourceAws                                                                 string = "aws"
+	ResourceAwsAccount                                                          string = "aws.account"
+	ResourceAwsAccountAlternateContact                                          string = "aws.account.alternateContact"
+	ResourceAwsOrganization                                                     string = "aws.organization"
+	ResourceAwsVpc                                                              string = "aws.vpc"
+	ResourceAwsVpcRoutetable                                                    string = "aws.vpc.routetable"
+	ResourceAwsVpcRoutetableAssociation                                         string = "aws.vpc.routetable.association"
+	ResourceAwsVpcSubnet                                                        string = "aws.vpc.subnet"
+	ResourceAwsVpcEndpoint                                                      string = "aws.vpc.endpoint"
+	ResourceAwsVpcFlowlog                                                       string = "aws.vpc.flowlog"
+	ResourceAwsWaf                                                              string = "aws.waf"
+	ResourceAwsWafAcl                                                           string = "aws.waf.acl"
+	ResourceAwsWafRulegroup                                                     string = "aws.waf.rulegroup"
+	ResourceAwsWafRule                                                          string = "aws.waf.rule"
+	ResourceAwsWafRuleAction                                                    string = "aws.waf.rule.action"
+	ResourceAwsWafRuleStatement                                                 string = "aws.waf.rule.statement"
+	ResourceAwsWafRuleStatementGeomatchstatement                                string = "aws.waf.rule.statement.geomatchstatement"
+	ResourceAwsWafRuleStatementIpsetreferencestatement                          string = "aws.waf.rule.statement.ipsetreferencestatement"
+	ResourceAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig    string = "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig"
+	ResourceAwsWafRuleStatementLabelmatchstatement                              string = "aws.waf.rule.statement.labelmatchstatement"
+	ResourceAwsWafRuleStatementManagedrulegroupstatement                        string = "aws.waf.rule.statement.managedrulegroupstatement"
+	ResourceAwsWafRuleStatementAndstatement                                     string = "aws.waf.rule.statement.andstatement"
+	ResourceAwsWafRuleStatementNotstatement                                     string = "aws.waf.rule.statement.notstatement"
+	ResourceAwsWafRuleStatementOrstatement                                      string = "aws.waf.rule.statement.orstatement"
+	ResourceAwsWafRuleStatementRatebasedstatement                               string = "aws.waf.rule.statement.ratebasedstatement"
+	ResourceAwsWafRuleStatementRegexpatternsetreferencestatement                string = "aws.waf.rule.statement.regexpatternsetreferencestatement"
+	ResourceAwsWafRuleStatementRulegroupreferencestatement                      string = "aws.waf.rule.statement.rulegroupreferencestatement"
+	ResourceAwsWafRuleStatementSizeconstraintstatement                          string = "aws.waf.rule.statement.sizeconstraintstatement"
+	ResourceAwsWafRuleStatementRegexmatchstatement                              string = "aws.waf.rule.statement.regexmatchstatement"
+	ResourceAwsWafRuleStatementBytematchstatement                               string = "aws.waf.rule.statement.bytematchstatement"
+	ResourceAwsWafRuleFieldtomatch                                              string = "aws.waf.rule.fieldtomatch"
+	ResourceAwsWafRuleFieldtomatchBody                                          string = "aws.waf.rule.fieldtomatch.body"
+	ResourceAwsWafRuleFieldtomatchCookie                                        string = "aws.waf.rule.fieldtomatch.cookie"
+	ResourceAwsWafRuleFieldtomatchHeaderorder                                   string = "aws.waf.rule.fieldtomatch.headerorder"
+	ResourceAwsWafRuleFieldtomatchSingleheader                                  string = "aws.waf.rule.fieldtomatch.singleheader"
+	ResourceAwsWafRuleFieldtomatchSinglequeryargument                           string = "aws.waf.rule.fieldtomatch.singlequeryargument"
+	ResourceAwsWafRuleFieldtomatchJa3fingerprint                                string = "aws.waf.rule.fieldtomatch.ja3fingerprint"
+	ResourceAwsWafRuleFieldtomatchJsonbody                                      string = "aws.waf.rule.fieldtomatch.jsonbody"
+	ResourceAwsWafRuleFieldtomatchJsonbodyMatchpattern                          string = "aws.waf.rule.fieldtomatch.jsonbody.matchpattern"
+	ResourceAwsWafRuleFieldtomatchHeaders                                       string = "aws.waf.rule.fieldtomatch.headers"
+	ResourceAwsWafRuleFieldtomatchHeadersMatchpattern                           string = "aws.waf.rule.fieldtomatch.headers.matchpattern"
+	ResourceAwsWafRuleStatementXssmatchstatement                                string = "aws.waf.rule.statement.xssmatchstatement"
+	ResourceAwsWafRuleStatementSqlimatchstatement                               string = "aws.waf.rule.statement.sqlimatchstatement"
+	ResourceAwsWafIpset                                                         string = "aws.waf.ipset"
+	ResourceAwsEfs                                                              string = "aws.efs"
+	ResourceAwsEfsFilesystem                                                    string = "aws.efs.filesystem"
+	ResourceAwsEfsMountTarget                                                   string = "aws.efs.mountTarget"
+	ResourceAwsEfsAccessPoint                                                   string = "aws.efs.accessPoint"
+	ResourceAwsFsx                                                              string = "aws.fsx"
+	ResourceAwsFsxFilesystem                                                    string = "aws.fsx.filesystem"
+	ResourceAwsFsxCache                                                         string = "aws.fsx.cache"
+	ResourceAwsFsxBackup                                                        string = "aws.fsx.backup"
+	ResourceAwsKms                                                              string = "aws.kms"
+	ResourceAwsKmsKey                                                           string = "aws.kms.key"
+	ResourceAwsIam                                                              string = "aws.iam"
+	ResourceAwsIamUsercredentialreportentry                                     string = "aws.iam.usercredentialreportentry"
+	ResourceAwsIamUser                                                          string = "aws.iam.user"
+	ResourceAwsIamInstanceProfile                                               string = "aws.iam.instanceProfile"
+	ResourceAwsIamLoginProfile                                                  string = "aws.iam.loginProfile"
+	ResourceAwsIamPolicy                                                        string = "aws.iam.policy"
+	ResourceAwsIamPolicyversion                                                 string = "aws.iam.policyversion"
+	ResourceAwsIamRole                                                          string = "aws.iam.role"
+	ResourceAwsIamGroup                                                         string = "aws.iam.group"
+	ResourceAwsIamVirtualmfadevice                                              string = "aws.iam.virtualmfadevice"
+	ResourceAwsIamSamlProvider                                                  string = "aws.iam.samlProvider"
+	ResourceAwsIamOidcProvider                                                  string = "aws.iam.oidcProvider"
+	ResourceAwsIamAccessAnalyzer                                                string = "aws.iam.accessAnalyzer"
+	ResourceAwsIamAccessanalyzerAnalyzer                                        string = "aws.iam.accessanalyzer.analyzer"
+	ResourceAwsIamAccessanalyzerFinding                                         string = "aws.iam.accessanalyzer.finding"
+	ResourceAwsSagemaker                                                        string = "aws.sagemaker"
+	ResourceAwsSagemakerNotebookinstance                                        string = "aws.sagemaker.notebookinstance"
+	ResourceAwsSagemakerNotebookinstancedetails                                 string = "aws.sagemaker.notebookinstancedetails"
+	ResourceAwsSagemakerEndpoint                                                string = "aws.sagemaker.endpoint"
+	ResourceAwsSns                                                              string = "aws.sns"
+	ResourceAwsSnsTopic                                                         string = "aws.sns.topic"
+	ResourceAwsSnsSubscription                                                  string = "aws.sns.subscription"
+	ResourceAwsEs                                                               string = "aws.es"
+	ResourceAwsEsDomain                                                         string = "aws.es.domain"
+	ResourceAwsAcm                                                              string = "aws.acm"
+	ResourceAwsAcmCertificate                                                   string = "aws.acm.certificate"
+	ResourceAwsAutoscaling                                                      string = "aws.autoscaling"
+	ResourceAwsAutoscalingGroup                                                 string = "aws.autoscaling.group"
+	ResourceAwsAutoscalingGroupTag                                              string = "aws.autoscaling.group.tag"
+	ResourceAwsElb                                                              string = "aws.elb"
+	ResourceAwsElbTargetgroup                                                   string = "aws.elb.targetgroup"
+	ResourceAwsElbLoadbalancer                                                  string = "aws.elb.loadbalancer"
+	ResourceAwsCodebuild                                                        string = "aws.codebuild"
+	ResourceAwsCodebuildProject                                                 string = "aws.codebuild.project"
+	ResourceAwsGuardduty                                                        string = "aws.guardduty"
+	ResourceAwsGuarddutyDetector                                                string = "aws.guardduty.detector"
+	ResourceAwsGuarddutyFinding                                                 string = "aws.guardduty.finding"
+	ResourceAwsMacie                                                            string = "aws.macie"
+	ResourceAwsMacieSession                                                     string = "aws.macie.session"
+	ResourceAwsMacieClassificationJob                                           string = "aws.macie.classificationJob"
+	ResourceAwsMacieFinding                                                     string = "aws.macie.finding"
+	ResourceAwsMacieCustomDataIdentifier                                        string = "aws.macie.customDataIdentifier"
+	ResourceAwsSecurityhub                                                      string = "aws.securityhub"
+	ResourceAwsSecurityhubHub                                                   string = "aws.securityhub.hub"
+	ResourceAwsSecretsmanager                                                   string = "aws.secretsmanager"
+	ResourceAwsSecretsmanagerSecret                                             string = "aws.secretsmanager.secret"
+	ResourceAwsEcs                                                              string = "aws.ecs"
+	ResourceAwsEcsCluster                                                       string = "aws.ecs.cluster"
+	ResourceAwsEcsInstance                                                      string = "aws.ecs.instance"
+	ResourceAwsEcsTask                                                          string = "aws.ecs.task"
+	ResourceAwsEcsContainer                                                     string = "aws.ecs.container"
+	ResourceAwsEcsTaskDefinition                                                string = "aws.ecs.taskDefinition"
+	ResourceAwsEcsTaskDefinitionContainerDefinition                             string = "aws.ecs.taskDefinition.containerDefinition"
+	ResourceAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable          string = "aws.ecs.taskDefinition.containerDefinition.environmentVariable"
+	ResourceAwsEcsTaskDefinitionContainerDefinitionSecret                       string = "aws.ecs.taskDefinition.containerDefinition.secret"
+	ResourceAwsEcsTaskDefinitionContainerDefinitionLogConfiguration             string = "aws.ecs.taskDefinition.containerDefinition.logConfiguration"
+	ResourceAwsEcsTaskDefinitionContainerDefinitionPortMapping                  string = "aws.ecs.taskDefinition.containerDefinition.portMapping"
+	ResourceAwsEcsTaskDefinitionVolume                                          string = "aws.ecs.taskDefinition.volume"
+	ResourceAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration                    string = "aws.ecs.taskDefinition.volume.efsVolumeConfiguration"
+	ResourceAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig string = "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig"
+	ResourceAwsEcsTaskDefinitionVolumeHost                                      string = "aws.ecs.taskDefinition.volume.host"
+	ResourceAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration                 string = "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration"
+	ResourceAwsEcsTaskDefinitionEphemeralStorage                                string = "aws.ecs.taskDefinition.ephemeralStorage"
+	ResourceAwsEmr                                                              string = "aws.emr"
+	ResourceAwsEmrCluster                                                       string = "aws.emr.cluster"
+	ResourceAwsCloudwatch                                                       string = "aws.cloudwatch"
+	ResourceAwsCloudwatchMetricsalarm                                           string = "aws.cloudwatch.metricsalarm"
+	ResourceAwsCloudwatchMetric                                                 string = "aws.cloudwatch.metric"
+	ResourceAwsCloudwatchMetricdimension                                        string = "aws.cloudwatch.metricdimension"
+	ResourceAwsCloudwatchMetricstatistics                                       string = "aws.cloudwatch.metricstatistics"
+	ResourceAwsCloudwatchMetricDatapoint                                        string = "aws.cloudwatch.metric.datapoint"
+	ResourceAwsCloudwatchLoggroup                                               string = "aws.cloudwatch.loggroup"
+	ResourceAwsCloudwatchLoggroupMetricsfilter                                  string = "aws.cloudwatch.loggroup.metricsfilter"
+	ResourceAwsCloudfront                                                       string = "aws.cloudfront"
+	ResourceAwsCloudfrontDistribution                                           string = "aws.cloudfront.distribution"
+	ResourceAwsCloudfrontDistributionOrigin                                     string = "aws.cloudfront.distribution.origin"
+	ResourceAwsCloudfrontFunction                                               string = "aws.cloudfront.function"
+	ResourceAwsCloudtrail                                                       string = "aws.cloudtrail"
+	ResourceAwsCloudtrailTrail                                                  string = "aws.cloudtrail.trail"
+	ResourceAwsS3control                                                        string = "aws.s3control"
+	ResourceAwsS3                                                               string = "aws.s3"
+	ResourceAwsS3Bucket                                                         string = "aws.s3.bucket"
+	ResourceAwsS3BucketGrant                                                    string = "aws.s3.bucket.grant"
+	ResourceAwsS3BucketCorsrule                                                 string = "aws.s3.bucket.corsrule"
+	ResourceAwsS3BucketPolicy                                                   string = "aws.s3.bucket.policy"
+	ResourceAwsApplicationAutoscaling                                           string = "aws.applicationAutoscaling"
+	ResourceAwsApplicationAutoscalingTarget                                     string = "aws.applicationAutoscaling.target"
+	ResourceAwsDrs                                                              string = "aws.drs"
+	ResourceAwsDrsSourceServer                                                  string = "aws.drs.sourceServer"
+	ResourceAwsDrsJob                                                           string = "aws.drs.job"
+	ResourceAwsDrsReplicationConfiguration                                      string = "aws.drs.replicationConfiguration"
+	ResourceAwsDrsLaunchConfiguration                                           string = "aws.drs.launchConfiguration"
+	ResourceAwsBackup                                                           string = "aws.backup"
+	ResourceAwsBackupVault                                                      string = "aws.backup.vault"
+	ResourceAwsBackupVaultRecoveryPoint                                         string = "aws.backup.vaultRecoveryPoint"
+	ResourceAwsDynamodb                                                         string = "aws.dynamodb"
+	ResourceAwsDynamodbExport                                                   string = "aws.dynamodb.export"
+	ResourceAwsDynamodbLimit                                                    string = "aws.dynamodb.limit"
+	ResourceAwsDynamodbGlobaltable                                              string = "aws.dynamodb.globaltable"
+	ResourceAwsDynamodbTable                                                    string = "aws.dynamodb.table"
+	ResourceAwsSqs                                                              string = "aws.sqs"
+	ResourceAwsSqsQueue                                                         string = "aws.sqs.queue"
+	ResourceAwsRds                                                              string = "aws.rds"
+	ResourceAwsRdsBackupsetting                                                 string = "aws.rds.backupsetting"
+	ResourceAwsRdsDbcluster                                                     string = "aws.rds.dbcluster"
+	ResourceAwsRdsSnapshot                                                      string = "aws.rds.snapshot"
+	ResourceAwsRdsDbinstance                                                    string = "aws.rds.dbinstance"
+	ResourceAwsRdsPendingMaintenanceAction                                      string = "aws.rds.pendingMaintenanceAction"
+	ResourceAwsRdsClusterParameterGroup                                         string = "aws.rds.clusterParameterGroup"
+	ResourceAwsRdsParameterGroup                                                string = "aws.rds.parameterGroup"
+	ResourceAwsRdsParameterGroupParameter                                       string = "aws.rds.parameterGroup.parameter"
+	ResourceAwsElasticache                                                      string = "aws.elasticache"
+	ResourceAwsElasticacheCluster                                               string = "aws.elasticache.cluster"
+	ResourceAwsElasticacheServerlessCache                                       string = "aws.elasticache.serverlessCache"
+	ResourceAwsRedshift                                                         string = "aws.redshift"
+	ResourceAwsRedshiftCluster                                                  string = "aws.redshift.cluster"
+	ResourceAwsEcr                                                              string = "aws.ecr"
+	ResourceAwsEcrRepository                                                    string = "aws.ecr.repository"
+	ResourceAwsEcrImage                                                         string = "aws.ecr.image"
+	ResourceAwsDms                                                              string = "aws.dms"
+	ResourceAwsApigateway                                                       string = "aws.apigateway"
+	ResourceAwsApigatewayRestapi                                                string = "aws.apigateway.restapi"
+	ResourceAwsApigatewayStage                                                  string = "aws.apigateway.stage"
+	ResourceAwsLambda                                                           string = "aws.lambda"
+	ResourceAwsLambdaFunction                                                   string = "aws.lambda.function"
+	ResourceAwsSsm                                                              string = "aws.ssm"
+	ResourceAwsSsmParameter                                                     string = "aws.ssm.parameter"
+	ResourceAwsSsmInstance                                                      string = "aws.ssm.instance"
+	ResourceAwsEc2                                                              string = "aws.ec2"
+	ResourceAwsEc2Eip                                                           string = "aws.ec2.eip"
+	ResourceAwsVpcNatgateway                                                    string = "aws.vpc.natgateway"
+	ResourceAwsVpcNatgatewayAddress                                             string = "aws.vpc.natgateway.address"
+	ResourceAwsVpcServiceEndpoint                                               string = "aws.vpc.serviceEndpoint"
+	ResourceAwsVpcPeeringConnection                                             string = "aws.vpc.peeringConnection"
+	ResourceAwsVpcPeeringConnectionPeeringVpc                                   string = "aws.vpc.peeringConnection.peeringVpc"
+	ResourceAwsEc2Networkacl                                                    string = "aws.ec2.networkacl"
+	ResourceAwsEc2NetworkaclAssociation                                         string = "aws.ec2.networkacl.association"
+	ResourceAwsEc2NetworkaclEntry                                               string = "aws.ec2.networkacl.entry"
+	ResourceAwsEc2NetworkaclEntryPortrange                                      string = "aws.ec2.networkacl.entry.portrange"
+	ResourceAwsEc2Vpnconnection                                                 string = "aws.ec2.vpnconnection"
+	ResourceAwsEc2Vgwtelemetry                                                  string = "aws.ec2.vgwtelemetry"
+	ResourceAwsEc2Internetgateway                                               string = "aws.ec2.internetgateway"
+	ResourceAwsEc2Snapshot                                                      string = "aws.ec2.snapshot"
+	ResourceAwsEc2Volume                                                        string = "aws.ec2.volume"
+	ResourceAwsInspector                                                        string = "aws.inspector"
+	ResourceAwsInspectorCoverage                                                string = "aws.inspector.coverage"
+	ResourceAwsInspectorCoverageInstance                                        string = "aws.inspector.coverage.instance"
+	ResourceAwsInspectorCoverageImage                                           string = "aws.inspector.coverage.image"
+	ResourceAwsInspectorCoverageRepository                                      string = "aws.inspector.coverage.repository"
+	ResourceAwsEc2Instance                                                      string = "aws.ec2.instance"
+	ResourceAwsEc2Networkinterface                                              string = "aws.ec2.networkinterface"
+	ResourceAwsEc2Keypair                                                       string = "aws.ec2.keypair"
+	ResourceAwsEc2Image                                                         string = "aws.ec2.image"
+	ResourceAwsEc2ImageLaunchPermission                                         string = "aws.ec2.image.launchPermission"
+	ResourceAwsEc2ImageBlockDeviceMapping                                       string = "aws.ec2.image.blockDeviceMapping"
+	ResourceAwsEc2ImageEbsBlockDevice                                           string = "aws.ec2.image.ebsBlockDevice"
+	ResourceAwsEc2InstanceDevice                                                string = "aws.ec2.instance.device"
+	ResourceAwsEc2Securitygroup                                                 string = "aws.ec2.securitygroup"
+	ResourceAwsEc2SecuritygroupIppermission                                     string = "aws.ec2.securitygroup.ippermission"
+	ResourceAwsConfig                                                           string = "aws.config"
+	ResourceAwsConfigRule                                                       string = "aws.config.rule"
+	ResourceAwsConfigRecorder                                                   string = "aws.config.recorder"
+	ResourceAwsConfigDeliverychannel                                            string = "aws.config.deliverychannel"
+	ResourceAwsEks                                                              string = "aws.eks"
+	ResourceAwsEksNodegroup                                                     string = "aws.eks.nodegroup"
+	ResourceAwsEksAddon                                                         string = "aws.eks.addon"
+	ResourceAwsEksCluster                                                       string = "aws.eks.cluster"
+	ResourceAwsNeptune                                                          string = "aws.neptune"
+	ResourceAwsNeptuneCluster                                                   string = "aws.neptune.cluster"
+	ResourceAwsNeptuneInstance                                                  string = "aws.neptune.instance"
+	ResourceAwsTimestreamLiveanalytics                                          string = "aws.timestream.liveanalytics"
+	ResourceAwsTimestreamLiveanalyticsDatabase                                  string = "aws.timestream.liveanalytics.database"
+	ResourceAwsTimestreamLiveanalyticsTable                                     string = "aws.timestream.liveanalytics.table"
+	ResourceAwsCodedeploy                                                       string = "aws.codedeploy"
+	ResourceAwsCodedeployApplication                                            string = "aws.codedeploy.application"
+	ResourceAwsCodedeployDeploymentGroup                                        string = "aws.codedeploy.deploymentGroup"
+	ResourceAwsCodedeployDeployment                                             string = "aws.codedeploy.deployment"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -661,6 +673,54 @@ func init() {
 		"aws.ecs.container": {
 			// to override args, implement: initAwsEcsContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEcsContainer,
+		},
+		"aws.ecs.taskDefinition": {
+			// to override args, implement: initAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinition,
+		},
+		"aws.ecs.taskDefinition.containerDefinition": {
+			// to override args, implement: initAwsEcsTaskDefinitionContainerDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionContainerDefinition,
+		},
+		"aws.ecs.taskDefinition.containerDefinition.environmentVariable": {
+			// to override args, implement: initAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable,
+		},
+		"aws.ecs.taskDefinition.containerDefinition.secret": {
+			// to override args, implement: initAwsEcsTaskDefinitionContainerDefinitionSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionContainerDefinitionSecret,
+		},
+		"aws.ecs.taskDefinition.containerDefinition.logConfiguration": {
+			// to override args, implement: initAwsEcsTaskDefinitionContainerDefinitionLogConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionContainerDefinitionLogConfiguration,
+		},
+		"aws.ecs.taskDefinition.containerDefinition.portMapping": {
+			// to override args, implement: initAwsEcsTaskDefinitionContainerDefinitionPortMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionContainerDefinitionPortMapping,
+		},
+		"aws.ecs.taskDefinition.volume": {
+			// to override args, implement: initAwsEcsTaskDefinitionVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionVolume,
+		},
+		"aws.ecs.taskDefinition.volume.efsVolumeConfiguration": {
+			// to override args, implement: initAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration,
+		},
+		"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig": {
+			// to override args, implement: initAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig,
+		},
+		"aws.ecs.taskDefinition.volume.host": {
+			// to override args, implement: initAwsEcsTaskDefinitionVolumeHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionVolumeHost,
+		},
+		"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration": {
+			// to override args, implement: initAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration,
+		},
+		"aws.ecs.taskDefinition.ephemeralStorage": {
+			// to override args, implement: initAwsEcsTaskDefinitionEphemeralStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionEphemeralStorage,
 		},
 		"aws.emr": {
 			// to override args, implement: initAwsEmr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3130,6 +3190,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.containerInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcs).GetContainerInstances()).ToDataRes(types.Array(types.Resource("aws.ecs.instance")))
 	},
+	"aws.ecs.taskDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcs).GetTaskDefinitions()).ToDataRes(types.Array(types.Resource("aws.ecs.taskDefinition")))
+	},
 	"aws.ecs.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetArn()).ToDataRes(types.String)
 	},
@@ -3264,6 +3327,162 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.container.reason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsContainer).GetReason()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetFamily()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.revision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetRevision()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskDefinition.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.networkMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetNetworkMode()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.pidMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetPidMode()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.ipcMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetIpcMode()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.taskRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetTaskRoleArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.executionRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetExecutionRoleArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetContainerDefinitions()).ToDataRes(types.Array(types.Resource("aws.ecs.taskDefinition.containerDefinition")))
+	},
+	"aws.ecs.taskDefinition.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetVolumes()).ToDataRes(types.Array(types.Resource("aws.ecs.taskDefinition.volume")))
+	},
+	"aws.ecs.taskDefinition.ephemeralStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetEphemeralStorage()).ToDataRes(types.Resource("aws.ecs.taskDefinition.ephemeralStorage"))
+	},
+	"aws.ecs.taskDefinition.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.taskDefinition.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetName()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetImage()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.privileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetPrivileged()).ToDataRes(types.Bool)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.readonlyRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetReadonlyRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetUser()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.environment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetEnvironment()).ToDataRes(types.Array(types.Resource("aws.ecs.taskDefinition.containerDefinition.environmentVariable")))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetSecrets()).ToDataRes(types.Array(types.Resource("aws.ecs.taskDefinition.containerDefinition.secret")))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.logConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetLogConfiguration()).ToDataRes(types.Resource("aws.ecs.taskDefinition.containerDefinition.logConfiguration"))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.memory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetMemory()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.cpu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetCpu()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.portMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetPortMappings()).ToDataRes(types.Array(types.Resource("aws.ecs.taskDefinition.containerDefinition.portMapping")))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable).GetName()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable).GetValue()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.secret.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionSecret).GetName()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.secret.valueFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionSecret).GetValueFrom()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.logConfiguration.logDriver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration).GetLogDriver()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.logConfiguration.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.portMapping.containerPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping).GetContainerPort()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.portMapping.hostPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping).GetHostPort()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.portMapping.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolume).GetName()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolume).GetEfsVolumeConfiguration()).ToDataRes(types.Resource("aws.ecs.taskDefinition.volume.efsVolumeConfiguration"))
+	},
+	"aws.ecs.taskDefinition.volume.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolume).GetHost()).ToDataRes(types.Resource("aws.ecs.taskDefinition.volume.host"))
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolume).GetDockerVolumeConfiguration()).ToDataRes(types.Resource("aws.ecs.taskDefinition.volume.dockerVolumeConfiguration"))
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.rootDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).GetRootDirectory()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.transitEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).GetTransitEncryption()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.transitEncryptionPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).GetTransitEncryptionPort()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).GetAuthorizationConfig()).ToDataRes(types.Resource("aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig"))
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig.accessPointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig).GetAccessPointId()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig.iam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig).GetIam()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.host.sourcePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeHost).GetSourcePath()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).GetScope()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.autoprovision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).GetAutoprovision()).ToDataRes(types.Bool)
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.driver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).GetDriver()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.driverOpts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).GetDriverOpts()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.taskDefinition.ephemeralStorage.sizeInGiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionEphemeralStorage).GetSizeInGiB()).ToDataRes(types.Int)
 	},
 	"aws.emr.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmr).GetClusters()).ToDataRes(types.Array(types.Resource("aws.emr.cluster")))
@@ -9236,6 +9455,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcs).ContainerInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.taskDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcs).TaskDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsCluster).__id, ok = v.Value.(string)
 		return
@@ -9430,6 +9653,262 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.container.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsContainer).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.revision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).Revision, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.networkMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).NetworkMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.pidMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).PidMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.ipcMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).IpcMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.taskRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).TaskRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.executionRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).ExecutionRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).ContainerDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.ephemeralStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).EphemeralStorage, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinitionEphemeralStorage](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.privileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Privileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.readonlyRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).ReadonlyRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Environment, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.logConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).LogConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.memory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Memory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.cpu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Cpu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.portMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).PortMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionSecret).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.secret.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionSecret).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.secret.valueFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionSecret).ValueFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.logConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.logConfiguration.logDriver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration).LogDriver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.logConfiguration.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.portMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.portMapping.containerPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping).ContainerPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.portMapping.hostPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping).HostPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.portMapping.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolume).EfsVolumeConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolume).Host, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinitionVolumeHost](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolume).DockerVolumeConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.rootDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).RootDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.transitEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).TransitEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.transitEncryptionPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).TransitEncryptionPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).AuthorizationConfig, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig.accessPointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig).AccessPointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig.iam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig).Iam, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeHost).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.host.sourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeHost).SourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.autoprovision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).Autoprovision, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.driver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).Driver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.driverOpts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).DriverOpts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.ephemeralStorage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionEphemeralStorage).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.ephemeralStorage.sizeInGiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionEphemeralStorage).SizeInGiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.emr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22544,6 +23023,7 @@ type mqlAwsEcs struct {
 	Clusters           plugin.TValue[[]any]
 	Containers         plugin.TValue[[]any]
 	ContainerInstances plugin.TValue[[]any]
+	TaskDefinitions    plugin.TValue[[]any]
 }
 
 // createAwsEcs creates a new instance of this resource
@@ -22628,6 +23108,22 @@ func (c *mqlAwsEcs) GetContainerInstances() *plugin.TValue[[]any] {
 		}
 
 		return c.containerInstances()
+	})
+}
+
+func (c *mqlAwsEcs) GetTaskDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TaskDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs", c.__id, "taskDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.taskDefinitions()
 	})
 }
 
@@ -23078,6 +23574,926 @@ func (c *mqlAwsEcsContainer) GetMemoryHardLimit() *plugin.TValue[string] {
 
 func (c *mqlAwsEcsContainer) GetReason() *plugin.TValue[string] {
 	return &c.Reason
+}
+
+// mqlAwsEcsTaskDefinition for the aws.ecs.taskDefinition resource
+type mqlAwsEcsTaskDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionInternal it will be used here
+	Arn                  plugin.TValue[string]
+	Family               plugin.TValue[string]
+	Revision             plugin.TValue[int64]
+	Status               plugin.TValue[string]
+	NetworkMode          plugin.TValue[string]
+	PidMode              plugin.TValue[string]
+	IpcMode              plugin.TValue[string]
+	TaskRoleArn          plugin.TValue[string]
+	ExecutionRoleArn     plugin.TValue[string]
+	ContainerDefinitions plugin.TValue[[]any]
+	Volumes              plugin.TValue[[]any]
+	EphemeralStorage     plugin.TValue[*mqlAwsEcsTaskDefinitionEphemeralStorage]
+	Tags                 plugin.TValue[map[string]any]
+	Region               plugin.TValue[string]
+}
+
+// createAwsEcsTaskDefinition creates a new instance of this resource
+func createAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinition) MqlName() string {
+	return "aws.ecs.taskDefinition"
+}
+
+func (c *mqlAwsEcsTaskDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetRevision() *plugin.TValue[int64] {
+	return &c.Revision
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetNetworkMode() *plugin.TValue[string] {
+	return &c.NetworkMode
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetPidMode() *plugin.TValue[string] {
+	return &c.PidMode
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetIpcMode() *plugin.TValue[string] {
+	return &c.IpcMode
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetTaskRoleArn() *plugin.TValue[string] {
+	return &c.TaskRoleArn
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetExecutionRoleArn() *plugin.TValue[string] {
+	return &c.ExecutionRoleArn
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetContainerDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition", c.__id, "containerDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containerDefinitions()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetEphemeralStorage() *plugin.TValue[*mqlAwsEcsTaskDefinitionEphemeralStorage] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinitionEphemeralStorage](&c.EphemeralStorage, func() (*mqlAwsEcsTaskDefinitionEphemeralStorage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition", c.__id, "ephemeralStorage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskDefinitionEphemeralStorage), nil
+			}
+		}
+
+		return c.ephemeralStorage()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsEcsTaskDefinitionContainerDefinition for the aws.ecs.taskDefinition.containerDefinition resource
+type mqlAwsEcsTaskDefinitionContainerDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionContainerDefinitionInternal it will be used here
+	Name                   plugin.TValue[string]
+	Image                  plugin.TValue[string]
+	Privileged             plugin.TValue[bool]
+	ReadonlyRootFilesystem plugin.TValue[bool]
+	User                   plugin.TValue[string]
+	Environment            plugin.TValue[[]any]
+	Secrets                plugin.TValue[[]any]
+	LogConfiguration       plugin.TValue[*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration]
+	Memory                 plugin.TValue[int64]
+	Cpu                    plugin.TValue[int64]
+	PortMappings           plugin.TValue[[]any]
+}
+
+// createAwsEcsTaskDefinitionContainerDefinition creates a new instance of this resource
+func createAwsEcsTaskDefinitionContainerDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionContainerDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.containerDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) MqlName() string {
+	return "aws.ecs.taskDefinition.containerDefinition"
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetImage() *plugin.TValue[string] {
+	return &c.Image
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetPrivileged() *plugin.TValue[bool] {
+	return &c.Privileged
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetReadonlyRootFilesystem() *plugin.TValue[bool] {
+	return &c.ReadonlyRootFilesystem
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetEnvironment() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Environment, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition.containerDefinition", c.__id, "environment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.environment()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition.containerDefinition", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetLogConfiguration() *plugin.TValue[*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration](&c.LogConfiguration, func() (*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition.containerDefinition", c.__id, "logConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration), nil
+			}
+		}
+
+		return c.logConfiguration()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetMemory() *plugin.TValue[int64] {
+	return &c.Memory
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetCpu() *plugin.TValue[int64] {
+	return &c.Cpu
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetPortMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PortMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition.containerDefinition", c.__id, "portMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.portMappings()
+	})
+}
+
+// mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable for the aws.ecs.taskDefinition.containerDefinition.environmentVariable resource
+type mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariableInternal it will be used here
+	Name  plugin.TValue[string]
+	Value plugin.TValue[string]
+}
+
+// createAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable creates a new instance of this resource
+func createAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.containerDefinition.environmentVariable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable) MqlName() string {
+	return "aws.ecs.taskDefinition.containerDefinition.environmentVariable"
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+// mqlAwsEcsTaskDefinitionContainerDefinitionSecret for the aws.ecs.taskDefinition.containerDefinition.secret resource
+type mqlAwsEcsTaskDefinitionContainerDefinitionSecret struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionContainerDefinitionSecretInternal it will be used here
+	Name      plugin.TValue[string]
+	ValueFrom plugin.TValue[string]
+}
+
+// createAwsEcsTaskDefinitionContainerDefinitionSecret creates a new instance of this resource
+func createAwsEcsTaskDefinitionContainerDefinitionSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionContainerDefinitionSecret{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.containerDefinition.secret", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionSecret) MqlName() string {
+	return "aws.ecs.taskDefinition.containerDefinition.secret"
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionSecret) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionSecret) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionSecret) GetValueFrom() *plugin.TValue[string] {
+	return &c.ValueFrom
+}
+
+// mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration for the aws.ecs.taskDefinition.containerDefinition.logConfiguration resource
+type mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionContainerDefinitionLogConfigurationInternal it will be used here
+	LogDriver plugin.TValue[string]
+	Options   plugin.TValue[map[string]any]
+}
+
+// createAwsEcsTaskDefinitionContainerDefinitionLogConfiguration creates a new instance of this resource
+func createAwsEcsTaskDefinitionContainerDefinitionLogConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.containerDefinition.logConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration) MqlName() string {
+	return "aws.ecs.taskDefinition.containerDefinition.logConfiguration"
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration) GetLogDriver() *plugin.TValue[string] {
+	return &c.LogDriver
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration) GetOptions() *plugin.TValue[map[string]any] {
+	return &c.Options
+}
+
+// mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping for the aws.ecs.taskDefinition.containerDefinition.portMapping resource
+type mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionContainerDefinitionPortMappingInternal it will be used here
+	ContainerPort plugin.TValue[int64]
+	HostPort      plugin.TValue[int64]
+	Protocol      plugin.TValue[string]
+}
+
+// createAwsEcsTaskDefinitionContainerDefinitionPortMapping creates a new instance of this resource
+func createAwsEcsTaskDefinitionContainerDefinitionPortMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.containerDefinition.portMapping", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping) MqlName() string {
+	return "aws.ecs.taskDefinition.containerDefinition.portMapping"
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping) GetContainerPort() *plugin.TValue[int64] {
+	return &c.ContainerPort
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping) GetHostPort() *plugin.TValue[int64] {
+	return &c.HostPort
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+// mqlAwsEcsTaskDefinitionVolume for the aws.ecs.taskDefinition.volume resource
+type mqlAwsEcsTaskDefinitionVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionVolumeInternal it will be used here
+	Name                      plugin.TValue[string]
+	EfsVolumeConfiguration    plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration]
+	Host                      plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeHost]
+	DockerVolumeConfiguration plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration]
+}
+
+// createAwsEcsTaskDefinitionVolume creates a new instance of this resource
+func createAwsEcsTaskDefinitionVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolume) MqlName() string {
+	return "aws.ecs.taskDefinition.volume"
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolume) GetEfsVolumeConfiguration() *plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration](&c.EfsVolumeConfiguration, func() (*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition.volume", c.__id, "efsVolumeConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration), nil
+			}
+		}
+
+		return c.efsVolumeConfiguration()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolume) GetHost() *plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeHost] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinitionVolumeHost](&c.Host, func() (*mqlAwsEcsTaskDefinitionVolumeHost, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition.volume", c.__id, "host")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskDefinitionVolumeHost), nil
+			}
+		}
+
+		return c.host()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolume) GetDockerVolumeConfiguration() *plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration](&c.DockerVolumeConfiguration, func() (*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition.volume", c.__id, "dockerVolumeConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration), nil
+			}
+		}
+
+		return c.dockerVolumeConfiguration()
+	})
+}
+
+// mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration for the aws.ecs.taskDefinition.volume.efsVolumeConfiguration resource
+type mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationInternal it will be used here
+	FileSystemId          plugin.TValue[string]
+	RootDirectory         plugin.TValue[string]
+	TransitEncryption     plugin.TValue[string]
+	TransitEncryptionPort plugin.TValue[int64]
+	AuthorizationConfig   plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig]
+}
+
+// createAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration creates a new instance of this resource
+func createAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.volume.efsVolumeConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) MqlName() string {
+	return "aws.ecs.taskDefinition.volume.efsVolumeConfiguration"
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) GetRootDirectory() *plugin.TValue[string] {
+	return &c.RootDirectory
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) GetTransitEncryption() *plugin.TValue[string] {
+	return &c.TransitEncryption
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) GetTransitEncryptionPort() *plugin.TValue[int64] {
+	return &c.TransitEncryptionPort
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) GetAuthorizationConfig() *plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig](&c.AuthorizationConfig, func() (*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition.volume.efsVolumeConfiguration", c.__id, "authorizationConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig), nil
+			}
+		}
+
+		return c.authorizationConfig()
+	})
+}
+
+// mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig for the aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig resource
+type mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfigInternal it will be used here
+	AccessPointId plugin.TValue[string]
+	Iam           plugin.TValue[string]
+}
+
+// createAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig creates a new instance of this resource
+func createAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig) MqlName() string {
+	return "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig"
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig) GetAccessPointId() *plugin.TValue[string] {
+	return &c.AccessPointId
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig) GetIam() *plugin.TValue[string] {
+	return &c.Iam
+}
+
+// mqlAwsEcsTaskDefinitionVolumeHost for the aws.ecs.taskDefinition.volume.host resource
+type mqlAwsEcsTaskDefinitionVolumeHost struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionVolumeHostInternal it will be used here
+	SourcePath plugin.TValue[string]
+}
+
+// createAwsEcsTaskDefinitionVolumeHost creates a new instance of this resource
+func createAwsEcsTaskDefinitionVolumeHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionVolumeHost{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.volume.host", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeHost) MqlName() string {
+	return "aws.ecs.taskDefinition.volume.host"
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeHost) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeHost) GetSourcePath() *plugin.TValue[string] {
+	return &c.SourcePath
+}
+
+// mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration for the aws.ecs.taskDefinition.volume.dockerVolumeConfiguration resource
+type mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfigurationInternal it will be used here
+	Scope         plugin.TValue[string]
+	Autoprovision plugin.TValue[bool]
+	Driver        plugin.TValue[string]
+	DriverOpts    plugin.TValue[map[string]any]
+	Labels        plugin.TValue[map[string]any]
+}
+
+// createAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration creates a new instance of this resource
+func createAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.volume.dockerVolumeConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) MqlName() string {
+	return "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration"
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) GetAutoprovision() *plugin.TValue[bool] {
+	return &c.Autoprovision
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) GetDriver() *plugin.TValue[string] {
+	return &c.Driver
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) GetDriverOpts() *plugin.TValue[map[string]any] {
+	return &c.DriverOpts
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+// mqlAwsEcsTaskDefinitionEphemeralStorage for the aws.ecs.taskDefinition.ephemeralStorage resource
+type mqlAwsEcsTaskDefinitionEphemeralStorage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionEphemeralStorageInternal it will be used here
+	SizeInGiB plugin.TValue[int64]
+}
+
+// createAwsEcsTaskDefinitionEphemeralStorage creates a new instance of this resource
+func createAwsEcsTaskDefinitionEphemeralStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionEphemeralStorage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.ephemeralStorage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionEphemeralStorage) MqlName() string {
+	return "aws.ecs.taskDefinition.ephemeralStorage"
+}
+
+func (c *mqlAwsEcsTaskDefinitionEphemeralStorage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionEphemeralStorage) GetSizeInGiB() *plugin.TValue[int64] {
+	return &c.SizeInGiB
 }
 
 // mqlAwsEmr for the aws.emr resource

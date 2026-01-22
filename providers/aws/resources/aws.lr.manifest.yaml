@@ -1673,6 +1673,8 @@ resources:
       clusters: {}
       containerInstances: {}
       containers: {}
+      taskDefinitions:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: latest
     platform:
       name:
@@ -1752,6 +1754,143 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition:
+    fields:
+      arn: {}
+      containerDefinitions: {}
+      ephemeralStorage: {}
+      executionRoleArn: {}
+      family: {}
+      ipcMode: {}
+      networkMode: {}
+      pidMode: {}
+      region: {}
+      revision: {}
+      status: {}
+      tags: {}
+      taskRoleArn: {}
+      volumes: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.containerDefinition:
+    fields:
+      cpu: {}
+      environment: {}
+      image: {}
+      logConfiguration: {}
+      memory: {}
+      name: {}
+      portMappings: {}
+      privileged: {}
+      readonlyRootFilesystem: {}
+      secrets: {}
+      user: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.containerDefinition.environmentVariable:
+    fields:
+      name: {}
+      value: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.containerDefinition.logConfiguration:
+    fields:
+      logDriver: {}
+      options: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.containerDefinition.portMapping:
+    fields:
+      containerPort: {}
+      hostPort: {}
+      protocol: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.containerDefinition.secret:
+    fields:
+      name: {}
+      valueFrom: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.ephemeralStorage:
+    fields:
+      kmsKeyId: {}
+      sizeInGiB: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.volume:
+    fields:
+      dockerVolumeConfiguration: {}
+      efsVolumeConfiguration: {}
+      host: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.volume.dockerVolumeConfiguration:
+    fields:
+      autoprovision: {}
+      driver: {}
+      driverOpts: {}
+      labels: {}
+      scope: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.volume.efsVolumeConfiguration:
+    fields:
+      authorizationConfig: {}
+      fileSystemId: {}
+      rootDirectory: {}
+      transitEncryption: {}
+      transitEncryptionPort: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig:
+    fields:
+      accessPointId: {}
+      iam: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskDefinition.volume.host:
+    fields:
+      sourcePath: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
