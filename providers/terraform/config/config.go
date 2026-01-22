@@ -24,12 +24,18 @@ var Config = plugin.Provider{
 			Name:    "terraform",
 			Aliases: []string{},
 			Use:     "terraform PATH",
-			Short:   "a Terraform HCL file or directory",
-			Long: `Use the terraform provider to query Terraform HCL files and directories, including resources, variables, outputs, and module configurations.
+			Short:   "Terraform HCL configurations, plan files, and state files",
+			Long: `Use the terraform provider to query Terraform HCL, plan, or state files as well as directories of files.
+
+Available commands:
+  plan                       Terraform plan file
+  state                      Terraform state file
 
 Examples:
+  cnquery shell terraform <PATH-TO-HCL-DIRECTORY>
   cnspec scan terraform <PATH-TO-HCL-FILE>
-  cnquery shell terraform <PATH-TO-DIRECTORY>
+  cnspec scan terraform plan <PATH-TO-PLAN-JSON>
+  cnspec scan terraform state <PATH-TO-STATE-JSON>
 `,
 			MinArgs:   1,
 			MaxArgs:   2,
