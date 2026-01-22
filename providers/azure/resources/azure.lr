@@ -36,6 +36,8 @@ azure.subscription @defaults ("name") {
   compute() azure.subscription.computeService
   // Batch resources in the subscription
   batch() azure.subscription.batchService
+  // Databricks resources in the subscription
+  databricks() azure.subscription.databricksService
   // Network resources in the subscription
   network() azure.subscription.networkService
   // Storage resources in the subscription
@@ -284,6 +286,32 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   deploymentConfiguration dict
   // Pool virtual machine configuration
   virtualMachineConfiguration dict
+}
+
+// Azure Databricks
+private azure.subscription.databricksService {
+  // Subscription identifier
+  subscriptionId string
+  // Databricks workspaces in the subscription
+  workspaces() []azure.subscription.databricksService.workspace
+}
+
+// Azure Databricks workspace
+azure.subscription.databricksService.workspace @defaults("id name location") {
+  // Workspace ID
+  id string
+  // Workspace name
+  name string
+  // Workspace location
+  location string
+  // Workspace tags
+  tags map[string]string
+  // Workspace type
+  type string
+  // Workspace properties
+  properties dict
+  // Workspace SKU
+  sku dict
 }
 
 // Azure network
@@ -1943,6 +1971,54 @@ private azure.subscription.keyVaultService.certificate @defaults("id certName") 
   version() string
   // List of certificate versions
   versions() []azure.subscription.keyVaultService.certificate
+  // Certificate policy
+  policy() azure.subscription.keyVaultService.certificate.policy
+}
+
+// Azure Key Vault certificate policy
+private azure.subscription.keyVaultService.certificate.policy @defaults("x509CertificateProperties") {
+  // X.509 certificate properties
+  x509CertificateProperties() azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties
+  // Key properties (keyType, keySize, etc.)
+  keyProperties() azure.subscription.keyVaultService.certificate.policy.keyProperties
+  // Issuer parameters (name, etc.)
+  issuerParameters() azure.subscription.keyVaultService.certificate.policy.issuerParameters
+}
+
+// Azure Key Vault certificate policy key properties
+private azure.subscription.keyVaultService.certificate.policy.keyProperties {
+  // Elliptic curve name (for EC keys)
+  curve string
+  // Whether the private key can be exported
+  exportable bool
+  // The key size in bits (e.g., 2048, 3072, 4096 for RSA)
+  keySize int
+  // The type of key pair (e.g., RSA, EC)
+  keyType string
+  // Whether the same key pair will be used on certificate renewal
+  reuseKey bool
+}
+
+// Azure Key Vault certificate policy issuer parameters
+private azure.subscription.keyVaultService.certificate.policy.issuerParameters {
+  // Whether certificates should be published to certificate transparency logs
+  certificateTransparency bool
+  // Certificate type as supported by the provider (e.g., OV-SSL, EV-SSL)
+  certificateType string
+  // Name of the referenced issuer object or reserved names (e.g., Self, Unknown)
+  name string
+}
+
+// Azure Key Vault certificate policy X.509 properties
+private azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties @defaults("subject validityInMonths") {
+  // Certificate subject (e.g., CN=example.com)
+  subject string
+  // Certificate validity period in months
+  validityInMonths int
+  // Key usage types (e.g., digitalSignature, keyEncipherment)
+  keyUsage []string
+  // Extended key usage OIDs
+  ekus []string
 }
 
 // Azure Key Vault secret

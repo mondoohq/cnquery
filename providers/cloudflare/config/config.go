@@ -11,13 +11,18 @@ import (
 var Config = plugin.Provider{
 	Name:            "cloudflare",
 	ID:              "go.mondoo.com/cnquery/v12/providers/cloudflare",
-	Version:         "11.0.86",
+	Version:         "11.0.88",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:  "cloudflare",
 			Use:   "cloudflare",
 			Short: "Cloudflare provider",
+			Long: `Use the cloudflare provider to query resources in your Cloudflare account, including zones, DNS records, and account settings.
+
+Example:
+  cnquery shell cloudflare --token <access_token>
+`,
 			Discovery: []string{
 				connection.DiscoveryAll,
 				connection.DiscoveryAuto,

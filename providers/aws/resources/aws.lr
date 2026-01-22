@@ -709,6 +709,90 @@ private aws.efs.filesystem @defaults("name id region") {
   createdAt time
 }
 
+// AWS FSx service
+aws.fsx @defaults("fileSystems") {
+  // A list of FSx file systems
+  fileSystems() []aws.fsx.filesystem
+  // A list of Amazon File Cache instances
+  caches() []aws.fsx.cache
+  // A list of FSx backups
+  backups() []aws.fsx.backup
+}
+
+// AWS FSx file system
+private aws.fsx.filesystem @defaults("id type region") {
+  // File system ID
+  id string
+  // File system ARN
+  arn string
+  // File system type (LUSTRE, WINDOWS, ONTAP, OPENZFS)
+  type string
+  // Lifecycle status
+  lifecycle string
+  // Storage capacity in GiB
+  storageCapacity int
+  // Storage type (SSD, HDD)
+  storageType string
+  // Whether file system is encrypted at rest (true if kmsKeyId is set)
+  encrypted() bool
+  // KMS key ID used for encryption
+  kmsKeyId string
+  // VPC ID where file system resides
+  vpcId string
+  // Subnet IDs for file system
+  subnetIds []string
+  // Resource tags
+  tags map[string]string
+  // Creation timestamp
+  createdAt time
+  // Region where the file system exists
+  region string
+}
+
+// AWS Amazon File Cache instance
+private aws.fsx.cache @defaults("id lifecycle") {
+  // Cache ID
+  id string
+  // Cache ARN
+  arn string
+  // Lifecycle status
+  lifecycle string
+  // Storage capacity in TiB
+  storageCapacity int
+  // VPC ID
+  vpcId string
+  // Subnet IDs
+  subnetIds []string
+  // Lustre-specific configuration
+  lustreConfiguration dict
+  // S3 data repository associations
+  dataRepositoryAssociations []dict
+  // Resource tags
+  tags map[string]string
+}
+
+// AWS FSx backup
+private aws.fsx.backup @defaults("backupId type lifecycle") {
+  // Backup ID
+  backupId string
+  // Backup ARN
+  arn string
+  // Backup type (USER_INITIATED, AUTOMATIC, AWS_BACKUP)
+  type string
+  // Lifecycle status
+  lifecycle string
+  // Associated file system ID
+  fileSystemId string
+  // File system type
+  fileSystemType string
+  // KMS key ID used for encryption
+  kmsKeyId string
+  // Creation timestamp
+  createdAt time
+  // Resource tags
+  tags map[string]string
+}
+
 // AWS Key Management Service (KMS)
 aws.kms @defaults("keys") {
   // A list of all customer master keys (CMKs) in the caller's AWS account (across all regions)
@@ -2227,6 +2311,106 @@ private aws.applicationAutoscaling.target @defaults("arn") {
   suspendedState dict
   // Creation date for the auto scaling target
   createdAt time
+}
+
+// AWS Elastic Disaster Recovery (DRS)
+aws.drs @defaults("sourceServers") {
+  // List of source servers being replicated
+  sourceServers() []aws.drs.sourceServer
+  // List of DRS jobs (recovery, drill, failback)
+  jobs() []aws.drs.job
+}
+
+// AWS DRS source server
+private aws.drs.sourceServer @defaults("sourceServerID arn") {
+  // Source server ID
+  sourceServerID string
+  // Source server ARN
+  arn string
+  // Data replication status and progress
+  dataReplicationInfo dict
+  // Result of last launch (NOT_STARTED, PENDING, SUCCEEDED, FAILED)
+  lastLaunchResult string
+  // Lifecycle state information
+  lifeCycle dict
+  // Source server properties (OS, disks, network)
+  sourceProperties dict
+  // Staging area configuration
+  stagingArea dict
+  // Replication direction: FAILOVER_AND_FAILBACK or ONE_WAY
+  replicationDirection string
+  // ID of last recovery instance
+  recoveryInstanceId string
+  // Resource tags
+  tags map[string]string
+  // Replication settings for this server
+  replicationConfiguration() aws.drs.replicationConfiguration
+  // Launch settings for this server
+  launchConfiguration() aws.drs.launchConfiguration
+}
+
+// AWS DRS job
+private aws.drs.job @defaults("jobID type status") {
+  // Job ID
+  jobID string
+  // Job ARN
+  arn string
+  // Job type (LAUNCH, CREATE_CONVERTED_SNAPSHOT, TERMINATE)
+  type string
+  // Job status (PENDING, STARTED, COMPLETED)
+  status string
+  // How job was initiated (START_RECOVERY, START_DRILL, etc.)
+  initiatedBy string
+  // Job creation timestamp
+  createdAt time
+  // Job completion timestamp
+  endedAt time
+  // Servers participating in job
+  participatingServers []dict
+}
+
+// AWS DRS replication configuration
+private aws.drs.replicationConfiguration @defaults("sourceServerID") {
+  // Associated source server ID
+  sourceServerID string
+  // Staging area subnet ID
+  stagingAreaSubnetId string
+  // Staging area tags
+  stagingAreaTags map[string]string
+  // Whether to use dedicated replication server
+  useDedicatedReplicationServer bool
+  // EC2 instance type for replication server
+  replicationServerInstanceType string
+  // EBS encryption mode (DEFAULT, CUSTOM)
+  ebsEncryption string
+  // Custom KMS key for EBS encryption
+  ebsEncryptionKeyArn string
+  // Disk replication configuration
+  replicatedDisks []dict
+  // Bandwidth throttling in Mbps
+  bandwidthThrottling int
+}
+
+// AWS DRS launch configuration
+private aws.drs.launchConfiguration @defaults("sourceServerID") {
+  // Associated source server ID
+  sourceServerID string
+  // Instance type right sizing method (NONE, BASIC, IN_AWS)
+  targetInstanceTypeRightSizingMethod string
+  // Launch disposition: STOPPED or STARTED
+  launchDisposition string
+  // Whether to copy private IP
+  copyPrivateIp bool
+  // Whether to copy tags
+  copyTags bool
+  // EC2 launch template ID
+  ec2LaunchTemplateID string
+  // Licensing configuration
+  licensing dict
+  // Post-launch actions
+  postLaunchEnabled bool
+  // Launch into instance properties
+  launchIntoInstanceProperties dict
 }
 
 // AWS Backup

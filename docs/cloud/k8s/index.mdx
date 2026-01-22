@@ -1,0 +1,44 @@
+---
+title: Query Kubernetes
+sidebar_label: Get Started
+id: cnquery-k8s-intro
+displayed_sidebar: cnquery
+sidebar_position: 1
+description: Explore and analyze your Kubernetes infrastructure with cnquery
+image: /img/cnquery/mondoo-kubernetes.jpg
+---
+
+Rely on cnquery to explore and analyze your entire Kubernetes stack. You can query any type of Kubernetes deployment, whether it's local or in the cloud. cnquery lets you gather data about all aspects of your container infrastructure and their workloads.
+
+cnquery provides the answers you need about every Kubernetes configuration. For a list of Kubernetes resources you can query, read [Mondoo Kubernetes (K8s) Resource Pack Reference](/mql/resources/k8s/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+## Connect cnquery with your Kubernetes environment
+
+### Requirements
+
+To analyze and explore your Kubernetes environment with cnquery, you must have:
+
+- [cnquery installed on your workstation](/cnquery/).
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed on your workstation. To ensure that kubectl is successfully installed and you can access your Kubernetes infrastructure, run `kubectl describe nodes`.
+
+### Verify with a quick Kubernetes query
+
+To quickly confirm that cnquery has access to your Kubernetes environment, run this query from your terminal:
+
+```bash
+cnquery run k8s -c k8s.deployment
+```
+
+cnquery returns a list of found deployments:
+
+```coffeescript
+k8s.deployment: k8s.deployment namespace="kube-system" name="coredns" created=2022-12-14 15:17:37 -0800 PST
+k8s.deployment: k8s.deployment namespace="luna" name="luna-frontend" created=2022-12-14 15:28:23 -0800 PST
+k8s.deployment: k8s.deployment namespace="luna" name="postgres" created=2022-12-14 15:28:48 -0800 PST
+```
+
+## Next step
+
+You've successfully used cnquery to answer your first question about your Kubernetes infrastructure. Now you're ready to [explore more Kubernetes information.](/cnquery/cloud/k8s/cluster/)
+
+---

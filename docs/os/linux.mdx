@@ -1,0 +1,142 @@
+---
+title: Query Linux
+id: linux
+sidebar_label: Linux
+displayed_sidebar: cnquery
+sidebar_position: 1
+description: Explore and analyze your Linux assets with cnquery
+image: /img/cnquery/mondoo-feature.jpg
+---
+
+cnquery provides the answers you need about your Linux assets. For example, you can retrieve the distribution, user information, or security settings.
+
+For a list of Linux resources you can query, read [Mondoo Operating Systems (OS) Resource Pack Reference](/mql/resources/os/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+## Requirements
+
+To explore a Linux asset with cnquery, you must have:
+
+- [cnquery installed on your workstation](/cnquery/)
+- Access to the asset
+
+## Query a Linux asset
+
+To answer any question about your environment, use cnquery's interactive shell. It has auto-complete to guide you, which is especially helpful when you're new to cnquery and learning MQL.
+
+To launch a shell into your local Linux environment, enter:
+
+```bash
+cnquery shell
+```
+
+To launch a shell into a remote Linux environment, enter:
+
+```bash
+cnquery shell ssh user@HOST
+```
+
+For `HOST`, substitute the hostname of the remote Linux asset.
+
+### Discover capabilities with the `help` command
+
+Once inside the shell, use the `help` command to learn what Linux resources you can query. This command lists all the operating system resources:
+
+```coffeescript
+help os
+```
+
+From the resulting list, you can drill down further. For example, enter this command to list the OS update information you can retrieve:
+
+```coffeescript
+help os.update
+```
+
+You can also learn about available Linux resources in the [Mondoo Operating Systems (OS) Resource Pack Reference](/mql/resources/os/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+### Get simple answers in the shell
+
+Now that you know how to discover what's possible with cnquery, let's run some actual queries in the shell.
+
+This query asks the hostname:
+
+```coffeescript
+asset.name
+```
+
+cnquery returns the pretty hostname:
+
+```coffeescript
+asset.name: "luna-ubuntu-05"
+```
+
+This query asks the name of the operating system:
+
+```coffeescript
+asset.platform
+```
+
+### Query users
+
+To request a list of all users on a machine, enter this query in the shell:
+
+```coffeescript
+users
+```
+
+### Request full details in results
+
+For a more detailed report, you can specify that you want all fields:
+
+```coffeescript
+users { * }
+```
+
+For every user, cnquery provides information about their settings.
+
+### Specify fields to include in results
+
+If you're interested in only some details, specify the fields you want in braces. For example, this query asks for each user's name, group, and whether it's enabled:
+
+```coffeescript
+users { name group enabled }
+```
+
+### Filter results
+
+You can filter results based on any fields. Specify the criteria using the `where` function and standard boolean operators.
+
+For example, this filters results based on group name:
+
+```coffeescript
+users.where(group.name == "admins") { name uid }
+```
+
+cnquery returns all users in the `admins` group. It includes the name and UID for each user.
+
+## Learn more about querying Linux
+
+- To learn more about how the MQL query language works, read [Write Effective MQL](/mql/mql-write).
+- For a list of all the Linux resources and fields you can query, read the [Mondoo Operating Systems (OS) Resource Pack Reference](/mql/resources/os/) and [Mondoo Core Resource Pack Reference](/mql/resources/core/).
+
+## Analyze your environment with query packs
+
+Mondoo makes these [core Linux query packs](https://github.com/mondoohq/cnquery) available in GitHub:
+
+- [Linux Inventory Pack](https://github.com/mondoohq/cnquery/blob/main/content/mondoo-linux-inventory.mql.yaml) provides information about all your Linux assets and their configuration.
+- [Linux Incident Response Pack](https://github.com/mondoohq/cnquery/blob/main/content/mondoo-linux-incident-response.mql.yaml) helps you investigate and minimize damage when a security incident occurs.
+
+To run one of these purpose-built collections of Linux-specific queries:
+
+1. In Mondoo's [cnquery GitHub repo](https://github.com/mondoohq/cnquery), go to the `content` directory and find the Linux query pack you want to run.
+
+2. Download the YAML file to a local directory and, in your terminal, move to that directory.
+
+3. Use the `cnquery scan` command, specifying the file and the query pack:
+
+```bash
+cnquery scan -f mondoo-linux-incident-response.mql.yaml --querypack mondoo-incident-response-linux
+```
+
+You can also create your own query packs to meet your specific needs. To learn more about query packs, read [Run a Query Pack](/cnquery/cnquery-run-pack/).
+
+---

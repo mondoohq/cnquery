@@ -49,4 +49,3 @@ packs:
         title: Disk usage in %
         mql: |
           parse.json(content: powershell("Get-Counter '\\LogicalDisk(*)\\% Free Space' | ConvertTo-Json -Compress").stdout).params['CounterSamples'] { Path CookedValue }
-    
