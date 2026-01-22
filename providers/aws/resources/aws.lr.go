@@ -63,6 +63,8 @@ const (
 	ResourceAwsWafIpset                                                      string = "aws.waf.ipset"
 	ResourceAwsEfs                                                           string = "aws.efs"
 	ResourceAwsEfsFilesystem                                                 string = "aws.efs.filesystem"
+	ResourceAwsEfsMountTarget                                                string = "aws.efs.mountTarget"
+	ResourceAwsEfsAccessPoint                                                string = "aws.efs.accessPoint"
 	ResourceAwsFsx                                                           string = "aws.fsx"
 	ResourceAwsFsxFilesystem                                                 string = "aws.fsx.filesystem"
 	ResourceAwsFsxCache                                                      string = "aws.fsx.cache"
@@ -423,6 +425,14 @@ func init() {
 		"aws.efs.filesystem": {
 			Init:   initAwsEfsFilesystem,
 			Create: createAwsEfsFilesystem,
+		},
+		"aws.efs.mountTarget": {
+			// to override args, implement: initAwsEfsMountTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsMountTarget,
+		},
+		"aws.efs.accessPoint": {
+			// to override args, implement: initAwsEfsAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsAccessPoint,
 		},
 		"aws.fsx": {
 			// to override args, implement: initAwsFsx(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1952,6 +1962,69 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.efs.filesystem.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.efs.filesystem.mountTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetMountTargets()).ToDataRes(types.Array(types.Resource("aws.efs.mountTarget")))
+	},
+	"aws.efs.filesystem.accessPoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetAccessPoints()).ToDataRes(types.Array(types.Resource("aws.efs.accessPoint")))
+	},
+	"aws.efs.filesystem.fileSystemPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetFileSystemPolicy()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.mountTargetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetMountTargetId()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.subnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetSubnetId()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetIpAddress()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.efs.mountTarget.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.networkInterfaceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetNetworkInterfaceId()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.accessPointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetAccessPointId()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetArn()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetName()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.posixUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetPosixUser()).ToDataRes(types.Dict)
+	},
+	"aws.efs.accessPoint.rootDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectory()).ToDataRes(types.Dict)
+	},
+	"aws.efs.accessPoint.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.efs.accessPoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.fsx.fileSystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsx).GetFileSystems()).ToDataRes(types.Array(types.Resource("aws.fsx.filesystem")))
@@ -7385,6 +7458,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.efs.filesystem.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystem).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.mountTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).MountTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.accessPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).AccessPoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.fileSystemPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).FileSystemPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.mountTarget.mountTargetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).MountTargetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.networkInterfaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).NetworkInterfaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.accessPoint.accessPointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).AccessPointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.posixUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).PosixUser, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.rootDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).RootDirectory, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17176,6 +17341,9 @@ type mqlAwsEfsFilesystem struct {
 	AvailabilityZone plugin.TValue[string]
 	Tags             plugin.TValue[map[string]any]
 	CreatedAt        plugin.TValue[*time.Time]
+	MountTargets     plugin.TValue[[]any]
+	AccessPoints     plugin.TValue[[]any]
+	FileSystemPolicy plugin.TValue[string]
 }
 
 // createAwsEfsFilesystem creates a new instance of this resource
@@ -17267,6 +17435,224 @@ func (c *mqlAwsEfsFilesystem) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsEfsFilesystem) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsEfsFilesystem) GetMountTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MountTargets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "mountTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mountTargets()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetAccessPoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessPoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "accessPoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessPoints()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetFileSystemPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FileSystemPolicy, func() (string, error) {
+		return c.fileSystemPolicy()
+	})
+}
+
+// mqlAwsEfsMountTarget for the aws.efs.mountTarget resource
+type mqlAwsEfsMountTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEfsMountTargetInternal
+	MountTargetId      plugin.TValue[string]
+	FileSystemId       plugin.TValue[string]
+	SubnetId           plugin.TValue[string]
+	AvailabilityZone   plugin.TValue[string]
+	IpAddress          plugin.TValue[string]
+	SecurityGroups     plugin.TValue[[]any]
+	LifecycleState     plugin.TValue[string]
+	NetworkInterfaceId plugin.TValue[string]
+	Region             plugin.TValue[string]
+}
+
+// createAwsEfsMountTarget creates a new instance of this resource
+func createAwsEfsMountTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsMountTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.mountTarget", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsMountTarget) MqlName() string {
+	return "aws.efs.mountTarget"
+}
+
+func (c *mqlAwsEfsMountTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsMountTarget) GetMountTargetId() *plugin.TValue[string] {
+	return &c.MountTargetId
+}
+
+func (c *mqlAwsEfsMountTarget) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAwsEfsMountTarget) GetSubnetId() *plugin.TValue[string] {
+	return &c.SubnetId
+}
+
+func (c *mqlAwsEfsMountTarget) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsEfsMountTarget) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlAwsEfsMountTarget) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.mountTarget", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsEfsMountTarget) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlAwsEfsMountTarget) GetNetworkInterfaceId() *plugin.TValue[string] {
+	return &c.NetworkInterfaceId
+}
+
+func (c *mqlAwsEfsMountTarget) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsEfsAccessPoint for the aws.efs.accessPoint resource
+type mqlAwsEfsAccessPoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEfsAccessPointInternal it will be used here
+	AccessPointId  plugin.TValue[string]
+	Arn            plugin.TValue[string]
+	FileSystemId   plugin.TValue[string]
+	Name           plugin.TValue[string]
+	PosixUser      plugin.TValue[any]
+	RootDirectory  plugin.TValue[any]
+	LifecycleState plugin.TValue[string]
+	Tags           plugin.TValue[map[string]any]
+	Region         plugin.TValue[string]
+}
+
+// createAwsEfsAccessPoint creates a new instance of this resource
+func createAwsEfsAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsAccessPoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.accessPoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsAccessPoint) MqlName() string {
+	return "aws.efs.accessPoint"
+}
+
+func (c *mqlAwsEfsAccessPoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsAccessPoint) GetAccessPointId() *plugin.TValue[string] {
+	return &c.AccessPointId
+}
+
+func (c *mqlAwsEfsAccessPoint) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEfsAccessPoint) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAwsEfsAccessPoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEfsAccessPoint) GetPosixUser() *plugin.TValue[any] {
+	return &c.PosixUser
+}
+
+func (c *mqlAwsEfsAccessPoint) GetRootDirectory() *plugin.TValue[any] {
+	return &c.RootDirectory
+}
+
+func (c *mqlAwsEfsAccessPoint) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlAwsEfsAccessPoint) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEfsAccessPoint) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsFsx for the aws.fsx resource
