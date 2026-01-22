@@ -3264,9 +3264,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.taskDefinition.ephemeralStorage.sizeInGiB": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionEphemeralStorage).GetSizeInGiB()).ToDataRes(types.Int)
 	},
-	"aws.ecs.taskDefinition.ephemeralStorage.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcsTaskDefinitionEphemeralStorage).GetKmsKeyId()).ToDataRes(types.String)
-	},
 	"aws.emr.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmr).GetClusters()).ToDataRes(types.Array(types.Resource("aws.emr.cluster")))
 	},
@@ -9328,10 +9325,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.taskDefinition.ephemeralStorage.sizeInGiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinitionEphemeralStorage).SizeInGiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"aws.ecs.taskDefinition.ephemeralStorage.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsTaskDefinitionEphemeralStorage).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.emr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23091,7 +23084,6 @@ type mqlAwsEcsTaskDefinitionEphemeralStorage struct {
 	__id       string
 	// optional: if you define mqlAwsEcsTaskDefinitionEphemeralStorageInternal it will be used here
 	SizeInGiB plugin.TValue[int64]
-	KmsKeyId  plugin.TValue[string]
 }
 
 // createAwsEcsTaskDefinitionEphemeralStorage creates a new instance of this resource
@@ -23133,10 +23125,6 @@ func (c *mqlAwsEcsTaskDefinitionEphemeralStorage) MqlID() string {
 
 func (c *mqlAwsEcsTaskDefinitionEphemeralStorage) GetSizeInGiB() *plugin.TValue[int64] {
 	return &c.SizeInGiB
-}
-
-func (c *mqlAwsEcsTaskDefinitionEphemeralStorage) GetKmsKeyId() *plugin.TValue[string] {
-	return &c.KmsKeyId
 }
 
 // mqlAwsEmr for the aws.emr resource
