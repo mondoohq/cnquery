@@ -113,6 +113,7 @@ paravirtual
 PAYG
 Pids
 portgroup
+posix
 postgre
 pushconfig
 querypack
