@@ -40,6 +40,7 @@ dlv
 eas
 eip
 ekm
+ekus
 elbv
 exo
 filecache
@@ -101,6 +102,7 @@ nsrecord
 nullgroup
 nullstring
 oidc
+OIDs
 ontap
 opcplc
 openssh

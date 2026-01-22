@@ -711,6 +711,271 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]any, erro
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	id := a.Id.Data
+	kvid, err := parseKeyVaultId(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if kvid.Type != "certificates" {
+		return nil, errors.New("only certificate ids are supported")
+	}
+
+	client, err := azcertificates.NewClient(kvid.BaseUrl, conn.Token(), &azcertificates.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	policyResp, err := client.GetCertificatePolicy(ctx, kvid.Name, nil)
+	if err != nil {
+		// Only treat 404 (not found) as "policy doesn't exist"
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+			// Certificate policy doesn't exist, return empty resource
+			x509Props, err := CreateResource(a.MqlRuntime,
+				"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties",
+				map[string]*llx.RawData{
+					"__id":             llx.StringData(id + "/policy/x509CertificateProperties"),
+					"subject":          llx.StringData(""),
+					"validityInMonths": llx.IntData(0),
+					"keyUsage":         llx.ArrayData([]any{}, types.String),
+					"ekus":             llx.ArrayData([]any{}, types.String),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			// Create empty key properties resource
+			keyProps, err := CreateResource(a.MqlRuntime,
+				"azure.subscription.keyVaultService.certificate.policy.keyProperties",
+				map[string]*llx.RawData{
+					"__id":       llx.StringData(id + "/policy/keyProperties"),
+					"curve":      llx.StringData(""),
+					"exportable": llx.BoolData(false),
+					"keySize":    llx.IntData(0),
+					"keyType":    llx.StringData(""),
+					"reuseKey":   llx.BoolData(false),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			// Create empty issuer parameters resource
+			issuerParams, err := CreateResource(a.MqlRuntime,
+				"azure.subscription.keyVaultService.certificate.policy.issuerParameters",
+				map[string]*llx.RawData{
+					"__id":                    llx.StringData(id + "/policy/issuerParameters"),
+					"certificateTransparency": llx.BoolData(false),
+					"certificateType":         llx.StringData(""),
+					"name":                    llx.StringData(""),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			resource, err := CreateResource(a.MqlRuntime,
+				"azure.subscription.keyVaultService.certificate.policy",
+				map[string]*llx.RawData{
+					"__id":                      llx.StringData(id + "/policy"),
+					"x509CertificateProperties": llx.ResourceData(x509Props, "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"),
+					"keyProperties":             llx.ResourceData(keyProps, "azure.subscription.keyVaultService.certificate.policy.keyProperties"),
+					"issuerParameters":          llx.ResourceData(issuerParams, "azure.subscription.keyVaultService.certificate.policy.issuerParameters"),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+			return resource.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy), nil
+		}
+		// Return the actual error for non-404 cases
+		return nil, err
+	}
+
+	// Extract X.509 properties
+	subject := ""
+	validityInMonths := int64(0)
+	keyUsage := []any{}
+	ekus := []any{}
+
+	if policyResp.X509CertificateProperties != nil {
+		if policyResp.X509CertificateProperties.Subject != nil {
+			subject = *policyResp.X509CertificateProperties.Subject
+		}
+		if policyResp.X509CertificateProperties.ValidityInMonths != nil {
+			validityInMonths = int64(*policyResp.X509CertificateProperties.ValidityInMonths)
+		}
+		if policyResp.X509CertificateProperties.KeyUsage != nil {
+			for _, ku := range policyResp.X509CertificateProperties.KeyUsage {
+				if ku != nil {
+					keyUsage = append(keyUsage, string(*ku))
+				}
+			}
+		}
+		if policyResp.X509CertificateProperties.EnhancedKeyUsage != nil {
+			for _, eku := range policyResp.X509CertificateProperties.EnhancedKeyUsage {
+				if eku != nil {
+					ekus = append(ekus, *eku)
+				}
+			}
+		}
+	}
+
+	// Create X.509 properties resource
+	x509Props, err := CreateResource(a.MqlRuntime,
+		"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties",
+		map[string]*llx.RawData{
+			"__id":             llx.StringData(id + "/policy/x509CertificateProperties"),
+			"subject":          llx.StringData(subject),
+			"validityInMonths": llx.IntData(validityInMonths),
+			"keyUsage":         llx.ArrayData(keyUsage, types.String),
+			"ekus":             llx.ArrayData(ekus, types.String),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract key properties
+	curve := ""
+	exportable := false
+	keySize := int64(0)
+	keyType := ""
+	reuseKey := false
+
+	if policyResp.KeyProperties != nil {
+		if policyResp.KeyProperties.Curve != nil {
+			curve = string(*policyResp.KeyProperties.Curve)
+		}
+		if policyResp.KeyProperties.Exportable != nil {
+			exportable = *policyResp.KeyProperties.Exportable
+		}
+		if policyResp.KeyProperties.KeySize != nil {
+			keySize = int64(*policyResp.KeyProperties.KeySize)
+		}
+		if policyResp.KeyProperties.KeyType != nil {
+			keyType = string(*policyResp.KeyProperties.KeyType)
+		}
+		if policyResp.KeyProperties.ReuseKey != nil {
+			reuseKey = *policyResp.KeyProperties.ReuseKey
+		}
+	}
+
+	// Create key properties resource
+	keyProps, err := CreateResource(a.MqlRuntime,
+		"azure.subscription.keyVaultService.certificate.policy.keyProperties",
+		map[string]*llx.RawData{
+			"__id":       llx.StringData(id + "/policy/keyProperties"),
+			"curve":      llx.StringData(curve),
+			"exportable": llx.BoolData(exportable),
+			"keySize":    llx.IntData(keySize),
+			"keyType":    llx.StringData(keyType),
+			"reuseKey":   llx.BoolData(reuseKey),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract issuer parameters
+	certificateTransparency := false
+	certificateType := ""
+	issuerName := ""
+
+	if policyResp.IssuerParameters != nil {
+		if policyResp.IssuerParameters.CertificateTransparency != nil {
+			certificateTransparency = *policyResp.IssuerParameters.CertificateTransparency
+		}
+		if policyResp.IssuerParameters.CertificateType != nil {
+			certificateType = *policyResp.IssuerParameters.CertificateType
+		}
+		if policyResp.IssuerParameters.Name != nil {
+			issuerName = *policyResp.IssuerParameters.Name
+		}
+	}
+
+	// Create issuer parameters resource
+	issuerParams, err := CreateResource(a.MqlRuntime,
+		"azure.subscription.keyVaultService.certificate.policy.issuerParameters",
+		map[string]*llx.RawData{
+			"__id":                    llx.StringData(id + "/policy/issuerParameters"),
+			"certificateTransparency": llx.BoolData(certificateTransparency),
+			"certificateType":         llx.StringData(certificateType),
+			"name":                    llx.StringData(issuerName),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	resource, err := CreateResource(a.MqlRuntime,
+		"azure.subscription.keyVaultService.certificate.policy",
+		map[string]*llx.RawData{
+			"__id":                      llx.StringData(id + "/policy"),
+			"x509CertificateProperties": llx.ResourceData(x509Props, "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"),
+			"keyProperties":             llx.ResourceData(keyProps, "azure.subscription.keyVaultService.certificate.policy.keyProperties"),
+			"issuerParameters":          llx.ResourceData(issuerParams, "azure.subscription.keyVaultService.certificate.policy.issuerParameters"),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicy), nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) x509CertificateProperties() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties, error) {
+	if !a.X509CertificateProperties.IsSet() {
+		return nil, nil
+	}
+	if a.X509CertificateProperties.Error != nil {
+		return nil, a.X509CertificateProperties.Error
+	}
+	return a.X509CertificateProperties.Data, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) keyProperties() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties, error) {
+	if !a.KeyProperties.IsSet() {
+		return nil, nil
+	}
+	if a.KeyProperties.Error != nil {
+		return nil, a.KeyProperties.Error
+	}
+	return a.KeyProperties.Data, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) issuerParameters() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters, error) {
+	if !a.IssuerParameters.IsSet() {
+		return nil, nil
+	}
+	if a.IssuerParameters.Error != nil {
+		return nil, a.IssuerParameters.Error
+	}
+	return a.IssuerParameters.Data, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters) id() (string, error) {
+	return a.__id, nil
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceSecret) secretName() (string, error) {
 	id := a.Id.Data
 	kvid, err := parseKeyVaultId(id)
