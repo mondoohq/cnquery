@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v75/github"
+	"github.com/google/go-github/v81/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/logger"
