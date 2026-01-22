@@ -19,10 +19,11 @@ var Config = plugin.Provider{
 			Name:  "arista",
 			Use:   "arista user@host",
 			Short: "an Arista EOS device",
-			Long: `Use the arista provider to query resources on an Arista EOS device.
+			Long: `Use the arista provider to query resources on an Arista EOS network device, including system information, interfaces, and configuration.
 
-Example:
+Examples:
   cnquery shell arista <user@host>
+  cnspec scan arista <user@host> --ask-pass
 `,
 			Discovery: []string{},
 			MinArgs:   1,

@@ -25,11 +25,11 @@ var Config = plugin.Provider{
 			Aliases: []string{},
 			Use:     "terraform PATH",
 			Short:   "a Terraform HCL file or directory",
-			Long: `Use the terraform provider to query Terraform HCL files and directories. 
+			Long: `Use the terraform provider to query Terraform HCL files and directories, including resources, variables, outputs, and module configurations.
 
 Examples:
   cnspec scan terraform <PATH-TO-HCL-FILE>
-	cnquery shell terraform <PATH-TO-DIRECTORY>
+  cnquery shell terraform <PATH-TO-DIRECTORY>
 `,
 			MinArgs:   1,
 			MaxArgs:   2,
@@ -39,7 +39,7 @@ Examples:
 					Long:        "ignore-dot-terraform",
 					Type:        plugin.FlagType_Bool,
 					Default:     "false",
-					Desc:        "Ignore the .terraform directory",
+					Desc:        "Exclude the .terraform directory (contains cached provider plugins and modules)",
 					ConfigEntry: "ignore_dot_terraform",
 				},
 			},

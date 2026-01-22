@@ -19,10 +19,11 @@ var Config = plugin.Provider{
 			Name:  "cloudformation",
 			Use:   "cloudformation PATH",
 			Short: "an AWS CloudFormation template or AWS SAM template",
-			Long: `Use the cloudformation provider to query AWS CloudFormation templates or AWS SAM templates.
+			Long: `Use the cloudformation provider to query AWS CloudFormation templates or AWS SAM templates, including resources, parameters, outputs, and mappings.
 
-Example:
+Examples:
   cnquery shell cloudformation <path>
+  cnspec scan cloudformation <path>
 `,
 			MinArgs:   1,
 			MaxArgs:   1,
