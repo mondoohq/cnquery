@@ -35,11 +35,11 @@ func (a *mqlAwsDrsJob) id() (string, error) {
 }
 
 func (a *mqlAwsDrsReplicationConfiguration) id() (string, error) {
-	return a.SourceServerID.Data, nil
+	return "aws.drs.replicationConfiguration/" + a.SourceServerID.Data, nil
 }
 
 func (a *mqlAwsDrsLaunchConfiguration) id() (string, error) {
-	return a.SourceServerID.Data, nil
+	return "aws.drs.launchConfiguration/" + a.SourceServerID.Data, nil
 }
 
 func (a *mqlAwsDrs) sourceServers() ([]any, error) {
