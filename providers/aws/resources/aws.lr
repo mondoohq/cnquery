@@ -2159,6 +2159,106 @@ private aws.applicationAutoscaling.target @defaults("arn") {
   createdAt time
 }
 
+// AWS Elastic Disaster Recovery (DRS)
+aws.drs @defaults("sourceServers") {
+  // List of source servers being replicated
+  sourceServers() []aws.drs.sourceServer
+  // List of DRS jobs (recovery, drill, failback)
+  jobs() []aws.drs.job
+}
+
+// AWS DRS source server
+private aws.drs.sourceServer @defaults("sourceServerID arn") {
+  // Source server ID
+  sourceServerID string
+  // Source server ARN
+  arn string
+  // Data replication status and progress
+  dataReplicationInfo dict
+  // Result of last launch (NOT_STARTED, PENDING, SUCCEEDED, FAILED)
+  lastLaunchResult string
+  // Lifecycle state information
+  lifeCycle dict
+  // Source server properties (OS, disks, network)
+  sourceProperties dict
+  // Staging area configuration
+  stagingArea dict
+  // Replication direction: FAILOVER_AND_FAILBACK or ONE_WAY
+  replicationDirection string
+  // ID of last recovery instance
+  recoveryInstanceId string
+  // Resource tags
+  tags map[string]string
+  // Replication settings for this server
+  replicationConfiguration() aws.drs.replicationConfiguration
+  // Launch settings for this server
+  launchConfiguration() aws.drs.launchConfiguration
+}
+
+// AWS DRS job
+private aws.drs.job @defaults("jobID type status") {
+  // Job ID
+  jobID string
+  // Job ARN
+  arn string
+  // Job type (LAUNCH, CREATE_CONVERTED_SNAPSHOT, TERMINATE)
+  type string
+  // Job status (PENDING, STARTED, COMPLETED)
+  status string
+  // How job was initiated (START_RECOVERY, START_DRILL, etc.)
+  initiatedBy string
+  // Job creation timestamp
+  createdAt time
+  // Job completion timestamp
+  endedAt time
+  // Servers participating in job
+  participatingServers []dict
+}
+
+// AWS DRS replication configuration
+private aws.drs.replicationConfiguration @defaults("sourceServerID") {
+  // Associated source server ID
+  sourceServerID string
+  // Staging area subnet ID
+  stagingAreaSubnetId string
+  // Staging area tags
+  stagingAreaTags map[string]string
+  // Whether to use dedicated replication server
+  useDedicatedReplicationServer bool
+  // EC2 instance type for replication server
+  replicationServerInstanceType string
+  // EBS encryption mode (DEFAULT, CUSTOM)
+  ebsEncryption string
+  // Custom KMS key for EBS encryption
+  ebsEncryptionKeyArn string
+  // Disk replication configuration
+  replicatedDisks []dict
+  // Bandwidth throttling in Mbps
+  bandwidthThrottling int
+}
+
+// AWS DRS launch configuration
+private aws.drs.launchConfiguration @defaults("sourceServerID") {
+  // Associated source server ID
+  sourceServerID string
+  // Instance type right sizing method (NONE, BASIC, IN_AWS)
+  targetInstanceTypeRightSizingMethod string
+  // Launch disposition: STOPPED or STARTED
+  launchDisposition string
+  // Whether to copy private IP
+  copyPrivateIp bool
+  // Whether to copy tags
+  copyTags bool
+  // EC2 launch template ID
+  ec2LaunchTemplateID string
+  // Licensing configuration
+  licensing dict
+  // Post-launch actions
+  postLaunchEnabled bool
+  // Launch into instance properties
+  launchIntoInstanceProperties dict
+}
+
 // AWS Backup
 aws.backup @defaults("vaults") {
   // List of vaults for the service

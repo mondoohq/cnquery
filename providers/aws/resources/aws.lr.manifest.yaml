@@ -905,6 +905,118 @@ resources:
         )
       title: Check whether AWS Database Migration Service replication instances are
         public
+  aws.drs:
+    docs:
+      desc: |
+        Use the `aws.drs` resource to assess the configuration of AWS Elastic Disaster Recovery (DRS) service in an AWS account. This resource provides the `.sourceServers` field, which returns a list of all source servers being replicated, and the `.jobs` field, which returns a list of all DRS jobs across all enabled regions.
+    fields:
+      jobs: {}
+      sourceServers: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+    refs:
+    - title: What is AWS Elastic Disaster Recovery?
+      url: https://docs.aws.amazon.com/drs/latest/userguide/what-is-drs.html
+    - title: Security in AWS Elastic Disaster Recovery
+      url: https://docs.aws.amazon.com/drs/latest/userguide/security.html
+    snippets:
+    - query: aws.drs.sourceServers
+      title: Return a list of all DRS source servers
+    - query: |
+        aws.drs.sourceServers {
+          arn
+          sourceServerID
+          dataReplicationInfo
+          lastLaunchResult
+          replicationConfiguration
+        }
+      title: Return source servers with replication details
+    - query: |
+        aws.drs.sourceServers.all(replicationConfiguration.ebsEncryption != "NONE")
+      title: Ensure EBS encryption is enabled for all DRS source servers
+    - query: |
+        aws.drs.jobs.where(type == "LAUNCH" && initiatedBy == "START_DRILL" && status == "COMPLETED").length > 0
+      title: Check that recovery drills have been performed
+  aws.drs.job:
+    docs:
+      desc: |
+        The `aws.drs.job` resource provides fields representing an individual DRS job. For usage, read the `aws.drs` resource documentation.
+    fields:
+      arn: {}
+      createdAt: {}
+      endedAt: {}
+      initiatedBy: {}
+      jobID: {}
+      participatingServers: {}
+      status: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.drs.launchConfiguration:
+    docs:
+      desc: |
+        The `aws.drs.launchConfiguration` resource provides fields representing the launch configuration for a DRS source server. For usage, read the `aws.drs` resource documentation.
+    fields:
+      copyPrivateIp: {}
+      copyTags: {}
+      ec2LaunchTemplateID: {}
+      launchDisposition: {}
+      launchIntoInstanceProperties: {}
+      licensing: {}
+      postLaunchEnabled: {}
+      sourceServerID: {}
+      targetInstanceTypeRightSizingMethod: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.drs.replicationConfiguration:
+    docs:
+      desc: |
+        The `aws.drs.replicationConfiguration` resource provides fields representing the replication configuration for a DRS source server. For usage, read the `aws.drs` resource documentation.
+    fields:
+      bandwidthThrottling: {}
+      ebsEncryption: {}
+      ebsEncryptionKeyArn: {}
+      replicatedDisks: {}
+      replicationServerInstanceType: {}
+      sourceServerID: {}
+      stagingAreaSubnetId: {}
+      stagingAreaTags: {}
+      useDedicatedReplicationServer: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.drs.sourceServer:
+    docs:
+      desc: |
+        The `aws.drs.sourceServer` resource provides fields representing an individual DRS source server. For usage, read the `aws.drs` resource documentation.
+    fields:
+      arn: {}
+      dataReplicationInfo: {}
+      lastLaunchResult: {}
+      launchConfiguration: {}
+      lifeCycle: {}
+      recoveryInstanceId: {}
+      replicationConfiguration: {}
+      replicationDirection: {}
+      sourceProperties: {}
+      sourceServerID: {}
+      stagingArea: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.dynamodb:
     docs:
       desc: |
