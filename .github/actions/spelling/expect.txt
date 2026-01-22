@@ -7,7 +7,6 @@ auditlog
 Auths
 autoaccept
 autoclose
-autoprovision
 autoprovisioned
 awslogs
 awsvpc
