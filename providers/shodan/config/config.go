@@ -20,13 +20,15 @@ var Config = plugin.Provider{
 			Name:  "shodan",
 			Use:   "shodan",
 			Short: "a Shodan account",
-			Long: `Use the shodan provider to query domain and IP security information in the Shodan search engine. 
-
-If you set the SHODAN_TOKEN environment variable, you can omit the token flag.
+			Long: `Use the shodan provider to query domain and IP security information in the Shodan search engine.
 
 Examples:
   cnquery shell shodan --token <api-token>
-	cnquery shell shodan --networks <ip-range> --discover hosts
+  cnquery shell shodan --networks <ip-range> --discover hosts
+  cnspec scan shodan --token <api-token>
+
+Notes:
+  If you set the SHODAN_TOKEN environment variable, you can omit the token flag.
 `,
 			MinArgs: 0,
 			MaxArgs: 2,
@@ -44,7 +46,7 @@ Examples:
 					Long:    "networks",
 					Type:    plugin.FlagType_List,
 					Default: "",
-					Desc:    "Only include matching networks",
+					Desc:    "Comma-separated list of IP ranges to query (e.g., 10.0.0.0/8,192.168.0.0/16)",
 				},
 			},
 		},

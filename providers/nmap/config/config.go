@@ -20,12 +20,16 @@ var Config = plugin.Provider{
 			Name:  "nmap",
 			Use:   "nmap",
 			Short: "a Nmap network scanner",
-			Long: `Use the nmap provider to query network information using the Nmap network scanner. Nmap must be installed on the system.
+			Long: `Use the nmap provider to query network information using the Nmap network scanner, including open ports, services, and host information.
 
-Example:
+Requirement:
+  Nmap must be installed on your system. To learn how, read https://nmap.org/download.html.
+
+Examples:
   cnquery shell nmap 192.168.1.0/24
   cnquery shell nmap 192.168.1.1
   cnquery shell nmap --networks 10.0.0.0/8,192.168.0.0/16
+  cnspec scan nmap 192.168.1.0/24
 `,
 			MinArgs: 0,
 			MaxArgs: 2,
@@ -39,7 +43,7 @@ Example:
 					Long:    "networks",
 					Type:    plugin.FlagType_List,
 					Default: "",
-					Desc:    "Only include matching networks",
+					Desc:    "Comma-separated list of networks to scan (e.g., 10.0.0.0/8,192.168.0.0/16)",
 				},
 			},
 		},

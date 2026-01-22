@@ -17,11 +17,15 @@ var Config = plugin.Provider{
 		{
 			Name:  "cloudflare",
 			Use:   "cloudflare",
-			Short: "Cloudflare provider",
+			Short: "a Cloudflare account",
 			Long: `Use the cloudflare provider to query resources in your Cloudflare account, including zones, DNS records, and account settings.
 
-Example:
+Examples:
   cnquery shell cloudflare --token <access_token>
+  cnspec scan cloudflare --token <access_token>
+
+Notes:
+  If you set the CLOUDFLARE_API_TOKEN environment variable, you can omit the token flag.
 `,
 			Discovery: []string{
 				connection.DiscoveryAll,
@@ -34,7 +38,7 @@ Example:
 					Long:    "token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Cloudflare access token",
+					Desc:    "Cloudflare API token for authentication",
 				},
 			},
 		},

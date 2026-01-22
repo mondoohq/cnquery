@@ -29,7 +29,7 @@ Requirement:
 Examples:
   cnquery shell k8s
   cnspec scan k8s
-  cnspec <MANIFEST-FILE>
+  cnspec scan k8s <MANIFEST-FILE>
 `,
 			MinArgs: 0,
 			MaxArgs: 1,
@@ -53,7 +53,7 @@ Examples:
 					Long:    "context",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Target a Kubernetes context",
+					Desc:    "Target a specific Kubernetes context from your kubeconfig",
 				},
 				{
 					Long:    "namespaces-exclude",
@@ -65,7 +65,7 @@ Examples:
 					Long:    "namespaces",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Only include Kubernetes object in the matching namespaces",
+					Desc:    "Only include Kubernetes objects in the matching namespaces",
 				},
 				{
 					Long:    "container-proxy",

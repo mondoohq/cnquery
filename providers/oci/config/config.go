@@ -19,10 +19,11 @@ var Config = plugin.Provider{
 			Name:  "oci",
 			Use:   "oci",
 			Short: "an Oracle Cloud Infrastructure tenancy",
-			Long: `Use the oci provider to query resources in an Oracle Cloud Infrastructure tenancy.
+			Long: `Use the oci provider to query resources in an Oracle Cloud Infrastructure tenancy, including compute instances, networks, storage, and identity resources.
 
-Example:
+Examples:
   cnquery shell oci --tenancy <tenancy_ocid> --user <user_ocid> --region <region> --key-path <path_to_private_key> --fingerprint <key_fingerprint>
+  cnspec scan oci --tenancy <tenancy_ocid> --user <user_ocid> --region <region> --key-path <path_to_private_key> --fingerprint <key_fingerprint>
 `,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
@@ -42,13 +43,13 @@ Example:
 					Long:    "region",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "The selected region",
+					Desc:    "The OCI region to connect to (e.g., us-ashburn-1)",
 				},
 				{
 					Long:    "key-path",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "The path to the private key, that will be used for authentication",
+					Desc:    "Path to the private key file for API key authentication",
 				},
 				{
 					Long:    "fingerprint",
@@ -60,7 +61,7 @@ Example:
 					Long:    "key-secret",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "The passphrase for private key, that will be used for authentication",
+					Desc:    "Passphrase for the private key file, if encrypted",
 				},
 			},
 		},
