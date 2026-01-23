@@ -148,11 +148,11 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 }
 
 func getDiscoveryTargets(config *inventory.Config) []string {
-	targets := config.Discover.Targets
-
-	if len(targets) == 0 {
+	if config.Discover == nil {
 		return Auto
 	}
+	targets := config.Discover.Targets
+
 
 	if stringx.Contains(targets, DiscoveryAll) {
 		// return the All list + All Api Resources list

@@ -67,7 +67,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	filterOpts := parseFlagsToFiltersOpts(flags)
 
-	inventoryConfig.Discover = &inventory.Discovery{Targets: discoverTargets, Filter: filterOpts}
+	// skip unecessary discovery objects for child connections where we dont set both flags
+	if len(discoverTargets) > 0 || len(filterOpts) > 0 {
+		inventoryConfig.Discover = &inventory.Discovery{Targets: discoverTargets, Filter: filterOpts}
+	}
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{inventoryConfig},
 		Options:     opts,
@@ -289,7 +292,9 @@ func (s *Service) detect(asset *inventory.Asset, conn plugin.Connection) error {
 }
 
 func (s *Service) discover(conn *connection.AwsConnection) (*inventory.Inventory, error) {
-	if conn.Conf.Discover == nil {
+	// Skip discovery for child connections (they have a parent connection ID set).
+	// and should not run discovery again.
+	if conn.Conf.ParentConnectionId != 0 {
 		return nil, nil
 	}
 
