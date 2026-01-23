@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"go.mondoo.com/cnquery/v12/types"
 	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
@@ -80,6 +81,15 @@ func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 				}, 0, nil
 			}
 		}
+
+		// No case-insensitive match - try fuzzy matching for typos
+		if suggestion := findFuzzyMapKey(key, m); suggestion != "" {
+			return &RawData{
+				Type:  childType,
+				Error: errors.New("key '" + key + "' not found, did you mean '" + suggestion + "'?"),
+			}, 0, nil
+		}
+
 		// Key doesn't exist and no similar keys found - return nil for backward compatibility
 		return &RawData{
 			Type:  childType,
@@ -91,6 +101,37 @@ func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		Type:  childType,
 		Value: value,
 	}, 0, nil
+}
+
+// findFuzzyMapKey looks for a similar key in the map using Levenshtein distance.
+// Returns empty string if no good suggestion is found.
+func findFuzzyMapKey(key string, m map[string]any) string {
+	var bestMatch string
+	bestDistance := -1
+
+	for k := range m {
+		distance := fuzzy.LevenshteinDistance(key, k)
+		if bestDistance < 0 || distance < bestDistance {
+			bestDistance = distance
+			bestMatch = k
+		}
+	}
+
+	if bestMatch == "" {
+		return ""
+	}
+
+	// Only suggest if the match is reasonably close
+	// Distance threshold: allow up to 40% of the key length as edits, minimum 2
+	threshold := len(key) * 2 / 5
+	if threshold < 2 {
+		threshold = 2
+	}
+	if bestDistance <= threshold {
+		return bestMatch
+	}
+
+	return ""
 }
 
 func mapCmpNil(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -451,6 +492,15 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 					}, 0, nil
 				}
 			}
+
+			// No case-insensitive match - try fuzzy matching for typos
+			if suggestion := findFuzzyMapKey(key, x); suggestion != "" {
+				return &RawData{
+					Type:  bind.Type,
+					Error: errors.New("key '" + key + "' not found, did you mean '" + suggestion + "'?"),
+				}, 0, nil
+			}
+
 			// Key doesn't exist and no similar keys found - return nil for backward compatibility
 			return &RawData{
 				Type:  bind.Type,
