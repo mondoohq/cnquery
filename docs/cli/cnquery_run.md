@@ -25,6 +25,7 @@ cnquery run [flags]
   -j, --json                    Run the query and return the object in a JSON structure
       --parse                   Parse the query and return the logical structure
       --platform-id string      Select a specific target asset by providing its platform ID
+      --sudo                    Elevate privileges with sudo
 ```
 
 ### Options inherited from parent commands

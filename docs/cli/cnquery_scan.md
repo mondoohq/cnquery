@@ -37,6 +37,7 @@ cnquery scan [flags]
       --props stringToString          Custom values for properties (default [])
       --querypack querypack-bundle    Set the query packs to execute. This requires querypack-bundle. You can specify multiple UIDs
   -f, --querypack-bundle strings      Path to local query pack file
+      --sudo                          Elevate privileges with sudo
       --trace-id string               Trace identifier
 ```
 

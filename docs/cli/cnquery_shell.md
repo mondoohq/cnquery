@@ -16,9 +16,10 @@ cnquery shell [flags]
 ### Options
 
 ```
-  -c, --command string       MQL query to execute in the shell
-  -h, --help                 help for shell
-      --platform-id string   Select a specific target asset by providing its platform ID
+  -c, --command string         MQL query to execute in the shell
+  -h, --help                   help for shell
+      --platform-id string     Select a specific target asset by providing its platform ID
+      --sudo                   Elevate privileges with sudo
 ```
 
 ### Options inherited from parent commands

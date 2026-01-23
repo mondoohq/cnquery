@@ -27,6 +27,7 @@ cnquery login [flags]
       --api-endpoint string         Set the Mondoo API endpoint
   -h, --help                        help for login
       --name string                 Set asset name
+      --providers-url string        Set the providers URL
       --splay int                   Randomize the timer by up to this many minutes
       --timer int                   Set the scan interval in minutes
   -t, --token string                Set a client registration token
