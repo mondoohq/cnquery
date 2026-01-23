@@ -40,4 +40,8 @@ func TestGetDiscoveryTargets(t *testing.T) {
 	// test random
 	config.Discover.Targets = []string{"cloud-dns-zones", "compute-images", "projects", "instances"}
 	require.Equal(t, []string{DiscoverCloudDNSZones, DiscoveryComputeImages, DiscoveryProjects, DiscoveryComputeInstances}, getDiscoveryTargets(config))
+
+	// test standard cli run without options
+	config.Discover.Targets = []string{}
+	require.Equal(t, Auto, getDiscoveryTargets(config))
 }
