@@ -455,8 +455,10 @@ func (cfg *Config) Clone(opts ...CloneOption) *Config {
 			clonedObject.Discover = &Discovery{}
 		}
 		clonedObject.Discover.Filter = make(map[string]string)
-		for k, v := range cfg.Discover.Filter {
-			clonedObject.Discover.Filter[k] = v
+		if cfg.Discover != nil {
+			for k, v := range cfg.Discover.Filter {
+				clonedObject.Discover.Filter[k] = v
+			}
 		}
 	}
 
