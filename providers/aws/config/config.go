@@ -46,7 +46,7 @@ Examples:
 	cnspec scan aws ec2 instance-connect <user@host>
 	cnspec scan aws ec2 instance-connect <user@host> --identity-file <path>
 	cnspec scan aws ec2 ebs <snapshot-id>
-	cnspec scan aws --filters region=ap-south-1
+	cnspec scan aws --filters regions=ap-south-1,us-east-1
 
 Notes:
   If you set the AWS_PROFILE environment variable, you can omit the profile flag.
@@ -132,7 +132,7 @@ Notes:
 					Long:    "filters",
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",
-					Desc:    "Filter options, e.g., --filters region=us-east-2, --filters ec2:instance-ids=i-093439483935",
+					Desc:    "Filter options, e.g., --filters regions=us-east-2,us-east-1 , --filters ec2:instance-ids=i-093439483935",
 				},
 			},
 		},
