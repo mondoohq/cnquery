@@ -61,6 +61,19 @@ var Auto = []string{
 	DiscoveryOrganization,
 	DiscoveryFolders,
 	DiscoveryProjects,
+	DiscoveryComputeImages,
+	DiscoveryComputeNetworks,
+	DiscoveryComputeSubnetworks,
+	DiscoveryComputeFirewalls,
+	DiscoveryGkeClusters,
+	DiscoveryStorageBuckets,
+	DiscoveryBigQueryDatasets,
+	DiscoverCloudSQLMySQL,
+	DiscoverCloudSQLPostgreSQL,
+	DiscoverCloudSQLSQLServer,
+	DiscoverCloudDNSZones,
+	DiscoverCloudKMSKeyrings,
+	DiscoveryComputeInstances,
 }
 
 var AllAPIResources = []string{
@@ -84,6 +97,10 @@ var AllCloudSQLTypes = []string{DiscoverCloudSQLPostgreSQL, DiscoverCloudSQLSQLS
 
 func getDiscoveryTargets(config *inventory.Config) []string {
 	targets := config.Discover.Targets
+
+	if len(targets) == 0 {
+		return Auto
+	}
 
 	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
 		// return the All list + All Api Resources list
