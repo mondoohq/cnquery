@@ -61,47 +61,107 @@ func (a *mqlAwsS3) buckets() ([]any, error) {
 	svc := conn.S3("")
 	ctx := context.Background()
 
-	totalBuckets := make([]s3types.Bucket, 0)
-	params := &s3.ListBucketsInput{}
-	paginator := s3.NewListBucketsPaginator(svc, params, func(o *s3.ListBucketsPaginatorOptions) {
-		o.Limit = 100
-	})
-	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, err
+	// Get configured regions
+	configuredRegions, err := conn.Regions()
+	if err != nil {
+		return nil, err
+	}
+
+	hasIncludeRegionFilter := len(conn.Filters.General.Regions) > 0
+
+	type bucketWithRegion struct {
+		bucket s3types.Bucket
+		region string
+	}
+	var bucketsWithRegions []bucketWithRegion
+
+	if hasIncludeRegionFilter {
+		// Optimization: When specific regions are requested, use BucketRegion parameter
+		// to only fetch buckets from those regions avoids GetBucketLocation calls entirely
+		for _, region := range configuredRegions {
+			log.Debug().Str("region", region).Msg("listing S3 buckets in region")
+			params := &s3.ListBucketsInput{BucketRegion: aws.String(region)}
+			paginator := s3.NewListBucketsPaginator(svc, params, func(o *s3.ListBucketsPaginatorOptions) {
+				o.Limit = 100
+			})
+			for paginator.HasMorePages() {
+				output, err := paginator.NextPage(ctx)
+				if err != nil {
+					log.Warn().Err(err).Str("region", region).Msg("could not list S3 buckets in region")
+					break // continue with next region
+				}
+				for _, bucket := range output.Buckets {
+					bucketsWithRegions = append(bucketsWithRegions, bucketWithRegion{bucket: bucket, region: region})
+				}
+			}
 		}
-		totalBuckets = append(totalBuckets, output.Buckets...)
+	} else {
+		// No include filter (or only exclude filter): list all buckets globally and get their locations
+		totalBuckets := make([]s3types.Bucket, 0)
+		params := &s3.ListBucketsInput{}
+		paginator := s3.NewListBucketsPaginator(svc, params, func(o *s3.ListBucketsPaginatorOptions) {
+			o.Limit = 100
+		})
+		for paginator.HasMorePages() {
+			output, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			totalBuckets = append(totalBuckets, output.Buckets...)
+		}
+
+		// Get location for each bucket and filter by configured regions
+		excludeRegions := conn.Filters.General.ExcludeRegions
+		// Todo GetBucketLocation is no longer best practice use HeadBucket instead
+		for _, bucket := range totalBuckets {
+			location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
+				Bucket: bucket.Name,
+			})
+			if err != nil {
+				log.Error().Err(err).Str("bucket", *bucket.Name).Msg("Could not get bucket location")
+				continue
+			}
+			if location == nil {
+				log.Error().Err(err).Str("bucket", *bucket.Name).Msg("Could not get bucket location (returned null)")
+				continue
+			}
+
+			region := string(location.LocationConstraint)
+			// us-east-1 returns "" therefore we set it explicitly
+			// https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html#API_GetBucketLocation_ResponseSyntax
+			if region == "" {
+				region = "us-east-1"
+			}
+
+			// Filter out excluded regions
+			if len(excludeRegions) > 0 {
+				excluded := false
+				for _, excl := range excludeRegions {
+					if region == excl {
+						log.Debug().Str("bucket", *bucket.Name).Str("region", region).Msg("excluding bucket due to region exclusion filter")
+						excluded = true
+						break
+					}
+				}
+				if excluded {
+					continue
+				}
+			}
+
+			bucketsWithRegions = append(bucketsWithRegions, bucketWithRegion{bucket: bucket, region: region})
+		}
 	}
 
 	res := []any{}
-	for _, bucket := range totalBuckets {
-		location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
-			Bucket: bucket.Name,
-		})
-		if err != nil {
-			log.Error().Err(err).Str("bucket", *bucket.Name).Msg("Could not get bucket location")
-			continue
-		}
-		if location == nil {
-			log.Error().Err(err).Str("bucket", *bucket.Name).Msg("Could not get bucket location (returned null)")
-			continue
-		}
-
-		region := string(location.LocationConstraint)
-		// us-east-1 returns "" therefore we set it explicitly
-		// https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html#API_GetBucketLocation_ResponseSyntax
-		if region == "" {
-			region = "us-east-1"
-		}
+	for _, bwr := range bucketsWithRegions {
 		mqlS3Bucket, err := CreateResource(a.MqlRuntime, ResourceAwsS3Bucket,
 			map[string]*llx.RawData{
-				"name":        llx.StringDataPtr(bucket.Name),
-				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bucket.Name))),
+				"name":        llx.StringDataPtr(bwr.bucket.Name),
+				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bwr.bucket.Name))),
 				"exists":      llx.BoolData(true),
-				"location":    llx.StringData(region),
-				"createdTime": llx.TimeDataPtr(bucket.CreationDate),
-				"createdAt":   llx.TimeDataPtr(bucket.CreationDate),
+				"location":    llx.StringData(bwr.region),
+				"createdTime": llx.TimeDataPtr(bwr.bucket.CreationDate),
+				"createdAt":   llx.TimeDataPtr(bwr.bucket.CreationDate),
 			})
 		if err != nil {
 			return nil, err
@@ -115,7 +175,6 @@ func (a *mqlAwsS3) buckets() ([]any, error) {
 			}
 
 			if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
-				log.Debug().Interface("log_group", bucket.Name).Msg("excluding log group due to filters")
 				continue
 			}
 		}
