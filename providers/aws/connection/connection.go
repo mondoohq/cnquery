@@ -11,6 +11,7 @@ import (
 	"maps"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -75,9 +76,11 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	for _, opt := range opts {
 		opt(c)
 	}
-	// custom retry client
+	// custom retry client with reduced retries and shorter backoff
+	// to avoid excessive delays when regions are unreachable
 	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 5
+	retryClient.RetryMax = 2              // reduced from 5 to avoid long delays on unreachable regions
+	retryClient.RetryWaitMax = 10 * time.Second        // cap at 10s instead of 30s
 	retryClient.Logger = zerologadapter.New(log.Logger)
 	c.awsConfigOptions = append(c.awsConfigOptions, config.WithHTTPClient(retryClient.StandardClient()))
 
