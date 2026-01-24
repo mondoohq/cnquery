@@ -1957,6 +1957,34 @@ private networkRoute @defaults("destination flags"){
   iface() networkInterface
 }
 
+// Chrome browser resources
+chrome {
+  // All installed Chrome extensions across all profiles and users
+  extensions() []chrome.extension
+  // Paths searched for Chrome extensions
+  paths() []string
+}
+
+// Chrome browser extension
+private chrome.extension @defaults("name version identifier") {
+  // Unique extension identifier (32-character string)
+  identifier string
+  // Extension name from manifest
+  name string
+  // Extension version from manifest
+  version string
+  // Extension description from manifest
+  description string
+  // Chrome extension manifest version (2 or 3)
+  manifestVersion int
+  // Permissions requested by the extension
+  permissions []string
+  // Path to the extension directory
+  path string
+  // Chrome profile name where extension is installed
+  profile string
+}
+
 // Experimental: USB resource
 usb {
   // List of USB devices
