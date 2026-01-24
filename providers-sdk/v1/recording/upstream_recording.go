@@ -91,7 +91,7 @@ func (n *Upstream) EnsureAsset(asset *inventory.Asset, provider string, connecti
 	// We don't sync assets with upstream, we only read at this time
 }
 
-func (n *Upstream) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
+func (n *Upstream) AddData(req llx.AddDataReq) {
 	// We don't store asset data this way, we use StoreResults for now.
 	// We will expand this method to handle more ad-hoc data methods in the
 	// future. (e.g. for shell)
