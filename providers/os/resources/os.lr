@@ -1966,7 +1966,7 @@ chrome {
 }
 
 // Chrome browser extension
-private chrome.extension @defaults("name version identifier") {
+private chrome.extension @defaults("name version identifier browser") {
   // Unique extension identifier (32-character string)
   identifier string
   // Extension name from manifest

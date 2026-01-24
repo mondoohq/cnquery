@@ -16,128 +16,62 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
-// Chrome extension search configurations per platform
-type chromeSearchConfig struct {
-	basePath    string
-	pathPattern *regexp.Regexp
-	depth       int64
+// browserConfig defines a browser's extension path configuration
+type browserConfig struct {
+	name        string // Human-readable browser name
+	relPath     string // Path relative to user home directory
+	profilePath string // Additional path to profiles (e.g., "User Data" for Chrome on Windows)
 }
 
-// browserNames maps the path component to a human-readable browser name
-var browserNames = map[string]string{
-	// Linux - Chrome variants
-	"google-chrome":          "Google Chrome",
-	"google-chrome-beta":     "Google Chrome Beta",
-	"google-chrome-unstable": "Google Chrome Dev",
-	"chromium":               "Chromium",
-	// Linux - Edge
-	"microsoft-edge":      "Microsoft Edge",
-	"microsoft-edge-beta": "Microsoft Edge Beta",
-	"microsoft-edge-dev":  "Microsoft Edge Dev",
-	// Linux - Other Chromium-based browsers
-	"BraveSoftware/Brave-Browser": "Brave",
-	"vivaldi":                     "Vivaldi",
-	"opera":                       "Opera",
-	// macOS - Chrome variants
-	"Google/Chrome":        "Google Chrome",
-	"Google/Chrome Beta":   "Google Chrome Beta",
-	"Google/Chrome Canary": "Google Chrome Canary",
-	"Chromium":             "Chromium",
-	// macOS - Edge
-	"Microsoft Edge":      "Microsoft Edge",
-	"Microsoft Edge Beta": "Microsoft Edge Beta",
-	"Microsoft Edge Dev":  "Microsoft Edge Dev",
-	// macOS - Other Chromium-based browsers
-	"Vivaldi":                 "Vivaldi",
-	"com.operasoftware.Opera": "Opera",
-	// macOS - AI browsers
-	"Comet":        "Perplexity Comet",
-	"ChatGPT":      "ChatGPT Atlas",
-	"Atlas":        "ChatGPT Atlas",
-	// Windows (case-insensitive matching needed)
-	"google/chrome":               "Google Chrome",
-	"google/chrome beta":          "Google Chrome Beta",
-	"google/chrome sxs":           "Google Chrome Canary",
-	"microsoft/edge":              "Microsoft Edge",
-	"microsoft/edge beta":         "Microsoft Edge Beta",
-	"microsoft/edge dev":          "Microsoft Edge Dev",
-	"bravesoftware/brave-browser": "Brave",
-	"opera software/opera stable": "Opera",
-	// Windows - AI browsers
-	"comet":        "Perplexity Comet",
-	"chatgpt":      "ChatGPT Atlas",
-	"openai/atlas": "ChatGPT Atlas",
-}
-
-// Search configurations for different platforms
-// Covers Chrome, Chromium, Edge, Brave, Vivaldi, Opera, Perplexity Comet, and ChatGPT Atlas
-// Uses files.find with name="manifest.json" then filters results by path pattern
-var chromeSearchConfigs = map[string][]chromeSearchConfig{
+// browserConfigs maps platform to list of browser configurations
+// Each browser config specifies the relative path from user home to the browser data directory
+var browserConfigs = map[string][]browserConfig{
 	"linux": {
-		{
-			basePath:    "/home",
-			pathPattern: regexp.MustCompile(`/\.config/(google-chrome|google-chrome-beta|google-chrome-unstable|chromium|microsoft-edge|microsoft-edge-beta|microsoft-edge-dev|BraveSoftware/Brave-Browser|vivaldi|opera)/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
-			depth:       10,
-		},
+		{name: "Google Chrome", relPath: ".config/google-chrome"},
+		{name: "Google Chrome Beta", relPath: ".config/google-chrome-beta"},
+		{name: "Google Chrome Dev", relPath: ".config/google-chrome-unstable"},
+		{name: "Chromium", relPath: ".config/chromium"},
+		{name: "Microsoft Edge", relPath: ".config/microsoft-edge"},
+		{name: "Microsoft Edge Beta", relPath: ".config/microsoft-edge-beta"},
+		{name: "Microsoft Edge Dev", relPath: ".config/microsoft-edge-dev"},
+		{name: "Brave", relPath: ".config/BraveSoftware/Brave-Browser"},
+		{name: "Vivaldi", relPath: ".config/vivaldi"},
+		{name: "Opera", relPath: ".config/opera"},
 	},
 	"darwin": {
-		{
-			basePath:    "/Users",
-			pathPattern: regexp.MustCompile(`/Library/Application Support/(Google/Chrome|Google/Chrome Beta|Google/Chrome Canary|Chromium|Microsoft Edge|Microsoft Edge Beta|Microsoft Edge Dev|BraveSoftware/Brave-Browser|Vivaldi|com\.operasoftware\.Opera|Comet|ChatGPT|Atlas)/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
-			depth:       11,
-		},
+		{name: "Google Chrome", relPath: "Library/Application Support/Google/Chrome"},
+		{name: "Google Chrome Beta", relPath: "Library/Application Support/Google/Chrome Beta"},
+		{name: "Google Chrome Canary", relPath: "Library/Application Support/Google/Chrome Canary"},
+		{name: "Chromium", relPath: "Library/Application Support/Chromium"},
+		{name: "Microsoft Edge", relPath: "Library/Application Support/Microsoft Edge"},
+		{name: "Microsoft Edge Beta", relPath: "Library/Application Support/Microsoft Edge Beta"},
+		{name: "Microsoft Edge Dev", relPath: "Library/Application Support/Microsoft Edge Dev"},
+		{name: "Brave", relPath: "Library/Application Support/BraveSoftware/Brave-Browser"},
+		{name: "Vivaldi", relPath: "Library/Application Support/Vivaldi"},
+		{name: "Opera", relPath: "Library/Application Support/com.operasoftware.Opera"},
+		{name: "Perplexity Comet", relPath: "Library/Application Support/Comet"},
+		{name: "ChatGPT Atlas", relPath: "Library/Application Support/ChatGPT"},
 	},
 	"windows": {
-		// AppData\Local - Chrome, Edge, Brave, Vivaldi, and AI browsers
-		{
-			basePath:    "C:\\Users",
-			pathPattern: regexp.MustCompile(`(?i)/AppData/Local/(Google/Chrome|Google/Chrome Beta|Google/Chrome SxS|Microsoft/Edge|Microsoft/Edge Beta|Microsoft/Edge Dev|BraveSoftware/Brave-Browser|Vivaldi|Comet|ChatGPT|OpenAI/Atlas)/User Data/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
-			depth:       11,
-		},
-		// AppData\Roaming - Opera (different path structure, no "User Data" folder)
-		{
-			basePath:    "C:\\Users",
-			pathPattern: regexp.MustCompile(`(?i)/AppData/Roaming/(Opera Software/Opera Stable)/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
-			depth:       10,
-		},
+		// AppData\Local browsers
+		{name: "Google Chrome", relPath: "AppData/Local/Google/Chrome", profilePath: "User Data"},
+		{name: "Google Chrome Beta", relPath: "AppData/Local/Google/Chrome Beta", profilePath: "User Data"},
+		{name: "Google Chrome Canary", relPath: "AppData/Local/Google/Chrome SxS", profilePath: "User Data"},
+		{name: "Microsoft Edge", relPath: "AppData/Local/Microsoft/Edge", profilePath: "User Data"},
+		{name: "Microsoft Edge Beta", relPath: "AppData/Local/Microsoft/Edge Beta", profilePath: "User Data"},
+		{name: "Microsoft Edge Dev", relPath: "AppData/Local/Microsoft/Edge Dev", profilePath: "User Data"},
+		{name: "Brave", relPath: "AppData/Local/BraveSoftware/Brave-Browser", profilePath: "User Data"},
+		{name: "Vivaldi", relPath: "AppData/Local/Vivaldi", profilePath: "User Data"},
+		{name: "Perplexity Comet", relPath: "AppData/Local/Comet", profilePath: "User Data"},
+		{name: "ChatGPT Atlas", relPath: "AppData/Local/OpenAI/Atlas", profilePath: "User Data"},
+		// AppData\Roaming browsers (Opera has different structure)
+		{name: "Opera", relPath: "AppData/Roaming/Opera Software/Opera Stable"},
 	},
 }
 
-// Default paths for display (informational only)
-var defaultChromePaths = []string{
-	// Linux - Chrome/Chromium
-	"/home/*/.config/google-chrome/*/Extensions",
-	"/home/*/.config/chromium/*/Extensions",
-	// Linux - Edge
-	"/home/*/.config/microsoft-edge/*/Extensions",
-	// Linux - Other browsers
-	"/home/*/.config/BraveSoftware/Brave-Browser/*/Extensions",
-	"/home/*/.config/vivaldi/*/Extensions",
-	"/home/*/.config/opera/*/Extensions",
-	// macOS - Chrome/Chromium
-	"/Users/*/Library/Application Support/Google/Chrome/*/Extensions",
-	"/Users/*/Library/Application Support/Chromium/*/Extensions",
-	// macOS - Edge
-	"/Users/*/Library/Application Support/Microsoft Edge/*/Extensions",
-	// macOS - Other browsers
-	"/Users/*/Library/Application Support/BraveSoftware/Brave-Browser/*/Extensions",
-	"/Users/*/Library/Application Support/Vivaldi/*/Extensions",
-	"/Users/*/Library/Application Support/com.operasoftware.Opera/*/Extensions",
-	// macOS - AI browsers
-	"/Users/*/Library/Application Support/Comet/*/Extensions",
-	"/Users/*/Library/Application Support/ChatGPT/*/Extensions",
-	// Windows - Chrome/Chromium
-	"C:\\Users\\*\\AppData\\Local\\Google\\Chrome\\User Data\\*\\Extensions",
-	// Windows - Edge
-	"C:\\Users\\*\\AppData\\Local\\Microsoft\\Edge\\User Data\\*\\Extensions",
-	// Windows - Other browsers
-	"C:\\Users\\*\\AppData\\Local\\BraveSoftware\\Brave-Browser\\User Data\\*\\Extensions",
-	"C:\\Users\\*\\AppData\\Local\\Vivaldi\\User Data\\*\\Extensions",
-	"C:\\Users\\*\\AppData\\Roaming\\Opera Software\\Opera Stable\\*\\Extensions",
-	// Windows - AI browsers
-	"C:\\Users\\*\\AppData\\Local\\Comet\\User Data\\*\\Extensions",
-	"C:\\Users\\*\\AppData\\Local\\ChatGPT\\User Data\\*\\Extensions",
-}
+// extensionPathPattern matches Chrome extension manifest paths and extracts profile and extension ID
+// Group 1: profile name, Group 2: extension ID
+var extensionPathPattern = regexp.MustCompile(`/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`)
 
 // chromeManifest represents the structure of a Chrome extension manifest.json
 type chromeManifest struct {
@@ -154,11 +88,34 @@ func (c *mqlChrome) id() (string, error) {
 }
 
 func (c *mqlChrome) paths() ([]any, error) {
-	result := make([]any, len(defaultChromePaths))
-	for i, p := range defaultChromePaths {
-		result[i] = p
+	conn := c.MqlRuntime.Connection.(shared.Connection)
+	pf := conn.Asset().Platform
+	if pf == nil {
+		return []any{}, nil
 	}
-	return result, nil
+
+	platformKey := getPlatformKey(pf)
+	if platformKey == "" {
+		return []any{}, nil
+	}
+
+	configs, ok := browserConfigs[platformKey]
+	if !ok {
+		return []any{}, nil
+	}
+
+	// Return informational paths showing where we search
+	paths := []any{}
+	for _, cfg := range configs {
+		var pathPattern string
+		if cfg.profilePath != "" {
+			pathPattern = filepath.Join("~", cfg.relPath, cfg.profilePath, "*/Extensions")
+		} else {
+			pathPattern = filepath.Join("~", cfg.relPath, "*/Extensions")
+		}
+		paths = append(paths, pathPattern)
+	}
+	return paths, nil
 }
 
 func (c *mqlChrome) extensions() ([]any, error) {
@@ -168,22 +125,27 @@ func (c *mqlChrome) extensions() ([]any, error) {
 		return nil, nil
 	}
 
-	// Determine platform family
-	var platformKey string
-	switch {
-	case pf.IsFamily("linux"):
-		platformKey = "linux"
-	case pf.IsFamily("darwin"):
-		platformKey = "darwin"
-	case pf.IsFamily("windows"):
-		platformKey = "windows"
-	default:
+	platformKey := getPlatformKey(pf)
+	if platformKey == "" {
 		log.Debug().Str("platform", pf.Name).Msg("unsupported platform for Chrome extension detection")
 		return []any{}, nil
 	}
 
-	configs, ok := chromeSearchConfigs[platformKey]
+	configs, ok := browserConfigs[platformKey]
 	if !ok {
+		return []any{}, nil
+	}
+
+	// Get list of users to find their home directories
+	usersResource, err := CreateResource(c.MqlRuntime, "users", map[string]*llx.RawData{})
+	if err != nil {
+		log.Debug().Err(err).Msg("could not get users list")
+		return []any{}, nil
+	}
+	users := usersResource.(*mqlUsers)
+	userList := users.GetList()
+	if userList.Error != nil {
+		log.Debug().Err(userList.Error).Msg("could not retrieve users list")
 		return []any{}, nil
 	}
 
@@ -193,130 +155,186 @@ func (c *mqlChrome) extensions() ([]any, error) {
 	fs := conn.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 
-	log.Debug().Str("platform", platformKey).Msg("searching for browser extensions")
+	log.Debug().Str("platform", platformKey).Int("userCount", len(userList.Data)).Msg("searching for browser extensions")
 
-	for _, config := range configs {
-		// Use files.find resource for efficient searching
-		// Uses find command on Unix, PowerShell on Windows - single RTT for discovery
-		filesFind, err := CreateResource(c.MqlRuntime, "files.find", map[string]*llx.RawData{
-			"from":  llx.StringData(config.basePath),
-			"name":  llx.StringData("manifest.json"),
-			"type":  llx.StringData("f"),
-			"depth": llx.IntData(config.depth),
-		})
-		if err != nil {
-			log.Debug().Err(err).Str("basePath", config.basePath).Msg("could not create files.find resource")
+	// Iterate through each user's home directory
+	for _, u := range userList.Data {
+		user := u.(*mqlUser)
+		home := user.GetHome()
+		if home.Error != nil || home.Data == "" {
 			continue
 		}
 
-		ff := filesFind.(*mqlFilesFind)
-		fileList := ff.GetList()
-		if fileList.Error != nil {
-			log.Debug().Err(fileList.Error).Str("basePath", config.basePath).Msg("files.find failed")
+		// Skip system users (no valid home or special paths)
+		homeDir := home.Data
+		if !isValidUserHome(homeDir, platformKey) {
 			continue
 		}
 
-		for _, f := range fileList.Data {
-			file := f.(*mqlFile)
-			manifestPath := file.GetPath()
-			if manifestPath.Error != nil {
+		// Check each browser for this user
+		for _, browserCfg := range configs {
+			browserDir := filepath.Join(homeDir, browserCfg.relPath)
+			if browserCfg.profilePath != "" {
+				browserDir = filepath.Join(browserDir, browserCfg.profilePath)
+			}
+
+			// Check if browser directory exists before searching
+			exists, err := afs.DirExists(browserDir)
+			if err != nil || !exists {
 				continue
 			}
 
-			// Normalize path for regex matching (use forward slashes)
-			normalizedPath := filepath.ToSlash(manifestPath.Data)
+			log.Debug().Str("browser", browserCfg.name).Str("path", browserDir).Msg("found browser directory")
 
-			// Filter to only browser extension manifest files using the path pattern
-			matches := config.pathPattern.FindStringSubmatch(normalizedPath)
-			if matches == nil {
-				continue
-			}
-
-			// Extract browser variant, profile and extension ID from regex groups
-			// Group 1: browser variant, Group 2: profile, Group 3: extension ID
-			browserVariant := matches[1]
-			profile := matches[2]
-			extensionID := matches[3]
-
-			// Get human-readable browser name
-			browser := getBrowserName(browserVariant)
-
-			// Create unique key including browser to avoid cross-browser deduplication
-			// Same extension in Chrome and Edge should be listed separately
-			uniqueKey := browser + "|" + profile + "|" + extensionID
-			if seen[uniqueKey] {
-				// Skip duplicate (same extension, same browser, same profile)
-				// This can happen if multiple versions exist - we take the first one found
-				continue
-			}
-			seen[uniqueKey] = true
-
-			// Read and parse manifest.json
-			manifest, err := readChromeManifest(afs, manifestPath.Data)
-			if err != nil {
-				log.Debug().Err(err).Str("path", manifestPath.Data).Msg("could not read manifest.json")
-				continue
-			}
-
-			// Resolve localized names if needed
-			extDir := filepath.Dir(manifestPath.Data)
-			name := manifest.Name
-			if strings.HasPrefix(name, "__MSG_") {
-				if localizedName := resolveChromei18n(afs, extDir, manifest.DefaultLocale, name); localizedName != "" {
-					name = localizedName
-				}
-			}
-
-			description := manifest.Description
-			if strings.HasPrefix(description, "__MSG_") {
-				if localizedDesc := resolveChromei18n(afs, extDir, manifest.DefaultLocale, description); localizedDesc != "" {
-					description = localizedDesc
-				}
-			}
-
-			// Convert permissions to []any
-			perms := make([]any, len(manifest.Permissions))
-			for i, p := range manifest.Permissions {
-				perms[i] = p
-			}
-
-			ext, err := CreateResource(c.MqlRuntime, "chrome.extension", map[string]*llx.RawData{
-				"__id":            llx.StringData(uniqueKey),
-				"identifier":      llx.StringData(extensionID),
-				"name":            llx.StringData(name),
-				"version":         llx.StringData(manifest.Version),
-				"description":     llx.StringData(description),
-				"manifestVersion": llx.IntData(int64(manifest.ManifestVersion)),
-				"permissions":     llx.ArrayData(perms, types.String),
-				"path":            llx.StringData(extDir),
-				"profile":         llx.StringData(profile),
-				"browser":         llx.StringData(browser),
+			// Search for extensions in this browser directory
+			// Depth 5: profile/Extensions/extID/version/manifest.json
+			filesFind, err := CreateResource(c.MqlRuntime, "files.find", map[string]*llx.RawData{
+				"from":  llx.StringData(browserDir),
+				"name":  llx.StringData("manifest.json"),
+				"type":  llx.StringData("f"),
+				"depth": llx.IntData(5),
 			})
 			if err != nil {
-				log.Debug().Err(err).Str("extension", extensionID).Msg("could not create extension resource")
+				log.Debug().Err(err).Str("browserDir", browserDir).Msg("could not create files.find resource")
 				continue
 			}
 
-			extensions = append(extensions, ext)
+			ff := filesFind.(*mqlFilesFind)
+			fileList := ff.GetList()
+			if fileList.Error != nil {
+				log.Debug().Err(fileList.Error).Str("browserDir", browserDir).Msg("files.find failed")
+				continue
+			}
+
+			for _, f := range fileList.Data {
+				file := f.(*mqlFile)
+				manifestPath := file.GetPath()
+				if manifestPath.Error != nil {
+					continue
+				}
+
+				// Normalize path for regex matching (use forward slashes)
+				normalizedPath := filepath.ToSlash(manifestPath.Data)
+
+				// Filter to only extension manifest files using the path pattern
+				matches := extensionPathPattern.FindStringSubmatch(normalizedPath)
+				if matches == nil {
+					continue
+				}
+
+				// Extract profile and extension ID from regex groups
+				// Group 1: profile name, Group 2: extension ID
+				profile := matches[1]
+				extensionID := matches[2]
+
+				// Create unique key including browser to avoid cross-browser deduplication
+				// Same extension in Chrome and Edge should be listed separately
+				uniqueKey := browserCfg.name + "|" + profile + "|" + extensionID
+				if seen[uniqueKey] {
+					// Skip duplicate (same extension, same browser, same profile)
+					// This can happen if multiple versions exist - we take the first one found
+					continue
+				}
+				seen[uniqueKey] = true
+
+				// Read and parse manifest.json
+				manifest, err := readChromeManifest(afs, manifestPath.Data)
+				if err != nil {
+					log.Debug().Err(err).Str("path", manifestPath.Data).Msg("could not read manifest.json")
+					continue
+				}
+
+				// Resolve localized names if needed
+				extDir := filepath.Dir(manifestPath.Data)
+				name := manifest.Name
+				if strings.HasPrefix(name, "__MSG_") {
+					if localizedName := resolveChromei18n(afs, extDir, manifest.DefaultLocale, name); localizedName != "" {
+						name = localizedName
+					}
+				}
+
+				description := manifest.Description
+				if strings.HasPrefix(description, "__MSG_") {
+					if localizedDesc := resolveChromei18n(afs, extDir, manifest.DefaultLocale, description); localizedDesc != "" {
+						description = localizedDesc
+					}
+				}
+
+				// Convert permissions to []any
+				perms := make([]any, len(manifest.Permissions))
+				for i, p := range manifest.Permissions {
+					perms[i] = p
+				}
+
+				ext, err := CreateResource(c.MqlRuntime, "chrome.extension", map[string]*llx.RawData{
+					"__id":            llx.StringData(uniqueKey),
+					"identifier":      llx.StringData(extensionID),
+					"name":            llx.StringData(name),
+					"version":         llx.StringData(manifest.Version),
+					"description":     llx.StringData(description),
+					"manifestVersion": llx.IntData(int64(manifest.ManifestVersion)),
+					"permissions":     llx.ArrayData(perms, types.String),
+					"path":            llx.StringData(extDir),
+					"profile":         llx.StringData(profile),
+					"browser":         llx.StringData(browserCfg.name),
+				})
+				if err != nil {
+					log.Debug().Err(err).Str("extension", extensionID).Msg("could not create extension resource")
+					continue
+				}
+
+				extensions = append(extensions, ext)
+			}
 		}
 	}
 
 	return extensions, nil
 }
 
-// getBrowserName returns a human-readable browser name from the path component
-func getBrowserName(variant string) string {
-	// Try exact match first
-	if name, ok := browserNames[variant]; ok {
-		return name
+// getPlatformKey returns the platform key for browser configs lookup
+func getPlatformKey(pf interface{ IsFamily(string) bool }) string {
+	switch {
+	case pf.IsFamily("linux"):
+		return "linux"
+	case pf.IsFamily("darwin"):
+		return "darwin"
+	case pf.IsFamily("windows"):
+		return "windows"
+	default:
+		return ""
 	}
-	// Try case-insensitive match (for Windows paths)
-	lowerVariant := strings.ToLower(variant)
-	if name, ok := browserNames[lowerVariant]; ok {
-		return name
+}
+
+// isValidUserHome checks if a home directory is a valid user home (not a system account)
+func isValidUserHome(homeDir string, platform string) bool {
+	if homeDir == "" {
+		return false
 	}
-	// Fallback to the variant itself with some cleanup
-	return strings.ReplaceAll(variant, "/", " ")
+
+	switch platform {
+	case "linux":
+		// Valid homes: /home/*, /root
+		return strings.HasPrefix(homeDir, "/home/") || homeDir == "/root"
+	case "darwin":
+		// Valid homes: /Users/* (excluding /Users/Shared)
+		return strings.HasPrefix(homeDir, "/Users/") && homeDir != "/Users/Shared"
+	case "windows":
+		// Valid homes: C:\Users\* (excluding system accounts)
+		lowerHome := strings.ToLower(homeDir)
+		if !strings.HasPrefix(lowerHome, "c:\\users\\") && !strings.HasPrefix(lowerHome, "c:/users/") {
+			return false
+		}
+		// Exclude known system accounts
+		excludedUsers := []string{"default", "public", "all users", "default user"}
+		for _, excluded := range excludedUsers {
+			if strings.Contains(lowerHome, "\\"+excluded) || strings.Contains(lowerHome, "/"+excluded) {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
 }
 
 // readChromeManifest reads and parses a Chrome extension manifest.json file
