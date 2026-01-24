@@ -148,11 +148,11 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 }
 
 func getDiscoveryTargets(config *inventory.Config) []string {
-	if config.Discover == nil {
+	// as we dont always initalize Discover in ParseCLI we provide both checks
+	if config.Discover == nil || len(config.Discover.Targets) == 0 {
 		return Auto
 	}
 	targets := config.Discover.Targets
-
 
 	if stringx.Contains(targets, DiscoveryAll) {
 		// return the All list + All Api Resources list
