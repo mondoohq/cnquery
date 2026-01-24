@@ -119,11 +119,6 @@ packs:
           - uid: mondoo-asset-count-gcp-service-accounts
           - uid: mondoo-asset-count-gcp-gke-clusters
           - uid: mondoo-asset-count-gcp-bigquery-datasets
-          - uid: mondoo-asset-count-gcp-storage-buckets
-          - uid: mondoo-asset-count-gcp-compute-instances
-          - uid: mondoo-asset-count-gcp-service-accounts
-          - uid: mondoo-asset-count-gcp-gke-clusters
-          - uid: mondoo-asset-count-gcp-bigquery-datasets
           - uid: mondoo-asset-count-gcp-cloudfunctions
           - uid: mondoo-asset-count-gcp-cloudrun-jobs
           - uid: mondoo-asset-count-gcp-cloudrun-services
@@ -268,7 +263,7 @@ queries:
       azure.subscription.network.securityGroups.length
 
   - uid: mondoo-asset-count-azure-virtual-network-gateways
-    title: Azure virtual Network Security Gateways
+    title: Azure Virtual Network Gateways
     docs:
       desc: Returns the number of Virtual Network Gateways in the Azure subscription.
     mql: |
