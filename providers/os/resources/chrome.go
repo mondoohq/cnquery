@@ -50,19 +50,27 @@ var browserNames = map[string]string{
 	// macOS - Other Chromium-based browsers
 	"Vivaldi":                 "Vivaldi",
 	"com.operasoftware.Opera": "Opera",
+	// macOS - AI browsers
+	"Comet":        "Perplexity Comet",
+	"ChatGPT":      "ChatGPT Atlas",
+	"Atlas":        "ChatGPT Atlas",
 	// Windows (case-insensitive matching needed)
-	"google/chrome":                "Google Chrome",
-	"google/chrome beta":           "Google Chrome Beta",
-	"google/chrome sxs":            "Google Chrome Canary",
-	"microsoft/edge":               "Microsoft Edge",
-	"microsoft/edge beta":          "Microsoft Edge Beta",
-	"microsoft/edge dev":           "Microsoft Edge Dev",
-	"bravesoftware/brave-browser":  "Brave",
-	"opera software/opera stable":  "Opera",
+	"google/chrome":               "Google Chrome",
+	"google/chrome beta":          "Google Chrome Beta",
+	"google/chrome sxs":           "Google Chrome Canary",
+	"microsoft/edge":              "Microsoft Edge",
+	"microsoft/edge beta":         "Microsoft Edge Beta",
+	"microsoft/edge dev":          "Microsoft Edge Dev",
+	"bravesoftware/brave-browser": "Brave",
+	"opera software/opera stable": "Opera",
+	// Windows - AI browsers
+	"comet":        "Perplexity Comet",
+	"chatgpt":      "ChatGPT Atlas",
+	"openai/atlas": "ChatGPT Atlas",
 }
 
 // Search configurations for different platforms
-// Covers Chrome, Chromium, Edge, Brave, Vivaldi, and Opera
+// Covers Chrome, Chromium, Edge, Brave, Vivaldi, Opera, Perplexity Comet, and ChatGPT Atlas
 // Uses files.find with name="manifest.json" then filters results by path pattern
 var chromeSearchConfigs = map[string][]chromeSearchConfig{
 	"linux": {
@@ -75,14 +83,14 @@ var chromeSearchConfigs = map[string][]chromeSearchConfig{
 	"darwin": {
 		{
 			basePath:    "/Users",
-			pathPattern: regexp.MustCompile(`/Library/Application Support/(Google/Chrome|Google/Chrome Beta|Google/Chrome Canary|Chromium|Microsoft Edge|Microsoft Edge Beta|Microsoft Edge Dev|BraveSoftware/Brave-Browser|Vivaldi|com\.operasoftware\.Opera)/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
+			pathPattern: regexp.MustCompile(`/Library/Application Support/(Google/Chrome|Google/Chrome Beta|Google/Chrome Canary|Chromium|Microsoft Edge|Microsoft Edge Beta|Microsoft Edge Dev|BraveSoftware/Brave-Browser|Vivaldi|com\.operasoftware\.Opera|Comet|ChatGPT|Atlas)/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
 			depth:       11,
 		},
 	},
 	"windows": {
 		{
 			basePath:    "C:\\Users",
-			pathPattern: regexp.MustCompile(`(?i)/AppData/Local/(Google/Chrome|Google/Chrome Beta|Google/Chrome SxS|Microsoft/Edge|Microsoft/Edge Beta|Microsoft/Edge Dev|BraveSoftware/Brave-Browser|Vivaldi|Opera Software/Opera Stable)/User Data/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
+			pathPattern: regexp.MustCompile(`(?i)/AppData/Local/(Google/Chrome|Google/Chrome Beta|Google/Chrome SxS|Microsoft/Edge|Microsoft/Edge Beta|Microsoft/Edge Dev|BraveSoftware/Brave-Browser|Vivaldi|Opera Software/Opera Stable|Comet|ChatGPT|OpenAI/Atlas)/User Data/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
 			depth:       11,
 		},
 	},
@@ -106,6 +114,9 @@ var defaultChromePaths = []string{
 	// macOS - Other browsers
 	"/Users/*/Library/Application Support/BraveSoftware/Brave-Browser/*/Extensions",
 	"/Users/*/Library/Application Support/Vivaldi/*/Extensions",
+	// macOS - AI browsers
+	"/Users/*/Library/Application Support/Comet/*/Extensions",
+	"/Users/*/Library/Application Support/ChatGPT/*/Extensions",
 	// Windows - Chrome/Chromium
 	"C:\\Users\\*\\AppData\\Local\\Google\\Chrome\\User Data\\*\\Extensions",
 	// Windows - Edge
@@ -113,6 +124,9 @@ var defaultChromePaths = []string{
 	// Windows - Other browsers
 	"C:\\Users\\*\\AppData\\Local\\BraveSoftware\\Brave-Browser\\User Data\\*\\Extensions",
 	"C:\\Users\\*\\AppData\\Local\\Vivaldi\\User Data\\*\\Extensions",
+	// Windows - AI browsers
+	"C:\\Users\\*\\AppData\\Local\\Comet\\User Data\\*\\Extensions",
+	"C:\\Users\\*\\AppData\\Local\\ChatGPT\\User Data\\*\\Extensions",
 }
 
 // chromeManifest represents the structure of a Chrome extension manifest.json
