@@ -88,10 +88,17 @@ var chromeSearchConfigs = map[string][]chromeSearchConfig{
 		},
 	},
 	"windows": {
+		// AppData\Local - Chrome, Edge, Brave, Vivaldi, and AI browsers
 		{
 			basePath:    "C:\\Users",
-			pathPattern: regexp.MustCompile(`(?i)/AppData/Local/(Google/Chrome|Google/Chrome Beta|Google/Chrome SxS|Microsoft/Edge|Microsoft/Edge Beta|Microsoft/Edge Dev|BraveSoftware/Brave-Browser|Vivaldi|Opera Software/Opera Stable|Comet|ChatGPT|OpenAI/Atlas)/User Data/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
+			pathPattern: regexp.MustCompile(`(?i)/AppData/Local/(Google/Chrome|Google/Chrome Beta|Google/Chrome SxS|Microsoft/Edge|Microsoft/Edge Beta|Microsoft/Edge Dev|BraveSoftware/Brave-Browser|Vivaldi|Comet|ChatGPT|OpenAI/Atlas)/User Data/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
 			depth:       11,
+		},
+		// AppData\Roaming - Opera (different path structure, no "User Data" folder)
+		{
+			basePath:    "C:\\Users",
+			pathPattern: regexp.MustCompile(`(?i)/AppData/Roaming/(Opera Software/Opera Stable)/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`),
+			depth:       10,
 		},
 	},
 }
@@ -106,6 +113,7 @@ var defaultChromePaths = []string{
 	// Linux - Other browsers
 	"/home/*/.config/BraveSoftware/Brave-Browser/*/Extensions",
 	"/home/*/.config/vivaldi/*/Extensions",
+	"/home/*/.config/opera/*/Extensions",
 	// macOS - Chrome/Chromium
 	"/Users/*/Library/Application Support/Google/Chrome/*/Extensions",
 	"/Users/*/Library/Application Support/Chromium/*/Extensions",
@@ -114,6 +122,7 @@ var defaultChromePaths = []string{
 	// macOS - Other browsers
 	"/Users/*/Library/Application Support/BraveSoftware/Brave-Browser/*/Extensions",
 	"/Users/*/Library/Application Support/Vivaldi/*/Extensions",
+	"/Users/*/Library/Application Support/com.operasoftware.Opera/*/Extensions",
 	// macOS - AI browsers
 	"/Users/*/Library/Application Support/Comet/*/Extensions",
 	"/Users/*/Library/Application Support/ChatGPT/*/Extensions",
@@ -124,6 +133,7 @@ var defaultChromePaths = []string{
 	// Windows - Other browsers
 	"C:\\Users\\*\\AppData\\Local\\BraveSoftware\\Brave-Browser\\User Data\\*\\Extensions",
 	"C:\\Users\\*\\AppData\\Local\\Vivaldi\\User Data\\*\\Extensions",
+	"C:\\Users\\*\\AppData\\Roaming\\Opera Software\\Opera Stable\\*\\Extensions",
 	// Windows - AI browsers
 	"C:\\Users\\*\\AppData\\Local\\Comet\\User Data\\*\\Extensions",
 	"C:\\Users\\*\\AppData\\Local\\ChatGPT\\User Data\\*\\Extensions",
