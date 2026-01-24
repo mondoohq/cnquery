@@ -1983,6 +1983,8 @@ private chrome.extension @defaults("name version identifier") {
   path string
   // Chrome profile name where extension is installed
   profile string
+  // Browser name (e.g., "Google Chrome", "Chromium", "Google Chrome Beta")
+  browser string
 }
 
 // Experimental: USB resource

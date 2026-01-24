@@ -2868,6 +2868,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"chrome.extension.profile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChromeExtension).GetProfile()).ToDataRes(types.String)
 	},
+	"chrome.extension.browser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetBrowser()).ToDataRes(types.String)
+	},
 	"usb.devices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsb).GetDevices()).ToDataRes(types.Array(types.Resource("usb.device")))
 	},
@@ -6217,6 +6220,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"chrome.extension.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlChromeExtension).Profile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.browser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Browser, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17443,6 +17450,7 @@ type mqlChromeExtension struct {
 	Permissions     plugin.TValue[[]any]
 	Path            plugin.TValue[string]
 	Profile         plugin.TValue[string]
+	Browser         plugin.TValue[string]
 }
 
 // createChromeExtension creates a new instance of this resource
@@ -17507,6 +17515,10 @@ func (c *mqlChromeExtension) GetPath() *plugin.TValue[string] {
 
 func (c *mqlChromeExtension) GetProfile() *plugin.TValue[string] {
 	return &c.Profile
+}
+
+func (c *mqlChromeExtension) GetBrowser() *plugin.TValue[string] {
+	return &c.Browser
 }
 
 // mqlUsb for the usb resource
