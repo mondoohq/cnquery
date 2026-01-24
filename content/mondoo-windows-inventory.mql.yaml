@@ -24,7 +24,7 @@ packs:
         ```
 
         ## Remote scan
-        To run this pack against a remote macOS host using SSH (requires Remote Management is activated in System Preferences):
+        To run this pack against a remote Windows host using WinRM:
 
         ```bash
         cnquery scan winrm <user>@<ip_address> -f mondoo-windows-inventory.mql.yaml

@@ -224,7 +224,7 @@ queries:
       asset.platform == "aws"
     mql: |
       aws.ec2.instances.
-        where( publicIp != '' ) {
+        where( publicIp != empty ) {
           arn
           instanceId
           region
