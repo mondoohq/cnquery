@@ -167,6 +167,8 @@ const (
 	ResourceNetworkRoute               string = "networkRoute"
 	ResourceChrome                     string = "chrome"
 	ResourceChromeExtension            string = "chrome.extension"
+	ResourceFirefox                    string = "firefox"
+	ResourceFirefoxAddon               string = "firefox.addon"
 	ResourceUsb                        string = "usb"
 	ResourceUsbDevice                  string = "usb.device"
 	ResourceCrontab                    string = "crontab"
@@ -778,6 +780,14 @@ func init() {
 		"chrome.extension": {
 			// to override args, implement: initChromeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createChromeExtension,
+		},
+		"firefox": {
+			// to override args, implement: initFirefox(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirefox,
+		},
+		"firefox.addon": {
+			// to override args, implement: initFirefoxAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirefoxAddon,
 		},
 		"usb": {
 			// to override args, implement: initUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3105,6 +3115,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"chrome.extension.browser": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChromeExtension).GetBrowser()).ToDataRes(types.String)
+	},
+	"firefox.addons": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefox).GetAddons()).ToDataRes(types.Array(types.Resource("firefox.addon")))
+	},
+	"firefox.addon.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetIdentifier()).ToDataRes(types.String)
+	},
+	"firefox.addon.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetName()).ToDataRes(types.String)
+	},
+	"firefox.addon.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetVersion()).ToDataRes(types.String)
+	},
+	"firefox.addon.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetDescription()).ToDataRes(types.String)
+	},
+	"firefox.addon.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetType()).ToDataRes(types.String)
+	},
+	"firefox.addon.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetActive()).ToDataRes(types.Bool)
+	},
+	"firefox.addon.userDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetUserDisabled()).ToDataRes(types.Bool)
+	},
+	"firefox.addon.visible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetVisible()).ToDataRes(types.Bool)
+	},
+	"firefox.addon.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetPath()).ToDataRes(types.String)
+	},
+	"firefox.addon.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetProfile()).ToDataRes(types.String)
+	},
+	"firefox.addon.browser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetBrowser()).ToDataRes(types.String)
+	},
+	"firefox.addon.sourceUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetSourceUri()).ToDataRes(types.String)
+	},
+	"firefox.addon.installDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetInstallDate()).ToDataRes(types.Int)
+	},
+	"firefox.addon.updateDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetUpdateDate()).ToDataRes(types.Int)
 	},
 	"usb.devices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsb).GetDevices()).ToDataRes(types.Array(types.Resource("usb.device")))
@@ -6788,6 +6843,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"chrome.extension.browser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlChromeExtension).Browser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefox).__id, ok = v.Value.(string)
+		return
+	},
+	"firefox.addons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefox).Addons, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"firefox.addon.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.userDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).UserDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.visible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Visible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Profile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.browser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Browser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.sourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).SourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.installDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).InstallDate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.updateDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).UpdateDate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19130,6 +19253,176 @@ func (c *mqlChromeExtension) GetProfile() *plugin.TValue[string] {
 
 func (c *mqlChromeExtension) GetBrowser() *plugin.TValue[string] {
 	return &c.Browser
+}
+
+// mqlFirefox for the firefox resource
+type mqlFirefox struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirefoxInternal it will be used here
+	Addons plugin.TValue[[]any]
+}
+
+// createFirefox creates a new instance of this resource
+func createFirefox(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirefox{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firefox", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirefox) MqlName() string {
+	return "firefox"
+}
+
+func (c *mqlFirefox) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirefox) GetAddons() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Addons, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("firefox", c.__id, "addons")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.addons()
+	})
+}
+
+// mqlFirefoxAddon for the firefox.addon resource
+type mqlFirefoxAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirefoxAddonInternal it will be used here
+	Identifier   plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Type         plugin.TValue[string]
+	Active       plugin.TValue[bool]
+	UserDisabled plugin.TValue[bool]
+	Visible      plugin.TValue[bool]
+	Path         plugin.TValue[string]
+	Profile      plugin.TValue[string]
+	Browser      plugin.TValue[string]
+	SourceUri    plugin.TValue[string]
+	InstallDate  plugin.TValue[int64]
+	UpdateDate   plugin.TValue[int64]
+}
+
+// createFirefoxAddon creates a new instance of this resource
+func createFirefoxAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirefoxAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firefox.addon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirefoxAddon) MqlName() string {
+	return "firefox.addon"
+}
+
+func (c *mqlFirefoxAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirefoxAddon) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlFirefoxAddon) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlFirefoxAddon) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlFirefoxAddon) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlFirefoxAddon) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlFirefoxAddon) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlFirefoxAddon) GetUserDisabled() *plugin.TValue[bool] {
+	return &c.UserDisabled
+}
+
+func (c *mqlFirefoxAddon) GetVisible() *plugin.TValue[bool] {
+	return &c.Visible
+}
+
+func (c *mqlFirefoxAddon) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlFirefoxAddon) GetProfile() *plugin.TValue[string] {
+	return &c.Profile
+}
+
+func (c *mqlFirefoxAddon) GetBrowser() *plugin.TValue[string] {
+	return &c.Browser
+}
+
+func (c *mqlFirefoxAddon) GetSourceUri() *plugin.TValue[string] {
+	return &c.SourceUri
+}
+
+func (c *mqlFirefoxAddon) GetInstallDate() *plugin.TValue[int64] {
+	return &c.InstallDate
+}
+
+func (c *mqlFirefoxAddon) GetUpdateDate() *plugin.TValue[int64] {
+	return &c.UpdateDate
 }
 
 // mqlUsb for the usb resource
