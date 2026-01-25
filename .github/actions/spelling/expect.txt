@@ -47,7 +47,9 @@ ekus
 elbv
 exo
 failback
+filecache
 filesz
+firefox
 frontmatter
 fumadocs
 gcfs
@@ -166,4 +168,5 @@ vulnerabilityassessmentsettings
 vulnmgmt
 wil
 xoxp
+XPI
 xssmatchstatement
