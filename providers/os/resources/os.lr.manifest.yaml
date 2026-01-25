@@ -162,6 +162,42 @@ resources:
       registry: {}
       scheme: {}
     min_mondoo_version: 5.31.0
+  crontab:
+    docs:
+      desc: |
+        The `crontab` resource provides fields for examining cron job entries on Unix-like systems.
+        It collects entries from system crontabs (/etc/crontab, /etc/cron.d/*) and user crontabs.
+    fields:
+      entries:
+        desc: All cron entries from system and user crontabs
+      files:
+        desc: Files that contain crontab entries
+    min_mondoo_version: 9.0.0
+  crontab.entry:
+    docs:
+      desc: |
+        The `crontab.entry` resource represents a single cron job entry.
+    fields:
+      command:
+        desc: Command to execute
+      dayOfMonth:
+        desc: Day of month field (1-31, *, or cron expression)
+      dayOfWeek:
+        desc: Day of week field (0-7, *, or cron expression)
+      file:
+        desc: File containing this entry
+      hour:
+        desc: Hour field (0-23, *, or cron expression)
+      lineNumber:
+        desc: Line number in the source file
+      minute:
+        desc: Minute field (0-59, *, or cron expression)
+      month:
+        desc: Month field (1-12, *, or cron expression)
+      user:
+        desc: User that runs the command
+    is_private: true
+    min_mondoo_version: 9.0.0
   docker:
     fields:
       containers: {}
