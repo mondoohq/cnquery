@@ -57,20 +57,20 @@ func (s *WindowsGroupManager) Group(id string) (*Group, error) {
 	return findGroup(groups, id)
 }
 
-func (s *WindowsGroupManager) List() ([]*Group, error) {
+func (s *WindowsGroupManager) listViaPowershell() ([]*Group, error) {
 	powershellCmd := "Get-LocalGroup | ConvertTo-Json"
 	c, err := s.conn.RunCommand(powershell.Wrap(powershellCmd))
 	if err != nil {
 		return nil, err
 	}
-	winUsers, err := ParseWindowsLocalGroups(c.Stdout)
+	winGroups, err := ParseWindowsLocalGroups(c.Stdout)
 	if err != nil {
 		return nil, err
 	}
 
 	res := []*Group{}
-	for i := range winUsers {
-		res = append(res, winToGroup(winUsers[i]))
+	for i := range winGroups {
+		res = append(res, winToGroup(winGroups[i]))
 	}
 	return res, nil
 }
