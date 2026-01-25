@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
@@ -25,7 +26,16 @@ func (w *mqlWindowsFirewallRule) id() (string, error) {
 func (w *mqlWindowsFirewall) settings() (map[string]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
-	// query firewall profiles
+	// Try native API for local Windows connections (faster)
+	fwSettings, err := windows.GetNativeFirewallSettings(conn)
+	if err != nil {
+		log.Debug().Err(err).Msg("native firewall settings API failed, falling back to PowerShell")
+	}
+	if fwSettings != nil {
+		return convert.JsonToDict(fwSettings)
+	}
+
+	// Fallback to PowerShell for remote connections or non-Windows platforms
 	encodedCmd := powershell.Encode(windows.FIREWALL_SETTINGS)
 	executedCmd, err := conn.RunCommand(encodedCmd)
 	if err != nil {
@@ -40,7 +50,7 @@ func (w *mqlWindowsFirewall) settings() (map[string]any, error) {
 		return nil, errors.New("failed to retrieve computer info: " + string(stderr))
 	}
 
-	fwSettings, err := windows.ParseWindowsFirewallSettings(executedCmd.Stdout)
+	fwSettings, err = windows.ParseWindowsFirewallSettings(executedCmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
@@ -50,24 +60,35 @@ func (w *mqlWindowsFirewall) settings() (map[string]any, error) {
 func (w *mqlWindowsFirewall) profiles() ([]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
-	// query firewall profiles
-	encodedCmd := powershell.Encode(windows.FIREWALL_PROFILES)
-	executedCmd, err := conn.RunCommand(encodedCmd)
-	if err != nil {
-		return nil, err
-	}
+	var fwProfiles []windows.WindowsFirewallProfile
 
-	if executedCmd.ExitStatus != 0 {
-		stderr, err := io.ReadAll(executedCmd.Stderr)
+	// Try native API for local Windows connections (faster)
+	nativeProfiles, err := windows.GetNativeFirewallProfiles(conn)
+	if err != nil {
+		log.Debug().Err(err).Msg("native firewall profiles API failed, falling back to PowerShell")
+	}
+	if nativeProfiles != nil {
+		fwProfiles = nativeProfiles
+	} else {
+		// Fallback to PowerShell for remote connections or non-Windows platforms
+		encodedCmd := powershell.Encode(windows.FIREWALL_PROFILES)
+		executedCmd, err := conn.RunCommand(encodedCmd)
 		if err != nil {
 			return nil, err
 		}
-		return nil, errors.New("failed to retrieve firewall profiles: " + string(stderr))
-	}
 
-	fwProfiles, err := windows.ParseWindowsFirewallProfiles(executedCmd.Stdout)
-	if err != nil {
-		return nil, err
+		if executedCmd.ExitStatus != 0 {
+			stderr, err := io.ReadAll(executedCmd.Stderr)
+			if err != nil {
+				return nil, err
+			}
+			return nil, errors.New("failed to retrieve firewall profiles: " + string(stderr))
+		}
+
+		fwProfiles, err = windows.ParseWindowsFirewallProfiles(executedCmd.Stdout)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// convert firewall profiles to MQL resource
@@ -107,24 +128,35 @@ func (w *mqlWindowsFirewall) profiles() ([]any, error) {
 func (w *mqlWindowsFirewall) rules() ([]any, error) {
 	conn := w.MqlRuntime.Connection.(shared.Connection)
 
-	// query firewall rules
-	encodedCmd := powershell.Encode(windows.FIREWALL_RULES)
-	executedCmd, err := conn.RunCommand(encodedCmd)
-	if err != nil {
-		return nil, err
-	}
+	var fwRules []windows.WindowsFirewallRule
 
-	if executedCmd.ExitStatus != 0 {
-		stderr, err := io.ReadAll(executedCmd.Stderr)
+	// Try native API for local Windows connections (faster)
+	nativeRules, err := windows.GetNativeFirewallRules(conn)
+	if err != nil {
+		log.Debug().Err(err).Msg("native firewall rules API failed, falling back to PowerShell")
+	}
+	if nativeRules != nil {
+		fwRules = nativeRules
+	} else {
+		// Fallback to PowerShell for remote connections or non-Windows platforms
+		encodedCmd := powershell.Encode(windows.FIREWALL_RULES)
+		executedCmd, err := conn.RunCommand(encodedCmd)
 		if err != nil {
 			return nil, err
 		}
-		return nil, errors.New("failed to retrieve firewall rules: " + string(stderr))
-	}
 
-	fwRules, err := windows.ParseWindowsFirewallRules(executedCmd.Stdout)
-	if err != nil {
-		return nil, err
+		if executedCmd.ExitStatus != 0 {
+			stderr, err := io.ReadAll(executedCmd.Stderr)
+			if err != nil {
+				return nil, err
+			}
+			return nil, errors.New("failed to retrieve firewall rules: " + string(stderr))
+		}
+
+		fwRules, err = windows.ParseWindowsFirewallRules(executedCmd.Stdout)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// convert firewall rules to MQL resource
