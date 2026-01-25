@@ -97,6 +97,8 @@ const (
 	ResourceDockerFileCopy             string = "docker.file.copy"
 	ResourceDockerImage                string = "docker.image"
 	ResourceDockerContainer            string = "docker.container"
+	ResourceContainerd                 string = "containerd"
+	ResourceContainerdContainer        string = "containerd.container"
 	ResourceIptables                   string = "iptables"
 	ResourceIp6tables                  string = "ip6tables"
 	ResourceIptablesEntry              string = "iptables.entry"
@@ -482,6 +484,14 @@ func init() {
 		"docker.container": {
 			// to override args, implement: initDockerContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDockerContainer,
+		},
+		"containerd": {
+			// to override args, implement: initContainerd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createContainerd,
+		},
+		"containerd.container": {
+			// to override args, implement: initContainerdContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createContainerdContainer,
 		},
 		"iptables": {
 			// to override args, implement: initIptables(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1849,6 +1859,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.container.hostConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerContainer).GetHostConfig()).ToDataRes(types.Dict)
+	},
+	"containerd.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerd).GetContainers()).ToDataRes(types.Array(types.Resource("containerd.container")))
+	},
+	"containerd.container.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerdContainer).GetId()).ToDataRes(types.String)
+	},
+	"containerd.container.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerdContainer).GetImage()).ToDataRes(types.String)
+	},
+	"containerd.container.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerdContainer).GetStatus()).ToDataRes(types.String)
+	},
+	"containerd.container.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerdContainer).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"containerd.container.pid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerdContainer).GetPid()).ToDataRes(types.Int)
+	},
+	"containerd.container.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerdContainer).GetNamespace()).ToDataRes(types.String)
+	},
+	"containerd.container.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerdContainer).GetRuntime()).ToDataRes(types.String)
+	},
+	"containerd.container.snapshotter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerdContainer).GetSnapshotter()).ToDataRes(types.String)
 	},
 	"iptables.input": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptables).GetInput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
@@ -4593,6 +4630,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.container.hostConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerContainer).HostConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"containerd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerd).__id, ok = v.Value.(string)
+		return
+	},
+	"containerd.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerd).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"containerd.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerdContainer).__id, ok = v.Value.(string)
+		return
+	},
+	"containerd.container.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerdContainer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"containerd.container.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerdContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"containerd.container.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerdContainer).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"containerd.container.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerdContainer).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"containerd.container.pid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerdContainer).Pid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"containerd.container.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerdContainer).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"containerd.container.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerdContainer).Runtime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"containerd.container.snapshotter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerdContainer).Snapshotter, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"iptables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12440,6 +12521,146 @@ func (c *mqlDockerContainer) GetHostConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.HostConfig, func() (any, error) {
 		return c.hostConfig()
 	})
+}
+
+// mqlContainerd for the containerd resource
+type mqlContainerd struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlContainerdInternal it will be used here
+	Containers plugin.TValue[[]any]
+}
+
+// createContainerd creates a new instance of this resource
+func createContainerd(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlContainerd{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("containerd", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlContainerd) MqlName() string {
+	return "containerd"
+}
+
+func (c *mqlContainerd) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlContainerd) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("containerd", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containers()
+	})
+}
+
+// mqlContainerdContainer for the containerd.container resource
+type mqlContainerdContainer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlContainerdContainerInternal it will be used here
+	Id          plugin.TValue[string]
+	Image       plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Labels      plugin.TValue[map[string]any]
+	Pid         plugin.TValue[int64]
+	Namespace   plugin.TValue[string]
+	Runtime     plugin.TValue[string]
+	Snapshotter plugin.TValue[string]
+}
+
+// createContainerdContainer creates a new instance of this resource
+func createContainerdContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlContainerdContainer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("containerd.container", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlContainerdContainer) MqlName() string {
+	return "containerd.container"
+}
+
+func (c *mqlContainerdContainer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlContainerdContainer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlContainerdContainer) GetImage() *plugin.TValue[string] {
+	return &c.Image
+}
+
+func (c *mqlContainerdContainer) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlContainerdContainer) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlContainerdContainer) GetPid() *plugin.TValue[int64] {
+	return &c.Pid
+}
+
+func (c *mqlContainerdContainer) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlContainerdContainer) GetRuntime() *plugin.TValue[string] {
+	return &c.Runtime
+}
+
+func (c *mqlContainerdContainer) GetSnapshotter() *plugin.TValue[string] {
+	return &c.Snapshotter
 }
 
 // mqlIptables for the iptables resource
