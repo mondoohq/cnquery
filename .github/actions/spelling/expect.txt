@@ -47,6 +47,7 @@ elbv
 exo
 failback
 filecache
+firefox
 frontmatter
 fsx
 fumadocs
@@ -164,4 +165,5 @@ vulnerabilityassessmentsettings
 vulnmgmt
 wil
 xoxp
+XPI
 xssmatchstatement

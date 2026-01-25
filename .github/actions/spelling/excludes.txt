@@ -75,6 +75,7 @@
 \.woff2?$
 \.xcf$
 \.xlsx?$
+\.xpi$
 \.xpm$
 \.xz$
 \.zip$
