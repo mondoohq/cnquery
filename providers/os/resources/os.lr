@@ -1286,6 +1286,77 @@ private limits.entry @defaults("domain item") {
   value string
 }
 
+// Sudoers configuration
+sudoers {
+  init(path? string)
+  // List of files that make up the sudoers configuration
+  files() []file
+  // Raw contents of all sudoers files
+  content(files) string
+  // User permission specifications
+  userSpecs(files) []sudoers.userSpec
+  // Default settings
+  defaults(files) []sudoers.default
+  // Alias definitions (User_Alias, Host_Alias, Cmnd_Alias, Runas_Alias)
+  aliases(files) []sudoers.alias
+}
+
+// Sudoers user specification (permission entry)
+private sudoers.userSpec @defaults("users hosts commands") {
+  // File where this entry is defined
+  file string
+  // Line number in the file
+  lineNumber int
+  // Users or user aliases this rule applies to
+  users []string
+  // Hosts or host aliases this rule applies to
+  hosts []string
+  // RunAs users (users the command can be run as)
+  runasUsers []string
+  // RunAs groups (groups the command can be run as)
+  runasGroups []string
+  // Commands or command aliases
+  commands []string
+  // Tags applied to the command (NOPASSWD, SETENV, etc.)
+  tags []string
+}
+
+// Sudoers default setting
+private sudoers.default @defaults("parameter") {
+  // File where this entry is defined
+  file string
+  // Line number in the file
+  lineNumber int
+  // Raw Defaults line
+  raw string
+  // Scope: global, user, host, command, or runas
+  scope string
+  // Target (user/host/command/runas this applies to, if not global)
+  target string
+  // Parameter name (e.g., "env_reset", "secure_path")
+  parameter string
+  // Value (if parameter takes a value)
+  value string
+  // Operation: "=", "+=", or "-="
+  operation string
+  // Whether parameter is negated (starts with !)
+  negated bool
+}
+
+// Sudoers alias definition
+private sudoers.alias @defaults("type name") {
+  // File where this entry is defined
+  file string
+  // Line number in the file
+  lineNumber int
+  // Type: user, host, cmnd, or runas
+  type string
+  // Alias name (e.g., "ADMINS", "WEBSERVERS")
+  name string
+  // Values assigned to this alias
+  members []string
+}
+
 // Unix list block devices
 lsblk {
   []lsblk.entry

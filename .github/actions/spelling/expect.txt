@@ -22,6 +22,7 @@ clcerts
 cloudflare
 Clusterwide
 cmek
+cmnd
 copywrite
 cpe
 cryptokey
@@ -184,6 +185,7 @@ Vtpm
 vulnerabilityassessmentsettings
 vulnmgmt
 webide
+WEBSERVERS
 wil
 xoxp
 xssmatchstatement
