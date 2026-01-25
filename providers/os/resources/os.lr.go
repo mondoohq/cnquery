@@ -157,6 +157,8 @@ const (
 	ResourceNetworkRoute               string = "networkRoute"
 	ResourceUsb                        string = "usb"
 	ResourceUsbDevice                  string = "usb.device"
+	ResourceVscode                     string = "vscode"
+	ResourceVscodeExtension            string = "vscode.extension"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -722,6 +724,14 @@ func init() {
 		"usb.device": {
 			// to override args, implement: initUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createUsbDevice,
+		},
+		"vscode": {
+			// to override args, implement: initVscode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVscode,
+		},
+		"vscode.extension": {
+			// to override args, implement: initVscodeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVscodeExtension,
 		},
 	}
 }
@@ -2866,6 +2876,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"usb.device.isRemovable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsbDevice).GetIsRemovable()).ToDataRes(types.Bool)
+	},
+	"vscode.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscode).GetExtensions()).ToDataRes(types.Array(types.Resource("vscode.extension")))
+	},
+	"vscode.paths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscode).GetPaths()).ToDataRes(types.Array(types.String))
+	},
+	"vscode.extension.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetIdentifier()).ToDataRes(types.String)
+	},
+	"vscode.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetName()).ToDataRes(types.String)
+	},
+	"vscode.extension.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetDisplayName()).ToDataRes(types.String)
+	},
+	"vscode.extension.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetVersion()).ToDataRes(types.String)
+	},
+	"vscode.extension.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetDescription()).ToDataRes(types.String)
+	},
+	"vscode.extension.publisher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetPublisher()).ToDataRes(types.String)
+	},
+	"vscode.extension.editor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetEditor()).ToDataRes(types.String)
+	},
+	"vscode.extension.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetPath()).ToDataRes(types.String)
+	},
+	"vscode.extension.vscodeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetVscodeVersion()).ToDataRes(types.String)
+	},
+	"vscode.extension.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetCategories()).ToDataRes(types.Array(types.String))
 	},
 }
 
@@ -6189,6 +6235,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"usb.device.isRemovable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUsbDevice).IsRemovable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vscode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscode).__id, ok = v.Value.(string)
+		return
+	},
+	"vscode.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscode).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vscode.paths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscode).Paths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"vscode.extension.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.publisher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Publisher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.editor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Editor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.vscodeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).VscodeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -17427,4 +17529,166 @@ func (c *mqlUsbDevice) GetProtocol() *plugin.TValue[string] {
 
 func (c *mqlUsbDevice) GetIsRemovable() *plugin.TValue[bool] {
 	return &c.IsRemovable
+}
+
+// mqlVscode for the vscode resource
+type mqlVscode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVscodeInternal it will be used here
+	Extensions plugin.TValue[[]any]
+	Paths      plugin.TValue[[]any]
+}
+
+// createVscode creates a new instance of this resource
+func createVscode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVscode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vscode", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVscode) MqlName() string {
+	return "vscode"
+}
+
+func (c *mqlVscode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVscode) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vscode", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
+func (c *mqlVscode) GetPaths() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Paths, func() ([]any, error) {
+		return c.paths()
+	})
+}
+
+// mqlVscodeExtension for the vscode.extension resource
+type mqlVscodeExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVscodeExtensionInternal it will be used here
+	Identifier    plugin.TValue[string]
+	Name          plugin.TValue[string]
+	DisplayName   plugin.TValue[string]
+	Version       plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Publisher     plugin.TValue[string]
+	Editor        plugin.TValue[string]
+	Path          plugin.TValue[string]
+	VscodeVersion plugin.TValue[string]
+	Categories    plugin.TValue[[]any]
+}
+
+// createVscodeExtension creates a new instance of this resource
+func createVscodeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVscodeExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vscode.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVscodeExtension) MqlName() string {
+	return "vscode.extension"
+}
+
+func (c *mqlVscodeExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVscodeExtension) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlVscodeExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVscodeExtension) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlVscodeExtension) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlVscodeExtension) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVscodeExtension) GetPublisher() *plugin.TValue[string] {
+	return &c.Publisher
+}
+
+func (c *mqlVscodeExtension) GetEditor() *plugin.TValue[string] {
+	return &c.Editor
+}
+
+func (c *mqlVscodeExtension) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlVscodeExtension) GetVscodeVersion() *plugin.TValue[string] {
+	return &c.VscodeVersion
+}
+
+func (c *mqlVscodeExtension) GetCategories() *plugin.TValue[[]any] {
+	return &c.Categories
 }
