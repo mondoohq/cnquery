@@ -2202,3 +2202,35 @@ private crontab.entry @defaults("user command") {
   // File containing this entry
   file file
 }
+
+// Visual Studio Code editor resources
+vscode {
+  // All installed VS Code extensions across all users
+  extensions() []vscode.extension
+  // Paths searched for VS Code extensions
+  paths() []string
+}
+
+// Visual Studio Code extension
+private vscode.extension @defaults("editor name version") {
+  // Unique extension identifier (publisher.name format)
+  identifier string
+  // Extension name from package.json
+  name string
+  // Extension display name from package.json
+  displayName string
+  // Extension version from package.json
+  version string
+  // Extension description from package.json
+  description string
+  // Extension publisher from package.json
+  publisher string
+  // Editor application (e.g., Visual Studio Code, Cursor, Windsurf)
+  editor string
+  // Path to the extension directory
+  path string
+  // VS Code engine version compatibility
+  vscodeVersion string
+  // Extension categories
+  categories []string
+}

@@ -1310,6 +1310,25 @@ resources:
           name != "Guest"
         }
       title: Search for a specific SID and check for its values
+  vscode:
+    fields:
+      extensions: {}
+      paths: {}
+    min_mondoo_version: 9.0.0
+  vscode.extension:
+    fields:
+      categories: {}
+      description: {}
+      displayName: {}
+      editor: {}
+      identifier: {}
+      name: {}
+      path: {}
+      publisher: {}
+      version: {}
+      vscodeVersion: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   vuln.advisory:
     fields:
       description: {}
