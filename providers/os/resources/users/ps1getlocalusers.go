@@ -6,7 +6,9 @@ package users
 import (
 	"encoding/json"
 	"io"
+	"runtime"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
@@ -71,6 +73,18 @@ func (s *WindowsUserManager) User(id string) (*User, error) {
 }
 
 func (s *WindowsUserManager) List() ([]*User, error) {
+	// If we are running locally on Windows, use native API for better performance
+	// (~1-10ms vs ~200-500ms for PowerShell)
+	if s.conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
+		log.Debug().Msg("using native Windows API for user enumeration")
+		users, err := GetNativeUsers()
+		if err == nil {
+			return users, nil
+		}
+		// Fall back to PowerShell if native API fails
+		log.Debug().Err(err).Msg("native Windows API failed, falling back to PowerShell")
+	}
+
 	powershellCmd := "Get-LocalUser | ConvertTo-Json"
 	c, err := s.conn.RunCommand(powershell.Wrap(powershellCmd))
 	if err != nil {
