@@ -1961,8 +1961,6 @@ private networkRoute @defaults("destination flags"){
 chrome {
   // All installed Chrome extensions across all profiles and users
   extensions() []chrome.extension
-  // Paths searched for Chrome extensions
-  paths() []string
 }
 
 // Chrome browser extension

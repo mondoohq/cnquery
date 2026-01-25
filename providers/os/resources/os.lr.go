@@ -2841,9 +2841,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"chrome.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChrome).GetExtensions()).ToDataRes(types.Array(types.Resource("chrome.extension")))
 	},
-	"chrome.paths": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlChrome).GetPaths()).ToDataRes(types.Array(types.String))
-	},
 	"chrome.extension.identifier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChromeExtension).GetIdentifier()).ToDataRes(types.String)
 	},
@@ -6180,10 +6177,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"chrome.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlChrome).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"chrome.paths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlChrome).Paths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"chrome.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17375,7 +17368,6 @@ type mqlChrome struct {
 	__id       string
 	// optional: if you define mqlChromeInternal it will be used here
 	Extensions plugin.TValue[[]any]
-	Paths      plugin.TValue[[]any]
 }
 
 // createChrome creates a new instance of this resource
@@ -17428,12 +17420,6 @@ func (c *mqlChrome) GetExtensions() *plugin.TValue[[]any] {
 		}
 
 		return c.extensions()
-	})
-}
-
-func (c *mqlChrome) GetPaths() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Paths, func() ([]any, error) {
-		return c.paths()
 	})
 }
 

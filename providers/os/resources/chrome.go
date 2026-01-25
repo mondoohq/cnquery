@@ -87,37 +87,6 @@ func (c *mqlChrome) id() (string, error) {
 	return "chrome", nil
 }
 
-func (c *mqlChrome) paths() ([]any, error) {
-	conn := c.MqlRuntime.Connection.(shared.Connection)
-	pf := conn.Asset().Platform
-	if pf == nil {
-		return []any{}, nil
-	}
-
-	platformKey := getPlatformKey(pf)
-	if platformKey == "" {
-		return []any{}, nil
-	}
-
-	configs, ok := browserConfigs[platformKey]
-	if !ok {
-		return []any{}, nil
-	}
-
-	// Return informational paths showing where we search
-	paths := []any{}
-	for _, cfg := range configs {
-		var pathPattern string
-		if cfg.profilePath != "" {
-			pathPattern = filepath.Join("~", cfg.relPath, cfg.profilePath, "*/Extensions")
-		} else {
-			pathPattern = filepath.Join("~", cfg.relPath, "*/Extensions")
-		}
-		paths = append(paths, pathPattern)
-	}
-	return paths, nil
-}
-
 func (c *mqlChrome) extensions() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	pf := conn.Asset().Platform
