@@ -31,9 +31,9 @@
 \b[Ww]hite listed\b
 
 # s.b. Block list
-\b[Bb]lacklist\b
+# \b[Bb]lacklist\b # used by modprobe
 \b[Bb]lacklisting\b
-\b[Bb]lacklisted\b
+# \b[Bb]lacklisted\b # used by modprobe
 \b[Bb]lack list\b
 \b[Bb]lack listing\b
 \b[Bb]lack listed\b

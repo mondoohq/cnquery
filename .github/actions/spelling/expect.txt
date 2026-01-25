@@ -135,6 +135,7 @@ signin
 singlequeryargument
 sizeconstraintstatement
 Snat
+softdep
 spdx
 sph
 spo

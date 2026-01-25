@@ -1260,6 +1260,99 @@ logindefs {
   params(content) map[string]string
 }
 
+// Kernel module configuration from modprobe.d
+modprobe {
+  init(path? string)
+  // List of files that make up the modprobe configuration
+  files() []file
+  // Install directives (custom commands for loading modules)
+  installs(files) []modprobe.install
+  // Remove directives (custom commands for unloading modules)
+  removes(files) []modprobe.remove
+  // Blacklisted modules
+  blacklists(files) []modprobe.blacklist
+  // Module options and parameters
+  options(files) []modprobe.option
+  // Module aliases
+  aliases(files) []modprobe.alias
+  // Soft dependencies
+  softdeps(files) []modprobe.softdep
+}
+
+// Install directive for module loading
+private modprobe.install @defaults("module command") {
+  // File where this entry is defined
+  file string
+  // Line number in the file
+  lineNumber int
+  // Module name
+  module string
+  // Command to execute instead of default insmod
+  command string
+}
+
+// Remove directive for module unloading
+private modprobe.remove @defaults("module command") {
+  // File where this entry is defined
+  file string
+  // Line number in the file
+  lineNumber int
+  // Module name
+  module string
+  // Command to execute instead of default rmmod
+  command string
+}
+
+// Blacklist directive
+private modprobe.blacklist @defaults("module") {
+  // File where this entry is defined
+  file string
+  // Line number in the file
+  lineNumber int
+  // Module name that is blacklisted
+  module string
+}
+
+// Module options and parameters
+private modprobe.option @defaults("module") {
+  // File where this entry is defined
+  file string
+  // Line number in the file
+  lineNumber int
+  // Module name
+  module string
+  // Raw parameters string
+  parameters string
+  // Parsed parameters as key-value pairs
+  params() map[string]string
+}
+
+// Module alias
+private modprobe.alias @defaults("alias module") {
+  // File where this entry is defined
+  file string
+  // Line number in the file
+  lineNumber int
+  // Alias name (pattern or wildcard)
+  alias string
+  // Target module name
+  module string
+}
+
+// Soft dependency
+private modprobe.softdep @defaults("module") {
+  // File where this entry is defined
+  file string
+  // Line number in the file
+  lineNumber int
+  // Module name
+  module string
+  // Modules to load before (pre: dependencies)
+  pre []string
+  // Modules to load after (post: dependencies)
+  post []string
+}
+
 // Unix list block devices
 lsblk {
   []lsblk.entry
