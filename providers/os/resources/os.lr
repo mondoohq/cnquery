@@ -2144,3 +2144,33 @@ private usb.device @defaults("manufacturer name") {
   // Removable device
   isRemovable bool
 }
+
+// Crontab entries on the system
+crontab {
+  // All cron entries from system and user crontabs
+  entries() []crontab.entry
+  // Files that contain crontab entries
+  files() []file
+}
+
+// Individual crontab entry
+private crontab.entry @defaults("user command") {
+  // Line number in the source file
+  lineNumber int
+  // Minute field (0-59, *, or cron expression)
+  minute string
+  // Hour field (0-23, *, or cron expression)
+  hour string
+  // Day of month field (1-31, *, or cron expression)
+  dayOfMonth string
+  // Month field (1-12, *, or cron expression)
+  month string
+  // Day of week field (0-7, *, or cron expression)
+  dayOfWeek string
+  // User that runs the command
+  user string
+  // Command to execute
+  command string
+  // File containing this entry
+  file file
+}
