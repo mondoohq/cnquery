@@ -377,6 +377,28 @@ resources:
       type: {}
       xdev: {}
     min_mondoo_version: 5.15.0
+  firewalld:
+    fields:
+      defaultZone: {}
+      running: {}
+      zones: {}
+    min_mondoo_version: 9.0.0
+  firewalld.zone:
+    fields:
+      forwardPorts: {}
+      icmpBlockInversion: {}
+      icmpBlocks: {}
+      interfaces: {}
+      masquerade: {}
+      name: {}
+      ports: {}
+      protocols: {}
+      richRules: {}
+      services: {}
+      sourcePorts: {}
+      sources: {}
+      target: {}
+    min_mondoo_version: 9.0.0
   fstab:
     fields:
       entries: {}
@@ -747,6 +769,8 @@ resources:
     min_mondoo_version: 6.19.0
   os.linux:
     fields:
+      firewalld:
+        min_mondoo_version: 9.0.0
       fstab:
         min_mondoo_version: 9.0.0
       ip6tables: {}

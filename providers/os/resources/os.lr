@@ -312,6 +312,8 @@ os.linux {
   iptables() iptables
   // iptables firewall for IPv6
   ip6tables() ip6tables
+  // firewalld firewall management
+  firewalld() firewalld
   // /etc/fstab entries
   fstab() fstab
 }
@@ -1087,6 +1089,46 @@ iptables.entry {
   options string
   // Input or output, which is used to create the ID
   chain string
+}
+
+// firewalld - Dynamic Firewall Manager for Linux
+firewalld @defaults("defaultZone running") {
+  // Whether firewalld is running
+  running() bool
+  // Default zone name
+  defaultZone() string
+  // List of all zones
+  zones() []firewalld.zone
+}
+
+// firewalld zone configuration
+firewalld.zone @defaults("name target") {
+  // Zone name
+  name string
+  // Zone target (default, ACCEPT, DROP, REJECT)
+  target string
+  // Whether ICMP block inversion is enabled
+  icmpBlockInversion bool
+  // Network interfaces bound to this zone
+  interfaces []string
+  // Source addresses/networks bound to this zone
+  sources []string
+  // Allowed services in this zone
+  services []string
+  // Allowed ports in this zone (e.g., "80/tcp", "443/tcp")
+  ports []string
+  // Allowed protocols in this zone
+  protocols []string
+  // Whether masquerading is enabled
+  masquerade bool
+  // Port forwarding rules
+  forwardPorts []string
+  // Source ports
+  sourcePorts []string
+  // ICMP blocks
+  icmpBlocks []string
+  // Rich rules for advanced configurations
+  richRules []string
 }
 
 fstab @defaults("path") {
