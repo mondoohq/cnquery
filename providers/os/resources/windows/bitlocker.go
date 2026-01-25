@@ -142,7 +142,10 @@ type statusCode struct {
 	Text string `json:"text"`
 }
 
-func GetBitLockerVolumes(p shared.Connection) ([]bitlockerVolumeStatus, error) {
+// getPowershellBitLockerVolumes retrieves BitLocker status using PowerShell.
+// This is used as a fallback for remote connections (WinRM, SSH) where native
+// Windows API calls are not available.
+func getPowershellBitLockerVolumes(p shared.Connection) ([]bitlockerVolumeStatus, error) {
 	c, err := p.RunCommand(powershell.Encode(bitlockerStatusScript))
 	if err != nil {
 		return nil, err
