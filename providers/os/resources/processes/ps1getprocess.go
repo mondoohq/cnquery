@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"runtime"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
@@ -151,6 +152,36 @@ func (wpm *WindowsProcessManager) Name() string {
 }
 
 func (wpm *WindowsProcessManager) List() ([]*OSProcess, error) {
+	// If running locally on Windows, use native API for better performance
+	if wpm.conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
+		return wpm.listNative()
+	}
+	return wpm.listPowershell()
+}
+
+// listNative uses native Windows API to enumerate processes (~1-10ms)
+func (wpm *WindowsProcessManager) listNative() ([]*OSProcess, error) {
+	log.Debug().Msg("using native Windows API for process enumeration")
+
+	nativeProcesses, err := GetNativeProcessList()
+	if err != nil {
+		log.Debug().Err(err).Msg("native process enumeration failed, falling back to PowerShell")
+		return wpm.listPowershell()
+	}
+
+	var ps []*OSProcess
+	for _, proc := range nativeProcesses {
+		ps = append(ps, proc.ToOSProcess())
+	}
+
+	log.Debug().Int("processes", len(ps)).Msg("found processes via native API")
+	return ps, nil
+}
+
+// listPowershell uses PowerShell Get-Process for remote connections (~200-500ms)
+func (wpm *WindowsProcessManager) listPowershell() ([]*OSProcess, error) {
+	log.Debug().Msg("using PowerShell for process enumeration")
+
 	c, err := wpm.conn.RunCommand(powershell.Encode(Ps1GetProcess))
 	if err != nil {
 		return nil, fmt.Errorf("processes> could not run command")
@@ -169,7 +200,7 @@ func (wpm *WindowsProcessManager) List() ([]*OSProcess, error) {
 		return nil, err
 	}
 
-	log.Debug().Int("processes", len(entries)).Msg("found processes")
+	log.Debug().Int("processes", len(entries)).Msg("found processes via PowerShell")
 
 	var ps []*OSProcess
 	for i := range entries {
@@ -179,11 +210,43 @@ func (wpm *WindowsProcessManager) List() ([]*OSProcess, error) {
 }
 
 func (wpm *WindowsProcessManager) Exists(pid int64) (bool, error) {
-	return false, errors.New("not implemented")
+	// If running locally on Windows, use native API
+	if wpm.conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
+		return NativeProcessExists(pid)
+	}
+	// For remote connections, we need to enumerate all processes
+	processes, err := wpm.listPowershell()
+	if err != nil {
+		return false, err
+	}
+	for _, proc := range processes {
+		if proc.Pid == pid {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (wpm *WindowsProcessManager) Process(pid int64) (*OSProcess, error) {
-	return nil, errors.New("not implemented")
+	// If running locally on Windows, use native API
+	if wpm.conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
+		nativeProc, err := GetNativeProcess(pid)
+		if err != nil {
+			return nil, err
+		}
+		return nativeProc.ToOSProcess(), nil
+	}
+	// For remote connections, enumerate and find the process
+	processes, err := wpm.listPowershell()
+	if err != nil {
+		return nil, err
+	}
+	for _, proc := range processes {
+		if proc.Pid == pid {
+			return proc, nil
+		}
+	}
+	return nil, fmt.Errorf("process %d not found", pid)
 }
 
 func (wpm *WindowsProcessManager) ListSocketInodesByProcess() (map[int64]plugin.TValue[[]int64], error) {
