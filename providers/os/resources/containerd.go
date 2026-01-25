@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kballard/go-shellquote"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/types"
 )
@@ -87,7 +89,7 @@ func parseContainerInfo(jsonData []byte) (*containerInfo, error) {
 func (p *mqlContainerd) containers() ([]any, error) {
 	// Get all namespaces using ctr CLI
 	o, err := CreateResource(p.MqlRuntime, "command", map[string]*llx.RawData{
-		"command": llx.StringData("ctr namespaces list -q"),
+		"command": llx.StringData(shellquote.Join("ctr", "namespaces", "list", "-q")),
 	})
 	if err != nil {
 		return nil, err
@@ -107,15 +109,15 @@ func (p *mqlContainerd) containers() ([]any, error) {
 
 		// List containers in namespace
 		o, err := CreateResource(p.MqlRuntime, "command", map[string]*llx.RawData{
-			"command": llx.StringData(fmt.Sprintf("ctr -n %s containers list -q", ns)),
+			"command": llx.StringData(shellquote.Join("ctr", "-n", ns, "containers", "list", "-q")),
 		})
 		if err != nil {
-			// Skip namespaces we can't access
+			log.Debug().Str("namespace", ns).Err(err).Msg("skipping namespace, failed to create command")
 			continue
 		}
 		cmd := o.(*mqlCommand)
 		if exit := cmd.GetExitcode(); exit.Data != 0 {
-			// Skip namespaces we can't access
+			log.Debug().Str("namespace", ns).Str("stderr", cmd.Stderr.Data).Msg("skipping namespace, failed to list containers")
 			continue
 		}
 
@@ -125,7 +127,7 @@ func (p *mqlContainerd) containers() ([]any, error) {
 		var taskInfo map[string]taskData
 
 		o, err = CreateResource(p.MqlRuntime, "command", map[string]*llx.RawData{
-			"command": llx.StringData(fmt.Sprintf("ctr -n %s tasks list", ns)),
+			"command": llx.StringData(shellquote.Join("ctr", "-n", ns, "tasks", "list")),
 		})
 		if err == nil {
 			cmd := o.(*mqlCommand)
@@ -141,19 +143,22 @@ func (p *mqlContainerd) containers() ([]any, error) {
 
 			// Get container info as JSON
 			o, err := CreateResource(p.MqlRuntime, "command", map[string]*llx.RawData{
-				"command": llx.StringData(fmt.Sprintf("ctr -n %s containers info %s", ns, containerID)),
+				"command": llx.StringData(shellquote.Join("ctr", "-n", ns, "containers", "info", containerID)),
 			})
 			if err != nil {
+				log.Debug().Str("namespace", ns).Str("container", containerID).Err(err).Msg("skipping container, failed to create command")
 				continue
 			}
 			cmd := o.(*mqlCommand)
 			if exit := cmd.GetExitcode(); exit.Data != 0 {
+				log.Debug().Str("namespace", ns).Str("container", containerID).Str("stderr", cmd.Stderr.Data).Msg("skipping container, failed to get info")
 				continue
 			}
 
 			// Parse JSON output from ctr
 			info, err := parseContainerInfo([]byte(cmd.Stdout.Data))
 			if err != nil {
+				log.Debug().Str("namespace", ns).Str("container", containerID).Err(err).Msg("skipping container, failed to parse info")
 				continue
 			}
 
@@ -167,7 +172,7 @@ func (p *mqlContainerd) containers() ([]any, error) {
 			status := "created"
 			var pid int64
 			if task, ok := taskInfo[containerID]; ok {
-				status = task.status
+				status = strings.ToLower(task.status)
 				pid = task.pid
 			}
 
