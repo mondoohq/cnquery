@@ -146,6 +146,8 @@ const (
 	ResourceOpenBSMAudit               string = "openBSMAudit"
 	ResourceWindows                    string = "windows"
 	ResourceMacosSystemExtension       string = "macos.systemExtension"
+	ResourceSafari                     string = "safari"
+	ResourceSafariExtension            string = "safari.extension"
 	ResourceWindowsHotfix              string = "windows.hotfix"
 	ResourceWindowsFeature             string = "windows.feature"
 	ResourceWindowsServerFeature       string = "windows.serverFeature"
@@ -694,6 +696,14 @@ func init() {
 		"macos.systemExtension": {
 			// to override args, implement: initMacosSystemExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacosSystemExtension,
+		},
+		"safari": {
+			// to override args, implement: initSafari(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSafari,
+		},
+		"safari.extension": {
+			// to override args, implement: initSafariExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSafariExtension,
 		},
 		"windows.hotfix": {
 			Init:   initWindowsHotfix,
@@ -2742,6 +2752,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.systemExtension.mdmManaged": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosSystemExtension).GetMdmManaged()).ToDataRes(types.Bool)
+	},
+	"safari.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafari).GetExtensions()).ToDataRes(types.Array(types.Resource("safari.extension")))
+	},
+	"safari.extension.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetIdentifier()).ToDataRes(types.String)
+	},
+	"safari.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetName()).ToDataRes(types.String)
+	},
+	"safari.extension.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetVersion()).ToDataRes(types.String)
+	},
+	"safari.extension.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetDescription()).ToDataRes(types.String)
+	},
+	"safari.extension.extensionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetExtensionType()).ToDataRes(types.String)
+	},
+	"safari.extension.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetPath()).ToDataRes(types.String)
+	},
+	"safari.extension.containerAppPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetContainerAppPath()).ToDataRes(types.String)
+	},
+	"safari.extension.containerAppName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetContainerAppName()).ToDataRes(types.String)
 	},
 	"windows.hotfix.hotfixId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsHotfix).GetHotfixId()).ToDataRes(types.String)
@@ -6220,6 +6257,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.systemExtension.mdmManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosSystemExtension).MdmManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"safari.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafari).__id, ok = v.Value.(string)
+		return
+	},
+	"safari.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafari).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"safari.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"safari.extension.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.extensionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).ExtensionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.containerAppPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).ContainerAppPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.containerAppName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).ContainerAppName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.hotfix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17490,6 +17571,141 @@ func (c *mqlMacosSystemExtension) GetBundlePath() *plugin.TValue[string] {
 
 func (c *mqlMacosSystemExtension) GetMdmManaged() *plugin.TValue[bool] {
 	return &c.MdmManaged
+}
+
+// mqlSafari for the safari resource
+type mqlSafari struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSafariInternal it will be used here
+	Extensions plugin.TValue[[]any]
+}
+
+// createSafari creates a new instance of this resource
+func createSafari(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSafari{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("safari", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSafari) MqlName() string {
+	return "safari"
+}
+
+func (c *mqlSafari) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSafari) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("safari", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
+// mqlSafariExtension for the safari.extension resource
+type mqlSafariExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSafariExtensionInternal it will be used here
+	Identifier       plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Version          plugin.TValue[string]
+	Description      plugin.TValue[string]
+	ExtensionType    plugin.TValue[string]
+	Path             plugin.TValue[string]
+	ContainerAppPath plugin.TValue[string]
+	ContainerAppName plugin.TValue[string]
+}
+
+// createSafariExtension creates a new instance of this resource
+func createSafariExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSafariExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("safari.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSafariExtension) MqlName() string {
+	return "safari.extension"
+}
+
+func (c *mqlSafariExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSafariExtension) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlSafariExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSafariExtension) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlSafariExtension) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlSafariExtension) GetExtensionType() *plugin.TValue[string] {
+	return &c.ExtensionType
+}
+
+func (c *mqlSafariExtension) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlSafariExtension) GetContainerAppPath() *plugin.TValue[string] {
+	return &c.ContainerAppPath
+}
+
+func (c *mqlSafariExtension) GetContainerAppName() *plugin.TValue[string] {
+	return &c.ContainerAppName
 }
 
 // mqlWindowsHotfix for the windows.hotfix resource

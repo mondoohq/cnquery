@@ -1801,6 +1801,32 @@ private macos.systemExtension @defaults("teamID identifier version state"){
   mdmManaged bool
 }
 
+// Safari browser resources (macOS only)
+safari {
+  // All installed Safari extensions
+  extensions() []safari.extension
+}
+
+// Safari browser extension
+private safari.extension @defaults("name version identifier") {
+  // Extension bundle identifier
+  identifier string
+  // Extension name from Info.plist
+  name string
+  // Extension version
+  version string
+  // Extension description
+  description string
+  // Extension type (e.g., "web-extension", "extension", "content-blocker")
+  extensionType string
+  // Path to the extension bundle
+  path string
+  // Containing application path
+  containerAppPath string
+  // Containing application name
+  containerAppName string
+}
+
 // Windows hotfix resource
 windows.hotfix {
   init(hotfixId string)
