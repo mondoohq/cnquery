@@ -46,9 +46,7 @@ ekus
 elbv
 exo
 failback
-filecache
 frontmatter
-fsx
 fumadocs
 gcfs
 gcs
@@ -81,7 +79,6 @@ lfs
 liveanalytics
 loggingservice
 lsp
-lustre
 manageddevice
 managedrulegroupstatement
 managedzone
@@ -107,11 +104,9 @@ nullgroup
 nullstring
 oidc
 OIDs
-ontap
 opcplc
 openssh
 openssl
-openzfs
 orstatement
 paravirtual
 PAYG

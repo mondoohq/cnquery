@@ -162,6 +162,21 @@ resources:
       registry: {}
       scheme: {}
     min_mondoo_version: 5.31.0
+  containerd:
+    fields:
+      containers: {}
+    min_mondoo_version: 9.0.0
+  containerd.container:
+    fields:
+      id: {}
+      image: {}
+      labels: {}
+      namespace: {}
+      pid: {}
+      runtime: {}
+      snapshotter: {}
+      status: {}
+    min_mondoo_version: 9.0.0
   docker:
     fields:
       containers: {}

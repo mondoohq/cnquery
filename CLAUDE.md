@@ -50,6 +50,28 @@ Implement the generated interfaces in the provider's Go code. Use one of these p
 *Best for:* Linking resources (e.g., GCP Address -> Network).
 *   Use an `init` function to cache all instances and filter in memory to avoid N+1 API calls.
 
+**Patterns to avoid**
+- **Never use `os/exec` or `exec.CommandContext` directly.** Instead, use the `command` resource to delegate execution through the provider system:
+  ```go
+  // WRONG: Do not do this
+  cmd := exec.CommandContext(ctx, "lsblk", "--json", "--fs")
+  output, err := cmd.Output()
+
+  // CORRECT: Use the command resource
+  o, err := CreateResource(runtime, "command", map[string]*llx.RawData{
+      "command": llx.StringData("lsblk --json --fs"),
+  })
+  if err != nil {
+      return nil, err
+  }
+  cmd := o.(*mqlCommand)
+  if exit := cmd.GetExitcode(); exit.Data != 0 {
+      return nil, errors.New("command failed: " + cmd.Stderr.Data)
+  }
+  output := cmd.Stdout.Data
+  ```
+  **Why?** The `command` resource ensures proper execution context, authentication, connection handling, and works seamlessly across different connection types (local, SSH, container, etc.). See [lsblk.go](providers/os/resources/lsblk.go) for a complete example.
+
 ### Step 4: Verification (Interactive)
 Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard.**
 

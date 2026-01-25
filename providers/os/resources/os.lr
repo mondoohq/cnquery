@@ -1046,6 +1046,32 @@ docker.container @defaults("names.first status"){
   hostConfig() dict
 }
 
+// containerd host resource
+containerd {
+  // List all containerd containers
+  containers() []containerd.container
+}
+
+// containerd container
+containerd.container @defaults("id status") {
+  // Container ID
+  id string
+  // Container image reference
+  image string
+  // Container status (created, running, paused, stopped, unknown)
+  status string
+  // Container labels
+  labels map[string]string
+  // Container PID (0 if not running)
+  pid int
+  // containerd namespace
+  namespace string
+  // Container runtime (e.g., "io.containerd.runc.v2")
+  runtime string
+  // Container snapshotter
+  snapshotter string
+}
+
 // IPv4 tables
 iptables {
   // IPv4 input chain stats
