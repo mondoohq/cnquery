@@ -24,14 +24,14 @@ func (s *NetBsdServiceManager) Name() string {
 
 func (s *NetBsdServiceManager) List() ([]*Service, error) {
 	// Fetch all available services
-	c, err := s.conn.RunCommand("service -l")
+	c, err := s.conn.RunCommand("/usr/sbin/service -l")
 	if err != nil {
 		return nil, err
 	}
 	allServices := ParseNetBsdServiceList(c.Stdout)
 
 	// Fetch enabled services
-	c, err = s.conn.RunCommand("service -e")
+	c, err = s.conn.RunCommand("/usr/sbin/service -e")
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (s *NetBsdServiceManager) List() ([]*Service, error) {
 
 // checkServiceStatus checks if a service is currently running by executing service <name> status
 func (s *NetBsdServiceManager) checkServiceStatus(name string) (bool, error) {
-	cmd := "service " + name + " status"
+	cmd := "/usr/sbin/service " + name + " status"
 	c, err := s.conn.RunCommand(cmd)
 	if err != nil {
 		// Command execution failed (not just non-zero exit)
