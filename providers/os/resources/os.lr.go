@@ -169,6 +169,8 @@ const (
 	ResourceChromeExtension            string = "chrome.extension"
 	ResourceUsb                        string = "usb"
 	ResourceUsbDevice                  string = "usb.device"
+	ResourceCrontab                    string = "crontab"
+	ResourceCrontabEntry               string = "crontab.entry"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -782,6 +784,14 @@ func init() {
 		"usb.device": {
 			// to override args, implement: initUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createUsbDevice,
+		},
+		"crontab": {
+			// to override args, implement: initCrontab(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCrontab,
+		},
+		"crontab.entry": {
+			// to override args, implement: initCrontabEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCrontabEntry,
 		},
 	}
 }
@@ -3124,6 +3134,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"usb.device.isRemovable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsbDevice).GetIsRemovable()).ToDataRes(types.Bool)
+	},
+	"crontab.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontab).GetEntries()).ToDataRes(types.Array(types.Resource("crontab.entry")))
+	},
+	"crontab.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontab).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"crontab.entry.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"crontab.entry.minute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetMinute()).ToDataRes(types.String)
+	},
+	"crontab.entry.hour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetHour()).ToDataRes(types.String)
+	},
+	"crontab.entry.dayOfMonth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetDayOfMonth()).ToDataRes(types.String)
+	},
+	"crontab.entry.month": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetMonth()).ToDataRes(types.String)
+	},
+	"crontab.entry.dayOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetDayOfWeek()).ToDataRes(types.String)
+	},
+	"crontab.entry.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetUser()).ToDataRes(types.String)
+	},
+	"crontab.entry.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetCommand()).ToDataRes(types.String)
+	},
+	"crontab.entry.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetFile()).ToDataRes(types.Resource("file"))
 	},
 }
 
@@ -6759,6 +6802,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"usb.device.isRemovable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUsbDevice).IsRemovable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"crontab.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontab).__id, ok = v.Value.(string)
+		return
+	},
+	"crontab.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontab).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"crontab.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontab).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"crontab.entry.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.minute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).Minute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.hour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).Hour, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.dayOfMonth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).DayOfMonth, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.month": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).Month, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.dayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).DayOfWeek, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
 	},
 }
@@ -19088,4 +19183,171 @@ func (c *mqlUsbDevice) GetProtocol() *plugin.TValue[string] {
 
 func (c *mqlUsbDevice) GetIsRemovable() *plugin.TValue[bool] {
 	return &c.IsRemovable
+}
+
+// mqlCrontab for the crontab resource
+type mqlCrontab struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCrontabInternal it will be used here
+	Entries plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createCrontab creates a new instance of this resource
+func createCrontab(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCrontab{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("crontab", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCrontab) MqlName() string {
+	return "crontab"
+}
+
+func (c *mqlCrontab) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCrontab) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("crontab", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entries()
+	})
+}
+
+func (c *mqlCrontab) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("crontab", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlCrontabEntry for the crontab.entry resource
+type mqlCrontabEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCrontabEntryInternal it will be used here
+	LineNumber plugin.TValue[int64]
+	Minute     plugin.TValue[string]
+	Hour       plugin.TValue[string]
+	DayOfMonth plugin.TValue[string]
+	Month      plugin.TValue[string]
+	DayOfWeek  plugin.TValue[string]
+	User       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	File       plugin.TValue[*mqlFile]
+}
+
+// createCrontabEntry creates a new instance of this resource
+func createCrontabEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCrontabEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("crontab.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCrontabEntry) MqlName() string {
+	return "crontab.entry"
+}
+
+func (c *mqlCrontabEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCrontabEntry) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlCrontabEntry) GetMinute() *plugin.TValue[string] {
+	return &c.Minute
+}
+
+func (c *mqlCrontabEntry) GetHour() *plugin.TValue[string] {
+	return &c.Hour
+}
+
+func (c *mqlCrontabEntry) GetDayOfMonth() *plugin.TValue[string] {
+	return &c.DayOfMonth
+}
+
+func (c *mqlCrontabEntry) GetMonth() *plugin.TValue[string] {
+	return &c.Month
+}
+
+func (c *mqlCrontabEntry) GetDayOfWeek() *plugin.TValue[string] {
+	return &c.DayOfWeek
+}
+
+func (c *mqlCrontabEntry) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlCrontabEntry) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlCrontabEntry) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
 }

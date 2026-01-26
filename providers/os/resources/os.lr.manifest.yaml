@@ -195,6 +195,31 @@ resources:
       snapshotter: {}
       status: {}
     min_mondoo_version: 9.0.0
+  crontab:
+    docs:
+      desc: |
+        The `crontab` resource provides fields for examining cron job entries on Unix-like systems.
+        It collects entries from system crontabs (/etc/crontab, /etc/cron.d/*) and user crontabs.
+    fields:
+      entries: {}
+      files: {}
+    min_mondoo_version: 9.0.0
+  crontab.entry:
+    docs:
+      desc: |
+        The `crontab.entry` resource represents a single cron job entry.
+    fields:
+      command: {}
+      dayOfMonth: {}
+      dayOfWeek: {}
+      file: {}
+      hour: {}
+      lineNumber: {}
+      minute: {}
+      month: {}
+      user: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   docker:
     fields:
       containers: {}
