@@ -2739,7 +2739,7 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   engine string
   // Version of the database engine for this DB cluster
   engineVersion string
-  // Whether the cluster is publicly accessible
+  // Whether the cluster is publicly accessible. Note: This will only return a value for non-Aurora Multi-AZ DB clusters
   publiclyAccessible bool
   // Whether the cluster is a Multi-AZ deployment
   multiAZ bool
@@ -2847,7 +2847,7 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   region string
   // Availability zone where the instance exists
   availabilityZone string
-  // Whether the instance is publicly accessible. Note: This will only return a value for non-Aurora Multi-AZ DB clusters
+  // Whether the instance is publicly accessible
   publiclyAccessible bool
   // List of log types the instance is configured to export to CloudWatch logs
   enabledCloudwatchLogsExports []string
