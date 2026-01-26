@@ -56,7 +56,6 @@ Notes:
 			MaxArgs: 4,
 			Discovery: []string{
 				resources.DiscoveryAccounts,
-
 				resources.DiscoveryInstances,
 				resources.DiscoveryEC2InstanceAPI,
 				resources.DiscoverySSMInstances,
@@ -65,7 +64,6 @@ Notes:
 				resources.DiscoveryECRImageAPI,
 				resources.DiscoveryECS,
 				resources.DiscoveryECSContainersAPI,
-
 				resources.DiscoveryOrg,
 				resources.DiscoveryResources,
 				resources.DiscoveryEKSClusters,
@@ -90,6 +88,7 @@ Notes:
 				resources.DiscoveryESDomains,
 				resources.DiscoveryKMSKeys,
 				resources.DiscoverySagemakerNotebookInstances,
+				resources.DiscoverySecretsManagerSecrets,
 			},
 			Flags: []plugin.Flag{
 				{

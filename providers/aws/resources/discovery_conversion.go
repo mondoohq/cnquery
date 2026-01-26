@@ -195,6 +195,10 @@ func getPlatformName(awsObject awsObject) string {
 		if awsObject.objectType == "notebookinstance" {
 			return "aws-sagemaker-notebookinstance"
 		}
+	case "secretsmanager":
+		if awsObject.objectType == "secret" {
+			return "aws-secretsmanager-secret"
+		}
 	case "ssm":
 		if awsObject.objectType == "instance" {
 			return "aws-ssm-instance"
