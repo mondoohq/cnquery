@@ -21,11 +21,7 @@ func initOpenBSMAudit(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	conn := runtime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
-	supported := false
-	if platform.IsFamily("darwin") || platform.Name == "freebsd" {
-		supported = true
-	}
-
+	supported := platform.IsFamily("darwin") || platform.Name == "freebsd"
 	if !supported {
 		return nil, nil, errors.New("openBSMAudit resource is only supported on macOS and FreeBSD")
 	}
