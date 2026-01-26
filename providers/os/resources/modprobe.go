@@ -603,9 +603,10 @@ func parseSoftdeps(runtime *plugin.Runtime, filePath string, content string) ([]
 				continue
 			}
 
-			if currentSection == "pre" {
+			switch currentSection {
+			case "pre":
 				pre = append(pre, part)
-			} else if currentSection == "post" {
+			case "post":
 				post = append(post, part)
 			}
 		}
