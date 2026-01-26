@@ -12,9 +12,9 @@ import (
 	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v12/types"
 )
@@ -46,11 +46,11 @@ type HostedConnectionFilterPolicyReport struct {
 }
 
 type HostedConnectionFilterPolicyData struct {
-	Identity           string   `json:"Identity"`
-	AdminDisplayName   string   `json:"AdminDisplayName"`
-	IPAllowList        []string `json:"IPAllowList"`
-	IPBlockList        []string `json:"IPBlockList"`
-	EnableSafeList     bool     `json:"EnableSafeList"`
+	Identity         string   `json:"Identity"`
+	AdminDisplayName string   `json:"AdminDisplayName"`
+	IPAllowList      []string `json:"IPAllowList"`
+	IPBlockList      []string `json:"IPBlockList"`
+	EnableSafeList   bool     `json:"EnableSafeList"`
 }
 
 type mqlMicrosoftSecurityExchangeInternal struct {
@@ -104,11 +104,11 @@ func (r *mqlMicrosoftSecurityExchangeAntispam) hostedConnectionFilterPolicy() (*
 
 	resource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy",
 		map[string]*llx.RawData{
-			"identity":           llx.StringData(policy.Identity),
-			"adminDisplayName":   llx.StringData(policy.AdminDisplayName),
-			"ipAllowList":      	llx.ArrayData(convert.SliceAnyToInterface(policy.IPAllowList), types.String),
-			"ipBlockList":      	llx.ArrayData(convert.SliceAnyToInterface(policy.IPBlockList), types.String),
-			"enableSafeList":     llx.BoolData(policy.EnableSafeList),
+			"identity":         llx.StringData(policy.Identity),
+			"adminDisplayName": llx.StringData(policy.AdminDisplayName),
+			"ipAllowList":      llx.ArrayData(convert.SliceAnyToInterface(policy.IPAllowList), types.String),
+			"ipBlockList":      llx.ArrayData(convert.SliceAnyToInterface(policy.IPBlockList), types.String),
+			"enableSafeList":   llx.BoolData(policy.EnableSafeList),
 		})
 	if err != nil {
 		return nil, err
@@ -131,18 +131,18 @@ func (r *mqlMicrosoftSecurityExchange) getHostedConnectionFilterPolicyReport() (
 	}
 
 	conn := r.MqlRuntime.Connection.(*connection.Ms365Connection)
-	
+
 	// Get organization info
 	microsoft, err := CreateResource(r.MqlRuntime, "microsoft", map[string]*llx.RawData{})
 	if err != nil {
 		return errHandler(err)
 	}
-	
+
 	tenantDomainName := microsoft.(*mqlMicrosoft).GetTenantDomainName()
 	if tenantDomainName.Error != nil {
 		return errHandler(tenantDomainName.Error)
 	}
-	
+
 	organization := tenantDomainName.Data
 	if organization == "" {
 		return errHandler(errors.New("no organization provided, unable to fetch hosted connection filter policy"))
@@ -180,7 +180,7 @@ func (r *mqlMicrosoftSecurityExchange) getHostedConnectionFilterPolicyReport() (
 		if err != nil {
 			return errHandler(err)
 		}
-		
+
 		err = fmt.Errorf("failed to generate hosted connection filter policy report (exit code %d): %s", res.ExitStatus, string(data))
 		return errHandler(err)
 	}

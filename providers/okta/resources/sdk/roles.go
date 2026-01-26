@@ -15,11 +15,11 @@ type ListCustomRolesResponse struct {
 }
 
 type CustomRole struct {
-	Id          string      `json:"id,omitempty"`
-	Label       string      `json:"label,omitempty"`
-	Description string      `json:"description,omitempty"`
-	Permissions []string    `json:"permissions,omitempty"`
-	Links       any `json:"_links,omitempty"`
+	Id          string   `json:"id,omitempty"`
+	Label       string   `json:"label,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Permissions []string `json:"permissions,omitempty"`
+	Links       any      `json:"_links,omitempty"`
 }
 
 // ListCustomRoles Gets all customRoles based on the query params

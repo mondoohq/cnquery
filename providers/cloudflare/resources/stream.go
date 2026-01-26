@@ -53,10 +53,10 @@ func fetchLiveInputs(runtime *plugin.Runtime, account_id string) ([]any, error) 
 
 	var results struct {
 		Result []struct {
-			Uid                      string                 `json:"uid"`
-			Modified                 string                 `json:"modified"`
-			Created                  string                 `json:"created"`
-			DeleteRecordingAfterDays int                    `json:"deleteRecordingAfterDays"`
+			Uid                      string         `json:"uid"`
+			Modified                 string         `json:"modified"`
+			Created                  string         `json:"created"`
+			DeleteRecordingAfterDays int            `json:"deleteRecordingAfterDays"`
 			Meta                     map[string]any `json:"meta"`
 		} `json:"result"`
 	}
