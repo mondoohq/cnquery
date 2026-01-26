@@ -63,6 +63,43 @@ jobs:
         with:
           version: latest
 
+  golangci-lint-providers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Import environment variables from file
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version: ">=${{ env.golang-version }}"
+          cache: false
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+
+      - name: Run golangci-lint on all providers
+        run: |
+          failed=""
+          for provider in providers/*/; do
+            # Skip providers without go.mod (they are part of the main module)
+            if [ ! -f "$provider/go.mod" ]; then
+              continue
+            fi
+            name=$(basename "$provider")
+            echo "=== Linting provider: $name ==="
+            if ! (cd "$provider" && golangci-lint run); then
+              failed="$failed $name"
+            fi
+          done
+          if [ -n "$failed" ]; then
+            echo "=== Failed providers:$failed ==="
+            exit 1
+          fi
+
   go-test:
     runs-on:
       group: Default
@@ -199,7 +236,7 @@ jobs:
 
   go-auto-approve:
     runs-on: ubuntu-latest
-    needs: [golangci-lint, go-test, go-test-integration, go-bench, go-mod]
+    needs: [golangci-lint, golangci-lint-providers, go-test, go-test-integration, go-bench, go-mod]
     # For now, we only auto approve and merge provider release PRs created by mondoo-tools.
     # We have to check the commit author, because the PR is created by "github-actions[bot]"
     # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions#startswith
