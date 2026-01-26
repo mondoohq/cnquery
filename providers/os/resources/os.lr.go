@@ -165,6 +165,8 @@ const (
 	ResourceNetworkInterface           string = "networkInterface"
 	ResourceNetworkRoutes              string = "networkRoutes"
 	ResourceNetworkRoute               string = "networkRoute"
+	ResourceChrome                     string = "chrome"
+	ResourceChromeExtension            string = "chrome.extension"
 	ResourceUsb                        string = "usb"
 	ResourceUsbDevice                  string = "usb.device"
 )
@@ -764,6 +766,14 @@ func init() {
 		"networkRoute": {
 			// to override args, implement: initNetworkRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNetworkRoute,
+		},
+		"chrome": {
+			// to override args, implement: initChrome(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createChrome,
+		},
+		"chrome.extension": {
+			// to override args, implement: initChromeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createChromeExtension,
 		},
 		"usb": {
 			// to override args, implement: initUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3045,6 +3055,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"networkRoute.iface": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkRoute).GetIface()).ToDataRes(types.Resource("networkInterface"))
+	},
+	"chrome.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChrome).GetExtensions()).ToDataRes(types.Array(types.Resource("chrome.extension")))
+	},
+	"chrome.extension.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetIdentifier()).ToDataRes(types.String)
+	},
+	"chrome.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetName()).ToDataRes(types.String)
+	},
+	"chrome.extension.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetVersion()).ToDataRes(types.String)
+	},
+	"chrome.extension.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetDescription()).ToDataRes(types.String)
+	},
+	"chrome.extension.manifestVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetManifestVersion()).ToDataRes(types.Int)
+	},
+	"chrome.extension.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"chrome.extension.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetPath()).ToDataRes(types.String)
+	},
+	"chrome.extension.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetProfile()).ToDataRes(types.String)
+	},
+	"chrome.extension.browser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetBrowser()).ToDataRes(types.String)
 	},
 	"usb.devices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsb).GetDevices()).ToDataRes(types.Array(types.Resource("usb.device")))
@@ -6611,6 +6651,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"networkRoute.iface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetworkRoute).Iface, ok = plugin.RawToTValue[*mqlNetworkInterface](v.Value, v.Error)
+		return
+	},
+	"chrome.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChrome).__id, ok = v.Value.(string)
+		return
+	},
+	"chrome.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChrome).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"chrome.extension.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.manifestVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).ManifestVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Profile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.browser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Browser, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18700,6 +18788,151 @@ func (c *mqlNetworkRoute) GetIface() *plugin.TValue[*mqlNetworkInterface] {
 
 		return c.iface()
 	})
+}
+
+// mqlChrome for the chrome resource
+type mqlChrome struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlChromeInternal it will be used here
+	Extensions plugin.TValue[[]any]
+}
+
+// createChrome creates a new instance of this resource
+func createChrome(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlChrome{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("chrome", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlChrome) MqlName() string {
+	return "chrome"
+}
+
+func (c *mqlChrome) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlChrome) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("chrome", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
+// mqlChromeExtension for the chrome.extension resource
+type mqlChromeExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlChromeExtensionInternal it will be used here
+	Identifier      plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Version         plugin.TValue[string]
+	Description     plugin.TValue[string]
+	ManifestVersion plugin.TValue[int64]
+	Permissions     plugin.TValue[[]any]
+	Path            plugin.TValue[string]
+	Profile         plugin.TValue[string]
+	Browser         plugin.TValue[string]
+}
+
+// createChromeExtension creates a new instance of this resource
+func createChromeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlChromeExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("chrome.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlChromeExtension) MqlName() string {
+	return "chrome.extension"
+}
+
+func (c *mqlChromeExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlChromeExtension) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlChromeExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlChromeExtension) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlChromeExtension) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlChromeExtension) GetManifestVersion() *plugin.TValue[int64] {
+	return &c.ManifestVersion
+}
+
+func (c *mqlChromeExtension) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
+func (c *mqlChromeExtension) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlChromeExtension) GetProfile() *plugin.TValue[string] {
+	return &c.Profile
+}
+
+func (c *mqlChromeExtension) GetBrowser() *plugin.TValue[string] {
+	return &c.Browser
 }
 
 // mqlUsb for the usb resource

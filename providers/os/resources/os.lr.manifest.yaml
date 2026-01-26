@@ -125,6 +125,24 @@ resources:
       options: {}
       type: {}
     min_mondoo_version: latest
+  chrome:
+    fields:
+      extensions: {}
+      paths: {}
+    min_mondoo_version: 9.0.0
+  chrome.extension:
+    fields:
+      browser: {}
+      description: {}
+      identifier: {}
+      manifestVersion: {}
+      name: {}
+      path: {}
+      permissions: {}
+      profile: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   cloud:
     fields:
       instance: {}
