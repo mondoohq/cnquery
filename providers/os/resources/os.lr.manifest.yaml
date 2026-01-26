@@ -1312,7 +1312,6 @@ resources:
       aliases: {}
       content: {}
       defaults: {}
-      entries: {}
       files: {}
       userSpecs: {}
     min_mondoo_version: 9.0.0
@@ -1337,18 +1336,6 @@ resources:
       target: {}
       value: {}
     is_private: true
-    min_mondoo_version: 9.0.0
-  sudoers.entry:
-    fields:
-      commands: {}
-      entryType: {}
-      file: {}
-      hosts: {}
-      lineNumber: {}
-      runasGroups: {}
-      runasUsers: {}
-      tags: {}
-      users: {}
     min_mondoo_version: 9.0.0
   sudoers.userSpec:
     fields:
