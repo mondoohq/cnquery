@@ -26,6 +26,9 @@ var (
 	// Regular expressions for parsing sudoers entries
 	sudoersAliasRegex = regexp.MustCompile(`^(User_Alias|Runas_Alias|Host_Alias|Cmnd_Alias)\s+(\w+)\s*=\s*(.+)$`)
 	defaultsRegex     = regexp.MustCompile(`^Defaults\b`)
+	// Include directives: @include, @includedir, #include, #includedir (sudo 1.9.1+)
+	includeRegex    = regexp.MustCompile(`^[@#]include\s+(.+)$`)
+	includedirRegex = regexp.MustCompile(`^[@#]includedir\s+(.+)$`)
 )
 
 func initSudoers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -89,72 +92,145 @@ func (sa *mqlSudoersAlias) id() (string, error) {
 
 // files returns the list of sudoers configuration files
 func (s *mqlSudoers) files() ([]any, error) {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	visited := make(map[string]bool)
 	var allFiles []any
 
-	// Add main sudoers file
-	mainFile, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(defaultSudoersFile),
-	})
+	// Start with the main sudoers file
+	err := s.collectSudoersFiles(conn, defaultSudoersFile, visited, &allFiles)
 	if err != nil {
 		return nil, err
-	}
-	f := mainFile.(*mqlFile)
-	exists := f.GetExists()
-	if exists.Error != nil {
-		return nil, exists.Error
-	}
-
-	if exists.Data {
-		allFiles = append(allFiles, f)
-	}
-
-	// Check if sudoers.d directory exists
-	dirFile, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(defaultSudoersDir),
-	})
-	if err != nil {
-		return nil, err
-	}
-	dir := dirFile.(*mqlFile)
-	dirExists := dir.GetExists()
-	if dirExists.Error != nil {
-		return nil, dirExists.Error
-	}
-
-	if dirExists.Data {
-		// Get all files from sudoers.d directory
-		files, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
-			"from": llx.StringData(defaultSudoersDir),
-			"type": llx.StringData("file"),
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		ff := files.(*mqlFilesFind)
-		list := ff.GetList()
-		if list.Error != nil {
-			return nil, list.Error
-		}
-
-		// Filter out README files and add to list
-		for i := range list.Data {
-			file := list.Data[i].(*mqlFile)
-			basename := file.GetBasename()
-			if basename.Error != nil {
-				continue
-			}
-
-			// Skip README files as per sudoers convention
-			if strings.Contains(strings.ToUpper(basename.Data), "README") {
-				continue
-			}
-
-			allFiles = append(allFiles, file)
-		}
 	}
 
 	return allFiles, nil
+}
+
+// collectSudoersFiles recursively collects sudoers files, following include directives
+func (s *mqlSudoers) collectSudoersFiles(conn shared.Connection, path string, visited map[string]bool, allFiles *[]any) error {
+	// Avoid infinite loops
+	if visited[path] {
+		return nil
+	}
+	visited[path] = true
+
+	// Check if file exists
+	fileRes, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(path),
+	})
+	if err != nil {
+		return err
+	}
+	f := fileRes.(*mqlFile)
+	exists := f.GetExists()
+	if exists.Error != nil {
+		return exists.Error
+	}
+
+	if !exists.Data {
+		return nil
+	}
+
+	// Add this file to the list
+	*allFiles = append(*allFiles, f)
+
+	// Read file content to find include directives
+	file, err := conn.FileSystem().Open(path)
+	if err != nil {
+		return err
+	}
+	raw, err := io.ReadAll(file)
+	file.Close()
+	if err != nil {
+		return err
+	}
+
+	// Parse include directives
+	lines := strings.Split(string(raw), "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+
+		// Check for @include or #include
+		if matches := includeRegex.FindStringSubmatch(line); matches != nil {
+			includePath := strings.TrimSpace(matches[1])
+			if err := s.collectSudoersFiles(conn, includePath, visited, allFiles); err != nil {
+				// Continue on error - included file might not exist
+				continue
+			}
+		}
+
+		// Check for @includedir or #includedir
+		if matches := includedirRegex.FindStringSubmatch(line); matches != nil {
+			includeDir := strings.TrimSpace(matches[1])
+			if err := s.collectSudoersDir(conn, includeDir, visited, allFiles); err != nil {
+				// Continue on error - directory might not exist
+				continue
+			}
+		}
+	}
+
+	return nil
+}
+
+// collectSudoersDir collects all sudoers files from a directory
+func (s *mqlSudoers) collectSudoersDir(conn shared.Connection, dirPath string, visited map[string]bool, allFiles *[]any) error {
+	// Check if directory exists
+	dirRes, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(dirPath),
+	})
+	if err != nil {
+		return err
+	}
+	dir := dirRes.(*mqlFile)
+	dirExists := dir.GetExists()
+	if dirExists.Error != nil {
+		return dirExists.Error
+	}
+
+	if !dirExists.Data {
+		return nil
+	}
+
+	// Get all files from the directory
+	files, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
+		"from": llx.StringData(dirPath),
+		"type": llx.StringData("file"),
+	})
+	if err != nil {
+		return err
+	}
+
+	ff := files.(*mqlFilesFind)
+	list := ff.GetList()
+	if list.Error != nil {
+		return list.Error
+	}
+
+	// Process each file in the directory
+	for i := range list.Data {
+		file := list.Data[i].(*mqlFile)
+		basename := file.GetBasename()
+		if basename.Error != nil {
+			continue
+		}
+
+		// Skip README files as per sudoers convention
+		if strings.Contains(strings.ToUpper(basename.Data), "README") {
+			continue
+		}
+
+		// Skip files with . or ~ in the name (sudoers convention)
+		if strings.Contains(basename.Data, ".") || strings.Contains(basename.Data, "~") {
+			continue
+		}
+
+		// Recursively process this file (it may have its own includes)
+		filePath := file.Path.Data
+		if err := s.collectSudoersFiles(conn, filePath, visited, allFiles); err != nil {
+			continue
+		}
+	}
+
+	return nil
 }
 
 // content aggregates the content from all sudoers files
