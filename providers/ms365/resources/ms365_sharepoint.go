@@ -46,10 +46,10 @@ ConvertTo-Json -Depth 4 $sharepoint -EnumsAsStrings
 `
 
 type SharepointOnlineReport struct {
-	SpoTenant                      any `json:"SPOTenant"`
-	SpoTenantSyncClientRestriction any `json:"SPOTenantSyncClientRestriction"`
-	SpoSite                        []*SpoSite  `json:"SPOSite"`
-	DefaultLinkPermission          string      `json:"DefaultLinkPermission"`
+	SpoTenant                      any        `json:"SPOTenant"`
+	SpoTenantSyncClientRestriction any        `json:"SPOTenantSyncClientRestriction"`
+	SpoSite                        []*SpoSite `json:"SPOSite"`
+	DefaultLinkPermission          string     `json:"DefaultLinkPermission"`
 }
 
 type SpoSite struct {

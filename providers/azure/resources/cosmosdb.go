@@ -16,8 +16,8 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	cosmosdb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
-	armresources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmosforpostgresql/armcosmosforpostgresql"
+	armresources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 )
 
 func (a *mqlAzureSubscriptionCosmosDbService) id() (string, error) {

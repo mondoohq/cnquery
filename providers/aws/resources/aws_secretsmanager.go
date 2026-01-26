@@ -74,36 +74,36 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 					return nil, err
 				}
 				for _, secret := range secrets.SecretList {
-				args := map[string]*llx.RawData{
-					"arn":              llx.StringDataPtr(secret.ARN),
-					"createdAt":        llx.TimeDataPtr(secret.CreatedDate),
-					"description":      llx.StringDataPtr(secret.Description),
-					"lastChangedDate":  llx.TimeDataPtr(secret.LastChangedDate),
-					"lastRotatedDate":  llx.TimeDataPtr(secret.LastRotatedDate),
-					"name":             llx.StringDataPtr(secret.Name),
-					"nextRotationDate": llx.TimeDataPtr(secret.NextRotationDate),
-					"primaryRegion":    llx.StringDataPtr(secret.PrimaryRegion),
-					"rotationEnabled":  llx.BoolData(convert.ToValue(secret.RotationEnabled)),
-					"tags":             llx.MapData(secretTagsToMap(secret.Tags), types.String),
-				}
-
-				// add kms key if there is one
-				if secret.KmsKeyId != nil {
-					mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
-						map[string]*llx.RawData{
-							"arn": llx.StringDataPtr(secret.KmsKeyId),
-						})
-					if err != nil {
-						args["kmsKey"] = llx.NilData
-					} else {
-						mqlKey := mqlKeyResource.(*mqlAwsKmsKey)
-						args["kmsKey"] = llx.ResourceData(mqlKey, mqlKey.MqlName())
+					args := map[string]*llx.RawData{
+						"arn":              llx.StringDataPtr(secret.ARN),
+						"createdAt":        llx.TimeDataPtr(secret.CreatedDate),
+						"description":      llx.StringDataPtr(secret.Description),
+						"lastChangedDate":  llx.TimeDataPtr(secret.LastChangedDate),
+						"lastRotatedDate":  llx.TimeDataPtr(secret.LastRotatedDate),
+						"name":             llx.StringDataPtr(secret.Name),
+						"nextRotationDate": llx.TimeDataPtr(secret.NextRotationDate),
+						"primaryRegion":    llx.StringDataPtr(secret.PrimaryRegion),
+						"rotationEnabled":  llx.BoolData(convert.ToValue(secret.RotationEnabled)),
+						"tags":             llx.MapData(secretTagsToMap(secret.Tags), types.String),
 					}
-				} else {
-					args["kmsKey"] = llx.NilData
-				}
 
-				mqlSecret, err := CreateResource(a.MqlRuntime, "aws.secretsmanager.secret", args)
+					// add kms key if there is one
+					if secret.KmsKeyId != nil {
+						mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
+							map[string]*llx.RawData{
+								"arn": llx.StringDataPtr(secret.KmsKeyId),
+							})
+						if err != nil {
+							args["kmsKey"] = llx.NilData
+						} else {
+							mqlKey := mqlKeyResource.(*mqlAwsKmsKey)
+							args["kmsKey"] = llx.ResourceData(mqlKey, mqlKey.MqlName())
+						}
+					} else {
+						args["kmsKey"] = llx.NilData
+					}
+
+					mqlSecret, err := CreateResource(a.MqlRuntime, "aws.secretsmanager.secret", args)
 					if err != nil {
 						return nil, err
 					}

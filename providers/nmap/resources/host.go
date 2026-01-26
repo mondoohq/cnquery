@@ -11,11 +11,11 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"github.com/Ullaakut/nmap/v3"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/nmap/connection"
 )
 

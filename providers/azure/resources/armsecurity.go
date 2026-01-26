@@ -147,8 +147,8 @@ type PolicyAssignment struct {
 				Value []string `json:"value"`
 			} `json:"approvedExtensions"`
 		} `json:"parameters"`
-		Scope     string        `json:"scope"`
-		NotScopes []any `json:"notScopes"`
+		Scope     string `json:"scope"`
+		NotScopes []any  `json:"notScopes"`
 	} `json:"properties"`
 }
 
