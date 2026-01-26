@@ -1261,7 +1261,7 @@ logindefs {
 }
 
 // Kernel module configuration from modprobe.d
-modprobe {
+modprobe @defaults("blacklists installs") {
   init(path? string)
   // List of files that make up the modprobe configuration
   files() []file
