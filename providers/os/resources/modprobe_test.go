@@ -317,3 +317,60 @@ func TestParseSoftdep_OnlyKeyword(t *testing.T) {
 	// Should not match (no dependencies)
 	assert.Nil(t, matches)
 }
+
+// parseModprobeParams tests
+func TestParseModprobeParams_Simple(t *testing.T) {
+	params := parseModprobeParams("key1=value1 key2=value2")
+
+	assert.Equal(t, []string{"key1=value1", "key2=value2"}, params)
+}
+
+func TestParseModprobeParams_QuotedValue(t *testing.T) {
+	params := parseModprobeParams(`key="value with spaces"`)
+
+	require.Len(t, params, 1)
+	assert.Equal(t, `key="value with spaces"`, params[0])
+}
+
+func TestParseModprobeParams_SingleQuotedValue(t *testing.T) {
+	params := parseModprobeParams(`key='value with spaces'`)
+
+	require.Len(t, params, 1)
+	assert.Equal(t, `key='value with spaces'`, params[0])
+}
+
+func TestParseModprobeParams_MixedQuotedAndUnquoted(t *testing.T) {
+	params := parseModprobeParams(`simple=value quoted="has spaces" another=test`)
+
+	require.Len(t, params, 3)
+	assert.Equal(t, "simple=value", params[0])
+	assert.Equal(t, `quoted="has spaces"`, params[1])
+	assert.Equal(t, "another=test", params[2])
+}
+
+func TestParseModprobeParams_BooleanFlags(t *testing.T) {
+	params := parseModprobeParams("flag1 key=value flag2")
+
+	require.Len(t, params, 3)
+	assert.Equal(t, "flag1", params[0])
+	assert.Equal(t, "key=value", params[1])
+	assert.Equal(t, "flag2", params[2])
+}
+
+func TestParseModprobeParams_Empty(t *testing.T) {
+	params := parseModprobeParams("")
+
+	assert.Empty(t, params)
+}
+
+func TestParseModprobeParams_MultipleSpaces(t *testing.T) {
+	params := parseModprobeParams("key1=value1    key2=value2")
+
+	assert.Equal(t, []string{"key1=value1", "key2=value2"}, params)
+}
+
+func TestParseModprobeParams_TabSeparated(t *testing.T) {
+	params := parseModprobeParams("key1=value1\tkey2=value2")
+
+	assert.Equal(t, []string{"key1=value1", "key2=value2"}, params)
+}

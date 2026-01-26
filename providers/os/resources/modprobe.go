@@ -154,18 +154,12 @@ func (m *mqlModprobe) installs(files []any) ([]any, error) {
 	for i := range files {
 		file := files[i].(*mqlFile)
 
-		f, err := conn.FileSystem().Open(file.Path.Data)
+		content, err := readFileContent(conn, file.Path.Data)
 		if err != nil {
 			return nil, err
 		}
 
-		raw, err := io.ReadAll(f)
-		f.Close()
-		if err != nil {
-			return nil, err
-		}
-
-		installs, err := parseInstalls(m.MqlRuntime, file.Path.Data, string(raw))
+		installs, err := parseInstalls(m.MqlRuntime, file.Path.Data, content)
 		if err != nil {
 			return nil, err
 		}
@@ -184,18 +178,12 @@ func (m *mqlModprobe) removes(files []any) ([]any, error) {
 	for i := range files {
 		file := files[i].(*mqlFile)
 
-		f, err := conn.FileSystem().Open(file.Path.Data)
+		content, err := readFileContent(conn, file.Path.Data)
 		if err != nil {
 			return nil, err
 		}
 
-		raw, err := io.ReadAll(f)
-		f.Close()
-		if err != nil {
-			return nil, err
-		}
-
-		removes, err := parseRemoves(m.MqlRuntime, file.Path.Data, string(raw))
+		removes, err := parseRemoves(m.MqlRuntime, file.Path.Data, content)
 		if err != nil {
 			return nil, err
 		}
@@ -214,18 +202,12 @@ func (m *mqlModprobe) blacklists(files []any) ([]any, error) {
 	for i := range files {
 		file := files[i].(*mqlFile)
 
-		f, err := conn.FileSystem().Open(file.Path.Data)
+		content, err := readFileContent(conn, file.Path.Data)
 		if err != nil {
 			return nil, err
 		}
 
-		raw, err := io.ReadAll(f)
-		f.Close()
-		if err != nil {
-			return nil, err
-		}
-
-		blacklists, err := parseBlacklists(m.MqlRuntime, file.Path.Data, string(raw))
+		blacklists, err := parseBlacklists(m.MqlRuntime, file.Path.Data, content)
 		if err != nil {
 			return nil, err
 		}
@@ -244,18 +226,12 @@ func (m *mqlModprobe) options(files []any) ([]any, error) {
 	for i := range files {
 		file := files[i].(*mqlFile)
 
-		f, err := conn.FileSystem().Open(file.Path.Data)
+		content, err := readFileContent(conn, file.Path.Data)
 		if err != nil {
 			return nil, err
 		}
 
-		raw, err := io.ReadAll(f)
-		f.Close()
-		if err != nil {
-			return nil, err
-		}
-
-		options, err := parseOptions(m.MqlRuntime, file.Path.Data, string(raw))
+		options, err := parseOptions(m.MqlRuntime, file.Path.Data, content)
 		if err != nil {
 			return nil, err
 		}
@@ -274,18 +250,12 @@ func (m *mqlModprobe) aliases(files []any) ([]any, error) {
 	for i := range files {
 		file := files[i].(*mqlFile)
 
-		f, err := conn.FileSystem().Open(file.Path.Data)
+		content, err := readFileContent(conn, file.Path.Data)
 		if err != nil {
 			return nil, err
 		}
 
-		raw, err := io.ReadAll(f)
-		f.Close()
-		if err != nil {
-			return nil, err
-		}
-
-		aliases, err := parseAliases(m.MqlRuntime, file.Path.Data, string(raw))
+		aliases, err := parseAliases(m.MqlRuntime, file.Path.Data, content)
 		if err != nil {
 			return nil, err
 		}
@@ -304,18 +274,12 @@ func (m *mqlModprobe) softdeps(files []any) ([]any, error) {
 	for i := range files {
 		file := files[i].(*mqlFile)
 
-		f, err := conn.FileSystem().Open(file.Path.Data)
+		content, err := readFileContent(conn, file.Path.Data)
 		if err != nil {
 			return nil, err
 		}
 
-		raw, err := io.ReadAll(f)
-		f.Close()
-		if err != nil {
-			return nil, err
-		}
-
-		softdeps, err := parseSoftdeps(m.MqlRuntime, file.Path.Data, string(raw))
+		softdeps, err := parseSoftdeps(m.MqlRuntime, file.Path.Data, content)
 		if err != nil {
 			return nil, err
 		}
@@ -331,13 +295,20 @@ func (mo *mqlModprobeOption) params() (map[string]any, error) {
 	params := make(map[string]any)
 	parameters := mo.Parameters.Data
 
-	// Split on whitespace and parse key=value pairs
-	parts := strings.Fields(parameters)
+	// Parse key=value pairs, handling quoted values with spaces
+	parts := parseModprobeParams(parameters)
 	for _, part := range parts {
 		// Check if it's a key=value pair
 		if idx := strings.Index(part, "="); idx != -1 {
 			key := part[:idx]
 			value := part[idx+1:]
+			// Remove surrounding quotes if present
+			if len(value) >= 2 {
+				if (value[0] == '"' && value[len(value)-1] == '"') ||
+					(value[0] == '\'' && value[len(value)-1] == '\'') {
+					value = value[1 : len(value)-1]
+				}
+			}
 			params[key] = value
 		} else {
 			// Boolean flag (no value)
@@ -346,6 +317,57 @@ func (mo *mqlModprobeOption) params() (map[string]any, error) {
 	}
 
 	return params, nil
+}
+
+// parseModprobeParams splits a parameter string respecting quoted values
+func parseModprobeParams(s string) []string {
+	var parts []string
+	var current strings.Builder
+	inQuote := false
+	quoteChar := byte(0)
+
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+
+		if !inQuote && (c == '"' || c == '\'') {
+			inQuote = true
+			quoteChar = c
+			current.WriteByte(c)
+		} else if inQuote && c == quoteChar {
+			inQuote = false
+			quoteChar = 0
+			current.WriteByte(c)
+		} else if !inQuote && (c == ' ' || c == '\t') {
+			if current.Len() > 0 {
+				parts = append(parts, current.String())
+				current.Reset()
+			}
+		} else {
+			current.WriteByte(c)
+		}
+	}
+
+	if current.Len() > 0 {
+		parts = append(parts, current.String())
+	}
+
+	return parts
+}
+
+// readFileContent reads a file's content and properly closes the file handle
+func readFileContent(conn shared.Connection, path string) (string, error) {
+	f, err := conn.FileSystem().Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	raw, err := io.ReadAll(f)
+	if err != nil {
+		return "", err
+	}
+
+	return string(raw), nil
 }
 
 // parseInstalls parses install directives from modprobe content
