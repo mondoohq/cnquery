@@ -1,0 +1,100 @@
+[commands."service -l"]
+stdout = """/etc/rc.d/bootconf.sh
+/etc/rc.d/ccd
+/etc/rc.d/cgd
+/etc/rc.d/cleartmp
+/etc/rc.d/cron
+/etc/rc.d/dhcpcd
+/etc/rc.d/dhcpd
+/etc/rc.d/dmesg
+/etc/rc.d/downinterfaces
+/etc/rc.d/fsck
+/etc/rc.d/hostapd
+/etc/rc.d/inetd
+/etc/rc.d/ipfilter
+/etc/rc.d/ipsec
+/etc/rc.d/ldconfig
+/etc/rc.d/local
+/etc/rc.d/mountall
+/etc/rc.d/mountcritlocal
+/etc/rc.d/mountcritremote
+/etc/rc.d/mountd
+/etc/rc.d/motd
+/etc/rc.d/network
+/etc/rc.d/newsyslog
+/etc/rc.d/nfsd
+/etc/rc.d/ntpd
+/etc/rc.d/ntpdate
+/etc/rc.d/pf
+/etc/rc.d/postfix
+/etc/rc.d/powerd
+/etc/rc.d/ppp
+/etc/rc.d/racoon
+/etc/rc.d/raidframe
+/etc/rc.d/rarpd
+/etc/rc.d/rbootd
+/etc/rc.d/root
+/etc/rc.d/route6d
+/etc/rc.d/routed
+/etc/rc.d/rpcbind
+/etc/rc.d/rtadvd
+/etc/rc.d/rwho
+/etc/rc.d/savecore
+/etc/rc.d/securelevel
+/etc/rc.d/sshd
+/etc/rc.d/staticroute
+/etc/rc.d/swap1
+/etc/rc.d/swap2
+/etc/rc.d/sysctl
+/etc/rc.d/sysdb
+/etc/rc.d/syslogd
+/etc/rc.d/timed
+/etc/rc.d/tpctl
+/etc/rc.d/tty
+/etc/rc.d/veriexec
+/etc/rc.d/wscons
+/etc/rc.d/wsmoused
+/etc/rc.d/ypbind
+"""
+
+[commands."service -e"]
+stdout = """/etc/rc.d/cron
+/etc/rc.d/dhcpcd
+/etc/rc.d/ntpd
+/etc/rc.d/postfix
+/etc/rc.d/sshd
+/etc/rc.d/syslogd
+"""
+
+[commands."service cron status"]
+stdout = "cron is running as pid 245."
+exit_status =0
+
+[commands."service dhcpcd status"]
+stdout = "dhcpcd is running as pid 182."
+exit_status =0
+
+[commands."service ntpd status"]
+stdout = "ntpd is not running."
+exit_status =1
+
+[commands."service postfix status"]
+stdout = "postfix is running."
+exit_status =0
+
+[commands."service sshd status"]
+stdout = "sshd is running as pid 389."
+exit_status =0
+
+[commands."service syslogd status"]
+stdout = "syslogd is running as pid 156."
+exit_status =0
+
+[commands."uname -s"]
+stdout = "NetBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "9.3"
