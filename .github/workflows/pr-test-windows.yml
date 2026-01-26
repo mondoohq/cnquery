@@ -1,0 +1,46 @@
+name: Windows Tests
+
+on:
+  push:
+    paths:
+      - "providers/os/**"
+      - ".github/workflows/pr-test-windows.yml"
+  pull_request:
+    paths:
+      - "providers/os/**"
+      - ".github/workflows/pr-test-windows.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  windows-test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Import environment variables from file
+        shell: bash
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version: ">=${{ env.golang-version }}"
+          cache: false
+
+      - name: Run Windows-specific tests
+        shell: pwsh
+        run: |
+          # Run tests for packages with Windows-specific code
+          # The build tag ensures only Windows tests are compiled and run
+          go test -v -tags windows ./providers/os/resources/services/... 2>&1 | Tee-Object -FilePath windows-test-output.txt
+
+      - name: Upload test output
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: success() || failure()
+        with:
+          name: windows-test-output
+          path: windows-test-output.txt
