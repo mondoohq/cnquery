@@ -206,6 +206,9 @@ func (c *Connection) RunCommand(command string) (*shared.Command, error) {
 }
 
 func (c *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
+	// Normalize path separators to forward slashes for cross-platform compatibility
+	path = filepath.ToSlash(path)
+
 	found, ok := c.data.Files[path]
 	if !ok {
 		return shared.FileInfoDetails{}, errors.New("file not found: " + path)
@@ -246,6 +249,10 @@ func (c *Connection) Open(name string) (afero.File, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
+	// Normalize path separators to forward slashes for cross-platform compatibility
+	// Mock data uses forward slashes, but Windows filepath.Join uses backslashes
+	name = filepath.ToSlash(name)
+
 	data, ok := c.data.Files[name]
 	if !ok || data.Enoent {
 		return nil, os.ErrNotExist
@@ -264,6 +271,8 @@ func (c *Connection) OpenFile(name string, flag int, perm os.FileMode) (afero.Fi
 func (c *Connection) Remove(name string) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	// Normalize path separators to forward slashes for cross-platform compatibility
+	name = filepath.ToSlash(name)
 	delete(c.data.Files, name)
 	return nil
 }
@@ -275,6 +284,11 @@ func (c *Connection) RemoveAll(path string) error {
 func (c *Connection) Rename(oldname, newname string) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	// Normalize path separators to forward slashes for cross-platform compatibility
+	oldname = filepath.ToSlash(oldname)
+	newname = filepath.ToSlash(newname)
+
 	if oldname == newname {
 		return nil
 	}
@@ -291,6 +305,10 @@ func (c *Connection) Rename(oldname, newname string) error {
 func (c *Connection) Stat(name string) (os.FileInfo, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	// Normalize path separators to forward slashes for cross-platform compatibility
+	name = filepath.ToSlash(name)
+
 	data, ok := c.data.Files[name]
 	if !ok {
 		return nil, os.ErrNotExist

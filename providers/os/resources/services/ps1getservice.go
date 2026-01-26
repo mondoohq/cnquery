@@ -6,7 +6,9 @@ package services
 import (
 	"encoding/json"
 	"io"
+	"runtime"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
@@ -57,7 +59,7 @@ func (s WindowsService) State() State {
 	case 2:
 		res = ServiceStartPending
 	case 3:
-		res = ServiceStopped
+		res = ServiceStopPending
 	case 4:
 		res = ServiceRunning
 	case 5:
@@ -130,6 +132,18 @@ func (s *WindowsServiceManager) Name() string {
 }
 
 func (s *WindowsServiceManager) List() ([]*Service, error) {
+	// Use native Windows API for local connections - significantly faster (~1-10ms vs 200-500ms)
+	if s.conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
+		log.Debug().Msg("using native Windows SCM API for local connection")
+		services, err := GetNativeWindowsServices()
+		if err != nil {
+			log.Debug().Err(err).Msg("native Windows services failed, falling back to PowerShell")
+		} else {
+			return services, nil
+		}
+	}
+
+	// Fallback to PowerShell for remote connections or if native API fails
 	c, err := s.conn.RunCommand(powershell.Wrap("Get-Service | Select-Object -Property Status, Name, DisplayName, StartType | ConvertTo-Json"))
 	if err != nil {
 		return nil, err
