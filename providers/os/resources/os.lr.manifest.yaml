@@ -499,6 +499,20 @@ resources:
       configuration: {}
       process: {}
     min_mondoo_version: latest
+  limits:
+    fields:
+      entries: {}
+      files: {}
+    min_mondoo_version: 9.0.0
+  limits.entry:
+    fields:
+      domain: {}
+      file: {}
+      item: {}
+      lineNumber: {}
+      type: {}
+      value: {}
+    min_mondoo_version: 9.0.0
   logindefs:
     fields:
       content: {}
@@ -631,6 +645,65 @@ resources:
     fields:
       preferences: {}
     min_mondoo_version: 5.15.0
+  modprobe:
+    fields:
+      aliases: {}
+      blacklists: {}
+      files: {}
+      installs: {}
+      options: {}
+      removes: {}
+      softdeps: {}
+    min_mondoo_version: 9.0.0
+  modprobe.alias:
+    fields:
+      alias: {}
+      file: {}
+      lineNumber: {}
+      module: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  modprobe.blacklist:
+    fields:
+      file: {}
+      lineNumber: {}
+      module: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  modprobe.install:
+    fields:
+      command: {}
+      file: {}
+      lineNumber: {}
+      module: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  modprobe.option:
+    fields:
+      file: {}
+      lineNumber: {}
+      module: {}
+      parameters: {}
+      params: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  modprobe.remove:
+    fields:
+      command: {}
+      file: {}
+      lineNumber: {}
+      module: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  modprobe.softdep:
+    fields:
+      file: {}
+      lineNumber: {}
+      module: {}
+      post: {}
+      pre: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   mondoo.eol:
     fields:
       date: {}

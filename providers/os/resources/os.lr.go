@@ -114,6 +114,13 @@ const (
 	ResourceNtpConf                    string = "ntp.conf"
 	ResourceRsyslogConf                string = "rsyslog.conf"
 	ResourceLogindefs                  string = "logindefs"
+	ResourceModprobe                   string = "modprobe"
+	ResourceModprobeInstall            string = "modprobe.install"
+	ResourceModprobeRemove             string = "modprobe.remove"
+	ResourceModprobeBlacklist          string = "modprobe.blacklist"
+	ResourceModprobeOption             string = "modprobe.option"
+	ResourceModprobeAlias              string = "modprobe.alias"
+	ResourceModprobeSoftdep            string = "modprobe.softdep"
 	ResourceLsblk                      string = "lsblk"
 	ResourceLsblkEntry                 string = "lsblk.entry"
 	ResourceMount                      string = "mount"
@@ -553,6 +560,34 @@ func init() {
 		"logindefs": {
 			Init:   initLogindefs,
 			Create: createLogindefs,
+		},
+		"modprobe": {
+			Init:   initModprobe,
+			Create: createModprobe,
+		},
+		"modprobe.install": {
+			// to override args, implement: initModprobeInstall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createModprobeInstall,
+		},
+		"modprobe.remove": {
+			// to override args, implement: initModprobeRemove(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createModprobeRemove,
+		},
+		"modprobe.blacklist": {
+			// to override args, implement: initModprobeBlacklist(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createModprobeBlacklist,
+		},
+		"modprobe.option": {
+			// to override args, implement: initModprobeOption(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createModprobeOption,
+		},
+		"modprobe.alias": {
+			// to override args, implement: initModprobeAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createModprobeAlias,
+		},
+		"modprobe.softdep": {
+			// to override args, implement: initModprobeSoftdep(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createModprobeSoftdep,
 		},
 		"lsblk": {
 			// to override args, implement: initLsblk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2086,6 +2121,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"logindefs.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLogindefs).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"modprobe.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobe).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"modprobe.installs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobe).GetInstalls()).ToDataRes(types.Array(types.Resource("modprobe.install")))
+	},
+	"modprobe.removes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobe).GetRemoves()).ToDataRes(types.Array(types.Resource("modprobe.remove")))
+	},
+	"modprobe.blacklists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobe).GetBlacklists()).ToDataRes(types.Array(types.Resource("modprobe.blacklist")))
+	},
+	"modprobe.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobe).GetOptions()).ToDataRes(types.Array(types.Resource("modprobe.option")))
+	},
+	"modprobe.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobe).GetAliases()).ToDataRes(types.Array(types.Resource("modprobe.alias")))
+	},
+	"modprobe.softdeps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobe).GetSoftdeps()).ToDataRes(types.Array(types.Resource("modprobe.softdep")))
+	},
+	"modprobe.install.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeInstall).GetFile()).ToDataRes(types.String)
+	},
+	"modprobe.install.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeInstall).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"modprobe.install.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeInstall).GetModule()).ToDataRes(types.String)
+	},
+	"modprobe.install.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeInstall).GetCommand()).ToDataRes(types.String)
+	},
+	"modprobe.remove.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeRemove).GetFile()).ToDataRes(types.String)
+	},
+	"modprobe.remove.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeRemove).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"modprobe.remove.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeRemove).GetModule()).ToDataRes(types.String)
+	},
+	"modprobe.remove.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeRemove).GetCommand()).ToDataRes(types.String)
+	},
+	"modprobe.blacklist.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeBlacklist).GetFile()).ToDataRes(types.String)
+	},
+	"modprobe.blacklist.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeBlacklist).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"modprobe.blacklist.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeBlacklist).GetModule()).ToDataRes(types.String)
+	},
+	"modprobe.option.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeOption).GetFile()).ToDataRes(types.String)
+	},
+	"modprobe.option.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeOption).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"modprobe.option.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeOption).GetModule()).ToDataRes(types.String)
+	},
+	"modprobe.option.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeOption).GetParameters()).ToDataRes(types.String)
+	},
+	"modprobe.option.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeOption).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"modprobe.alias.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeAlias).GetFile()).ToDataRes(types.String)
+	},
+	"modprobe.alias.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeAlias).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"modprobe.alias.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeAlias).GetAlias()).ToDataRes(types.String)
+	},
+	"modprobe.alias.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeAlias).GetModule()).ToDataRes(types.String)
+	},
+	"modprobe.softdep.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeSoftdep).GetFile()).ToDataRes(types.String)
+	},
+	"modprobe.softdep.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeSoftdep).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"modprobe.softdep.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeSoftdep).GetModule()).ToDataRes(types.String)
+	},
+	"modprobe.softdep.pre": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeSoftdep).GetPre()).ToDataRes(types.Array(types.String))
+	},
+	"modprobe.softdep.post": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlModprobeSoftdep).GetPost()).ToDataRes(types.Array(types.String))
 	},
 	"lsblk.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLsblk).GetList()).ToDataRes(types.Array(types.Resource("lsblk.entry")))
@@ -5044,6 +5175,162 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"logindefs.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLogindefs).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"modprobe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobe).__id, ok = v.Value.(string)
+		return
+	},
+	"modprobe.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobe).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"modprobe.installs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobe).Installs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"modprobe.removes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobe).Removes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"modprobe.blacklists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobe).Blacklists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"modprobe.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobe).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"modprobe.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobe).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"modprobe.softdeps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobe).Softdeps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"modprobe.install.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeInstall).__id, ok = v.Value.(string)
+		return
+	},
+	"modprobe.install.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeInstall).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.install.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeInstall).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"modprobe.install.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeInstall).Module, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.install.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeInstall).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.remove.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeRemove).__id, ok = v.Value.(string)
+		return
+	},
+	"modprobe.remove.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeRemove).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.remove.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeRemove).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"modprobe.remove.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeRemove).Module, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.remove.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeRemove).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.blacklist.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeBlacklist).__id, ok = v.Value.(string)
+		return
+	},
+	"modprobe.blacklist.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeBlacklist).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.blacklist.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeBlacklist).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"modprobe.blacklist.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeBlacklist).Module, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.option.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeOption).__id, ok = v.Value.(string)
+		return
+	},
+	"modprobe.option.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeOption).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.option.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeOption).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"modprobe.option.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeOption).Module, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.option.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeOption).Parameters, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.option.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeOption).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"modprobe.alias.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeAlias).__id, ok = v.Value.(string)
+		return
+	},
+	"modprobe.alias.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeAlias).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.alias.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeAlias).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"modprobe.alias.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeAlias).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.alias.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeAlias).Module, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.softdep.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeSoftdep).__id, ok = v.Value.(string)
+		return
+	},
+	"modprobe.softdep.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeSoftdep).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.softdep.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeSoftdep).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"modprobe.softdep.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeSoftdep).Module, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"modprobe.softdep.pre": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeSoftdep).Pre, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"modprobe.softdep.post": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlModprobeSoftdep).Post, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"lsblk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13994,6 +14281,590 @@ func (c *mqlLogindefs) GetParams() *plugin.TValue[map[string]any] {
 
 		return c.params(vargContent.Data)
 	})
+}
+
+// mqlModprobe for the modprobe resource
+type mqlModprobe struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlModprobeInternal it will be used here
+	Files      plugin.TValue[[]any]
+	Installs   plugin.TValue[[]any]
+	Removes    plugin.TValue[[]any]
+	Blacklists plugin.TValue[[]any]
+	Options    plugin.TValue[[]any]
+	Aliases    plugin.TValue[[]any]
+	Softdeps   plugin.TValue[[]any]
+}
+
+// createModprobe creates a new instance of this resource
+func createModprobe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlModprobe{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("modprobe", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlModprobe) MqlName() string {
+	return "modprobe"
+}
+
+func (c *mqlModprobe) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlModprobe) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("modprobe", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlModprobe) GetInstalls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Installs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("modprobe", c.__id, "installs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.installs(vargFiles.Data)
+	})
+}
+
+func (c *mqlModprobe) GetRemoves() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Removes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("modprobe", c.__id, "removes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.removes(vargFiles.Data)
+	})
+}
+
+func (c *mqlModprobe) GetBlacklists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Blacklists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("modprobe", c.__id, "blacklists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.blacklists(vargFiles.Data)
+	})
+}
+
+func (c *mqlModprobe) GetOptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Options, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("modprobe", c.__id, "options")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.options(vargFiles.Data)
+	})
+}
+
+func (c *mqlModprobe) GetAliases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aliases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("modprobe", c.__id, "aliases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.aliases(vargFiles.Data)
+	})
+}
+
+func (c *mqlModprobe) GetSoftdeps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Softdeps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("modprobe", c.__id, "softdeps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.softdeps(vargFiles.Data)
+	})
+}
+
+// mqlModprobeInstall for the modprobe.install resource
+type mqlModprobeInstall struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlModprobeInstallInternal it will be used here
+	File       plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	Module     plugin.TValue[string]
+	Command    plugin.TValue[string]
+}
+
+// createModprobeInstall creates a new instance of this resource
+func createModprobeInstall(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlModprobeInstall{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("modprobe.install", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlModprobeInstall) MqlName() string {
+	return "modprobe.install"
+}
+
+func (c *mqlModprobeInstall) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlModprobeInstall) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlModprobeInstall) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlModprobeInstall) GetModule() *plugin.TValue[string] {
+	return &c.Module
+}
+
+func (c *mqlModprobeInstall) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+// mqlModprobeRemove for the modprobe.remove resource
+type mqlModprobeRemove struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlModprobeRemoveInternal it will be used here
+	File       plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	Module     plugin.TValue[string]
+	Command    plugin.TValue[string]
+}
+
+// createModprobeRemove creates a new instance of this resource
+func createModprobeRemove(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlModprobeRemove{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("modprobe.remove", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlModprobeRemove) MqlName() string {
+	return "modprobe.remove"
+}
+
+func (c *mqlModprobeRemove) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlModprobeRemove) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlModprobeRemove) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlModprobeRemove) GetModule() *plugin.TValue[string] {
+	return &c.Module
+}
+
+func (c *mqlModprobeRemove) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+// mqlModprobeBlacklist for the modprobe.blacklist resource
+type mqlModprobeBlacklist struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlModprobeBlacklistInternal it will be used here
+	File       plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	Module     plugin.TValue[string]
+}
+
+// createModprobeBlacklist creates a new instance of this resource
+func createModprobeBlacklist(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlModprobeBlacklist{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("modprobe.blacklist", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlModprobeBlacklist) MqlName() string {
+	return "modprobe.blacklist"
+}
+
+func (c *mqlModprobeBlacklist) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlModprobeBlacklist) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlModprobeBlacklist) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlModprobeBlacklist) GetModule() *plugin.TValue[string] {
+	return &c.Module
+}
+
+// mqlModprobeOption for the modprobe.option resource
+type mqlModprobeOption struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlModprobeOptionInternal it will be used here
+	File       plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	Module     plugin.TValue[string]
+	Parameters plugin.TValue[string]
+	Params     plugin.TValue[map[string]any]
+}
+
+// createModprobeOption creates a new instance of this resource
+func createModprobeOption(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlModprobeOption{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("modprobe.option", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlModprobeOption) MqlName() string {
+	return "modprobe.option"
+}
+
+func (c *mqlModprobeOption) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlModprobeOption) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlModprobeOption) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlModprobeOption) GetModule() *plugin.TValue[string] {
+	return &c.Module
+}
+
+func (c *mqlModprobeOption) GetParameters() *plugin.TValue[string] {
+	return &c.Parameters
+}
+
+func (c *mqlModprobeOption) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		return c.params()
+	})
+}
+
+// mqlModprobeAlias for the modprobe.alias resource
+type mqlModprobeAlias struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlModprobeAliasInternal it will be used here
+	File       plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	Alias      plugin.TValue[string]
+	Module     plugin.TValue[string]
+}
+
+// createModprobeAlias creates a new instance of this resource
+func createModprobeAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlModprobeAlias{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("modprobe.alias", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlModprobeAlias) MqlName() string {
+	return "modprobe.alias"
+}
+
+func (c *mqlModprobeAlias) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlModprobeAlias) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlModprobeAlias) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlModprobeAlias) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlModprobeAlias) GetModule() *plugin.TValue[string] {
+	return &c.Module
+}
+
+// mqlModprobeSoftdep for the modprobe.softdep resource
+type mqlModprobeSoftdep struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlModprobeSoftdepInternal it will be used here
+	File       plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	Module     plugin.TValue[string]
+	Pre        plugin.TValue[[]any]
+	Post       plugin.TValue[[]any]
+}
+
+// createModprobeSoftdep creates a new instance of this resource
+func createModprobeSoftdep(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlModprobeSoftdep{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("modprobe.softdep", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlModprobeSoftdep) MqlName() string {
+	return "modprobe.softdep"
+}
+
+func (c *mqlModprobeSoftdep) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlModprobeSoftdep) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlModprobeSoftdep) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlModprobeSoftdep) GetModule() *plugin.TValue[string] {
+	return &c.Module
+}
+
+func (c *mqlModprobeSoftdep) GetPre() *plugin.TValue[[]any] {
+	return &c.Pre
+}
+
+func (c *mqlModprobeSoftdep) GetPost() *plugin.TValue[[]any] {
+	return &c.Post
 }
 
 // mqlLsblk for the lsblk resource
