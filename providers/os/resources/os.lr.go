@@ -136,6 +136,7 @@ const (
 	ResourceMacosAlf                   string = "macos.alf"
 	ResourceMacosTimemachine           string = "macos.timemachine"
 	ResourceMacosSystemsetup           string = "macos.systemsetup"
+	ResourceOpenBSMAudit               string = "openBSMAudit"
 	ResourceWindows                    string = "windows"
 	ResourceMacosSystemExtension       string = "macos.systemExtension"
 	ResourceWindowsHotfix              string = "windows.hotfix"
@@ -640,6 +641,10 @@ func init() {
 		"macos.systemsetup": {
 			// to override args, implement: initMacosSystemsetup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacosSystemsetup,
+		},
+		"openBSMAudit": {
+			Init:   initOpenBSMAudit,
+			Create: createOpenBSMAudit,
 		},
 		"windows": {
 			// to override args, implement: initWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2486,6 +2491,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.systemsetup.disableKeyboardWhenEnclosureLockIsEngaged": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosSystemsetup).GetDisableKeyboardWhenEnclosureLockIsEngaged()).ToDataRes(types.String)
+	},
+	"openBSMAudit.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetPath()).ToDataRes(types.String)
+	},
+	"openBSMAudit.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"openBSMAudit.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetContent()).ToDataRes(types.String)
+	},
+	"openBSMAudit.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"openBSMAudit.dir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetDir()).ToDataRes(types.String)
+	},
+	"openBSMAudit.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"openBSMAudit.minfree": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetMinfree()).ToDataRes(types.Int)
+	},
+	"openBSMAudit.naflags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetNaflags()).ToDataRes(types.Array(types.String))
+	},
+	"openBSMAudit.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetPolicy()).ToDataRes(types.Array(types.String))
+	},
+	"openBSMAudit.filesz": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetFilesz()).ToDataRes(types.String)
+	},
+	"openBSMAudit.expireAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetExpireAfter()).ToDataRes(types.String)
+	},
+	"openBSMAudit.superuserSetSflagsMask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetSuperuserSetSflagsMask()).ToDataRes(types.Array(types.String))
+	},
+	"openBSMAudit.superuserClearSflagsMask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetSuperuserClearSflagsMask()).ToDataRes(types.Array(types.String))
+	},
+	"openBSMAudit.memberSetSflagsMask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetMemberSetSflagsMask()).ToDataRes(types.Array(types.String))
+	},
+	"openBSMAudit.memberClearSflagsMask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenBSMAudit).GetMemberClearSflagsMask()).ToDataRes(types.Array(types.String))
 	},
 	"windows.computerInfo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetComputerInfo()).ToDataRes(types.Dict)
@@ -5622,6 +5672,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.systemsetup.disableKeyboardWhenEnclosureLockIsEngaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosSystemsetup).DisableKeyboardWhenEnclosureLockIsEngaged, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).__id, ok = v.Value.(string)
+		return
+	},
+	"openBSMAudit.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.dir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).Dir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.minfree": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).Minfree, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.naflags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).Naflags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).Policy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.filesz": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).Filesz, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.expireAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).ExpireAfter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.superuserSetSflagsMask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).SuperuserSetSflagsMask, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.superuserClearSflagsMask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).SuperuserClearSflagsMask, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.memberSetSflagsMask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).MemberSetSflagsMask, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openBSMAudit.memberClearSflagsMask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenBSMAudit).MemberClearSflagsMask, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"windows.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15790,6 +15904,228 @@ func (c *mqlMacosSystemsetup) GetWaitForStartupAfterPowerFailure() *plugin.TValu
 func (c *mqlMacosSystemsetup) GetDisableKeyboardWhenEnclosureLockIsEngaged() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.DisableKeyboardWhenEnclosureLockIsEngaged, func() (string, error) {
 		return c.disableKeyboardWhenEnclosureLockIsEngaged()
+	})
+}
+
+// mqlOpenBSMAudit for the openBSMAudit resource
+type mqlOpenBSMAudit struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenBSMAuditInternal it will be used here
+	Path                     plugin.TValue[string]
+	File                     plugin.TValue[*mqlFile]
+	Content                  plugin.TValue[string]
+	Params                   plugin.TValue[map[string]any]
+	Dir                      plugin.TValue[string]
+	Flags                    plugin.TValue[[]any]
+	Minfree                  plugin.TValue[int64]
+	Naflags                  plugin.TValue[[]any]
+	Policy                   plugin.TValue[[]any]
+	Filesz                   plugin.TValue[string]
+	ExpireAfter              plugin.TValue[string]
+	SuperuserSetSflagsMask   plugin.TValue[[]any]
+	SuperuserClearSflagsMask plugin.TValue[[]any]
+	MemberSetSflagsMask      plugin.TValue[[]any]
+	MemberClearSflagsMask    plugin.TValue[[]any]
+}
+
+// createOpenBSMAudit creates a new instance of this resource
+func createOpenBSMAudit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenBSMAudit{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openBSMAudit", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenBSMAudit) MqlName() string {
+	return "openBSMAudit"
+}
+
+func (c *mqlOpenBSMAudit) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenBSMAudit) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlOpenBSMAudit) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openBSMAudit", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.params(vargContent.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Dir, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.dir(vargParams.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetFlags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Flags, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.flags(vargParams.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetMinfree() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Minfree, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.minfree(vargParams.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetNaflags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Naflags, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.naflags(vargParams.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policy, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.policy(vargParams.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetFilesz() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Filesz, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.filesz(vargParams.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetExpireAfter() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExpireAfter, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.expireAfter(vargParams.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetSuperuserSetSflagsMask() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SuperuserSetSflagsMask, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.superuserSetSflagsMask(vargParams.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetSuperuserClearSflagsMask() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SuperuserClearSflagsMask, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.superuserClearSflagsMask(vargParams.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetMemberSetSflagsMask() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MemberSetSflagsMask, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.memberSetSflagsMask(vargParams.Data)
+	})
+}
+
+func (c *mqlOpenBSMAudit) GetMemberClearSflagsMask() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MemberClearSflagsMask, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.memberClearSflagsMask(vargParams.Data)
 	})
 }
 
