@@ -43,11 +43,7 @@ func initOpenBSMAudit(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 			return nil, nil, err
 		}
 		args["file"] = llx.ResourceData(f, "file")
-		args["path"] = llx.StringData(path)
-		delete(args, "path")
-	}
-
-	if _, ok := args["path"]; !ok {
+	} else {
 		args["path"] = llx.StringData(defaultAuditControlPath)
 	}
 
