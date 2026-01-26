@@ -145,8 +145,10 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		}
 	case asset.Platform.IsFamily("darwin"): // "macos", "darwin"
 		osm = &LaunchDServiceManager{conn: conn}
-	case asset.Platform.Name == "freebsd" || asset.Platform.Name == "dragonflybsd" || asset.Platform.Name == "netbsd":
+	case asset.Platform.Name == "freebsd" || asset.Platform.Name == "dragonflybsd":
 		osm = &BsdInitServiceManager{conn: conn}
+	case asset.Platform.Name == "netbsd":
+		osm = &NetBsdServiceManager{conn: conn}
 	case asset.Platform.Name == "openbsd":
 		osm = &OpenBsdRcctlServiceManager{conn: conn}
 	case asset.Platform.Name == "windows":
