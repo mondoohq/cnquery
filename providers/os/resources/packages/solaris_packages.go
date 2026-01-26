@@ -18,7 +18,7 @@ const (
 
 var (
 	SOLARIS_PKG_REGEX  = regexp.MustCompile(`^(.*)\s+([\w\-]+)$`)
-	SOLARIS_FMRI_REGEX = regexp.MustCompile(`^pkg:\/\/([\w]+)/(.*)@(.*),(.*):(.*)$`)
+	SOLARIS_FMRI_REGEX = regexp.MustCompile(`^pkg:\/\/([\w]+)/(.*)@([^,-]+)[,-]([^:]+):(.*)$`)
 )
 
 type SolarisPackage struct {
