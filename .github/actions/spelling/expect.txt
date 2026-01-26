@@ -46,6 +46,7 @@ ekus
 elbv
 exo
 failback
+filesz
 frontmatter
 fumadocs
 gcfs
@@ -88,8 +89,10 @@ meid
 messagestoragepolicy
 mfs
 mgroup
+minfree
 mkey
 mpim
+naflags
 natgateway
 networkinterface
 nmap
@@ -131,6 +134,7 @@ scm
 SECRETID
 SECRETVALUE
 serviceprincipals
+Sflags
 signin
 singlequeryargument
 sizeconstraintstatement
@@ -142,6 +146,7 @@ sqli
 sqlimatchstatement
 sqlserver
 Sspr
+superusers
 tailscale
 targetgroup
 tde

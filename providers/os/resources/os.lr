@@ -1630,6 +1630,41 @@ macos.systemsetup {
   disableKeyboardWhenEnclosureLockIsEngaged() string
 }
 
+// OpenBSM audit control configuration (used by macOS and other BSD systems)
+openBSMAudit @defaults("path") {
+  init(path? string)
+  // Path to the audit_control file
+  path string
+  // File resource for the audit_control file
+  file() file
+  // Content of the audit_control file
+  content(file) string
+  // Parsed parameters from the audit_control file
+  params(content) map[string]string
+  // Directory where audit log files are stored
+  dir(params) string
+  // Audit event flags for attributable (user) events
+  flags(params) []string
+  // Minimum free space threshold (percentage) before audit warnings
+  minfree(params) int
+  // Audit event flags for non-attributable events
+  naflags(params) []string
+  // Audit policy settings
+  policy(params) []string
+  // Maximum size of individual audit log files
+  filesz(params) string
+  // Expiration criteria for audit logs
+  expireAfter(params) string
+  // Flags that superusers can set on their processes
+  superuserSetSflagsMask(params) []string
+  // Flags that superusers can clear on their processes
+  superuserClearSflagsMask(params) []string
+  // Flags that non-superusers can set on their processes
+  memberSetSflagsMask(params) []string
+  // Flags that non-superusers can clear on their processes
+  memberClearSflagsMask(params) []string
+}
+
 // Windows-specific resource to get operating system details
 windows {
   // A consolidated object of system and operating system properties

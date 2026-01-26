@@ -729,6 +729,24 @@ resources:
       servers: {}
       settings: {}
     min_mondoo_version: 5.15.0
+  openBSMAudit:
+    fields:
+      content: {}
+      dir: {}
+      expireAfter: {}
+      file: {}
+      filesz: {}
+      flags: {}
+      memberClearSflagsMask: {}
+      memberSetSflagsMask: {}
+      minfree: {}
+      naflags: {}
+      params: {}
+      path: {}
+      policy: {}
+      superuserClearSflagsMask: {}
+      superuserSetSflagsMask: {}
+    min_mondoo_version: 9.0.0
   os:
     fields:
       env: {}
