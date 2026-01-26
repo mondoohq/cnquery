@@ -24,7 +24,7 @@ const (
 
 var (
 	// Regular expressions for parsing sudoers entries
-	aliasRegex    = regexp.MustCompile(`^(User_Alias|Runas_Alias|Host_Alias|Cmnd_Alias)\s+(\w+)\s*=\s*(.+)$`)
+	sudoersAliasRegex = regexp.MustCompile(`^(User_Alias|Runas_Alias|Host_Alias|Cmnd_Alias)\s+(\w+)\s*=\s*(.+)$`)
 	defaultsRegex = regexp.MustCompile(`^Defaults\b`)
 	// Include directives: @include, @includedir, #include, #includedir (sudo 1.9.1+)
 	includeRegex    = regexp.MustCompile(`^[@#]include\s+(.+)$`)
@@ -342,7 +342,7 @@ func (s *mqlSudoers) aliases(files []any) ([]any, error) {
 			return nil, err
 		}
 
-		aliases, err := parseAliases(s.MqlRuntime, file.Path.Data, string(raw))
+		aliases, err := parseSudoersAliases(s.MqlRuntime, file.Path.Data, string(raw))
 		if err != nil {
 			return nil, err
 		}
@@ -518,8 +518,8 @@ func parseDefaults(runtime *plugin.Runtime, filePath string, content string) ([]
 	return defaults, nil
 }
 
-// parseAliases parses alias definitions from sudoers content
-func parseAliases(runtime *plugin.Runtime, filePath string, content string) ([]any, error) {
+// parseSudoersAliases parses alias definitions from sudoers content
+func parseSudoersAliases(runtime *plugin.Runtime, filePath string, content string) ([]any, error) {
 	var aliases []any
 	lines := strings.Split(content, "\n")
 
@@ -553,7 +553,7 @@ func parseAliases(runtime *plugin.Runtime, filePath string, content string) ([]a
 		}
 
 		// Check for alias definitions
-		matches := aliasRegex.FindStringSubmatch(line)
+		matches := sudoersAliasRegex.FindStringSubmatch(line)
 		if matches == nil {
 			continue
 		}
@@ -696,7 +696,7 @@ func parseSudoersLine(line string) *sudoersLine {
 	}
 
 	// Check for alias definitions
-	if matches := aliasRegex.FindStringSubmatch(line); matches != nil {
+	if matches := sudoersAliasRegex.FindStringSubmatch(line); matches != nil {
 		aliasType := matches[1]
 		aliasName := matches[2]
 		aliasValue := matches[3]
