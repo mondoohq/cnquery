@@ -331,6 +331,10 @@ func (h *AwsConnection) Regions() ([]string, error) {
 	svc := h.Ec2(h.cfg.Region)
 	ctx := context.Background()
 
+	// DescribeRegions works to get the list of enabled regions for the account ( each account of organization)
+	// but this does not mean the respective service endpoint is available in that region. They will timeout instead of failing fast
+	// (e.g. EKS,KMS,Sagemaker is for example not available in ap-southeast-1 etc)
+	// This also does not cover SCPs that might block access to certain regions.
 	res, err := svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
 		log.Warn().Err(err).Msg("unable to describe regions")
