@@ -23,11 +23,26 @@ type Runtime interface {
 	AssetUpdated(asset *inventory.Asset)
 }
 
+type AddDataReq struct {
+	// the id of the connection that was used to fetch the data
+	ConnectionID uint32
+	// the resource type name
+	Resource string
+	// the id of the resource as returned by the connection
+	ResourceID string
+	// the resource field, if specified
+	Field string
+	// the resource data
+	Data *RawData
+	// the id of the resource as requested towards the connection
+	RequestResourceId string
+}
+
 type Recording interface {
 	Save() error
 	EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config)
-	AddData(connectionID uint32, resource string, id string, field string, data *RawData)
-	GetData(connectionID uint32, resource string, id string, field string) (*RawData, bool)
-	GetResource(connectionID uint32, resource string, id string) (map[string]*RawData, bool)
+	AddData(req AddDataReq)
+	GetData(connectionID uint32, resource string, resourceId string, field string) (*RawData, bool)
+	GetResource(connectionID uint32, resource string, resourceId string) (map[string]*RawData, bool)
 	GetAssetData(assetMrn string) (map[string]*ResourceRecording, bool)
 }

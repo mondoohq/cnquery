@@ -58,6 +58,7 @@ func NewAssetRecording(asset *inventory.Asset) *Asset {
 		Asset:       ai,
 		connections: map[string]*connection{},
 		resources:   map[string]*Resource{},
+		IdsLookup:   map[string]string{},
 	}
 }
 
@@ -99,7 +100,7 @@ func (n *readOnly) EnsureAsset(asset *inventory.Asset, provider string, connecti
 	}
 }
 
-func (n *readOnly) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
+func (n *readOnly) AddData(req llx.AddDataReq) {
 }
 
 type RecordingOptions struct {
@@ -205,8 +206,7 @@ func (r *recording) Save() error {
 
 func (r *recording) refreshCache() {
 	r.assets = syncx.Map[*Asset]{}
-	for i := range r.Assets {
-		asset := r.Assets[i]
+	for _, asset := range r.Assets {
 		asset.RefreshCache()
 
 		for _, conn := range asset.Connections {
@@ -383,24 +383,32 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	r.assets.Set(fmt.Sprintf("%d", conf.Id), recordingAsset)
 }
 
-func (r *recording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
-	asset, ok := r.assets.Get(fmt.Sprintf("%d", connectionID))
+func (r *recording) AddData(req llx.AddDataReq) {
+	asset, ok := r.assets.Get(fmt.Sprintf("%d", req.ConnectionID))
 	if !ok {
 		return
 	}
 
-	obj, exist := asset.resources[resource+"\x00"+id]
-	if !exist {
-		obj = &Resource{
-			Resource: resource,
-			ID:       id,
-			Fields:   map[string]*llx.RawData{},
-		}
-		asset.resources[resource+"\x00"+id] = obj
+	if asset.IdsLookup == nil {
+		asset.IdsLookup = map[string]string{}
 	}
 
-	if field != "" {
-		obj.Fields[field] = data
+	if req.RequestResourceId != req.ResourceID {
+		asset.IdsLookup[req.Resource+"\x00"+req.RequestResourceId] = req.ResourceID
+	}
+
+	obj, exist := asset.resources[req.Resource+"\x00"+req.ResourceID]
+	if !exist {
+		obj = &Resource{
+			Resource: req.Resource,
+			ID:       req.ResourceID,
+			Fields:   map[string]*llx.RawData{},
+		}
+		asset.resources[req.Resource+"\x00"+req.ResourceID] = obj
+	}
+
+	if req.Field != "" {
+		obj.Fields[req.Field] = req.Data
 	}
 }
 
@@ -408,6 +416,11 @@ func (r *recording) GetData(connectionID uint32, resource string, id string, fie
 	asset, ok := r.assets.Get(fmt.Sprintf("%d", connectionID))
 	if !ok {
 		return nil, false
+	}
+
+	// overwrite resourceId if there exists a lookup entry
+	if lookupId, ok := asset.IdsLookup[resource+"\x00"+id]; ok {
+		id = lookupId
 	}
 
 	obj, exist := asset.resources[resource+"\x00"+id]
