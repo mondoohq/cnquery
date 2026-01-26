@@ -152,7 +152,7 @@ func (n *NetBSDPkgManager) Format() string {
 }
 
 func (n *NetBSDPkgManager) List() ([]Package, error) {
-	cmd, err := n.conn.RunCommand("pkg_info -X -a")
+	cmd, err := n.conn.RunCommand("/usr/sbin/pkg_info -X -a")
 	if err != nil {
 		return nil, fmt.Errorf("could not read netbsd package list")
 	}

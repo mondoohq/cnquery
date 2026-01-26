@@ -1,4 +1,4 @@
-[commands."service -l"]
+[commands."/usr/sbin/service -l"]
 stdout = """/etc/rc.d/bootconf.sh
 /etc/rc.d/ccd
 /etc/rc.d/cgd
@@ -57,7 +57,7 @@ stdout = """/etc/rc.d/bootconf.sh
 /etc/rc.d/ypbind
 """
 
-[commands."service -e"]
+[commands."/usr/sbin/service -e"]
 stdout = """/etc/rc.d/cron
 /etc/rc.d/dhcpcd
 /etc/rc.d/ntpd
@@ -66,27 +66,27 @@ stdout = """/etc/rc.d/cron
 /etc/rc.d/syslogd
 """
 
-[commands."service cron status"]
+[commands."/usr/sbin/service cron status"]
 stdout = "cron is running as pid 245."
 exit_status =0
 
-[commands."service dhcpcd status"]
+[commands."/usr/sbin/service dhcpcd status"]
 stdout = "dhcpcd is running as pid 182."
 exit_status =0
 
-[commands."service ntpd status"]
+[commands."/usr/sbin/service ntpd status"]
 stdout = "ntpd is not running."
 exit_status =1
 
-[commands."service postfix status"]
+[commands."/usr/sbin/service postfix status"]
 stdout = "postfix is running."
 exit_status =0
 
-[commands."service sshd status"]
+[commands."/usr/sbin/service sshd status"]
 stdout = "sshd is running as pid 389."
 exit_status =0
 
-[commands."service syslogd status"]
+[commands."/usr/sbin/service syslogd status"]
 stdout = "syslogd is running as pid 156."
 exit_status =0
 
