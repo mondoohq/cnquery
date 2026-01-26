@@ -59,6 +59,15 @@ func TestFmriParser(t *testing.T) {
 	assert.Equal(t, "solaris", sp.Publisher)
 	assert.Equal(t, "16.2.3", sp.Version)
 	assert.Equal(t, "11.4.42.0.0.111.0", sp.Branch)
+
+	// Some packages have no branch, going directly from version to timestamp
+	// pkg://solaris/runtime/java/jre-8@1.8.0.311.11:20211005T165404Z
+	sp, err = ParseSolarisFmri("pkg://solaris/runtime/java/jre-8@1.8.0.311.11:20211005T165404Z")
+	require.NoError(t, err)
+	assert.Equal(t, "runtime/java/jre-8", sp.Name)
+	assert.Equal(t, "solaris", sp.Publisher)
+	assert.Equal(t, "1.8.0.311.11", sp.Version)
+	assert.Equal(t, "", sp.Branch)
 }
 
 func TestSolarisPackageParser(t *testing.T) {
@@ -134,7 +143,7 @@ func TestSolaris114Manager(t *testing.T) {
 	pkgList, err := pkgManager.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 468, len(pkgList))
+	assert.Equal(t, 471, len(pkgList))
 	p := Package{
 		Name:    "compress/p7zip",
 		Version: "16.2.3",
