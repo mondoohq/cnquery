@@ -125,7 +125,7 @@ func TestParseOptions_QuotedValue(t *testing.T) {
 // Alias directive tests
 func TestParseAlias_BasicAlias(t *testing.T) {
 	content := "alias eth0 e1000e"
-	matches := aliasRegex2.FindStringSubmatch(content)
+	matches := aliasRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "eth0", matches[1])
@@ -134,7 +134,7 @@ func TestParseAlias_BasicAlias(t *testing.T) {
 
 func TestParseAlias_WildcardPattern(t *testing.T) {
 	content := "alias pci:v00008086d* e1000e"
-	matches := aliasRegex2.FindStringSubmatch(content)
+	matches := aliasRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Contains(t, matches[1], "pci:")
@@ -143,7 +143,7 @@ func TestParseAlias_WildcardPattern(t *testing.T) {
 
 func TestParseAlias_SymbolAlias(t *testing.T) {
 	content := "alias symbol:nvidiafb nvidia"
-	matches := aliasRegex2.FindStringSubmatch(content)
+	matches := aliasRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Contains(t, matches[1], "symbol:")
@@ -200,7 +200,7 @@ func TestParseDirectives_Comments(t *testing.T) {
 	assert.Nil(t, removeRegex.FindStringSubmatch(content))
 	assert.Nil(t, blacklistRegex.FindStringSubmatch(content))
 	assert.Nil(t, optionsRegex.FindStringSubmatch(content))
-	assert.Nil(t, aliasRegex2.FindStringSubmatch(content))
+	assert.Nil(t, aliasRegex.FindStringSubmatch(content))
 	assert.Nil(t, softdepRegex.FindStringSubmatch(content))
 }
 
@@ -211,7 +211,7 @@ func TestParseDirectives_EmptyLine(t *testing.T) {
 	assert.Nil(t, removeRegex.FindStringSubmatch(content))
 	assert.Nil(t, blacklistRegex.FindStringSubmatch(content))
 	assert.Nil(t, optionsRegex.FindStringSubmatch(content))
-	assert.Nil(t, aliasRegex2.FindStringSubmatch(content))
+	assert.Nil(t, aliasRegex.FindStringSubmatch(content))
 	assert.Nil(t, softdepRegex.FindStringSubmatch(content))
 }
 
@@ -304,7 +304,7 @@ func TestParseOptions_EmptyParameters(t *testing.T) {
 
 func TestParseAlias_MultipleSpaces(t *testing.T) {
 	content := "alias   eth0    e1000e"
-	matches := aliasRegex2.FindStringSubmatch(strings.TrimSpace(content))
+	matches := aliasRegex.FindStringSubmatch(strings.TrimSpace(content))
 
 	// After trim and normalize spaces, should still match
 	require.NotNil(t, matches)

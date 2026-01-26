@@ -27,7 +27,7 @@ var (
 	removeRegex    = regexp.MustCompile(`^remove\s+(\S+)\s+(.+)$`)
 	blacklistRegex = regexp.MustCompile(`^blacklist\s+(\S+)`)
 	optionsRegex   = regexp.MustCompile(`^options\s+(\S+)\s+(.+)$`)
-	aliasRegex2    = regexp.MustCompile(`^alias\s+(\S+)\s+(\S+)`)
+	aliasRegex     = regexp.MustCompile(`^alias\s+(\S+)\s+(\S+)`)
 	softdepRegex   = regexp.MustCompile(`^softdep\s+(\S+)\s+(.+)$`)
 )
 
@@ -285,7 +285,7 @@ func (m *mqlModprobe) aliases(files []any) ([]any, error) {
 			return nil, err
 		}
 
-		aliases, err := parseAliases2(m.MqlRuntime, file.Path.Data, string(raw))
+		aliases, err := parseAliases(m.MqlRuntime, file.Path.Data, string(raw))
 		if err != nil {
 			return nil, err
 		}
@@ -502,8 +502,8 @@ func parseOptions(runtime *plugin.Runtime, filePath string, content string) ([]a
 	return options, nil
 }
 
-// parseAliases2 parses alias directives from modprobe content
-func parseAliases2(runtime *plugin.Runtime, filePath string, content string) ([]any, error) {
+// parseAliases parses alias directives from modprobe content
+func parseAliases(runtime *plugin.Runtime, filePath string, content string) ([]any, error) {
 	var aliases []any
 	lines := strings.Split(content, "\n")
 
@@ -517,7 +517,7 @@ func parseAliases2(runtime *plugin.Runtime, filePath string, content string) ([]
 		}
 
 		// Parse alias directive
-		matches := aliasRegex2.FindStringSubmatch(line)
+		matches := aliasRegex.FindStringSubmatch(line)
 		if matches == nil {
 			continue
 		}
