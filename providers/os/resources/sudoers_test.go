@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -332,4 +333,98 @@ func TestParseSudoersLine_WildcardCommand(t *testing.T) {
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, []string{"/usr/bin/*"}, parsed.commands)
+}
+
+func TestIncludeRegex_AtInclude(t *testing.T) {
+	tests := []struct {
+		line     string
+		expected string
+	}{
+		{"@include /etc/sudoers.local", "/etc/sudoers.local"},
+		{"@include /path/to/file", "/path/to/file"},
+		{"@include   /path/with/spaces  ", "/path/with/spaces"},
+	}
+
+	for _, tt := range tests {
+		matches := includeRegex.FindStringSubmatch(tt.line)
+		require.NotNil(t, matches, "line: %s", tt.line)
+		assert.Equal(t, tt.expected, strings.TrimSpace(matches[1]))
+	}
+}
+
+func TestIncludeRegex_HashInclude(t *testing.T) {
+	tests := []struct {
+		line     string
+		expected string
+	}{
+		{"#include /etc/sudoers.local", "/etc/sudoers.local"},
+		{"#include /path/to/file", "/path/to/file"},
+	}
+
+	for _, tt := range tests {
+		matches := includeRegex.FindStringSubmatch(tt.line)
+		require.NotNil(t, matches, "line: %s", tt.line)
+		assert.Equal(t, tt.expected, strings.TrimSpace(matches[1]))
+	}
+}
+
+func TestIncludedirRegex_AtIncludedir(t *testing.T) {
+	tests := []struct {
+		line     string
+		expected string
+	}{
+		{"@includedir /etc/sudoers.d", "/etc/sudoers.d"},
+		{"@includedir /path/to/dir", "/path/to/dir"},
+		{"@includedir   /path/with/spaces  ", "/path/with/spaces"},
+	}
+
+	for _, tt := range tests {
+		matches := includedirRegex.FindStringSubmatch(tt.line)
+		require.NotNil(t, matches, "line: %s", tt.line)
+		assert.Equal(t, tt.expected, strings.TrimSpace(matches[1]))
+	}
+}
+
+func TestIncludedirRegex_HashIncludedir(t *testing.T) {
+	tests := []struct {
+		line     string
+		expected string
+	}{
+		{"#includedir /etc/sudoers.d", "/etc/sudoers.d"},
+		{"#includedir /path/to/dir", "/path/to/dir"},
+	}
+
+	for _, tt := range tests {
+		matches := includedirRegex.FindStringSubmatch(tt.line)
+		require.NotNil(t, matches, "line: %s", tt.line)
+		assert.Equal(t, tt.expected, strings.TrimSpace(matches[1]))
+	}
+}
+
+func TestIncludeRegex_NotMatchingLines(t *testing.T) {
+	lines := []string{
+		"# This is a comment about include",
+		"Defaults env_reset",
+		"root ALL=(ALL) ALL",
+		"@includedir /etc/sudoers.d", // includedir should not match include
+	}
+
+	for _, line := range lines {
+		matches := includeRegex.FindStringSubmatch(line)
+		assert.Nil(t, matches, "line should not match: %s", line)
+	}
+}
+
+func TestIncludedirRegex_NotMatchingLines(t *testing.T) {
+	lines := []string{
+		"# This is a comment about includedir",
+		"Defaults env_reset",
+		"root ALL=(ALL) ALL",
+		"@include /etc/sudoers.local", // include should not match includedir
+	}
+
+	for _, line := range lines {
+		matches := includedirRegex.FindStringSubmatch(line)
+		assert.Nil(t, matches, "line should not match: %s", line)
+	}
 }
