@@ -1682,7 +1682,7 @@ aws.secretsmanager {
 }
 
 // AWS Secrets Manager secret
-private aws.secretsmanager.secret @defaults("arn name") {
+aws.secretsmanager.secret @defaults("arn name") {
   // ARN for the secret
   arn string
   // Creation date of the secret

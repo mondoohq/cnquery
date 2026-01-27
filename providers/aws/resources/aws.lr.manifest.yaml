@@ -3726,7 +3726,6 @@ resources:
         min_mondoo_version: 9.0.0
       rotationEnabled: {}
       tags: {}
-    is_private: true
     min_mondoo_version: 5.15.0
     platform:
       name:
