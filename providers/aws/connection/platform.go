@@ -138,6 +138,8 @@ func getTitleForPlatformName(name string) string {
 		return "AWS ECR Image"
 	case "aws-eks-cluster":
 		return "AWS EKS Cluster"
+	case "aws-secretsmanager-secret":
+		return "AWS Secrets Manager Secret"
 	}
 	return "Amazon Web Services"
 }
