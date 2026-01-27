@@ -1,0 +1,15 @@
+[commands."command -v rpm"]
+stdout="/usr/bin/rpm"
+
+[commands."rpm -E '%{_dbpath}'"]
+stdout="/var/lib/rpm"
+
+[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{MODULARITYLABEL}\\n'"]
+stdout="""
+php-xml 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__A module for PHP applications which use XML__php:7.4:8100020241212065510:eb0869e2
+php-mbstring 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__A module for PHP applications which need multi-byte string handling__php:7.4:8100020241212065510:eb0869e2
+php-common 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__Common files for PHP__php:7.4:8100020241212065510:eb0869e2
+php-cli 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__Command-line interface for PHP__php:7.4:8100020241212065510:eb0869e2
+php-fpm 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__PHP FastCGI Process Manager__php:7.4:8100020241212065510:eb0869e2
+php-json 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__JavaScript Object Notation extension for PHP__php:7.4:8100020241212065510:eb0869e2
+"""
