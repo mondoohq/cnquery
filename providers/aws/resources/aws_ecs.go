@@ -1244,3 +1244,217 @@ func (a *mqlAwsEcsTaskDefinitionVolumeHost) id() (string, error) {
 func (a *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) id() (string, error) {
 	return a.__id, nil
 }
+
+func (a *mqlAwsEcs) services() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getECSServices(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsEcs) getECSServices(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	var err error
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+	log.Debug().Msgf("regions being called for ecs services list are: %v", regions)
+	for ri := range regions {
+		region := regions[ri]
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Ecs(region)
+			ctx := context.Background()
+			res := []any{}
+
+			// First, list all clusters in the region
+			params := &ecsservice.ListClustersInput{}
+			paginator := ecsservice.NewListClustersPaginator(svc, params)
+			clusterArns := []string{}
+			for paginator.HasMorePages() {
+				resp, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, errors.Wrap(err, "could not gather ecs cluster information")
+				}
+				clusterArns = append(clusterArns, resp.ClusterArns...)
+			}
+
+			// For each cluster, list services
+			for _, clusterArn := range clusterArns {
+				serviceParams := &ecsservice.ListServicesInput{
+					Cluster: &clusterArn,
+				}
+				servicePaginator := ecsservice.NewListServicesPaginator(svc, serviceParams)
+				serviceArns := []string{}
+				for servicePaginator.HasMorePages() {
+					serviceResp, err := servicePaginator.NextPage(ctx)
+					if err != nil {
+						if Is400AccessDeniedError(err) {
+							log.Warn().Str("region", region).Str("cluster", clusterArn).Msg("error accessing cluster for services")
+							continue
+						}
+						return nil, errors.Wrap(err, "could not gather ecs services information")
+					}
+					serviceArns = append(serviceArns, serviceResp.ServiceArns...)
+				}
+
+				// Describe services in batches (AWS allows up to 10 services per DescribeServices call)
+				batchSize := 10
+				for i := 0; i < len(serviceArns); i += batchSize {
+					end := i + batchSize
+					if end > len(serviceArns) {
+						end = len(serviceArns)
+					}
+					batch := serviceArns[i:end]
+
+					describeParams := &ecsservice.DescribeServicesInput{
+						Cluster:  &clusterArn,
+						Services: batch,
+						Include:  []ecstypes.ServiceField{ecstypes.ServiceFieldTags},
+					}
+					describeResp, err := svc.DescribeServices(ctx, describeParams)
+					if err != nil {
+						if Is400AccessDeniedError(err) {
+							log.Warn().Str("region", region).Str("cluster", clusterArn).Msg("error describing services")
+							continue
+						}
+						return nil, errors.Wrap(err, "could not describe ecs services")
+					}
+
+					for _, service := range describeResp.Services {
+						mqlService, err := NewResource(a.MqlRuntime, ResourceAwsEcsService,
+							map[string]*llx.RawData{
+								"arn": llx.StringData(convert.ToValue(service.ServiceArn)),
+							})
+						if err != nil {
+							return nil, err
+						}
+						res = append(res, mqlService)
+					}
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *mqlAwsEcsService) id() (string, error) {
+	return s.Arn.Data, nil
+}
+
+func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch ecs service")
+	}
+	a := args["arn"].Value.(string)
+	conn := runtime.Connection.(*connection.AwsConnection)
+
+	// Validate and parse ARN if provided
+	parsedARN, err := validateAndParseARN(a, "ecs")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	region := parsedARN.Region
+	clusterName := ""
+	if res := strings.Split(parsedARN.Resource, "/"); len(res) >= 2 {
+		clusterName = res[1]
+	}
+
+	svc := conn.Ecs(region)
+	ctx := context.Background()
+
+	// Extract service name from ARN
+	serviceName := ""
+	if res := strings.Split(parsedARN.Resource, "/"); len(res) >= 3 {
+		serviceName = res[2]
+	}
+
+	clusterArn := fmt.Sprintf("arn:aws:ecs:%s:%s:cluster/%s", region, parsedARN.AccountID, clusterName)
+
+	serviceDetails, err := svc.DescribeServices(ctx, &ecs.DescribeServicesInput{
+		Cluster:  &clusterArn,
+		Services: []string{serviceName},
+		Include:  []ecstypes.ServiceField{ecstypes.ServiceFieldTags},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(serviceDetails.Services) != 1 {
+		return nil, nil, errors.Newf("only expected one service, got %d", len(serviceDetails.Services))
+	}
+
+	s := serviceDetails.Services[0]
+
+	// Extract deployment configuration
+	deploymentConfig, err := convert.JsonToDict(s.DeploymentConfiguration)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Extract network configuration
+	networkConfig, err := convert.JsonToDict(s.NetworkConfiguration)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Extract launch type
+	launchType := ""
+	if s.LaunchType != "" {
+		launchType = string(s.LaunchType)
+	}
+
+	// Extract task definition ARN
+	taskDefinition := ""
+	if s.TaskDefinition != nil {
+		taskDefinition = *s.TaskDefinition
+	}
+
+	// Extract createdBy
+	createdBy := ""
+	if s.CreatedBy != nil {
+		createdBy = *s.CreatedBy
+	}
+
+	args["name"] = llx.StringDataPtr(s.ServiceName)
+	args["clusterArn"] = llx.StringDataPtr(s.ClusterArn)
+	args["status"] = llx.StringDataPtr(s.Status)
+	args["desiredCount"] = llx.IntData(int64(s.DesiredCount))
+	args["runningCount"] = llx.IntData(int64(s.RunningCount))
+	args["taskDefinition"] = llx.StringData(taskDefinition)
+	args["launchType"] = llx.StringData(launchType)
+	args["deploymentConfiguration"] = llx.MapData(deploymentConfig, types.String)
+	args["networkConfiguration"] = llx.MapData(networkConfig, types.String)
+	args["tags"] = llx.MapData(ecsTagsToMap(s.Tags), types.String)
+	args["createdAt"] = llx.TimeDataPtr(s.CreatedAt)
+	args["createdBy"] = llx.StringData(createdBy)
+
+	return args, nil, nil
+}

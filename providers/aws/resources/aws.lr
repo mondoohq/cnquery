@@ -1718,6 +1718,8 @@ aws.ecs  @defaults("clusters containers containerInstances") {
   containerInstances() []aws.ecs.instance
   // List of AWS ECS Task Definitions
   taskDefinitions() []aws.ecs.taskDefinition
+  // List of AWS ECS Services
+  services() []aws.ecs.service
 }
 
 // Amazon ECS cluster
@@ -1857,6 +1859,36 @@ private aws.ecs.taskDefinition @defaults("arn family revision") {
   tags map[string]string
   // Region where the task definition is located
   region string
+}
+
+// Amazon ECS Service
+private aws.ecs.service @defaults("arn name clusterArn status") {
+  // ARN of the ECS service
+  arn string
+  // Name of the ECS service
+  name string
+  // ARN of the cluster the service belongs to
+  clusterArn string
+  // Status of the service
+  status string
+  // Desired number of tasks for the service
+  desiredCount int
+  // Number of running tasks for the service
+  runningCount int
+  // ARN of the task definition used by the service
+  taskDefinition string
+  // Launch type for the service (EC2, FARGATE, EXTERNAL)
+  launchType string
+  // Deployment configuration for the service
+  deploymentConfiguration dict
+  // Network configuration for the service
+  networkConfiguration dict
+  // Tags associated with the service
+  tags map[string]string
+  // Creation timestamp of the service
+  createdAt time
+  // IAM principal that created the service
+  createdBy string
 }
 
 // Amazon ECS Task Definition Container Definition
