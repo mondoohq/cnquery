@@ -1361,7 +1361,7 @@ func (s *mqlAwsEcsService) id() (string, error) {
 
 func (s *mqlAwsEcsService) deploymentConfiguration() (*mqlAwsEcsServiceDeploymentConfiguration, error) {
 	if !s.DeploymentConfiguration.IsSet() {
-		return nil, nil
+		return nil, errors.New("deploymentConfiguration not initialized")
 	}
 	if s.DeploymentConfiguration.Error != nil {
 		return nil, s.DeploymentConfiguration.Error
@@ -1371,7 +1371,7 @@ func (s *mqlAwsEcsService) deploymentConfiguration() (*mqlAwsEcsServiceDeploymen
 
 func (s *mqlAwsEcsService) networkConfiguration() (*mqlAwsEcsServiceNetworkConfiguration, error) {
 	if !s.NetworkConfiguration.IsSet() {
-		return nil, nil
+		return nil, errors.New("networkConfiguration not initialized")
 	}
 	if s.NetworkConfiguration.Error != nil {
 		return nil, s.NetworkConfiguration.Error
@@ -1381,7 +1381,7 @@ func (s *mqlAwsEcsService) networkConfiguration() (*mqlAwsEcsServiceNetworkConfi
 
 func (d *mqlAwsEcsServiceDeploymentConfiguration) deploymentCircuitBreaker() (*mqlAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker, error) {
 	if !d.DeploymentCircuitBreaker.IsSet() {
-		return nil, nil
+		return nil, errors.New("deploymentCircuitBreaker not initialized")
 	}
 	if d.DeploymentCircuitBreaker.Error != nil {
 		return nil, d.DeploymentCircuitBreaker.Error
@@ -1391,7 +1391,7 @@ func (d *mqlAwsEcsServiceDeploymentConfiguration) deploymentCircuitBreaker() (*m
 
 func (n *mqlAwsEcsServiceNetworkConfiguration) awsvpcConfiguration() (*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration, error) {
 	if !n.AwsvpcConfiguration.IsSet() {
-		return nil, nil
+		return nil, errors.New("awsvpcConfiguration not initialized")
 	}
 	if n.AwsvpcConfiguration.Error != nil {
 		return nil, n.AwsvpcConfiguration.Error
@@ -1498,11 +1498,19 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["runningCount"] = llx.IntData(int64(s.RunningCount))
 	args["taskDefinition"] = llx.StringData(taskDefinition)
 	args["launchType"] = llx.StringData(launchType)
+	// Always set deploymentConfiguration - AWS services should always have this, but handle nil case
 	if deploymentConfigResource != nil {
 		args["deploymentConfiguration"] = llx.ResourceData(deploymentConfigResource.(plugin.Resource), ResourceAwsEcsServiceDeploymentConfiguration)
+	} else {
+		// AWS should always return deploymentConfiguration, but if nil, set to nil explicitly
+		args["deploymentConfiguration"] = llx.NilData
 	}
+	// Always set networkConfiguration - AWS services should always have this, but handle nil case
 	if networkConfigResource != nil {
 		args["networkConfiguration"] = llx.ResourceData(networkConfigResource.(plugin.Resource), ResourceAwsEcsServiceNetworkConfiguration)
+	} else {
+		// AWS should always return networkConfiguration, but if nil, set to nil explicitly
+		args["networkConfiguration"] = llx.NilData
 	}
 	args["tags"] = llx.MapData(ecsTagsToMap(s.Tags), types.String)
 	args["createdAt"] = llx.TimeDataPtr(s.CreatedAt)
@@ -1571,8 +1579,11 @@ func createDeploymentConfigurationResource(runtime *plugin.Runtime, dc *ecstypes
 		"bakeTimeInMinutes":     llx.IntDataPtr(dc.BakeTimeInMinutes),
 		"strategy":              llx.StringData(string(dc.Strategy)),
 	}
+	// Always set deploymentCircuitBreaker, even if nil
 	if circuitBreakerResource != nil {
 		args["deploymentCircuitBreaker"] = llx.ResourceData(circuitBreakerResource.(plugin.Resource), ResourceAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker)
+	} else {
+		args["deploymentCircuitBreaker"] = llx.NilData
 	}
 	if alarmsDict != nil {
 		args["alarms"] = llx.MapData(alarmsDict, types.String)
@@ -1619,8 +1630,11 @@ func createNetworkConfigurationResource(runtime *plugin.Runtime, nc *ecstypes.Ne
 	args := map[string]*llx.RawData{
 		"__id": llx.StringData(serviceArn + "/networkConfiguration"),
 	}
+	// Always set awsvpcConfiguration, even if nil
 	if awsvpcResource != nil {
 		args["awsvpcConfiguration"] = llx.ResourceData(awsvpcResource.(plugin.Resource), ResourceAwsEcsServiceNetworkConfigurationAwsvpcConfiguration)
+	} else {
+		args["awsvpcConfiguration"] = llx.NilData
 	}
 
 	return CreateResource(runtime, ResourceAwsEcsServiceNetworkConfiguration, args)
