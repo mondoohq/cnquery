@@ -651,7 +651,7 @@ func init() {
 			Create: createAwsSecretsmanager,
 		},
 		"aws.secretsmanager.secret": {
-			// to override args, implement: initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSecretsmanagerSecret,
 			Create: createAwsSecretsmanagerSecret,
 		},
 		"aws.ecs": {

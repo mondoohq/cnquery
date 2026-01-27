@@ -5,12 +5,14 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	secretstypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v12/providers/aws/connection"
@@ -42,6 +44,42 @@ func (a *mqlAwsSecretsmanager) secrets() ([]any, error) {
 
 func (a *mqlAwsSecretsmanagerSecret) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch secretsmanager secret")
+	}
+
+	obj, err := CreateResource(runtime, "aws.secretsmanager", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	sm := obj.(*mqlAwsSecretsmanager)
+
+	rawResources := sm.GetSecrets()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	arnVal := args["arn"].Value.(string)
+	for _, rawResource := range rawResources.Data {
+		secret := rawResource.(*mqlAwsSecretsmanagerSecret)
+		if secret.Arn.Data == arnVal {
+			return args, secret, nil
+		}
+	}
+	return nil, nil, errors.New("secretsmanager secret does not exist")
 }
 
 func (a *mqlAwsSecretsmanagerSecret) kmsKey() (*mqlAwsKmsKey, error) {
