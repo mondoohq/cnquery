@@ -277,7 +277,7 @@ func TestDiscoveryAndFilterPropagation(t *testing.T) {
 			inputTargets    []string
 			expectedTargets []string
 		}{
-			{"empty defaults to auto", []string{}, Auto},
+			{"empty returns empty (ParseCLI sets default)", []string{}, []string{}},
 			{"auto keyword", []string{"auto"}, Auto},
 			{"all keyword", []string{"all"}, allDiscovery()},
 			{"resources keyword", []string{"resources"}, AllAPIResources},
@@ -383,9 +383,9 @@ func TestGetDiscoveryTargets(t *testing.T) {
 		want    []string
 	}{
 		{
-			name:    "empty",
+			name:    "empty returns empty (ParseCLI sets default)",
 			targets: []string{},
-			want:    Auto,
+			want:    []string{},
 		},
 		{
 			name:    "all",
@@ -441,3 +441,79 @@ func TestGetDiscoveryTargets(t *testing.T) {
 		})
 	}
 }
+
+// TestDiscoveryDefaultBehavior documents the expected discovery flow:
+//
+// 1. ParseCLI (in provider.go): When no --discover flag is provided, it sets
+//    targets to ["auto"]. This ensures the parent connection always has explicit targets.
+//
+// 2. getDiscoveryTargets: Expands "auto" to the Auto list. Does NOT provide a
+//    fallback for empty targets - that's ParseCLI's responsibility.
+//
+// 3. Child connections: Created with WithoutDiscovery() which sets Discover to
+//    an empty struct (targets = nil/empty). This prevents re-discovery.
+//
+// 4. Service.discover(): Checks len(targets) == 0 to skip discovery for children.
+func TestDiscoveryDefaultBehavior(t *testing.T) {
+	t.Run("ParseCLI sets auto target - simulated parent connection", func(t *testing.T) {
+		// Simulate what ParseCLI does: when no --discover flag, set "auto"
+		parentConfig := &inventory.Config{
+			Discover: &inventory.Discovery{
+				Targets: []string{DiscoveryAuto}, // ParseCLI sets this
+			},
+		}
+
+		// getDiscoveryTargets should expand "auto" to the full Auto list
+		resolved := getDiscoveryTargets(parentConfig)
+		require.ElementsMatch(t, Auto, resolved,
+			"parent with 'auto' target should resolve to full Auto list")
+		require.NotEmpty(t, resolved, "parent should have discovery targets")
+	})
+
+	t.Run("child connection has no targets - discovery skipped", func(t *testing.T) {
+		// Simulate parent with targets set by ParseCLI
+		parentConfig := &inventory.Config{
+			Id: 1,
+			Discover: &inventory.Discovery{
+				Targets: []string{DiscoveryAuto},
+				Filter:  map[string]string{"regions": "us-east-1"},
+			},
+		}
+
+		// Simulate child creation with WithoutDiscovery() + WithFilters()
+		childConfig := parentConfig.Clone(
+			inventory.WithoutDiscovery(),
+			inventory.WithParentConnectionId(parentConfig.Id),
+			inventory.WithFilters(),
+		)
+
+		// Child should have empty targets (discovery disabled)
+		childResolved := getDiscoveryTargets(childConfig)
+		require.Empty(t, childResolved,
+			"child connection should have empty targets (no discovery)")
+
+		// But filters should be preserved
+		require.Equal(t, "us-east-1", childConfig.Discover.Filter["regions"],
+			"child should preserve filters from parent")
+	})
+
+	t.Run("explicit targets are preserved through flow", func(t *testing.T) {
+		// User explicitly specifies --discover=s3-buckets,iam-users
+		parentConfig := &inventory.Config{
+			Discover: &inventory.Discovery{
+				Targets: []string{"s3-buckets", "iam-users"},
+			},
+		}
+
+		resolved := getDiscoveryTargets(parentConfig)
+		require.ElementsMatch(t, []string{DiscoveryS3Buckets, DiscoveryIAMUsers}, resolved,
+			"explicit targets should be preserved")
+
+		// Child still gets no targets
+		childConfig := parentConfig.Clone(inventory.WithoutDiscovery())
+		childResolved := getDiscoveryTargets(childConfig)
+		require.Empty(t, childResolved,
+			"child should have no targets regardless of parent's explicit targets")
+	})
+}
+
