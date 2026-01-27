@@ -47,10 +47,8 @@ func ParseSolarisSmfServices(r io.Reader) []*Service {
 	var services []*Service
 	scanner := bufio.NewScanner(r)
 
-	// Skip header line
-	if scanner.Scan() {
-		// First line is header: "STATE          STIME           FMRI"
-	}
+	// Skip header line: "STATE          STIME           FMRI"
+	_ = scanner.Scan()
 
 	for scanner.Scan() {
 		line := scanner.Text()
