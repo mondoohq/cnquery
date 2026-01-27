@@ -1764,6 +1764,49 @@ resources:
     platform:
       name:
       - aws
+  aws.ecs.service.deploymentConfiguration:
+    fields:
+      alarms: {}
+      bakeTimeInMinutes: {}
+      canaryConfiguration: {}
+      deploymentCircuitBreaker: {}
+      lifecycleHooks: {}
+      linearConfiguration: {}
+      maximumPercent: {}
+      minimumHealthyPercent: {}
+      strategy: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker:
+    fields:
+      enable: {}
+      rollback: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.service.networkConfiguration:
+    fields:
+      awsvpcConfiguration: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.service.networkConfiguration.awsvpcConfiguration:
+    fields:
+      assignPublicIp: {}
+      securityGroups: {}
+      subnets: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.ecs.task:
     fields:
       arn: {}

@@ -1880,15 +1880,61 @@ private aws.ecs.service @defaults("arn name clusterArn status") {
   // Launch type for the service (EC2, FARGATE, EXTERNAL)
   launchType string
   // Deployment configuration for the service
-  deploymentConfiguration dict
+  deploymentConfiguration() aws.ecs.service.deploymentConfiguration
   // Network configuration for the service
-  networkConfiguration dict
+  networkConfiguration() aws.ecs.service.networkConfiguration
   // Tags associated with the service
   tags map[string]string
   // Creation timestamp of the service
   createdAt time
   // IAM principal that created the service
   createdBy string
+}
+
+// Amazon ECS Service Deployment Configuration
+private aws.ecs.service.deploymentConfiguration @defaults("maximumPercent minimumHealthyPercent") {
+  // Upper limit on the number of tasks in a service that are allowed in the RUNNING or PENDING state
+  maximumPercent int
+  // Lower limit on the number of tasks in a service that must remain in the RUNNING state
+  minimumHealthyPercent int
+  // Circuit breaker configuration for the deployment
+  deploymentCircuitBreaker() aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker
+  // Deployment alarms configuration
+  alarms dict
+  // Bake time in minutes for blue/green deployments
+  bakeTimeInMinutes int
+  // Canary configuration for deployments
+  canaryConfiguration dict
+  // Lifecycle hooks configuration
+  lifecycleHooks dict
+  // Linear configuration for deployments
+  linearConfiguration dict
+  // Deployment strategy
+  strategy string
+}
+
+// Amazon ECS Service Deployment Circuit Breaker
+private aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker {
+  // Whether to enable the deployment circuit breaker
+  enable bool
+  // Whether to enable rollback on deployment failure
+  rollback bool
+}
+
+// Amazon ECS Service Network Configuration
+private aws.ecs.service.networkConfiguration {
+  // VPC configuration for the service
+  awsvpcConfiguration() aws.ecs.service.networkConfiguration.awsvpcConfiguration
+}
+
+// Amazon ECS Service Network Configuration AWS VPC Configuration
+private aws.ecs.service.networkConfiguration.awsvpcConfiguration {
+  // Subnets associated with the service
+  subnets []string
+  // Security groups associated with the service
+  securityGroups []string
+  // Whether to assign a public IP address (ENABLED, DISABLED)
+  assignPublicIp string
 }
 
 // Amazon ECS Task Definition Container Definition

@@ -1359,6 +1359,46 @@ func (s *mqlAwsEcsService) id() (string, error) {
 	return s.Arn.Data, nil
 }
 
+func (s *mqlAwsEcsService) deploymentConfiguration() (*mqlAwsEcsServiceDeploymentConfiguration, error) {
+	if !s.DeploymentConfiguration.IsSet() {
+		return nil, nil
+	}
+	if s.DeploymentConfiguration.Error != nil {
+		return nil, s.DeploymentConfiguration.Error
+	}
+	return s.DeploymentConfiguration.Data, nil
+}
+
+func (s *mqlAwsEcsService) networkConfiguration() (*mqlAwsEcsServiceNetworkConfiguration, error) {
+	if !s.NetworkConfiguration.IsSet() {
+		return nil, nil
+	}
+	if s.NetworkConfiguration.Error != nil {
+		return nil, s.NetworkConfiguration.Error
+	}
+	return s.NetworkConfiguration.Data, nil
+}
+
+func (d *mqlAwsEcsServiceDeploymentConfiguration) deploymentCircuitBreaker() (*mqlAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker, error) {
+	if !d.DeploymentCircuitBreaker.IsSet() {
+		return nil, nil
+	}
+	if d.DeploymentCircuitBreaker.Error != nil {
+		return nil, d.DeploymentCircuitBreaker.Error
+	}
+	return d.DeploymentCircuitBreaker.Data, nil
+}
+
+func (n *mqlAwsEcsServiceNetworkConfiguration) awsvpcConfiguration() (*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration, error) {
+	if !n.AwsvpcConfiguration.IsSet() {
+		return nil, nil
+	}
+	if n.AwsvpcConfiguration.Error != nil {
+		return nil, n.AwsvpcConfiguration.Error
+	}
+	return n.AwsvpcConfiguration.Data, nil
+}
+
 func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -1413,16 +1453,24 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 	s := serviceDetails.Services[0]
 
-	// Extract deployment configuration
-	deploymentConfig, err := convert.JsonToDict(s.DeploymentConfiguration)
-	if err != nil {
-		return nil, nil, err
+	// Create deployment configuration resource
+	var deploymentConfigResource any
+	if s.DeploymentConfiguration != nil {
+		var err error
+		deploymentConfigResource, err = createDeploymentConfigurationResource(runtime, s.DeploymentConfiguration, a)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
-	// Extract network configuration
-	networkConfig, err := convert.JsonToDict(s.NetworkConfiguration)
-	if err != nil {
-		return nil, nil, err
+	// Create network configuration resource
+	var networkConfigResource any
+	if s.NetworkConfiguration != nil {
+		var err error
+		networkConfigResource, err = createNetworkConfigurationResource(runtime, s.NetworkConfiguration, a)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	// Extract launch type
@@ -1450,11 +1498,130 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["runningCount"] = llx.IntData(int64(s.RunningCount))
 	args["taskDefinition"] = llx.StringData(taskDefinition)
 	args["launchType"] = llx.StringData(launchType)
-	args["deploymentConfiguration"] = llx.MapData(deploymentConfig, types.String)
-	args["networkConfiguration"] = llx.MapData(networkConfig, types.String)
+	if deploymentConfigResource != nil {
+		args["deploymentConfiguration"] = llx.ResourceData(deploymentConfigResource.(plugin.Resource), ResourceAwsEcsServiceDeploymentConfiguration)
+	}
+	if networkConfigResource != nil {
+		args["networkConfiguration"] = llx.ResourceData(networkConfigResource.(plugin.Resource), ResourceAwsEcsServiceNetworkConfiguration)
+	}
 	args["tags"] = llx.MapData(ecsTagsToMap(s.Tags), types.String)
 	args["createdAt"] = llx.TimeDataPtr(s.CreatedAt)
 	args["createdBy"] = llx.StringData(createdBy)
 
 	return args, nil, nil
+}
+
+func createDeploymentConfigurationResource(runtime *plugin.Runtime, dc *ecstypes.DeploymentConfiguration, serviceArn string) (any, error) {
+	// Create deployment circuit breaker resource
+	var circuitBreakerResource any
+	if dc.DeploymentCircuitBreaker != nil {
+		cb, err := CreateResource(runtime, ResourceAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker,
+			map[string]*llx.RawData{
+				"__id":     llx.StringData(serviceArn + "/deploymentCircuitBreaker"),
+				"enable":   llx.BoolData(dc.DeploymentCircuitBreaker.Enable),
+				"rollback": llx.BoolData(dc.DeploymentCircuitBreaker.Rollback),
+			})
+		if err != nil {
+			return nil, err
+		}
+		circuitBreakerResource = cb
+	}
+
+	// Convert optional fields to dicts
+	var alarmsDict map[string]any
+	if dc.Alarms != nil {
+		var err error
+		alarmsDict, err = convert.JsonToDict(dc.Alarms)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var canaryConfigDict map[string]any
+	if dc.CanaryConfiguration != nil {
+		var err error
+		canaryConfigDict, err = convert.JsonToDict(dc.CanaryConfiguration)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var lifecycleHooksDict map[string]any
+	if dc.LifecycleHooks != nil {
+		var err error
+		lifecycleHooksDict, err = convert.JsonToDict(dc.LifecycleHooks)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var linearConfigDict map[string]any
+	if dc.LinearConfiguration != nil {
+		var err error
+		linearConfigDict, err = convert.JsonToDict(dc.LinearConfiguration)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	args := map[string]*llx.RawData{
+		"__id":                  llx.StringData(serviceArn + "/deploymentConfiguration"),
+		"maximumPercent":        llx.IntDataPtr(dc.MaximumPercent),
+		"minimumHealthyPercent": llx.IntDataPtr(dc.MinimumHealthyPercent),
+		"bakeTimeInMinutes":     llx.IntDataPtr(dc.BakeTimeInMinutes),
+		"strategy":              llx.StringData(string(dc.Strategy)),
+	}
+	if circuitBreakerResource != nil {
+		args["deploymentCircuitBreaker"] = llx.ResourceData(circuitBreakerResource.(plugin.Resource), ResourceAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker)
+	}
+	if alarmsDict != nil {
+		args["alarms"] = llx.MapData(alarmsDict, types.String)
+	}
+	if canaryConfigDict != nil {
+		args["canaryConfiguration"] = llx.MapData(canaryConfigDict, types.String)
+	}
+	if lifecycleHooksDict != nil {
+		args["lifecycleHooks"] = llx.MapData(lifecycleHooksDict, types.String)
+	}
+	if linearConfigDict != nil {
+		args["linearConfiguration"] = llx.MapData(linearConfigDict, types.String)
+	}
+
+	return CreateResource(runtime, ResourceAwsEcsServiceDeploymentConfiguration, args)
+}
+
+func createNetworkConfigurationResource(runtime *plugin.Runtime, nc *ecstypes.NetworkConfiguration, serviceArn string) (any, error) {
+	// Create awsvpc configuration resource
+	var awsvpcResource any
+	if nc.AwsvpcConfiguration != nil {
+		awsvpc := nc.AwsvpcConfiguration
+		subnets := []any{}
+		for _, subnet := range awsvpc.Subnets {
+			subnets = append(subnets, subnet)
+		}
+		securityGroups := []any{}
+		for _, sg := range awsvpc.SecurityGroups {
+			securityGroups = append(securityGroups, sg)
+		}
+		awsvpcRes, err := CreateResource(runtime, ResourceAwsEcsServiceNetworkConfigurationAwsvpcConfiguration,
+			map[string]*llx.RawData{
+				"__id":           llx.StringData(serviceArn + "/networkConfiguration/awsvpc"),
+				"subnets":        llx.ArrayData(subnets, types.String),
+				"securityGroups": llx.ArrayData(securityGroups, types.String),
+				"assignPublicIp": llx.StringData(string(awsvpc.AssignPublicIp)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		awsvpcResource = awsvpcRes
+	}
+
+	args := map[string]*llx.RawData{
+		"__id": llx.StringData(serviceArn + "/networkConfiguration"),
+	}
+	if awsvpcResource != nil {
+		args["awsvpcConfiguration"] = llx.ResourceData(awsvpcResource.(plugin.Resource), ResourceAwsEcsServiceNetworkConfigurationAwsvpcConfiguration)
+	}
+
+	return CreateResource(runtime, ResourceAwsEcsServiceNetworkConfiguration, args)
 }
