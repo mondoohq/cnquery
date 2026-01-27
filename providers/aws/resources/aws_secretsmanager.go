@@ -86,6 +86,18 @@ func (a *mqlAwsSecretsmanagerSecret) kmsKey() (*mqlAwsKmsKey, error) {
 	return a.KmsKey.Data, nil
 }
 
+func (a *mqlAwsSecretsmanagerSecret) rotationLambda() (*mqlAwsLambdaFunction, error) {
+	return a.RotationLambda.Data, nil
+}
+
+func (a *mqlAwsSecretsmanagerSecret) rotationRules() (*mqlAwsSecretsmanagerSecretRotationRules, error) {
+	return a.RotationRules.Data, nil
+}
+
+func (a *mqlAwsSecretsmanagerSecretRotationRules) id() (string, error) {
+	return a.__id, nil
+}
+
 func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
@@ -116,10 +128,12 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 						"arn":              llx.StringDataPtr(secret.ARN),
 						"createdAt":        llx.TimeDataPtr(secret.CreatedDate),
 						"description":      llx.StringDataPtr(secret.Description),
+						"lastAccessedDate": llx.TimeDataPtr(secret.LastAccessedDate),
 						"lastChangedDate":  llx.TimeDataPtr(secret.LastChangedDate),
 						"lastRotatedDate":  llx.TimeDataPtr(secret.LastRotatedDate),
 						"name":             llx.StringDataPtr(secret.Name),
 						"nextRotationDate": llx.TimeDataPtr(secret.NextRotationDate),
+						"owningService":    llx.StringDataPtr(secret.OwningService),
 						"primaryRegion":    llx.StringDataPtr(secret.PrimaryRegion),
 						"rotationEnabled":  llx.BoolData(convert.ToValue(secret.RotationEnabled)),
 						"tags":             llx.MapData(secretTagsToMap(secret.Tags), types.String),
@@ -139,6 +153,45 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 						}
 					} else {
 						args["kmsKey"] = llx.NilData
+					}
+
+					// add rotation lambda if there is one
+					if secret.RotationLambdaARN != nil {
+						mqlLambdaResource, err := NewResource(a.MqlRuntime, "aws.lambda.function",
+							map[string]*llx.RawData{
+								"arn": llx.StringDataPtr(secret.RotationLambdaARN),
+							})
+						if err != nil {
+							args["rotationLambda"] = llx.NilData
+						} else {
+							mqlLambda := mqlLambdaResource.(*mqlAwsLambdaFunction)
+							args["rotationLambda"] = llx.ResourceData(mqlLambda, mqlLambda.MqlName())
+						}
+					} else {
+						args["rotationLambda"] = llx.NilData
+					}
+
+					// add rotation rules if configured
+					if secret.RotationRules != nil {
+						var automaticallyAfterDays int64
+						if secret.RotationRules.AutomaticallyAfterDays != nil {
+							automaticallyAfterDays = *secret.RotationRules.AutomaticallyAfterDays
+						}
+						mqlRotationRules, err := CreateResource(a.MqlRuntime, "aws.secretsmanager.secret.rotationRules",
+							map[string]*llx.RawData{
+								"__id":                   llx.StringData(convert.ToValue(secret.ARN) + "/rotationRules"),
+								"automaticallyAfterDays": llx.IntData(automaticallyAfterDays),
+								"duration":               llx.StringDataPtr(secret.RotationRules.Duration),
+								"scheduleExpression":     llx.StringDataPtr(secret.RotationRules.ScheduleExpression),
+							})
+						if err != nil {
+							args["rotationRules"] = llx.NilData
+						} else {
+							mqlRules := mqlRotationRules.(*mqlAwsSecretsmanagerSecretRotationRules)
+							args["rotationRules"] = llx.ResourceData(mqlRules, mqlRules.MqlName())
+						}
+					} else {
+						args["rotationRules"] = llx.NilData
 					}
 
 					mqlSecret, err := CreateResource(a.MqlRuntime, "aws.secretsmanager.secret", args)
