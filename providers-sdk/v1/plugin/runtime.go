@@ -196,9 +196,7 @@ type TValue[T any] struct {
 
 func (x *TValue[T]) ToDataRes(typ types.Type) *DataRes {
 	if !x.IsSet() {
-		return &DataRes{
-			Data: &llx.Primitive{Type: string(types.Nil)},
-		}
+		return &DataRes{}
 	}
 	if x.IsNull() {
 		if x.Error != nil {
