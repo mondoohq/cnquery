@@ -613,7 +613,7 @@ func (r *Runtime) SetMockRecording(anyRecording llx.Recording, providerID string
 		return nil
 	}
 	assetRecording := assetRecordings[0]
-	asset := assetRecording.Asset.ToInventory()
+	asset := assetRecording.Asset
 
 	provider, ok := r.providers[providerID]
 	if !ok {

@@ -189,7 +189,7 @@ func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 		}
 
 		conn, err := provider.Instance.Plugin.MockConnect(&plugin.ConnectReq{
-			Asset:    asset.Asset.ToInventory(),
+			Asset:    asset.Asset,
 			Features: req.Features,
 			Upstream: req.Upstream,
 		}, callback)
