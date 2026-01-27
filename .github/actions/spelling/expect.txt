@@ -46,7 +46,7 @@ ekus
 elbv
 exo
 failback
-fargate
+FARGATE
 filesz
 frontmatter
 fumadocs
