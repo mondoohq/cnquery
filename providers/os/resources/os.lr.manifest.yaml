@@ -68,6 +68,7 @@ resources:
   auditd.rule.syscall:
     fields:
       action: {}
+      comparisons: {}
       fields: {}
       keyname: {}
       list: {}
