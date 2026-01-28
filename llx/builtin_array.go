@@ -267,7 +267,11 @@ func _arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, in
 			},
 		}
 	}
-	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errors []error) {
+	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		// Propagate any errors from block execution (e.g., case-mismatch errors in dict access)
+		var anyError multierr.Errors
+		anyError.Add(errs...)
+
 		resList := []any{}
 		for i, res := range results {
 			isTruthy := res.isTruthy()
@@ -279,6 +283,7 @@ func _arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, in
 		data := &RawData{
 			Type:  bind.Type,
 			Value: resList,
+			Error: anyError.Deduplicate(),
 		}
 		e.cache.Store(ref, &stepCache{
 			Result:   data,

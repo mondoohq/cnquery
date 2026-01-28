@@ -4,6 +4,7 @@
 package resources_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -604,6 +605,115 @@ func TestDict_Methods_OtherJson(t *testing.T) {
 			Expectation: nil,
 		},
 	})
+}
+
+func TestDict_KeyNotFound(t *testing.T) {
+	p := "parse.json('/dummy.json')."
+	keyNotFoundErr := func(key, suggestion string) string {
+		return fmt.Sprintf("key '%s' not found, did you mean '%s'? (keys are case-sensitive)", key, suggestion)
+	}
+
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        p + "params.nonExistentKey",
+			Expectation: nil,
+		},
+		{
+			Code:        p + "params['nonExistentKey']",
+			Expectation: nil,
+		},
+		{
+			Code:  p + "params.Hello",
+			Error: keyNotFoundErr("Hello", "hello"),
+		},
+		{
+			Code:  p + "params['HELLO']",
+			Error: keyNotFoundErr("HELLO", "hello"),
+		},
+		{
+			Code:  p + "params.dict.EE",
+			Error: keyNotFoundErr("EE", "ee"),
+		},
+		{
+			Code:        p + "params.hello",
+			Expectation: "hello",
+		},
+		{
+			Code:        p + "params.dict.ee",
+			Expectation: float64(3),
+		},
+	})
+}
+
+func TestDict_KeyNotFound_ChainedFunctions(t *testing.T) {
+	p := "parse.json('/dummy.json')."
+	keyNotFoundErr := func(key, suggestion string) string {
+		return fmt.Sprintf("key '%s' not found, did you mean '%s'? (keys are case-sensitive)", key, suggestion)
+	}
+
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:  p + "params.Hello.length",
+			Error: keyNotFoundErr("Hello", "hello"),
+		},
+		{
+			Code:  p + "params.Hello == 'hello'",
+			Error: keyNotFoundErr("Hello", "hello"),
+		},
+		{
+			Code:  p + "params.Hello != empty",
+			Error: keyNotFoundErr("Hello", "hello"),
+		},
+		{
+			Code:  p + "params.dict.EE == 3",
+			Error: keyNotFoundErr("EE", "ee"),
+		},
+		{
+			Code:        p + "params.nonExistentKey.length",
+			Expectation: nil,
+		},
+		{
+			Code:        p + "params.nonExistentKey == empty",
+			Expectation: nil,
+		},
+		{
+			Code:        p + "params.f.map(_['ff'])",
+			Expectation: []any{float64(3)},
+		},
+	})
+}
+
+func TestDict_KeyNotFound_BlockOperations(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	keyNotFoundErr := func(key, suggestion string) string {
+		return fmt.Sprintf("key '%s' not found, did you mean '%s'?", key, suggestion)
+	}
+
+	tests := []struct {
+		name       string
+		code       string
+		key        string
+		suggestion string
+	}{
+		{"where", "parse.json('/dummy.json').params.f.where(_['FF'] == 3)", "FF", "ff"},
+		{"all", "parse.json('/dummy.json').params.f.all(_['FF'] == 3)", "FF", "ff"},
+		{"any", "parse.json('/dummy.json').params.f.any(_['FF'] == 3)", "FF", "ff"},
+		{"one", "parse.json('/dummy.json').params.f.one(_['FF'] == 3)", "FF", "ff"},
+		{"none", "parse.json('/dummy.json').params.f.none(_['FF'] == 3)", "FF", "ff"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res := x.TestQuery(t, tc.code)
+			require.NotEmpty(t, res)
+			lastResult := res[len(res)-1]
+			require.NotNil(t, lastResult)
+			require.Error(t, lastResult.Data.Error)
+			assert.Contains(t, lastResult.Data.Error.Error(), keyNotFoundErr(tc.key, tc.suggestion))
+		})
+	}
 }
 
 func TestArrayBlockError(t *testing.T) {

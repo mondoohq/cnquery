@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/multierr"
 )
 
 // mapFunctions are all the handlers for builtin array methods
@@ -65,9 +66,30 @@ func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
 	}
+
+	// Check if key exists in the map
+	value, exists := m[key]
+	if !exists {
+		// Key doesn't exist - check for case-insensitive matches to provide helpful error
+		// This helps catch common typos like "UniformBucketLevelAccess" vs "uniformBucketLevelAccess"
+		for k := range m {
+			if strings.EqualFold(k, key) {
+				return &RawData{
+					Type:  childType,
+					Error: errors.New("key '" + key + "' not found, did you mean '" + k + "'? (keys are case-sensitive)"),
+				}, 0, nil
+			}
+		}
+		// Key doesn't exist and no similar keys found - return nil for backward compatibility
+		return &RawData{
+			Type:  childType,
+			Value: nil,
+		}, 0, nil
+	}
+
 	return &RawData{
 		Type:  childType,
-		Value: m[key],
+		Value: value,
 	}, 0, nil
 }
 
@@ -178,6 +200,10 @@ func _mapWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inve
 	}
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		// Propagate any errors from block execution (e.g., case-mismatch errors in dict access)
+		var anyError multierr.Errors
+		anyError.Add(errs...)
+
 		resMap := map[string]any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
@@ -188,6 +214,7 @@ func _mapWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inve
 		data := &RawData{
 			Type:  bind.Type,
 			Value: resMap,
+			Error: anyError.Deduplicate(),
 		}
 		e.cache.Store(ref, &stepCache{
 			Result:   data,
@@ -411,8 +438,27 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 		// ^^ TODO
 
 		key := string(args[0].Value)
+		// Check if key exists in the map
+		value, exists := x[key]
+		if !exists {
+			// Key doesn't exist - check for case-insensitive matches to provide helpful error
+			// This helps catch common typos like "UniformBucketLevelAccess" vs "uniformBucketLevelAccess"
+			for k := range x {
+				if strings.EqualFold(k, key) {
+					return &RawData{
+						Type:  bind.Type,
+						Error: errors.New("key '" + key + "' not found, did you mean '" + k + "'? (keys are case-sensitive)"),
+					}, 0, nil
+				}
+			}
+			// Key doesn't exist and no similar keys found - return nil for backward compatibility
+			return &RawData{
+				Type:  bind.Type,
+				Value: nil,
+			}, 0, nil
+		}
 		return &RawData{
-			Value: x[key],
+			Value: value,
 			Type:  bind.Type,
 		}, 0, nil
 	default:
@@ -764,6 +810,10 @@ func _dictArrayWhere(e *blockExecutor, list []any, chunk *Chunk, ref uint64, inv
 	}
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		// Propagate any errors from block execution (e.g., case-mismatch errors in dict access)
+		var anyError multierr.Errors
+		anyError.Add(errs...)
+
 		resList := []any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
@@ -775,6 +825,7 @@ func _dictArrayWhere(e *blockExecutor, list []any, chunk *Chunk, ref uint64, inv
 		data := &RawData{
 			Type:  types.Dict,
 			Value: resList,
+			Error: anyError.Deduplicate(),
 		}
 		e.cache.Store(ref, &stepCache{
 			Result:   data,
@@ -859,6 +910,10 @@ func _dictWhere(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inver
 	}
 
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		// Propagate any errors from block execution (e.g., case-mismatch errors in dict access)
+		var anyError multierr.Errors
+		anyError.Add(errs...)
+
 		resMap := map[string]any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
@@ -869,6 +924,7 @@ func _dictWhere(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inver
 		data := &RawData{
 			Type:  bind.Type,
 			Value: resMap,
+			Error: anyError.Deduplicate(),
 		}
 		e.cache.Store(ref, &stepCache{
 			Result:   data,
@@ -946,6 +1002,10 @@ func filterList(e *blockExecutor, list []any, chunk *Chunk, ref uint64, invert b
 
 	var res []any
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		// Note: filterList is used by _dictRecurse which iterates through nested structures
+		// of varying types. Type-related errors (e.g., "dict value does not support accessor")
+		// are expected and should be silently handled. We don't propagate errors here to
+		// maintain backward compatibility with recurse operations.
 		resList := []any{}
 		for i, res := range results {
 			if res.isTruthy() == !invert {
