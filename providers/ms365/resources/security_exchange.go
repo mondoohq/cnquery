@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v12/types"
@@ -69,7 +70,7 @@ type mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicyInternal st
 }
 
 func (r *mqlMicrosoftSecurity) exchange() (*mqlMicrosoftSecurityExchange, error) {
-	resource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange", map[string]*llx.RawData{})
+	resource, err := CreateResource(r.MqlRuntime, ResourceMicrosoftSecurityExchange, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +78,7 @@ func (r *mqlMicrosoftSecurity) exchange() (*mqlMicrosoftSecurityExchange, error)
 }
 
 func (r *mqlMicrosoftSecurityExchange) antispam() (*mqlMicrosoftSecurityExchangeAntispam, error) {
-	resource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange.antispam", map[string]*llx.RawData{})
+	resource, err := CreateResource(r.MqlRuntime, ResourceMicrosoftSecurityExchangeAntispam, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +87,7 @@ func (r *mqlMicrosoftSecurityExchange) antispam() (*mqlMicrosoftSecurityExchange
 
 func (r *mqlMicrosoftSecurityExchangeAntispam) hostedConnectionFilterPolicy() (*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy, error) {
 	// Create a new exchange resource to get the report
-	exchangeResource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange", map[string]*llx.RawData{})
+	exchangeResource, err := CreateResource(r.MqlRuntime, ResourceMicrosoftSecurityExchange, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +103,7 @@ func (r *mqlMicrosoftSecurityExchangeAntispam) hostedConnectionFilterPolicy() (*
 
 	policy := report.HostedConnectionFilterPolicy
 
-	resource, err := CreateResource(r.MqlRuntime, "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy",
+	resource, err := CreateResource(r.MqlRuntime, ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy,
 		map[string]*llx.RawData{
 			"identity":         llx.StringData(policy.Identity),
 			"adminDisplayName": llx.StringData(policy.AdminDisplayName),
@@ -114,6 +115,21 @@ func (r *mqlMicrosoftSecurityExchangeAntispam) hostedConnectionFilterPolicy() (*
 		return nil, err
 	}
 	return resource.(*mqlMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy), nil
+}
+
+func initMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// Create the parent antispam resource and call its method
+	antispamResource, err := CreateResource(runtime, ResourceMicrosoftSecurityExchangeAntispam, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	policy, err := antispamResource.(*mqlMicrosoftSecurityExchangeAntispam).hostedConnectionFilterPolicy()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return nil, policy, nil
 }
 
 func (r *mqlMicrosoftSecurityExchange) getHostedConnectionFilterPolicyReport() (*HostedConnectionFilterPolicyReport, error) {

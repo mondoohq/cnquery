@@ -365,6 +365,21 @@ func (a *mqlMicrosoftPolicies) externalIdentitiesPolicy() (*mqlMicrosoftPolicies
 	return mqlPolicy.(*mqlMicrosoftPoliciesExternalIdentitiesPolicy), nil
 }
 
+func initMicrosoftPoliciesExternalIdentitiesPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// Create the parent policies resource and call its method
+	policiesResource, err := CreateResource(runtime, ResourceMicrosoftPolicies, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	policy, err := policiesResource.(*mqlMicrosoftPolicies).externalIdentitiesPolicy()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return nil, policy, nil
+}
+
 // Internal struct for caching cross-tenant access policy data
 // This will be embedded in mqlMicrosoftPoliciesCrossTenantAccessPolicyDefault after code generation
 type mqlMicrosoftPoliciesCrossTenantAccessPolicyDefaultInternal struct {

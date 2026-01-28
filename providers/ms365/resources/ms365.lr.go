@@ -431,7 +431,7 @@ func init() {
 			Create: createMicrosoftSecurityExchangeAntispam,
 		},
 		"microsoft.security.exchange.antispam.hostedConnectionFilterPolicy": {
-			// to override args, implement: initMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy,
 			Create: createMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy,
 		},
 		"microsoft.policies": {
@@ -439,7 +439,7 @@ func init() {
 			Create: createMicrosoftPolicies,
 		},
 		"microsoft.policies.externalIdentitiesPolicy": {
-			// to override args, implement: initMicrosoftPoliciesExternalIdentitiesPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMicrosoftPoliciesExternalIdentitiesPolicy,
 			Create: createMicrosoftPoliciesExternalIdentitiesPolicy,
 		},
 		"microsoft.policies.activityBasedTimeoutPolicy": {

@@ -1227,6 +1227,7 @@ microsoft.security.exchange.antispam {
 
 // Microsoft Security Exchange Antispam Hosted Connection Filter Policy
 microsoft.security.exchange.antispam.hostedConnectionFilterPolicy @defaults("identity enableSafeList") {
+  init(identity? string)
   // Policy identity
   identity string
   // Admin display name for the policy
@@ -1263,6 +1264,7 @@ microsoft.policies {
 
 // Tenant-wide policy that controls whether external users can leave a tenant via self-service controls
 private microsoft.policies.externalIdentitiesPolicy @defaults("displayName allowExternalIdentitiesToLeave") {
+  init(id? string)
   // Policy ID
   id string
   // Policy display name
