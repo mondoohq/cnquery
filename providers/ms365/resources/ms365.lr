@@ -1165,6 +1165,8 @@ microsoft.security {
   riskyUsers() []microsoft.security.riskyUser
   // Exchange security settings
   exchange() microsoft.security.exchange
+  // Information protection settings
+  informationProtection() microsoft.security.informationProtection
 }
 
 // Microsoft Secure Score
@@ -1237,6 +1239,38 @@ microsoft.security.exchange.antispam.hostedConnectionFilterPolicy @defaults("ide
   ipBlockList []string
   // Whether to use the safe list
   enableSafeList bool
+}
+
+// Microsoft Information Protection
+microsoft.security.informationProtection {
+  // List of sensitivity labels
+  sensitivityLabels() []microsoft.security.informationProtection.sensitivityLabel
+}
+
+// Microsoft Information Protection Sensitivity Label
+microsoft.security.informationProtection.sensitivityLabel @defaults("id name") {
+  // Unique identifier for the sensitivity label
+  id string
+  // Name of the label
+  name string
+  // Description of the label
+  description string
+  // Tooltip displayed in UI
+  toolTip string
+  // UI display color (e.g., "#EAA300")
+  color string
+  // Supported content formats (e.g., file, email, teamwork)
+  contentFormats []string
+  // Whether the label can be applied to content
+  isAppliable bool
+  // Whether the label has protection enabled
+  hasProtection bool
+  // Whether the label is active
+  isActive bool
+  // Sensitivity level (lower number = less sensitive)
+  sensitivity int
+  // Parent label in the hierarchy
+  parent microsoft.security.informationProtection.sensitivityLabel
 }
 
 // Microsoft policies
