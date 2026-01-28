@@ -1708,9 +1708,9 @@ aws.secretsmanager.secret @defaults("arn name") {
   // Whether rotation is enabled for the secret
   rotationEnabled bool
   // Lambda function used for automatic rotation
-  rotationLambda() aws.lambda.function
+  rotationLambda aws.lambda.function
   // Rotation schedule configuration
-  rotationRules() aws.secretsmanager.secret.rotationRules
+  rotationRules aws.secretsmanager.secret.rotationRules
   // Tags for the secret
   tags map[string]string
 }
