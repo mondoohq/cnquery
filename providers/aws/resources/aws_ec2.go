@@ -1644,6 +1644,7 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
+					mqlVol.(*mqlAwsEc2Volume).cacheKmsKeyId = vol.KmsKeyId
 					res = append(res, mqlVol)
 				}
 			}
@@ -1699,6 +1700,26 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 
 	return nil, nil, errors.New("volume does not exist")
+}
+
+type mqlAwsEc2VolumeInternal struct {
+	cacheKmsKeyId *string
+}
+
+func (a *mqlAwsEc2Volume) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// KmsKeyId is already an ARN from the AWS API
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -1943,6 +1964,7 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 					if err != nil {
 						return nil, err
 					}
+					mqlSnap.(*mqlAwsEc2Snapshot).cacheKmsKeyId = snapshot.KmsKeyId
 					res = append(res, mqlSnap)
 				}
 			}
@@ -1951,6 +1973,26 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+type mqlAwsEc2SnapshotInternal struct {
+	cacheKmsKeyId *string
+}
+
+func (a *mqlAwsEc2Snapshot) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// KmsKeyId is already an ARN from the AWS API
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]any, error) {

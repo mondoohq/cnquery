@@ -2553,7 +2553,7 @@ private aws.dynamodb.export {
   endTime() time
   // S3 SSE Algorithm for the export
   s3SseAlgorithm() string
-  // SSE KMS Key Id
+  // SSE KMS Key
   kmsKey() aws.kms.key
   // ARN for the export
   arn string
@@ -2789,6 +2789,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   globalClusterIdentifier string
   // CloudWatch Database Insights mode. Possible values are `standard` and `advanced`
   databaseInsightsMode string
+  // KMS key used for storage encryption
+  kmsKey() aws.kms.key
 }
 
 // Amazon RDS snapshot
@@ -2821,6 +2823,8 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   allocatedStorage int
   // Creation date of the snapshot
   createdAt time
+  // KMS key used for snapshot encryption
+  kmsKey() aws.kms.key
 }
 
 // Amazon RDS database instance
@@ -2913,6 +2917,8 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   preferredMaintenanceWindow string
   // Preferred backup window for the database cluster
   preferredBackupWindow string
+  // KMS key used for storage encryption
+  kmsKey() aws.kms.key
 }
 
 // Amazon RDS pending maintenance action
@@ -3592,6 +3598,8 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   encrypted bool
   // The storage tier in which the snapshot is stored
   storageTier string
+  // KMS key used for snapshot encryption
+  kmsKey() aws.kms.key
 }
 
 // Amazon EC2 (EBS) volume
@@ -3624,6 +3632,8 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   size int
   // Number of I/O operations per second (IOPS). For gp3, io1, and io2 volumes, this represents the number of IOPS that are provisioned for the volume. For gp2 volumes, this represents the baseline performance of the volume and the rate at which the volume accumulates I/O credits for bursting.
   iops int
+  // KMS key used for volume encryption
+  kmsKey() aws.kms.key
 }
 
 // Amazon Inspector

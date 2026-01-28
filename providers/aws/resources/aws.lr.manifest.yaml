@@ -1529,6 +1529,8 @@ resources:
       encrypted:
         min_mondoo_version: 9.0.0
       id: {}
+      kmsKey:
+        min_mondoo_version: 9.0.0
       region: {}
       startTime: {}
       state: {}
@@ -1569,6 +1571,8 @@ resources:
       encrypted: {}
       id: {}
       iops:
+        min_mondoo_version: 9.0.0
+      kmsKey:
         min_mondoo_version: 9.0.0
       multiAttachEnabled:
         min_mondoo_version: 9.0.0
@@ -3239,6 +3243,8 @@ resources:
       iamDatabaseAuthentication:
         min_mondoo_version: latest
       id: {}
+      kmsKey:
+        min_mondoo_version: 9.0.0
       latestRestorableTime:
         min_mondoo_version: 9.0.0
       masterUsername:
@@ -3324,6 +3330,8 @@ resources:
       iamDatabaseAuthentication:
         min_mondoo_version: latest
       id: {}
+      kmsKey:
+        min_mondoo_version: 9.0.0
       latestRestorableTime:
         min_mondoo_version: 9.0.0
       masterUsername:
@@ -3426,6 +3434,8 @@ resources:
         min_mondoo_version: 9.0.0
       id: {}
       isClusterSnapshot: {}
+      kmsKey:
+        min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
       region: {}
