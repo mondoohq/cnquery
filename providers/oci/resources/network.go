@@ -96,14 +96,31 @@ func (o *mqlOciNetwork) getVcns(conn *connection.OciConnection) []*jobpool.Job {
 					created = &vcn.TimeCreated.Time
 				}
 
+				freeformTags := make(map[string]interface{})
+				for k, v := range vcn.FreeformTags {
+					freeformTags[k] = v
+				}
+
+				definedTags := make(map[string]interface{})
+				for k, v := range vcn.DefinedTags {
+					definedTags[k] = v
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(vcn.Id),
-					"name":          llx.StringDataPtr(vcn.DisplayName),
-					"created":       llx.TimeDataPtr(created),
-					"state":         llx.StringData(string(vcn.LifecycleState)),
-					"compartmentID": llx.StringDataPtr(vcn.CompartmentId),
-					"cidrBlock":     llx.StringDataPtr(vcn.CidrBlock),
-					"cidrBlocks":    llx.ArrayData(convert.SliceAnyToInterface(vcn.CidrBlocks), types.String),
+					"id":                    llx.StringDataPtr(vcn.Id),
+					"name":                  llx.StringDataPtr(vcn.DisplayName),
+					"created":               llx.TimeDataPtr(created),
+					"state":                 llx.StringData(string(vcn.LifecycleState)),
+					"compartmentID":         llx.StringDataPtr(vcn.CompartmentId),
+					"cidrBlock":             llx.StringDataPtr(vcn.CidrBlock),
+					"cidrBlocks":            llx.ArrayData(convert.SliceAnyToInterface(vcn.CidrBlocks), types.String),
+					"vcnDomainName":         llx.StringDataPtr(vcn.VcnDomainName),
+					"defaultDhcpOptionsId":  llx.StringDataPtr(vcn.DefaultDhcpOptionsId),
+					"defaultRouteTableId":   llx.StringDataPtr(vcn.DefaultRouteTableId),
+					"defaultSecurityListId": llx.StringDataPtr(vcn.DefaultSecurityListId),
+					"dnsLabel":              llx.StringDataPtr(vcn.DnsLabel),
+					"freeformTags":          llx.MapData(freeformTags, types.String),
+					"definedTags":           llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -275,6 +292,16 @@ func (o *mqlOciNetwork) getSecurityLists(conn *connection.OciConnection) []*jobp
 					return nil, err
 				}
 
+				freeformTags := make(map[string]interface{})
+				for k, v := range securityList.FreeformTags {
+					freeformTags[k] = v
+				}
+
+				definedTags := make(map[string]interface{})
+				for k, v := range securityList.DefinedTags {
+					definedTags[k] = v
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.securityList", map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(securityList.Id),
 					"name":                 llx.StringDataPtr(securityList.DisplayName),
@@ -283,6 +310,9 @@ func (o *mqlOciNetwork) getSecurityLists(conn *connection.OciConnection) []*jobp
 					"compartmentID":        llx.StringDataPtr(securityList.CompartmentId),
 					"egressSecurityRules":  llx.DictData(egress),
 					"ingressSecurityRules": llx.DictData(ingress),
+					"vcnId":                llx.StringDataPtr(securityList.VcnId),
+					"freeformTags":         llx.MapData(freeformTags, types.String),
+					"definedTags":          llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err
