@@ -163,11 +163,11 @@ func cloneForChildBroken(parent *inventory.Config) *inventory.Config {
 func TestDiscoveryAndFilterPropagation(t *testing.T) {
 	t.Run("clone options behavior", func(t *testing.T) {
 		cases := []struct {
-			name            string
-			cloneOpts       []inventory.CloneOption
-			expectFilters   bool
-			expectTargets   bool
-			expectParentId  bool
+			name           string
+			cloneOpts      []inventory.CloneOption
+			expectFilters  bool
+			expectTargets  bool
+			expectParentId bool
 		}{
 			{
 				name: "WithFilters only",
@@ -282,8 +282,11 @@ func TestDiscoveryAndFilterPropagation(t *testing.T) {
 			{"all keyword", []string{"all"}, allDiscovery()},
 			{"resources keyword", []string{"resources"}, AllAPIResources},
 			{"explicit single", []string{"s3-buckets"}, []string{DiscoveryS3Buckets}},
-			{"explicit multiple", []string{"s3-buckets", "instances", "iam-users"},
-				[]string{DiscoveryS3Buckets, DiscoveryInstances, DiscoveryIAMUsers}},
+			{
+				"explicit multiple",
+				[]string{"s3-buckets", "instances", "iam-users"},
+				[]string{DiscoveryS3Buckets, DiscoveryInstances, DiscoveryIAMUsers},
+			},
 			{"auto takes precedence", []string{"auto", "s3-buckets"}, Auto},
 			{"all takes precedence", []string{"all", "s3-buckets"}, allDiscovery()},
 		}
@@ -444,14 +447,14 @@ func TestGetDiscoveryTargets(t *testing.T) {
 
 // TestDiscoveryDefaultBehavior documents the expected discovery flow:
 //
-// 1. ParseCLI (in provider.go): When no --discover flag is provided, it sets
-//    targets to ["auto"]. This ensures the parent connection always has explicit targets.
+//  1. ParseCLI (in provider.go): When no --discover flag is provided, it sets
+//     targets to ["auto"]. This ensures the parent connection always has explicit targets.
 //
-// 2. getDiscoveryTargets: Expands "auto" to the Auto list. Does NOT provide a
-//    fallback for empty targets - that's ParseCLI's responsibility.
+//  2. getDiscoveryTargets: Expands "auto" to the Auto list. Does NOT provide a
+//     fallback for empty targets - that's ParseCLI's responsibility.
 //
-// 3. Child connections: Created with WithoutDiscovery() which sets Discover to
-//    an empty struct (targets = nil/empty). This prevents re-discovery.
+//  3. Child connections: Created with WithoutDiscovery() which sets Discover to
+//     an empty struct (targets = nil/empty). This prevents re-discovery.
 //
 // 4. Service.discover(): Checks len(targets) == 0 to skip discovery for children.
 func TestDiscoveryDefaultBehavior(t *testing.T) {
@@ -516,4 +519,3 @@ func TestDiscoveryDefaultBehavior(t *testing.T) {
 			"child should have no targets regardless of parent's explicit targets")
 	})
 }
-
