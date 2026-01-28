@@ -275,6 +275,11 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 			mp := x.Runtime.Plugin.(*sbomProviderService)
 			mp.Init(x.Runtime)
 		}
+
+		if id == recordingProviderInstance.ID {
+			rp := x.Runtime.Plugin.(*recordingProvider)
+			rp.Init(x.Runtime)
+		}
 		c.schema.Add(id, x.Runtime.Schema)
 		return x.Runtime, nil
 	}
