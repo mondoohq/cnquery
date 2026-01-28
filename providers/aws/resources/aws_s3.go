@@ -57,8 +57,6 @@ func (a *mqlAwsS3) id() (string, error) {
 
 func (a *mqlAwsS3) buckets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3("")
 	ctx := context.Background()
 
 	configuredRegions, err := conn.Regions()
@@ -73,6 +71,7 @@ func (a *mqlAwsS3) buckets() ([]any, error) {
 	var bucketsWithRegions []bucketWithRegion
 
 	for _, region := range configuredRegions {
+		svc := conn.S3(region)
 		log.Debug().Str("region", region).Msg("listing S3 buckets in region")
 		params := &s3.ListBucketsInput{BucketRegion: aws.String(region)}
 		paginator := s3.NewListBucketsPaginator(svc, params, func(o *s3.ListBucketsPaginatorOptions) {
