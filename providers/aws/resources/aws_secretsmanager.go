@@ -94,10 +94,6 @@ func (a *mqlAwsSecretsmanagerSecret) rotationRules() (*mqlAwsSecretsmanagerSecre
 	return a.RotationRules.Data, nil
 }
 
-func (a *mqlAwsSecretsmanagerSecretRotationRules) id() (string, error) {
-	return a.__id, nil
-}
-
 func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()

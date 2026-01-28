@@ -23082,35 +23082,11 @@ func (c *mqlAwsSecretsmanagerSecret) GetRotationEnabled() *plugin.TValue[bool] {
 }
 
 func (c *mqlAwsSecretsmanagerSecret) GetRotationLambda() *plugin.TValue[*mqlAwsLambdaFunction] {
-	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.RotationLambda, func() (*mqlAwsLambdaFunction, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.secretsmanager.secret", c.__id, "rotationLambda")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsLambdaFunction), nil
-			}
-		}
-
-		return c.rotationLambda()
-	})
+	return &c.RotationLambda
 }
 
 func (c *mqlAwsSecretsmanagerSecret) GetRotationRules() *plugin.TValue[*mqlAwsSecretsmanagerSecretRotationRules] {
-	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecretRotationRules](&c.RotationRules, func() (*mqlAwsSecretsmanagerSecretRotationRules, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.secretsmanager.secret", c.__id, "rotationRules")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsSecretsmanagerSecretRotationRules), nil
-			}
-		}
-
-		return c.rotationRules()
-	})
+	return &c.RotationRules
 }
 
 func (c *mqlAwsSecretsmanagerSecret) GetTags() *plugin.TValue[map[string]any] {
@@ -23138,12 +23114,7 @@ func createAwsSecretsmanagerSecretRotationRules(runtime *plugin.Runtime, args ma
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.secretsmanager.secret.rotationRules", res.__id)
