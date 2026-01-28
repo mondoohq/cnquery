@@ -118,8 +118,6 @@ func (r *mqlMicrosoftSecurityExchangeAntispam) hostedConnectionFilterPolicy() (*
 }
 
 func initMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// If identity is provided, we can use it, but typically we fetch from API
-	// The optional identity parameter is ignored - we always fetch the default policy
 	// Create the parent antispam resource and call its method
 	antispamResource, err := CreateResource(runtime, ResourceMicrosoftSecurityExchangeAntispam, map[string]*llx.RawData{})
 	if err != nil {

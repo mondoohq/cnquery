@@ -366,8 +366,6 @@ func (a *mqlMicrosoftPolicies) externalIdentitiesPolicy() (*mqlMicrosoftPolicies
 }
 
 func initMicrosoftPoliciesExternalIdentitiesPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// If id is provided, we can use it, but typically we fetch from API
-	// The optional id parameter is ignored - we always fetch the current policy
 	// Create the parent policies resource and call its method
 	policiesResource, err := CreateResource(runtime, ResourceMicrosoftPolicies, map[string]*llx.RawData{})
 	if err != nil {
