@@ -22,6 +22,7 @@ clcerts
 cloudflare
 Clusterwide
 cmek
+cmnd
 copywrite
 cpe
 crontabs
@@ -164,6 +165,7 @@ virtualmachine
 Vtpm
 vulnerabilityassessmentsettings
 vulnmgmt
+WEBSERVERS
 wil
 xoxp
 xssmatchstatement
