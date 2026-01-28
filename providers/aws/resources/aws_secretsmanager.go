@@ -86,14 +86,6 @@ func (a *mqlAwsSecretsmanagerSecret) kmsKey() (*mqlAwsKmsKey, error) {
 	return a.KmsKey.Data, nil
 }
 
-func (a *mqlAwsSecretsmanagerSecret) rotationLambda() (*mqlAwsLambdaFunction, error) {
-	return a.RotationLambda.Data, nil
-}
-
-func (a *mqlAwsSecretsmanagerSecret) rotationRules() (*mqlAwsSecretsmanagerSecretRotationRules, error) {
-	return a.RotationRules.Data, nil
-}
-
 func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
