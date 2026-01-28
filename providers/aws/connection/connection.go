@@ -11,6 +11,7 @@ import (
 	"maps"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -75,9 +76,11 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	for _, opt := range opts {
 		opt(c)
 	}
-	// custom retry client
+	// custom retry client with reduced retries and shorter backoff
+	// to avoid excessive delays when regions are unreachable
 	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 5
+	retryClient.RetryMax = 2              // reduced from 5 to avoid long delays on unreachable regions
+	retryClient.RetryWaitMax = 10 * time.Second        // cap at 10s instead of 30s
 	retryClient.Logger = zerologadapter.New(log.Logger)
 	c.awsConfigOptions = append(c.awsConfigOptions, config.WithHTTPClient(retryClient.StandardClient()))
 
@@ -328,6 +331,10 @@ func (h *AwsConnection) Regions() ([]string, error) {
 	svc := h.Ec2(h.cfg.Region)
 	ctx := context.Background()
 
+	// DescribeRegions works to get the list of enabled regions for the account ( each account of organization)
+	// but this does not mean the respective service endpoint is available in that region. They will timeout instead of failing fast
+	// (e.g. EKS,KMS,Sagemaker is for example not available in ap-southeast-1 etc)
+	// This also does not cover SCPs that might block access to certain regions.
 	res, err := svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
 		log.Warn().Err(err).Msg("unable to describe regions")

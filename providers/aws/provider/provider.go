@@ -54,9 +54,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		return &plugin.ParseCLIRes{Asset: asset}, nil
 	}
 
-	inventoryConfig := &inventory.Config{
-		Type: req.Connector,
-	}
 	// discovery flags
 	discoverTargets := []string{}
 	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
@@ -67,7 +64,14 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	filterOpts := parseFlagsToFiltersOpts(flags)
 
-	inventoryConfig.Discover = &inventory.Discovery{Targets: discoverTargets, Filter: filterOpts}
+	if len(discoverTargets) == 0 {
+		discoverTargets = []string{resources.DiscoveryAuto}
+	}
+
+	inventoryConfig := &inventory.Config{
+		Type:     req.Connector,
+		Discover: &inventory.Discovery{Targets: discoverTargets, Filter: filterOpts},
+	}
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{inventoryConfig},
 		Options:     opts,
@@ -289,7 +293,7 @@ func (s *Service) detect(asset *inventory.Asset, conn plugin.Connection) error {
 }
 
 func (s *Service) discover(conn *connection.AwsConnection) (*inventory.Inventory, error) {
-	if conn.Conf.Discover == nil {
+	if len(conn.Conf.GetDiscover().GetTargets()) == 0 {
 		return nil, nil
 	}
 
