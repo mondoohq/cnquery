@@ -4,27 +4,27 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/arista"
 option go_package = "go.mondoo.com/cnquery/v12/providers/arista/resources"
 
-// Arista EOS resource
+// Arista EOS network operating system
 arista.eos {
-  // EOS system configuration
+  // System configuration key-value pairs
   systemConfig() map[string]string
-  // IP interfaces
+  // IP-enabled interfaces with addresses
   ipInterfaces() []arista.eos.ipInterface
-  // Details related to interfaces
+  // All network interfaces
   interfaces() []arista.eos.interface
-  // Software and hardware versions
+  // EOS software and hardware version info
   version() dict
-  // The system hostname
+  // System hostname
   hostname() string
-  // The systems fqdn
+  // Fully qualified domain name
   fqdn() string
-  // Local user configuration
+  // Local user accounts
   users() []arista.eos.user
-  // All user-defined and built-in roles
+  // User-defined and built-in roles
   roles() []arista.eos.role
-  // Details on SNMP operation
+  // SNMP configuration
   snmp() arista.eos.snmpSetting
-  // Show NTP status
+  // NTP synchronization status
   ntp() arista.eos.ntpSetting
 }
 

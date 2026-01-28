@@ -4,76 +4,76 @@
 option provider = "go.mondoo.com/cnquery/v12/providers/nmap"
 option go_package = "go.mondoo.com/cnquery/v12/providers/nmap/resources"
 
-// Nmap
+// Nmap network scanner
 nmap {
-  // Nmap version information
+  // Nmap installation version and build info
   version() nmap.versionInformation
 }
 
-// Nmap network
+// Nmap network scan target
 nmap.network {
   init(target string)
-  // Target IP address or hostname
+  // Target IP address, hostname, or CIDR range
   target string
-  // Hosts discovered for the target
+  // Discovered hosts from the scan
   hosts() []nmap.host
-  // Errors encountered during the scan
+  // Warnings and errors from the scan
   warnings() []string
 }
 
-// Nmap host
+// Nmap discovered host
 nmap.host @defaults("name") {
  init(name string)
-  // Name of the host
+ // Hostname or IP address
  name string
- // Distance to the host
+ // Network distance (hop count)
  distance() dict
- // Information about the host operating system
+ // OS detection results
  os() dict
- //
+ // Scan end timestamp
  endTime() time
- // Comments about the host
+ // User-defined host comments
  comment() string
- // Trace route information
+ // Traceroute hops to this host
  trace() dict
- // Addresses associated with the host
+ // IP and MAC addresses
  addresses() []dict
- // Hostnames associated with the host
+ // DNS hostnames
  hostnames() []dict
- // Ports on the host
+ // Open, filtered, and closed ports
  ports() []nmap.port
- // State of the host (e.g., up or down)
+ // Host state: up, down, unknown
  state() string
 }
 
-// Nmap port
+// Nmap discovered port
 private nmap.port @defaults("port service"){
-  // Port number
+  // Port number (1-65535)
   port int
-  // Service running on the port
+  // Detected service name (e.g., http, ssh)
   service string
-  // Method used to discover the port (e.g., SYN scan)
+  // Scan method used (e.g., syn, connect)
   method string
-  // Protocol used (e.g., TCP or UDP)
+  // Protocol: tcp or udp
   protocol string
-  // Product running on the port
+  // Product name (e.g., Apache httpd, OpenSSH)
   product string
-  // Version of the product running on the port
+  // Product version
   version string
-  // State of the port (e.g., open or closed)
+  // Port state: open, closed, filtered
   state string
 }
 
-// Nmap version information
+// Nmap version and build information
 private nmap.versionInformation @defaults("version") {
-  // Version of Nmap
+  // Nmap version number
   version string
-  // Platform Nmap is running on
+  // Platform (e.g., x86_64-apple-darwin)
   platform string
-  // Libraries compiled with
+  // Libraries compiled with (e.g., openssl, libpcap)
   compiledWith []string
   // Libraries not compiled with
   compiledWithout []string
-  // nsock engines
+  // Available nsock I/O engines
   nsockEngines []string
 }
