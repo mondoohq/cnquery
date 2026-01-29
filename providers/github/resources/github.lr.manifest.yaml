@@ -64,6 +64,26 @@ resources:
       restrictions: {}
     is_private: true
     min_mondoo_version: 6.4.0
+  github.codeScanningAlert:
+    fields:
+      closedAt: {}
+      closedBy: {}
+      createdAt: {}
+      dismissedAt: {}
+      dismissedBy: {}
+      dismissedComment: {}
+      dismissedReason: {}
+      fixedAt: {}
+      htmlUrl: {}
+      mostRecentInstance: {}
+      number: {}
+      rule: {}
+      state: {}
+      tool: {}
+      updatedAt: {}
+      url: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   github.collaborator:
     fields:
       id: {}
@@ -380,6 +400,8 @@ resources:
         min_mondoo_version: 9.0.0
       codeOfConductFile:
         min_mondoo_version: 9.0.0
+      codeScanningAlerts:
+        min_mondoo_version: 9.0.0
       collaborators:
         min_mondoo_version: 6.11.0
       commits:
@@ -446,6 +468,8 @@ resources:
         min_mondoo_version: 9.0.0
       releases:
         min_mondoo_version: 6.4.0
+      secretScanningAlerts:
+        min_mondoo_version: 9.0.0
       security:
         min_mondoo_version: 9.0.0
       securityAndAnalysis:
@@ -494,6 +518,29 @@ resources:
       user: {}
     is_private: true
     min_mondoo_version: 6.4.0
+  github.secretScanningAlert:
+    fields:
+      createdAt: {}
+      htmlUrl: {}
+      multiRepo: {}
+      number: {}
+      publiclyLeaked: {}
+      pushProtectionBypassed: {}
+      pushProtectionBypassedAt: {}
+      pushProtectionBypassedBy: {}
+      resolution: {}
+      resolutionComment: {}
+      resolvedAt: {}
+      resolvedBy: {}
+      secret: {}
+      secretType: {}
+      secretTypeDisplayName: {}
+      state: {}
+      updatedAt: {}
+      url: {}
+      validity: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   github.team:
     fields:
       defaultPermission: {}
