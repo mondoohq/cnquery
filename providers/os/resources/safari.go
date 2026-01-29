@@ -5,11 +5,14 @@ package resources
 
 import (
 	"bufio"
+	"fmt"
+	"io"
 	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
@@ -36,6 +39,13 @@ func (s *mqlSafari) extensions() ([]any, error) {
 		return nil, nil
 	}
 
+	// Check if pluginkit command exists
+	afs := conn.FileSystem()
+	if _, err := afs.Stat("/usr/bin/pluginkit"); err != nil {
+		log.Warn().Msg("pluginkit command not found at /usr/bin/pluginkit, cannot enumerate Safari extensions")
+		return []any{}, nil
+	}
+
 	seen := make(map[string]bool)
 	var extensions []any
 
@@ -43,8 +53,12 @@ func (s *mqlSafari) extensions() ([]any, error) {
 		// Run pluginkit to list extensions of this type
 		cmd, err := conn.RunCommand("pluginkit -mAvvv -p " + extType)
 		if err != nil {
-			// pluginkit might not be available or no extensions of this type
-			continue
+			return nil, err
+		}
+
+		if cmd.ExitStatus != 0 {
+			stderr, _ := io.ReadAll(cmd.Stderr)
+			return nil, fmt.Errorf("pluginkit failed for %s: %s", extType, string(stderr))
 		}
 
 		scanner := bufio.NewScanner(cmd.Stdout)
