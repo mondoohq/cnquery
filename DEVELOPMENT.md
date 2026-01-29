@@ -66,6 +66,21 @@ make providers/mqlr
 ```
 To quickly install the changed provider plugin run `make providers/build/aws && make providers/install/aws`.
 
+### Resource Naming Conventions
+
+When defining resources in `.lr` files, if a function name matches a resource structure name, append `Default` to the resource structure name to avoid implicit resource conflicts.
+
+**Example:**
+```lr
+microsoft.policies {
+  // Function name: crossTenantAccessPolicy
+  // Resource structure: crossTenantAccessPolicyDefault (note the "Default" suffix)
+  crossTenantAccessPolicy() microsoft.policies.crossTenantAccessPolicyDefault
+}
+```
+
+This naming convention prevents issues with dot notation access (e.g., `microsoft.policies.crossTenantAccessPolicyDefault.someField`) by ensuring the resource structure name is distinct from the function name. Without this convention, the schema builder creates implicit resources that cannot be instantiated directly, requiring `init()` methods to enable dot notation access.
+
 ## Debug providers
 
 `cnquery` uses a plugin mechanism. Each provider has its own go modules. This ensures that dependencies are only used on
