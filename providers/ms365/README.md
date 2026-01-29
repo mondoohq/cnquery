@@ -1,20 +1,5 @@
 # ms365 Provider
 
-## Resource Naming Conventions
-
-When defining resources in the `.lr` file, if a function name matches a resource structure name, append `Default` to the resource structure name to avoid implicit resource conflicts.
-
-**Example:**
-```lr
-microsoft.policies {
-  // Function name: crossTenantAccessPolicy
-  // Resource structure: crossTenantAccessPolicyDefault (note the "Default" suffix)
-  crossTenantAccessPolicy() microsoft.policies.crossTenantAccessPolicyDefault
-}
-```
-
-This naming convention prevents issues with dot notation access (e.g., `microsoft.policies.crossTenantAccessPolicyDefault.someField`) by ensuring the resource structure name is distinct from the function name.
-
 ## Prerequisites
 
 - A registered Azure AD app configured with certificate-based authentication
