@@ -460,6 +460,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 			"networkType":                   llx.StringDataPtr(dbInstance.NetworkType),
 			"preferredMaintenanceWindow":    llx.StringDataPtr(dbInstance.PreferredMaintenanceWindow),
 			"preferredBackupWindow":         llx.StringDataPtr(dbInstance.PreferredBackupWindow),
+			"performanceInsightsEnabled":    llx.BoolDataPtr(dbInstance.PerformanceInsightsEnabled),
 		})
 	if err != nil {
 		return nil, err
@@ -821,10 +822,11 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 			"region":                     llx.StringData(region),
 			"status":                     llx.StringDataPtr(cluster.Status),
 			"storageAllocated":           llx.IntDataDefault(cluster.AllocatedStorage, 0),
-			"storageEncrypted":           llx.BoolDataPtr(cluster.StorageEncrypted),
-			"storageIops":                llx.IntDataDefault(cluster.Iops, 0),
-			"storageType":                llx.StringDataPtr(cluster.StorageType),
-			"tags":                       llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
+			"storageEncrypted":            llx.BoolDataPtr(cluster.StorageEncrypted),
+			"storageIops":                 llx.IntDataDefault(cluster.Iops, 0),
+			"storageType":                 llx.StringDataPtr(cluster.StorageType),
+			"tags":                        llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
+			"performanceInsightsEnabled": llx.BoolDataPtr(cluster.PerformanceInsightsEnabled),
 		})
 	if err != nil {
 		return nil, err

@@ -161,6 +161,20 @@ func (a *mqlAwsKmsKey) aliases() ([]any, error) {
 	return aliases, nil
 }
 
+func (a *mqlAwsKmsKey) keyState() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	keyArn := a.Arn.Data
+
+	svc := conn.Kms(a.Region.Data)
+	ctx := context.Background()
+
+	keyMetadata, err := svc.DescribeKey(ctx, &kms.DescribeKeyInput{KeyId: &keyArn})
+	if err != nil {
+		return "", err
+	}
+	return string(keyMetadata.KeyMetadata.KeyState), nil
+}
+
 func (a *mqlAwsKmsKey) id() (string, error) {
 	return a.Arn.Data, nil
 }

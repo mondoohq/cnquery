@@ -2556,6 +2556,8 @@ resources:
       desc: |
         The `aws.guardduty.detector` resource provides fields for assessing the configuration of individual Amazon GuardDuty Detectors. For usage, read the `aws.guardduty` resource documentation
     fields:
+      createdAt:
+        min_mondoo_version: 9.0.0
       features:
         min_mondoo_version: 9.0.0
       findingPublishingFrequency: {}
@@ -2565,6 +2567,8 @@ resources:
       region: {}
       status: {}
       tags:
+        min_mondoo_version: 9.0.0
+      updatedAt:
         min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
@@ -2804,6 +2808,10 @@ resources:
         min_mondoo_version: 9.0.0
       description: {}
       id: {}
+      lastUsedAt:
+        min_mondoo_version: 9.0.0
+      lastUsedRegion:
+        min_mondoo_version: 9.0.0
       name: {}
       tags: {}
     is_private: true
@@ -2983,6 +2991,8 @@ resources:
       arn: {}
       id: {}
       keyRotationEnabled: {}
+      keyState:
+        min_mondoo_version: 9.0.0
       metadata: {}
       region: {}
       tags:
@@ -3007,9 +3017,15 @@ resources:
       desc: |
         The `aws.lambda.function` resource provides fields for assessing the configuration of individual AWS Lambda functions. For usage, read the `aws.lambda` resource documentation.
     fields:
+      architectures:
+        min_mondoo_version: 9.0.0
       arn: {}
       concurrency: {}
       dlqTargetArn: {}
+      ephemeralStorageSize:
+        min_mondoo_version: 9.0.0
+      memorySize:
+        min_mondoo_version: 9.0.0
       name: {}
       policy: {}
       region: {}
@@ -3325,6 +3341,8 @@ resources:
         min_mondoo_version: 9.0.0
       parameterGroupName:
         min_mondoo_version: 9.0.0
+      performanceInsightsEnabled:
+        min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
       preferredBackupWindow:
@@ -3410,6 +3428,8 @@ resources:
       networkType:
         min_mondoo_version: 9.0.0
       pendingMaintenanceActions:
+        min_mondoo_version: 9.0.0
+      performanceInsightsEnabled:
         min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
@@ -3983,6 +4003,8 @@ resources:
     fields:
       arn: {}
       cidrBlock:
+        min_mondoo_version: 9.0.0
+      dhcpOptionsId:
         min_mondoo_version: 9.0.0
       endpoints:
         min_mondoo_version: 9.0.0

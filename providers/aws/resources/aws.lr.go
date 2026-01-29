@@ -1411,6 +1411,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.internetGatewayBlockMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetInternetGatewayBlockMode()).ToDataRes(types.String)
 	},
+	"aws.vpc.dhcpOptionsId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetDhcpOptionsId()).ToDataRes(types.String)
+	},
 	"aws.vpc.routetable.associations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetable).GetAssociations()).ToDataRes(types.Array(types.Resource("aws.vpc.routetable.association")))
 	},
@@ -2242,6 +2245,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.aliases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetAliases()).ToDataRes(types.Array(types.String))
 	},
+	"aws.kms.key.keyState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetKeyState()).ToDataRes(types.String)
+	},
 	"aws.iam.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
 	},
@@ -2481,6 +2487,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.role.assumeRolePolicyDocument": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetAssumeRolePolicyDocument()).ToDataRes(types.Dict)
+	},
+	"aws.iam.role.lastUsedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetLastUsedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.role.lastUsedRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetLastUsedRegion()).ToDataRes(types.String)
 	},
 	"aws.iam.group.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetArn()).ToDataRes(types.String)
@@ -2991,6 +3003,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.guardduty.detector.findings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyDetector).GetFindings()).ToDataRes(types.Array(types.Resource("aws.guardduty.finding")))
+	},
+	"aws.guardduty.detector.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyDetector).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.guardduty.detector.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyDetector).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.guardduty.finding.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyFinding).GetArn()).ToDataRes(types.String)
@@ -4588,6 +4606,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
+	"aws.rds.dbcluster.performanceInsightsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetPerformanceInsightsEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -4767,6 +4788,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.rds.dbinstance.performanceInsightsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetPerformanceInsightsEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.rds.pendingMaintenanceAction.resourceArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetResourceArn()).ToDataRes(types.String)
@@ -5208,6 +5232,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lambda.function.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.lambda.function.architectures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetArchitectures()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.function.ephemeralStorageSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetEphemeralStorageSize()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.memorySize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetMemorySize()).ToDataRes(types.Int)
 	},
 	"aws.ssm.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsm).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ssm.instance")))
@@ -6812,6 +6845,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpc).InternetGatewayBlockMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.dhcpOptionsId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).DhcpOptionsId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.routetable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetable).__id, ok = v.Value.(string)
 		return
@@ -8116,6 +8153,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.kms.key.keyState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).KeyState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.iam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIam).__id, ok = v.Value.(string)
 		return
@@ -8466,6 +8507,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.role.assumeRolePolicyDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamRole).AssumeRolePolicyDocument, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.lastUsedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).LastUsedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.lastUsedRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).LastUsedRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.iam.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9258,6 +9307,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.guardduty.detector.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGuarddutyDetector).Findings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.detector.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyDetector).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.guardduty.detector.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyDetector).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11688,6 +11745,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbcluster).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.performanceInsightsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).PerformanceInsightsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 		return
@@ -11934,6 +11995,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.dbinstance.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.performanceInsightsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).PerformanceInsightsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.rds.pendingMaintenanceAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12594,6 +12659,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.architectures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).Architectures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.ephemeralStorageSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).EphemeralStorageSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.memorySize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).MemorySize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15104,6 +15181,7 @@ type mqlAwsVpc struct {
 	ServiceEndpoints         plugin.TValue[[]any]
 	PeeringConnections       plugin.TValue[[]any]
 	InternetGatewayBlockMode plugin.TValue[string]
+	DhcpOptionsId            plugin.TValue[string]
 }
 
 // createAwsVpc creates a new instance of this resource
@@ -15293,6 +15371,10 @@ func (c *mqlAwsVpc) GetPeeringConnections() *plugin.TValue[[]any] {
 
 func (c *mqlAwsVpc) GetInternetGatewayBlockMode() *plugin.TValue[string] {
 	return &c.InternetGatewayBlockMode
+}
+
+func (c *mqlAwsVpc) GetDhcpOptionsId() *plugin.TValue[string] {
+	return &c.DhcpOptionsId
 }
 
 // mqlAwsVpcRoutetable for the aws.vpc.routetable resource
@@ -18932,6 +19014,7 @@ type mqlAwsKmsKey struct {
 	Metadata           plugin.TValue[any]
 	Tags               plugin.TValue[map[string]any]
 	Aliases            plugin.TValue[[]any]
+	KeyState           plugin.TValue[string]
 }
 
 // createAwsKmsKey creates a new instance of this resource
@@ -19004,6 +19087,12 @@ func (c *mqlAwsKmsKey) GetTags() *plugin.TValue[map[string]any] {
 func (c *mqlAwsKmsKey) GetAliases() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Aliases, func() ([]any, error) {
 		return c.aliases()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetKeyState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KeyState, func() (string, error) {
+		return c.keyState()
 	})
 }
 
@@ -19982,6 +20071,8 @@ type mqlAwsIamRole struct {
 	Tags                     plugin.TValue[map[string]any]
 	CreatedAt                plugin.TValue[*time.Time]
 	AssumeRolePolicyDocument plugin.TValue[any]
+	LastUsedAt               plugin.TValue[*time.Time]
+	LastUsedRegion           plugin.TValue[string]
 }
 
 // createAwsIamRole creates a new instance of this resource
@@ -20047,6 +20138,14 @@ func (c *mqlAwsIamRole) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsIamRole) GetAssumeRolePolicyDocument() *plugin.TValue[any] {
 	return &c.AssumeRolePolicyDocument
+}
+
+func (c *mqlAwsIamRole) GetLastUsedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUsedAt
+}
+
+func (c *mqlAwsIamRole) GetLastUsedRegion() *plugin.TValue[string] {
+	return &c.LastUsedRegion
 }
 
 // mqlAwsIamGroup for the aws.iam.group resource
@@ -22355,6 +22454,8 @@ type mqlAwsGuarddutyDetector struct {
 	Tags                       plugin.TValue[map[string]any]
 	FindingPublishingFrequency plugin.TValue[string]
 	Findings                   plugin.TValue[[]any]
+	CreatedAt                  plugin.TValue[*time.Time]
+	UpdatedAt                  plugin.TValue[*time.Time]
 }
 
 // createAwsGuarddutyDetector creates a new instance of this resource
@@ -22439,6 +22540,18 @@ func (c *mqlAwsGuarddutyDetector) GetFindings() *plugin.TValue[[]any] {
 		}
 
 		return c.findings()
+	})
+}
+
+func (c *mqlAwsGuarddutyDetector) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsGuarddutyDetector) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.UpdatedAt, func() (*time.Time, error) {
+		return c.updatedAt()
 	})
 }
 
@@ -29141,6 +29254,7 @@ type mqlAwsRdsDbcluster struct {
 	GlobalClusterIdentifier    plugin.TValue[string]
 	DatabaseInsightsMode       plugin.TValue[string]
 	KmsKey                     plugin.TValue[*mqlAwsKmsKey]
+	PerformanceInsightsEnabled plugin.TValue[bool]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -29404,6 +29518,10 @@ func (c *mqlAwsRdsDbcluster) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	})
 }
 
+func (c *mqlAwsRdsDbcluster) GetPerformanceInsightsEnabled() *plugin.TValue[bool] {
+	return &c.PerformanceInsightsEnabled
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -29587,6 +29705,7 @@ type mqlAwsRdsDbinstance struct {
 	PreferredMaintenanceWindow    plugin.TValue[string]
 	PreferredBackupWindow         plugin.TValue[string]
 	KmsKey                        plugin.TValue[*mqlAwsKmsKey]
+	PerformanceInsightsEnabled    plugin.TValue[bool]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -29876,6 +29995,10 @@ func (c *mqlAwsRdsDbinstance) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 
 		return c.kmsKey()
 	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetPerformanceInsightsEnabled() *plugin.TValue[bool] {
+	return &c.PerformanceInsightsEnabled
 }
 
 // mqlAwsRdsPendingMaintenanceAction for the aws.rds.pendingMaintenanceAction resource
@@ -31465,15 +31588,18 @@ type mqlAwsLambdaFunction struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsLambdaFunctionInternal it will be used here
-	Arn          plugin.TValue[string]
-	Name         plugin.TValue[string]
-	Runtime      plugin.TValue[string]
-	Concurrency  plugin.TValue[int64]
-	DlqTargetArn plugin.TValue[string]
-	Policy       plugin.TValue[any]
-	VpcConfig    plugin.TValue[any]
-	Region       plugin.TValue[string]
-	Tags         plugin.TValue[map[string]any]
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Runtime              plugin.TValue[string]
+	Concurrency          plugin.TValue[int64]
+	DlqTargetArn         plugin.TValue[string]
+	Policy               plugin.TValue[any]
+	VpcConfig            plugin.TValue[any]
+	Region               plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
+	Architectures        plugin.TValue[[]any]
+	EphemeralStorageSize plugin.TValue[int64]
+	MemorySize           plugin.TValue[int64]
 }
 
 // createAwsLambdaFunction creates a new instance of this resource
@@ -31551,6 +31677,18 @@ func (c *mqlAwsLambdaFunction) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsLambdaFunction) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+func (c *mqlAwsLambdaFunction) GetArchitectures() *plugin.TValue[[]any] {
+	return &c.Architectures
+}
+
+func (c *mqlAwsLambdaFunction) GetEphemeralStorageSize() *plugin.TValue[int64] {
+	return &c.EphemeralStorageSize
+}
+
+func (c *mqlAwsLambdaFunction) GetMemorySize() *plugin.TValue[int64] {
+	return &c.MemorySize
 }
 
 // mqlAwsSsm for the aws.ssm resource

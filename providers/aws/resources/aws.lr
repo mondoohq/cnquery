@@ -117,6 +117,8 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
   peeringConnections() []aws.vpc.peeringConnection
   // Internet gateway blocking mode: block-bidirectional, block-ingress, or off
   internetGatewayBlockMode string
+  // ID of the set of DHCP options associated with the VPC
+  dhcpOptionsId string
 }
 
 // Amazon Virtual Private Cloud (VPC) route table
@@ -865,6 +867,8 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   tags() map[string]string
   // Aliases for the KMS key
   aliases() []string
+  // Current state of the key: Enabled, Disabled, PendingDeletion, PendingImport, PendingReplicaDeletion, Unavailable, or Updating
+  keyState() string
 }
 
 
@@ -1067,6 +1071,10 @@ private aws.iam.role @defaults("arn name") {
   createdAt time
   // Policy document that grants an entity permission to assume the role
   assumeRolePolicyDocument dict
+  // Time when the role was last used to make an AWS request
+  lastUsedAt time
+  // Region in which the role was last used
+  lastUsedRegion string
 }
 
 // AWS IAM group
@@ -1519,6 +1527,10 @@ private aws.guardduty.detector @defaults("id region") {
   findingPublishingFrequency() string
   // List of active findings by the detector
   findings() []aws.guardduty.finding
+  // Time when the detector was created
+  createdAt() time
+  // Time when the detector was last updated
+  updatedAt() time
 }
 
 // AWS Guard Duty finding
@@ -2887,6 +2899,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   databaseInsightsMode string
   // KMS key used for storage encryption
   kmsKey() aws.kms.key
+  // Whether Performance Insights is enabled for the DB cluster
+  performanceInsightsEnabled bool
 }
 
 // Amazon RDS snapshot
@@ -3015,6 +3029,8 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   preferredBackupWindow string
   // KMS key used for storage encryption
   kmsKey() aws.kms.key
+  // Whether Performance Insights is enabled for the DB instance
+  performanceInsightsEnabled bool
 }
 
 // Amazon RDS pending maintenance action
@@ -3380,6 +3396,12 @@ private aws.lambda.function @defaults("arn") {
   region string
   // Tags for the function
   tags map[string]string
+  // Instruction set architectures supported by the function (x86_64, arm64)
+  architectures []string
+  // Size of the /tmp directory in MB (512-10240)
+  ephemeralStorageSize int
+  // Amount of memory available to the function at runtime in MB
+  memorySize int
 }
 
 // Amazon Systems Manager
