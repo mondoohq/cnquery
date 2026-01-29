@@ -116,7 +116,7 @@ func (l *mqlLimits) files() ([]any, error) {
 			return nil, list.Error
 		}
 
-		// Add all files from limits.d
+		// Filter for .conf files from limits.d
 		for i := range list.Data {
 			file := list.Data[i].(*mqlFile)
 			basename := file.GetBasename()
@@ -124,7 +124,10 @@ func (l *mqlLimits) files() ([]any, error) {
 				continue
 			}
 
-			allFiles = append(allFiles, file)
+			// Only include .conf files
+			if strings.HasSuffix(basename.Data, ".conf") {
+				allFiles = append(allFiles, file)
+			}
 		}
 	}
 
