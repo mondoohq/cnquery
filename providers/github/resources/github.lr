@@ -286,7 +286,7 @@ github.packages {
 }
 
 // GitHub repository
-private github.repository @defaults("fullName") {
+github.repository @defaults("fullName") {
   init(name string) // can only be used when logged in to github as a user
   // Repository ID
   id int
