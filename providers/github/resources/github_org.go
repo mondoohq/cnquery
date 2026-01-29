@@ -99,6 +99,20 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["membersCanCreatePrivatePages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePrivateRepos))
 	args["membersCanForkPrivateRepos"] = llx.BoolData(convert.ToValue(org.MembersCanForkPrivateRepos))
 
+	// Security settings for new repositories
+	args["dependabotAlertsEnabledForNewRepos"] = llx.BoolData(convert.ToValue(org.DependabotAlertsEnabledForNewRepos))
+	args["dependabotSecurityUpdatesEnabledForNewRepos"] = llx.BoolData(convert.ToValue(org.DependabotSecurityUpdatesEnabledForNewRepos))
+	args["advancedSecurityEnabledForNewRepos"] = llx.BoolData(convert.ToValue(org.AdvancedSecurityEnabledForNewRepos))
+	args["secretScanningEnabledForNewRepos"] = llx.BoolData(convert.ToValue(org.SecretScanningEnabledForNewRepos))
+	args["secretScanningPushProtectionEnabledForNewRepos"] = llx.BoolData(convert.ToValue(org.SecretScanningPushProtectionEnabledForNewRepos))
+	args["secretScanningValidityChecksEnabled"] = llx.BoolData(convert.ToValue(org.SecretScanningValidityChecksEnabled))
+
+	// Member permissions
+	args["membersCanDeleteRepositories"] = llx.BoolData(convert.ToValue(org.MembersCanDeleteRepositories))
+	args["membersCanChangeRepoVisibility"] = llx.BoolData(convert.ToValue(org.MembersCanChangeRepoVisibility))
+	args["membersCanDeleteIssues"] = llx.BoolData(convert.ToValue(org.MembersCanDeleteIssues))
+	args["readersCanCreateDiscussions"] = llx.BoolData(convert.ToValue(org.ReadersCanCreateDiscussions))
+
 	return args, nil, nil
 }
 

@@ -1083,16 +1083,32 @@ func (g *mqlGithubRepository) releases() ([]any, error) {
 	res := []any{}
 	for i := range allReleases {
 		r := allReleases[i]
-		mqlUser, err := CreateResource(g.MqlRuntime, "github.release", map[string]*llx.RawData{
-			"url":        llx.StringDataPtr(r.HTMLURL),
-			"name":       llx.StringDataPtr(r.Name),
-			"tagName":    llx.StringDataPtr(r.TagName),
-			"preRelease": llx.BoolDataPtr(r.Prerelease),
+
+		var author any
+		if r.Author != nil {
+			var authorErr error
+			author, authorErr = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(r.Author.ID),
+				"login": llx.StringDataPtr(r.Author.Login),
+			})
+			if authorErr != nil {
+				return nil, authorErr
+			}
+		}
+
+		mqlRelease, err := CreateResource(g.MqlRuntime, "github.release", map[string]*llx.RawData{
+			"url":         llx.StringDataPtr(r.HTMLURL),
+			"name":        llx.StringDataPtr(r.Name),
+			"tagName":     llx.StringDataPtr(r.TagName),
+			"preRelease":  llx.BoolDataPtr(r.Prerelease),
+			"createdAt":   llx.TimeDataPtr(githubTimestamp(r.CreatedAt)),
+			"publishedAt": llx.TimeDataPtr(githubTimestamp(r.PublishedAt)),
+			"author":      llx.AnyData(author),
 		})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlUser)
+		res = append(res, mqlRelease)
 	}
 
 	return res, nil
@@ -1654,6 +1670,8 @@ func (g *mqlGithubRepository) getIssues(state string) ([]any, error) {
 			"closedAt":  llx.TimeDataPtr(githubTimestamp(issue.ClosedAt)),
 			"assignees": llx.ArrayData(assignees, types.Any),
 			"closedBy":  llx.AnyData(closedBy),
+			"draft":     llx.BoolData(issue.GetDraft()),
+			"locked":    llx.BoolData(issue.GetLocked()),
 		})
 		if err != nil {
 			return nil, err
