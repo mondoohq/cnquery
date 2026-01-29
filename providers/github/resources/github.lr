@@ -402,6 +402,8 @@ private github.repository @defaults("fullName") {
   supportFile() github.file
   // Repository security file
   securityFile() github.file
+  // Dependabot alerts for the repository
+  dependabotAlerts() []github.dependabotAlert
 }
 
 // GitHub license
@@ -680,4 +682,38 @@ private github.issue @defaults("title") {
   draft bool
   // Whether the issue is locked
   locked bool
+}
+
+// GitHub Dependabot alert
+private github.dependabotAlert @defaults("number state") {
+  // Alert number
+  number int
+  // Alert state (auto_dismissed, dismissed, fixed, open)
+  state string
+  // Vulnerable dependency information
+  dependency dict
+  // Security advisory details
+  securityAdvisory dict
+  // Specific vulnerability details
+  securityVulnerability dict
+  // API URL
+  url string
+  // Web URL
+  htmlUrl string
+  // Alert creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+  // When the alert was dismissed
+  dismissedAt time
+  // When the vulnerability was fixed
+  fixedAt time
+  // When the alert was auto-dismissed
+  autoDismissedAt time
+  // User who dismissed the alert
+  dismissedBy github.user
+  // Reason for dismissal
+  dismissedReason string
+  // Comment on dismissal
+  dismissedComment string
 }

@@ -1794,3 +1794,106 @@ func (g *mqlGithubRepository) findSpecialFiles() error {
 
 	return nil
 }
+
+func (g *mqlGithubDependabotAlert) id() (string, error) {
+	if g.Number.Error != nil {
+		return "", g.Number.Error
+	}
+	return "github.dependabotAlert/" + strconv.FormatInt(g.Number.Data, 10), nil
+}
+
+func (g *mqlGithubRepository) dependabotAlerts() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	owner := g.Owner.Data
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	listOpts := &github.ListAlertsOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+	}
+
+	var allAlerts []*github.DependabotAlert
+	for {
+		alerts, resp, err := conn.Client().Dependabot.ListRepoAlerts(conn.Context(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			// Dependabot alerts may not be enabled or accessible
+			if strings.Contains(err.Error(), "403") {
+				log.Debug().Msg("Dependabot alerts are not accessible for this repository")
+				return nil, nil
+			}
+			return nil, err
+		}
+		allAlerts = append(allAlerts, alerts...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.ListOptions.Page = resp.NextPage
+	}
+
+	res := []any{}
+	for _, alert := range allAlerts {
+		var dismissedBy any
+		if alert.DismissedBy != nil {
+			var err error
+			dismissedBy, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(alert.DismissedBy.ID),
+				"login": llx.StringDataPtr(alert.DismissedBy.Login),
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		dependency, err := convert.JsonToDict(alert.Dependency)
+		if err != nil {
+			return nil, err
+		}
+
+		securityAdvisory, err := convert.JsonToDict(alert.SecurityAdvisory)
+		if err != nil {
+			return nil, err
+		}
+
+		securityVulnerability, err := convert.JsonToDict(alert.SecurityVulnerability)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlAlert, err := CreateResource(g.MqlRuntime, "github.dependabotAlert", map[string]*llx.RawData{
+			"number":                llx.IntData(int64(alert.GetNumber())),
+			"state":                 llx.StringData(alert.GetState()),
+			"dependency":            llx.DictData(dependency),
+			"securityAdvisory":      llx.DictData(securityAdvisory),
+			"securityVulnerability": llx.DictData(securityVulnerability),
+			"url":                   llx.StringData(alert.GetURL()),
+			"htmlUrl":               llx.StringData(alert.GetHTMLURL()),
+			"createdAt":             llx.TimeDataPtr(githubTimestamp(alert.CreatedAt)),
+			"updatedAt":             llx.TimeDataPtr(githubTimestamp(alert.UpdatedAt)),
+			"dismissedAt":           llx.TimeDataPtr(githubTimestamp(alert.DismissedAt)),
+			"fixedAt":               llx.TimeDataPtr(githubTimestamp(alert.FixedAt)),
+			"autoDismissedAt":       llx.TimeDataPtr(githubTimestamp(alert.AutoDismissedAt)),
+			"dismissedBy":           llx.AnyData(dismissedBy),
+			"dismissedReason":       llx.StringData(alert.GetDismissedReason()),
+			"dismissedComment":      llx.StringData(alert.GetDismissedComment()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAlert)
+	}
+
+	return res, nil
+}

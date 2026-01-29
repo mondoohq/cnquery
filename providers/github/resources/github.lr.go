@@ -43,6 +43,7 @@ const (
 	ResourceGithubGist                       string = "github.gist"
 	ResourceGithubGistfile                   string = "github.gistfile"
 	ResourceGithubIssue                      string = "github.issue"
+	ResourceGithubDependabotAlert            string = "github.dependabotAlert"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -152,6 +153,10 @@ func init() {
 		"github.issue": {
 			// to override args, implement: initGithubIssue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubIssue,
+		},
+		"github.dependabotAlert": {
+			// to override args, implement: initGithubDependabotAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubDependabotAlert,
 		},
 	}
 }
@@ -764,6 +769,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.securityFile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetSecurityFile()).ToDataRes(types.Resource("github.file"))
 	},
+	"github.repository.dependabotAlerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetDependabotAlerts()).ToDataRes(types.Array(types.Resource("github.dependabotAlert")))
+	},
 	"github.license.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubLicense).GetKey()).ToDataRes(types.String)
 	},
@@ -1096,6 +1104,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.issue.locked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubIssue).GetLocked()).ToDataRes(types.Bool)
+	},
+	"github.dependabotAlert.number": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetNumber()).ToDataRes(types.Int)
+	},
+	"github.dependabotAlert.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetState()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.dependency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetDependency()).ToDataRes(types.Dict)
+	},
+	"github.dependabotAlert.securityAdvisory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetSecurityAdvisory()).ToDataRes(types.Dict)
+	},
+	"github.dependabotAlert.securityVulnerability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetSecurityVulnerability()).ToDataRes(types.Dict)
+	},
+	"github.dependabotAlert.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetUrl()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.htmlUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetHtmlUrl()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"github.dependabotAlert.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"github.dependabotAlert.dismissedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetDismissedAt()).ToDataRes(types.Time)
+	},
+	"github.dependabotAlert.fixedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetFixedAt()).ToDataRes(types.Time)
+	},
+	"github.dependabotAlert.autoDismissedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetAutoDismissedAt()).ToDataRes(types.Time)
+	},
+	"github.dependabotAlert.dismissedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetDismissedBy()).ToDataRes(types.Resource("github.user"))
+	},
+	"github.dependabotAlert.dismissedReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetDismissedReason()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.dismissedComment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetDismissedComment()).ToDataRes(types.String)
 	},
 }
 
@@ -1865,6 +1918,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubRepository).SecurityFile, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
 		return
 	},
+	"github.repository.dependabotAlerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).DependabotAlerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"github.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubLicense).__id, ok = v.Value.(string)
 		return
@@ -2363,6 +2420,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.issue.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubIssue).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).__id, ok = v.Value.(string)
+		return
+	},
+	"github.dependabotAlert.number": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).Number, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.dependency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).Dependency, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.securityAdvisory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).SecurityAdvisory, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.securityVulnerability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).SecurityVulnerability, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.htmlUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).HtmlUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.dismissedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).DismissedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.fixedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).FixedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.autoDismissedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).AutoDismissedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.dismissedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).DismissedBy, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.dismissedReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).DismissedReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.dismissedComment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).DismissedComment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -3734,6 +3855,7 @@ type mqlGithubRepository struct {
 	CodeOfConductFile   plugin.TValue[*mqlGithubFile]
 	SupportFile         plugin.TValue[*mqlGithubFile]
 	SecurityFile        plugin.TValue[*mqlGithubFile]
+	DependabotAlerts    plugin.TValue[[]any]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -4250,6 +4372,22 @@ func (c *mqlGithubRepository) GetSecurityFile() *plugin.TValue[*mqlGithubFile] {
 		}
 
 		return c.securityFile()
+	})
+}
+
+func (c *mqlGithubRepository) GetDependabotAlerts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DependabotAlerts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "dependabotAlerts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dependabotAlerts()
 	})
 }
 
@@ -5500,4 +5638,123 @@ func (c *mqlGithubIssue) GetDraft() *plugin.TValue[bool] {
 
 func (c *mqlGithubIssue) GetLocked() *plugin.TValue[bool] {
 	return &c.Locked
+}
+
+// mqlGithubDependabotAlert for the github.dependabotAlert resource
+type mqlGithubDependabotAlert struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubDependabotAlertInternal it will be used here
+	Number                plugin.TValue[int64]
+	State                 plugin.TValue[string]
+	Dependency            plugin.TValue[any]
+	SecurityAdvisory      plugin.TValue[any]
+	SecurityVulnerability plugin.TValue[any]
+	Url                   plugin.TValue[string]
+	HtmlUrl               plugin.TValue[string]
+	CreatedAt             plugin.TValue[*time.Time]
+	UpdatedAt             plugin.TValue[*time.Time]
+	DismissedAt           plugin.TValue[*time.Time]
+	FixedAt               plugin.TValue[*time.Time]
+	AutoDismissedAt       plugin.TValue[*time.Time]
+	DismissedBy           plugin.TValue[*mqlGithubUser]
+	DismissedReason       plugin.TValue[string]
+	DismissedComment      plugin.TValue[string]
+}
+
+// createGithubDependabotAlert creates a new instance of this resource
+func createGithubDependabotAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubDependabotAlert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.dependabotAlert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubDependabotAlert) MqlName() string {
+	return "github.dependabotAlert"
+}
+
+func (c *mqlGithubDependabotAlert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubDependabotAlert) GetNumber() *plugin.TValue[int64] {
+	return &c.Number
+}
+
+func (c *mqlGithubDependabotAlert) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGithubDependabotAlert) GetDependency() *plugin.TValue[any] {
+	return &c.Dependency
+}
+
+func (c *mqlGithubDependabotAlert) GetSecurityAdvisory() *plugin.TValue[any] {
+	return &c.SecurityAdvisory
+}
+
+func (c *mqlGithubDependabotAlert) GetSecurityVulnerability() *plugin.TValue[any] {
+	return &c.SecurityVulnerability
+}
+
+func (c *mqlGithubDependabotAlert) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlGithubDependabotAlert) GetHtmlUrl() *plugin.TValue[string] {
+	return &c.HtmlUrl
+}
+
+func (c *mqlGithubDependabotAlert) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGithubDependabotAlert) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGithubDependabotAlert) GetDismissedAt() *plugin.TValue[*time.Time] {
+	return &c.DismissedAt
+}
+
+func (c *mqlGithubDependabotAlert) GetFixedAt() *plugin.TValue[*time.Time] {
+	return &c.FixedAt
+}
+
+func (c *mqlGithubDependabotAlert) GetAutoDismissedAt() *plugin.TValue[*time.Time] {
+	return &c.AutoDismissedAt
+}
+
+func (c *mqlGithubDependabotAlert) GetDismissedBy() *plugin.TValue[*mqlGithubUser] {
+	return &c.DismissedBy
+}
+
+func (c *mqlGithubDependabotAlert) GetDismissedReason() *plugin.TValue[string] {
+	return &c.DismissedReason
+}
+
+func (c *mqlGithubDependabotAlert) GetDismissedComment() *plugin.TValue[string] {
+	return &c.DismissedComment
 }
