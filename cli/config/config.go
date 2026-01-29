@@ -188,6 +188,15 @@ func DisplayUsedConfig() {
 	}
 }
 
+// GetAutoUpdate returns the auto_update setting from viper config.
+// Returns true (enabled) by default if not explicitly set.
+func GetAutoUpdate() bool {
+	if viper.IsSet("auto_update") {
+		return viper.GetBool("auto_update")
+	}
+	return true
+}
+
 func Read() (*Config, error) {
 	// load viper config into a struct
 	var opts Config
