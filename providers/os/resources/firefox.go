@@ -221,8 +221,13 @@ func (f *mqlFirefox) addons() ([]any, error) {
 						continue
 					}
 
-					// Create unique key including browser to avoid cross-browser deduplication
-					uniqueKey := browserCfg.name + "|" + profileName + "|" + addon.ID
+					// Create unique key including user and browser to avoid deduplication across users
+					userName := user.GetName()
+					userNameStr := ""
+					if userName.Error == nil {
+						userNameStr = userName.Data
+					}
+					uniqueKey := userNameStr + "|" + browserCfg.name + "|" + profileName + "|" + addon.ID
 					if seen[uniqueKey] {
 						continue
 					}

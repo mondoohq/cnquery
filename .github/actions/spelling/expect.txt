@@ -168,5 +168,4 @@ vulnerabilityassessmentsettings
 vulnmgmt
 wil
 xoxp
-XPI
 xssmatchstatement
