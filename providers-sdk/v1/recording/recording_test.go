@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
 func TestLoadRecording(t *testing.T) {
@@ -26,8 +27,8 @@ func TestAddAndGetData(t *testing.T) {
 
 		// Create an asset and add it to the recording
 		asset := &Asset{
-			Asset: &assetInfo{
-				ID:   "test-asset-1",
+			Asset: &inventory.Asset{
+				Id:   "test-asset-1",
 				Name: "test-asset",
 			},
 			connections: map[string]*connection{},
@@ -74,8 +75,8 @@ func TestAddAndGetData(t *testing.T) {
 		r.refreshCache()
 
 		asset := &Asset{
-			Asset: &assetInfo{
-				ID:   "test-asset-2",
+			Asset: &inventory.Asset{
+				Id:   "test-asset-2",
 				Name: "test-asset",
 			},
 			connections: map[string]*connection{},
@@ -132,8 +133,8 @@ func TestAddAndGetData(t *testing.T) {
 		r.refreshCache()
 
 		asset := &Asset{
-			Asset: &assetInfo{
-				ID:   "test-asset-3",
+			Asset: &inventory.Asset{
+				Id:   "test-asset-3",
 				Name: "test-asset",
 			},
 			connections: map[string]*connection{},
@@ -171,8 +172,8 @@ func TestAddAndGetData(t *testing.T) {
 		r.refreshCache()
 
 		asset := &Asset{
-			Asset: &assetInfo{
-				ID:   "test-asset-4",
+			Asset: &inventory.Asset{
+				Id:   "test-asset-4",
 				Name: "test-asset",
 			},
 			connections: map[string]*connection{},
@@ -210,8 +211,8 @@ func TestAddAndGetData(t *testing.T) {
 		r.refreshCache()
 
 		asset := &Asset{
-			Asset: &assetInfo{
-				ID:   "test-asset-5",
+			Asset: &inventory.Asset{
+				Id:   "test-asset-5",
 				Name: "test-asset",
 			},
 			connections: map[string]*connection{},
@@ -248,8 +249,8 @@ func TestAddAndGetData(t *testing.T) {
 		r.refreshCache()
 
 		asset := &Asset{
-			Asset: &assetInfo{
-				ID:   "test-asset-6",
+			Asset: &inventory.Asset{
+				Id:   "test-asset-6",
 				Name: "test-asset",
 			},
 			connections: map[string]*connection{},
@@ -295,8 +296,8 @@ func TestAddAndGetData(t *testing.T) {
 		r.refreshCache()
 
 		asset := &Asset{
-			Asset: &assetInfo{
-				ID:   "test-asset-7",
+			Asset: &inventory.Asset{
+				Id:   "test-asset-7",
 				Name: "test-asset",
 			},
 			connections: map[string]*connection{},
@@ -353,8 +354,8 @@ func TestAddAndGetData(t *testing.T) {
 		r.refreshCache()
 
 		asset := &Asset{
-			Asset: &assetInfo{
-				ID:   "test-asset-8",
+			Asset: &inventory.Asset{
+				Id:   "test-asset-8",
 				Name: "test-asset",
 			},
 			connections: map[string]*connection{},

@@ -30,32 +30,8 @@ type recording struct {
 }
 
 func NewAssetRecording(asset *inventory.Asset) *Asset {
-	id := asset.Mrn
-	if id == "" {
-		id = asset.Id
-	}
-	if id == "" && asset.Platform != nil {
-		id = asset.Platform.Title
-	}
-	ai := &assetInfo{
-		ID:          id,
-		Name:        asset.Name,
-		PlatformIDs: asset.PlatformIds,
-		Annotations: asset.Annotations,
-	}
-
-	if asset.Platform != nil {
-		ai.Arch = asset.Platform.Arch
-		ai.Title = asset.Platform.Title
-		ai.Family = asset.Platform.Family
-		ai.Build = asset.Platform.Build
-		ai.Version = asset.Platform.Version
-		ai.Kind = asset.Platform.Kind
-		ai.Runtime = asset.Platform.Runtime
-		ai.Labels = asset.Platform.Labels
-	}
 	return &Asset{
-		Asset:       ai,
+		Asset:       asset,
 		connections: map[string]*connection{},
 		resources:   map[string]*Resource{},
 		IdsLookup:   map[string]string{},
@@ -155,6 +131,22 @@ func NewWithFile(path string, opts RecordingOptions) (llx.Recording, error) {
 		// Schrodinger's file, may be permissions or something else...
 		return nil, multierr.Wrap(err, "failed to access recording in '"+path+"'")
 	}
+}
+
+func NewWithAsset(asset *inventory.Asset) *recording {
+	rec := &recording{
+		Assets: []*Asset{
+			{
+				Asset:       asset,
+				connections: map[string]*connection{},
+				resources:   map[string]*Resource{},
+				IdsLookup:   map[string]string{},
+			},
+		},
+		assets: syncx.Map[*Asset]{},
+	}
+	rec.refreshCache()
+	return rec
 }
 
 func LoadRecordingFile(path string) (*recording, error) {
@@ -322,12 +314,12 @@ func (r *recording) finalize() {
 
 func (r *recording) getExistingAsset(asset *inventory.Asset) *Asset {
 	for _, existing := range r.Assets {
-		id := existing.Asset.ID
+		id := existing.Asset.Id
 		if id == asset.Mrn {
 			return existing
 		}
 
-		for _, pidExisting := range existing.Asset.PlatformIDs {
+		for _, pidExisting := range existing.Asset.PlatformIds {
 			if slices.Contains(asset.PlatformIds, pidExisting) {
 				return existing
 			}
@@ -350,18 +342,7 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	recordingAsset := r.getExistingAsset(asset)
 	if recordingAsset == nil {
 		recordingAsset = &Asset{
-			Asset: &assetInfo{
-				PlatformIDs: asset.PlatformIds,
-				Name:        asset.Platform.Name,
-				Arch:        asset.Platform.Arch,
-				Title:       asset.Platform.Title,
-				Family:      asset.Platform.Family,
-				Build:       asset.Platform.Build,
-				Version:     asset.Platform.Version,
-				Kind:        asset.Platform.Kind,
-				Runtime:     asset.Platform.Runtime,
-				Labels:      asset.Platform.Labels,
-			},
+			Asset:       asset,
 			connections: map[string]*connection{},
 			resources:   map[string]*Resource{},
 		}
@@ -369,9 +350,9 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	}
 	// always update the id for the asset, sometimes we get assets by id and then
 	// they get updated with an MRN attached
-	recordingAsset.Asset.ID = getAssetIdForRecording(asset)
+	recordingAsset.Asset.Id = getAssetIdForRecording(asset)
 	if len(asset.PlatformIds) != 0 {
-		recordingAsset.Asset.PlatformIDs = asset.PlatformIds
+		recordingAsset.Asset.PlatformIds = asset.PlatformIds
 	}
 
 	recordingAsset.connections[fmt.Sprintf("%d", conf.Id)] = &connection{
@@ -460,7 +441,7 @@ func (r *recording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecor
 		cur = r.Assets[i]
 		if assetMrn == "" && len(r.Assets) == 1 {
 			// next
-		} else if cur.Asset.ID != assetMrn {
+		} else if cur.Asset.Id != assetMrn {
 			continue
 		}
 
@@ -494,7 +475,7 @@ func (r *recording) SetAssetRecording(id uint32, reco *Asset) {
 
 // This method makes sure the asset metadata is always included in the data
 // dump of a recording
-func ensureAssetMetadata(resources map[string]*Resource, asset *assetInfo) {
+func ensureAssetMetadata(resources map[string]*Resource, asset *inventory.Asset) {
 	id := "asset\x00"
 	existing, ok := resources[id]
 	if !ok {
@@ -510,48 +491,27 @@ func ensureAssetMetadata(resources map[string]*Resource, asset *assetInfo) {
 		existing.Fields["platform"] = llx.StringData(asset.Name)
 	}
 	if _, ok := existing.Fields["version"]; !ok {
-		existing.Fields["version"] = llx.StringData(asset.Version)
+		existing.Fields["version"] = llx.StringData(asset.Platform.Version)
 	}
 	if _, ok := existing.Fields["kind"]; !ok {
-		existing.Fields["kind"] = llx.StringData(asset.Kind)
+		existing.Fields["kind"] = llx.StringData(asset.Platform.Kind)
 	}
 	if _, ok := existing.Fields["runtime"]; !ok {
-		existing.Fields["runtime"] = llx.StringData(asset.Runtime)
+		existing.Fields["runtime"] = llx.StringData(asset.Platform.Runtime)
 	}
 	if _, ok := existing.Fields["arch"]; !ok {
-		existing.Fields["arch"] = llx.StringData(asset.Arch)
+		existing.Fields["arch"] = llx.StringData(asset.Platform.Arch)
 	}
 	if _, ok := existing.Fields["title"]; !ok {
-		existing.Fields["title"] = llx.StringData(asset.Title)
+		existing.Fields["title"] = llx.StringData(asset.Platform.Title)
 	}
 
 	if _, ok := existing.Fields["ids"]; !ok {
-		arr := make([]any, len(asset.PlatformIDs))
-		for i := range asset.PlatformIDs {
-			arr[i] = asset.PlatformIDs[i]
+		arr := make([]any, len(asset.PlatformIds))
+		for i := range asset.PlatformIds {
+			arr[i] = asset.PlatformIds[i]
 		}
 		existing.Fields["ids"] = llx.ArrayData(arr, types.String)
-	}
-}
-
-func (a assetInfo) ToInventory() *inventory.Asset {
-	return &inventory.Asset{
-		Id:          a.ID,
-		Name:        a.Name,
-		Labels:      a.Labels,
-		PlatformIds: a.PlatformIDs,
-		Annotations: a.Annotations,
-		Platform: &inventory.Platform{
-			Name:    a.Name,
-			Arch:    a.Arch,
-			Title:   a.Title,
-			Family:  a.Family,
-			Build:   a.Build,
-			Version: a.Version,
-			Kind:    a.Kind,
-			Runtime: a.Runtime,
-			Labels:  a.Labels,
-		},
 	}
 }
 

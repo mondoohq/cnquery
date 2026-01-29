@@ -3,22 +3,25 @@
     {
       "asset": {
         "id": "Arch Linux",
-        "platformIDs": [
+        "platform_ids": [
           "archlinux"
         ],
         "name": "arch",
-        "arch": "x86_64",
-        "title": "Arch Linux",
-        "family": [
-          "arch",
-          "linux",
-          "unix",
-          "os"
-        ],
-        "build": "rolling",
-        "version": "rolling",
-        "labels": {
-          "distro-id": "arch"
+        "platform": {
+          "name": "arch",
+          "arch": "x86_64",
+          "title": "Arch Linux",
+          "family": [
+            "arch",
+            "linux",
+            "unix",
+            "os"
+          ],
+          "build": "rolling",
+          "version": "rolling",
+          "labels": {
+            "distro-id": "arch"
+          }
         }
       },
       "connections": [

@@ -3,18 +3,21 @@
     {
       "asset": {
         "id": "windows-server",
-        "platformIDs": [
+        "platform_ids": [
           "windows"
         ],
         "name": "windows",
-        "arch": "x86_64",
-        "title": "Windows Server",
-        "family": [
-          "windows",
-          "os"
-        ],
-        "build": "rolling",
-        "version": "2022"
+        "platform": {
+          "name": "windows",
+          "arch": "x86_64",
+          "title": "Windows Server",
+          "family": [
+            "windows",
+            "os"
+          ],
+          "build": "rolling",
+          "version": "2022"
+        }
       },
       "connections": [
         {

@@ -7,19 +7,13 @@ import (
 	"sort"
 
 	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
-type ResourceIdLookup struct {
-	// The resource id as requested towards the connection
-	RequestId string `json:"requestId"`
-	// The resource id as returned by the connection
-	ResponseId string `json:"responseId"`
-}
-
 type Asset struct {
-	Asset       *assetInfo   `json:"asset"`
-	Connections []connection `json:"connections"`
-	Resources   []Resource   `json:"resources"`
+	Asset       *inventory.Asset `json:"asset"`
+	Connections []connection     `json:"connections"`
+	Resources   []Resource       `json:"resources"`
 	// A lookup of requested resources to their actual ID.
 	// This is required to resolve cases where a resource is requested by one ID (usually empty ID)
 	// and the connection responds with another (resolved) ID. This mapping allows us to mimic
@@ -32,21 +26,6 @@ type Asset struct {
 
 	connections map[string]*connection `json:"-"`
 	resources   map[string]*Resource   `json:"-"`
-}
-
-type assetInfo struct {
-	ID          string            `json:"id"`
-	PlatformIDs []string          `json:"platformIDs,omitempty"`
-	Name        string            `json:"name,omitempty"`
-	Arch        string            `json:"arch,omitempty"`
-	Title       string            `json:"title,omitempty"`
-	Family      []string          `json:"family,omitempty"`
-	Build       string            `json:"build,omitempty"`
-	Version     string            `json:"version,omitempty"`
-	Kind        string            `json:"kind,omitempty"`
-	Runtime     string            `json:"runtime,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type connection struct {
