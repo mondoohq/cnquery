@@ -79,6 +79,8 @@ func initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(githubUser.UpdatedAt))
 	args["suspendedAt"] = llx.TimeDataPtr(githubTimestamp(githubUser.SuspendedAt))
 	args["company"] = llx.StringData(githubUser.GetCompany())
+	args["hireable"] = llx.BoolData(githubUser.GetHireable())
+	args["siteAdmin"] = llx.BoolData(githubUser.GetSiteAdmin())
 	return args, nil, nil
 }
 

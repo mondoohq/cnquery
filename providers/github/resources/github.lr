@@ -116,6 +116,26 @@ github.organization @defaults("login name") {
   membersCanCreatePrivatePages bool
   // Whether members can fork private repositories to their own GitHub account
   membersCanForkPrivateRepos bool
+  // Whether Dependabot alerts are enabled for new repositories
+  dependabotAlertsEnabledForNewRepos bool
+  // Whether Dependabot security updates are enabled for new repositories
+  dependabotSecurityUpdatesEnabledForNewRepos bool
+  // Whether GitHub Advanced Security is enabled for new repositories
+  advancedSecurityEnabledForNewRepos bool
+  // Whether secret scanning is enabled for new repositories
+  secretScanningEnabledForNewRepos bool
+  // Whether secret scanning push protection is enabled for new repositories
+  secretScanningPushProtectionEnabledForNewRepos bool
+  // Whether secret scanning validity checks are enabled
+  secretScanningValidityChecksEnabled bool
+  // Whether members can delete repositories
+  membersCanDeleteRepositories bool
+  // Whether members can change repository visibility
+  membersCanChangeRepoVisibility bool
+  // Whether members can delete issues
+  membersCanDeleteIssues bool
+  // Whether readers can create discussions
+  readersCanCreateDiscussions bool
   // List of users that are part of the owners group
   owners() []github.user
   // List of users that are part of the members group
@@ -190,6 +210,10 @@ private github.user @defaults("login name email company") {
   suspendedAt time
   // User's company
   company string
+  // Whether the user is hireable
+  hireable bool
+  // Whether the user is a GitHub site admin
+  siteAdmin bool
   // User's repositories
   repositories() []github.repository
   // User gists
@@ -428,6 +452,12 @@ private github.release @defaults("name tagName") {
   tagName string
   // Whether the release is a pre-release
   preRelease bool
+  // Release creation time
+  createdAt time
+  // Release publish time
+  publishedAt time
+  // Release author
+  author github.user
 }
 
 // GitHub webhook
@@ -646,4 +676,8 @@ private github.issue @defaults("title") {
   assignees []github.user
   // User who closed the issue
   closedBy github.user
+  // Whether the issue is a draft
+  draft bool
+  // Whether the issue is locked
+  locked bool
 }
