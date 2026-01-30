@@ -97,3 +97,51 @@ func TestHostnameMacos(t *testing.T) {
 
 	assert.Equal(t, "moonshot.local", hostame)
 }
+
+func TestHostnameFreeBSD(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_freebsd.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hostame, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "freebsd-server.local", hostame)
+}
+
+func TestHostnameOpenBSD(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_openbsd.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hostame, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "openbsd-server.local", hostame)
+}
+
+func TestHostnameNetBSD(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_netbsd.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hostame, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "netbsd-server.local", hostame)
+}
+
+func TestHostnameDragonFlyBSD(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_dragonflybsd.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hostame, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "dragonfly-server.local", hostame)
+}

@@ -20,6 +20,7 @@ import (
 // On Linux systems we prefer `hostname -f` over `/etc/hostname` since systemd is not updating the value all the time.
 // On Windows the `hostname` command (without the -f flag) works more reliable than `powershell -c "$env:computername"`
 // since it will return a non-zero exit code.
+// On BSD systems (FreeBSD, OpenBSD, NetBSD, DragonFlyBSD) we use `hostname` without the -f flag since BSD doesn't support it.
 func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 	if !pf.IsFamily(inventory.FAMILY_UNIX) && !pf.IsFamily(inventory.FAMILY_WINDOWS) {
 		log.Warn().Msg("your platform is not supported for hostname detection")
@@ -27,7 +28,9 @@ func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 	}
 
 	// On unix systems we try to get the hostname via `hostname -f` first since it returns the fqdn.
-	if pf.IsFamily(inventory.FAMILY_UNIX) {
+	// However, BSD systems (FreeBSD, OpenBSD, NetBSD, DragonFlyBSD) don't support the -f flag,
+	// so we skip this step for BSD systems (excluding Darwin/macOS which handles hostname differently).
+	if pf.IsFamily(inventory.FAMILY_UNIX) && !isBSDWithoutDarwin(pf) {
 		fqdn, err := runCommand(conn, "hostname -f")
 		if err == nil && fqdn != "localhost" && fqdn != "" {
 			return fqdn, true
@@ -162,4 +165,10 @@ func isLocalhostVariant(host string) bool {
 		lh == "localhost.localdomain" ||
 		lh == "ip6-localhost" ||
 		lh == "ip6-loopback"
+}
+
+// isBSDWithoutDarwin returns true if the platform is a BSD system but not Darwin/macOS.
+// BSD systems like FreeBSD, OpenBSD, NetBSD, and DragonFlyBSD don't support `hostname -f`.
+func isBSDWithoutDarwin(pf *inventory.Platform) bool {
+	return pf.IsFamily(inventory.FAMILY_BSD) && !pf.IsFamily(inventory.FAMILY_DARWIN)
 }

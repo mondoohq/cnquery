@@ -1,0 +1,11 @@
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "14.0-RELEASE"
+
+[commands."hostname"]
+stdout = "freebsd-server.local"
