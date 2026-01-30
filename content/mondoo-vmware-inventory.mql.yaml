@@ -16,7 +16,7 @@ packs:
       desc: |
         ## Overview
 
-        VMware vCenter Asset Inventory Pack by Mondoo retrieves data about vCenter and its ESXi hosts.
+        The VMware vCenter Asset Inventory Pack retrieves data about vCenter and its ESXi hosts.
 
         ### Run query pack
 

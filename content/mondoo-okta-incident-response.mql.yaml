@@ -16,7 +16,7 @@ packs:
       desc: |
         ### Overview
 
-        During a security incident, the Okta Incident Response query pack retrieves configuration data about your Okta configuration.
+        The Okta Incident Response Pack retrieves configuration data about your Okta environment during a security incident.
 
         ### Prerequisites
 

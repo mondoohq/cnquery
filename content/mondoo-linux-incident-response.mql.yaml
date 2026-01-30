@@ -16,7 +16,7 @@ packs:
       desc: |
         ### Overview
 
-        The Linux Incident Response Pack by Mondoo retrieves configuration data from Linux hosts for investigation during a security incident. This includes kernel information, running processes, mounted devices, listening ports, installed packages, and running services.
+        The Linux Incident Response Pack retrieves configuration data from Linux hosts for investigation during a security incident. This includes kernel information, running processes, mounted devices, listening ports, installed packages, and running services.
 
         ### Run query pack
 

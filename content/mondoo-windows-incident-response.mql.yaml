@@ -16,7 +16,7 @@ packs:
       desc: |
         ### Overview
 
-        The Windows Incident Response Pack by Mondoo retrieves configuration data from Windows hosts for investigation during a security incident. This includes installed hotfixes, system uptime, installed packages, computer information, and running services.
+        The Windows Incident Response Pack retrieves configuration data from Windows hosts for investigation during a security incident. This includes installed hotfixes, system uptime, installed packages, computer information, and running services.
 
         ### Run query pack
 

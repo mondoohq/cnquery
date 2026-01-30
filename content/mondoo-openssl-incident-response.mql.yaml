@@ -16,7 +16,7 @@ packs:
       desc: |
         ### Overview
 
-        The OpenSSL Incident Response Pack by Mondoo retrieves SSL/TLS library information from Linux hosts for investigation during a security incident. This includes platform details, installed SSL libraries, and listening ports that may be using SSL/TLS.
+        The OpenSSL Incident Response Pack retrieves SSL/TLS library information from Linux hosts for investigation during a security incident. This includes platform details, installed SSL libraries, and listening ports that may be using SSL/TLS.
 
         ### Run query pack
 

@@ -16,7 +16,7 @@ packs:
       desc: |
         ### Overview
 
-        The GitHub Organization Incident Response Pack by Mondoo query pack retrieves configuration data about GitHub organizations and the repositories within them for investigation during a security incident.
+        The GitHub Organization Incident Response Pack retrieves configuration data about GitHub organizations and repositories for investigation during a security incident.
 
         ### Prerequisites
 
@@ -58,14 +58,14 @@ packs:
         title: GitHub Organization MFA status
         docs:
           desc: |
-            This query retrieves whether multi-factor authentication is required for users of the organization. A null value means the API token used to query the information doesn't have sufficient permissions in the organization. The API token must have owner permissions in the organization to access this data.
+            Returns whether multi-factor authentication is required for organization users. A null value indicates insufficient API token permissions; owner permissions are required.
         mql: |
           github.organization.twoFactorRequirementEnabled
       - uid: mondoo-incident-response-github-org-owners
         title: GitHub Organization Owners
         docs:
           desc: |
-            This query retrieves all GitHub organization owners.
+            Retrieves all GitHub organization owners.
         mql: |
           github.organization.owners.length
           github.organization {
@@ -79,7 +79,7 @@ packs:
         title: GitHub Organization Members
         docs:
           desc: |
-            This query retrieves all of the members of the GitHub organization.
+            Retrieves all members of the GitHub organization.
         mql: |
           github.organization.members.length
           github.organization {
@@ -93,7 +93,7 @@ packs:
         title: GitHub Organization Teams
         docs:
           desc: |
-            This query retrieves all GitHub organization teams.
+            Retrieves all GitHub organization teams with their members and permissions.
         mql: |
           github.organization {
             teams {
@@ -108,10 +108,10 @@ packs:
             }
           }
       - uid: mondoo-incident-response-github-private-repos
-        title: GitHub Organization private repositories
+        title: GitHub Organization public repositories
         docs:
           desc: |
-            This query retrieves all of the public repositories within the GitHub organization. The query returns the repo's name and whether the default branch is [protected](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/about-protected-branches) using protection rules.
+            Retrieves all public repositories in the organization with branch protection status.
         mql: |
           github.organization.repositories.
             where( private == false ) {
@@ -122,10 +122,10 @@ packs:
                 }
             }
       - uid: mondoo-incident-response-github-packages
-        title: GitHub Organization private repositories
+        title: GitHub Organization packages
         docs:
           desc: |
-            This query retrieves the packages published to GHCR.io.
+            Retrieves packages published to GitHub Container Registry (GHCR).
         mql: |
           github.organization {
             packages {

@@ -17,7 +17,7 @@ packs:
         The AWS Asset Inventory Pack retrieves information about AWS accounts for asset inventory.
     groups:
       - uid: mondoo-asset-inventory-aws-group
-        title: AWS Asset Inventory Pack Group
+        title: AWS Asset Inventory Queries
         filters: |
           asset.runtime == "aws"
         queries:
@@ -57,7 +57,7 @@ queries:
       asset.platform == "aws"
     docs:
       desc: |
-        This query retrieves all AWS regions enabled in the account
+        Retrieves all AWS regions enabled in the account.
     mql: |
       aws { regions }
 
@@ -65,7 +65,7 @@ queries:
     title: VPCs
     docs:
       desc: |
-        This query retrieves all of the configuration data for AWS VPCs
+        Retrieves all VPCs with their configuration data.
     variants:
       - uid: mondoo-asset-inventory-aws-vpcs-all
       - uid: mondoo-asset-inventory-aws-vpcs-single
@@ -84,7 +84,7 @@ queries:
     title: IAM users
     docs:
       desc: |
-        This query retrieves data for all IAM users
+        Retrieves all IAM users with their configuration.
     variants:
       - uid: mondoo-asset-inventory-aws-iam-users-all
       - uid: mondoo-asset-inventory-aws-iam-users-single
@@ -103,7 +103,7 @@ queries:
     title: IAM groups
     docs:
       desc: |
-        This query retrieves all of the IAM groups.
+        Retrieves all IAM groups with their members and policies.
     variants:
       - uid: mondoo-asset-inventory-aws-iam-groups-all
       - uid: mondoo-asset-inventory-aws-iam-groups-single
@@ -122,7 +122,7 @@ queries:
     title: IAM roles
     docs:
       desc: |
-        This query retrieves all IAM Roles
+        Retrieves all IAM roles with their trust policies and permissions.
     variants:
       - uid: mondoo-asset-inventory-aws-iam-roles-all
   - uid: mondoo-asset-inventory-aws-iam-roles-all
@@ -137,14 +137,14 @@ queries:
       asset.platform == "aws"
     docs:
       desc: |
-        This query retrieves all IAM policies attached to a user, group, or role.
+        Retrieves all IAM policies attached to users, groups, or roles.
     mql: aws.iam.policies.where( attachmentCount > 0 )
 
   - uid: mondoo-asset-inventory-aws-ec2-security-groups
     title: EC2 Security Groups
     docs:
       desc: |
-        This query retrieves all AWS EC2 Security Groups
+        Retrieves all EC2 security groups with their rules.
     variants:
       - uid: mondoo-asset-inventory-aws-ec2-security-groups-all
       - uid: mondoo-asset-inventory-aws-ec2-security-groups-single
@@ -163,7 +163,7 @@ queries:
     title: EBS volumes
     docs:
       desc: |
-        This query retrieves all AWS EBS volumes
+        Retrieves all EBS volumes with their configuration.
     variants:
       - uid: mondoo-asset-inventory-aws-ec2-volumes-all
       - uid: mondoo-asset-inventory-aws-ec2-volumes-single

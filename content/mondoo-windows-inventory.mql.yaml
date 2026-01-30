@@ -14,7 +14,7 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Windows Asset Inventory Pack by Mondoo retrieves data about Windows hosts for asset inventory.
+        The Windows Asset Inventory Pack retrieves data about Windows hosts for asset inventory.
 
         ## Local scan
         To run this pack locally on a Windows host:
