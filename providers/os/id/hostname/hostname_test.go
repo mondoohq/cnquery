@@ -20,10 +20,10 @@ func TestHostnameLinuxEtcHostname(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "9be843c4be9f", hostame)
+	assert.Equal(t, "9be843c4be9f", hn)
 }
 
 func TestHostnameLinux(t *testing.T) {
@@ -32,10 +32,10 @@ func TestHostnameLinux(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "abefed34cc9c", hostame)
+	assert.Equal(t, "abefed34cc9c", hn)
 }
 
 func TestHostnameLinuxFqdn(t *testing.T) {
@@ -44,10 +44,10 @@ func TestHostnameLinuxFqdn(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "myhost.example.com", hostame)
+	assert.Equal(t, "myhost.example.com", hn)
 }
 
 func TestHostnameLinuxGetentIPv4(t *testing.T) {
@@ -56,10 +56,10 @@ func TestHostnameLinuxGetentIPv4(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "myhost.example.com", hostame)
+	assert.Equal(t, "myhost.example.com", hn)
 }
 
 func TestHostnameLinuxGetentIPv6(t *testing.T) {
@@ -68,10 +68,10 @@ func TestHostnameLinuxGetentIPv6(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "myhost.example.com", hostame)
+	assert.Equal(t, "myhost.example.com", hn)
 }
 
 func TestHostnameWindows(t *testing.T) {
@@ -80,10 +80,10 @@ func TestHostnameWindows(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "WIN-ABCDEFGVHLD", hostame)
+	assert.Equal(t, "WIN-ABCDEFGVHLD", hn)
 }
 
 func TestHostnameMacos(t *testing.T) {
@@ -92,10 +92,10 @@ func TestHostnameMacos(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "moonshot.local", hostame)
+	assert.Equal(t, "moonshot.local", hn)
 }
 
 func TestHostnameFreeBSD(t *testing.T) {
@@ -104,10 +104,10 @@ func TestHostnameFreeBSD(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "freebsd-server.local", hostame)
+	assert.Equal(t, "freebsd-server.local", hn)
 }
 
 func TestHostnameOpenBSD(t *testing.T) {
@@ -116,10 +116,10 @@ func TestHostnameOpenBSD(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "openbsd-server.local", hostame)
+	assert.Equal(t, "openbsd-server.local", hn)
 }
 
 func TestHostnameNetBSD(t *testing.T) {
@@ -128,10 +128,10 @@ func TestHostnameNetBSD(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "netbsd-server.local", hostame)
+	assert.Equal(t, "netbsd-server.local", hn)
 }
 
 func TestHostnameDragonFlyBSD(t *testing.T) {
@@ -140,8 +140,8 @@ func TestHostnameDragonFlyBSD(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	hostame, ok := hostname.Hostname(conn, platform)
+	hn, ok := hostname.Hostname(conn, platform)
 	require.True(t, ok)
 
-	assert.Equal(t, "dragonfly-server.local", hostame)
+	assert.Equal(t, "dragonfly-server.local", hn)
 }
