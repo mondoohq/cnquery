@@ -498,6 +498,13 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 				}
 			}
 
+			var lastUsedAt *time.Time
+			var lastUsedRegion string
+			if role.RoleLastUsed != nil {
+				lastUsedAt = role.RoleLastUsed.LastUsedDate
+				lastUsedRegion = convert.ToValue(role.RoleLastUsed.Region)
+			}
+
 			mqlAwsIamRole, err := CreateResource(a.MqlRuntime, ResourceAwsIamRole,
 				map[string]*llx.RawData{
 					"arn":                      llx.StringDataPtr(role.Arn),
@@ -507,6 +514,8 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 					"tags":                     llx.MapData(iamTagsToMap(role.Tags), types.String),
 					"createdAt":                llx.TimeDataPtr(role.CreateDate),
 					"assumeRolePolicyDocument": llx.MapData(policyDocumentMap, types.Any),
+					"lastUsedAt":               llx.TimeDataPtr(lastUsedAt),
+					"lastUsedRegion":           llx.StringData(lastUsedRegion),
 				})
 			if err != nil {
 				return nil, err

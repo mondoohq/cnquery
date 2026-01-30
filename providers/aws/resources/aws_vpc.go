@@ -85,6 +85,7 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 						map[string]*llx.RawData{
 							"arn":                      llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(vpc.VpcId))),
 							"cidrBlock":                llx.StringDataPtr(vpc.CidrBlock),
+							"dhcpOptionsId":            llx.StringDataPtr(vpc.DhcpOptionsId),
 							"id":                       llx.StringDataPtr(vpc.VpcId),
 							"instanceTenancy":          llx.StringData(string(vpc.InstanceTenancy)),
 							"internetGatewayBlockMode": llx.StringData(string(vpc.BlockPublicAccessStates.InternetGatewayBlockMode)),

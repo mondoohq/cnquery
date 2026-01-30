@@ -90,15 +90,30 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 						continue
 					}
 
+					// Convert architectures to []any
+					architectures := make([]any, len(function.Architectures))
+					for i, arch := range function.Architectures {
+						architectures[i] = string(arch)
+					}
+
+					// Get ephemeral storage size (defaults to 512 MB if not set)
+					var ephemeralStorageSize int64 = 512
+					if function.EphemeralStorage != nil && function.EphemeralStorage.Size != nil {
+						ephemeralStorageSize = int64(*function.EphemeralStorage.Size)
+					}
+
 					mqlFunc, err := CreateResource(a.MqlRuntime, "aws.lambda.function",
 						map[string]*llx.RawData{
-							"arn":          llx.StringDataPtr(function.FunctionArn),
-							"name":         llx.StringDataPtr(function.FunctionName),
-							"runtime":      llx.StringData(string(function.Runtime)),
-							"dlqTargetArn": llx.StringData(dlqTarget),
-							"vpcConfig":    llx.MapData(vpcConfigJson, types.Any),
-							"region":       llx.StringData(region),
-							"tags":         llx.MapData(toInterfaceMap(tags), types.String),
+							"arn":                  llx.StringDataPtr(function.FunctionArn),
+							"name":                 llx.StringDataPtr(function.FunctionName),
+							"runtime":              llx.StringData(string(function.Runtime)),
+							"dlqTargetArn":         llx.StringData(dlqTarget),
+							"vpcConfig":            llx.MapData(vpcConfigJson, types.Any),
+							"region":               llx.StringData(region),
+							"tags":                 llx.MapData(toInterfaceMap(tags), types.String),
+							"architectures":        llx.ArrayData(architectures, types.String),
+							"ephemeralStorageSize": llx.IntData(ephemeralStorageSize),
+							"memorySize":           llx.IntDataDefault(function.MemorySize, 0),
 						})
 					if err != nil {
 						return nil, err

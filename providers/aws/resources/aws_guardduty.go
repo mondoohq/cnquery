@@ -96,6 +96,8 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 	a.FindingPublishingFrequency = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	a.Features = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	a.Tags = plugin.TValue[map[string]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	a.CreatedAt = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
+	a.UpdatedAt = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
 
 	detectorId := a.GetId().Data
 	region := a.GetRegion().Data
@@ -116,6 +118,17 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 	a.Features = plugin.TValue[[]any]{Data: features, State: plugin.StateIsSet}
 	a.Tags = plugin.TValue[map[string]any]{Data: convert.MapToInterfaceMap(detector.Tags), State: plugin.StateIsSet}
 
+	if detector.CreatedAt != nil {
+		if createdAt, err := time.Parse(time.RFC3339, *detector.CreatedAt); err == nil {
+			a.CreatedAt = plugin.TValue[*time.Time]{Data: &createdAt, State: plugin.StateIsSet}
+		}
+	}
+	if detector.UpdatedAt != nil {
+		if updatedAt, err := time.Parse(time.RFC3339, *detector.UpdatedAt); err == nil {
+			a.UpdatedAt = plugin.TValue[*time.Time]{Data: &updatedAt, State: plugin.StateIsSet}
+		}
+	}
+
 	return nil
 }
 
@@ -133,6 +146,14 @@ func (a *mqlAwsGuarddutyDetector) tags() (map[string]any, error) {
 
 func (a *mqlAwsGuarddutyDetector) findingPublishingFrequency() (string, error) {
 	return "", a.populateData()
+}
+
+func (a *mqlAwsGuarddutyDetector) createdAt() (*time.Time, error) {
+	return nil, a.populateData()
+}
+
+func (a *mqlAwsGuarddutyDetector) updatedAt() (*time.Time, error) {
+	return nil, a.populateData()
 }
 
 func (a *mqlAwsGuarddutyDetector) findings() ([]any, error) {
