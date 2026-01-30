@@ -49,6 +49,7 @@ exo
 failback
 FARGATE
 filecache
+filesize
 filesz
 firefox
 frontmatter
@@ -60,6 +61,7 @@ gistfile
 googleworkplace
 gotestsum
 gpu
+groupname
 gvnic
 headerorder
 hostkeys
@@ -87,15 +89,18 @@ lsp
 manageddevice
 managedrulegroupstatement
 managedzone
+maxlogins
 mcp
 mcr
 meid
+memlock
 messagestoragepolicy
 mfs
 mgroup
 minfree
 mkey
 mpim
+msgqueue
 naflags
 natgateway
 networkinterface
@@ -106,6 +111,7 @@ nodekey
 nodepool
 nokeys
 notebookinstancedetails
+nproc
 nsrecord
 nullgroup
 nullstring
@@ -127,6 +133,7 @@ ratebasedstatement
 regexmatchstatement
 regexpatternsetreferencestatement
 resourcegroup
+rtprio
 rtsp
 rulegroup
 rulegroupreferencestatement
@@ -140,6 +147,7 @@ SECRETVALUE
 serviceprincipals
 Sflags
 signin
+sigpending
 singlequeryargument
 sizeconstraintstatement
 Snat
