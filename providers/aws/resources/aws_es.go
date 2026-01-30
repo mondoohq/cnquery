@@ -6,7 +6,9 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
@@ -84,12 +86,43 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 }
 
 func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
+	if len(args) >= 2 {
 		return args, nil, nil
 	}
 
+	// Todo rename from ES to OpenSearch
+
+	// Todo helper function for repetitive pattern
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil && args["name"] == nil {
+		return nil, nil, errors.New("arn or name required to fetch es domain")
+	}
+
+	// If we have an ARN but missing region or name, extract from ARN
+	// ARN format: arn:aws:es:REGION:ACCOUNT:domain/DOMAIN_NAME
+	if args["arn"] != nil && (args["region"] == nil || args["name"] == nil) {
+		arnVal := args["arn"].Value.(string)
+		parsedArn, err := arn.Parse(arnVal)
+		if err != nil {
+			return nil, nil, errors.New("invalid arn for es domain")
+		}
+		if args["region"] == nil {
+			args["region"] = llx.StringData(parsedArn.Region)
+		}
+		if args["name"] == nil {
+			args["name"] = llx.StringData(strings.TrimPrefix(parsedArn.Resource, "domain/"))
+		}
+	}
+
 	if args["name"] == nil || args["region"] == nil {
-		return nil, nil, errors.New("name and region required to fetch es domain")
+		return nil, nil, errors.New("arn, or name and region required to fetch es domain")
 	}
 
 	name := args["name"].Value.(string)
