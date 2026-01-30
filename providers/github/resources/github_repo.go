@@ -1897,3 +1897,223 @@ func (g *mqlGithubRepository) dependabotAlerts() ([]any, error) {
 
 	return res, nil
 }
+
+func (g *mqlGithubSecretScanningAlert) id() (string, error) {
+	if g.Number.Error != nil {
+		return "", g.Number.Error
+	}
+	return "github.secretScanningAlert/" + strconv.FormatInt(g.Number.Data, 10), nil
+}
+
+func (g *mqlGithubRepository) secretScanningAlerts() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	owner := g.Owner.Data
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	listOpts := &github.SecretScanningAlertListOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+	}
+
+	var allAlerts []*github.SecretScanningAlert
+	for {
+		alerts, resp, err := conn.Client().SecretScanning.ListAlertsForRepo(conn.Context(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			// Secret scanning may not be enabled or accessible
+			if strings.Contains(err.Error(), "403") {
+				log.Debug().Msg("Secret scanning alerts are not accessible for this repository")
+				return nil, nil
+			}
+			return nil, err
+		}
+		allAlerts = append(allAlerts, alerts...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.ListOptions.Page = resp.NextPage
+	}
+
+	res := []any{}
+	for _, alert := range allAlerts {
+		var resolvedBy any
+		if alert.ResolvedBy != nil {
+			var err error
+			resolvedBy, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(alert.ResolvedBy.ID),
+				"login": llx.StringDataPtr(alert.ResolvedBy.Login),
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var pushProtectionBypassedBy any
+		if alert.PushProtectionBypassedBy != nil {
+			var err error
+			pushProtectionBypassedBy, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(alert.PushProtectionBypassedBy.ID),
+				"login": llx.StringDataPtr(alert.PushProtectionBypassedBy.Login),
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		mqlAlert, err := CreateResource(g.MqlRuntime, "github.secretScanningAlert", map[string]*llx.RawData{
+			"number":                   llx.IntData(int64(alert.GetNumber())),
+			"state":                    llx.StringData(alert.GetState()),
+			"resolution":               llx.StringData(alert.GetResolution()),
+			"secretType":               llx.StringData(alert.GetSecretType()),
+			"secretTypeDisplayName":    llx.StringData(alert.GetSecretTypeDisplayName()),
+			"secret":                   llx.StringData(alert.GetSecret()),
+			"validity":                 llx.StringData(alert.GetValidity()),
+			"publiclyLeaked":           llx.BoolData(alert.GetPubliclyLeaked()),
+			"multiRepo":                llx.BoolData(alert.GetMultiRepo()),
+			"url":                      llx.StringData(alert.GetURL()),
+			"htmlUrl":                  llx.StringData(alert.GetHTMLURL()),
+			"createdAt":                llx.TimeDataPtr(githubTimestamp(alert.CreatedAt)),
+			"updatedAt":                llx.TimeDataPtr(githubTimestamp(alert.UpdatedAt)),
+			"resolvedAt":               llx.TimeDataPtr(githubTimestamp(alert.ResolvedAt)),
+			"resolvedBy":               llx.AnyData(resolvedBy),
+			"pushProtectionBypassed":   llx.BoolData(alert.GetPushProtectionBypassed()),
+			"pushProtectionBypassedBy": llx.AnyData(pushProtectionBypassedBy),
+			"pushProtectionBypassedAt": llx.TimeDataPtr(githubTimestamp(alert.PushProtectionBypassedAt)),
+			"resolutionComment":        llx.StringData(alert.GetResolutionComment()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAlert)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGithubCodeScanningAlert) id() (string, error) {
+	if g.Number.Error != nil {
+		return "", g.Number.Error
+	}
+	return "github.codeScanningAlert/" + strconv.FormatInt(g.Number.Data, 10), nil
+}
+
+func (g *mqlGithubRepository) codeScanningAlerts() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	owner := g.Owner.Data
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	listOpts := &github.AlertListOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+	}
+
+	var allAlerts []*github.Alert
+	for {
+		alerts, resp, err := conn.Client().CodeScanning.ListAlertsForRepo(conn.Context(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			// Code scanning may not be enabled or accessible
+			if strings.Contains(err.Error(), "403") {
+				log.Debug().Msg("Code scanning alerts are not accessible for this repository")
+				return nil, nil
+			}
+			return nil, err
+		}
+		allAlerts = append(allAlerts, alerts...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.ListOptions.Page = resp.NextPage
+	}
+
+	res := []any{}
+	for _, alert := range allAlerts {
+		var closedBy any
+		if alert.ClosedBy != nil {
+			var err error
+			closedBy, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(alert.ClosedBy.ID),
+				"login": llx.StringDataPtr(alert.ClosedBy.Login),
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var dismissedBy any
+		if alert.DismissedBy != nil {
+			var err error
+			dismissedBy, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(alert.DismissedBy.ID),
+				"login": llx.StringDataPtr(alert.DismissedBy.Login),
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		rule, err := convert.JsonToDict(alert.Rule)
+		if err != nil {
+			return nil, err
+		}
+
+		tool, err := convert.JsonToDict(alert.Tool)
+		if err != nil {
+			return nil, err
+		}
+
+		mostRecentInstance, err := convert.JsonToDict(alert.MostRecentInstance)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlAlert, err := CreateResource(g.MqlRuntime, "github.codeScanningAlert", map[string]*llx.RawData{
+			"number":             llx.IntData(int64(alert.GetNumber())),
+			"state":              llx.StringData(alert.GetState()),
+			"rule":               llx.DictData(rule),
+			"tool":               llx.DictData(tool),
+			"url":                llx.StringData(alert.GetURL()),
+			"htmlUrl":            llx.StringData(alert.GetHTMLURL()),
+			"createdAt":          llx.TimeDataPtr(githubTimestamp(alert.CreatedAt)),
+			"updatedAt":          llx.TimeDataPtr(githubTimestamp(alert.UpdatedAt)),
+			"fixedAt":            llx.TimeDataPtr(githubTimestamp(alert.FixedAt)),
+			"closedAt":           llx.TimeDataPtr(githubTimestamp(alert.ClosedAt)),
+			"closedBy":           llx.AnyData(closedBy),
+			"dismissedAt":        llx.TimeDataPtr(githubTimestamp(alert.DismissedAt)),
+			"dismissedBy":        llx.AnyData(dismissedBy),
+			"dismissedReason":    llx.StringData(alert.GetDismissedReason()),
+			"dismissedComment":   llx.StringData(alert.GetDismissedComment()),
+			"mostRecentInstance": llx.DictData(mostRecentInstance),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAlert)
+	}
+
+	return res, nil
+}

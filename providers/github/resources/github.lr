@@ -404,6 +404,10 @@ github.repository @defaults("fullName") {
   securityFile() github.file
   // Dependabot alerts for the repository
   dependabotAlerts() []github.dependabotAlert
+  // Secret scanning alerts for the repository
+  secretScanningAlerts() []github.secretScanningAlert
+  // Code scanning alerts for the repository
+  codeScanningAlerts() []github.codeScanningAlert
 }
 
 // GitHub license
@@ -716,4 +720,82 @@ private github.dependabotAlert @defaults("number state") {
   dismissedReason string
   // Comment on dismissal
   dismissedComment string
+}
+
+// GitHub secret scanning alert
+private github.secretScanningAlert @defaults("number state") {
+  // Alert number
+  number int
+  // Alert state (open, resolved)
+  state string
+  // Resolution status (false_positive, wont_fix, revoked, used_in_tests, pattern_deleted)
+  resolution string
+  // Type of secret detected
+  secretType string
+  // Human-readable name of the secret type
+  secretTypeDisplayName string
+  // The secret value (partially redacted)
+  secret string
+  // Validity of the secret (active, inactive, unknown)
+  validity string
+  // Whether the secret was publicly leaked
+  publiclyLeaked bool
+  // Whether the secret was found in multiple repositories
+  multiRepo bool
+  // API URL
+  url string
+  // Web URL
+  htmlUrl string
+  // Alert creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+  // When the alert was resolved
+  resolvedAt time
+  // User who resolved the alert
+  resolvedBy github.user
+  // Whether push protection was bypassed
+  pushProtectionBypassed bool
+  // User who bypassed push protection
+  pushProtectionBypassedBy github.user
+  // When push protection was bypassed
+  pushProtectionBypassedAt time
+  // Comment on resolution
+  resolutionComment string
+}
+
+// GitHub code scanning alert
+private github.codeScanningAlert @defaults("number state") {
+  // Alert number
+  number int
+  // Alert state (open, closed, dismissed, fixed)
+  state string
+  // The security rule that triggered the alert
+  rule dict
+  // The tool that generated the alert
+  tool dict
+  // API URL
+  url string
+  // Web URL
+  htmlUrl string
+  // Alert creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+  // When the alert was fixed
+  fixedAt time
+  // When the alert was closed
+  closedAt time
+  // User who closed the alert
+  closedBy github.user
+  // When the alert was dismissed
+  dismissedAt time
+  // User who dismissed the alert
+  dismissedBy github.user
+  // Reason for dismissal
+  dismissedReason string
+  // Comment on dismissal
+  dismissedComment string
+  // Most recent instance of this alert
+  mostRecentInstance dict
 }
