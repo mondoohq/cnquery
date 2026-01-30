@@ -1677,6 +1677,8 @@ resources:
       clusters: {}
       containerInstances: {}
       containers: {}
+      services:
+        min_mondoo_version: 9.0.0
       taskDefinitions:
         min_mondoo_version: 9.0.0
     min_mondoo_version: latest
@@ -1695,6 +1697,8 @@ resources:
       region: {}
       registeredContainerInstancesCount: {}
       runningTasksCount: {}
+      services:
+        min_mondoo_version: 9.0.0
       status: {}
       tags: {}
       tasks: {}
@@ -1743,6 +1747,69 @@ resources:
       region: {}
     is_private: true
     min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ecs.service:
+    fields:
+      arn: {}
+      clusterArn: {}
+      createdAt: {}
+      createdBy: {}
+      deploymentConfiguration: {}
+      desiredCount: {}
+      launchType: {}
+      name: {}
+      networkConfiguration: {}
+      runningCount: {}
+      status: {}
+      tags: {}
+      taskDefinition: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.service.deploymentConfiguration:
+    fields:
+      alarms: {}
+      bakeTimeInMinutes: {}
+      canaryConfiguration: {}
+      deploymentCircuitBreaker: {}
+      lifecycleHooks: {}
+      linearConfiguration: {}
+      maximumPercent: {}
+      minimumHealthyPercent: {}
+      strategy: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker:
+    fields:
+      enable: {}
+      rollback: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.service.networkConfiguration:
+    fields:
+      awsVpcConfiguration: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.service.networkConfiguration.awsVpcConfiguration:
+    fields:
+      assignPublicIp: {}
+      securityGroups: {}
+      subnets: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

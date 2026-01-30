@@ -1760,6 +1760,8 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   tasks() []aws.ecs.task
   // List of AWS ECS container instances
   containerInstances() []aws.ecs.instance
+  // List of AWS ECS services in the cluster
+  services() []aws.ecs.service
   // Region where the cluster is located
   region string
   // Number of services running in the cluster
@@ -1875,6 +1877,82 @@ private aws.ecs.taskDefinition @defaults("arn family revision") {
   tags map[string]string
   // Region where the task definition is located
   region string
+}
+
+// Amazon ECS Service
+private aws.ecs.service @defaults("arn name clusterArn status") {
+  // ARN of the ECS service
+  arn string
+  // Name of the ECS service
+  name string
+  // ARN of the cluster the service belongs to
+  clusterArn string
+  // Status of the service
+  status string
+  // Desired number of tasks for the service
+  desiredCount int
+  // Number of running tasks for the service
+  runningCount int
+  // ARN of the task definition used by the service
+  taskDefinition string
+  // Launch type for the service (EC2, FARGATE, EXTERNAL)
+  launchType string
+  // Deployment configuration for the service
+  deploymentConfiguration() aws.ecs.service.deploymentConfiguration
+  // Network configuration for the service
+  networkConfiguration() aws.ecs.service.networkConfiguration
+  // Tags associated with the service
+  tags map[string]string
+  // Creation timestamp of the service
+  createdAt time
+  // IAM principal that created the service
+  createdBy string
+}
+
+// Amazon ECS Service Deployment Configuration
+private aws.ecs.service.deploymentConfiguration @defaults("maximumPercent minimumHealthyPercent") {
+  // Upper limit on the number of tasks in a service that are allowed in the RUNNING or PENDING state
+  maximumPercent int
+  // Lower limit on the number of tasks in a service that must remain in the RUNNING state
+  minimumHealthyPercent int
+  // Circuit breaker configuration for the deployment
+  deploymentCircuitBreaker() aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker
+  // Deployment alarms configuration
+  alarms dict
+  // Bake time in minutes for blue/green deployments
+  bakeTimeInMinutes int
+  // Canary configuration for deployments
+  canaryConfiguration dict
+  // Lifecycle hooks configuration
+  lifecycleHooks dict
+  // Linear configuration for deployments
+  linearConfiguration dict
+  // Deployment strategy
+  strategy string
+}
+
+// Amazon ECS Service Deployment Circuit Breaker
+private aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker {
+  // Whether to enable the deployment circuit breaker
+  enable bool
+  // Whether to enable rollback on deployment failure
+  rollback bool
+}
+
+// Amazon ECS Service Network Configuration
+private aws.ecs.service.networkConfiguration {
+  // VPC configuration for the service
+  awsVpcConfiguration() aws.ecs.service.networkConfiguration.awsVpcConfiguration
+}
+
+// Amazon ECS Service Network Configuration AWS VPC Configuration
+private aws.ecs.service.networkConfiguration.awsVpcConfiguration {
+  // Subnets associated with the service
+  subnets []string
+  // Security groups associated with the service
+  securityGroups []string
+  // Whether to assign a public IP address (ENABLED, DISABLED)
+  assignPublicIp string
 }
 
 // Amazon ECS Task Definition Container Definition
