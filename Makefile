@@ -162,6 +162,7 @@ providers/proto:
 	go generate ./providers-sdk/v1/resources
 	go generate ./providers-sdk/v1/inventory
 	go generate ./providers-sdk/v1/plugin
+	go generate ./providers-sdk/v1/recording
 
 .PHONY: providers/config
 providers/config:
