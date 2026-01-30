@@ -1173,6 +1173,31 @@ resources:
         min_mondoo_version: latest
       settings: {}
     min_mondoo_version: 5.15.0
+  safari:
+    fields:
+      extensions: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - macos
+    snippets:
+    - query: safari.extensions { name version identifier }
+      title: List all Safari extensions
+  safari.extension:
+    fields:
+      containerAppName: {}
+      containerAppPath: {}
+      description: {}
+      extensionType: {}
+      identifier: {}
+      name: {}
+      path: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - macos
   secpol:
     fields:
       eventaudit: {}
