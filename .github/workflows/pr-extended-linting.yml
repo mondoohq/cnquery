@@ -14,6 +14,8 @@ permissions:
 
 jobs:
   golangci-lint:
+    # Only run for PRs from forks, internal PRs are covered by Code Test workflow on push
+    if: github.event.pull_request.head.repo.full_name != github.repository
     permissions:
       # allow read access to the content for analysis.
       contents: read
@@ -43,6 +45,8 @@ jobs:
           skip-cache: true
 
   golangci-lint-providers:
+    # Only run for PRs from forks, internal PRs are covered by Code Test workflow on push
+    if: github.event.pull_request.head.repo.full_name != github.repository
     permissions:
       # allow read access to the content for analysis.
       contents: read
