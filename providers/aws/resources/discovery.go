@@ -53,6 +53,7 @@ const (
 	DiscoveryESDomains                  = "es-domains"
 	DiscoveryKMSKeys                    = "kms-keys"
 	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances"
+	DiscoverySecretsManagerSecrets      = "secretsmanager-secrets"
 )
 
 var All = []string{
@@ -91,6 +92,7 @@ var Auto = []string{
 	DiscoveryESDomains,
 	DiscoveryKMSKeys,
 	DiscoverySagemakerNotebookInstances,
+	DiscoverySecretsManagerSecrets,
 }
 
 var AllAPIResources = []string{
@@ -120,6 +122,7 @@ var AllAPIResources = []string{
 	DiscoveryESDomains,
 	DiscoveryKMSKeys,
 	DiscoverySagemakerNotebookInstances,
+	DiscoverySecretsManagerSecrets,
 }
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
@@ -148,11 +151,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 }
 
 func getDiscoveryTargets(config *inventory.Config) []string {
-	targets := config.Discover.Targets
-
-	if len(targets) == 0 {
-		return Auto
-	}
+	targets := config.GetDiscover().GetTargets()
 
 	if stringx.Contains(targets, DiscoveryAll) {
 		// return the All list + All Api Resources list
@@ -963,6 +962,38 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				awsObject: awsObject{
 					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
 					id: f.Name.Data, service: "sagemaker", objectType: "notebookinstance",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoverySecretsManagerSecrets:
+		res, err := NewResource(runtime, "aws.secretsmanager", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		sm := res.(*mqlAwsSecretsmanager)
+
+		secrets := sm.GetSecrets()
+		if secrets == nil {
+			return assetList, nil
+		}
+
+		for i := range secrets.Data {
+			f := secrets.Data[i].(*mqlAwsSecretsmanagerSecret)
+
+			var region string
+			if arn.IsARN(f.Arn.Data) {
+				if p, err := arn.Parse(f.Arn.Data); err == nil {
+					region = p.Region
+				}
+			}
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: region, arn: f.Arn.Data,
+					id: f.Name.Data, service: "secretsmanager", objectType: "secret",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))

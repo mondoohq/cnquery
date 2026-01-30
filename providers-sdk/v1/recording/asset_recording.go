@@ -7,30 +7,25 @@ import (
 	"sort"
 
 	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
 type Asset struct {
-	Asset       *assetInfo   `json:"asset"`
-	Connections []connection `json:"connections"`
-	Resources   []Resource   `json:"resources"`
+	Asset       *inventory.Asset `json:"asset"`
+	Connections []connection     `json:"connections"`
+	Resources   []Resource       `json:"resources"`
+	// A lookup of requested resources to their actual ID.
+	// This is required to resolve cases where a resource is requested by one ID (usually empty ID)
+	// and the connection responds with another (resolved) ID. This mapping allows us to mimic
+	// the same behavior when reading/replaying recordings.
+	//
+	// The key is the resource name + request ID, e.g.
+	// "aws.ec2.instance\x00123": "i-1234567890abcdef0"
+	// "azure.subscription\x001": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+	IdsLookup map[string]string `json:"idsLookup,omitempty"`
 
 	connections map[string]*connection `json:"-"`
 	resources   map[string]*Resource   `json:"-"`
-}
-
-type assetInfo struct {
-	ID          string            `json:"id"`
-	PlatformIDs []string          `json:"platformIDs,omitempty"`
-	Name        string            `json:"name,omitempty"`
-	Arch        string            `json:"arch,omitempty"`
-	Title       string            `json:"title,omitempty"`
-	Family      []string          `json:"family,omitempty"`
-	Build       string            `json:"build,omitempty"`
-	Version     string            `json:"version,omitempty"`
-	Kind        string            `json:"kind,omitempty"`
-	Runtime     string            `json:"runtime,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type connection struct {
@@ -82,13 +77,11 @@ func (asset *Asset) RefreshCache() {
 	asset.resources = make(map[string]*Resource, len(asset.Resources))
 	asset.connections = make(map[string]*connection, len(asset.Connections))
 
-	for j := range asset.Resources {
-		resource := &asset.Resources[j]
-		asset.resources[resource.Resource+"\x00"+resource.ID] = resource
+	for _, resource := range asset.Resources {
+		asset.resources[resource.Resource+"\x00"+resource.ID] = &resource
 	}
 
-	for j := range asset.Connections {
-		conn := &asset.Connections[j]
-		asset.connections[conn.Url] = conn
+	for _, conn := range asset.Connections {
+		asset.connections[conn.Url] = &conn
 	}
 }

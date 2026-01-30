@@ -298,8 +298,9 @@ func (a *mqlAwsRdsDbinstance) id() (string, error) {
 
 type mqlAwsRdsDbinstanceInternal struct {
 	securityGroupIdHandler
-	cacheSubnets *rds_types.DBSubnetGroup
-	region       string
+	cacheSubnets  *rds_types.DBSubnetGroup
+	cacheKmsKeyId *string
+	region        string
 }
 
 func newMqlAwsParameterGroup(runtime *plugin.Runtime, region string, parameterGroup rds_types.DBParameterGroup) (*mqlAwsRdsParameterGroup, error) {
@@ -466,6 +467,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 	mqlDBInstance := resource.(*mqlAwsRdsDbinstance)
 	mqlDBInstance.region = region
 	mqlDBInstance.cacheSubnets = dbInstance.DBSubnetGroup
+	mqlDBInstance.cacheKmsKeyId = dbInstance.KmsKeyId
 	mqlDBInstance.setSecurityGroupArns(sgsArn)
 	return mqlDBInstance, nil
 }
@@ -556,6 +558,22 @@ func (a *mqlAwsRdsDbinstance) subnets() ([]any, error) {
 		return res, nil
 	}
 	return nil, errors.New("no subnets found for RDS DB instance")
+}
+
+func (a *mqlAwsRdsDbinstance) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// KmsKeyId is already an ARN from the AWS API
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsRdsDbinstance) securityGroups() ([]any, error) {
@@ -730,6 +748,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 
 type mqlAwsRdsDbclusterInternal struct {
 	securityGroupIdHandler
+	cacheKmsKeyId *string
 }
 
 func (a *mqlAwsRdsDbcluster) id() (string, error) {
@@ -811,12 +830,29 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 		return nil, err
 	}
 	mqlDbCluster := resource.(*mqlAwsRdsDbcluster)
+	mqlDbCluster.cacheKmsKeyId = cluster.KmsKeyId
 	mqlDbCluster.setSecurityGroupArns(sgsArns)
 	return mqlDbCluster, nil
 }
 
 func (a *mqlAwsRdsDbcluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func (a *mqlAwsRdsDbcluster) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// KmsKeyId is already an ARN from the AWS API
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsRdsDbcluster) snapshots() ([]any, error) {
@@ -868,7 +904,9 @@ func newMqlAwsRdsClusterSnapshot(runtime *plugin.Runtime, region string, snapsho
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsRdsSnapshot), nil
+	mqlSnapshot := res.(*mqlAwsRdsSnapshot)
+	mqlSnapshot.cacheKmsKeyId = snapshot.KmsKeyId
+	return mqlSnapshot, nil
 }
 
 // newMqlAwsRdsDbSnapshot creates a new mqlAwsRdsSnapshot from a rds_types.DBSnapshot which is only
@@ -893,11 +931,33 @@ func newMqlAwsRdsDbSnapshot(runtime *plugin.Runtime, region string, snapshot rds
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsRdsSnapshot), nil
+	mqlSnapshot := res.(*mqlAwsRdsSnapshot)
+	mqlSnapshot.cacheKmsKeyId = snapshot.KmsKeyId
+	return mqlSnapshot, nil
 }
 
 func (a *mqlAwsRdsSnapshot) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+type mqlAwsRdsSnapshotInternal struct {
+	cacheKmsKeyId *string
+}
+
+func (a *mqlAwsRdsSnapshot) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// KmsKeyId is already an ARN from the AWS API
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsRdsBackupsetting) id() (string, error) {

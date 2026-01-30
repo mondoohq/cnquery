@@ -159,6 +159,8 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		osm = &OpenrcServiceManager{conn: conn}
 	case asset.Platform.Name == "aix":
 		osm = &AixServiceManager{conn: conn}
+	case asset.Platform.Name == "solaris":
+		osm = &SolarisSmfServiceManager{conn: conn}
 	case asset.Platform.IsFamily("linux"): // fallback for other linux distros which we assume are systemd
 		osm = ResolveSystemdServiceManager(conn)
 	}

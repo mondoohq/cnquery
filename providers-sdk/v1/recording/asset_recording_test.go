@@ -51,8 +51,8 @@ func TestAssetRecording(t *testing.T) {
 		require.Len(t, rec.Assets[0].connections, 1)
 		require.Len(t, rec.Assets[0].Resources, 0)
 		a := rec.Assets[0].Asset
-		require.Equal(t, "asset-mrn", a.ID)
-		require.Equal(t, []string{"platform-id"}, a.PlatformIDs)
+		require.Equal(t, "asset-mrn", a.Id)
+		require.Equal(t, []string{"platform-id"}, a.PlatformIds)
 
 		// re-add again by MRN, ensure nothing gets duplicated
 		asset.Mrn = "asset-mrn"
@@ -63,8 +63,8 @@ func TestAssetRecording(t *testing.T) {
 		require.Len(t, rec.Assets[0].Resources, 0)
 		a = rec.Assets[0].Asset
 
-		require.Equal(t, "asset-mrn", a.ID)
-		require.Equal(t, []string{"platform-id", "asset-mrn"}, a.PlatformIDs)
+		require.Equal(t, "asset-mrn", a.Id)
+		require.Equal(t, []string{"platform-id", "asset-mrn"}, a.PlatformIds)
 	})
 
 	t.Run("add asset by platform id and mrn", func(t *testing.T) {
@@ -87,8 +87,8 @@ func TestAssetRecording(t *testing.T) {
 		require.Len(t, rec.Assets[0].connections, 1)
 		require.Len(t, rec.Assets[0].Resources, 0)
 		a := rec.Assets[0].Asset
-		require.Equal(t, "asset-mrn", a.ID)
-		require.Equal(t, []string{"platform-id"}, a.PlatformIDs)
+		require.Equal(t, "asset-mrn", a.Id)
+		require.Equal(t, []string{"platform-id"}, a.PlatformIds)
 
 		// re-add again by platform id, ensure nothing gets duplicated
 		asset.Mrn = ""
@@ -98,8 +98,8 @@ func TestAssetRecording(t *testing.T) {
 		require.Len(t, rec.Assets[0].Resources, 0)
 		a = rec.Assets[0].Asset
 
-		require.Equal(t, "platform-id", a.ID)
-		require.Equal(t, []string{"platform-id"}, a.PlatformIDs)
+		require.Equal(t, "platform-id", a.Id)
+		require.Equal(t, []string{"platform-id"}, a.PlatformIds)
 
 		// re-add again by mrn, ensure nothing gets duplicated
 		asset.Mrn = "asset-mrn"
@@ -109,7 +109,7 @@ func TestAssetRecording(t *testing.T) {
 		require.Len(t, rec.Assets[0].Resources, 0)
 		a = rec.Assets[0].Asset
 
-		require.Equal(t, "asset-mrn", a.ID)
-		require.Equal(t, []string{"platform-id"}, a.PlatformIDs)
+		require.Equal(t, "asset-mrn", a.Id)
+		require.Equal(t, []string{"platform-id"}, a.PlatformIds)
 	})
 }

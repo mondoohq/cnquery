@@ -43,6 +43,7 @@ const (
 	ResourceGithubGist                       string = "github.gist"
 	ResourceGithubGistfile                   string = "github.gistfile"
 	ResourceGithubIssue                      string = "github.issue"
+	ResourceGithubDependabotAlert            string = "github.dependabotAlert"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -152,6 +153,10 @@ func init() {
 		"github.issue": {
 			// to override args, implement: initGithubIssue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubIssue,
+		},
+		"github.dependabotAlert": {
+			// to override args, implement: initGithubDependabotAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubDependabotAlert,
 		},
 	}
 }
@@ -377,6 +382,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.organization.membersCanForkPrivateRepos": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetMembersCanForkPrivateRepos()).ToDataRes(types.Bool)
 	},
+	"github.organization.dependabotAlertsEnabledForNewRepos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetDependabotAlertsEnabledForNewRepos()).ToDataRes(types.Bool)
+	},
+	"github.organization.dependabotSecurityUpdatesEnabledForNewRepos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetDependabotSecurityUpdatesEnabledForNewRepos()).ToDataRes(types.Bool)
+	},
+	"github.organization.advancedSecurityEnabledForNewRepos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetAdvancedSecurityEnabledForNewRepos()).ToDataRes(types.Bool)
+	},
+	"github.organization.secretScanningEnabledForNewRepos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetSecretScanningEnabledForNewRepos()).ToDataRes(types.Bool)
+	},
+	"github.organization.secretScanningPushProtectionEnabledForNewRepos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetSecretScanningPushProtectionEnabledForNewRepos()).ToDataRes(types.Bool)
+	},
+	"github.organization.secretScanningValidityChecksEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetSecretScanningValidityChecksEnabled()).ToDataRes(types.Bool)
+	},
+	"github.organization.membersCanDeleteRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetMembersCanDeleteRepositories()).ToDataRes(types.Bool)
+	},
+	"github.organization.membersCanChangeRepoVisibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetMembersCanChangeRepoVisibility()).ToDataRes(types.Bool)
+	},
+	"github.organization.membersCanDeleteIssues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetMembersCanDeleteIssues()).ToDataRes(types.Bool)
+	},
+	"github.organization.readersCanCreateDiscussions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetReadersCanCreateDiscussions()).ToDataRes(types.Bool)
+	},
 	"github.organization.owners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetOwners()).ToDataRes(types.Array(types.Resource("github.user")))
 	},
@@ -475,6 +510,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.user.company": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubUser).GetCompany()).ToDataRes(types.String)
+	},
+	"github.user.hireable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubUser).GetHireable()).ToDataRes(types.Bool)
+	},
+	"github.user.siteAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubUser).GetSiteAdmin()).ToDataRes(types.Bool)
 	},
 	"github.user.repositories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubUser).GetRepositories()).ToDataRes(types.Array(types.Resource("github.repository")))
@@ -728,6 +769,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.securityFile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetSecurityFile()).ToDataRes(types.Resource("github.file"))
 	},
+	"github.repository.dependabotAlerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetDependabotAlerts()).ToDataRes(types.Array(types.Resource("github.dependabotAlert")))
+	},
 	"github.license.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubLicense).GetKey()).ToDataRes(types.String)
 	},
@@ -784,6 +828,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.release.preRelease": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRelease).GetPreRelease()).ToDataRes(types.Bool)
+	},
+	"github.release.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRelease).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"github.release.publishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRelease).GetPublishedAt()).ToDataRes(types.Time)
+	},
+	"github.release.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRelease).GetAuthor()).ToDataRes(types.Resource("github.user"))
 	},
 	"github.webhook.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubWebhook).GetId()).ToDataRes(types.Int)
@@ -1046,6 +1099,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.issue.closedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubIssue).GetClosedBy()).ToDataRes(types.Resource("github.user"))
 	},
+	"github.issue.draft": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubIssue).GetDraft()).ToDataRes(types.Bool)
+	},
+	"github.issue.locked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubIssue).GetLocked()).ToDataRes(types.Bool)
+	},
+	"github.dependabotAlert.number": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetNumber()).ToDataRes(types.Int)
+	},
+	"github.dependabotAlert.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetState()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.dependency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetDependency()).ToDataRes(types.Dict)
+	},
+	"github.dependabotAlert.securityAdvisory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetSecurityAdvisory()).ToDataRes(types.Dict)
+	},
+	"github.dependabotAlert.securityVulnerability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetSecurityVulnerability()).ToDataRes(types.Dict)
+	},
+	"github.dependabotAlert.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetUrl()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.htmlUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetHtmlUrl()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"github.dependabotAlert.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"github.dependabotAlert.dismissedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetDismissedAt()).ToDataRes(types.Time)
+	},
+	"github.dependabotAlert.fixedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetFixedAt()).ToDataRes(types.Time)
+	},
+	"github.dependabotAlert.autoDismissedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetAutoDismissedAt()).ToDataRes(types.Time)
+	},
+	"github.dependabotAlert.dismissedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetDismissedBy()).ToDataRes(types.Resource("github.user"))
+	},
+	"github.dependabotAlert.dismissedReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetDismissedReason()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.dismissedComment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetDismissedComment()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1270,6 +1374,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubOrganization).MembersCanForkPrivateRepos, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"github.organization.dependabotAlertsEnabledForNewRepos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).DependabotAlertsEnabledForNewRepos, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.dependabotSecurityUpdatesEnabledForNewRepos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).DependabotSecurityUpdatesEnabledForNewRepos, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.advancedSecurityEnabledForNewRepos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).AdvancedSecurityEnabledForNewRepos, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.secretScanningEnabledForNewRepos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).SecretScanningEnabledForNewRepos, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.secretScanningPushProtectionEnabledForNewRepos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).SecretScanningPushProtectionEnabledForNewRepos, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.secretScanningValidityChecksEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).SecretScanningValidityChecksEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.membersCanDeleteRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).MembersCanDeleteRepositories, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.membersCanChangeRepoVisibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).MembersCanChangeRepoVisibility, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.membersCanDeleteIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).MembersCanDeleteIssues, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.readersCanCreateDiscussions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).ReadersCanCreateDiscussions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"github.organization.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganization).Owners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1408,6 +1552,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.user.company": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubUser).Company, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.user.hireable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubUser).Hireable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.user.siteAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubUser).SiteAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.user.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1766,6 +1918,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubRepository).SecurityFile, ok = plugin.RawToTValue[*mqlGithubFile](v.Value, v.Error)
 		return
 	},
+	"github.repository.dependabotAlerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).DependabotAlerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"github.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubLicense).__id, ok = v.Value.(string)
 		return
@@ -1852,6 +2008,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.release.preRelease": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRelease).PreRelease, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.release.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRelease).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.release.publishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRelease).PublishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.release.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRelease).Author, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
 		return
 	},
 	"github.webhook.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2246,6 +2414,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubIssue).ClosedBy, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
 		return
 	},
+	"github.issue.draft": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubIssue).Draft, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.issue.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubIssue).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).__id, ok = v.Value.(string)
+		return
+	},
+	"github.dependabotAlert.number": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).Number, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.dependency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).Dependency, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.securityAdvisory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).SecurityAdvisory, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.securityVulnerability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).SecurityVulnerability, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.htmlUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).HtmlUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.dismissedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).DismissedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.fixedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).FixedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.autoDismissedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).AutoDismissedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.dismissedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).DismissedBy, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.dismissedReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).DismissedReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.dismissedComment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).DismissedComment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2516,50 +2756,60 @@ type mqlGithubOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGithubOrganizationInternal
-	Login                                plugin.TValue[string]
-	Id                                   plugin.TValue[int64]
-	NodeId                               plugin.TValue[string]
-	Name                                 plugin.TValue[string]
-	Company                              plugin.TValue[string]
-	Blog                                 plugin.TValue[string]
-	Location                             plugin.TValue[string]
-	Email                                plugin.TValue[string]
-	TwitterUsername                      plugin.TValue[string]
-	AvatarUrl                            plugin.TValue[string]
-	Followers                            plugin.TValue[int64]
-	Following                            plugin.TValue[int64]
-	Description                          plugin.TValue[string]
-	CreatedAt                            plugin.TValue[*time.Time]
-	UpdatedAt                            plugin.TValue[*time.Time]
-	TotalPrivateRepos                    plugin.TValue[int64]
-	TotalPublicRepos                     plugin.TValue[int64]
-	OwnedPrivateRepos                    plugin.TValue[int64]
-	PrivateGists                         plugin.TValue[int64]
-	DiskUsage                            plugin.TValue[int64]
-	Collaborators                        plugin.TValue[int64]
-	BillingEmail                         plugin.TValue[string]
-	Plan                                 plugin.TValue[any]
-	TwoFactorRequirementEnabled          plugin.TValue[bool]
-	IsVerified                           plugin.TValue[bool]
-	DefaultRepositoryPermission          plugin.TValue[string]
-	MembersCanCreateRepositories         plugin.TValue[bool]
-	MembersCanCreatePublicRepositories   plugin.TValue[bool]
-	MembersCanCreatePrivateRepositories  plugin.TValue[bool]
-	MembersCanCreateInternalRepositories plugin.TValue[bool]
-	MembersCanCreatePages                plugin.TValue[bool]
-	MembersCanCreatePublicPages          plugin.TValue[bool]
-	MembersCanCreatePrivatePages         plugin.TValue[bool]
-	MembersCanForkPrivateRepos           plugin.TValue[bool]
-	Owners                               plugin.TValue[[]any]
-	Members                              plugin.TValue[[]any]
-	Teams                                plugin.TValue[[]any]
-	Repositories                         plugin.TValue[[]any]
-	Installations                        plugin.TValue[[]any]
-	Webhooks                             plugin.TValue[[]any]
-	Packages                             plugin.TValue[[]any]
-	HasOrganizationProjects              plugin.TValue[bool]
-	HasRepositoryProjects                plugin.TValue[bool]
-	CustomProperties                     plugin.TValue[[]any]
+	Login                                          plugin.TValue[string]
+	Id                                             plugin.TValue[int64]
+	NodeId                                         plugin.TValue[string]
+	Name                                           plugin.TValue[string]
+	Company                                        plugin.TValue[string]
+	Blog                                           plugin.TValue[string]
+	Location                                       plugin.TValue[string]
+	Email                                          plugin.TValue[string]
+	TwitterUsername                                plugin.TValue[string]
+	AvatarUrl                                      plugin.TValue[string]
+	Followers                                      plugin.TValue[int64]
+	Following                                      plugin.TValue[int64]
+	Description                                    plugin.TValue[string]
+	CreatedAt                                      plugin.TValue[*time.Time]
+	UpdatedAt                                      plugin.TValue[*time.Time]
+	TotalPrivateRepos                              plugin.TValue[int64]
+	TotalPublicRepos                               plugin.TValue[int64]
+	OwnedPrivateRepos                              plugin.TValue[int64]
+	PrivateGists                                   plugin.TValue[int64]
+	DiskUsage                                      plugin.TValue[int64]
+	Collaborators                                  plugin.TValue[int64]
+	BillingEmail                                   plugin.TValue[string]
+	Plan                                           plugin.TValue[any]
+	TwoFactorRequirementEnabled                    plugin.TValue[bool]
+	IsVerified                                     plugin.TValue[bool]
+	DefaultRepositoryPermission                    plugin.TValue[string]
+	MembersCanCreateRepositories                   plugin.TValue[bool]
+	MembersCanCreatePublicRepositories             plugin.TValue[bool]
+	MembersCanCreatePrivateRepositories            plugin.TValue[bool]
+	MembersCanCreateInternalRepositories           plugin.TValue[bool]
+	MembersCanCreatePages                          plugin.TValue[bool]
+	MembersCanCreatePublicPages                    plugin.TValue[bool]
+	MembersCanCreatePrivatePages                   plugin.TValue[bool]
+	MembersCanForkPrivateRepos                     plugin.TValue[bool]
+	DependabotAlertsEnabledForNewRepos             plugin.TValue[bool]
+	DependabotSecurityUpdatesEnabledForNewRepos    plugin.TValue[bool]
+	AdvancedSecurityEnabledForNewRepos             plugin.TValue[bool]
+	SecretScanningEnabledForNewRepos               plugin.TValue[bool]
+	SecretScanningPushProtectionEnabledForNewRepos plugin.TValue[bool]
+	SecretScanningValidityChecksEnabled            plugin.TValue[bool]
+	MembersCanDeleteRepositories                   plugin.TValue[bool]
+	MembersCanChangeRepoVisibility                 plugin.TValue[bool]
+	MembersCanDeleteIssues                         plugin.TValue[bool]
+	ReadersCanCreateDiscussions                    plugin.TValue[bool]
+	Owners                                         plugin.TValue[[]any]
+	Members                                        plugin.TValue[[]any]
+	Teams                                          plugin.TValue[[]any]
+	Repositories                                   plugin.TValue[[]any]
+	Installations                                  plugin.TValue[[]any]
+	Webhooks                                       plugin.TValue[[]any]
+	Packages                                       plugin.TValue[[]any]
+	HasOrganizationProjects                        plugin.TValue[bool]
+	HasRepositoryProjects                          plugin.TValue[bool]
+	CustomProperties                               plugin.TValue[[]any]
 }
 
 // createGithubOrganization creates a new instance of this resource
@@ -2733,6 +2983,46 @@ func (c *mqlGithubOrganization) GetMembersCanCreatePrivatePages() *plugin.TValue
 
 func (c *mqlGithubOrganization) GetMembersCanForkPrivateRepos() *plugin.TValue[bool] {
 	return &c.MembersCanForkPrivateRepos
+}
+
+func (c *mqlGithubOrganization) GetDependabotAlertsEnabledForNewRepos() *plugin.TValue[bool] {
+	return &c.DependabotAlertsEnabledForNewRepos
+}
+
+func (c *mqlGithubOrganization) GetDependabotSecurityUpdatesEnabledForNewRepos() *plugin.TValue[bool] {
+	return &c.DependabotSecurityUpdatesEnabledForNewRepos
+}
+
+func (c *mqlGithubOrganization) GetAdvancedSecurityEnabledForNewRepos() *plugin.TValue[bool] {
+	return &c.AdvancedSecurityEnabledForNewRepos
+}
+
+func (c *mqlGithubOrganization) GetSecretScanningEnabledForNewRepos() *plugin.TValue[bool] {
+	return &c.SecretScanningEnabledForNewRepos
+}
+
+func (c *mqlGithubOrganization) GetSecretScanningPushProtectionEnabledForNewRepos() *plugin.TValue[bool] {
+	return &c.SecretScanningPushProtectionEnabledForNewRepos
+}
+
+func (c *mqlGithubOrganization) GetSecretScanningValidityChecksEnabled() *plugin.TValue[bool] {
+	return &c.SecretScanningValidityChecksEnabled
+}
+
+func (c *mqlGithubOrganization) GetMembersCanDeleteRepositories() *plugin.TValue[bool] {
+	return &c.MembersCanDeleteRepositories
+}
+
+func (c *mqlGithubOrganization) GetMembersCanChangeRepoVisibility() *plugin.TValue[bool] {
+	return &c.MembersCanChangeRepoVisibility
+}
+
+func (c *mqlGithubOrganization) GetMembersCanDeleteIssues() *plugin.TValue[bool] {
+	return &c.MembersCanDeleteIssues
+}
+
+func (c *mqlGithubOrganization) GetReadersCanCreateDiscussions() *plugin.TValue[bool] {
+	return &c.ReadersCanCreateDiscussions
 }
 
 func (c *mqlGithubOrganization) GetOwners() *plugin.TValue[[]any] {
@@ -2975,6 +3265,8 @@ type mqlGithubUser struct {
 	UpdatedAt       plugin.TValue[*time.Time]
 	SuspendedAt     plugin.TValue[*time.Time]
 	Company         plugin.TValue[string]
+	Hireable        plugin.TValue[bool]
+	SiteAdmin       plugin.TValue[bool]
 	Repositories    plugin.TValue[[]any]
 	Gists           plugin.TValue[[]any]
 }
@@ -3074,6 +3366,14 @@ func (c *mqlGithubUser) GetSuspendedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlGithubUser) GetCompany() *plugin.TValue[string] {
 	return &c.Company
+}
+
+func (c *mqlGithubUser) GetHireable() *plugin.TValue[bool] {
+	return &c.Hireable
+}
+
+func (c *mqlGithubUser) GetSiteAdmin() *plugin.TValue[bool] {
+	return &c.SiteAdmin
 }
 
 func (c *mqlGithubUser) GetRepositories() *plugin.TValue[[]any] {
@@ -3555,6 +3855,7 @@ type mqlGithubRepository struct {
 	CodeOfConductFile   plugin.TValue[*mqlGithubFile]
 	SupportFile         plugin.TValue[*mqlGithubFile]
 	SecurityFile        plugin.TValue[*mqlGithubFile]
+	DependabotAlerts    plugin.TValue[[]any]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -4074,6 +4375,22 @@ func (c *mqlGithubRepository) GetSecurityFile() *plugin.TValue[*mqlGithubFile] {
 	})
 }
 
+func (c *mqlGithubRepository) GetDependabotAlerts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DependabotAlerts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "dependabotAlerts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dependabotAlerts()
+	})
+}
+
 // mqlGithubLicense for the github.license resource
 type mqlGithubLicense struct {
 	MqlRuntime *plugin.Runtime
@@ -4256,10 +4573,13 @@ type mqlGithubRelease struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGithubReleaseInternal it will be used here
-	Url        plugin.TValue[string]
-	Name       plugin.TValue[string]
-	TagName    plugin.TValue[string]
-	PreRelease plugin.TValue[bool]
+	Url         plugin.TValue[string]
+	Name        plugin.TValue[string]
+	TagName     plugin.TValue[string]
+	PreRelease  plugin.TValue[bool]
+	CreatedAt   plugin.TValue[*time.Time]
+	PublishedAt plugin.TValue[*time.Time]
+	Author      plugin.TValue[*mqlGithubUser]
 }
 
 // createGithubRelease creates a new instance of this resource
@@ -4313,6 +4633,18 @@ func (c *mqlGithubRelease) GetTagName() *plugin.TValue[string] {
 
 func (c *mqlGithubRelease) GetPreRelease() *plugin.TValue[bool] {
 	return &c.PreRelease
+}
+
+func (c *mqlGithubRelease) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGithubRelease) GetPublishedAt() *plugin.TValue[*time.Time] {
+	return &c.PublishedAt
+}
+
+func (c *mqlGithubRelease) GetAuthor() *plugin.TValue[*mqlGithubUser] {
+	return &c.Author
 }
 
 // mqlGithubWebhook for the github.webhook resource
@@ -5215,6 +5547,8 @@ type mqlGithubIssue struct {
 	ClosedAt  plugin.TValue[*time.Time]
 	Assignees plugin.TValue[[]any]
 	ClosedBy  plugin.TValue[*mqlGithubUser]
+	Draft     plugin.TValue[bool]
+	Locked    plugin.TValue[bool]
 }
 
 // createGithubIssue creates a new instance of this resource
@@ -5296,4 +5630,131 @@ func (c *mqlGithubIssue) GetAssignees() *plugin.TValue[[]any] {
 
 func (c *mqlGithubIssue) GetClosedBy() *plugin.TValue[*mqlGithubUser] {
 	return &c.ClosedBy
+}
+
+func (c *mqlGithubIssue) GetDraft() *plugin.TValue[bool] {
+	return &c.Draft
+}
+
+func (c *mqlGithubIssue) GetLocked() *plugin.TValue[bool] {
+	return &c.Locked
+}
+
+// mqlGithubDependabotAlert for the github.dependabotAlert resource
+type mqlGithubDependabotAlert struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubDependabotAlertInternal it will be used here
+	Number                plugin.TValue[int64]
+	State                 plugin.TValue[string]
+	Dependency            plugin.TValue[any]
+	SecurityAdvisory      plugin.TValue[any]
+	SecurityVulnerability plugin.TValue[any]
+	Url                   plugin.TValue[string]
+	HtmlUrl               plugin.TValue[string]
+	CreatedAt             plugin.TValue[*time.Time]
+	UpdatedAt             plugin.TValue[*time.Time]
+	DismissedAt           plugin.TValue[*time.Time]
+	FixedAt               plugin.TValue[*time.Time]
+	AutoDismissedAt       plugin.TValue[*time.Time]
+	DismissedBy           plugin.TValue[*mqlGithubUser]
+	DismissedReason       plugin.TValue[string]
+	DismissedComment      plugin.TValue[string]
+}
+
+// createGithubDependabotAlert creates a new instance of this resource
+func createGithubDependabotAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubDependabotAlert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.dependabotAlert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubDependabotAlert) MqlName() string {
+	return "github.dependabotAlert"
+}
+
+func (c *mqlGithubDependabotAlert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubDependabotAlert) GetNumber() *plugin.TValue[int64] {
+	return &c.Number
+}
+
+func (c *mqlGithubDependabotAlert) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGithubDependabotAlert) GetDependency() *plugin.TValue[any] {
+	return &c.Dependency
+}
+
+func (c *mqlGithubDependabotAlert) GetSecurityAdvisory() *plugin.TValue[any] {
+	return &c.SecurityAdvisory
+}
+
+func (c *mqlGithubDependabotAlert) GetSecurityVulnerability() *plugin.TValue[any] {
+	return &c.SecurityVulnerability
+}
+
+func (c *mqlGithubDependabotAlert) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlGithubDependabotAlert) GetHtmlUrl() *plugin.TValue[string] {
+	return &c.HtmlUrl
+}
+
+func (c *mqlGithubDependabotAlert) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGithubDependabotAlert) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGithubDependabotAlert) GetDismissedAt() *plugin.TValue[*time.Time] {
+	return &c.DismissedAt
+}
+
+func (c *mqlGithubDependabotAlert) GetFixedAt() *plugin.TValue[*time.Time] {
+	return &c.FixedAt
+}
+
+func (c *mqlGithubDependabotAlert) GetAutoDismissedAt() *plugin.TValue[*time.Time] {
+	return &c.AutoDismissedAt
+}
+
+func (c *mqlGithubDependabotAlert) GetDismissedBy() *plugin.TValue[*mqlGithubUser] {
+	return &c.DismissedBy
+}
+
+func (c *mqlGithubDependabotAlert) GetDismissedReason() *plugin.TValue[string] {
+	return &c.DismissedReason
+}
+
+func (c *mqlGithubDependabotAlert) GetDismissedComment() *plugin.TValue[string] {
+	return &c.DismissedComment
 }

@@ -1682,7 +1682,7 @@ aws.secretsmanager {
 }
 
 // AWS Secrets Manager secret
-private aws.secretsmanager.secret @defaults("arn name") {
+aws.secretsmanager.secret @defaults("arn name") {
   // ARN for the secret
   arn string
   // Creation date of the secret
@@ -1691,6 +1691,8 @@ private aws.secretsmanager.secret @defaults("arn name") {
   description string
   // KMS key used for encryption of the secret
   kmsKey() aws.kms.key
+  // Last date the secret was accessed
+  lastAccessedDate time
   // Last date the secret was changed
   lastChangedDate time
   // Last date the secret was automatically rotated
@@ -1699,12 +1701,28 @@ private aws.secretsmanager.secret @defaults("arn name") {
   name string
   // Date of the next secret rotation
   nextRotationDate time
+  // AWS service that created this secret (e.g., RDS, Redshift)
+  owningService string
   // Primary region of the secret
   primaryRegion string
   // Whether rotation is enabled for the secret
   rotationEnabled bool
+  // Lambda function used for automatic rotation
+  rotationLambda aws.lambda.function
+  // Rotation schedule configuration
+  rotationRules aws.secretsmanager.secret.rotationRules
   // Tags for the secret
   tags map[string]string
+}
+
+// AWS Secrets Manager secret rotation rules configuration
+private aws.secretsmanager.secret.rotationRules {
+  // Number of days between automatic scheduled rotations
+  automaticallyAfterDays int
+  // Length of the rotation window in hours (e.g., "3h")
+  duration string
+  // Cron or rate expression defining the rotation schedule (e.g., "rate(12 hours)")
+  scheduleExpression string
 }
 
 
@@ -2631,7 +2649,7 @@ private aws.dynamodb.export {
   endTime() time
   // S3 SSE Algorithm for the export
   s3SseAlgorithm() string
-  // SSE KMS Key Id
+  // SSE KMS Key
   kmsKey() aws.kms.key
   // ARN for the export
   arn string
@@ -2817,7 +2835,7 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   engine string
   // Version of the database engine for this DB cluster
   engineVersion string
-  // Whether the cluster is publicly accessible
+  // Whether the cluster is publicly accessible. Note: This will only return a value for non-Aurora Multi-AZ DB clusters
   publiclyAccessible bool
   // Whether the cluster is a Multi-AZ deployment
   multiAZ bool
@@ -2867,6 +2885,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   globalClusterIdentifier string
   // CloudWatch Database Insights mode. Possible values are `standard` and `advanced`
   databaseInsightsMode string
+  // KMS key used for storage encryption
+  kmsKey() aws.kms.key
 }
 
 // Amazon RDS snapshot
@@ -2899,6 +2919,8 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   allocatedStorage int
   // Creation date of the snapshot
   createdAt time
+  // KMS key used for snapshot encryption
+  kmsKey() aws.kms.key
 }
 
 // Amazon RDS database instance
@@ -2925,7 +2947,7 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   region string
   // Availability zone where the instance exists
   availabilityZone string
-  // Whether the instance is publicly accessible. Note: This will only return a value for non-Aurora Multi-AZ DB clusters
+  // Whether the instance is publicly accessible
   publiclyAccessible bool
   // List of log types the instance is configured to export to CloudWatch logs
   enabledCloudwatchLogsExports []string
@@ -2991,6 +3013,8 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   preferredMaintenanceWindow string
   // Preferred backup window for the database cluster
   preferredBackupWindow string
+  // KMS key used for storage encryption
+  kmsKey() aws.kms.key
 }
 
 // Amazon RDS pending maintenance action
@@ -3670,6 +3694,8 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   encrypted bool
   // The storage tier in which the snapshot is stored
   storageTier string
+  // KMS key used for snapshot encryption
+  kmsKey() aws.kms.key
 }
 
 // Amazon EC2 (EBS) volume
@@ -3702,6 +3728,8 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   size int
   // Number of I/O operations per second (IOPS). For gp3, io1, and io2 volumes, this represents the number of IOPS that are provisioned for the volume. For gp2 volumes, this represents the baseline performance of the volume and the rate at which the volume accumulates I/O credits for bursting.
   iops int
+  // KMS key used for volume encryption
+  kmsKey() aws.kms.key
 }
 
 // Amazon Inspector

@@ -6,280 +6,280 @@ option go_package = "go.mondoo.com/cnquery/v12/providers/oci/resources"
 
 // Oracle Cloud Infrastructure (OCI) tenancy
 oci {
-  // Regions
+  // Available regions
   regions() []oci.region
-  // Compartments
+  // Compartments in the tenancy
   compartments() []oci.compartment
 }
 
 // Oracle Cloud Infrastructure (OCI) tenancy
 oci.tenancy @defaults("name") {
-  // Compartment ID
+  // Tenancy OCID
   id string
-  // Compartment name
+  // Tenancy name
   name string
-  // Description of the compartment
+  // Tenancy description
   description string
-  // Retention period duration
+  // Event retention period duration
   retentionPeriod() time
 }
 
 // Oracle Cloud Infrastructure (OCI) region
 private oci.region @defaults("id name") {
-  // Region's key
+  // Region key (e.g., us-phoenix-1)
   id string
-  // Region name
+  // Region display name
   name string
-  // Whether the region is the home region
+  // Whether this is the tenancy's home region
   isHomeRegion bool
-  // Region subscription status
+  // Region subscription status (e.g., READY, IN_PROGRESS)
   status string
 }
 
 // Oracle Cloud Infrastructure (OCI) compartment
 private oci.compartment @defaults("name") {
-  // Compartment ID
+  // Compartment OCID
   id string
   // Compartment name
   name string
-  // Description of the compartment
+  // Compartment description
   description string
-  // Time when the compartment was created
+  // Compartment creation time
   created time
-  // Compartment state
+  // Compartment lifecycle state (e.g., ACTIVE, DELETED)
   state string
 }
 
-// Oracle Cloud Infrastructure (OCI) identity
+// Oracle Cloud Infrastructure (OCI) identity and access management
 oci.identity {
-  // Users
+  // IAM users
   users() []oci.identity.user
-  // Groups
+  // IAM groups
   groups() []oci.identity.group
-  // Policies
+  // IAM policies
   policies() []oci.identity.policy
 }
 
-// Oracle Cloud Infrastructure (OCI) identity user
+// Oracle Cloud Infrastructure (OCI) IAM user
 private oci.identity.user @defaults("name") {
-  // User ID
+  // User OCID
   id string
-  // Tenancy containing the user
+  // Compartment OCID containing the user
   compartmentID string
-  // Name of the user
+  // Username
   name string
-  // Description of the user
+  // User description
   description string
-  // Time when the user was created
+  // User creation time
   created time
-  // Instance state
+  // User lifecycle state (e.g., ACTIVE, INACTIVE)
   state string
-  // Whether MFA is activated
+  // Whether multi-factor authentication is enabled
   mfaActivated bool
   // User email address
   email string
-  // Whether email is verified
+  // Whether the email address has been verified
   emailVerified bool
-  // Properties indicating how the user is allowed to authenticate
+  // Authentication capabilities (e.g., can_use_api_keys, can_use_auth_tokens)
   capabilities map[string]bool
-  // Most recent login
+  // Most recent successful login time
   lastLogin time
-  // Previous login
+  // Previous successful login time
   previousLogin time
-  // API keys
+  // API keys for API authentication
   apiKeys() []oci.identity.apiKey
-  // Customer secret keys
+  // Customer secret keys for Amazon S3 compatibility API
   customerSecretKeys() []oci.identity.customerSecretKey
-  // Auth tokens
+  // Authentication tokens for Oracle Cloud Infrastructure APIs
   authTokens() []oci.identity.authToken
-  // User groups
+  // Groups the user belongs to
   groups() []oci.identity.group
 }
 
-// Oracle Cloud Infrastructure (OCI) API key (a PEM-format RSA credential)
+// Oracle Cloud Infrastructure (OCI) API key (PEM-format RSA credential for API authentication)
 private oci.identity.apiKey @defaults("fingerprint") {
-  // Key ID
+  // API key OCID
   id string
-  // Key value
+  // Public key value in PEM format
   value string
-  // Key fingerprint
+  // MD5 fingerprint of the public key
   fingerprint string
-  // Time when the key was created
+  // API key creation time
   created time
-  // Key state
+  // API key lifecycle state (e.g., ACTIVE, INACTIVE)
   state string
 }
 
-// Oracle Cloud Infrastructure (OCI) customer secret key for OCI Object Storage service
+// Oracle Cloud Infrastructure (OCI) customer secret key for Amazon S3 compatibility API
 private oci.identity.customerSecretKey @defaults("name") {
-  // Key ID
+  // Customer secret key OCID
   id string
-  // Key name
+  // Display name for the key
   name string
-  // Time when the key was created
+  // Key creation time
   created time
-  // Key state
+  // Key lifecycle state (e.g., ACTIVE, INACTIVE)
   state string
 }
 
-// Oracle Cloud Infrastructure (OCI) token string
+// Oracle Cloud Infrastructure (OCI) authentication token for API access
 private oci.identity.authToken @defaults("description") {
-  // Token ID
+  // Auth token OCID
   id string
   // Token description
   description string
-  // Time when the token was created
+  // Token creation time
   created time
-  // Time when the token will expire
+  // Token expiration time
   expires time
-  // Key state
+  // Token lifecycle state (e.g., ACTIVE, INACTIVE)
   state string
 }
 
-// Oracle Cloud Infrastructure (OCI) collection of users
+// Oracle Cloud Infrastructure (OCI) IAM group (collection of users)
 private oci.identity.group @defaults("name") {
-  // User ID
+  // Group OCID
   id string
-  // Tenancy containing the user
+  // Compartment OCID containing the group
   compartmentID string
-  // Name of the user
+  // Group name
   name string
-  // Description of the user
+  // Group description
   description string
-  // Time when the user was created
+  // Group creation time
   created time
-  // Instance state
+  // Group lifecycle state (e.g., ACTIVE, INACTIVE)
   state string
 }
 
-// Policy that specifies the type of access a group has to the resources in a compartment
+// Oracle Cloud Infrastructure (OCI) IAM policy that grants group permissions to resources
 private oci.identity.policy @defaults("name description") {
-  // User ID
+  // Policy OCID
   id string
-  // Tenancy containing the policy
+  // Compartment OCID containing the policy
   compartmentID string
-  // Name of the policy
+  // Policy name
   name string
-  // Description of the policy
+  // Policy description
   description string
-  // Time when the policy was created
+  // Policy creation time
   created time
-  // Instance state
+  // Policy lifecycle state (e.g., ACTIVE, INACTIVE)
   state string
-  // Policy statements
+  // Policy statements defining permissions
   statements []string
 }
 
-// Oracle Cloud Infrastructure (OCI) Compute
+// Oracle Cloud Infrastructure (OCI) Compute service
 oci.compute {
-  // Instances
+  // Compute instances
   instances() []oci.compute.instance
-  // Images
+  // Compute images
   images() []oci.compute.image
 }
 
 // Oracle Cloud Infrastructure (OCI) Compute instance
 private oci.compute.instance @defaults("name") {
-  // Instance ID
+  // Instance OCID
   id string
-  // Instance name
+  // Instance display name
   name string
-  // Region
+  // Region where the instance is running
   region oci.region
-  // Time when the instance was created
+  // Instance creation time
   created time
-  // Instance state
+  // Instance lifecycle state (e.g., RUNNING, STOPPED, TERMINATED)
   state string
 }
 
 // Oracle Cloud Infrastructure (OCI) Compute image
 private oci.compute.image @defaults("name") {
-  // Image ID
+  // Image OCID
   id string
-  // Image name
+  // Image display name
   name string
-  // Region
+  // Region where the image is available
   region oci.region
-  // Time when the image was created
+  // Image creation time
   created time
-  // Image state
+  // Image lifecycle state (e.g., AVAILABLE, DISABLED, DELETED)
   state string
 }
 
-// Oracle Cloud Infrastructure (OCI) Networking
+// Oracle Cloud Infrastructure (OCI) Networking service
 oci.network {
-  // Virtual Cloud Networks
+  // Virtual Cloud Networks (VCNs)
   vcns() []oci.network.vcn
-  // VCN Security List
+  // VCN security lists
   securityLists() []oci.network.securityList
 }
 
-// Oracle Cloud Infrastructure (OCI) virtual cloud network (VCN)
+// Oracle Cloud Infrastructure (OCI) Virtual Cloud Network (VCN)
 private oci.network.vcn @defaults("name") {
-  // VCN ID
+  // VCN OCID
   id string
-  // Tenancy containing the VCN
+  // Compartment OCID containing the VCN
   compartmentID string
-  // VCN name
+  // VCN display name
   name string
-  // Time when the VCN was created
+  // VCN creation time
   created time
-  // VCN state
+  // VCN lifecycle state (e.g., AVAILABLE, TERMINATED)
   state string
-  // Deprecated
+  // Deprecated: Use cidrBlocks instead
   cidrBlock string
-  // List of IPv4 CIDR blocks
+  // IPv4 CIDR blocks for the VCN address space
   cidrBlocks []string
 }
 
-// Oracle Cloud Infrastructure (OCI) VCN security list virtual firewall rules
+// Oracle Cloud Infrastructure (OCI) VCN security list (virtual firewall rules)
 private oci.network.securityList @defaults("name") {
-  // SecurityList ID
+  // Security list OCID
   id string
-  // Tenancy containing the VCN
+  // Compartment OCID containing the security list
   compartmentID string
-  // VCN name
+  // Security list display name
   name string
-  // Time when the VCN was created
+  // Security list creation time
   created time
-  // VCN state
+  // Security list lifecycle state (e.g., AVAILABLE, TERMINATED)
   state string
-  // Rules for allowing egress IP packets
+  // Egress security rules for outbound traffic
   egressSecurityRules []dict
-  // Rules for allowing ingress IP packets
+  // Ingress security rules for inbound traffic
   ingressSecurityRules []dict
 }
 
-// Oracle Cloud Infrastructure (OCI) Object Storage
+// Oracle Cloud Infrastructure (OCI) Object Storage service
 oci.objectStorage {
-  // Namespace
+  // Object Storage namespace (unique per tenancy)
   namespace() string
-  // Buckets
+  // Object Storage buckets
   buckets() []oci.objectStorage.bucket
 }
 
 // Oracle Cloud Infrastructure (OCI) Object Storage bucket
 private oci.objectStorage.bucket {
-  // Bucket namespace
+  // Object Storage namespace
   namespace string
   // Bucket name
   name string
-  // Tenancy containing the bucket
+  // Compartment OCID containing the bucket
   compartmentID string
-  // Time when the vcn was created
+  // Bucket creation time
   created time
-  // Region
+  // Region where the bucket is located
   region oci.region
-  // Type of public access enabled
+  // Public access type (NoPublicAccess, ObjectRead, ObjectReadWithoutList)
   publicAccessType() string
-  // Storage tier type
+  // Storage tier (Standard or Archive)
   storageTier() string
-  // Auto tiering status
+  // Auto-tiering status (Disabled or InfrequentAccess)
   autoTiering() string
-  // Bucket versioning
+  // Object versioning status (Enabled, Suspended, Disabled)
   versioning() string
-  // Whether events are emitted for object state changes
+  // Whether object state change events are emitted
   objectEventsEnabled() bool
-  // Whether the bucket is a replication source
+  // Whether the bucket is configured as a replication source
   replicationEnabled() bool
 }

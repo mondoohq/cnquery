@@ -4,161 +4,161 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/atlassian"
 option go_package = "go.mondoo.com/cnquery/providers/atlassian/resources"
 
-// Cross-domain Identity Management (SCIM)
+// Atlassian SCIM (Cross-domain Identity Management) provisioning
 atlassian.scim {
-  // SCIM users
+  // Provisioned SCIM users
   users() []atlassian.scim.user
-  // SCIM groups
+  // Provisioned SCIM groups
   groups() []atlassian.scim.group
 }
 
-// SCIM user
+// Atlassian SCIM provisioned user
 atlassian.scim.user @defaults("displayName") {
-  // User ID
+  // SCIM user ID
   id string
-  // User name
+  // Username for login
   name string
-  // User's display name
+  // Display name shown in UI
   displayName string
-  // Organization the user belongs to
+  // Organization membership
   organization string
-  // User's title
+  // Job title
   title string
 }
 
-// SCIM group
+// Atlassian SCIM provisioned group
 atlassian.scim.group @defaults("name") {
-  // Group ID
+  // SCIM group ID
   id string
   // Group name
   name string
 }
 
-// Organization
+// Atlassian Admin organization
 atlassian.admin.organization @defaults("name") {
   // Organization ID
   id string
-  // Name
+  // Organization name
   name string
-  // Organization type
+  // Organization type (e.g., cloud)
   type string
-  // Policies
+  // Organization policies
   policies() []atlassian.admin.organization.policy
-  // Domains
+  // Verified domains
   domains() []atlassian.admin.organization.domain
-  // Managed users
+  // Users managed by this organization
   managedUsers() []atlassian.admin.organization.managedUser
 }
 
-// Managed users
+// Atlassian managed user in an organization
 atlassian.admin.organization.managedUser @defaults("name") {
-  // ID
+  // User ID
   id string
-  // Name
+  // User display name
   name string
-  // Type
+  // Account type (atlassian, customer, app)
   type string
-  // Email
+  // Email address
   email string
-  // Status
+  // Account status (active, inactive, closed)
   status string
-  // Last active
+  // Last activity timestamp
   lastActive time
-  // Product access
+  // Product access permissions
   productAccess []dict
 }
 
-// Policies (except authentication policies)
+// Atlassian organization policy
 atlassian.admin.organization.policy @defaults("name") {
   // Policy ID
   id string
   // Object type (always "policy")
   type string
-  // Policy name
+  // Policy display name
   name string
-  // Type of policy
+  // Policy type (e.g., ip-allowlist, data-residency)
   policyType string
-  // Status
+  // Policy status (enabled, disabled)
   status string
 }
 
-// Domains
+// Atlassian verified domain
 atlassian.admin.organization.domain @defaults("name") {
   // Domain ID
   id string
-  // Name
+  // Domain name (e.g., example.com)
   name string
-  // Type
+  // Domain type (e.g., verified)
   type string
 }
 
-// Jira
+// Atlassian Jira instance
 atlassian.jira {
-  // Jira users
+  // All Jira users
   users() []atlassian.jira.user
-  // Jira projects
+  // All Jira projects
   projects() []atlassian.jira.project
-  // Jira issues
+  // All Jira issues
   issues() []atlassian.jira.issue
-  // Jira groups
+  // All Jira groups
   groups() []atlassian.jira.group
-  // Jira server info
+  // Jira server information
   serverInfos() atlassian.jira.serverInfo
 }
 
-// Jira issue
+// Jira issue (ticket)
 atlassian.jira.issue @defaults("id createdAt") {
   // Issue ID
   id string
-  // Project
+  // Parent project name
   project string
-  // Project key
+  // Project key (e.g., PROJ)
   projectKey string
-  // Status
+  // Issue status (e.g., Open, In Progress, Done)
   status string
-  // Description
+  // Issue description text
   description string
-  // Issue create time in UTC
+  // Creation timestamp (UTC)
   createdAt time
-  // Issue creator
+  // User who created the issue
   creator atlassian.jira.user
-  // Issue type name
+  // Issue type (e.g., Bug, Story, Task)
   typeName string
 }
 
-// Jira server info
+// Jira server information
 atlassian.jira.serverInfo @defaults("serverTitle") {
-  // BaseUrl
+  // Jira instance base URL
   baseUrl string
   // Build number
   buildNumber int
-  // Server title
+  // Server display title
   serverTitle string
-  // Deployment type
+  // Deployment type (Cloud, Server, Data Center)
   deploymentType string
 }
 
-// Jira user
+// Jira user account
 atlassian.jira.user @defaults("name") {
-  // Account ID
+  // Atlassian account ID
   id string
-  // Name
+  // Display name
   name string
-  // Account type
+  // Account type (atlassian, app, customer)
   type string
-  // Picture of the user
+  // Avatar URL
   picture string
-  // Groups
+  // Group memberships
   groups() []atlassian.jira.group
-  // Roles
+  // Application role assignments
   applicationRoles() []atlassian.jira.applicationRole
 }
 
 // Jira application role
 atlassian.jira.applicationRole @defaults("name") {
-  // Role ID
+  // Role key
   id string
-  // Role name
+  // Role display name
   name string
 }
 
@@ -166,33 +166,33 @@ atlassian.jira.applicationRole @defaults("name") {
 atlassian.jira.project @defaults("name") {
   // Project ID
   id string
-  // Project name
+  // Project display name
   name string
-  // UUID
+  // Project UUID
   uuid string
-  // Key
+  // Project key (e.g., PROJ)
   key string
-  // URL
+  // Project URL
   url string
-  // Email
+  // Project email address
   email string
-  // Whether the group is private
+  // Whether the project is private
   private bool
-  // Whether the group has been deleted
+  // Whether the project is deleted
   deleted bool
-  // Whether the group has been archived
+  // Whether the project is archived
   archived bool
-  // Properties
+  // Custom project properties
   properties() []atlassian.jira.project.property
 }
 
-// Jira project property
+// Jira project custom property
 atlassian.jira.project.property @defaults("id") {
   // Property key
   id string
 }
 
-// Jira group
+// Jira user group
 atlassian.jira.group @defaults("name") {
   // Group ID
   id string
@@ -200,18 +200,18 @@ atlassian.jira.group @defaults("name") {
   name string
 }
 
-// Confluence
+// Atlassian Confluence instance
 atlassian.confluence {
-  // Confluence users
+  // All Confluence users
   users() []atlassian.confluence.user
 }
 
-// Confluence user
+// Confluence user account
 atlassian.confluence.user @defaults("name") {
-  // Account ID
+  // Atlassian account ID
   id string
-  // Account name
+  // Display name
   name string
-  // Account type
+  // Account type (atlassian, app, customer)
   type string
 }

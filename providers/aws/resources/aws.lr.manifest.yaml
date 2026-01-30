@@ -1529,6 +1529,8 @@ resources:
       encrypted:
         min_mondoo_version: 9.0.0
       id: {}
+      kmsKey:
+        min_mondoo_version: 9.0.0
       region: {}
       startTime: {}
       state: {}
@@ -1569,6 +1571,8 @@ resources:
       encrypted: {}
       id: {}
       iops:
+        min_mondoo_version: 9.0.0
+      kmsKey:
         min_mondoo_version: 9.0.0
       multiAttachEnabled:
         min_mondoo_version: 9.0.0
@@ -3316,6 +3320,8 @@ resources:
       iamDatabaseAuthentication:
         min_mondoo_version: latest
       id: {}
+      kmsKey:
+        min_mondoo_version: 9.0.0
       latestRestorableTime:
         min_mondoo_version: 9.0.0
       masterUsername:
@@ -3401,6 +3407,8 @@ resources:
       iamDatabaseAuthentication:
         min_mondoo_version: latest
       id: {}
+      kmsKey:
+        min_mondoo_version: 9.0.0
       latestRestorableTime:
         min_mondoo_version: 9.0.0
       masterUsername:
@@ -3503,6 +3511,8 @@ resources:
         min_mondoo_version: 9.0.0
       id: {}
       isClusterSnapshot: {}
+      kmsKey:
+        min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
       region: {}
@@ -3792,6 +3802,8 @@ resources:
         min_mondoo_version: 9.0.0
       kmsKey:
         min_mondoo_version: 9.0.0
+      lastAccessedDate:
+        min_mondoo_version: 9.0.0
       lastChangedDate:
         min_mondoo_version: 9.0.0
       lastRotatedDate:
@@ -3799,12 +3811,27 @@ resources:
       name: {}
       nextRotationDate:
         min_mondoo_version: 9.0.0
+      owningService:
+        min_mondoo_version: 9.0.0
       primaryRegion:
         min_mondoo_version: 9.0.0
       rotationEnabled: {}
+      rotationLambda:
+        min_mondoo_version: 9.0.0
+      rotationRules:
+        min_mondoo_version: 9.0.0
       tags: {}
-    is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.secretsmanager.secret.rotationRules:
+    fields:
+      automaticallyAfterDays: {}
+      duration: {}
+      scheduleExpression: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

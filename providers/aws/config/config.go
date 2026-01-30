@@ -14,7 +14,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "aws",
 	ID:              "go.mondoo.com/cnquery/v9/providers/aws",
-	Version:         "11.5.110",
+	Version:         "11.5.113",
 	ConnectionTypes: []string{provider.DefaultConnectionType, string(awsec2ebsconn.EBSConnectionType)},
 	Connectors: []plugin.Connector{
 		{
@@ -46,7 +46,7 @@ Examples:
 	cnspec scan aws ec2 instance-connect <user@host>
 	cnspec scan aws ec2 instance-connect <user@host> --identity-file <path>
 	cnspec scan aws ec2 ebs <snapshot-id>
-	cnspec scan aws --filters region=ap-south-1
+	cnspec scan aws --filters regions=ap-south-1,us-east-1
 
 Notes:
   If you set the AWS_PROFILE environment variable, you can omit the profile flag.
@@ -56,40 +56,39 @@ Notes:
 			MaxArgs: 4,
 			Discovery: []string{
 				resources.DiscoveryAccounts,
-
-				resources.DiscoveryInstances,
+				resources.DiscoveryCloudtrailTrails,
+				resources.DiscoveryCloudwatchLoggroups,
+				resources.DiscoveryDynamoDBGlobalTables,
+				resources.DiscoveryDynamoDBTables,
 				resources.DiscoveryEC2InstanceAPI,
-				resources.DiscoverySSMInstances,
-				resources.DiscoverySSMInstanceAPI,
+				resources.DiscoverySnapshots,
+				resources.DiscoveryVolumes,
 				resources.DiscoveryECR,
 				resources.DiscoveryECRImageAPI,
 				resources.DiscoveryECS,
 				resources.DiscoveryECSContainersAPI,
-
-				resources.DiscoveryOrg,
-				resources.DiscoveryResources,
-				resources.DiscoveryEKSClusters,
-				resources.DiscoveryS3Buckets,
-				resources.DiscoveryCloudtrailTrails,
-				resources.DiscoveryRdsDbInstances,
-				resources.DiscoveryRdsDbClusters,
-				resources.DiscoveryVPCs,
-				resources.DiscoverySecurityGroups,
-				resources.DiscoveryIAMUsers,
-				resources.DiscoveryIAMGroups,
-				resources.DiscoveryCloudwatchLoggroups,
-				resources.DiscoveryLambdaFunctions,
-				resources.DiscoveryDynamoDBTables,
-				resources.DiscoveryDynamoDBGlobalTables,
-				resources.DiscoveryRedshiftClusters,
-				resources.DiscoveryVolumes,
-				resources.DiscoverySnapshots,
 				resources.DiscoveryEFSFilesystems,
-				resources.DiscoveryAPIGatewayRestAPIs,
+				resources.DiscoveryEKSClusters,
 				resources.DiscoveryELBLoadBalancers,
 				resources.DiscoveryESDomains,
+				resources.DiscoveryAPIGatewayRestAPIs,
+				resources.DiscoveryIAMGroups,
+				resources.DiscoveryIAMUsers,
+				resources.DiscoveryInstances,
 				resources.DiscoveryKMSKeys,
+				resources.DiscoveryLambdaFunctions,
+				resources.DiscoveryOrg,
+				resources.DiscoveryRdsDbClusters,
+				resources.DiscoveryRdsDbInstances,
+				resources.DiscoveryRedshiftClusters,
+				resources.DiscoveryResources,
+				resources.DiscoveryS3Buckets,
 				resources.DiscoverySagemakerNotebookInstances,
+				resources.DiscoverySecretsManagerSecrets,
+				resources.DiscoverySecurityGroups,
+				resources.DiscoverySSMInstances,
+				resources.DiscoverySSMInstanceAPI,
+				resources.DiscoveryVPCs,
 			},
 			Flags: []plugin.Flag{
 				{
@@ -132,7 +131,7 @@ Notes:
 					Long:    "filters",
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",
-					Desc:    "Filter options, e.g., --filters region=us-east-2, --filters ec2:instance-ids=i-093439483935",
+					Desc:    "Filter options, e.g., --filters regions=us-east-2,us-east-1 , --filters ec2:instance-ids=i-093439483935",
 				},
 			},
 		},

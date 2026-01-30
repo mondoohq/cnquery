@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.com/cnquery/v12/providers/core/resources/versions/semver"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/purl"
 
@@ -374,12 +375,22 @@ func (spm *SusePkgManager) Available() (map[string]PackageUpdate, error) {
 // Not every rpm based distro supports modules.
 // E.g. SLES and Amazon Linux 2023 do not support modularity.
 // Amazon Linux 2 supports modularity.
+// No more modules starting with RHEL v10: https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/considerations_in_adopting_rhel_10/application-streams
 func modularitySupportedByPlatform(platform *inventory.Platform) bool {
 	supported := false
 
 	switch platform.Name {
-	case "oraclelinux":
-		supported = true
+	case "oraclelinux", "almalinux":
+		vParser := semver.Parser{}
+		cmp, err := vParser.Compare(platform.Version, "10")
+		if err != nil {
+			return false
+		}
+		if cmp < 0 {
+			supported = true
+		} else {
+			supported = false
+		}
 	}
 
 	return supported

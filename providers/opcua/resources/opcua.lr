@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/opcua"
 option go_package = "go.mondoo.com/cnquery/v12/providers/opcua/resources"
 
-// OPC UA
+// OPC UA (Open Platform Communications Unified Architecture) server
 opcua {
   // Namespaces
   namespaces() []opcua.namespace
@@ -14,7 +14,7 @@ opcua {
   nodes() []opcua.node
 }
 
-// Server object
+// OPC UA server information
 opcua.server {
   // Reference to node
   node opcua.node

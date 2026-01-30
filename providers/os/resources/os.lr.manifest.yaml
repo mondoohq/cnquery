@@ -195,6 +195,31 @@ resources:
       snapshotter: {}
       status: {}
     min_mondoo_version: 9.0.0
+  crontab:
+    docs:
+      desc: |
+        The `crontab` resource provides fields for examining cron job entries on Unix-like systems.
+        It collects entries from system crontabs (/etc/crontab, /etc/cron.d/*) and user crontabs.
+    fields:
+      entries: {}
+      files: {}
+    min_mondoo_version: 9.0.0
+  crontab.entry:
+    docs:
+      desc: |
+        The `crontab.entry` resource represents a single cron job entry.
+    fields:
+      command: {}
+      dayOfMonth: {}
+      dayOfWeek: {}
+      file: {}
+      hour: {}
+      lineNumber: {}
+      minute: {}
+      month: {}
+      user: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   docker:
     fields:
       containers: {}
@@ -410,6 +435,29 @@ resources:
       type: {}
       xdev: {}
     min_mondoo_version: 5.15.0
+  firefox:
+    fields:
+      addons: {}
+      paths: {}
+    min_mondoo_version: 9.0.0
+  firefox.addon:
+    fields:
+      active: {}
+      browser: {}
+      description: {}
+      identifier: {}
+      installDate: {}
+      name: {}
+      path: {}
+      profile: {}
+      sourceUri: {}
+      type: {}
+      updateDate: {}
+      userDisabled: {}
+      version: {}
+      visible: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   fstab:
     fields:
       entries: {}
@@ -1148,6 +1196,31 @@ resources:
         min_mondoo_version: latest
       settings: {}
     min_mondoo_version: 5.15.0
+  safari:
+    fields:
+      extensions: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - macos
+    snippets:
+    - query: safari.extensions { name version identifier }
+      title: List all Safari extensions
+  safari.extension:
+    fields:
+      containerAppName: {}
+      containerAppPath: {}
+      description: {}
+      extensionType: {}
+      identifier: {}
+      name: {}
+      path: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - macos
   secpol:
     fields:
       eventaudit: {}
@@ -1285,6 +1358,25 @@ resources:
           name != "Guest"
         }
       title: Search for a specific SID and check for its values
+  vscode:
+    fields:
+      extensions: {}
+      paths: {}
+    min_mondoo_version: 9.0.0
+  vscode.extension:
+    fields:
+      categories: {}
+      description: {}
+      displayName: {}
+      editor: {}
+      identifier: {}
+      name: {}
+      path: {}
+      publisher: {}
+      version: {}
+      vscodeVersion: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   vuln.advisory:
     fields:
       description: {}

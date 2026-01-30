@@ -428,3 +428,75 @@ func TestOracleParser(t *testing.T) {
 	fPkg = findPkg(m, p.Name)
 	assert.Equal(t, p.PUrl, fPkg.PUrl)
 }
+
+func TestAlmaLinuxParser(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/packages_almalinux.toml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pf := &inventory.Platform{
+		Name:    "almalinux",
+		Version: "8.10",
+		Arch:    "x86_64",
+		Family:  []string{"redhat", "linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "almalinux",
+		},
+	}
+
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{MODULARITYLABEL}\\n'")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m := ParseRpmPackages(pf, c.Stdout)
+	require.Equal(t, 6, len(m))
+
+	p := Package{
+		Name: "php-cli",
+		PUrl: "pkg:rpm/almalinux/php-cli@7.4.33-2.module_el8.10.0%2B3935%2B28808425?arch=aarch64&distro=almalinux-8.10&rpmmod=php%3A7.4%3A8100020241212065510%3Aeb0869e2",
+	}
+	fPkg := findPkg(m, p.Name)
+	assert.Equal(t, p.PUrl, fPkg.PUrl)
+}
+
+func TestModularitySupportedByPlatform(t *testing.T) {
+	tests := []struct {
+		name     string
+		platform *inventory.Platform
+		want     bool
+	}{
+		{
+			name:     "AlmaLinux",
+			platform: &inventory.Platform{Name: "almalinux", Version: "8.10", Arch: "x86_64"},
+			want:     true,
+		},
+		{
+			name:     "OracleLinux",
+			platform: &inventory.Platform{Name: "oraclelinux", Version: "9", Arch: "x86_64"},
+			want:     true,
+		},
+		{
+			name:     "AlmaLinux",
+			platform: &inventory.Platform{Name: "almalinux", Version: "10", Arch: "x86_64"},
+			want:     false,
+		},
+		{
+			name:     "OracleLinux",
+			platform: &inventory.Platform{Name: "oraclelinux", Version: "10.1", Arch: "x86_64"},
+			want:     false,
+		},
+		{
+			name:     "AmazonLinux",
+			platform: &inventory.Platform{Name: "amazonlinux", Version: "2", Arch: "x86_64"},
+			want:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, modularitySupportedByPlatform(tt.platform))
+		})
+	}
+}

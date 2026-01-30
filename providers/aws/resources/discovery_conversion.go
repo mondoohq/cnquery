@@ -75,8 +75,9 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsC
 		return nil
 	}
 	platformid := MondooObjectID(mqlObject.awsObject)
-	t := conn.Conf
-	t.PlatformId = platformid
+	// Clone first to avoid mutating the parent connection's config (race condition)
+	clonedConfig := conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id), inventory.WithFilters())
+	clonedConfig.PlatformId = platformid
 	platformIds := []string{platformid, mqlObject.awsObject.arn}
 	platformIds = append(platformIds, mqlObject.platformIds...)
 	return &inventory.Asset{
@@ -84,7 +85,7 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsC
 		Name:        mqlObject.name,
 		Platform:    connection.GetPlatformForObject(platformName, account),
 		Labels:      mqlObject.labels,
-		Connections: []*inventory.Config{t.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(t.Id))},
+		Connections: []*inventory.Config{clonedConfig},
 		Options:     conn.ConnectionOptions(),
 	}
 }
@@ -195,6 +196,10 @@ func getPlatformName(awsObject awsObject) string {
 		if awsObject.objectType == "notebookinstance" {
 			return "aws-sagemaker-notebookinstance"
 		}
+	case "secretsmanager":
+		if awsObject.objectType == "secret" {
+			return "aws-secretsmanager-secret"
+		}
 	case "ssm":
 		if awsObject.objectType == "instance" {
 			return "aws-ssm-instance"
@@ -222,11 +227,14 @@ func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *in
 
 	id := "//platformid.api.mondoo.app/runtime/aws/accounts/" + accountId
 	accountArn := "arn:aws:sts::" + accountId
+	// Clone first to avoid mutating the parent connection's config
+	clonedConfig := conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id), inventory.WithFilters())
+	clonedConfig.PlatformId = id
 	return &inventory.Asset{
 		PlatformIds: []string{id, accountArn},
 		Name:        name,
 		Platform:    connection.GetPlatformForObject("", accountId),
-		Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id), inventory.WithFilters())},
+		Connections: []*inventory.Config{clonedConfig},
 		Options:     conn.ConnectionOptions(),
 	}
 }

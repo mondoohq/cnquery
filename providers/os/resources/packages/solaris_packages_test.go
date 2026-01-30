@@ -50,6 +50,24 @@ func TestFmriParser(t *testing.T) {
 	assert.Equal(t, "solaris", sp.Publisher)
 	assert.Equal(t, "1.2.2", sp.Version)
 	assert.Equal(t, "5.11-0.175.1.0.0.24.1317", sp.Branch)
+
+	// Solaris 11.4+ uses hyphen instead of comma between version and branch
+	// pkg://solaris/compress/p7zip@16.2.3-11.4.42.0.0.111.0:20211203T173845Z
+	sp, err = ParseSolarisFmri("pkg://solaris/compress/p7zip@16.2.3-11.4.42.0.0.111.0:20211203T173845Z")
+	require.NoError(t, err)
+	assert.Equal(t, "compress/p7zip", sp.Name)
+	assert.Equal(t, "solaris", sp.Publisher)
+	assert.Equal(t, "16.2.3", sp.Version)
+	assert.Equal(t, "11.4.42.0.0.111.0", sp.Branch)
+
+	// Some packages have no branch, going directly from version to timestamp
+	// pkg://solaris/runtime/java/jre-8@1.8.0.311.11:20211005T165404Z
+	sp, err = ParseSolarisFmri("pkg://solaris/runtime/java/jre-8@1.8.0.311.11:20211005T165404Z")
+	require.NoError(t, err)
+	assert.Equal(t, "runtime/java/jre-8", sp.Name)
+	assert.Equal(t, "solaris", sp.Publisher)
+	assert.Equal(t, "1.8.0.311.11", sp.Version)
+	assert.Equal(t, "", sp.Branch)
 }
 
 func TestSolarisPackageParser(t *testing.T) {
@@ -84,8 +102,8 @@ pkg://solaris/compress/p7zip@9.20.1,5.11-0.175.1.0.0.24.0:20120904T170605Z   i--
 	assert.Contains(t, m, p, "pkg detected")
 }
 
-func TestSolarisManager(t *testing.T) {
-	filepath, _ := filepath.Abs("./testdata/packages_solaris11.toml")
+func TestSolaris111Manager(t *testing.T) {
+	filepath, _ := filepath.Abs("./testdata/packages_solaris111.toml")
 	conn, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "solaris",
@@ -104,6 +122,31 @@ func TestSolarisManager(t *testing.T) {
 	p := Package{
 		Name:    "compress/p7zip",
 		Version: "9.20.1",
+		Format:  SolarisPkgFormat,
+	}
+	assert.Contains(t, pkgList, p, "pkg detected")
+}
+
+func TestSolaris114Manager(t *testing.T) {
+	filepath, _ := filepath.Abs("./testdata/packages_solaris114.toml")
+	conn, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name: "solaris",
+		},
+	}, mock.WithPath(filepath))
+	require.NoError(t, err)
+
+	pms, err := ResolveSystemPkgManagers(conn)
+	require.NoError(t, err)
+	pkgManager := pms[0]
+
+	pkgList, err := pkgManager.List()
+	require.NoError(t, err)
+
+	assert.Equal(t, 471, len(pkgList))
+	p := Package{
+		Name:    "compress/p7zip",
+		Version: "16.2.3",
 		Format:  SolarisPkgFormat,
 	}
 	assert.Contains(t, pkgList, p, "pkg detected")

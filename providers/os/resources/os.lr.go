@@ -146,6 +146,8 @@ const (
 	ResourceOpenBSMAudit               string = "openBSMAudit"
 	ResourceWindows                    string = "windows"
 	ResourceMacosSystemExtension       string = "macos.systemExtension"
+	ResourceSafari                     string = "safari"
+	ResourceSafariExtension            string = "safari.extension"
 	ResourceWindowsHotfix              string = "windows.hotfix"
 	ResourceWindowsFeature             string = "windows.feature"
 	ResourceWindowsServerFeature       string = "windows.serverFeature"
@@ -167,8 +169,14 @@ const (
 	ResourceNetworkRoute               string = "networkRoute"
 	ResourceChrome                     string = "chrome"
 	ResourceChromeExtension            string = "chrome.extension"
+	ResourceFirefox                    string = "firefox"
+	ResourceFirefoxAddon               string = "firefox.addon"
 	ResourceUsb                        string = "usb"
 	ResourceUsbDevice                  string = "usb.device"
+	ResourceCrontab                    string = "crontab"
+	ResourceCrontabEntry               string = "crontab.entry"
+	ResourceVscode                     string = "vscode"
+	ResourceVscodeExtension            string = "vscode.extension"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -691,6 +699,14 @@ func init() {
 			// to override args, implement: initMacosSystemExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacosSystemExtension,
 		},
+		"safari": {
+			// to override args, implement: initSafari(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSafari,
+		},
+		"safari.extension": {
+			// to override args, implement: initSafariExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSafariExtension,
+		},
 		"windows.hotfix": {
 			Init:   initWindowsHotfix,
 			Create: createWindowsHotfix,
@@ -775,6 +791,14 @@ func init() {
 			// to override args, implement: initChromeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createChromeExtension,
 		},
+		"firefox": {
+			// to override args, implement: initFirefox(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirefox,
+		},
+		"firefox.addon": {
+			// to override args, implement: initFirefoxAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirefoxAddon,
+		},
 		"usb": {
 			// to override args, implement: initUsb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createUsb,
@@ -782,6 +806,22 @@ func init() {
 		"usb.device": {
 			// to override args, implement: initUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createUsbDevice,
+		},
+		"crontab": {
+			// to override args, implement: initCrontab(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCrontab,
+		},
+		"crontab.entry": {
+			// to override args, implement: initCrontabEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCrontabEntry,
+		},
+		"vscode": {
+			// to override args, implement: initVscode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVscode,
+		},
+		"vscode.extension": {
+			// to override args, implement: initVscodeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVscodeExtension,
 		},
 	}
 }
@@ -2723,6 +2763,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"macos.systemExtension.mdmManaged": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosSystemExtension).GetMdmManaged()).ToDataRes(types.Bool)
 	},
+	"safari.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafari).GetExtensions()).ToDataRes(types.Array(types.Resource("safari.extension")))
+	},
+	"safari.extension.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetIdentifier()).ToDataRes(types.String)
+	},
+	"safari.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetName()).ToDataRes(types.String)
+	},
+	"safari.extension.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetVersion()).ToDataRes(types.String)
+	},
+	"safari.extension.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetDescription()).ToDataRes(types.String)
+	},
+	"safari.extension.extensionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetExtensionType()).ToDataRes(types.String)
+	},
+	"safari.extension.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetPath()).ToDataRes(types.String)
+	},
+	"safari.extension.containerAppPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetContainerAppPath()).ToDataRes(types.String)
+	},
+	"safari.extension.containerAppName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetContainerAppName()).ToDataRes(types.String)
+	},
 	"windows.hotfix.hotfixId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsHotfix).GetHotfixId()).ToDataRes(types.String)
 	},
@@ -3086,6 +3153,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"chrome.extension.browser": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChromeExtension).GetBrowser()).ToDataRes(types.String)
 	},
+	"firefox.addons": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefox).GetAddons()).ToDataRes(types.Array(types.Resource("firefox.addon")))
+	},
+	"firefox.addon.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetIdentifier()).ToDataRes(types.String)
+	},
+	"firefox.addon.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetName()).ToDataRes(types.String)
+	},
+	"firefox.addon.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetVersion()).ToDataRes(types.String)
+	},
+	"firefox.addon.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetDescription()).ToDataRes(types.String)
+	},
+	"firefox.addon.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetType()).ToDataRes(types.String)
+	},
+	"firefox.addon.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetActive()).ToDataRes(types.Bool)
+	},
+	"firefox.addon.userDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetUserDisabled()).ToDataRes(types.Bool)
+	},
+	"firefox.addon.visible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetVisible()).ToDataRes(types.Bool)
+	},
+	"firefox.addon.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetPath()).ToDataRes(types.String)
+	},
+	"firefox.addon.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetProfile()).ToDataRes(types.String)
+	},
+	"firefox.addon.browser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetBrowser()).ToDataRes(types.String)
+	},
+	"firefox.addon.sourceUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetSourceUri()).ToDataRes(types.String)
+	},
+	"firefox.addon.installDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetInstallDate()).ToDataRes(types.Int)
+	},
+	"firefox.addon.updateDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetUpdateDate()).ToDataRes(types.Int)
+	},
 	"usb.devices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsb).GetDevices()).ToDataRes(types.Array(types.Resource("usb.device")))
 	},
@@ -3124,6 +3236,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"usb.device.isRemovable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsbDevice).GetIsRemovable()).ToDataRes(types.Bool)
+	},
+	"crontab.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontab).GetEntries()).ToDataRes(types.Array(types.Resource("crontab.entry")))
+	},
+	"crontab.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontab).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"crontab.entry.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"crontab.entry.minute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetMinute()).ToDataRes(types.String)
+	},
+	"crontab.entry.hour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetHour()).ToDataRes(types.String)
+	},
+	"crontab.entry.dayOfMonth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetDayOfMonth()).ToDataRes(types.String)
+	},
+	"crontab.entry.month": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetMonth()).ToDataRes(types.String)
+	},
+	"crontab.entry.dayOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetDayOfWeek()).ToDataRes(types.String)
+	},
+	"crontab.entry.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetUser()).ToDataRes(types.String)
+	},
+	"crontab.entry.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetCommand()).ToDataRes(types.String)
+	},
+	"crontab.entry.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCrontabEntry).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"vscode.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscode).GetExtensions()).ToDataRes(types.Array(types.Resource("vscode.extension")))
+	},
+	"vscode.paths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscode).GetPaths()).ToDataRes(types.Array(types.String))
+	},
+	"vscode.extension.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetIdentifier()).ToDataRes(types.String)
+	},
+	"vscode.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetName()).ToDataRes(types.String)
+	},
+	"vscode.extension.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetDisplayName()).ToDataRes(types.String)
+	},
+	"vscode.extension.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetVersion()).ToDataRes(types.String)
+	},
+	"vscode.extension.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetDescription()).ToDataRes(types.String)
+	},
+	"vscode.extension.publisher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetPublisher()).ToDataRes(types.String)
+	},
+	"vscode.extension.editor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetEditor()).ToDataRes(types.String)
+	},
+	"vscode.extension.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetPath()).ToDataRes(types.String)
+	},
+	"vscode.extension.vscodeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetVscodeVersion()).ToDataRes(types.String)
+	},
+	"vscode.extension.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetCategories()).ToDataRes(types.Array(types.String))
 	},
 }
 
@@ -6133,6 +6314,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMacosSystemExtension).MdmManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"safari.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafari).__id, ok = v.Value.(string)
+		return
+	},
+	"safari.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafari).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"safari.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"safari.extension.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.extensionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).ExtensionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.containerAppPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).ContainerAppPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.containerAppName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).ContainerAppName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"windows.hotfix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsHotfix).__id, ok = v.Value.(string)
 		return
@@ -6701,6 +6926,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlChromeExtension).Browser, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"firefox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefox).__id, ok = v.Value.(string)
+		return
+	},
+	"firefox.addons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefox).Addons, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).__id, ok = v.Value.(string)
+		return
+	},
+	"firefox.addon.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.userDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).UserDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.visible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Visible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Profile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.browser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Browser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.sourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).SourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.installDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).InstallDate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.updateDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).UpdateDate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUsb).__id, ok = v.Value.(string)
 		return
@@ -6759,6 +7052,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"usb.device.isRemovable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUsbDevice).IsRemovable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"crontab.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontab).__id, ok = v.Value.(string)
+		return
+	},
+	"crontab.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontab).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"crontab.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontab).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"crontab.entry.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.minute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).Minute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.hour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).Hour, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.dayOfMonth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).DayOfMonth, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.month": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).Month, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.dayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).DayOfWeek, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"crontab.entry.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCrontabEntry).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"vscode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscode).__id, ok = v.Value.(string)
+		return
+	},
+	"vscode.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscode).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vscode.paths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscode).Paths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"vscode.extension.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.publisher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Publisher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.editor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Editor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.vscodeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).VscodeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -17295,6 +17696,141 @@ func (c *mqlMacosSystemExtension) GetMdmManaged() *plugin.TValue[bool] {
 	return &c.MdmManaged
 }
 
+// mqlSafari for the safari resource
+type mqlSafari struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSafariInternal it will be used here
+	Extensions plugin.TValue[[]any]
+}
+
+// createSafari creates a new instance of this resource
+func createSafari(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSafari{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("safari", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSafari) MqlName() string {
+	return "safari"
+}
+
+func (c *mqlSafari) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSafari) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("safari", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
+// mqlSafariExtension for the safari.extension resource
+type mqlSafariExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSafariExtensionInternal it will be used here
+	Identifier       plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Version          plugin.TValue[string]
+	Description      plugin.TValue[string]
+	ExtensionType    plugin.TValue[string]
+	Path             plugin.TValue[string]
+	ContainerAppPath plugin.TValue[string]
+	ContainerAppName plugin.TValue[string]
+}
+
+// createSafariExtension creates a new instance of this resource
+func createSafariExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSafariExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("safari.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSafariExtension) MqlName() string {
+	return "safari.extension"
+}
+
+func (c *mqlSafariExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSafariExtension) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlSafariExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSafariExtension) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlSafariExtension) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlSafariExtension) GetExtensionType() *plugin.TValue[string] {
+	return &c.ExtensionType
+}
+
+func (c *mqlSafariExtension) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlSafariExtension) GetContainerAppPath() *plugin.TValue[string] {
+	return &c.ContainerAppPath
+}
+
+func (c *mqlSafariExtension) GetContainerAppName() *plugin.TValue[string] {
+	return &c.ContainerAppName
+}
+
 // mqlWindowsHotfix for the windows.hotfix resource
 type mqlWindowsHotfix struct {
 	MqlRuntime *plugin.Runtime
@@ -18935,6 +19471,176 @@ func (c *mqlChromeExtension) GetBrowser() *plugin.TValue[string] {
 	return &c.Browser
 }
 
+// mqlFirefox for the firefox resource
+type mqlFirefox struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirefoxInternal it will be used here
+	Addons plugin.TValue[[]any]
+}
+
+// createFirefox creates a new instance of this resource
+func createFirefox(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirefox{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firefox", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirefox) MqlName() string {
+	return "firefox"
+}
+
+func (c *mqlFirefox) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirefox) GetAddons() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Addons, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("firefox", c.__id, "addons")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.addons()
+	})
+}
+
+// mqlFirefoxAddon for the firefox.addon resource
+type mqlFirefoxAddon struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirefoxAddonInternal it will be used here
+	Identifier   plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Type         plugin.TValue[string]
+	Active       plugin.TValue[bool]
+	UserDisabled plugin.TValue[bool]
+	Visible      plugin.TValue[bool]
+	Path         plugin.TValue[string]
+	Profile      plugin.TValue[string]
+	Browser      plugin.TValue[string]
+	SourceUri    plugin.TValue[string]
+	InstallDate  plugin.TValue[int64]
+	UpdateDate   plugin.TValue[int64]
+}
+
+// createFirefoxAddon creates a new instance of this resource
+func createFirefoxAddon(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirefoxAddon{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firefox.addon", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirefoxAddon) MqlName() string {
+	return "firefox.addon"
+}
+
+func (c *mqlFirefoxAddon) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirefoxAddon) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlFirefoxAddon) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlFirefoxAddon) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlFirefoxAddon) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlFirefoxAddon) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlFirefoxAddon) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlFirefoxAddon) GetUserDisabled() *plugin.TValue[bool] {
+	return &c.UserDisabled
+}
+
+func (c *mqlFirefoxAddon) GetVisible() *plugin.TValue[bool] {
+	return &c.Visible
+}
+
+func (c *mqlFirefoxAddon) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlFirefoxAddon) GetProfile() *plugin.TValue[string] {
+	return &c.Profile
+}
+
+func (c *mqlFirefoxAddon) GetBrowser() *plugin.TValue[string] {
+	return &c.Browser
+}
+
+func (c *mqlFirefoxAddon) GetSourceUri() *plugin.TValue[string] {
+	return &c.SourceUri
+}
+
+func (c *mqlFirefoxAddon) GetInstallDate() *plugin.TValue[int64] {
+	return &c.InstallDate
+}
+
+func (c *mqlFirefoxAddon) GetUpdateDate() *plugin.TValue[int64] {
+	return &c.UpdateDate
+}
+
 // mqlUsb for the usb resource
 type mqlUsb struct {
 	MqlRuntime *plugin.Runtime
@@ -19088,4 +19794,333 @@ func (c *mqlUsbDevice) GetProtocol() *plugin.TValue[string] {
 
 func (c *mqlUsbDevice) GetIsRemovable() *plugin.TValue[bool] {
 	return &c.IsRemovable
+}
+
+// mqlCrontab for the crontab resource
+type mqlCrontab struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCrontabInternal it will be used here
+	Entries plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createCrontab creates a new instance of this resource
+func createCrontab(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCrontab{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("crontab", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCrontab) MqlName() string {
+	return "crontab"
+}
+
+func (c *mqlCrontab) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCrontab) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("crontab", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entries()
+	})
+}
+
+func (c *mqlCrontab) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("crontab", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlCrontabEntry for the crontab.entry resource
+type mqlCrontabEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCrontabEntryInternal it will be used here
+	LineNumber plugin.TValue[int64]
+	Minute     plugin.TValue[string]
+	Hour       plugin.TValue[string]
+	DayOfMonth plugin.TValue[string]
+	Month      plugin.TValue[string]
+	DayOfWeek  plugin.TValue[string]
+	User       plugin.TValue[string]
+	Command    plugin.TValue[string]
+	File       plugin.TValue[*mqlFile]
+}
+
+// createCrontabEntry creates a new instance of this resource
+func createCrontabEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCrontabEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("crontab.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCrontabEntry) MqlName() string {
+	return "crontab.entry"
+}
+
+func (c *mqlCrontabEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCrontabEntry) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlCrontabEntry) GetMinute() *plugin.TValue[string] {
+	return &c.Minute
+}
+
+func (c *mqlCrontabEntry) GetHour() *plugin.TValue[string] {
+	return &c.Hour
+}
+
+func (c *mqlCrontabEntry) GetDayOfMonth() *plugin.TValue[string] {
+	return &c.DayOfMonth
+}
+
+func (c *mqlCrontabEntry) GetMonth() *plugin.TValue[string] {
+	return &c.Month
+}
+
+func (c *mqlCrontabEntry) GetDayOfWeek() *plugin.TValue[string] {
+	return &c.DayOfWeek
+}
+
+func (c *mqlCrontabEntry) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlCrontabEntry) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlCrontabEntry) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+// mqlVscode for the vscode resource
+type mqlVscode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVscodeInternal it will be used here
+	Extensions plugin.TValue[[]any]
+	Paths      plugin.TValue[[]any]
+}
+
+// createVscode creates a new instance of this resource
+func createVscode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVscode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vscode", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVscode) MqlName() string {
+	return "vscode"
+}
+
+func (c *mqlVscode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVscode) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vscode", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
+func (c *mqlVscode) GetPaths() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Paths, func() ([]any, error) {
+		return c.paths()
+	})
+}
+
+// mqlVscodeExtension for the vscode.extension resource
+type mqlVscodeExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVscodeExtensionInternal it will be used here
+	Identifier    plugin.TValue[string]
+	Name          plugin.TValue[string]
+	DisplayName   plugin.TValue[string]
+	Version       plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Publisher     plugin.TValue[string]
+	Editor        plugin.TValue[string]
+	Path          plugin.TValue[string]
+	VscodeVersion plugin.TValue[string]
+	Categories    plugin.TValue[[]any]
+}
+
+// createVscodeExtension creates a new instance of this resource
+func createVscodeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVscodeExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vscode.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVscodeExtension) MqlName() string {
+	return "vscode.extension"
+}
+
+func (c *mqlVscodeExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVscodeExtension) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlVscodeExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVscodeExtension) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlVscodeExtension) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlVscodeExtension) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVscodeExtension) GetPublisher() *plugin.TValue[string] {
+	return &c.Publisher
+}
+
+func (c *mqlVscodeExtension) GetEditor() *plugin.TValue[string] {
+	return &c.Editor
+}
+
+func (c *mqlVscodeExtension) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlVscodeExtension) GetVscodeVersion() *plugin.TValue[string] {
+	return &c.VscodeVersion
+}
+
+func (c *mqlVscodeExtension) GetCategories() *plugin.TValue[[]any] {
+	return &c.Categories
 }

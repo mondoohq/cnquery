@@ -4,21 +4,21 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/google-workspace"
 option go_package = "go.mondoo.com/cnquery/v12/providers/google-workspace/resources"
 
-// Google Workspace
+// Google Workspace organization
 googleworkspace {
-  // Retrieves a list of all organizational units for the Google Workspace account
+  // Organizational units in the account hierarchy
   orgUnits() []googleworkspace.orgUnit
-  // Retrieves a list of all users for the Google Workspace account
+  // All user accounts
   users() []googleworkspace.user
-  // Retrieves a list of domains for the Google Workspace account
+  // Registered domains
   domains() []googleworkspace.domain
-  // Retrieves a list of all groups for the Google Workspace account
+  // Groups for collaboration and access control
   groups() []googleworkspace.group
-  // Retrieves a list of all roles for the Google Workspace account
+  // Admin roles and privileges
   roles() []googleworkspace.role
-  // Retrieves a list of all apps for the Google Workspace account
+  // Third-party OAuth connected apps
   connectedApps() []googleworkspace.connectedApp
-  // Retrieves a list of all calendars for the Google Workspace account
+  // User calendars
   calendars() []googleworkspace.calendar
 }
 

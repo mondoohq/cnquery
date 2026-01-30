@@ -4,6 +4,7 @@
 package inventory
 
 import (
+	"maps"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -455,9 +456,7 @@ func (cfg *Config) Clone(opts ...CloneOption) *Config {
 			clonedObject.Discover = &Discovery{}
 		}
 		clonedObject.Discover.Filter = make(map[string]string)
-		for k, v := range cfg.Discover.Filter {
-			clonedObject.Discover.Filter[k] = v
-		}
+		maps.Copy(clonedObject.Discover.Filter, cfg.Discover.GetFilter())
 	}
 
 	return clonedObject

@@ -8,6 +8,8 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
+var _ llx.Recording = &Null{}
+
 type Null struct{}
 
 func (n Null) Save() error {
@@ -17,7 +19,7 @@ func (n Null) Save() error {
 func (n Null) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
 }
 
-func (n Null) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
+func (n Null) AddData(req llx.AddDataReq) {
 }
 
 func (n Null) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {

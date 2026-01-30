@@ -4,82 +4,82 @@
 option provider = "go.mondoo.com/cnquery/v12/providers/ansible"
 option go_package = "go.mondoo.com/cnquery/v12/providers/ansible/resources"
 
-// Ansible
+// Ansible playbook configuration
 ansible {
-  // Ansible Plays
+  // Plays defined in the playbook
   plays() []ansible.play
 }
 
-// Ansible Play
+// Ansible play targeting hosts with tasks
 ansible.play @defaults("name") {
-  // Name of the play
+  // Play name displayed during execution
   name string
-  // Hosts
+  // Target hosts or host groups
   hosts dict
   // User for the connection
   remoteUser string
   // Become flag
   become bool
-  // Become user
+  // User to become (e.g., root)
   becomeUser string
   // Become method
   becomeMethod string
-  // Become flags
+  // Additional flags for become method
   becomeFlags string
   // Strategy
   strategy string
-  // Maximum number of hosts to fail before quitting
+  // Max percentage of failed hosts before aborting
   maxFailPercentage int
   // Whether to ignore unreachable hosts
   ignoreUnreachable bool
-  // Whether to finish fatal on any error
+  // Whether any task failure aborts the play
   anyErrorsFatal bool
-  // Playbook variables
+  // Play-level variables
   vars map[string]dict
-  // Roles
+  // Roles to apply
   roles []string
-  // Tasks
+  // Tasks to execute
   tasks() []ansible.task
-  // Handlers
+  // Handlers triggered by notify
   handlers() []ansible.handler
 }
 
-// Ansible Task
+// Ansible task within a play
 ansible.task @defaults("name"){
-  // Name of the task
+  // Task name displayed during execution
   name string
-  // Task action
+  // Module and arguments to execute
   action dict
-  // Task variables
+  // Task-level variables
   vars map[string]dict
-  // Register variable to store the result
+  // Variable name to store task result
   register string
-  // Condition to run the task
+  // Jinja2 condition for task execution
   when string
-  // Failed condition
+  // Condition that marks task as failed
   failedWhen string
-  // Changed condition
+  // Condition that marks task as changed
   changedWhen string
-  // Notify handlers
+  // Handlers to trigger on change
   notify []string
-  // Pre-process playbook file when playbook is parsed
+  // Statically import playbook at parse time
   importPlaybook string
-  // Include playbook file
+  // Dynamically include playbook at runtime
   includePlaybook string
-  // Pre-process tasks file when playbook is parsed
+  // Statically import tasks at parse time
   importTasks string
-  // Include tasks file
+  // Dynamically include tasks at runtime
   includeTasks string
-  // Block tasks
+  // Tasks in error handling block
   block() []ansible.task
-  // Rescue tasks
+  // Tasks to run on block failure
   rescue() []ansible.task
 }
 
-// Ansible Handler
+// Ansible handler triggered by task notifications
 ansible.handler @defaults("name"){
-  // Name of the handler
+  // Handler name (referenced in notify)
   name string
-  // Handler action
+  // Module and arguments to execute
   action dict
 }

@@ -329,17 +329,26 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 		return nil, errors.New("no connection to provider")
 	}
 
-	res, err := provider.Instance.Plugin.GetData(&plugin.DataReq{
+	req := &plugin.DataReq{
 		Connection: provider.Connection.Id,
 		Resource:   name,
 		Args:       args,
-	})
+	}
+	res, err := provider.Instance.Plugin.GetData(req)
 	if err != nil {
 		return nil, err
 	}
 
 	if _, ok := r.Recording().GetResource(provider.Connection.Id, name, string(res.Data.Value)); !ok {
-		r.Recording().AddData(provider.Connection.Id, name, string(res.Data.Value), "", nil)
+		addDataReq := llx.AddDataReq{
+			ConnectionID:      provider.Connection.Id,
+			Resource:          name,
+			ResourceID:        string(res.Data.Value),
+			RequestResourceId: req.ResourceId,
+			Data:              nil,
+			Field:             "",
+		}
+		r.Recording().AddData(addDataReq)
 	}
 
 	typ := types.Type(res.Data.Type)
@@ -436,12 +445,13 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 		return cached, nil
 	}
 
-	data, err := provider.Instance.Plugin.GetData(&plugin.DataReq{
+	req := &plugin.DataReq{
 		Connection: provider.Connection.Id,
 		Resource:   resource,
 		ResourceId: resourceID,
 		Field:      field,
-	})
+	}
+	data, err := provider.Instance.Plugin.GetData(req)
 	if err != nil {
 		// Recoverable errors can continue with the execution,
 		// they only store errors in the place of actual data.
@@ -460,7 +470,15 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 		raw = data.Data.RawData()
 	}
 
-	r.Recording().AddData(provider.Connection.Id, resource, resourceID, field, raw)
+	addDataReq := llx.AddDataReq{
+		ConnectionID:      provider.Connection.Id,
+		Resource:          resource,
+		ResourceID:        resourceID,
+		RequestResourceId: req.ResourceId,
+		Data:              raw,
+		Field:             field,
+	}
+	r.Recording().AddData(addDataReq)
 	return raw, nil
 }
 
@@ -595,7 +613,7 @@ func (r *Runtime) SetMockRecording(anyRecording llx.Recording, providerID string
 		return nil
 	}
 	assetRecording := assetRecordings[0]
-	asset := assetRecording.Asset.ToInventory()
+	asset := assetRecording.Asset
 
 	provider, ok := r.providers[providerID]
 	if !ok {
