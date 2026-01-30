@@ -333,6 +333,44 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// return m, tea.Println(fmt.Sprintf("Key: [%s] Paste: %v Runes: %d", msg.String(), msg.Paste, len(msg.Runes)))
 
 	switch msg.String() {
+	case "up":
+		if len(m.history) == 0 {
+			return m, nil
+		}
+
+		m.historyIdx--
+
+		if m.historyIdx >= 0 && m.historyIdx <= len(m.history)-1 {
+			m.input.SetValue(m.history[m.historyIdx])
+		} else if m.historyIdx >= len(m.history) {
+			m.historyIdx = len(m.history) - 1
+			m.input.SetValue(m.history[m.historyIdx])
+		} else {
+			m.historyIdx = -1
+			m.input.SetValue("")
+		}
+
+		return m, nil
+
+	case "down":
+		if len(m.history) == 0 {
+			return m, nil
+		}
+
+		m.historyIdx++
+
+		if m.historyIdx >= 0 && m.historyIdx <= len(m.history)-1 {
+			m.input.SetValue(m.history[m.historyIdx])
+		} else if m.historyIdx >= len(m.history) {
+			m.historyIdx = len(m.history)
+			m.input.SetValue("")
+		} else {
+			m.historyIdx = 0
+			m.input.SetValue(m.history[m.historyIdx])
+		}
+
+		return m, nil
+
 	case "ctrl+d":
 		m.quitting = true
 		return m, tea.Quit
