@@ -127,7 +127,7 @@ const (
 	ResourceAwsEcsServiceDeploymentConfiguration                                string = "aws.ecs.service.deploymentConfiguration"
 	ResourceAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker        string = "aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker"
 	ResourceAwsEcsServiceNetworkConfiguration                                   string = "aws.ecs.service.networkConfiguration"
-	ResourceAwsEcsServiceNetworkConfigurationAwsvpcConfiguration                string = "aws.ecs.service.networkConfiguration.awsvpcConfiguration"
+	ResourceAwsEcsServiceNetworkConfigurationAwsVpcConfiguration                string = "aws.ecs.service.networkConfiguration.awsVpcConfiguration"
 	ResourceAwsEcsTaskDefinitionContainerDefinition                             string = "aws.ecs.taskDefinition.containerDefinition"
 	ResourceAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable          string = "aws.ecs.taskDefinition.containerDefinition.environmentVariable"
 	ResourceAwsEcsTaskDefinitionContainerDefinitionSecret                       string = "aws.ecs.taskDefinition.containerDefinition.secret"
@@ -699,9 +699,9 @@ func init() {
 			// to override args, implement: initAwsEcsServiceNetworkConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEcsServiceNetworkConfiguration,
 		},
-		"aws.ecs.service.networkConfiguration.awsvpcConfiguration": {
-			// to override args, implement: initAwsEcsServiceNetworkConfigurationAwsvpcConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAwsEcsServiceNetworkConfigurationAwsvpcConfiguration,
+		"aws.ecs.service.networkConfiguration.awsVpcConfiguration": {
+			// to override args, implement: initAwsEcsServiceNetworkConfigurationAwsVpcConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsServiceNetworkConfigurationAwsVpcConfiguration,
 		},
 		"aws.ecs.taskDefinition.containerDefinition": {
 			// to override args, implement: initAwsEcsTaskDefinitionContainerDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3218,9 +3218,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.taskDefinitions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcs).GetTaskDefinitions()).ToDataRes(types.Array(types.Resource("aws.ecs.taskDefinition")))
 	},
-	"aws.ecs.services": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcs).GetServices()).ToDataRes(types.Array(types.Resource("aws.ecs.service")))
-	},
 	"aws.ecs.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetArn()).ToDataRes(types.String)
 	},
@@ -3250,6 +3247,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.cluster.containerInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetContainerInstances()).ToDataRes(types.Array(types.Resource("aws.ecs.instance")))
+	},
+	"aws.ecs.cluster.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetServices()).ToDataRes(types.Array(types.Resource("aws.ecs.service")))
 	},
 	"aws.ecs.cluster.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetRegion()).ToDataRes(types.String)
@@ -3470,17 +3470,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker.rollback": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker).GetRollback()).ToDataRes(types.Bool)
 	},
-	"aws.ecs.service.networkConfiguration.awsvpcConfiguration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcsServiceNetworkConfiguration).GetAwsvpcConfiguration()).ToDataRes(types.Resource("aws.ecs.service.networkConfiguration.awsvpcConfiguration"))
+	"aws.ecs.service.networkConfiguration.awsVpcConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsServiceNetworkConfiguration).GetAwsVpcConfiguration()).ToDataRes(types.Resource("aws.ecs.service.networkConfiguration.awsVpcConfiguration"))
 	},
-	"aws.ecs.service.networkConfiguration.awsvpcConfiguration.subnets": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration).GetSubnets()).ToDataRes(types.Array(types.String))
+	"aws.ecs.service.networkConfiguration.awsVpcConfiguration.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration).GetSubnets()).ToDataRes(types.Array(types.String))
 	},
-	"aws.ecs.service.networkConfiguration.awsvpcConfiguration.securityGroups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration).GetSecurityGroups()).ToDataRes(types.Array(types.String))
+	"aws.ecs.service.networkConfiguration.awsVpcConfiguration.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration).GetSecurityGroups()).ToDataRes(types.Array(types.String))
 	},
-	"aws.ecs.service.networkConfiguration.awsvpcConfiguration.assignPublicIp": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration).GetAssignPublicIp()).ToDataRes(types.String)
+	"aws.ecs.service.networkConfiguration.awsVpcConfiguration.assignPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration).GetAssignPublicIp()).ToDataRes(types.String)
 	},
 	"aws.ecs.taskDefinition.containerDefinition.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetName()).ToDataRes(types.String)
@@ -9571,10 +9571,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcs).TaskDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.ecs.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcs).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"aws.ecs.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsCluster).__id, ok = v.Value.(string)
 		return
@@ -9617,6 +9613,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.cluster.containerInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsCluster).ContainerInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9943,24 +9943,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsServiceNetworkConfiguration).__id, ok = v.Value.(string)
 		return
 	},
-	"aws.ecs.service.networkConfiguration.awsvpcConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsServiceNetworkConfiguration).AwsvpcConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration](v.Value, v.Error)
+	"aws.ecs.service.networkConfiguration.awsVpcConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsServiceNetworkConfiguration).AwsVpcConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration](v.Value, v.Error)
 		return
 	},
-	"aws.ecs.service.networkConfiguration.awsvpcConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration).__id, ok = v.Value.(string)
+	"aws.ecs.service.networkConfiguration.awsVpcConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration).__id, ok = v.Value.(string)
 		return
 	},
-	"aws.ecs.service.networkConfiguration.awsvpcConfiguration.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.ecs.service.networkConfiguration.awsVpcConfiguration.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.ecs.service.networkConfiguration.awsvpcConfiguration.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.ecs.service.networkConfiguration.awsVpcConfiguration.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.ecs.service.networkConfiguration.awsvpcConfiguration.assignPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration).AssignPublicIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.ecs.service.networkConfiguration.awsVpcConfiguration.assignPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration).AssignPublicIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.taskDefinition.containerDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23272,7 +23272,6 @@ type mqlAwsEcs struct {
 	Containers         plugin.TValue[[]any]
 	ContainerInstances plugin.TValue[[]any]
 	TaskDefinitions    plugin.TValue[[]any]
-	Services           plugin.TValue[[]any]
 }
 
 // createAwsEcs creates a new instance of this resource
@@ -23376,22 +23375,6 @@ func (c *mqlAwsEcs) GetTaskDefinitions() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlAwsEcs) GetServices() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs", c.__id, "services")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.services()
-	})
-}
-
 // mqlAwsEcsCluster for the aws.ecs.cluster resource
 type mqlAwsEcsCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -23407,6 +23390,7 @@ type mqlAwsEcsCluster struct {
 	Status                            plugin.TValue[string]
 	Tasks                             plugin.TValue[[]any]
 	ContainerInstances                plugin.TValue[[]any]
+	Services                          plugin.TValue[[]any]
 	Region                            plugin.TValue[string]
 	ActiveServicesCount               plugin.TValue[int64]
 }
@@ -23509,6 +23493,22 @@ func (c *mqlAwsEcsCluster) GetContainerInstances() *plugin.TValue[[]any] {
 		}
 
 		return c.containerInstances()
+	})
+}
+
+func (c *mqlAwsEcsCluster) GetServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.services()
 	})
 }
 
@@ -24274,7 +24274,7 @@ type mqlAwsEcsServiceNetworkConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEcsServiceNetworkConfigurationInternal it will be used here
-	AwsvpcConfiguration plugin.TValue[*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration]
+	AwsVpcConfiguration plugin.TValue[*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration]
 }
 
 // createAwsEcsServiceNetworkConfiguration creates a new instance of this resource
@@ -24309,35 +24309,35 @@ func (c *mqlAwsEcsServiceNetworkConfiguration) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEcsServiceNetworkConfiguration) GetAwsvpcConfiguration() *plugin.TValue[*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration] {
-	return plugin.GetOrCompute[*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration](&c.AwsvpcConfiguration, func() (*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration, error) {
+func (c *mqlAwsEcsServiceNetworkConfiguration) GetAwsVpcConfiguration() *plugin.TValue[*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration](&c.AwsVpcConfiguration, func() (*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.service.networkConfiguration", c.__id, "awsvpcConfiguration")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.service.networkConfiguration", c.__id, "awsVpcConfiguration")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration), nil
+				return d.Value.(*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration), nil
 			}
 		}
 
-		return c.awsvpcConfiguration()
+		return c.awsVpcConfiguration()
 	})
 }
 
-// mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration for the aws.ecs.service.networkConfiguration.awsvpcConfiguration resource
-type mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration struct {
+// mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration for the aws.ecs.service.networkConfiguration.awsVpcConfiguration resource
+type mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEcsServiceNetworkConfigurationAwsvpcConfigurationInternal it will be used here
+	// optional: if you define mqlAwsEcsServiceNetworkConfigurationAwsVpcConfigurationInternal it will be used here
 	Subnets        plugin.TValue[[]any]
 	SecurityGroups plugin.TValue[[]any]
 	AssignPublicIp plugin.TValue[string]
 }
 
-// createAwsEcsServiceNetworkConfigurationAwsvpcConfiguration creates a new instance of this resource
-func createAwsEcsServiceNetworkConfigurationAwsvpcConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration{
+// createAwsEcsServiceNetworkConfigurationAwsVpcConfiguration creates a new instance of this resource
+func createAwsEcsServiceNetworkConfigurationAwsVpcConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration{
 		MqlRuntime: runtime,
 	}
 
@@ -24349,7 +24349,7 @@ func createAwsEcsServiceNetworkConfigurationAwsvpcConfiguration(runtime *plugin.
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.ecs.service.networkConfiguration.awsvpcConfiguration", res.__id)
+		args, err = runtime.ResourceFromRecording("aws.ecs.service.networkConfiguration.awsVpcConfiguration", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -24359,23 +24359,23 @@ func createAwsEcsServiceNetworkConfigurationAwsvpcConfiguration(runtime *plugin.
 	return res, nil
 }
 
-func (c *mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration) MqlName() string {
-	return "aws.ecs.service.networkConfiguration.awsvpcConfiguration"
+func (c *mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration) MqlName() string {
+	return "aws.ecs.service.networkConfiguration.awsVpcConfiguration"
 }
 
-func (c *mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration) MqlID() string {
+func (c *mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration) GetSubnets() *plugin.TValue[[]any] {
+func (c *mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration) GetSubnets() *plugin.TValue[[]any] {
 	return &c.Subnets
 }
 
-func (c *mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration) GetSecurityGroups() *plugin.TValue[[]any] {
+func (c *mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration) GetSecurityGroups() *plugin.TValue[[]any] {
 	return &c.SecurityGroups
 }
 
-func (c *mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration) GetAssignPublicIp() *plugin.TValue[string] {
+func (c *mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration) GetAssignPublicIp() *plugin.TValue[string] {
 	return &c.AssignPublicIp
 }
 

@@ -1718,8 +1718,6 @@ aws.ecs  @defaults("clusters containers containerInstances") {
   containerInstances() []aws.ecs.instance
   // List of AWS ECS Task Definitions
   taskDefinitions() []aws.ecs.taskDefinition
-  // List of AWS ECS Services
-  services() []aws.ecs.service
 }
 
 // Amazon ECS cluster
@@ -1744,6 +1742,8 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   tasks() []aws.ecs.task
   // List of AWS ECS container instances
   containerInstances() []aws.ecs.instance
+  // List of AWS ECS services in the cluster
+  services() []aws.ecs.service
   // Region where the cluster is located
   region string
   // Number of services running in the cluster
@@ -1924,11 +1924,11 @@ private aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker {
 // Amazon ECS Service Network Configuration
 private aws.ecs.service.networkConfiguration {
   // VPC configuration for the service
-  awsvpcConfiguration() aws.ecs.service.networkConfiguration.awsvpcConfiguration
+  awsVpcConfiguration() aws.ecs.service.networkConfiguration.awsVpcConfiguration
 }
 
 // Amazon ECS Service Network Configuration AWS VPC Configuration
-private aws.ecs.service.networkConfiguration.awsvpcConfiguration {
+private aws.ecs.service.networkConfiguration.awsVpcConfiguration {
   // Subnets associated with the service
   subnets []string
   // Security groups associated with the service

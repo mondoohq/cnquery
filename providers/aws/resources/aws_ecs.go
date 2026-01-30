@@ -1245,114 +1245,73 @@ func (a *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) id() (string, e
 	return a.__id, nil
 }
 
-func (a *mqlAwsEcs) services() ([]any, error) {
+func (a *mqlAwsEcsCluster) services() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getECSServices(conn), 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
+	clusterArn := a.Arn.Data
+	region := ""
+	if arn.IsARN(clusterArn) {
+		if val, err := arn.Parse(clusterArn); err == nil {
+			region = val.Region
+		}
 	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	svc := conn.Ecs(region)
+	ctx := context.Background()
+	res := []any{}
+
+	// List services in this cluster
+	serviceParams := &ecsservice.ListServicesInput{
+		Cluster: &clusterArn,
+	}
+	servicePaginator := ecsservice.NewListServicesPaginator(svc, serviceParams)
+	serviceArns := []string{}
+	for servicePaginator.HasMorePages() {
+		serviceResp, err := servicePaginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Str("cluster", clusterArn).Msg("error accessing cluster for services")
+				return res, nil
+			}
+			return nil, errors.Wrap(err, "could not gather ecs services information")
+		}
+		serviceArns = append(serviceArns, serviceResp.ServiceArns...)
+	}
+
+	// Describe services in batches (AWS allows up to 10 services per DescribeServices call)
+	batchSize := 10
+	for i := 0; i < len(serviceArns); i += batchSize {
+		end := i + batchSize
+		if end > len(serviceArns) {
+			end = len(serviceArns)
+		}
+		batch := serviceArns[i:end]
+
+		describeParams := &ecsservice.DescribeServicesInput{
+			Cluster:  &clusterArn,
+			Services: batch,
+			Include:  []ecstypes.ServiceField{ecstypes.ServiceFieldTags},
+		}
+		describeResp, err := svc.DescribeServices(ctx, describeParams)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Str("cluster", clusterArn).Msg("error describing services")
+				continue
+			}
+			return nil, errors.Wrap(err, "could not describe ecs services")
+		}
+
+		for _, service := range describeResp.Services {
+			mqlService, err := NewResource(a.MqlRuntime, ResourceAwsEcsService,
+				map[string]*llx.RawData{
+					"arn": llx.StringData(convert.ToValue(service.ServiceArn)),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlService)
+		}
 	}
 
 	return res, nil
-}
-
-func (a *mqlAwsEcs) getECSServices(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	var err error
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
-	log.Debug().Msgf("regions being called for ecs services list are: %v", regions)
-	for ri := range regions {
-		region := regions[ri]
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Ecs(region)
-			ctx := context.Background()
-			res := []any{}
-
-			// First, list all clusters in the region
-			params := &ecsservice.ListClustersInput{}
-			paginator := ecsservice.NewListClustersPaginator(svc, params)
-			clusterArns := []string{}
-			for paginator.HasMorePages() {
-				resp, err := paginator.NextPage(ctx)
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					return nil, errors.Wrap(err, "could not gather ecs cluster information")
-				}
-				clusterArns = append(clusterArns, resp.ClusterArns...)
-			}
-
-			// For each cluster, list services
-			for _, clusterArn := range clusterArns {
-				serviceParams := &ecsservice.ListServicesInput{
-					Cluster: &clusterArn,
-				}
-				servicePaginator := ecsservice.NewListServicesPaginator(svc, serviceParams)
-				serviceArns := []string{}
-				for servicePaginator.HasMorePages() {
-					serviceResp, err := servicePaginator.NextPage(ctx)
-					if err != nil {
-						if Is400AccessDeniedError(err) {
-							log.Warn().Str("region", region).Str("cluster", clusterArn).Msg("error accessing cluster for services")
-							continue
-						}
-						return nil, errors.Wrap(err, "could not gather ecs services information")
-					}
-					serviceArns = append(serviceArns, serviceResp.ServiceArns...)
-				}
-
-				// Describe services in batches (AWS allows up to 10 services per DescribeServices call)
-				batchSize := 10
-				for i := 0; i < len(serviceArns); i += batchSize {
-					end := i + batchSize
-					if end > len(serviceArns) {
-						end = len(serviceArns)
-					}
-					batch := serviceArns[i:end]
-
-					describeParams := &ecsservice.DescribeServicesInput{
-						Cluster:  &clusterArn,
-						Services: batch,
-						Include:  []ecstypes.ServiceField{ecstypes.ServiceFieldTags},
-					}
-					describeResp, err := svc.DescribeServices(ctx, describeParams)
-					if err != nil {
-						if Is400AccessDeniedError(err) {
-							log.Warn().Str("region", region).Str("cluster", clusterArn).Msg("error describing services")
-							continue
-						}
-						return nil, errors.Wrap(err, "could not describe ecs services")
-					}
-
-					for _, service := range describeResp.Services {
-						mqlService, err := NewResource(a.MqlRuntime, ResourceAwsEcsService,
-							map[string]*llx.RawData{
-								"arn": llx.StringData(convert.ToValue(service.ServiceArn)),
-							})
-						if err != nil {
-							return nil, err
-						}
-						res = append(res, mqlService)
-					}
-				}
-			}
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
 }
 
 func (s *mqlAwsEcsService) id() (string, error) {
@@ -1389,14 +1348,14 @@ func (d *mqlAwsEcsServiceDeploymentConfiguration) deploymentCircuitBreaker() (*m
 	return d.DeploymentCircuitBreaker.Data, nil
 }
 
-func (n *mqlAwsEcsServiceNetworkConfiguration) awsvpcConfiguration() (*mqlAwsEcsServiceNetworkConfigurationAwsvpcConfiguration, error) {
-	if !n.AwsvpcConfiguration.IsSet() {
-		return nil, errors.New("awsvpcConfiguration not initialized")
+func (n *mqlAwsEcsServiceNetworkConfiguration) awsVpcConfiguration() (*mqlAwsEcsServiceNetworkConfigurationAwsVpcConfiguration, error) {
+	if !n.AwsVpcConfiguration.IsSet() {
+		return nil, errors.New("awsVpcConfiguration not initialized")
 	}
-	if n.AwsvpcConfiguration.Error != nil {
-		return nil, n.AwsvpcConfiguration.Error
+	if n.AwsVpcConfiguration.Error != nil {
+		return nil, n.AwsVpcConfiguration.Error
 	}
-	return n.AwsvpcConfiguration.Data, nil
+	return n.AwsVpcConfiguration.Data, nil
 }
 
 func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -1424,20 +1383,20 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 	region := parsedARN.Region
 	clusterName := ""
+	serviceName := ""
 	if res := strings.Split(parsedARN.Resource, "/"); len(res) >= 2 {
 		clusterName = res[1]
+		if len(res) >= 3 {
+			serviceName = res[2]
+		}
 	}
+
+	// Extract service name from ARN
+
+	clusterArn := fmt.Sprintf("arn:aws:ecs:%s:%s:cluster/%s", region, parsedARN.AccountID, clusterName)
 
 	svc := conn.Ecs(region)
 	ctx := context.Background()
-
-	// Extract service name from ARN
-	serviceName := ""
-	if res := strings.Split(parsedARN.Resource, "/"); len(res) >= 3 {
-		serviceName = res[2]
-	}
-
-	clusterArn := fmt.Sprintf("arn:aws:ecs:%s:%s:cluster/%s", region, parsedARN.AccountID, clusterName)
 
 	serviceDetails, err := svc.DescribeServices(ctx, &ecs.DescribeServicesInput{
 		Cluster:  &clusterArn,
@@ -1614,9 +1573,9 @@ func createNetworkConfigurationResource(runtime *plugin.Runtime, nc *ecstypes.Ne
 		for _, sg := range awsvpc.SecurityGroups {
 			securityGroups = append(securityGroups, sg)
 		}
-		awsvpcRes, err := CreateResource(runtime, ResourceAwsEcsServiceNetworkConfigurationAwsvpcConfiguration,
+		awsvpcRes, err := CreateResource(runtime, ResourceAwsEcsServiceNetworkConfigurationAwsVpcConfiguration,
 			map[string]*llx.RawData{
-				"__id":           llx.StringData(serviceArn + "/networkConfiguration/awsvpc"),
+				"__id":           llx.StringData(serviceArn + "/networkConfiguration/awsVpc"),
 				"subnets":        llx.ArrayData(subnets, types.String),
 				"securityGroups": llx.ArrayData(securityGroups, types.String),
 				"assignPublicIp": llx.StringData(string(awsvpc.AssignPublicIp)),
@@ -1630,11 +1589,11 @@ func createNetworkConfigurationResource(runtime *plugin.Runtime, nc *ecstypes.Ne
 	args := map[string]*llx.RawData{
 		"__id": llx.StringData(serviceArn + "/networkConfiguration"),
 	}
-	// Always set awsvpcConfiguration, even if nil
+	// Always set awsVpcConfiguration, even if nil
 	if awsvpcResource != nil {
-		args["awsvpcConfiguration"] = llx.ResourceData(awsvpcResource.(plugin.Resource), ResourceAwsEcsServiceNetworkConfigurationAwsvpcConfiguration)
+		args["awsVpcConfiguration"] = llx.ResourceData(awsvpcResource.(plugin.Resource), ResourceAwsEcsServiceNetworkConfigurationAwsVpcConfiguration)
 	} else {
-		args["awsvpcConfiguration"] = llx.NilData
+		args["awsVpcConfiguration"] = llx.NilData
 	}
 
 	return CreateResource(runtime, ResourceAwsEcsServiceNetworkConfiguration, args)

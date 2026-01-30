@@ -1693,6 +1693,8 @@ resources:
       region: {}
       registeredContainerInstancesCount: {}
       runningTasksCount: {}
+      services:
+        min_mondoo_version: 9.0.0
       status: {}
       tags: {}
       tasks: {}
@@ -1791,7 +1793,18 @@ resources:
       - aws
   aws.ecs.service.networkConfiguration:
     fields:
+      awsVpcConfiguration: {}
       awsvpcConfiguration: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.service.networkConfiguration.awsVpcConfiguration:
+    fields:
+      assignPublicIp: {}
+      securityGroups: {}
+      subnets: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
@@ -1802,7 +1815,6 @@ resources:
       assignPublicIp: {}
       securityGroups: {}
       subnets: {}
-    is_private: true
     min_mondoo_version: 9.0.0
     platform:
       name:
