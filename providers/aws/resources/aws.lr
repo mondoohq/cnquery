@@ -1691,6 +1691,8 @@ aws.secretsmanager.secret @defaults("arn name") {
   description string
   // KMS key used for encryption of the secret
   kmsKey() aws.kms.key
+  // Last date the secret was accessed
+  lastAccessedDate time
   // Last date the secret was changed
   lastChangedDate time
   // Last date the secret was automatically rotated
@@ -1699,12 +1701,28 @@ aws.secretsmanager.secret @defaults("arn name") {
   name string
   // Date of the next secret rotation
   nextRotationDate time
+  // AWS service that created this secret (e.g., RDS, Redshift)
+  owningService string
   // Primary region of the secret
   primaryRegion string
   // Whether rotation is enabled for the secret
   rotationEnabled bool
+  // Lambda function used for automatic rotation
+  rotationLambda aws.lambda.function
+  // Rotation schedule configuration
+  rotationRules aws.secretsmanager.secret.rotationRules
   // Tags for the secret
   tags map[string]string
+}
+
+// AWS Secrets Manager secret rotation rules configuration
+private aws.secretsmanager.secret.rotationRules {
+  // Number of days between automatic scheduled rotations
+  automaticallyAfterDays int
+  // Length of the rotation window in hours (e.g., "3h")
+  duration string
+  // Cron or rate expression defining the rotation schedule (e.g., "rate(12 hours)")
+  scheduleExpression string
 }
 
 

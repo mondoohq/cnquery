@@ -117,6 +117,7 @@ const (
 	ResourceAwsSecurityhubHub                                                   string = "aws.securityhub.hub"
 	ResourceAwsSecretsmanager                                                   string = "aws.secretsmanager"
 	ResourceAwsSecretsmanagerSecret                                             string = "aws.secretsmanager.secret"
+	ResourceAwsSecretsmanagerSecretRotationRules                                string = "aws.secretsmanager.secret.rotationRules"
 	ResourceAwsEcs                                                              string = "aws.ecs"
 	ResourceAwsEcsCluster                                                       string = "aws.ecs.cluster"
 	ResourceAwsEcsInstance                                                      string = "aws.ecs.instance"
@@ -653,6 +654,10 @@ func init() {
 		"aws.secretsmanager.secret": {
 			Init:   initAwsSecretsmanagerSecret,
 			Create: createAwsSecretsmanagerSecret,
+		},
+		"aws.secretsmanager.secret.rotationRules": {
+			// to override args, implement: initAwsSecretsmanagerSecretRotationRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecretsmanagerSecretRotationRules,
 		},
 		"aws.ecs": {
 			// to override args, implement: initAwsEcs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3160,6 +3165,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.secretsmanager.secret.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
+	"aws.secretsmanager.secret.lastAccessedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetLastAccessedDate()).ToDataRes(types.Time)
+	},
 	"aws.secretsmanager.secret.lastChangedDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetLastChangedDate()).ToDataRes(types.Time)
 	},
@@ -3172,14 +3180,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.secretsmanager.secret.nextRotationDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetNextRotationDate()).ToDataRes(types.Time)
 	},
+	"aws.secretsmanager.secret.owningService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetOwningService()).ToDataRes(types.String)
+	},
 	"aws.secretsmanager.secret.primaryRegion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetPrimaryRegion()).ToDataRes(types.String)
 	},
 	"aws.secretsmanager.secret.rotationEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetRotationEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.secretsmanager.secret.rotationLambda": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetRotationLambda()).ToDataRes(types.Resource("aws.lambda.function"))
+	},
+	"aws.secretsmanager.secret.rotationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetRotationRules()).ToDataRes(types.Resource("aws.secretsmanager.secret.rotationRules"))
+	},
 	"aws.secretsmanager.secret.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.secretsmanager.secret.rotationRules.automaticallyAfterDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretRotationRules).GetAutomaticallyAfterDays()).ToDataRes(types.Int)
+	},
+	"aws.secretsmanager.secret.rotationRules.duration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretRotationRules).GetDuration()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.rotationRules.scheduleExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretRotationRules).GetScheduleExpression()).ToDataRes(types.String)
 	},
 	"aws.ecs.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcs).GetClusters()).ToDataRes(types.Array(types.Resource("aws.ecs.cluster")))
@@ -9426,6 +9452,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSecretsmanagerSecret).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
+	"aws.secretsmanager.secret.lastAccessedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).LastAccessedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.secretsmanager.secret.lastChangedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).LastChangedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -9442,6 +9472,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSecretsmanagerSecret).NextRotationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.secretsmanager.secret.owningService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).OwningService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.secretsmanager.secret.primaryRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).PrimaryRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9450,8 +9484,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSecretsmanagerSecret).RotationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.secretsmanager.secret.rotationLambda": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).RotationLambda, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.rotationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).RotationRules, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecretRotationRules](v.Value, v.Error)
+		return
+	},
 	"aws.secretsmanager.secret.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.rotationRules.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretRotationRules).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.secretsmanager.secret.rotationRules.automaticallyAfterDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretRotationRules).AutomaticallyAfterDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.rotationRules.duration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretRotationRules).Duration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.rotationRules.scheduleExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretRotationRules).ScheduleExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22948,12 +23006,16 @@ type mqlAwsSecretsmanagerSecret struct {
 	CreatedAt        plugin.TValue[*time.Time]
 	Description      plugin.TValue[string]
 	KmsKey           plugin.TValue[*mqlAwsKmsKey]
+	LastAccessedDate plugin.TValue[*time.Time]
 	LastChangedDate  plugin.TValue[*time.Time]
 	LastRotatedDate  plugin.TValue[*time.Time]
 	Name             plugin.TValue[string]
 	NextRotationDate plugin.TValue[*time.Time]
+	OwningService    plugin.TValue[string]
 	PrimaryRegion    plugin.TValue[string]
 	RotationEnabled  plugin.TValue[bool]
+	RotationLambda   plugin.TValue[*mqlAwsLambdaFunction]
+	RotationRules    plugin.TValue[*mqlAwsSecretsmanagerSecretRotationRules]
 	Tags             plugin.TValue[map[string]any]
 }
 
@@ -23022,6 +23084,10 @@ func (c *mqlAwsSecretsmanagerSecret) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	})
 }
 
+func (c *mqlAwsSecretsmanagerSecret) GetLastAccessedDate() *plugin.TValue[*time.Time] {
+	return &c.LastAccessedDate
+}
+
 func (c *mqlAwsSecretsmanagerSecret) GetLastChangedDate() *plugin.TValue[*time.Time] {
 	return &c.LastChangedDate
 }
@@ -23038,6 +23104,10 @@ func (c *mqlAwsSecretsmanagerSecret) GetNextRotationDate() *plugin.TValue[*time.
 	return &c.NextRotationDate
 }
 
+func (c *mqlAwsSecretsmanagerSecret) GetOwningService() *plugin.TValue[string] {
+	return &c.OwningService
+}
+
 func (c *mqlAwsSecretsmanagerSecret) GetPrimaryRegion() *plugin.TValue[string] {
 	return &c.PrimaryRegion
 }
@@ -23046,8 +23116,70 @@ func (c *mqlAwsSecretsmanagerSecret) GetRotationEnabled() *plugin.TValue[bool] {
 	return &c.RotationEnabled
 }
 
+func (c *mqlAwsSecretsmanagerSecret) GetRotationLambda() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return &c.RotationLambda
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetRotationRules() *plugin.TValue[*mqlAwsSecretsmanagerSecretRotationRules] {
+	return &c.RotationRules
+}
+
 func (c *mqlAwsSecretsmanagerSecret) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+// mqlAwsSecretsmanagerSecretRotationRules for the aws.secretsmanager.secret.rotationRules resource
+type mqlAwsSecretsmanagerSecretRotationRules struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecretsmanagerSecretRotationRulesInternal it will be used here
+	AutomaticallyAfterDays plugin.TValue[int64]
+	Duration               plugin.TValue[string]
+	ScheduleExpression     plugin.TValue[string]
+}
+
+// createAwsSecretsmanagerSecretRotationRules creates a new instance of this resource
+func createAwsSecretsmanagerSecretRotationRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecretsmanagerSecretRotationRules{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.secretsmanager.secret.rotationRules", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecretsmanagerSecretRotationRules) MqlName() string {
+	return "aws.secretsmanager.secret.rotationRules"
+}
+
+func (c *mqlAwsSecretsmanagerSecretRotationRules) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecretsmanagerSecretRotationRules) GetAutomaticallyAfterDays() *plugin.TValue[int64] {
+	return &c.AutomaticallyAfterDays
+}
+
+func (c *mqlAwsSecretsmanagerSecretRotationRules) GetDuration() *plugin.TValue[string] {
+	return &c.Duration
+}
+
+func (c *mqlAwsSecretsmanagerSecretRotationRules) GetScheduleExpression() *plugin.TValue[string] {
+	return &c.ScheduleExpression
 }
 
 // mqlAwsEcs for the aws.ecs resource
