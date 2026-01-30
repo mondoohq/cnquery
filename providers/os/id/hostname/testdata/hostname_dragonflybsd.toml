@@ -1,0 +1,11 @@
+[commands."uname -s"]
+stdout = "DragonFly"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.4-RELEASE"
+
+[commands."hostname"]
+stdout = "dragonfly-server.local"

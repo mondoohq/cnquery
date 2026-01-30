@@ -1,0 +1,11 @@
+[commands."uname -s"]
+stdout = "NetBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "10.0"
+
+[commands."hostname"]
+stdout = "netbsd-server.local"
