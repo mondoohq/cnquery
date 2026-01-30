@@ -21,6 +21,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/cnquery/v12/utils/slicesx"
 	"go.mondoo.com/cnquery/v12/utils/stringx"
 )
 
@@ -1248,12 +1249,14 @@ func (a *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) id() (string, e
 func (a *mqlAwsEcsCluster) services() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	clusterArn := a.Arn.Data
-	region := ""
-	if arn.IsARN(clusterArn) {
-		if val, err := arn.Parse(clusterArn); err == nil {
-			region = val.Region
-		}
+	if !arn.IsARN(clusterArn) {
+		return nil, errors.New("cluster ARN is not a valid ARN")
 	}
+	parsedARN, err := arn.Parse(clusterArn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse cluster ARN")
+	}
+	region := parsedARN.Region
 	svc := conn.Ecs(region)
 	ctx := context.Background()
 	res := []any{}
@@ -1277,14 +1280,8 @@ func (a *mqlAwsEcsCluster) services() ([]any, error) {
 	}
 
 	// Describe services in batches (AWS allows up to 10 services per DescribeServices call)
-	batchSize := 10
-	for i := 0; i < len(serviceArns); i += batchSize {
-		end := i + batchSize
-		if end > len(serviceArns) {
-			end = len(serviceArns)
-		}
-		batch := serviceArns[i:end]
-
+	batches := slicesx.Batch(serviceArns, 10)
+	for _, batch := range batches {
 		describeParams := &ecsservice.DescribeServicesInput{
 			Cluster:  &clusterArn,
 			Services: batch,
