@@ -17,7 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v12/cli/config"
 	"go.mondoo.com/cnquery/v12/cli/shell"
 	"go.mondoo.com/cnquery/v12/cli/theme"
-	"go.mondoo.com/cnquery/v12/explorer/scan"
+	"go.mondoo.com/cnquery/v12/discovery"
 	"go.mondoo.com/cnquery/v12/providers"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
@@ -103,7 +103,7 @@ func ParseShellConfig(cmd *cobra.Command, cliRes *plugin.ParseCLIRes) *ShellConf
 func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	// we go through inventory resolution to resolve credentials properly for the passed-in asset
 	ctx := context.Background()
-	discoveredAssets, err := scan.DiscoverAssets(ctx,
+	discoveredAssets, err := discovery.DiscoverAssets(ctx,
 		inventory.New(inventory.WithAssets(conf.Asset)),
 		conf.UpstreamConfig,
 		runtime.Recording())
@@ -115,7 +115,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		log.Fatal().Msg("could not find an asset that we can connect to")
 	}
 
-	var connectAsset *scan.AssetWithRuntime
+	var connectAsset *discovery.AssetWithRuntime
 	if len(filteredAssets) == 1 {
 		connectAsset = filteredAssets[0]
 	} else if len(filteredAssets) > 1 {
@@ -143,7 +143,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	}
 
 	if connectAsset.Asset.Connections[0].DelayDiscovery {
-		discoveredAsset, err := scan.HandleDelayedDiscovery(ctx, connectAsset.Asset, connectAsset.Runtime, nil, "")
+		discoveredAsset, err := discovery.HandleDelayedDiscovery(ctx, connectAsset.Asset, connectAsset.Runtime)
 		if err != nil {
 			log.Error().Msg("no asset selected")
 			os.Exit(1)

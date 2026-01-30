@@ -6,9 +6,9 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/v12/explorer/resources"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v12/providers/mondoo/connection"
 	"go.mondoo.com/cnquery/v12/types"
 	"go.mondoo.com/cnquery/v12/utils/multierr"
@@ -84,17 +84,12 @@ func (m *mqlMondooAsset) resources() ([]any, error) {
 	conn := m.MqlRuntime.Connection.(*connection.Connection)
 	upstream := conn.Upstream
 
-	explorer, err := resources.NewRemoteServices(upstream.ApiEndpoint, upstream.Plugins, upstream.HttpClient)
+	explorer, err := recording.NewRemoteServices(upstream.ApiEndpoint, upstream.Plugins, upstream.HttpClient)
 	if err != nil {
 		return nil, err
 	}
 
-	// urecording, err := recording.NewUpstreamRecording(context.Background(), explorer, m.Mrn.Data)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	list, err := explorer.ListResources(context.Background(), &resources.ListResourcesReq{
+	list, err := explorer.ListResources(context.Background(), &recording.ListResourcesReq{
 		EntityMrn: m.Mrn.Data,
 	})
 	if err != nil {

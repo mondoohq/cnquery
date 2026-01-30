@@ -15,7 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v12/cli/printer"
 	"go.mondoo.com/cnquery/v12/cli/reporter"
 	"go.mondoo.com/cnquery/v12/cli/shell"
-	"go.mondoo.com/cnquery/v12/explorer/scan"
+	"go.mondoo.com/cnquery/v12/discovery"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/logger"
 	"go.mondoo.com/cnquery/v12/mqlc"
@@ -115,7 +115,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 	}
 
 	ctx := context.Background()
-	discoveredAssets, err := scan.DiscoverAssets(ctx, conf.Inventory, upstreamConfig, runtime.Recording())
+	discoveredAssets, err := discovery.DiscoverAssets(ctx, conf.Inventory, upstreamConfig, runtime.Recording())
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		asset := discoveredAssets.Assets[i]
 
 		if asset.Asset.Connections[0].DelayDiscovery {
-			discoveredAsset, err := scan.HandleDelayedDiscovery(ctx, asset.Asset, asset.Runtime, nil, "")
+			discoveredAsset, err := discovery.HandleDelayedDiscovery(ctx, asset.Asset, asset.Runtime)
 			if err != nil {
 				log.Error().Err(err).Str("asset", asset.Asset.Name).Msg("failed to handle delayed discovery for asset")
 				continue
