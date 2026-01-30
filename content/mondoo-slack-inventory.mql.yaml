@@ -74,14 +74,14 @@ packs:
         title: Slack Team MFA status
         docs:
           desc: |
-            This query retrieves the status of whether MFA is configured for all users.
+            Returns MFA status for all users in the workspace.
         mql: |
           slack.users { id name profile["email"] isBot teamId has2FA }
       - uid: mondoo-slack-inventory-owners
         title: Slack Team Owners
         docs:
           desc: |
-            This query retrieves the list of all users with the Owner privilege.
+            Lists all users with Owner privileges in the workspace.
         mql: |
           slack.users.owners.length
           slack.users.owners { id name profile["email"] isBot teamId has2FA }
@@ -89,11 +89,11 @@ packs:
         title: Slack Admins
         docs:
           desc: |
-            This query retrieves the list of all users with the Admin privilege.
+            Lists all users with Admin privileges in the workspace.
         mql: slack.users.admins { id name }
       - uid: mondoo-slack-inventory-external-channels
         title: Externally shared channels
         docs:
           desc: |
-            This query retrieves the list of all channels that have been externally shared.
+            Lists all channels that have been externally shared.
         mql: slack.conversations.where(isExtShared == true) { id name }

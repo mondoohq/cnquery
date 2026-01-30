@@ -15,7 +15,7 @@ packs:
       desc: |
         ### Overview
 
-        The Asset Count Query Pack by Mondoo retrieves resource counts across cloud providers and platforms including AWS, Azure, GCP, vSphere, Microsoft 365, GitLab, Kubernetes, and Windows Active Directory.
+        The Asset Count Query Pack retrieves resource counts across cloud providers and platforms including AWS, Azure, GCP, vSphere, Microsoft 365, GitLab, Kubernetes, and Windows Active Directory.
 
         ### Run query pack
 
@@ -39,15 +39,21 @@ packs:
     groups:
       - title: ESXi asset counts
         filters: asset.platform == 'vmware-vsphere'
+        docs:
+          desc: Counts ESXi hosts and virtual machines across vSphere datacenters to track virtualization infrastructure scale.
         queries:
           - uid: mondoo-asset-count-on-vsphere-cluster-esxi
           - uid: mondoo-asset-count-on-vsphere-cluster-vms
       - title: Microsoft 365 asset counts
         filters: asset.platform == 'microsoft365'
+        docs:
+          desc: Counts users in Microsoft Entra ID (formerly Azure AD) to track identity management scope.
         queries:
           - uid: mondoo-count-users-in-entra-id
       - title: Azure asset counts
         filters: asset.platform == 'azure'
+        docs:
+          desc: Counts Azure resources including VMs, databases, networking components, and AKS clusters to inventory subscription assets.
         queries:
           - uid: mondoo-asset-count-azure-resource-groups
           - uid: mondoo-asset-count-azure-vms
@@ -70,10 +76,14 @@ packs:
           - uid: mondoo-asset-count-azure-aks-agent-pools
       - title: Windows Active Directory asset counts
         filters: asset.platform == "windows"
+        docs:
+          desc: Counts Active Directory computer objects that have logged in within the last 180 days to track domain-joined machines.
         queries:
           - uid: mondoo-asset-count-in-windows-domain
       - title: AWS asset counts
         filters: asset.platform == "aws"
+        docs:
+          desc: Counts AWS resources across compute, storage, networking, containers, databases, and security services to inventory account assets.
         queries:
           - uid: mondoo-asset-count-aws-acm-certificates
           - uid: mondoo-asset-count-aws-api-gateways
@@ -113,6 +123,8 @@ packs:
           - uid: mondoo-asset-count-aws-vpcs
       - title: GCP Project Asset Count
         filters: asset.platform == "gcp-project"
+        docs:
+          desc: Counts GCP resources including compute instances, storage buckets, GKE clusters, Cloud Functions, and Cloud SQL instances to inventory project assets.
         queries:
           - uid: mondoo-asset-count-gcp-storage-buckets
           - uid: mondoo-asset-count-gcp-compute-instances
@@ -130,10 +142,14 @@ packs:
           - uid: mondoo-asset-count-gcp-services
       - title: GitLab Asset Counts
         filters: asset.platform == "gitlab-group"
+        docs:
+          desc: Counts projects within a GitLab group to track source code repository inventory.
         queries:
           - uid: mondoo-asset-count-gitlab-group-projects
       - title: K8s Asset Counts
         filters: asset.platform == "k8s-cluster"
+        docs:
+          desc: Counts Kubernetes cluster resources including nodes, pods, deployments, jobs, and DaemonSets.
         queries:
           - uid: mondoo-asset-count-k8s-nodes
           - uid: mondoo-asset-count-k8s-daemonsets

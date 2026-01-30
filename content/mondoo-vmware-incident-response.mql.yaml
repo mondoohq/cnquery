@@ -16,7 +16,7 @@ packs:
       desc: |
         ## Overview
 
-        VMware vCenter Incident Response Pack by Mondoo retrieves data about vCenter and its ESXi hosts.
+        The VMware vCenter Incident Response Pack retrieves data about vCenter and its ESXi hosts for investigation during a security incident.
 
         ### Run query pack
 

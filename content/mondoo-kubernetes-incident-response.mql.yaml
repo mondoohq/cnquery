@@ -16,7 +16,7 @@ packs:
       desc: |
         ### Overview
 
-        The Kubernetes Incident Response Pack by Mondoo retrieves security-related configuration data from Kubernetes clusters for investigation during a security incident. This includes cluster version, role bindings with cluster-admin permissions, pod security contexts, and container image information across various workload types.
+        The Kubernetes Incident Response Pack retrieves security-related configuration data from Kubernetes clusters for investigation during a security incident. This includes cluster version, role bindings with cluster-admin permissions, pod security contexts, and container image information across various workload types.
 
         ### Run query pack
 
