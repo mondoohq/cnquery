@@ -2165,6 +2165,44 @@ private chrome.extension @defaults("name version identifier browser") {
   browser string
 }
 
+// Firefox browser resources
+firefox {
+  // All installed Firefox addons across all profiles and users
+  addons() []firefox.addon
+}
+
+// Firefox browser addon
+private firefox.addon @defaults("name version active browser") {
+  // Unique addon identifier (e.g., "{uuid}" or "addon@example.com")
+  identifier string
+  // Addon name
+  name string
+  // Addon version
+  version string
+  // Addon description
+  description string
+  // Addon type (extension, theme, locale, dictionary, etc.)
+  type string
+  // Whether the addon is currently active
+  active bool
+  // Whether the addon is disabled by user
+  userDisabled bool
+  // Whether the addon is visible in the addon manager
+  visible bool
+  // Path to the addon (can be XPI file or directory)
+  path string
+  // Firefox profile where addon is installed
+  profile string
+  // Browser name (e.g., "Firefox", "Firefox Developer Edition", "LibreWolf")
+  browser string
+  // Source URI from where addon was installed
+  sourceUri string
+  // Install date as Unix timestamp (milliseconds)
+  installDate int
+  // Last update date as Unix timestamp (milliseconds)
+  updateDate int
+}
+
 // Experimental: USB resource
 usb {
   // List of USB devices

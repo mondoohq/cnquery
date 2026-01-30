@@ -435,6 +435,29 @@ resources:
       type: {}
       xdev: {}
     min_mondoo_version: 5.15.0
+  firefox:
+    fields:
+      addons: {}
+      paths: {}
+    min_mondoo_version: 9.0.0
+  firefox.addon:
+    fields:
+      active: {}
+      browser: {}
+      description: {}
+      identifier: {}
+      installDate: {}
+      name: {}
+      path: {}
+      profile: {}
+      sourceUri: {}
+      type: {}
+      updateDate: {}
+      userDisabled: {}
+      version: {}
+      visible: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   fstab:
     fields:
       entries: {}
