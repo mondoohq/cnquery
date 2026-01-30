@@ -1,11 +1,12 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package scan
+package discovery
 
 import (
 	"context"
 	"errors"
+	"maps"
 	"sync"
 	"time"
 
@@ -259,7 +260,5 @@ func prepareAsset(a *inventory.Asset, rootAsset *inventory.Asset, runtimeLabels 
 	if a.Labels == nil {
 		a.Labels = map[string]string{}
 	}
-	for k, v := range runtimeLabels {
-		a.Labels[k] = v
-	}
+	maps.Copy(a.Labels, runtimeLabels)
 }

@@ -70,9 +70,9 @@ prep/tools/mockgen:
 
 #   🌙 MQL/MOTOR   #
 
-cnquery/generate: clean/proto llx/generate shared/generate explorer/generate sbom/generate reporter/generate providers
+cnquery/generate: clean/proto llx/generate shared/generate sbom/generate reporter/generate providers
 
-cnquery/generate/core: clean/proto llx/generate shared/generate providers/proto providers/build/mock providers/build/core explorer/generate sbom/generate reporter/generate
+cnquery/generate/core: clean/proto llx/generate shared/generate providers/proto providers/build/mock providers/build/core sbom/generate reporter/generate
 
 define buildProvider
 	$(eval $@_HOME = $(1))
@@ -694,11 +694,6 @@ mqlc: | llx mqlc/test
 mqlc/test:
 	go test -timeout 5s $(shell go list ./mqlc/... | grep -v '/vendor/')
 
-explorer/generate:
-	go generate ./explorer
-	go generate ./explorer/scan
-	go generate ./explorer/resources
-
 sbom/generate:
 	go generate ./sbom
 
@@ -746,12 +741,8 @@ test/lint: test/lint/golangci-lint/run
 
 test: test/go test/lint
 
-benchmark/go:
-	go test -bench=. -benchmem go.mondoo.com/cnquery/${MAJOR_VERSION}/explorer/scan/benchmark
-
 race/go:
 	go test -race go.mondoo.com/cnquery/${MAJOR_VERSION}/internal/workerpool
-	go test -race go.mondoo.com/cnquery/${MAJOR_VERSION}/explorer/scan
 
 test/generate: prep/tools/mockgen
 	go generate ./providers/...
