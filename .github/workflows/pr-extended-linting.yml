@@ -8,6 +8,7 @@ on:
       - "**.mod"
       - "go.sum"
       - ".github/workflows/pr-extended-linting.yml"
+      - ".github/workflows/reusable-lint-providers.yml"
 
 permissions:
   contents: read

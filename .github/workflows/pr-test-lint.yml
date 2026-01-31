@@ -9,6 +9,7 @@ on:
       - "go.sum"
       - "Makefile"
       - ".github/workflows/pr-test-lint.yml"
+      - ".github/workflows/reusable-lint-providers.yml"
       - "**.toml" # run tests when any recording changed
 
 permissions:
