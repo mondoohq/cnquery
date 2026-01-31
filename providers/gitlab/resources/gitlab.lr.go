@@ -540,6 +540,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.mergeRequest.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectMergeRequest).GetLabels()).ToDataRes(types.Array(types.String))
 	},
+	"gitlab.project.mergeRequest.milestone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetMilestone()).ToDataRes(types.Resource("gitlab.project.milestone"))
+	},
 	"gitlab.project.issue.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectIssue).GetId()).ToDataRes(types.Int)
 	},
@@ -578,6 +581,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.issue.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectIssue).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.project.issue.milestone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetMilestone()).ToDataRes(types.Resource("gitlab.project.milestone"))
 	},
 	"gitlab.project.release.tagName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectRelease).GetTagName()).ToDataRes(types.String)
@@ -1254,6 +1260,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProjectMergeRequest).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.mergeRequest.milestone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Milestone, ok = plugin.RawToTValue[*mqlGitlabProjectMilestone](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.issue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectIssue).__id, ok = v.Value.(string)
 		return
@@ -1308,6 +1318,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.issue.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectIssue).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.milestone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).Milestone, ok = plugin.RawToTValue[*mqlGitlabProjectMilestone](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.release.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2674,6 +2688,7 @@ type mqlGitlabProjectMergeRequest struct {
 	Draft        plugin.TValue[bool]
 	WebURL       plugin.TValue[string]
 	Labels       plugin.TValue[[]any]
+	Milestone    plugin.TValue[*mqlGitlabProjectMilestone]
 }
 
 // createGitlabProjectMergeRequest creates a new instance of this resource
@@ -2769,6 +2784,22 @@ func (c *mqlGitlabProjectMergeRequest) GetLabels() *plugin.TValue[[]any] {
 	return &c.Labels
 }
 
+func (c *mqlGitlabProjectMergeRequest) GetMilestone() *plugin.TValue[*mqlGitlabProjectMilestone] {
+	return plugin.GetOrCompute[*mqlGitlabProjectMilestone](&c.Milestone, func() (*mqlGitlabProjectMilestone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.mergeRequest", c.__id, "milestone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabProjectMilestone), nil
+			}
+		}
+
+		return c.milestone()
+	})
+}
+
 // mqlGitlabProjectIssue for the gitlab.project.issue resource
 type mqlGitlabProjectIssue struct {
 	MqlRuntime *plugin.Runtime
@@ -2787,6 +2818,7 @@ type mqlGitlabProjectIssue struct {
 	Confidential plugin.TValue[bool]
 	WebURL       plugin.TValue[string]
 	Labels       plugin.TValue[[]any]
+	Milestone    plugin.TValue[*mqlGitlabProjectMilestone]
 }
 
 // createGitlabProjectIssue creates a new instance of this resource
@@ -2876,6 +2908,22 @@ func (c *mqlGitlabProjectIssue) GetWebURL() *plugin.TValue[string] {
 
 func (c *mqlGitlabProjectIssue) GetLabels() *plugin.TValue[[]any] {
 	return &c.Labels
+}
+
+func (c *mqlGitlabProjectIssue) GetMilestone() *plugin.TValue[*mqlGitlabProjectMilestone] {
+	return plugin.GetOrCompute[*mqlGitlabProjectMilestone](&c.Milestone, func() (*mqlGitlabProjectMilestone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.issue", c.__id, "milestone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabProjectMilestone), nil
+			}
+		}
+
+		return c.milestone()
+	})
 }
 
 // mqlGitlabProjectRelease for the gitlab.project.release resource

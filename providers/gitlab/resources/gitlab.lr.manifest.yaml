@@ -192,6 +192,7 @@ resources:
       id: {}
       internalId: {}
       labels: {}
+      milestone: {}
       state: {}
       title: {}
       updatedAt: {}
@@ -224,6 +225,7 @@ resources:
       internalId: {}
       labels: {}
       mergedAt: {}
+      milestone: {}
       sourceBranch: {}
       state: {}
       targetBranch: {}

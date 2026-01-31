@@ -280,6 +280,8 @@ private gitlab.project.mergeRequest @defaults("internalId title state") {
   webURL string
   // Merge request labels
   labels []string
+  // Merge request milestone
+  milestone() gitlab.project.milestone
 }
 
 // GitLab project issue
@@ -310,6 +312,8 @@ private gitlab.project.issue @defaults("internalId title state") {
   webURL string
   // Issue labels
   labels []string
+  // Issue milestone
+  milestone() gitlab.project.milestone
 }
 
 // GitLab project release

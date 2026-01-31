@@ -353,6 +353,60 @@ func (m *mqlGitlabProjectMergeRequest) id() (string, error) {
 	return strconv.FormatInt(m.Id.Data, 10), nil
 }
 
+// Helper function to create a milestone resource from API data
+func createMilestoneResource(runtime *plugin.Runtime, milestone *gitlab.Milestone) (*mqlGitlabProjectMilestone, error) {
+	if milestone == nil {
+		return nil, nil
+	}
+
+	milestoneInfo := map[string]*llx.RawData{
+		"__id":        llx.StringData(strconv.FormatInt(milestone.ID, 10)),
+		"id":          llx.IntData(milestone.ID),
+		"internalId":  llx.IntData(milestone.IID),
+		"projectId":   llx.IntData(milestone.ProjectID),
+		"title":       llx.StringData(milestone.Title),
+		"description": llx.StringData(milestone.Description),
+		"state":       llx.StringData(milestone.State),
+		"updatedAt":   llx.TimeDataPtr(milestone.UpdatedAt),
+		"createdAt":   llx.TimeDataPtr(milestone.CreatedAt),
+	}
+
+	// Convert ISOTime to time.Time for startDate
+	if milestone.StartDate != nil {
+		t := time.Time(*milestone.StartDate)
+		milestoneInfo["startDate"] = llx.TimeDataPtr(&t)
+	}
+
+	// Convert ISOTime to time.Time for dueDate
+	if milestone.DueDate != nil {
+		t := time.Time(*milestone.DueDate)
+		milestoneInfo["dueDate"] = llx.TimeDataPtr(&t)
+	}
+
+	// Handle expired field (pointer to bool)
+	if milestone.Expired != nil {
+		milestoneInfo["expired"] = llx.BoolData(*milestone.Expired)
+	} else {
+		milestoneInfo["expired"] = llx.BoolData(false)
+	}
+
+	mqlMilestone, err := CreateResource(runtime, "gitlab.project.milestone", milestoneInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlMilestone.(*mqlGitlabProjectMilestone), nil
+}
+
+// milestone fetches the milestone for a merge request
+func (m *mqlGitlabProjectMergeRequest) milestone() (*mqlGitlabProjectMilestone, error) {
+	// The milestone should already be set when the merge request is created
+	// This method is only called as a fallback if it wasn't set
+	// In that case, we would need to fetch the merge request details again
+	// For now, return nil to indicate no milestone
+	return nil, nil
+}
+
 // mergeRequests fetches the list of merge requests for the project
 func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
@@ -407,6 +461,17 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 			"labels":       llx.ArrayData(convert.SliceAnyToInterface([]string(mr.Labels)), types.String),
 		}
 
+		// Add milestone if present
+		if mr.Milestone != nil {
+			mqlMilestone, err := createMilestoneResource(p.MqlRuntime, mr.Milestone)
+			if err != nil {
+				return nil, err
+			}
+			if mqlMilestone != nil {
+				mrInfo["milestone"] = llx.ResourceData(mqlMilestone, "gitlab.project.milestone")
+			}
+		}
+
 		mqlMR, err := CreateResource(p.MqlRuntime, "gitlab.project.mergeRequest", mrInfo)
 		if err != nil {
 			return nil, err
@@ -421,6 +486,15 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 // id function for gitlab.project.issue
 func (i *mqlGitlabProjectIssue) id() (string, error) {
 	return strconv.FormatInt(i.Id.Data, 10), nil
+}
+
+// milestone fetches the milestone for an issue
+func (i *mqlGitlabProjectIssue) milestone() (*mqlGitlabProjectMilestone, error) {
+	// The milestone should already be set when the issue is created
+	// This method is only called as a fallback if it wasn't set
+	// In that case, we would need to fetch the issue details again
+	// For now, return nil to indicate no milestone
+	return nil, nil
 }
 
 // issues fetches the list of issues for the project
@@ -480,6 +554,17 @@ func (p *mqlGitlabProject) issues() ([]any, error) {
 			"confidential": llx.BoolData(issue.Confidential),
 			"webURL":       llx.StringData(issue.WebURL),
 			"labels":       llx.ArrayData(convert.SliceAnyToInterface([]string(issue.Labels)), types.String),
+		}
+
+		// Add milestone if present
+		if issue.Milestone != nil {
+			mqlMilestone, err := createMilestoneResource(p.MqlRuntime, issue.Milestone)
+			if err != nil {
+				return nil, err
+			}
+			if mqlMilestone != nil {
+				issueInfo["milestone"] = llx.ResourceData(mqlMilestone, "gitlab.project.milestone")
+			}
 		}
 
 		mqlIssue, err := CreateResource(p.MqlRuntime, "gitlab.project.issue", issueInfo)
