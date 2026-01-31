@@ -11,12 +11,6 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    permissions:
-      # allow read access to the content for analysis.
-      contents: read
-      # allow read access to pull request. Required when only-new-issues is true.
-      # Caller must grant pull-requests: read at workflow level for this to work.
-      pull-requests: read
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
