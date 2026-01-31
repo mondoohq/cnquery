@@ -9,7 +9,7 @@ on:
         default: false
 
 jobs:
-  golangci-lint-providers:
+  lint:
     runs-on: ubuntu-latest
     permissions:
       # allow read access to the content for analysis.
