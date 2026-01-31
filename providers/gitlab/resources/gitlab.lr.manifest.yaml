@@ -6,8 +6,6 @@ resources:
     fields:
       allowedEmailDomainsList:
         min_mondoo_version: 9.0.0
-      archived:
-        min_mondoo_version: 9.0.0
       createdAt:
         min_mondoo_version: 9.0.0
       description: {}
@@ -18,6 +16,8 @@ resources:
       fullPath:
         min_mondoo_version: 9.0.0
       id: {}
+      labels:
+        min_mondoo_version: 9.0.0
       lfsEnabled:
         min_mondoo_version: 9.0.0
       markedForDeletionOn:
@@ -40,14 +40,28 @@ resources:
       webURL:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
-  gitlab.group.member:
+  gitlab.group.label:
+    fields:
+      closedIssuesCount: {}
+      color: {}
+      description: {}
+      descriptionHtml: {}
+      id: {}
+      isProjectLabel: {}
+      name: {}
+      openIssuesCount: {}
+      openMergeRequestsCount: {}
+      priority: {}
+      subscribed: {}
+      textColor: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.member:
     fields:
       id: {}
-      name: {}
       role: {}
-      state: {}
       user: {}
-      username: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   gitlab.project:
     fields:
@@ -87,6 +101,8 @@ resources:
         min_mondoo_version: 9.0.0
       jobsEnabled:
         min_mondoo_version: 9.0.0
+      labels:
+        min_mondoo_version: 9.0.0
       lastActivityAt:
         min_mondoo_version: 9.0.0
       lfsEnabled:
@@ -96,6 +112,8 @@ resources:
       mergeRequests:
         min_mondoo_version: 9.0.0
       mergeRequestsEnabled:
+        min_mondoo_version: 9.0.0
+      milestones:
         min_mondoo_version: 9.0.0
       mirror:
         min_mondoo_version: 9.0.0
@@ -172,7 +190,7 @@ resources:
       description: {}
       dueDate: {}
       id: {}
-      iid: {}
+      internalId: {}
       labels: {}
       state: {}
       title: {}
@@ -180,14 +198,21 @@ resources:
       webURL: {}
     is_private: true
     min_mondoo_version: 9.0.0
-  gitlab.project.member:
+  gitlab.project.label:
     fields:
+      closedIssuesCount: {}
+      color: {}
+      description: {}
+      descriptionHtml: {}
       id: {}
+      isProjectLabel: {}
       name: {}
-      role: {}
-      state: {}
-      user: {}
-      username: {}
+      openIssuesCount: {}
+      openMergeRequestsCount: {}
+      priority: {}
+      subscribed: {}
+      textColor: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   gitlab.project.mergeRequest:
     fields:
@@ -196,7 +221,7 @@ resources:
       description: {}
       draft: {}
       id: {}
-      iid: {}
+      internalId: {}
       labels: {}
       mergedAt: {}
       sourceBranch: {}
@@ -205,6 +230,21 @@ resources:
       title: {}
       updatedAt: {}
       webURL: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.project.milestone:
+    fields:
+      createdAt: {}
+      description: {}
+      dueDate: {}
+      expired: {}
+      id: {}
+      internalId: {}
+      projectId: {}
+      startDate: {}
+      state: {}
+      title: {}
+      updatedAt: {}
     is_private: true
     min_mondoo_version: 9.0.0
   gitlab.project.protectedBranch:
@@ -246,11 +286,17 @@ resources:
   gitlab.user:
     fields:
       avatarURL: {}
+      bot: {}
       createdAt: {}
       email: {}
       id: {}
+      jobTitle: {}
+      location: {}
+      locked: {}
       name: {}
+      organization: {}
       state: {}
+      twoFactorEnabled: {}
       username: {}
       webURL: {}
     min_mondoo_version: 9.0.0

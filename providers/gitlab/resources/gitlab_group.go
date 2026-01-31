@@ -21,6 +21,10 @@ func (u *mqlGitlabUser) id() (string, error) {
 	return "gitlab.user/" + strconv.FormatInt(u.Id.Data, 10), nil
 }
 
+func (m *mqlGitlabMember) id() (string, error) {
+	return "gitlab.member/" + strconv.FormatInt(m.Id.Data, 10), nil
+}
+
 // init initializes the gitlab group with the arguments
 // see https://docs.gitlab.com/ee/api/groups.html#new-group
 func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -105,11 +109,6 @@ func (g *mqlGitlabGroup) projects() ([]any, error) {
 	return mqlProjects, nil
 }
 
-// id function for gitlab.group.member
-func (g *mqlGitlabGroupMember) id() (string, error) {
-	return strconv.FormatInt(g.Id.Data, 10), nil
-}
-
 // members fetches the list of members in the group with their roles
 func (g *mqlGitlabGroup) members() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
@@ -126,14 +125,20 @@ func (g *mqlGitlabGroup) members() ([]any, error) {
 		role := mapAccessLevelToRole(int(member.AccessLevel))
 
 		mqlUser, err := CreateResource(g.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
-			"id":        llx.IntData(member.ID),
-			"username":  llx.StringData(member.Username),
-			"name":      llx.StringData(member.Name),
-			"state":     llx.StringData(member.State),
-			"email":     llx.StringData(member.Email),
-			"webURL":    llx.StringData(member.WebURL),
-			"avatarURL": llx.StringData(member.AvatarURL),
-			"createdAt": llx.TimeDataPtr(member.CreatedAt),
+			"id":               llx.IntData(member.ID),
+			"username":         llx.StringData(member.Username),
+			"name":             llx.StringData(member.Name),
+			"state":            llx.StringData(member.State),
+			"email":            llx.StringData(member.Email),
+			"webURL":           llx.StringData(member.WebURL),
+			"avatarURL":        llx.StringData(member.AvatarURL),
+			"createdAt":        llx.TimeDataPtr(member.CreatedAt),
+			"jobTitle":         llx.StringData(""),
+			"organization":     llx.StringData(""),
+			"location":         llx.StringData(""),
+			"locked":           llx.BoolData(false),
+			"bot":              llx.BoolData(false),
+			"twoFactorEnabled": llx.BoolData(false),
 		})
 		if err != nil {
 			return nil, err
@@ -145,7 +150,7 @@ func (g *mqlGitlabGroup) members() ([]any, error) {
 			"role": llx.StringData(role),
 		}
 
-		mqlMember, err := CreateResource(g.MqlRuntime, "gitlab.group.member", memberInfo)
+		mqlMember, err := CreateResource(g.MqlRuntime, "gitlab.member", memberInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -222,4 +227,67 @@ func (g *mqlGitlabGroup) subgroups() ([]any, error) {
 	}
 
 	return mqlSubgroups, nil
+}
+
+// id function for gitlab.group.label
+func (l *mqlGitlabGroupLabel) id() (string, error) {
+	return strconv.FormatInt(l.Id.Data, 10), nil
+}
+
+// labels fetches the list of labels for the group
+func (g *mqlGitlabGroup) labels() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	groupID := int(g.Id.Data)
+
+	// Fetch all labels with pagination
+	perPage := int64(50)
+	page := int64(1)
+	var allLabels []*gitlab.GroupLabel
+
+	for {
+		labels, resp, err := conn.Client().GroupLabels.ListGroupLabels(groupID, &gitlab.ListGroupLabelsOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allLabels = append(allLabels, labels...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlLabels []any
+	for _, label := range allLabels {
+		labelInfo := map[string]*llx.RawData{
+			"id":                     llx.IntData(label.ID),
+			"name":                   llx.StringData(label.Name),
+			"color":                  llx.StringData(label.Color),
+			"textColor":              llx.StringData(label.TextColor),
+			"description":            llx.StringData(label.Description),
+			"descriptionHtml":        llx.StringData(""), // Not in API response
+			"openIssuesCount":        llx.IntData(label.OpenIssuesCount),
+			"closedIssuesCount":      llx.IntData(label.ClosedIssuesCount),
+			"openMergeRequestsCount": llx.IntData(label.OpenMergeRequestsCount),
+			"subscribed":             llx.BoolData(label.Subscribed),
+			"priority":               llx.IntData(label.Priority),
+			"isProjectLabel":         llx.BoolData(label.IsProjectLabel),
+		}
+
+		mqlLabel, err := CreateResource(g.MqlRuntime, "gitlab.group.label", labelInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlLabels = append(mqlLabels, mqlLabel)
+	}
+
+	return mqlLabels, nil
 }

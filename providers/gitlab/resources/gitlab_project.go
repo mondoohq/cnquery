@@ -198,11 +198,6 @@ func (p *mqlGitlabProject) protectedBranches() ([]any, error) {
 	return mqlProtectedBranches, nil
 }
 
-// id function for gitlab.project.member
-func (g *mqlGitlabProjectMember) id() (string, error) {
-	return strconv.FormatInt(g.Id.Data, 10), nil
-}
-
 // projectMembers fetches the list of members in the project with their roles
 func (p *mqlGitlabProject) projectMembers() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
@@ -219,14 +214,20 @@ func (p *mqlGitlabProject) projectMembers() ([]any, error) {
 		role := mapAccessLevelToRole(int(member.AccessLevel))
 
 		mqlUser, err := CreateResource(p.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
-			"id":        llx.IntData(int64(member.ID)),
-			"username":  llx.StringData(member.Username),
-			"name":      llx.StringData(member.Name),
-			"state":     llx.StringData(member.State),
-			"email":     llx.StringData(member.Email),
-			"webURL":    llx.StringData(member.WebURL),
-			"avatarURL": llx.StringData(member.AvatarURL),
-			"createdAt": llx.TimeDataPtr(member.CreatedAt),
+			"id":               llx.IntData(int64(member.ID)),
+			"username":         llx.StringData(member.Username),
+			"name":             llx.StringData(member.Name),
+			"state":            llx.StringData(member.State),
+			"email":            llx.StringData(member.Email),
+			"webURL":           llx.StringData(member.WebURL),
+			"avatarURL":        llx.StringData(member.AvatarURL),
+			"createdAt":        llx.TimeDataPtr(member.CreatedAt),
+			"jobTitle":         llx.StringData(""),
+			"organization":     llx.StringData(""),
+			"location":         llx.StringData(""),
+			"locked":           llx.BoolData(false),
+			"bot":              llx.BoolData(false),
+			"twoFactorEnabled": llx.BoolData(false),
 		})
 		if err != nil {
 			return nil, err
@@ -238,7 +239,7 @@ func (p *mqlGitlabProject) projectMembers() ([]any, error) {
 			"role": llx.StringData(role),
 		}
 
-		mqlMember, err := CreateResource(p.MqlRuntime, "gitlab.project.member", memberInfo)
+		mqlMember, err := CreateResource(p.MqlRuntime, "gitlab.member", memberInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -386,7 +387,7 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 
 		mrInfo := map[string]*llx.RawData{
 			"id":           llx.IntData(int64(mr.ID)),
-			"iid":          llx.IntData(int64(mr.IID)),
+			"internalId":   llx.IntData(int64(mr.IID)),
 			"title":        llx.StringData(mr.Title),
 			"state":        llx.StringData(mr.State),
 			"description":  llx.StringData(mr.Description),
@@ -462,7 +463,7 @@ func (p *mqlGitlabProject) issues() ([]any, error) {
 
 		issueInfo := map[string]*llx.RawData{
 			"id":           llx.IntData(int64(issue.ID)),
-			"iid":          llx.IntData(int64(issue.IID)),
+			"internalId":   llx.IntData(int64(issue.IID)),
 			"title":        llx.StringData(issue.Title),
 			"state":        llx.StringData(issue.State),
 			"description":  llx.StringData(issue.Description),
@@ -601,4 +602,145 @@ func (p *mqlGitlabProject) variables() ([]any, error) {
 	}
 
 	return mqlVariables, nil
+}
+
+// id function for gitlab.project.milestone
+func (m *mqlGitlabProjectMilestone) id() (string, error) {
+	return strconv.FormatInt(m.Id.Data, 10), nil
+}
+
+// milestones fetches the list of milestones for the project
+func (p *mqlGitlabProject) milestones() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	// Fetch all milestones with pagination
+	perPage := int64(50)
+	page := int64(1)
+	var allMilestones []*gitlab.Milestone
+
+	for {
+		milestones, resp, err := conn.Client().Milestones.ListMilestones(projectID, &gitlab.ListMilestonesOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allMilestones = append(allMilestones, milestones...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlMilestones []any
+	for _, milestone := range allMilestones {
+		milestoneInfo := map[string]*llx.RawData{
+			"id":          llx.IntData(milestone.ID),
+			"internalId":  llx.IntData(milestone.IID),
+			"projectId":   llx.IntData(milestone.ProjectID),
+			"title":       llx.StringData(milestone.Title),
+			"description": llx.StringData(milestone.Description),
+			"state":       llx.StringData(milestone.State),
+			"updatedAt":   llx.TimeDataPtr(milestone.UpdatedAt),
+			"createdAt":   llx.TimeDataPtr(milestone.CreatedAt),
+		}
+
+		// Convert ISOTime to time.Time for startDate
+		if milestone.StartDate != nil {
+			t := time.Time(*milestone.StartDate)
+			milestoneInfo["startDate"] = llx.TimeDataPtr(&t)
+		}
+
+		// Convert ISOTime to time.Time for dueDate
+		if milestone.DueDate != nil {
+			t := time.Time(*milestone.DueDate)
+			milestoneInfo["dueDate"] = llx.TimeDataPtr(&t)
+		}
+
+		// Handle expired field (pointer to bool)
+		if milestone.Expired != nil {
+			milestoneInfo["expired"] = llx.BoolData(*milestone.Expired)
+		} else {
+			milestoneInfo["expired"] = llx.BoolData(false)
+		}
+
+		mqlMilestone, err := CreateResource(p.MqlRuntime, "gitlab.project.milestone", milestoneInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlMilestones = append(mqlMilestones, mqlMilestone)
+	}
+
+	return mqlMilestones, nil
+}
+
+// id function for gitlab.project.label
+func (l *mqlGitlabProjectLabel) id() (string, error) {
+	return strconv.FormatInt(l.Id.Data, 10), nil
+}
+
+// labels fetches the list of labels for the project
+func (p *mqlGitlabProject) labels() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	// Fetch all labels with pagination
+	perPage := int64(50)
+	page := int64(1)
+	var allLabels []*gitlab.Label
+
+	for {
+		labels, resp, err := conn.Client().Labels.ListLabels(projectID, &gitlab.ListLabelsOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allLabels = append(allLabels, labels...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlLabels []any
+	for _, label := range allLabels {
+		labelInfo := map[string]*llx.RawData{
+			"id":                     llx.IntData(label.ID),
+			"name":                   llx.StringData(label.Name),
+			"color":                  llx.StringData(label.Color),
+			"textColor":              llx.StringData(label.TextColor),
+			"description":            llx.StringData(label.Description),
+			"descriptionHtml":        llx.StringData(""), // Not in API response
+			"openIssuesCount":        llx.IntData(label.OpenIssuesCount),
+			"closedIssuesCount":      llx.IntData(label.ClosedIssuesCount),
+			"openMergeRequestsCount": llx.IntData(label.OpenMergeRequestsCount),
+			"subscribed":             llx.BoolData(label.Subscribed),
+			"priority":               llx.IntData(label.Priority),
+			"isProjectLabel":         llx.BoolData(label.IsProjectLabel),
+		}
+
+		mqlLabel, err := CreateResource(p.MqlRuntime, "gitlab.project.label", labelInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlLabels = append(mqlLabels, mqlLabel)
+	}
+
+	return mqlLabels, nil
 }
