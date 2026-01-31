@@ -12,6 +12,7 @@ Available Commands:
   filesystem  Run a query with a mounted file system target
   local       Run a query with your local system
   mock        Run a query with a recording file without an active connection
+  recording   Run a query with read recording file from disk
   sbom        Run a query with read SBOM file on disk
   ssh         Run a query with a remote system via SSH
   vagrant     Run a query with a Vagrant host

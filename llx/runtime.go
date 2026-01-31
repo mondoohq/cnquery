@@ -45,4 +45,9 @@ type Recording interface {
 	GetData(connectionID uint32, resource string, resourceId string, field string) (*RawData, bool)
 	GetResource(connectionID uint32, resource string, resourceId string) (map[string]*RawData, bool)
 	GetAssetData(assetMrn string) (map[string]*ResourceRecording, bool)
+	GetAssets() []*inventory.Asset
+	// Scopes down the existing recording to the given asset
+	// If the asset is not part of the recording, an error is returned
+	// If it exists, a new recording containing only the data for the given asset is returned
+	ScopeToAsset(asset *inventory.Asset) (Recording, error)
 }

@@ -33,3 +33,11 @@ func (n Null) GetResource(connectionID uint32, resource string, id string) (map[
 func (n Null) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecording, bool) {
 	return nil, false
 }
+
+func (n Null) GetAssets() []*inventory.Asset {
+	return []*inventory.Asset{}
+}
+
+func (n Null) ScopeToAsset(asset *inventory.Asset) (llx.Recording, error) {
+	return n, nil
+}
