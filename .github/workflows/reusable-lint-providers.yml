@@ -2,6 +2,11 @@ name: Lint Providers
 
 on:
   workflow_call:
+    inputs:
+      only-new-issues:
+        description: 'Only report new issues (requires pull-requests: read permission at caller workflow level)'
+        type: boolean
+        default: false
 
 jobs:
   golangci-lint-providers:
@@ -9,7 +14,8 @@ jobs:
     permissions:
       # allow read access to the content for analysis.
       contents: read
-      # allow read access to pull request. Use with `only-new-issues` option.
+      # allow read access to pull request. Required when only-new-issues is true.
+      # Caller must grant pull-requests: read at workflow level for this to work.
       pull-requests: read
     steps:
       - name: Checkout code
@@ -28,8 +34,14 @@ jobs:
         run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 
       - name: Run golangci-lint on all providers
+        env:
+          ONLY_NEW_ISSUES: ${{ inputs.only-new-issues }}
         run: |
           failed=""
+          extra_args=""
+          if [ "$ONLY_NEW_ISSUES" = "true" ]; then
+            extra_args="--new-from-rev=origin/${{ github.base_ref }}"
+          fi
           for provider in providers/*/; do
             # Skip providers without go.mod (they are part of the main module)
             if [ ! -f "$provider/go.mod" ]; then
@@ -37,7 +49,7 @@ jobs:
             fi
             name=$(basename "$provider")
             echo "=== Linting provider: $name ==="
-            if ! (cd "$provider" && golangci-lint run --timeout=30m --only-new-issues); then
+            if ! (cd "$provider" && golangci-lint run --timeout=30m $extra_args); then
               failed="$failed $name"
             fi
           done
