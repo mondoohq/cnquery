@@ -65,6 +65,8 @@ jobs:
 
   golangci-lint-providers:
     uses: ./.github/workflows/reusable-lint-providers.yml
+    with:
+      only-new-issues: false
 
   go-test:
     runs-on:
