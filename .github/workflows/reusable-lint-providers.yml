@@ -1,0 +1,47 @@
+name: Lint Providers
+
+on:
+  workflow_call:
+
+jobs:
+  golangci-lint-providers:
+    runs-on: ubuntu-latest
+    permissions:
+      # allow read access to the content for analysis.
+      contents: read
+      # allow read access to pull request. Use with `only-new-issues` option.
+      pull-requests: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Import environment variables from file
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version: ">=${{ env.golang-version }}"
+          cache: false
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+
+      - name: Run golangci-lint on all providers
+        run: |
+          failed=""
+          for provider in providers/*/; do
+            # Skip providers without go.mod (they are part of the main module)
+            if [ ! -f "$provider/go.mod" ]; then
+              continue
+            fi
+            name=$(basename "$provider")
+            echo "=== Linting provider: $name ==="
+            if ! (cd "$provider" && golangci-lint run --timeout=30m --only-new-issues); then
+              failed="$failed $name"
+            fi
+          done
+          if [ -n "$failed" ]; then
+            echo "=== Failed providers:$failed ==="
+            exit 1
+          fi
