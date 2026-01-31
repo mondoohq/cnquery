@@ -47,13 +47,6 @@ jobs:
   golangci-lint-providers:
     # Only run for PRs from forks, internal PRs are covered by Code Test workflow on push
     if: github.event.pull_request.head.repo.full_name != github.repository
-    permissions:
-      # allow read access to the content for analysis.
-      contents: read
-      # allow read access to pull request. Use with `only-new-issues` option.
-      pull-requests: read
-      # allow write access to checks to allow the action to annotate code in the PR.
-      checks: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
