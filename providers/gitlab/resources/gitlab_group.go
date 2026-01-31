@@ -53,10 +53,12 @@ func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["emailsDisabled"] = llx.BoolData(!grp.EmailsEnabled)
 	args["requestAccessEnabled"] = llx.BoolData(grp.RequestAccessEnabled)
 	// Convert ISOTime to time.Time
+	var markedForDeletionOn *time.Time
 	if grp.MarkedForDeletionOn != nil {
 		t := time.Time(*grp.MarkedForDeletionOn)
-		args["markedForDeletionOn"] = llx.TimeDataPtr(&t)
+		markedForDeletionOn = &t
 	}
+	args["markedForDeletionOn"] = llx.TimeDataPtr(markedForDeletionOn)
 	args["allowedEmailDomainsList"] = llx.StringData(grp.AllowedEmailDomainsList)
 	args["lfsEnabled"] = llx.BoolData(grp.LFSEnabled)
 
@@ -193,6 +195,13 @@ func (g *mqlGitlabGroup) subgroups() ([]any, error) {
 
 	var mqlSubgroups []any
 	for _, subgroup := range allSubgroups {
+		// Convert ISOTime to time.Time for markedForDeletionOn
+		var markedForDeletionOn *time.Time
+		if subgroup.MarkedForDeletionOn != nil {
+			t := time.Time(*subgroup.MarkedForDeletionOn)
+			markedForDeletionOn = &t
+		}
+
 		subgroupArgs := map[string]*llx.RawData{
 			"id":                             llx.IntData(int64(subgroup.ID)),
 			"name":                           llx.StringData(subgroup.Name),
@@ -208,14 +217,9 @@ func (g *mqlGitlabGroup) subgroups() ([]any, error) {
 			"mentionsDisabled":               llx.BoolData(subgroup.MentionsDisabled),
 			"emailsDisabled":                 llx.BoolData(!subgroup.EmailsEnabled),
 			"requestAccessEnabled":           llx.BoolData(subgroup.RequestAccessEnabled),
+			"markedForDeletionOn":            llx.TimeDataPtr(markedForDeletionOn),
 			"allowedEmailDomainsList":        llx.StringData(subgroup.AllowedEmailDomainsList),
 			"lfsEnabled":                     llx.BoolData(subgroup.LFSEnabled),
-		}
-
-		// Convert ISOTime to time.Time for markedForDeletionOn
-		if subgroup.MarkedForDeletionOn != nil {
-			t := time.Time(*subgroup.MarkedForDeletionOn)
-			subgroupArgs["markedForDeletionOn"] = llx.TimeDataPtr(&t)
 		}
 
 		mqlSubgroup, err := CreateResource(g.MqlRuntime, "gitlab.group", subgroupArgs)

@@ -257,6 +257,11 @@ func (f *mqlGitlabProjectFile) id() (string, error) {
 
 // projectFiles fetches the list of files in the project repository and their contents
 func (p *mqlGitlabProject) projectFiles() ([]any, error) {
+	// Return empty array if repository is empty to avoid 404 errors
+	if p.EmptyRepo.Data {
+		return []any{}, nil
+	}
+
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
