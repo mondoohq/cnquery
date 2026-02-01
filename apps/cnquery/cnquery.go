@@ -98,6 +98,11 @@ func shouldTrySelfUpdate() bool {
 	// Initialize viper to read config files (same as detectConnectorName in cli/providers)
 	config.InitViperConfig()
 
+	// Check if the AutoUpdateEngine feature flag is enabled
+	if !config.GetFeatures().IsActive(cnquery.AutoUpdateEngine) {
+		return false
+	}
+
 	// Get auto_update setting from config (defaults to true if not set)
 	autoUpdate := config.GetAutoUpdate()
 

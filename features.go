@@ -77,9 +77,14 @@ const (
 	// status: new
 	UploadResultsV2 Feature = 13
 
+	// Auto-update the execution engine
+	// start:  v13.x
+	// status: new
+	AutoUpdateEngine Feature = 14
+
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 14
+	MAX_FEATURES byte = 15
 )
 
 var FeaturesValue = map[string]Feature{
@@ -96,6 +101,7 @@ var FeaturesValue = map[string]Feature{
 	"ResourceContext":      ResourceContext,
 	"FailIfNoEntryPoints":  FailIfNoEntryPoints,
 	"UploadResultsV2":      UploadResultsV2,
+	"AutoUpdateEngine":     AutoUpdateEngine,
 }
 
 // DefaultFeatures are a set of default flags that are active
@@ -110,4 +116,5 @@ var DefaultFeatures = Features{
 var AvailableFeatures = Features{
 	byte(MQLAssetContext),
 	byte(UploadResultsV2),
+	byte(AutoUpdateEngine),
 }
