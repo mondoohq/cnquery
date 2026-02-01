@@ -394,6 +394,8 @@ github.repository @defaults("fullName") {
   openIssues() []github.issue
   // List of repository closed issues
   closedIssues() []github.issue
+  // List of repository milestones
+  milestones() []github.milestone
   // Repository license
   license() github.license
   // Repository code of conduct
@@ -594,6 +596,10 @@ private github.mergeRequest @defaults("id state") {
   reviews() []github.review
   // Pull request repository name
   repoName string
+  // Pull request milestone
+  milestone github.milestone
+  // Time when the pull request was merged
+  mergedAt time
 }
 
 // GitHub repository review
@@ -658,6 +664,38 @@ private github.gistfile @defaults("filename") {
   content() string
 }
 
+// GitHub milestone
+private github.milestone @defaults("title state") {
+  // Milestone ID
+  id int
+  // Milestone number
+  number int
+  // Milestone title
+  title string
+  // Milestone description
+  description string
+  // Milestone state (open or closed)
+  state string
+  // Milestone URL
+  url string
+  // Milestone web URL
+  htmlUrl string
+  // Milestone creator
+  creator github.user
+  // Number of open issues in this milestone
+  openIssues int
+  // Number of closed issues in this milestone
+  closedIssues int
+  // Milestone creation time
+  createdAt time
+  // Milestone update time
+  updatedAt time
+  // Milestone closed time
+  closedAt time
+  // Milestone due date
+  dueOn time
+}
+
 // GitHub issue
 private github.issue @defaults("title") {
   // Issue ID
@@ -686,6 +724,8 @@ private github.issue @defaults("title") {
   draft bool
   // Whether the issue is locked
   locked bool
+  // Issue milestone
+  milestone github.milestone
 }
 
 // GitHub Dependabot alert

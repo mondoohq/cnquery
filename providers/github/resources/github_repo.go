@@ -332,6 +332,15 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 			assigneesRes = append(assigneesRes, assignee)
 		}
 
+		var milestone plugin.Resource
+		if pr.Milestone != nil {
+			m, err := newMqlGithubMilestone(g.MqlRuntime, pr.Milestone)
+			if err != nil {
+				return nil, err
+			}
+			milestone = m
+		}
+
 		r, err := CreateResource(g.MqlRuntime, "github.mergeRequest", map[string]*llx.RawData{
 			"id":        llx.IntDataPtr(pr.ID),
 			"number":    llx.IntData(int64(*pr.Number)),
@@ -342,6 +351,8 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 			"owner":     llx.ResourceData(owner, owner.MqlName()),
 			"assignees": llx.ArrayData(assigneesRes, types.Any),
 			"repoName":  llx.StringData(repoName),
+			"milestone": llx.ResourceData(milestone, "github.milestone"),
+			"mergedAt":  llx.TimeDataPtr(githubTimestamp(pr.MergedAt)),
 		})
 		if err != nil {
 			return nil, err
@@ -1658,6 +1669,15 @@ func (g *mqlGithubRepository) getIssues(state string) ([]any, error) {
 			closedBy = r
 		}
 
+		var milestone plugin.Resource
+		if issue.Milestone != nil {
+			m, err := newMqlGithubMilestone(g.MqlRuntime, issue.Milestone)
+			if err != nil {
+				return nil, err
+			}
+			milestone = m
+		}
+
 		r, err := CreateResource(g.MqlRuntime, "github.issue", map[string]*llx.RawData{
 			"id":        llx.IntData(issue.GetID()),
 			"number":    llx.IntData(int64(issue.GetNumber())),
@@ -1672,7 +1692,106 @@ func (g *mqlGithubRepository) getIssues(state string) ([]any, error) {
 			"closedBy":  llx.AnyData(closedBy),
 			"draft":     llx.BoolData(issue.GetDraft()),
 			"locked":    llx.BoolData(issue.GetLocked()),
+			"milestone": llx.ResourceData(milestone, "github.milestone"),
 		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+func (g *mqlGithubMilestone) id() (string, error) {
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	id := g.Id.Data
+
+	return "github.milestone/" + strconv.FormatInt(id, 10), nil
+}
+
+func newMqlGithubMilestone(runtime *plugin.Runtime, milestone *github.Milestone) (*mqlGithubMilestone, error) {
+	if milestone == nil {
+		return nil, nil
+	}
+
+	var creator plugin.Resource
+	if milestone.Creator != nil {
+		c, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
+			"id":    llx.IntDataPtr(milestone.Creator.ID),
+			"login": llx.StringDataPtr(milestone.Creator.Login),
+		})
+		if err != nil {
+			return nil, err
+		}
+		creator = c
+	}
+
+	r, err := CreateResource(runtime, "github.milestone", map[string]*llx.RawData{
+		"id":           llx.IntData(milestone.GetID()),
+		"number":       llx.IntData(int64(milestone.GetNumber())),
+		"title":        llx.StringData(milestone.GetTitle()),
+		"description":  llx.StringData(milestone.GetDescription()),
+		"state":        llx.StringData(milestone.GetState()),
+		"url":          llx.StringData(milestone.GetURL()),
+		"htmlUrl":      llx.StringData(milestone.GetHTMLURL()),
+		"creator":      llx.ResourceData(creator, "github.user"),
+		"openIssues":   llx.IntData(int64(milestone.GetOpenIssues())),
+		"closedIssues": llx.IntData(int64(milestone.GetClosedIssues())),
+		"createdAt":    llx.TimeDataPtr(githubTimestamp(milestone.CreatedAt)),
+		"updatedAt":    llx.TimeDataPtr(githubTimestamp(milestone.UpdatedAt)),
+		"closedAt":     llx.TimeDataPtr(githubTimestamp(milestone.ClosedAt)),
+		"dueOn":        llx.TimeDataPtr(githubTimestamp(milestone.DueOn)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlGithubMilestone), nil
+}
+
+func (g *mqlGithubRepository) milestones() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	owner := g.Owner.Data
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	listOpts := &github.MilestoneListOptions{
+		State: "all",
+		ListOptions: github.ListOptions{
+			PerPage: paginationPerPage,
+		},
+	}
+	var allMilestones []*github.Milestone
+	for {
+		milestones, resp, err := conn.Client().Issues.ListMilestones(conn.Context(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			log.Error().Err(err).Msg("unable to get milestones")
+			return nil, err
+		}
+		allMilestones = append(allMilestones, milestones...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.ListOptions.Page = resp.NextPage
+	}
+
+	res := []any{}
+	for _, milestone := range allMilestones {
+		r, err := newMqlGithubMilestone(g.MqlRuntime, milestone)
 		if err != nil {
 			return nil, err
 		}
