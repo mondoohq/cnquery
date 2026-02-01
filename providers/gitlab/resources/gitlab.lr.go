@@ -17,20 +17,36 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
+	ResourceGitlabUser                   string = "gitlab.user"
+	ResourceGitlabMember                 string = "gitlab.member"
 	ResourceGitlabGroup                  string = "gitlab.group"
 	ResourceGitlabProject                string = "gitlab.project"
 	ResourceGitlabProjectApprovalRule    string = "gitlab.project.approvalRule"
 	ResourceGitlabProjectApprovalSetting string = "gitlab.project.approvalSetting"
 	ResourceGitlabProjectProtectedBranch string = "gitlab.project.protectedBranch"
-	ResourceGitlabProjectMember          string = "gitlab.project.member"
 	ResourceGitlabProjectFile            string = "gitlab.project.file"
 	ResourceGitlabProjectWebhook         string = "gitlab.project.webhook"
+	ResourceGitlabProjectMergeRequest    string = "gitlab.project.mergeRequest"
+	ResourceGitlabProjectIssue           string = "gitlab.project.issue"
+	ResourceGitlabProjectRelease         string = "gitlab.project.release"
+	ResourceGitlabProjectVariable        string = "gitlab.project.variable"
+	ResourceGitlabProjectMilestone       string = "gitlab.project.milestone"
+	ResourceGitlabProjectLabel           string = "gitlab.project.label"
+	ResourceGitlabGroupLabel             string = "gitlab.group.label"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory{
+		"gitlab.user": {
+			// to override args, implement: initGitlabUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabUser,
+		},
+		"gitlab.member": {
+			// to override args, implement: initGitlabMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabMember,
+		},
 		"gitlab.group": {
 			Init:   initGitlabGroup,
 			Create: createGitlabGroup,
@@ -51,10 +67,6 @@ func init() {
 			// to override args, implement: initGitlabProjectProtectedBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGitlabProjectProtectedBranch,
 		},
-		"gitlab.project.member": {
-			// to override args, implement: initGitlabProjectMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createGitlabProjectMember,
-		},
 		"gitlab.project.file": {
 			// to override args, implement: initGitlabProjectFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGitlabProjectFile,
@@ -62,6 +74,34 @@ func init() {
 		"gitlab.project.webhook": {
 			// to override args, implement: initGitlabProjectWebhook(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGitlabProjectWebhook,
+		},
+		"gitlab.project.mergeRequest": {
+			// to override args, implement: initGitlabProjectMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectMergeRequest,
+		},
+		"gitlab.project.issue": {
+			// to override args, implement: initGitlabProjectIssue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectIssue,
+		},
+		"gitlab.project.release": {
+			// to override args, implement: initGitlabProjectRelease(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectRelease,
+		},
+		"gitlab.project.variable": {
+			// to override args, implement: initGitlabProjectVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectVariable,
+		},
+		"gitlab.project.milestone": {
+			// to override args, implement: initGitlabProjectMilestone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectMilestone,
+		},
+		"gitlab.project.label": {
+			// to override args, implement: initGitlabProjectLabel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectLabel,
+		},
+		"gitlab.group.label": {
+			// to override args, implement: initGitlabGroupLabel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabGroupLabel,
 		},
 	}
 }
@@ -143,6 +183,57 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"gitlab.user.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.user.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetUsername()).ToDataRes(types.String)
+	},
+	"gitlab.user.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.user.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetState()).ToDataRes(types.String)
+	},
+	"gitlab.user.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetEmail()).ToDataRes(types.String)
+	},
+	"gitlab.user.webURL": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetWebURL()).ToDataRes(types.String)
+	},
+	"gitlab.user.avatarURL": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetAvatarURL()).ToDataRes(types.String)
+	},
+	"gitlab.user.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.user.jobTitle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetJobTitle()).ToDataRes(types.String)
+	},
+	"gitlab.user.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetOrganization()).ToDataRes(types.String)
+	},
+	"gitlab.user.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetLocation()).ToDataRes(types.String)
+	},
+	"gitlab.user.locked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetLocked()).ToDataRes(types.Bool)
+	},
+	"gitlab.user.bot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetBot()).ToDataRes(types.Bool)
+	},
+	"gitlab.user.twoFactorEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetTwoFactorEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.member.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabMember).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.member.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabMember).GetUser()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.member.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabMember).GetRole()).ToDataRes(types.String)
+	},
 	"gitlab.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetId()).ToDataRes(types.Int)
 	},
@@ -151,6 +242,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.group.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetPath()).ToDataRes(types.String)
+	},
+	"gitlab.group.fullName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetFullName()).ToDataRes(types.String)
+	},
+	"gitlab.group.fullPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetFullPath()).ToDataRes(types.String)
 	},
 	"gitlab.group.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetCreatedAt()).ToDataRes(types.Time)
@@ -176,11 +273,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.group.mentionsDisabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetMentionsDisabled()).ToDataRes(types.Bool)
 	},
+	"gitlab.group.requestAccessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetRequestAccessEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.markedForDeletionOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetMarkedForDeletionOn()).ToDataRes(types.Time)
+	},
 	"gitlab.group.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetProjects()).ToDataRes(types.Array(types.Resource("gitlab.project")))
 	},
 	"gitlab.group.allowedEmailDomainsList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetAllowedEmailDomainsList()).ToDataRes(types.String)
+	},
+	"gitlab.group.lfsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetLfsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetMembers()).ToDataRes(types.Array(types.Resource("gitlab.member")))
+	},
+	"gitlab.group.subgroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetSubgroups()).ToDataRes(types.Array(types.Resource("gitlab.group")))
+	},
+	"gitlab.group.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetLabels()).ToDataRes(types.Array(types.Resource("gitlab.group.label")))
 	},
 	"gitlab.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetId()).ToDataRes(types.Int)
@@ -267,7 +382,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGitlabProject).GetProtectedBranches()).ToDataRes(types.Array(types.Resource("gitlab.project.protectedBranch")))
 	},
 	"gitlab.project.projectMembers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProject).GetProjectMembers()).ToDataRes(types.Array(types.Resource("gitlab.project.member")))
+		return (r.(*mqlGitlabProject).GetProjectMembers()).ToDataRes(types.Array(types.Resource("gitlab.member")))
 	},
 	"gitlab.project.projectFiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetProjectFiles()).ToDataRes(types.Array(types.Resource("gitlab.project.file")))
@@ -295,6 +410,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.autocloseReferencedIssues": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetAutocloseReferencedIssues()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.forksCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetForksCount()).ToDataRes(types.Int)
+	},
+	"gitlab.project.starCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetStarCount()).ToDataRes(types.Int)
+	},
+	"gitlab.project.lastActivityAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetLastActivityAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.mergeRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetMergeRequests()).ToDataRes(types.Array(types.Resource("gitlab.project.mergeRequest")))
+	},
+	"gitlab.project.issues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetIssues()).ToDataRes(types.Array(types.Resource("gitlab.project.issue")))
+	},
+	"gitlab.project.releases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetReleases()).ToDataRes(types.Array(types.Resource("gitlab.project.release")))
+	},
+	"gitlab.project.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetVariables()).ToDataRes(types.Array(types.Resource("gitlab.project.variable")))
+	},
+	"gitlab.project.milestones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetMilestones()).ToDataRes(types.Array(types.Resource("gitlab.project.milestone")))
+	},
+	"gitlab.project.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetLabels()).ToDataRes(types.Array(types.Resource("gitlab.project.label")))
 	},
 	"gitlab.project.approvalRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalRule).GetId()).ToDataRes(types.Int)
@@ -338,21 +480,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.protectedBranch.codeOwnerApproval": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectProtectedBranch).GetCodeOwnerApproval()).ToDataRes(types.Bool)
 	},
-	"gitlab.project.member.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectMember).GetId()).ToDataRes(types.Int)
-	},
-	"gitlab.project.member.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectMember).GetName()).ToDataRes(types.String)
-	},
-	"gitlab.project.member.role": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectMember).GetRole()).ToDataRes(types.String)
-	},
-	"gitlab.project.member.username": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectMember).GetUsername()).ToDataRes(types.String)
-	},
-	"gitlab.project.member.state": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectMember).GetState()).ToDataRes(types.String)
-	},
 	"gitlab.project.file.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectFile).GetPath()).ToDataRes(types.String)
 	},
@@ -371,6 +498,240 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.webhook.sslVerification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectWebhook).GetSslVerification()).ToDataRes(types.Bool)
 	},
+	"gitlab.project.mergeRequest.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.project.mergeRequest.internalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetInternalId()).ToDataRes(types.Int)
+	},
+	"gitlab.project.mergeRequest.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetTitle()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetState()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetDescription()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.sourceBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetSourceBranch()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.targetBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetTargetBranch()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetAuthor()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.mergeRequest.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.mergeRequest.mergedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetMergedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.mergeRequest.draft": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetDraft()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.mergeRequest.webURL": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetWebURL()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.project.mergeRequest.milestone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetMilestone()).ToDataRes(types.Resource("gitlab.project.milestone"))
+	},
+	"gitlab.project.issue.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.project.issue.internalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetInternalId()).ToDataRes(types.Int)
+	},
+	"gitlab.project.issue.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetTitle()).ToDataRes(types.String)
+	},
+	"gitlab.project.issue.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetState()).ToDataRes(types.String)
+	},
+	"gitlab.project.issue.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetDescription()).ToDataRes(types.String)
+	},
+	"gitlab.project.issue.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetAuthor()).ToDataRes(types.String)
+	},
+	"gitlab.project.issue.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.issue.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.issue.closedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetClosedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.issue.dueDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetDueDate()).ToDataRes(types.Time)
+	},
+	"gitlab.project.issue.confidential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetConfidential()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.issue.webURL": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetWebURL()).ToDataRes(types.String)
+	},
+	"gitlab.project.issue.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.project.issue.milestone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectIssue).GetMilestone()).ToDataRes(types.Resource("gitlab.project.milestone"))
+	},
+	"gitlab.project.release.tagName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetTagName()).ToDataRes(types.String)
+	},
+	"gitlab.project.release.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.project.release.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetDescription()).ToDataRes(types.String)
+	},
+	"gitlab.project.release.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.release.releasedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetReleasedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.release.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetAuthor()).ToDataRes(types.String)
+	},
+	"gitlab.project.variable.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVariable).GetKey()).ToDataRes(types.String)
+	},
+	"gitlab.project.variable.variableType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVariable).GetVariableType()).ToDataRes(types.String)
+	},
+	"gitlab.project.variable.protected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVariable).GetProtected()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.variable.masked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVariable).GetMasked()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.variable.hidden": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVariable).GetHidden()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.variable.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVariable).GetRaw()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.variable.environmentScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVariable).GetEnvironmentScope()).ToDataRes(types.String)
+	},
+	"gitlab.project.variable.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVariable).GetDescription()).ToDataRes(types.String)
+	},
+	"gitlab.project.milestone.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.project.milestone.internalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetInternalId()).ToDataRes(types.Int)
+	},
+	"gitlab.project.milestone.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetProjectId()).ToDataRes(types.Int)
+	},
+	"gitlab.project.milestone.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetTitle()).ToDataRes(types.String)
+	},
+	"gitlab.project.milestone.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetDescription()).ToDataRes(types.String)
+	},
+	"gitlab.project.milestone.dueDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetDueDate()).ToDataRes(types.Time)
+	},
+	"gitlab.project.milestone.startDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetStartDate()).ToDataRes(types.Time)
+	},
+	"gitlab.project.milestone.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetState()).ToDataRes(types.String)
+	},
+	"gitlab.project.milestone.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.milestone.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.milestone.expired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMilestone).GetExpired()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.label.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.project.label.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.project.label.color": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetColor()).ToDataRes(types.String)
+	},
+	"gitlab.project.label.textColor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetTextColor()).ToDataRes(types.String)
+	},
+	"gitlab.project.label.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetDescription()).ToDataRes(types.String)
+	},
+	"gitlab.project.label.descriptionHtml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetDescriptionHtml()).ToDataRes(types.String)
+	},
+	"gitlab.project.label.openIssuesCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetOpenIssuesCount()).ToDataRes(types.Int)
+	},
+	"gitlab.project.label.closedIssuesCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetClosedIssuesCount()).ToDataRes(types.Int)
+	},
+	"gitlab.project.label.openMergeRequestsCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetOpenMergeRequestsCount()).ToDataRes(types.Int)
+	},
+	"gitlab.project.label.subscribed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetSubscribed()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.label.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetPriority()).ToDataRes(types.Int)
+	},
+	"gitlab.project.label.isProjectLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectLabel).GetIsProjectLabel()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.label.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.group.label.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.group.label.color": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetColor()).ToDataRes(types.String)
+	},
+	"gitlab.group.label.textColor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetTextColor()).ToDataRes(types.String)
+	},
+	"gitlab.group.label.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetDescription()).ToDataRes(types.String)
+	},
+	"gitlab.group.label.descriptionHtml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetDescriptionHtml()).ToDataRes(types.String)
+	},
+	"gitlab.group.label.openIssuesCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetOpenIssuesCount()).ToDataRes(types.Int)
+	},
+	"gitlab.group.label.closedIssuesCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetClosedIssuesCount()).ToDataRes(types.Int)
+	},
+	"gitlab.group.label.openMergeRequestsCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetOpenMergeRequestsCount()).ToDataRes(types.Int)
+	},
+	"gitlab.group.label.subscribed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetSubscribed()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.label.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetPriority()).ToDataRes(types.Int)
+	},
+	"gitlab.group.label.isProjectLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupLabel).GetIsProjectLabel()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -383,6 +744,82 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
+	"gitlab.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.webURL": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).WebURL, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.avatarURL": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).AvatarURL, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.jobTitle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).JobTitle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).Organization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.bot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).Bot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.twoFactorEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).TwoFactorEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabMember).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.member.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabMember).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.member.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabMember).User, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.member.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabMember).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gitlab.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).__id, ok = v.Value.(string)
 		return
@@ -397,6 +834,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.group.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.fullName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).FullName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.fullPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).FullPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.group.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -431,12 +876,36 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabGroup).MentionsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.group.requestAccessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).RequestAccessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.markedForDeletionOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).MarkedForDeletionOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gitlab.group.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.group.allowedEmailDomainsList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).AllowedEmailDomainsList, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.lfsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).LfsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.subgroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).Subgroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -595,6 +1064,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProject).AutocloseReferencedIssues, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.forksCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ForksCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.starCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).StarCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.lastActivityAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).LastActivityAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).MergeRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).Issues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.releases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).Releases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).Milestones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.approvalRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectApprovalRule).__id, ok = v.Value.(string)
 		return
@@ -663,30 +1168,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProjectProtectedBranch).CodeOwnerApproval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectMember).__id, ok = v.Value.(string)
-		return
-	},
-	"gitlab.project.member.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectMember).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"gitlab.project.member.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectMember).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gitlab.project.member.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectMember).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gitlab.project.member.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectMember).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gitlab.project.member.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectMember).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gitlab.project.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectFile).__id, ok = v.Value.(string)
 		return
@@ -719,6 +1200,346 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProjectWebhook).SslVerification, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.mergeRequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.mergeRequest.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.internalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).InternalId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.sourceBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).SourceBranch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.targetBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).TargetBranch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.mergedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).MergedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.draft": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Draft, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.webURL": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).WebURL, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.milestone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Milestone, ok = plugin.RawToTValue[*mqlGitlabProjectMilestone](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.issue.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.internalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).InternalId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.closedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).ClosedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.dueDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).DueDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.confidential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).Confidential, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.webURL": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).WebURL, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issue.milestone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectIssue).Milestone, ok = plugin.RawToTValue[*mqlGitlabProjectMilestone](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.release.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.release.tagName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).TagName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.release.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.release.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.release.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.release.releasedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).ReleasedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.release.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.variable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVariable).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.variable.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVariable).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.variable.variableType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVariable).VariableType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.variable.protected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVariable).Protected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.variable.masked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVariable).Masked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.variable.hidden": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVariable).Hidden, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.variable.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVariable).Raw, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.variable.environmentScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVariable).EnvironmentScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.variable.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVariable).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.milestone.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.internalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).InternalId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).ProjectId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.dueDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).DueDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.startDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).StartDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.milestone.expired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMilestone).Expired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.label.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.color": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).Color, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.textColor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).TextColor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.descriptionHtml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).DescriptionHtml, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.openIssuesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).OpenIssuesCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.closedIssuesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).ClosedIssuesCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.openMergeRequestsCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).OpenMergeRequestsCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.subscribed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).Subscribed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.label.isProjectLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectLabel).IsProjectLabel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.group.label.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.color": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).Color, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.textColor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).TextColor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.descriptionHtml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).DescriptionHtml, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.openIssuesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).OpenIssuesCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.closedIssuesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).ClosedIssuesCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.openMergeRequestsCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).OpenMergeRequestsCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.subscribed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).Subscribed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.label.isProjectLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupLabel).IsProjectLabel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -743,6 +1564,179 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 	return nil
 }
 
+// mqlGitlabUser for the gitlab.user resource
+type mqlGitlabUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabUserInternal it will be used here
+	Id               plugin.TValue[int64]
+	Username         plugin.TValue[string]
+	Name             plugin.TValue[string]
+	State            plugin.TValue[string]
+	Email            plugin.TValue[string]
+	WebURL           plugin.TValue[string]
+	AvatarURL        plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	JobTitle         plugin.TValue[string]
+	Organization     plugin.TValue[string]
+	Location         plugin.TValue[string]
+	Locked           plugin.TValue[bool]
+	Bot              plugin.TValue[bool]
+	TwoFactorEnabled plugin.TValue[bool]
+}
+
+// createGitlabUser creates a new instance of this resource
+func createGitlabUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabUser) MqlName() string {
+	return "gitlab.user"
+}
+
+func (c *mqlGitlabUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabUser) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabUser) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlGitlabUser) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabUser) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGitlabUser) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlGitlabUser) GetWebURL() *plugin.TValue[string] {
+	return &c.WebURL
+}
+
+func (c *mqlGitlabUser) GetAvatarURL() *plugin.TValue[string] {
+	return &c.AvatarURL
+}
+
+func (c *mqlGitlabUser) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGitlabUser) GetJobTitle() *plugin.TValue[string] {
+	return &c.JobTitle
+}
+
+func (c *mqlGitlabUser) GetOrganization() *plugin.TValue[string] {
+	return &c.Organization
+}
+
+func (c *mqlGitlabUser) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGitlabUser) GetLocked() *plugin.TValue[bool] {
+	return &c.Locked
+}
+
+func (c *mqlGitlabUser) GetBot() *plugin.TValue[bool] {
+	return &c.Bot
+}
+
+func (c *mqlGitlabUser) GetTwoFactorEnabled() *plugin.TValue[bool] {
+	return &c.TwoFactorEnabled
+}
+
+// mqlGitlabMember for the gitlab.member resource
+type mqlGitlabMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabMemberInternal it will be used here
+	Id   plugin.TValue[int64]
+	User plugin.TValue[*mqlGitlabUser]
+	Role plugin.TValue[string]
+}
+
+// createGitlabMember creates a new instance of this resource
+func createGitlabMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabMember) MqlName() string {
+	return "gitlab.member"
+}
+
+func (c *mqlGitlabMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabMember) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabMember) GetUser() *plugin.TValue[*mqlGitlabUser] {
+	return &c.User
+}
+
+func (c *mqlGitlabMember) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
 // mqlGitlabGroup for the gitlab.group resource
 type mqlGitlabGroup struct {
 	MqlRuntime *plugin.Runtime
@@ -751,6 +1745,8 @@ type mqlGitlabGroup struct {
 	Id                             plugin.TValue[int64]
 	Name                           plugin.TValue[string]
 	Path                           plugin.TValue[string]
+	FullName                       plugin.TValue[string]
+	FullPath                       plugin.TValue[string]
 	CreatedAt                      plugin.TValue[*time.Time]
 	Description                    plugin.TValue[string]
 	WebURL                         plugin.TValue[string]
@@ -759,8 +1755,14 @@ type mqlGitlabGroup struct {
 	PreventForkingOutsideGroup     plugin.TValue[bool]
 	EmailsDisabled                 plugin.TValue[bool]
 	MentionsDisabled               plugin.TValue[bool]
+	RequestAccessEnabled           plugin.TValue[bool]
+	MarkedForDeletionOn            plugin.TValue[*time.Time]
 	Projects                       plugin.TValue[[]any]
 	AllowedEmailDomainsList        plugin.TValue[string]
+	LfsEnabled                     plugin.TValue[bool]
+	Members                        plugin.TValue[[]any]
+	Subgroups                      plugin.TValue[[]any]
+	Labels                         plugin.TValue[[]any]
 }
 
 // createGitlabGroup creates a new instance of this resource
@@ -812,6 +1814,14 @@ func (c *mqlGitlabGroup) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
 
+func (c *mqlGitlabGroup) GetFullName() *plugin.TValue[string] {
+	return &c.FullName
+}
+
+func (c *mqlGitlabGroup) GetFullPath() *plugin.TValue[string] {
+	return &c.FullPath
+}
+
 func (c *mqlGitlabGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -844,6 +1854,14 @@ func (c *mqlGitlabGroup) GetMentionsDisabled() *plugin.TValue[bool] {
 	return &c.MentionsDisabled
 }
 
+func (c *mqlGitlabGroup) GetRequestAccessEnabled() *plugin.TValue[bool] {
+	return &c.RequestAccessEnabled
+}
+
+func (c *mqlGitlabGroup) GetMarkedForDeletionOn() *plugin.TValue[*time.Time] {
+	return &c.MarkedForDeletionOn
+}
+
 func (c *mqlGitlabGroup) GetProjects() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -862,6 +1880,58 @@ func (c *mqlGitlabGroup) GetProjects() *plugin.TValue[[]any] {
 
 func (c *mqlGitlabGroup) GetAllowedEmailDomainsList() *plugin.TValue[string] {
 	return &c.AllowedEmailDomainsList
+}
+
+func (c *mqlGitlabGroup) GetLfsEnabled() *plugin.TValue[bool] {
+	return &c.LfsEnabled
+}
+
+func (c *mqlGitlabGroup) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.group", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+func (c *mqlGitlabGroup) GetSubgroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subgroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.group", c.__id, "subgroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subgroups()
+	})
+}
+
+func (c *mqlGitlabGroup) GetLabels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Labels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.group", c.__id, "labels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.labels()
+	})
 }
 
 // mqlGitlabProject for the gitlab.project resource
@@ -907,6 +1977,15 @@ type mqlGitlabProject struct {
 	RemoveSourceBranchAfterMerge              plugin.TValue[bool]
 	LfsEnabled                                plugin.TValue[bool]
 	AutocloseReferencedIssues                 plugin.TValue[bool]
+	ForksCount                                plugin.TValue[int64]
+	StarCount                                 plugin.TValue[int64]
+	LastActivityAt                            plugin.TValue[*time.Time]
+	MergeRequests                             plugin.TValue[[]any]
+	Issues                                    plugin.TValue[[]any]
+	Releases                                  plugin.TValue[[]any]
+	Variables                                 plugin.TValue[[]any]
+	Milestones                                plugin.TValue[[]any]
+	Labels                                    plugin.TValue[[]any]
 }
 
 // createGitlabProject creates a new instance of this resource
@@ -1172,6 +2251,114 @@ func (c *mqlGitlabProject) GetAutocloseReferencedIssues() *plugin.TValue[bool] {
 	return &c.AutocloseReferencedIssues
 }
 
+func (c *mqlGitlabProject) GetForksCount() *plugin.TValue[int64] {
+	return &c.ForksCount
+}
+
+func (c *mqlGitlabProject) GetStarCount() *plugin.TValue[int64] {
+	return &c.StarCount
+}
+
+func (c *mqlGitlabProject) GetLastActivityAt() *plugin.TValue[*time.Time] {
+	return &c.LastActivityAt
+}
+
+func (c *mqlGitlabProject) GetMergeRequests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MergeRequests, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "mergeRequests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mergeRequests()
+	})
+}
+
+func (c *mqlGitlabProject) GetIssues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Issues, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "issues")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.issues()
+	})
+}
+
+func (c *mqlGitlabProject) GetReleases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Releases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "releases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.releases()
+	})
+}
+
+func (c *mqlGitlabProject) GetVariables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Variables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "variables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.variables()
+	})
+}
+
+func (c *mqlGitlabProject) GetMilestones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Milestones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "milestones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.milestones()
+	})
+}
+
+func (c *mqlGitlabProject) GetLabels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Labels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "labels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.labels()
+	})
+}
+
 // mqlGitlabProjectApprovalRule for the gitlab.project.approvalRule resource
 type mqlGitlabProjectApprovalRule struct {
 	MqlRuntime *plugin.Runtime
@@ -1364,75 +2551,6 @@ func (c *mqlGitlabProjectProtectedBranch) GetCodeOwnerApproval() *plugin.TValue[
 	return &c.CodeOwnerApproval
 }
 
-// mqlGitlabProjectMember for the gitlab.project.member resource
-type mqlGitlabProjectMember struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlGitlabProjectMemberInternal it will be used here
-	Id       plugin.TValue[int64]
-	Name     plugin.TValue[string]
-	Role     plugin.TValue[string]
-	Username plugin.TValue[string]
-	State    plugin.TValue[string]
-}
-
-// createGitlabProjectMember creates a new instance of this resource
-func createGitlabProjectMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlGitlabProjectMember{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("gitlab.project.member", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlGitlabProjectMember) MqlName() string {
-	return "gitlab.project.member"
-}
-
-func (c *mqlGitlabProjectMember) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlGitlabProjectMember) GetId() *plugin.TValue[int64] {
-	return &c.Id
-}
-
-func (c *mqlGitlabProjectMember) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlGitlabProjectMember) GetRole() *plugin.TValue[string] {
-	return &c.Role
-}
-
-func (c *mqlGitlabProjectMember) GetUsername() *plugin.TValue[string] {
-	return &c.Username
-}
-
-func (c *mqlGitlabProjectMember) GetState() *plugin.TValue[string] {
-	return &c.State
-}
-
 // mqlGitlabProjectFile for the gitlab.project.file resource
 type mqlGitlabProjectFile struct {
 	MqlRuntime *plugin.Runtime
@@ -1549,4 +2667,726 @@ func (c *mqlGitlabProjectWebhook) GetUrl() *plugin.TValue[string] {
 
 func (c *mqlGitlabProjectWebhook) GetSslVerification() *plugin.TValue[bool] {
 	return &c.SslVerification
+}
+
+// mqlGitlabProjectMergeRequest for the gitlab.project.mergeRequest resource
+type mqlGitlabProjectMergeRequest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabProjectMergeRequestInternal it will be used here
+	Id           plugin.TValue[int64]
+	InternalId   plugin.TValue[int64]
+	Title        plugin.TValue[string]
+	State        plugin.TValue[string]
+	Description  plugin.TValue[string]
+	SourceBranch plugin.TValue[string]
+	TargetBranch plugin.TValue[string]
+	Author       plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+	UpdatedAt    plugin.TValue[*time.Time]
+	MergedAt     plugin.TValue[*time.Time]
+	Draft        plugin.TValue[bool]
+	WebURL       plugin.TValue[string]
+	Labels       plugin.TValue[[]any]
+	Milestone    plugin.TValue[*mqlGitlabProjectMilestone]
+}
+
+// createGitlabProjectMergeRequest creates a new instance of this resource
+func createGitlabProjectMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectMergeRequest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.mergeRequest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectMergeRequest) MqlName() string {
+	return "gitlab.project.mergeRequest"
+}
+
+func (c *mqlGitlabProjectMergeRequest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetInternalId() *plugin.TValue[int64] {
+	return &c.InternalId
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetSourceBranch() *plugin.TValue[string] {
+	return &c.SourceBranch
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetTargetBranch() *plugin.TValue[string] {
+	return &c.TargetBranch
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetMergedAt() *plugin.TValue[*time.Time] {
+	return &c.MergedAt
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetDraft() *plugin.TValue[bool] {
+	return &c.Draft
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetWebURL() *plugin.TValue[string] {
+	return &c.WebURL
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetMilestone() *plugin.TValue[*mqlGitlabProjectMilestone] {
+	return plugin.GetOrCompute[*mqlGitlabProjectMilestone](&c.Milestone, func() (*mqlGitlabProjectMilestone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.mergeRequest", c.__id, "milestone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabProjectMilestone), nil
+			}
+		}
+
+		return c.milestone()
+	})
+}
+
+// mqlGitlabProjectIssue for the gitlab.project.issue resource
+type mqlGitlabProjectIssue struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabProjectIssueInternal it will be used here
+	Id           plugin.TValue[int64]
+	InternalId   plugin.TValue[int64]
+	Title        plugin.TValue[string]
+	State        plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Author       plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+	UpdatedAt    plugin.TValue[*time.Time]
+	ClosedAt     plugin.TValue[*time.Time]
+	DueDate      plugin.TValue[*time.Time]
+	Confidential plugin.TValue[bool]
+	WebURL       plugin.TValue[string]
+	Labels       plugin.TValue[[]any]
+	Milestone    plugin.TValue[*mqlGitlabProjectMilestone]
+}
+
+// createGitlabProjectIssue creates a new instance of this resource
+func createGitlabProjectIssue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectIssue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.issue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectIssue) MqlName() string {
+	return "gitlab.project.issue"
+}
+
+func (c *mqlGitlabProjectIssue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectIssue) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabProjectIssue) GetInternalId() *plugin.TValue[int64] {
+	return &c.InternalId
+}
+
+func (c *mqlGitlabProjectIssue) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGitlabProjectIssue) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGitlabProjectIssue) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGitlabProjectIssue) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlGitlabProjectIssue) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGitlabProjectIssue) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGitlabProjectIssue) GetClosedAt() *plugin.TValue[*time.Time] {
+	return &c.ClosedAt
+}
+
+func (c *mqlGitlabProjectIssue) GetDueDate() *plugin.TValue[*time.Time] {
+	return &c.DueDate
+}
+
+func (c *mqlGitlabProjectIssue) GetConfidential() *plugin.TValue[bool] {
+	return &c.Confidential
+}
+
+func (c *mqlGitlabProjectIssue) GetWebURL() *plugin.TValue[string] {
+	return &c.WebURL
+}
+
+func (c *mqlGitlabProjectIssue) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
+func (c *mqlGitlabProjectIssue) GetMilestone() *plugin.TValue[*mqlGitlabProjectMilestone] {
+	return plugin.GetOrCompute[*mqlGitlabProjectMilestone](&c.Milestone, func() (*mqlGitlabProjectMilestone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.issue", c.__id, "milestone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabProjectMilestone), nil
+			}
+		}
+
+		return c.milestone()
+	})
+}
+
+// mqlGitlabProjectRelease for the gitlab.project.release resource
+type mqlGitlabProjectRelease struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabProjectReleaseInternal it will be used here
+	TagName     plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	ReleasedAt  plugin.TValue[*time.Time]
+	Author      plugin.TValue[string]
+}
+
+// createGitlabProjectRelease creates a new instance of this resource
+func createGitlabProjectRelease(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectRelease{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.release", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectRelease) MqlName() string {
+	return "gitlab.project.release"
+}
+
+func (c *mqlGitlabProjectRelease) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectRelease) GetTagName() *plugin.TValue[string] {
+	return &c.TagName
+}
+
+func (c *mqlGitlabProjectRelease) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabProjectRelease) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGitlabProjectRelease) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGitlabProjectRelease) GetReleasedAt() *plugin.TValue[*time.Time] {
+	return &c.ReleasedAt
+}
+
+func (c *mqlGitlabProjectRelease) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+// mqlGitlabProjectVariable for the gitlab.project.variable resource
+type mqlGitlabProjectVariable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabProjectVariableInternal it will be used here
+	Key              plugin.TValue[string]
+	VariableType     plugin.TValue[string]
+	Protected        plugin.TValue[bool]
+	Masked           plugin.TValue[bool]
+	Hidden           plugin.TValue[bool]
+	Raw              plugin.TValue[bool]
+	EnvironmentScope plugin.TValue[string]
+	Description      plugin.TValue[string]
+}
+
+// createGitlabProjectVariable creates a new instance of this resource
+func createGitlabProjectVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectVariable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.variable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectVariable) MqlName() string {
+	return "gitlab.project.variable"
+}
+
+func (c *mqlGitlabProjectVariable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectVariable) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlGitlabProjectVariable) GetVariableType() *plugin.TValue[string] {
+	return &c.VariableType
+}
+
+func (c *mqlGitlabProjectVariable) GetProtected() *plugin.TValue[bool] {
+	return &c.Protected
+}
+
+func (c *mqlGitlabProjectVariable) GetMasked() *plugin.TValue[bool] {
+	return &c.Masked
+}
+
+func (c *mqlGitlabProjectVariable) GetHidden() *plugin.TValue[bool] {
+	return &c.Hidden
+}
+
+func (c *mqlGitlabProjectVariable) GetRaw() *plugin.TValue[bool] {
+	return &c.Raw
+}
+
+func (c *mqlGitlabProjectVariable) GetEnvironmentScope() *plugin.TValue[string] {
+	return &c.EnvironmentScope
+}
+
+func (c *mqlGitlabProjectVariable) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+// mqlGitlabProjectMilestone for the gitlab.project.milestone resource
+type mqlGitlabProjectMilestone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabProjectMilestoneInternal it will be used here
+	Id          plugin.TValue[int64]
+	InternalId  plugin.TValue[int64]
+	ProjectId   plugin.TValue[int64]
+	Title       plugin.TValue[string]
+	Description plugin.TValue[string]
+	DueDate     plugin.TValue[*time.Time]
+	StartDate   plugin.TValue[*time.Time]
+	State       plugin.TValue[string]
+	UpdatedAt   plugin.TValue[*time.Time]
+	CreatedAt   plugin.TValue[*time.Time]
+	Expired     plugin.TValue[bool]
+}
+
+// createGitlabProjectMilestone creates a new instance of this resource
+func createGitlabProjectMilestone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectMilestone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.milestone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectMilestone) MqlName() string {
+	return "gitlab.project.milestone"
+}
+
+func (c *mqlGitlabProjectMilestone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectMilestone) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabProjectMilestone) GetInternalId() *plugin.TValue[int64] {
+	return &c.InternalId
+}
+
+func (c *mqlGitlabProjectMilestone) GetProjectId() *plugin.TValue[int64] {
+	return &c.ProjectId
+}
+
+func (c *mqlGitlabProjectMilestone) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGitlabProjectMilestone) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGitlabProjectMilestone) GetDueDate() *plugin.TValue[*time.Time] {
+	return &c.DueDate
+}
+
+func (c *mqlGitlabProjectMilestone) GetStartDate() *plugin.TValue[*time.Time] {
+	return &c.StartDate
+}
+
+func (c *mqlGitlabProjectMilestone) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGitlabProjectMilestone) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGitlabProjectMilestone) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGitlabProjectMilestone) GetExpired() *plugin.TValue[bool] {
+	return &c.Expired
+}
+
+// mqlGitlabProjectLabel for the gitlab.project.label resource
+type mqlGitlabProjectLabel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabProjectLabelInternal it will be used here
+	Id                     plugin.TValue[int64]
+	Name                   plugin.TValue[string]
+	Color                  plugin.TValue[string]
+	TextColor              plugin.TValue[string]
+	Description            plugin.TValue[string]
+	DescriptionHtml        plugin.TValue[string]
+	OpenIssuesCount        plugin.TValue[int64]
+	ClosedIssuesCount      plugin.TValue[int64]
+	OpenMergeRequestsCount plugin.TValue[int64]
+	Subscribed             plugin.TValue[bool]
+	Priority               plugin.TValue[int64]
+	IsProjectLabel         plugin.TValue[bool]
+}
+
+// createGitlabProjectLabel creates a new instance of this resource
+func createGitlabProjectLabel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectLabel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.label", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectLabel) MqlName() string {
+	return "gitlab.project.label"
+}
+
+func (c *mqlGitlabProjectLabel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectLabel) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabProjectLabel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabProjectLabel) GetColor() *plugin.TValue[string] {
+	return &c.Color
+}
+
+func (c *mqlGitlabProjectLabel) GetTextColor() *plugin.TValue[string] {
+	return &c.TextColor
+}
+
+func (c *mqlGitlabProjectLabel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGitlabProjectLabel) GetDescriptionHtml() *plugin.TValue[string] {
+	return &c.DescriptionHtml
+}
+
+func (c *mqlGitlabProjectLabel) GetOpenIssuesCount() *plugin.TValue[int64] {
+	return &c.OpenIssuesCount
+}
+
+func (c *mqlGitlabProjectLabel) GetClosedIssuesCount() *plugin.TValue[int64] {
+	return &c.ClosedIssuesCount
+}
+
+func (c *mqlGitlabProjectLabel) GetOpenMergeRequestsCount() *plugin.TValue[int64] {
+	return &c.OpenMergeRequestsCount
+}
+
+func (c *mqlGitlabProjectLabel) GetSubscribed() *plugin.TValue[bool] {
+	return &c.Subscribed
+}
+
+func (c *mqlGitlabProjectLabel) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlGitlabProjectLabel) GetIsProjectLabel() *plugin.TValue[bool] {
+	return &c.IsProjectLabel
+}
+
+// mqlGitlabGroupLabel for the gitlab.group.label resource
+type mqlGitlabGroupLabel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabGroupLabelInternal it will be used here
+	Id                     plugin.TValue[int64]
+	Name                   plugin.TValue[string]
+	Color                  plugin.TValue[string]
+	TextColor              plugin.TValue[string]
+	Description            plugin.TValue[string]
+	DescriptionHtml        plugin.TValue[string]
+	OpenIssuesCount        plugin.TValue[int64]
+	ClosedIssuesCount      plugin.TValue[int64]
+	OpenMergeRequestsCount plugin.TValue[int64]
+	Subscribed             plugin.TValue[bool]
+	Priority               plugin.TValue[int64]
+	IsProjectLabel         plugin.TValue[bool]
+}
+
+// createGitlabGroupLabel creates a new instance of this resource
+func createGitlabGroupLabel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabGroupLabel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.group.label", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabGroupLabel) MqlName() string {
+	return "gitlab.group.label"
+}
+
+func (c *mqlGitlabGroupLabel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabGroupLabel) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabGroupLabel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabGroupLabel) GetColor() *plugin.TValue[string] {
+	return &c.Color
+}
+
+func (c *mqlGitlabGroupLabel) GetTextColor() *plugin.TValue[string] {
+	return &c.TextColor
+}
+
+func (c *mqlGitlabGroupLabel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGitlabGroupLabel) GetDescriptionHtml() *plugin.TValue[string] {
+	return &c.DescriptionHtml
+}
+
+func (c *mqlGitlabGroupLabel) GetOpenIssuesCount() *plugin.TValue[int64] {
+	return &c.OpenIssuesCount
+}
+
+func (c *mqlGitlabGroupLabel) GetClosedIssuesCount() *plugin.TValue[int64] {
+	return &c.ClosedIssuesCount
+}
+
+func (c *mqlGitlabGroupLabel) GetOpenMergeRequestsCount() *plugin.TValue[int64] {
+	return &c.OpenMergeRequestsCount
+}
+
+func (c *mqlGitlabGroupLabel) GetSubscribed() *plugin.TValue[bool] {
+	return &c.Subscribed
+}
+
+func (c *mqlGitlabGroupLabel) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlGitlabGroupLabel) GetIsProjectLabel() *plugin.TValue[bool] {
+	return &c.IsProjectLabel
 }

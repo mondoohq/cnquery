@@ -11,7 +11,19 @@ resources:
       description: {}
       emailsDisabled:
         min_mondoo_version: 9.0.0
+      fullName:
+        min_mondoo_version: 9.0.0
+      fullPath:
+        min_mondoo_version: 9.0.0
       id: {}
+      labels:
+        min_mondoo_version: 9.0.0
+      lfsEnabled:
+        min_mondoo_version: 9.0.0
+      markedForDeletionOn:
+        min_mondoo_version: 9.0.0
+      members:
+        min_mondoo_version: 9.0.0
       mentionsDisabled:
         min_mondoo_version: 9.0.0
       name: {}
@@ -19,11 +31,38 @@ resources:
       preventForkingOutsideGroup:
         min_mondoo_version: 9.0.0
       projects: {}
+      requestAccessEnabled:
+        min_mondoo_version: 9.0.0
       requireTwoFactorAuthentication: {}
+      subgroups:
+        min_mondoo_version: 9.0.0
       visibility: {}
       webURL:
         min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
+  gitlab.group.label:
+    fields:
+      closedIssuesCount: {}
+      color: {}
+      description: {}
+      descriptionHtml: {}
+      id: {}
+      isProjectLabel: {}
+      name: {}
+      openIssuesCount: {}
+      openMergeRequestsCount: {}
+      priority: {}
+      subscribed: {}
+      textColor: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.member:
+    fields:
+      id: {}
+      role: {}
+      user: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   gitlab.project:
     fields:
       allowMergeOnSkippedPipeline:
@@ -49,20 +88,32 @@ resources:
         min_mondoo_version: 9.0.0
       emptyRepo:
         min_mondoo_version: 9.0.0
+      forksCount:
+        min_mondoo_version: 9.0.0
       fullName:
         min_mondoo_version: 9.0.0
       groupRunnersEnabled:
         min_mondoo_version: 9.0.0
       id: {}
+      issues:
+        min_mondoo_version: 9.0.0
       issuesEnabled:
         min_mondoo_version: 9.0.0
       jobsEnabled:
+        min_mondoo_version: 9.0.0
+      labels:
+        min_mondoo_version: 9.0.0
+      lastActivityAt:
         min_mondoo_version: 9.0.0
       lfsEnabled:
         min_mondoo_version: 9.0.0
       mergeMethod:
         min_mondoo_version: 9.0.0
+      mergeRequests:
+        min_mondoo_version: 9.0.0
       mergeRequestsEnabled:
+        min_mondoo_version: 9.0.0
+      milestones:
         min_mondoo_version: 9.0.0
       mirror:
         min_mondoo_version: 9.0.0
@@ -80,6 +131,8 @@ resources:
         min_mondoo_version: 9.0.0
       protectedBranches:
         min_mondoo_version: 9.0.0
+      releases:
+        min_mondoo_version: 9.0.0
       removeSourceBranchAfterMerge:
         min_mondoo_version: 9.0.0
       requirementsEnabled:
@@ -89,6 +142,10 @@ resources:
       sharedRunnersEnabled:
         min_mondoo_version: 9.0.0
       snippetsEnabled:
+        min_mondoo_version: 9.0.0
+      starCount:
+        min_mondoo_version: 9.0.0
+      variables:
         min_mondoo_version: 9.0.0
       visibility: {}
       webURL:
@@ -124,13 +181,73 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: 9.0.0
-  gitlab.project.member:
+  gitlab.project.issue:
     fields:
+      author: {}
+      closedAt: {}
+      confidential: {}
+      createdAt: {}
+      description: {}
+      dueDate: {}
       id: {}
-      name: {}
-      role: {}
+      internalId: {}
+      labels: {}
+      milestone: {}
       state: {}
-      username: {}
+      title: {}
+      updatedAt: {}
+      webURL: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.project.label:
+    fields:
+      closedIssuesCount: {}
+      color: {}
+      description: {}
+      descriptionHtml: {}
+      id: {}
+      isProjectLabel: {}
+      name: {}
+      openIssuesCount: {}
+      openMergeRequestsCount: {}
+      priority: {}
+      subscribed: {}
+      textColor: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.project.mergeRequest:
+    fields:
+      author: {}
+      createdAt: {}
+      description: {}
+      draft: {}
+      id: {}
+      internalId: {}
+      labels: {}
+      mergedAt: {}
+      milestone: {}
+      sourceBranch: {}
+      state: {}
+      targetBranch: {}
+      title: {}
+      updatedAt: {}
+      webURL: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.project.milestone:
+    fields:
+      createdAt: {}
+      description: {}
+      dueDate: {}
+      expired: {}
+      id: {}
+      internalId: {}
+      projectId: {}
+      startDate: {}
+      state: {}
+      title: {}
+      updatedAt: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   gitlab.project.protectedBranch:
     fields:
@@ -140,9 +257,48 @@ resources:
       name: {}
     is_private: true
     min_mondoo_version: 9.0.0
+  gitlab.project.release:
+    fields:
+      author: {}
+      createdAt: {}
+      description: {}
+      name: {}
+      releasedAt: {}
+      tagName: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.project.variable:
+    fields:
+      description: {}
+      environmentScope: {}
+      hidden: {}
+      key: {}
+      masked: {}
+      protected: {}
+      raw: {}
+      variableType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   gitlab.project.webhook:
     fields:
       sslVerification: {}
       url: {}
     is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.user:
+    fields:
+      avatarURL: {}
+      bot: {}
+      createdAt: {}
+      email: {}
+      id: {}
+      jobTitle: {}
+      location: {}
+      locked: {}
+      name: {}
+      organization: {}
+      state: {}
+      twoFactorEnabled: {}
+      username: {}
+      webURL: {}
     min_mondoo_version: 9.0.0

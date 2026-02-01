@@ -24,7 +24,6 @@ Clusterwide
 cmek
 copywrite
 cpe
-crontabs
 cryptokey
 ctx
 CUSTOMERID
@@ -48,7 +47,6 @@ elbv
 exo
 failback
 FARGATE
-filecache
 filesz
 firefox
 frontmatter

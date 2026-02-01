@@ -4,6 +4,48 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/gitlab"
 option go_package = "go.mondoo.com/cnquery/v12/providers/gitlab/resources"
 
+// GitLab user
+gitlab.user @defaults("username name state") {
+  // User ID
+  id int
+  // Username
+  username string
+  // Display name
+  name string
+  // User state (active, blocked, etc.)
+  state string
+  // Email address
+  email string
+  // Web URL to user profile
+  webURL string
+  // Avatar URL
+  avatarURL string
+  // Account creation date
+  createdAt time
+  // Job title
+  jobTitle string
+  // Organization name
+  organization string
+  // Geographic location
+  location string
+  // Whether the account is locked
+  locked bool
+  // Whether this is a bot account
+  bot bool
+  // Whether two-factor authentication is enabled
+  twoFactorEnabled bool
+}
+
+// GitLab member (used in both groups and projects)
+private gitlab.member @defaults("user role") {
+  // Member ID
+  id int
+  // Member user
+  user gitlab.user
+  // Member role
+  role string
+}
+
 // GitLab group
 gitlab.group @defaults("name visibility webURL") {
   // Group ID
@@ -12,6 +54,10 @@ gitlab.group @defaults("name visibility webURL") {
   name string
   // Group path
   path string
+  // Complete group name including namespace
+  fullName string
+  // Complete URL path including parent groups
+  fullPath string
   // Create date of the group
   createdAt time
   // Group description
@@ -28,10 +74,22 @@ gitlab.group @defaults("name visibility webURL") {
   emailsDisabled bool
   // Whether group mentions within issues and merge requests are disabled
   mentionsDisabled bool
+  // Whether users can request membership to the group
+  requestAccessEnabled bool
+  // Date when the group is scheduled for deletion
+  markedForDeletionOn time
   // List of all projects that belong to the group
   projects() []gitlab.project
   // List of allowed email domains for the group
   allowedEmailDomainsList string
+  // Whether the group has Large File Storage (LFS) enabled
+  lfsEnabled bool
+  // List of members in the group with their roles
+  members() []gitlab.member
+  // List of subgroups that belong to this group
+  subgroups() []gitlab.group
+  // List of labels for the group
+  labels() []gitlab.group.label
 }
 
 // GitLab project
@@ -93,7 +151,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   // Protected branches settings for the project
   protectedBranches() []gitlab.project.protectedBranch
   // List of members in the project with their roles
-  projectMembers() []gitlab.project.member
+  projectMembers() []gitlab.member
   // List of files in the project repository
   projectFiles() []gitlab.project.file
   // List of webhooks for the project
@@ -112,6 +170,24 @@ gitlab.project @defaults("fullName visibility webURL") {
   lfsEnabled bool
   // Whether the project has autoclose referenced issues enabled
   autocloseReferencedIssues bool
+  // Number of project forks
+  forksCount int
+  // Number of project stars
+  starCount int
+  // Last activity timestamp for the project
+  lastActivityAt time
+  // List of merge requests for the project
+  mergeRequests() []gitlab.project.mergeRequest
+  // List of issues for the project
+  issues() []gitlab.project.issue
+  // List of releases for the project
+  releases() []gitlab.project.release
+  // List of CI/CD variables for the project
+  variables() []gitlab.project.variable
+  // List of milestones for the project
+  milestones() []gitlab.project.milestone
+  // List of labels for the project
+  labels() []gitlab.project.label
 }
 
 // GitLab project approval rule
@@ -154,20 +230,6 @@ private gitlab.project.protectedBranch @defaults("name allowForcePush") {
   codeOwnerApproval bool
 }
 
-// GitLab project member
-gitlab.project.member @defaults("username role name") {
-  // Member ID
-  id int
-  // Member name
-  name string
-  // Member role
-  role string
-  // Member username
-  username string
-  // Member state
-  state string
-}
-
 // GitLab project file
 private gitlab.project.file @defaults("path type") {
   // File path
@@ -186,4 +248,188 @@ private gitlab.project.webhook @defaults("url sslVerification") {
   url string
   // Whether SSL verification is enabled
   sslVerification bool
+}
+
+// GitLab project merge request
+private gitlab.project.mergeRequest @defaults("internalId title state") {
+  // Merge request ID
+  id int
+  // Merge request internal ID (project-scoped)
+  internalId int
+  // Merge request title
+  title string
+  // Merge request state (opened, closed, merged, locked)
+  state string
+  // Merge request description
+  description string
+  // Source branch name
+  sourceBranch string
+  // Target branch name
+  targetBranch string
+  // Merge request author username
+  author string
+  // Merge request creation time
+  createdAt time
+  // Merge request update time
+  updatedAt time
+  // Merge request merge time (if merged)
+  mergedAt time
+  // Whether the merge request is a draft
+  draft bool
+  // Merge request web URL
+  webURL string
+  // Merge request labels
+  labels []string
+  // Merge request milestone
+  milestone() gitlab.project.milestone
+}
+
+// GitLab project issue
+private gitlab.project.issue @defaults("internalId title state") {
+  // Issue ID
+  id int
+  // Issue internal ID (project-scoped)
+  internalId int
+  // Issue title
+  title string
+  // Issue state (opened, closed)
+  state string
+  // Issue description
+  description string
+  // Issue author username
+  author string
+  // Issue creation time
+  createdAt time
+  // Issue update time
+  updatedAt time
+  // Issue close time (if closed)
+  closedAt time
+  // Issue due date
+  dueDate time
+  // Whether the issue is confidential
+  confidential bool
+  // Issue web URL
+  webURL string
+  // Issue labels
+  labels []string
+  // Issue milestone
+  milestone() gitlab.project.milestone
+}
+
+// GitLab project release
+private gitlab.project.release @defaults("tagName name") {
+  // Release tag name
+  tagName string
+  // Release name
+  name string
+  // Release description
+  description string
+  // Release creation time
+  createdAt time
+  // Release publish time
+  releasedAt time
+  // Release author username
+  author string
+}
+
+// GitLab project CI/CD variable
+private gitlab.project.variable @defaults("key masked protected") {
+  // Variable key/name
+  key string
+  // Variable type (env_var or file)
+  variableType string
+  // Whether the variable is protected (only available on protected branches/tags)
+  protected bool
+  // Whether the variable value is masked in job logs
+  masked bool
+  // Whether the variable is hidden
+  hidden bool
+  // Whether the variable is raw (not expanded)
+  raw bool
+  // Environment scope for the variable
+  environmentScope string
+  // Variable description
+  description string
+}
+
+// GitLab project milestone
+private gitlab.project.milestone @defaults("internalId title state") {
+  // Milestone ID
+  id int
+  // Milestone internal ID (project-scoped)
+  internalId int
+  // Project ID
+  projectId int
+  // Milestone title
+  title string
+  // Milestone description
+  description string
+  // Target completion date
+  dueDate time
+  // Beginning date
+  startDate time
+  // Current status (active or closed)
+  state string
+  // Last modification timestamp
+  updatedAt time
+  // Creation timestamp
+  createdAt time
+  // Whether the milestone has passed its due date
+  expired bool
+}
+
+// GitLab project label
+private gitlab.project.label @defaults("name color") {
+  // Label ID
+  id int
+  // Label name
+  name string
+  // Label color (hex notation with leading '#')
+  color string
+  // Text color for label display
+  textColor string
+  // Label description
+  description string
+  // HTML-formatted description
+  descriptionHtml string
+  // Count of open issues with this label
+  openIssuesCount int
+  // Count of closed issues with this label
+  closedIssuesCount int
+  // Count of open merge requests with this label
+  openMergeRequestsCount int
+  // Whether the authenticated user is subscribed
+  subscribed bool
+  // Label priority (higher priority labels appear first)
+  priority int
+  // Whether this is a project label (vs. group label)
+  isProjectLabel bool
+}
+
+// GitLab group label
+private gitlab.group.label @defaults("name color") {
+  // Label ID
+  id int
+  // Label name
+  name string
+  // Label color (hex notation with leading '#')
+  color string
+  // Text color for label display
+  textColor string
+  // Label description
+  description string
+  // HTML-formatted description
+  descriptionHtml string
+  // Count of open issues with this label
+  openIssuesCount int
+  // Count of closed issues with this label
+  closedIssuesCount int
+  // Count of open merge requests with this label
+  openMergeRequestsCount int
+  // Whether the authenticated user is subscribed
+  subscribed bool
+  // Label priority (higher priority labels appear first)
+  priority int
+  // Whether this is a project label (vs. group label)
+  isProjectLabel bool
 }
