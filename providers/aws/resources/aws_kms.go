@@ -23,6 +23,34 @@ const (
 	kmsKeyArnPattern = "arn:aws:kms:%s:%s:key/%s"
 )
 
+// NormalizeKmsKeyRef normalizes a KMS key reference to ARN format.
+// KeyID supports multiple formats: Key ID (UUID), Key ARN, Alias Name, Alias ARN
+func NormalizeKmsKeyRef(s, region, accountId string) (arn.ARN, error) {
+	// Try ARN parse first (common case)
+	parsed, arnErr := arn.Parse(s)
+	if arnErr == nil {
+		return parsed, nil
+	}
+
+	// Fallback: check if it's a key ID (UUID format: 36 chars with hyphens)
+	// Example: 7a4eb143-c07b-4e24-b0b7-f3abfdbbb2c2
+	// This is an edge case where Secrets Manager returns just the key ID
+	if len(s) == 36 && s[8] == '-' && s[13] == '-' && s[18] == '-' && s[23] == '-' {
+		return arn.ARN{
+			Partition: "aws",
+			Service:   "kms",
+			Region:    region,
+			AccountID: accountId,
+			Resource:  "key/" + s,
+		}, nil
+	}
+
+	// Todo add alias format handling here for Alias name and Alias ARN
+
+	// If both checks fail, propagate the ARN parse error for better diagnostics
+	return arn.ARN{}, fmt.Errorf("invalid KMS key reference %q: %w", s, arnErr)
+}
+
 func (a *mqlAwsKms) id() (string, error) {
 	return "aws.kms", nil
 }
@@ -199,10 +227,35 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	if !ok {
 		return nil, nil, errors.New("invalid arn")
 	}
-	arnVal, err := arn.Parse(a)
-	if arnVal.AccountID != runtime.Connection.(*connection.AwsConnection).AccountId() {
-		// sometimes there are references to keys in other accounts, like the master account of an org
-		return nil, nil, fmt.Errorf("cannot access key from different AWS account %q", arnVal.AccountID)
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+
+	// Get region from args if provided (needed when input is just a key ID, not full ARN)
+	var region string
+	if regionArg := args["region"]; regionArg != nil {
+		if r, ok := regionArg.Value.(string); ok {
+			region = r
+		}
+	}
+
+	// KMS Keys API calls use KeyID = support multiple formats aliases, UUID(ID) or arn format we would not need to normalize here but there seems to be some edge cases
+	// for Example Secrets Manager can returns just the key ID instead of full ARN in KmsKeyId for EventBride connection secrets
+	// Current code only provides arn to kms function
+	arnVal, err := NormalizeKmsKeyRef(a, region, conn.AccountId())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Use normalized ARN for cache lookup and resource creation
+	normalizedArn := arnVal.String()
+	args["arn"] = llx.StringData(normalizedArn)
+	args["region"] = llx.StringData(arnVal.Region)
+
+	if arnVal.AccountID != conn.AccountId() {
+		// Cross-account key not yet supported
+		// Todo isCrossAccount and accessible check to handle policy limitations in same and another account
+		log.Error().Str("arn", normalizedArn).Str("keyAccount", arnVal.AccountID).Str("currentAccount", conn.AccountId()).Msg("cross-account KMS keys are not supported yet")
+		return nil, nil, fmt.Errorf("cross-account KMS keys are not supported yet: %s (belongs to account %s)", normalizedArn, arnVal.AccountID)
 	}
 
 	obj, err := CreateResource(runtime, ResourceAwsKms, map[string]*llx.RawData{})
@@ -215,11 +268,32 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	if rawResources.Error != nil {
 		return nil, nil, rawResources.Error
 	}
+
+	// Extract key ID from input for cache matching (handles both ARN and UUID inputs)
+	inputKeyId := extractKmsKeyId(a)
+
 	for _, rawResource := range rawResources.Data {
 		key := rawResource.(*mqlAwsKmsKey)
-		if key.Arn.Data == a {
+		// Match by ARN or by key ID (for UUID-only inputs)
+		if key.Arn.Data == normalizedArn || key.Id.Data == inputKeyId {
+			// Use actual values from cache
+			args["arn"] = llx.StringData(key.Arn.Data)
+			args["region"] = llx.StringData(key.Region.Data)
+			args["id"] = llx.StringData(key.Id.Data)
 			return args, key, nil
 		}
 	}
-	return nil, nil, errors.New("key not found")
+
+	// Key not found in cache - return partial resource with what we know
+	log.Debug().Str("arn", normalizedArn).Msg("KMS key not found in cache")
+	args["id"] = llx.StringData(extractKmsKeyId(arnVal.Resource))
+	return args, nil, nil
+}
+
+// extractKmsKeyId extracts the key ID from an ARN resource string like "key/uuid"
+func extractKmsKeyId(resource string) string {
+	if len(resource) > 4 && resource[:4] == "key/" {
+		return resource[4:]
+	}
+	return resource
 }
