@@ -12,7 +12,7 @@ import (
 )
 
 func TestAssetRecording(t *testing.T) {
-	t.Run("add asset by id only", func(t *testing.T) {
+	t.Run("add asset without mrn or platform ids is ignored", func(t *testing.T) {
 		rec := &recording{
 			assets: syncx.Map[*Asset]{},
 			Assets: []*Asset{},
@@ -44,6 +44,7 @@ func TestAssetRecording(t *testing.T) {
 		}
 		conf := &inventory.Config{
 			Type: "local",
+			Id:   1,
 		}
 		rec.EnsureAsset(asset, "provider", 1, conf)
 
@@ -51,7 +52,7 @@ func TestAssetRecording(t *testing.T) {
 		require.Len(t, rec.Assets[0].connections, 1)
 		require.Len(t, rec.Assets[0].Resources, 0)
 		a := rec.Assets[0].Asset
-		require.Equal(t, "asset-mrn", a.Id)
+		require.Equal(t, "asset-mrn", a.Mrn)
 		require.Equal(t, []string{"platform-id"}, a.PlatformIds)
 
 		// re-add again by MRN, ensure nothing gets duplicated
@@ -63,7 +64,7 @@ func TestAssetRecording(t *testing.T) {
 		require.Len(t, rec.Assets[0].Resources, 0)
 		a = rec.Assets[0].Asset
 
-		require.Equal(t, "asset-mrn", a.Id)
+		require.Equal(t, "asset-mrn", a.Mrn)
 		require.Equal(t, []string{"platform-id", "asset-mrn"}, a.PlatformIds)
 	})
 
@@ -80,6 +81,7 @@ func TestAssetRecording(t *testing.T) {
 		}
 		conf := &inventory.Config{
 			Type: "local",
+			Id:   1,
 		}
 		rec.EnsureAsset(asset, "provider", 1, conf)
 
@@ -87,29 +89,36 @@ func TestAssetRecording(t *testing.T) {
 		require.Len(t, rec.Assets[0].connections, 1)
 		require.Len(t, rec.Assets[0].Resources, 0)
 		a := rec.Assets[0].Asset
-		require.Equal(t, "asset-mrn", a.Id)
+		require.Equal(t, "asset-mrn", a.Mrn)
 		require.Equal(t, []string{"platform-id"}, a.PlatformIds)
 
-		// re-add again by platform id, ensure nothing gets duplicated
-		asset.Mrn = ""
-		rec.EnsureAsset(asset, "provider", 1, conf)
+		// re-add again by platform id only (no MRN), ensure nothing gets duplicated
+		asset2 := &inventory.Asset{
+			PlatformIds: []string{"platform-id"},
+			Platform:    &inventory.Platform{},
+		}
+		rec.EnsureAsset(asset2, "provider", 1, conf)
 		require.Len(t, rec.Assets, 1)
 		require.Len(t, rec.Assets[0].connections, 1)
 		require.Len(t, rec.Assets[0].Resources, 0)
 		a = rec.Assets[0].Asset
 
-		require.Equal(t, "platform-id", a.Id)
+		require.Equal(t, "asset-mrn", a.Mrn)
 		require.Equal(t, []string{"platform-id"}, a.PlatformIds)
 
 		// re-add again by mrn, ensure nothing gets duplicated
-		asset.Mrn = "asset-mrn"
-		rec.EnsureAsset(asset, "provider", 1, conf)
+		asset3 := &inventory.Asset{
+			Mrn:         "asset-mrn",
+			PlatformIds: []string{"platform-id"},
+			Platform:    &inventory.Platform{},
+		}
+		rec.EnsureAsset(asset3, "provider", 1, conf)
 		require.Len(t, rec.Assets, 1)
 		require.Len(t, rec.Assets[0].connections, 1)
 		require.Len(t, rec.Assets[0].Resources, 0)
 		a = rec.Assets[0].Asset
 
-		require.Equal(t, "asset-mrn", a.Id)
+		require.Equal(t, "asset-mrn", a.Mrn)
 		require.Equal(t, []string{"platform-id"}, a.PlatformIds)
 	})
 }

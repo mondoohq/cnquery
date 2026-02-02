@@ -32,7 +32,7 @@ func NewUpstreamRecording(ctx context.Context, service resources.ResourcesExplor
 		resourcesCache: map[string]resourceCache{},
 	}
 
-	raw, ok := recording.GetResource(0, "asset", "")
+	raw, ok := recording.GetResource(llx.AssetRecordingLookup{Mrn: assetMrn}, "asset", "")
 	if !ok {
 		return nil, errors.New("failed to get asset info for " + assetMrn)
 	}
@@ -97,8 +97,8 @@ func (n *Upstream) AddData(req llx.AddDataReq) {
 	// future. (e.g. for shell)
 }
 
-func (n *Upstream) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
-	fields, ok := n.GetResource(connectionID, resource, id)
+func (n *Upstream) GetData(lookup llx.AssetRecordingLookup, resource string, id string, field string) (*llx.RawData, bool) {
+	fields, ok := n.GetResource(lookup, resource, id)
 	if !ok || len(fields) == 0 {
 		return nil, false
 	}
@@ -106,7 +106,7 @@ func (n *Upstream) GetData(connectionID uint32, resource string, id string, fiel
 	return res, ok
 }
 
-func (n *Upstream) GetResource(_ uint32, resource string, id string) (map[string]*llx.RawData, bool) {
+func (n *Upstream) GetResource(_ llx.AssetRecordingLookup, resource string, id string) (map[string]*llx.RawData, bool) {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
