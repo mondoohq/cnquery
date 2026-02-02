@@ -72,7 +72,38 @@ func TestResource_AuditdRules(t *testing.T) {
 		})
 	})
 
-	// Note: comparisons field testing requires updating the mock data to include
-	// rules with -C flags. The field is properly defined and will be populated
-	// when parsing actual rules files containing -C switches.
+	t.Run("auditd comparisons field", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			// Test that rules with -C have populated comparisons
+			{
+				Code:        "auditd.rules.syscalls.where(comparisons.length > 0).length",
+				ResultIndex: 0,
+				Expectation: int64(1),
+			},
+			// Test that rules without -C have empty comparisons
+			{
+				Code:        "auditd.rules.syscalls.where(comparisons.length == 0).length",
+				ResultIndex: 0,
+				Expectation: int64(3),
+			},
+			// Test filtering by comparison field values
+			{
+				Code:        `auditd.rules.syscalls.where(comparisons.any(field1 == "uid" && op == "!=" && field2 == "euid")).length`,
+				ResultIndex: 0,
+				Expectation: int64(1),
+			},
+			// Test accessing comparisons field on a specific rule
+			{
+				Code:        `auditd.rules.syscalls.where(keyname == "priv_escalation")[0].comparisons[0].field1`,
+				ResultIndex: 0,
+				Expectation: "uid",
+			},
+			// Test accessing second comparison
+			{
+				Code:        `auditd.rules.syscalls.where(keyname == "priv_escalation")[0].comparisons[1].field2`,
+				ResultIndex: 0,
+				Expectation: "egid",
+			},
+		})
+	})
 }
