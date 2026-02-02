@@ -191,6 +191,7 @@ resources:
       draft: {}
       id: {}
       locked: {}
+      milestone: {}
       number: {}
       state: {}
       title: {}
@@ -213,6 +214,10 @@ resources:
       createdAt: {}
       id: {}
       labels: {}
+      mergedAt:
+        min_mondoo_version: 9.0.0
+      milestone:
+        min_mondoo_version: 9.0.0
       number: {}
       owner: {}
       repoName: {}
@@ -221,6 +226,24 @@ resources:
       title: {}
     is_private: true
     min_mondoo_version: 6.4.0
+  github.milestone:
+    fields:
+      closedAt: {}
+      closedIssues: {}
+      createdAt: {}
+      creator: {}
+      description: {}
+      dueOn: {}
+      htmlUrl: {}
+      id: {}
+      number: {}
+      openIssues: {}
+      state: {}
+      title: {}
+      updatedAt: {}
+      url: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   github.organization:
     fields:
       advancedSecurityEnabledForNewRepos:
@@ -450,6 +473,8 @@ resources:
         min_mondoo_version: 7.14.0
       license:
         min_mondoo_version: 7.14.0
+      milestones:
+        min_mondoo_version: 9.0.0
       name: {}
       openIssues:
         min_mondoo_version: 7.14.0

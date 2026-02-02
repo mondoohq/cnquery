@@ -42,6 +42,7 @@ const (
 	ResourceGithubInstallation               string = "github.installation"
 	ResourceGithubGist                       string = "github.gist"
 	ResourceGithubGistfile                   string = "github.gistfile"
+	ResourceGithubMilestone                  string = "github.milestone"
 	ResourceGithubIssue                      string = "github.issue"
 	ResourceGithubDependabotAlert            string = "github.dependabotAlert"
 	ResourceGithubSecretScanningAlert        string = "github.secretScanningAlert"
@@ -151,6 +152,10 @@ func init() {
 		"github.gistfile": {
 			// to override args, implement: initGithubGistfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubGistfile,
+		},
+		"github.milestone": {
+			// to override args, implement: initGithubMilestone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubMilestone,
 		},
 		"github.issue": {
 			// to override args, implement: initGithubIssue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -767,6 +772,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.closedIssues": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetClosedIssues()).ToDataRes(types.Array(types.Resource("github.issue")))
 	},
+	"github.repository.milestones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetMilestones()).ToDataRes(types.Array(types.Resource("github.milestone")))
+	},
 	"github.repository.license": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetLicense()).ToDataRes(types.Resource("github.license"))
 	},
@@ -1013,6 +1021,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.mergeRequest.repoName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetRepoName()).ToDataRes(types.String)
 	},
+	"github.mergeRequest.milestone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetMilestone()).ToDataRes(types.Resource("github.milestone"))
+	},
+	"github.mergeRequest.mergedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetMergedAt()).ToDataRes(types.Time)
+	},
 	"github.review.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubReview).GetUrl()).ToDataRes(types.String)
 	},
@@ -1082,6 +1096,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.gistfile.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubGistfile).GetContent()).ToDataRes(types.String)
 	},
+	"github.milestone.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetId()).ToDataRes(types.Int)
+	},
+	"github.milestone.number": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetNumber()).ToDataRes(types.Int)
+	},
+	"github.milestone.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetTitle()).ToDataRes(types.String)
+	},
+	"github.milestone.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetDescription()).ToDataRes(types.String)
+	},
+	"github.milestone.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetState()).ToDataRes(types.String)
+	},
+	"github.milestone.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetUrl()).ToDataRes(types.String)
+	},
+	"github.milestone.htmlUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetHtmlUrl()).ToDataRes(types.String)
+	},
+	"github.milestone.creator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetCreator()).ToDataRes(types.Resource("github.user"))
+	},
+	"github.milestone.openIssues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetOpenIssues()).ToDataRes(types.Int)
+	},
+	"github.milestone.closedIssues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetClosedIssues()).ToDataRes(types.Int)
+	},
+	"github.milestone.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"github.milestone.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"github.milestone.closedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetClosedAt()).ToDataRes(types.Time)
+	},
+	"github.milestone.dueOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMilestone).GetDueOn()).ToDataRes(types.Time)
+	},
 	"github.issue.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubIssue).GetId()).ToDataRes(types.Int)
 	},
@@ -1120,6 +1176,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.issue.locked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubIssue).GetLocked()).ToDataRes(types.Bool)
+	},
+	"github.issue.milestone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubIssue).GetMilestone()).ToDataRes(types.Resource("github.milestone"))
 	},
 	"github.dependabotAlert.number": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubDependabotAlert).GetNumber()).ToDataRes(types.Int)
@@ -2023,6 +2082,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubRepository).ClosedIssues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"github.repository.milestones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).Milestones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"github.repository.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).License, ok = plugin.RawToTValue[*mqlGithubLicense](v.Value, v.Error)
 		return
@@ -2387,6 +2450,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubMergeRequest).RepoName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"github.mergeRequest.milestone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).Milestone, ok = plugin.RawToTValue[*mqlGithubMilestone](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.mergedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).MergedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"github.review.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubReview).__id, ok = v.Value.(string)
 		return
@@ -2495,6 +2566,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubGistfile).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"github.milestone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).__id, ok = v.Value.(string)
+		return
+	},
+	"github.milestone.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.milestone.number": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).Number, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.milestone.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.milestone.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.milestone.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.milestone.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.milestone.htmlUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).HtmlUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.milestone.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).Creator, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
+	"github.milestone.openIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).OpenIssues, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.milestone.closedIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).ClosedIssues, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.milestone.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.milestone.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.milestone.closedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).ClosedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.milestone.dueOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMilestone).DueOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"github.issue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubIssue).__id, ok = v.Value.(string)
 		return
@@ -2549,6 +2680,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.issue.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubIssue).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.issue.milestone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubIssue).Milestone, ok = plugin.RawToTValue[*mqlGithubMilestone](v.Value, v.Error)
 		return
 	},
 	"github.dependabotAlert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4128,6 +4263,7 @@ type mqlGithubRepository struct {
 	Stargazers           plugin.TValue[[]any]
 	OpenIssues           plugin.TValue[[]any]
 	ClosedIssues         plugin.TValue[[]any]
+	Milestones           plugin.TValue[[]any]
 	License              plugin.TValue[*mqlGithubLicense]
 	CodeOfConductFile    plugin.TValue[*mqlGithubFile]
 	SupportFile          plugin.TValue[*mqlGithubFile]
@@ -4587,6 +4723,22 @@ func (c *mqlGithubRepository) GetClosedIssues() *plugin.TValue[[]any] {
 		}
 
 		return c.closedIssues()
+	})
+}
+
+func (c *mqlGithubRepository) GetMilestones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Milestones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "milestones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.milestones()
 	})
 }
 
@@ -5442,6 +5594,8 @@ type mqlGithubMergeRequest struct {
 	Commits   plugin.TValue[[]any]
 	Reviews   plugin.TValue[[]any]
 	RepoName  plugin.TValue[string]
+	Milestone plugin.TValue[*mqlGithubMilestone]
+	MergedAt  plugin.TValue[*time.Time]
 }
 
 // createGithubMergeRequest creates a new instance of this resource
@@ -5547,6 +5701,14 @@ func (c *mqlGithubMergeRequest) GetReviews() *plugin.TValue[[]any] {
 
 func (c *mqlGithubMergeRequest) GetRepoName() *plugin.TValue[string] {
 	return &c.RepoName
+}
+
+func (c *mqlGithubMergeRequest) GetMilestone() *plugin.TValue[*mqlGithubMilestone] {
+	return &c.Milestone
+}
+
+func (c *mqlGithubMergeRequest) GetMergedAt() *plugin.TValue[*time.Time] {
+	return &c.MergedAt
 }
 
 // mqlGithubReview for the github.review resource
@@ -5842,6 +6004,120 @@ func (c *mqlGithubGistfile) GetContent() *plugin.TValue[string] {
 	})
 }
 
+// mqlGithubMilestone for the github.milestone resource
+type mqlGithubMilestone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubMilestoneInternal it will be used here
+	Id           plugin.TValue[int64]
+	Number       plugin.TValue[int64]
+	Title        plugin.TValue[string]
+	Description  plugin.TValue[string]
+	State        plugin.TValue[string]
+	Url          plugin.TValue[string]
+	HtmlUrl      plugin.TValue[string]
+	Creator      plugin.TValue[*mqlGithubUser]
+	OpenIssues   plugin.TValue[int64]
+	ClosedIssues plugin.TValue[int64]
+	CreatedAt    plugin.TValue[*time.Time]
+	UpdatedAt    plugin.TValue[*time.Time]
+	ClosedAt     plugin.TValue[*time.Time]
+	DueOn        plugin.TValue[*time.Time]
+}
+
+// createGithubMilestone creates a new instance of this resource
+func createGithubMilestone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubMilestone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.milestone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubMilestone) MqlName() string {
+	return "github.milestone"
+}
+
+func (c *mqlGithubMilestone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubMilestone) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGithubMilestone) GetNumber() *plugin.TValue[int64] {
+	return &c.Number
+}
+
+func (c *mqlGithubMilestone) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGithubMilestone) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGithubMilestone) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGithubMilestone) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlGithubMilestone) GetHtmlUrl() *plugin.TValue[string] {
+	return &c.HtmlUrl
+}
+
+func (c *mqlGithubMilestone) GetCreator() *plugin.TValue[*mqlGithubUser] {
+	return &c.Creator
+}
+
+func (c *mqlGithubMilestone) GetOpenIssues() *plugin.TValue[int64] {
+	return &c.OpenIssues
+}
+
+func (c *mqlGithubMilestone) GetClosedIssues() *plugin.TValue[int64] {
+	return &c.ClosedIssues
+}
+
+func (c *mqlGithubMilestone) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGithubMilestone) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGithubMilestone) GetClosedAt() *plugin.TValue[*time.Time] {
+	return &c.ClosedAt
+}
+
+func (c *mqlGithubMilestone) GetDueOn() *plugin.TValue[*time.Time] {
+	return &c.DueOn
+}
+
 // mqlGithubIssue for the github.issue resource
 type mqlGithubIssue struct {
 	MqlRuntime *plugin.Runtime
@@ -5860,6 +6136,7 @@ type mqlGithubIssue struct {
 	ClosedBy  plugin.TValue[*mqlGithubUser]
 	Draft     plugin.TValue[bool]
 	Locked    plugin.TValue[bool]
+	Milestone plugin.TValue[*mqlGithubMilestone]
 }
 
 // createGithubIssue creates a new instance of this resource
@@ -5949,6 +6226,10 @@ func (c *mqlGithubIssue) GetDraft() *plugin.TValue[bool] {
 
 func (c *mqlGithubIssue) GetLocked() *plugin.TValue[bool] {
 	return &c.Locked
+}
+
+func (c *mqlGithubIssue) GetMilestone() *plugin.TValue[*mqlGithubMilestone] {
+	return &c.Milestone
 }
 
 // mqlGithubDependabotAlert for the github.dependabotAlert resource
