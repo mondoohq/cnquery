@@ -95,6 +95,8 @@ const (
 	ResourceAwsSnsSubscription                                                  string = "aws.sns.subscription"
 	ResourceAwsEs                                                               string = "aws.es"
 	ResourceAwsEsDomain                                                         string = "aws.es.domain"
+	ResourceAwsOpensearch                                                       string = "aws.opensearch"
+	ResourceAwsOpensearchDomain                                                 string = "aws.opensearch.domain"
 	ResourceAwsAcm                                                              string = "aws.acm"
 	ResourceAwsAcmCertificate                                                   string = "aws.acm.certificate"
 	ResourceAwsAutoscaling                                                      string = "aws.autoscaling"
@@ -576,6 +578,14 @@ func init() {
 		"aws.es.domain": {
 			Init:   initAwsEsDomain,
 			Create: createAwsEsDomain,
+		},
+		"aws.opensearch": {
+			// to override args, implement: initAwsOpensearch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsOpensearch,
+		},
+		"aws.opensearch.domain": {
+			// to override args, implement: initAwsOpensearchDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsOpensearchDomain,
 		},
 		"aws.acm": {
 			// to override args, implement: initAwsAcm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2749,6 +2759,126 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.es.domain.domainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetDomainName()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearch).GetDomains()).ToDataRes(types.Array(types.Resource("aws.opensearch.domain")))
+	},
+	"aws.opensearch.domain.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetArn()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetName()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.domainId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetDomainId()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.encryptionAtRestEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEncryptionAtRestEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.encryptionAtRestKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEncryptionAtRestKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.nodeToNodeEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetNodeToNodeEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.dedicatedMasterEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetDedicatedMasterEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.dedicatedMasterType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetDedicatedMasterType()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.dedicatedMasterCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetDedicatedMasterCount()).ToDataRes(types.Int)
+	},
+	"aws.opensearch.domain.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.instanceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetInstanceCount()).ToDataRes(types.Int)
+	},
+	"aws.opensearch.domain.zoneAwarenessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetZoneAwarenessEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.availabilityZoneCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetAvailabilityZoneCount()).ToDataRes(types.Int)
+	},
+	"aws.opensearch.domain.warmEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetWarmEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.warmType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetWarmType()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.warmCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetWarmCount()).ToDataRes(types.Int)
+	},
+	"aws.opensearch.domain.coldStorageEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetColdStorageEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.ebsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEbsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.ebsVolumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEbsVolumeType()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.ebsVolumeSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEbsVolumeSize()).ToDataRes(types.Int)
+	},
+	"aws.opensearch.domain.ebsIops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEbsIops()).ToDataRes(types.Int)
+	},
+	"aws.opensearch.domain.ebsThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEbsThroughput()).ToDataRes(types.Int)
+	},
+	"aws.opensearch.domain.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.enforceHTTPS": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEnforceHTTPS()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.tlsSecurityPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetTlsSecurityPolicy()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.samlEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetSamlEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.anonymousAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetAnonymousAuthEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.internalUserDatabaseEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetInternalUserDatabaseEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.advancedSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetAdvancedSecurityEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.processing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetProcessing()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.upgradeProcessing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetUpgradeProcessing()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.opensearch.domain.autoTuneState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetAutoTuneState()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.opensearch.domain.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.opensearch.domain.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
 	},
 	"aws.acm.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAcm).GetCertificates()).ToDataRes(types.Array(types.Resource("aws.acm.certificate")))
@@ -8960,6 +9090,174 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.es.domain.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearch).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.opensearch.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearch).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.opensearch.domain.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.domainId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).DomainId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.encryptionAtRestEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).EncryptionAtRestEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.encryptionAtRestKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).EncryptionAtRestKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.nodeToNodeEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).NodeToNodeEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.dedicatedMasterEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).DedicatedMasterEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.dedicatedMasterType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).DedicatedMasterType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.dedicatedMasterCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).DedicatedMasterCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.instanceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).InstanceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.zoneAwarenessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).ZoneAwarenessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.availabilityZoneCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).AvailabilityZoneCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.warmEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).WarmEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.warmType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).WarmType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.warmCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).WarmCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.coldStorageEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).ColdStorageEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.ebsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).EbsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.ebsVolumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).EbsVolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.ebsVolumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).EbsVolumeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.ebsIops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).EbsIops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.ebsThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).EbsThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.enforceHTTPS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).EnforceHTTPS, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.tlsSecurityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).TlsSecurityPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.samlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).SamlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.anonymousAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).AnonymousAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.internalUserDatabaseEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).InternalUserDatabaseEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.advancedSecurityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).AdvancedSecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.processing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).Processing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.upgradeProcessing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).UpgradeProcessing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.autoTuneState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).AutoTuneState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.acm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21528,6 +21826,330 @@ func (c *mqlAwsEsDomain) GetDomainId() *plugin.TValue[string] {
 
 func (c *mqlAwsEsDomain) GetDomainName() *plugin.TValue[string] {
 	return &c.DomainName
+}
+
+// mqlAwsOpensearch for the aws.opensearch resource
+type mqlAwsOpensearch struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsOpensearchInternal it will be used here
+	Domains plugin.TValue[[]any]
+}
+
+// createAwsOpensearch creates a new instance of this resource
+func createAwsOpensearch(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsOpensearch{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.opensearch", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsOpensearch) MqlName() string {
+	return "aws.opensearch"
+}
+
+func (c *mqlAwsOpensearch) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsOpensearch) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.opensearch", c.__id, "domains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.domains()
+	})
+}
+
+// mqlAwsOpensearchDomain for the aws.opensearch.domain resource
+type mqlAwsOpensearchDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsOpensearchDomainInternal
+	Arn                         plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	DomainId                    plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	EngineVersion               plugin.TValue[string]
+	Endpoint                    plugin.TValue[string]
+	EncryptionAtRestEnabled     plugin.TValue[bool]
+	EncryptionAtRestKmsKeyId    plugin.TValue[string]
+	NodeToNodeEncryptionEnabled plugin.TValue[bool]
+	DedicatedMasterEnabled      plugin.TValue[bool]
+	DedicatedMasterType         plugin.TValue[string]
+	DedicatedMasterCount        plugin.TValue[int64]
+	InstanceType                plugin.TValue[string]
+	InstanceCount               plugin.TValue[int64]
+	ZoneAwarenessEnabled        plugin.TValue[bool]
+	AvailabilityZoneCount       plugin.TValue[int64]
+	WarmEnabled                 plugin.TValue[bool]
+	WarmType                    plugin.TValue[string]
+	WarmCount                   plugin.TValue[int64]
+	ColdStorageEnabled          plugin.TValue[bool]
+	EbsEnabled                  plugin.TValue[bool]
+	EbsVolumeType               plugin.TValue[string]
+	EbsVolumeSize               plugin.TValue[int64]
+	EbsIops                     plugin.TValue[int64]
+	EbsThroughput               plugin.TValue[int64]
+	VpcId                       plugin.TValue[string]
+	EnforceHTTPS                plugin.TValue[bool]
+	TlsSecurityPolicy           plugin.TValue[string]
+	SamlEnabled                 plugin.TValue[bool]
+	AnonymousAuthEnabled        plugin.TValue[bool]
+	InternalUserDatabaseEnabled plugin.TValue[bool]
+	AdvancedSecurityEnabled     plugin.TValue[bool]
+	Processing                  plugin.TValue[bool]
+	UpgradeProcessing           plugin.TValue[bool]
+	CreatedAt                   plugin.TValue[*time.Time]
+	AutoTuneState               plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	SecurityGroups              plugin.TValue[[]any]
+	Subnets                     plugin.TValue[[]any]
+}
+
+// createAwsOpensearchDomain creates a new instance of this resource
+func createAwsOpensearchDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsOpensearchDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.opensearch.domain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsOpensearchDomain) MqlName() string {
+	return "aws.opensearch.domain"
+}
+
+func (c *mqlAwsOpensearchDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsOpensearchDomain) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsOpensearchDomain) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsOpensearchDomain) GetDomainId() *plugin.TValue[string] {
+	return &c.DomainId
+}
+
+func (c *mqlAwsOpensearchDomain) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsOpensearchDomain) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsOpensearchDomain) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsOpensearchDomain) GetEncryptionAtRestEnabled() *plugin.TValue[bool] {
+	return &c.EncryptionAtRestEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetEncryptionAtRestKmsKeyId() *plugin.TValue[string] {
+	return &c.EncryptionAtRestKmsKeyId
+}
+
+func (c *mqlAwsOpensearchDomain) GetNodeToNodeEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.NodeToNodeEncryptionEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetDedicatedMasterEnabled() *plugin.TValue[bool] {
+	return &c.DedicatedMasterEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetDedicatedMasterType() *plugin.TValue[string] {
+	return &c.DedicatedMasterType
+}
+
+func (c *mqlAwsOpensearchDomain) GetDedicatedMasterCount() *plugin.TValue[int64] {
+	return &c.DedicatedMasterCount
+}
+
+func (c *mqlAwsOpensearchDomain) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsOpensearchDomain) GetInstanceCount() *plugin.TValue[int64] {
+	return &c.InstanceCount
+}
+
+func (c *mqlAwsOpensearchDomain) GetZoneAwarenessEnabled() *plugin.TValue[bool] {
+	return &c.ZoneAwarenessEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetAvailabilityZoneCount() *plugin.TValue[int64] {
+	return &c.AvailabilityZoneCount
+}
+
+func (c *mqlAwsOpensearchDomain) GetWarmEnabled() *plugin.TValue[bool] {
+	return &c.WarmEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetWarmType() *plugin.TValue[string] {
+	return &c.WarmType
+}
+
+func (c *mqlAwsOpensearchDomain) GetWarmCount() *plugin.TValue[int64] {
+	return &c.WarmCount
+}
+
+func (c *mqlAwsOpensearchDomain) GetColdStorageEnabled() *plugin.TValue[bool] {
+	return &c.ColdStorageEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetEbsEnabled() *plugin.TValue[bool] {
+	return &c.EbsEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetEbsVolumeType() *plugin.TValue[string] {
+	return &c.EbsVolumeType
+}
+
+func (c *mqlAwsOpensearchDomain) GetEbsVolumeSize() *plugin.TValue[int64] {
+	return &c.EbsVolumeSize
+}
+
+func (c *mqlAwsOpensearchDomain) GetEbsIops() *plugin.TValue[int64] {
+	return &c.EbsIops
+}
+
+func (c *mqlAwsOpensearchDomain) GetEbsThroughput() *plugin.TValue[int64] {
+	return &c.EbsThroughput
+}
+
+func (c *mqlAwsOpensearchDomain) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsOpensearchDomain) GetEnforceHTTPS() *plugin.TValue[bool] {
+	return &c.EnforceHTTPS
+}
+
+func (c *mqlAwsOpensearchDomain) GetTlsSecurityPolicy() *plugin.TValue[string] {
+	return &c.TlsSecurityPolicy
+}
+
+func (c *mqlAwsOpensearchDomain) GetSamlEnabled() *plugin.TValue[bool] {
+	return &c.SamlEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetAnonymousAuthEnabled() *plugin.TValue[bool] {
+	return &c.AnonymousAuthEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetInternalUserDatabaseEnabled() *plugin.TValue[bool] {
+	return &c.InternalUserDatabaseEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetAdvancedSecurityEnabled() *plugin.TValue[bool] {
+	return &c.AdvancedSecurityEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetProcessing() *plugin.TValue[bool] {
+	return &c.Processing
+}
+
+func (c *mqlAwsOpensearchDomain) GetUpgradeProcessing() *plugin.TValue[bool] {
+	return &c.UpgradeProcessing
+}
+
+func (c *mqlAwsOpensearchDomain) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsOpensearchDomain) GetAutoTuneState() *plugin.TValue[string] {
+	return &c.AutoTuneState
+}
+
+func (c *mqlAwsOpensearchDomain) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsOpensearchDomain) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.opensearch.domain", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsOpensearchDomain) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.opensearch.domain", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
 }
 
 // mqlAwsAcm for the aws.acm resource

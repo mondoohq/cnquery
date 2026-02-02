@@ -3203,6 +3203,59 @@ resources:
     platform:
       name:
       - aws
+  aws.opensearch:
+    fields:
+      domains: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.opensearch.domain:
+    fields:
+      advancedSecurityEnabled: {}
+      anonymousAuthEnabled: {}
+      arn: {}
+      autoTuneState: {}
+      availabilityZoneCount: {}
+      coldStorageEnabled: {}
+      createdAt: {}
+      dedicatedMasterCount: {}
+      dedicatedMasterEnabled: {}
+      dedicatedMasterType: {}
+      domainId: {}
+      ebsEnabled: {}
+      ebsIops: {}
+      ebsThroughput: {}
+      ebsVolumeSize: {}
+      ebsVolumeType: {}
+      encryptionAtRestEnabled: {}
+      encryptionAtRestKmsKeyId: {}
+      endpoint: {}
+      enforceHTTPS: {}
+      engineVersion: {}
+      instanceCount: {}
+      instanceType: {}
+      internalUserDatabaseEnabled: {}
+      name: {}
+      nodeToNodeEncryptionEnabled: {}
+      processing: {}
+      region: {}
+      samlEnabled: {}
+      securityGroups: {}
+      subnets: {}
+      tags: {}
+      tlsSecurityPolicy: {}
+      upgradeProcessing: {}
+      vpcId: {}
+      warmCount: {}
+      warmEnabled: {}
+      warmType: {}
+      zoneAwarenessEnabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.organization:
     fields:
       accounts:
