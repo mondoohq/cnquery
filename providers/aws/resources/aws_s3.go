@@ -711,6 +711,17 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {
 		if website.IndexDocument != nil {
 			res["IndexDocument"] = convert.ToValue(website.IndexDocument.Suffix)
 		}
+
+		if website.RedirectAllRequestsTo != nil {
+			res["RedirectAllRequestsTo.HostName"] = convert.ToValue(website.RedirectAllRequestsTo.HostName)
+			if website.RedirectAllRequestsTo.Protocol != "" {
+				res["RedirectAllRequestsTo.Protocol"] = string(website.RedirectAllRequestsTo.Protocol)
+			}
+		}
+
+		if len(website.RoutingRules) > 0 {
+			res["RoutingRules"] = "configured"
+		}
 	}
 
 	return res, nil
