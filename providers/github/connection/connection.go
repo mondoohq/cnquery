@@ -12,7 +12,7 @@ import (
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v81/github"
+	"github.com/google/go-github/v82/github"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog"
