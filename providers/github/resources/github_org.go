@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v81/github"
+	"github.com/google/go-github/v82/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/internal/workerpool"
 	"go.mondoo.com/cnquery/v12/llx"
@@ -137,13 +137,21 @@ func (g *mqlGithubOrganization) customProperties() ([]any, error) {
 
 	resources := []any{}
 	for _, property := range customProperties {
+		// Convert DefaultValue from any to string
+		var defaultValue string
+		if property.DefaultValue != nil {
+			if s, ok := property.DefaultValue.(string); ok {
+				defaultValue = s
+			}
+		}
+
 		r, err := CreateResource(g.MqlRuntime, "github.organization.customProperty", map[string]*llx.RawData{
 			"name":             llx.StringDataPtr(property.PropertyName),
 			"description":      llx.StringDataPtr(property.Description),
 			"sourceType":       llx.StringDataPtr(property.SourceType),
-			"valueType":        llx.StringData(property.ValueType),
+			"valueType":        llx.StringData(string(property.ValueType)),
 			"required":         llx.BoolDataPtr(property.Required),
-			"defaultValue":     llx.StringDataPtr(property.DefaultValue),
+			"defaultValue":     llx.StringData(defaultValue),
 			"allowedValues":    llx.ArrayData(convert.SliceAnyToInterface[string](property.AllowedValues), types.String),
 			"valuesEditableBy": llx.StringDataPtr(property.ValuesEditableBy),
 		})
