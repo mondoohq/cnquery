@@ -18,6 +18,8 @@ resources:
       becomeFlags: {}
       becomeMethod: {}
       becomeUser: {}
+      gatherFacts:
+        min_mondoo_version: 9.0.0
       handlers: {}
       hosts: {}
       ignoreUnreachable: {}

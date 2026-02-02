@@ -158,6 +158,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ansible.play.anyErrorsFatal": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlay).GetAnyErrorsFatal()).ToDataRes(types.Bool)
 	},
+	"ansible.play.gatherFacts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlay).GetGatherFacts()).ToDataRes(types.String)
+	},
 	"ansible.play.vars": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlay).GetVars()).ToDataRes(types.Map(types.String, types.Dict))
 	},
@@ -284,6 +287,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ansible.play.anyErrorsFatal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsiblePlay).AnyErrorsFatal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ansible.play.gatherFacts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlay).GatherFacts, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"ansible.play.vars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -475,6 +482,7 @@ type mqlAnsiblePlay struct {
 	MaxFailPercentage plugin.TValue[int64]
 	IgnoreUnreachable plugin.TValue[bool]
 	AnyErrorsFatal    plugin.TValue[bool]
+	GatherFacts       plugin.TValue[string]
 	Vars              plugin.TValue[map[string]any]
 	Roles             plugin.TValue[[]any]
 	Tasks             plugin.TValue[[]any]
@@ -560,6 +568,10 @@ func (c *mqlAnsiblePlay) GetIgnoreUnreachable() *plugin.TValue[bool] {
 
 func (c *mqlAnsiblePlay) GetAnyErrorsFatal() *plugin.TValue[bool] {
 	return &c.AnyErrorsFatal
+}
+
+func (c *mqlAnsiblePlay) GetGatherFacts() *plugin.TValue[string] {
+	return &c.GatherFacts
 }
 
 func (c *mqlAnsiblePlay) GetVars() *plugin.TValue[map[string]any] {
