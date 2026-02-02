@@ -114,6 +114,10 @@ const (
 	ResourceNtpConf                    string = "ntp.conf"
 	ResourceRsyslogConf                string = "rsyslog.conf"
 	ResourceLogindefs                  string = "logindefs"
+	ResourceLimits                     string = "limits"
+	ResourceLimitsEntry                string = "limits.entry"
+	ResourceLsblk                      string = "lsblk"
+	ResourceLsblkEntry                 string = "lsblk.entry"
 	ResourceModprobe                   string = "modprobe"
 	ResourceModprobeInstall            string = "modprobe.install"
 	ResourceModprobeRemove             string = "modprobe.remove"
@@ -121,8 +125,6 @@ const (
 	ResourceModprobeOption             string = "modprobe.option"
 	ResourceModprobeAlias              string = "modprobe.alias"
 	ResourceModprobeSoftdep            string = "modprobe.softdep"
-	ResourceLsblk                      string = "lsblk"
-	ResourceLsblkEntry                 string = "lsblk.entry"
 	ResourceMount                      string = "mount"
 	ResourceMountPoint                 string = "mount.point"
 	ResourceShadow                     string = "shadow"
@@ -571,6 +573,22 @@ func init() {
 			Init:   initLogindefs,
 			Create: createLogindefs,
 		},
+		"limits": {
+			Init:   initLimits,
+			Create: createLimits,
+		},
+		"limits.entry": {
+			// to override args, implement: initLimitsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLimitsEntry,
+		},
+		"lsblk": {
+			// to override args, implement: initLsblk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLsblk,
+		},
+		"lsblk.entry": {
+			// to override args, implement: initLsblkEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLsblkEntry,
+		},
 		"modprobe": {
 			Init:   initModprobe,
 			Create: createModprobe,
@@ -598,14 +616,6 @@ func init() {
 		"modprobe.softdep": {
 			// to override args, implement: initModprobeSoftdep(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createModprobeSoftdep,
-		},
-		"lsblk": {
-			// to override args, implement: initLsblk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createLsblk,
-		},
-		"lsblk.entry": {
-			// to override args, implement: initLsblkEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createLsblkEntry,
 		},
 		"mount": {
 			// to override args, implement: initMount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2175,6 +2185,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"logindefs.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLogindefs).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"limits.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLimits).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"limits.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLimits).GetEntries()).ToDataRes(types.Array(types.Resource("limits.entry")))
+	},
+	"limits.entry.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLimitsEntry).GetFile()).ToDataRes(types.String)
+	},
+	"limits.entry.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLimitsEntry).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"limits.entry.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLimitsEntry).GetDomain()).ToDataRes(types.String)
+	},
+	"limits.entry.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLimitsEntry).GetType()).ToDataRes(types.String)
+	},
+	"limits.entry.item": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLimitsEntry).GetItem()).ToDataRes(types.String)
+	},
+	"limits.entry.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLimitsEntry).GetValue()).ToDataRes(types.String)
+	},
+	"lsblk.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblk).GetList()).ToDataRes(types.Array(types.Resource("lsblk.entry")))
+	},
+	"lsblk.entry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblkEntry).GetName()).ToDataRes(types.String)
+	},
+	"lsblk.entry.fstype": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblkEntry).GetFstype()).ToDataRes(types.String)
+	},
+	"lsblk.entry.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblkEntry).GetLabel()).ToDataRes(types.String)
+	},
+	"lsblk.entry.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblkEntry).GetUuid()).ToDataRes(types.String)
+	},
+	"lsblk.entry.mountpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblkEntry).GetMountpoints()).ToDataRes(types.Array(types.String))
+	},
 	"modprobe.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlModprobe).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
 	},
@@ -2270,24 +2322,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"modprobe.softdep.post": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlModprobeSoftdep).GetPost()).ToDataRes(types.Array(types.String))
-	},
-	"lsblk.list": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlLsblk).GetList()).ToDataRes(types.Array(types.Resource("lsblk.entry")))
-	},
-	"lsblk.entry.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlLsblkEntry).GetName()).ToDataRes(types.String)
-	},
-	"lsblk.entry.fstype": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlLsblkEntry).GetFstype()).ToDataRes(types.String)
-	},
-	"lsblk.entry.label": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlLsblkEntry).GetLabel()).ToDataRes(types.String)
-	},
-	"lsblk.entry.uuid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlLsblkEntry).GetUuid()).ToDataRes(types.String)
-	},
-	"lsblk.entry.mountpoints": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlLsblkEntry).GetMountpoints()).ToDataRes(types.Array(types.String))
 	},
 	"mount.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMount).GetList()).ToDataRes(types.Array(types.Resource("mount.point")))
@@ -5405,6 +5439,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlLogindefs).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"limits.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLimits).__id, ok = v.Value.(string)
+		return
+	},
+	"limits.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLimits).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"limits.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLimits).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"limits.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLimitsEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"limits.entry.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLimitsEntry).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"limits.entry.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLimitsEntry).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"limits.entry.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLimitsEntry).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"limits.entry.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLimitsEntry).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"limits.entry.item": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLimitsEntry).Item, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"limits.entry.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLimitsEntry).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lsblk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblk).__id, ok = v.Value.(string)
+		return
+	},
+	"lsblk.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblk).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"lsblk.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"lsblk.entry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lsblk.entry.fstype": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).Fstype, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lsblk.entry.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lsblk.entry.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lsblk.entry.mountpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).Mountpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"modprobe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlModprobe).__id, ok = v.Value.(string)
 		return
@@ -5559,38 +5665,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"modprobe.softdep.post": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlModprobeSoftdep).Post, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"lsblk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlLsblk).__id, ok = v.Value.(string)
-		return
-	},
-	"lsblk.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlLsblk).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"lsblk.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlLsblkEntry).__id, ok = v.Value.(string)
-		return
-	},
-	"lsblk.entry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlLsblkEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"lsblk.entry.fstype": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlLsblkEntry).Fstype, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"lsblk.entry.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlLsblkEntry).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"lsblk.entry.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlLsblkEntry).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"lsblk.entry.mountpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlLsblkEntry).Mountpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"mount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14784,6 +14858,293 @@ func (c *mqlLogindefs) GetParams() *plugin.TValue[map[string]any] {
 	})
 }
 
+// mqlLimits for the limits resource
+type mqlLimits struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLimitsInternal it will be used here
+	Files   plugin.TValue[[]any]
+	Entries plugin.TValue[[]any]
+}
+
+// createLimits creates a new instance of this resource
+func createLimits(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLimits{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("limits", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLimits) MqlName() string {
+	return "limits"
+}
+
+func (c *mqlLimits) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLimits) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("limits", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlLimits) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("limits", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.entries(vargFiles.Data)
+	})
+}
+
+// mqlLimitsEntry for the limits.entry resource
+type mqlLimitsEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLimitsEntryInternal it will be used here
+	File       plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	Domain     plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Item       plugin.TValue[string]
+	Value      plugin.TValue[string]
+}
+
+// createLimitsEntry creates a new instance of this resource
+func createLimitsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLimitsEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("limits.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLimitsEntry) MqlName() string {
+	return "limits.entry"
+}
+
+func (c *mqlLimitsEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLimitsEntry) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlLimitsEntry) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlLimitsEntry) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlLimitsEntry) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlLimitsEntry) GetItem() *plugin.TValue[string] {
+	return &c.Item
+}
+
+func (c *mqlLimitsEntry) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+// mqlLsblk for the lsblk resource
+type mqlLsblk struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLsblkInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createLsblk creates a new instance of this resource
+func createLsblk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLsblk{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("lsblk", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLsblk) MqlName() string {
+	return "lsblk"
+}
+
+func (c *mqlLsblk) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLsblk) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("lsblk", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlLsblkEntry for the lsblk.entry resource
+type mqlLsblkEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLsblkEntryInternal it will be used here
+	Name        plugin.TValue[string]
+	Fstype      plugin.TValue[string]
+	Label       plugin.TValue[string]
+	Uuid        plugin.TValue[string]
+	Mountpoints plugin.TValue[[]any]
+}
+
+// createLsblkEntry creates a new instance of this resource
+func createLsblkEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLsblkEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("lsblk.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLsblkEntry) MqlName() string {
+	return "lsblk.entry"
+}
+
+func (c *mqlLsblkEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLsblkEntry) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlLsblkEntry) GetFstype() *plugin.TValue[string] {
+	return &c.Fstype
+}
+
+func (c *mqlLsblkEntry) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlLsblkEntry) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlLsblkEntry) GetMountpoints() *plugin.TValue[[]any] {
+	return &c.Mountpoints
+}
+
 // mqlModprobe for the modprobe resource
 type mqlModprobe struct {
 	MqlRuntime *plugin.Runtime
@@ -15366,136 +15727,6 @@ func (c *mqlModprobeSoftdep) GetPre() *plugin.TValue[[]any] {
 
 func (c *mqlModprobeSoftdep) GetPost() *plugin.TValue[[]any] {
 	return &c.Post
-}
-
-// mqlLsblk for the lsblk resource
-type mqlLsblk struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlLsblkInternal it will be used here
-	List plugin.TValue[[]any]
-}
-
-// createLsblk creates a new instance of this resource
-func createLsblk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlLsblk{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("lsblk", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlLsblk) MqlName() string {
-	return "lsblk"
-}
-
-func (c *mqlLsblk) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlLsblk) GetList() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("lsblk", c.__id, "list")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.list()
-	})
-}
-
-// mqlLsblkEntry for the lsblk.entry resource
-type mqlLsblkEntry struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlLsblkEntryInternal it will be used here
-	Name        plugin.TValue[string]
-	Fstype      plugin.TValue[string]
-	Label       plugin.TValue[string]
-	Uuid        plugin.TValue[string]
-	Mountpoints plugin.TValue[[]any]
-}
-
-// createLsblkEntry creates a new instance of this resource
-func createLsblkEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlLsblkEntry{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("lsblk.entry", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlLsblkEntry) MqlName() string {
-	return "lsblk.entry"
-}
-
-func (c *mqlLsblkEntry) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlLsblkEntry) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlLsblkEntry) GetFstype() *plugin.TValue[string] {
-	return &c.Fstype
-}
-
-func (c *mqlLsblkEntry) GetLabel() *plugin.TValue[string] {
-	return &c.Label
-}
-
-func (c *mqlLsblkEntry) GetUuid() *plugin.TValue[string] {
-	return &c.Uuid
-}
-
-func (c *mqlLsblkEntry) GetMountpoints() *plugin.TValue[[]any] {
-	return &c.Mountpoints
 }
 
 // mqlMount for the mount resource

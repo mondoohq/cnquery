@@ -1262,6 +1262,50 @@ logindefs {
   params(content) map[string]string
 }
 
+// System resource limits configuration
+limits {
+  init(path? string)
+  // List of files that make up the limits configuration
+  files() []file
+  // Parsed limits entries
+  entries(files) []limits.entry
+}
+
+// Resource limit entry
+private limits.entry @defaults("domain item") {
+  // File where this entry is defined
+  file string
+  // Line number in the file
+  lineNumber int
+  // Domain (username, @groupname, *, %)
+  domain string
+  // Limit type (soft, hard, -)
+  type string
+  // Resource item (core, nofile, nproc, etc.)
+  item string
+  // Limit value
+  value string
+}
+
+// Unix list block devices
+lsblk {
+  []lsblk.entry
+}
+
+// Unix block device
+lsblk.entry {
+  // Device name
+  name string
+  // File system type
+  fstype string
+  // Label for the file system
+  label string
+  // UUID for the file system
+  uuid string
+  // Mount points for the device
+  mountpoints  []string
+}
+
 // Kernel module configuration from modprobe.d
 modprobe @defaults("blacklists installs") {
   init(path? string)
@@ -1353,25 +1397,6 @@ private modprobe.softdep @defaults("module") {
   pre []string
   // Modules to load after (post: dependencies)
   post []string
-}
-
-// Unix list block devices
-lsblk {
-  []lsblk.entry
-}
-
-// Unix block device
-lsblk.entry {
-  // Device name
-  name string
-  // File system type
-  fstype string
-  // Label for the file system
-  label string
-  // UUID for the file system
-  uuid string
-  // Mount points for the device
-  mountpoints  []string
 }
 
 // Unix mounted file system
