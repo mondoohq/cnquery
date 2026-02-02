@@ -156,6 +156,9 @@ func Array(typ Type) Type {
 
 // IsArray checks if this type is an array
 func (typ Type) IsArray() bool {
+	if typ.NotSet() {
+		return false
+	}
 	return typ[0] == byteArray
 }
 
@@ -169,6 +172,9 @@ func Map(key, value Type) Type {
 
 // IsMap checks if this type is a map
 func (typ Type) IsMap() bool {
+	if typ.NotSet() {
+		return false
+	}
 	return typ[0] == byteMap
 }
 
@@ -209,13 +215,19 @@ func Function(required rune, args []Type) Type {
 	return FunctionLike + Type(required) + Type(sig)
 }
 
-// IsFunction checks if this type is a map
+// IsFunction checks if this type is a function
 func (typ Type) IsFunction() bool {
+	if typ.NotSet() {
+		return false
+	}
 	return typ[0] == byteFunction
 }
 
 // Underlying returns the basic type, e.g. types.MapLike instead of types.Map(..)
 func (typ Type) Underlying() Type {
+	if typ.NotSet() {
+		return NoType
+	}
 	return Type(typ[0])
 }
 
@@ -244,6 +256,9 @@ func Enforce(left, right Type) (Type, bool) {
 
 // Child returns the child type of arrays and maps
 func (typ Type) Child() Type {
+	if typ.NotSet() {
+		return NoType
+	}
 	switch typ[0] {
 	case byteDict:
 		return Dict
@@ -257,7 +272,7 @@ func (typ Type) Child() Type {
 
 // Key returns the key type of a map
 func (typ Type) Key() Type {
-	if typ[0] != byteMap {
+	if typ.NotSet() || typ[0] != byteMap {
 		panic("cannot retrieve key type of non-map type " + typ.Label())
 	}
 	return Type(typ[1])
@@ -266,6 +281,9 @@ func (typ Type) Key() Type {
 // ResourceName return the name of a resource. Has to be a resource type,
 // otherwise this call panics.
 func (typ Type) ResourceName() string {
+	if typ.NotSet() {
+		panic("cannot determine type name of empty type")
+	}
 	if typ[0] == byteResource {
 		return string(typ[1:])
 	}

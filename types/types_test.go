@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTypes(t *testing.T) {
@@ -42,4 +43,60 @@ func TestTypes(t *testing.T) {
 		// test for human friendly name
 		assert.Equal(t, test.ExpectedLabel, test.T.Label())
 	}
+}
+
+func TestEmptyType(t *testing.T) {
+	empty := Type("")
+
+	t.Run("NotSet returns true for empty type", func(t *testing.T) {
+		assert.True(t, empty.NotSet())
+	})
+
+	t.Run("Underlying returns NoType for empty type", func(t *testing.T) {
+		// This should not panic
+		result := empty.Underlying()
+		assert.Equal(t, NoType, result)
+	})
+
+	t.Run("IsArray returns false for empty type", func(t *testing.T) {
+		// This should not panic
+		assert.False(t, empty.IsArray())
+	})
+
+	t.Run("IsMap returns false for empty type", func(t *testing.T) {
+		// This should not panic
+		assert.False(t, empty.IsMap())
+	})
+
+	t.Run("IsFunction returns false for empty type", func(t *testing.T) {
+		// This should not panic
+		assert.False(t, empty.IsFunction())
+	})
+
+	t.Run("IsResource returns false for empty type", func(t *testing.T) {
+		// This should not panic
+		assert.False(t, empty.IsResource())
+	})
+
+	t.Run("Child returns NoType for empty type", func(t *testing.T) {
+		// This should not panic
+		result := empty.Child()
+		assert.Equal(t, NoType, result)
+	})
+
+	t.Run("Label returns EMPTY for empty type", func(t *testing.T) {
+		assert.Equal(t, "EMPTY", empty.Label())
+	})
+
+	t.Run("Key panics for empty type", func(t *testing.T) {
+		require.Panics(t, func() {
+			empty.Key()
+		})
+	})
+
+	t.Run("ResourceName panics for empty type", func(t *testing.T) {
+		require.Panics(t, func() {
+			empty.ResourceName()
+		})
+	})
 }
