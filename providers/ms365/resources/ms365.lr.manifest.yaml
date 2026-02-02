@@ -96,6 +96,24 @@ resources:
       length: {}
       list: {}
     min_mondoo_version: 9.0.0
+  microsoft.authenticationMethodConfiguration:
+    fields:
+      excludeTargets: {}
+      id: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.authenticationMethodsPolicy:
+    fields:
+      authenticationMethodConfigurations: {}
+      description: {}
+      displayName: {}
+      id: {}
+      lastModifiedDateTime: {}
+      policyVersion: {}
+      systemCredentialPreferences: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   microsoft.conditionalAccess:
     fields:
       authenticationMethodsPolicy: {}
@@ -257,6 +275,56 @@ resources:
       isEnabled: {}
     is_private: true
     min_mondoo_version: 9.0.0
+  microsoft.crossTenantAccessPolicyDefault:
+    fields:
+      automaticUserConsentSettings: {}
+      b2bCollaborationInbound: {}
+      b2bCollaborationOutbound: {}
+      b2bDirectConnectInbound: {}
+      b2bDirectConnectOutbound: {}
+      inboundTrust: {}
+      invitationRedemptionIdentityProviderConfiguration: {}
+      isServiceDefault: {}
+      tenantRestrictions: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.crossTenantAccessPolicyDefault.automaticUserConsentSettings:
+    fields:
+      inboundAllowed: {}
+      outboundAllowed: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.crossTenantAccessPolicyDefault.b2bSetting:
+    fields:
+      applications: {}
+      usersAndGroups: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.crossTenantAccessPolicyDefault.b2bSetting.target:
+    fields:
+      target: {}
+      targetType: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.crossTenantAccessPolicyDefault.b2bSetting.targetConfig:
+    fields:
+      accessType: {}
+      targets: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.crossTenantAccessPolicyDefault.inboundTrust:
+    fields:
+      isCompliantDeviceAccepted: {}
+      isHybridAzureADJoinedDeviceAccepted: {}
+      isMfaAccepted: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration:
+    fields:
+      fallbackIdentityProvider: {}
+      primaryIdentityProviderPrecedenceOrder: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   microsoft.device:
     fields:
       deviceCategory: {}
@@ -384,6 +452,14 @@ resources:
       recordType: {}
       supportedService: {}
       ttl: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.externalIdentitiesPolicy:
+    fields:
+      allowExternalIdentitiesToLeave: {}
+      description: {}
+      displayName: {}
+      id: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.graph.accessReviewReviewerScope:
@@ -575,89 +651,6 @@ resources:
       id: {}
       isOrganizationDefault: {}
     min_mondoo_version: 9.0.0
-  microsoft.policies.authenticationMethodConfiguration:
-    fields:
-      excludeTargets: {}
-      id: {}
-      state: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.policies.authenticationMethodsPolicy:
-    fields:
-      authenticationMethodConfigurations: {}
-      description: {}
-      displayName: {}
-      id: {}
-      lastModifiedDateTime: {}
-      policyVersion: {}
-      systemCredentialPreferences: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.policies.crossTenantAccessPolicyDefault:
-    fields:
-      automaticUserConsentSettings: {}
-      b2bCollaborationInbound: {}
-      b2bCollaborationOutbound: {}
-      b2bDirectConnectInbound: {}
-      b2bDirectConnectOutbound: {}
-      inboundTrust: {}
-      invitationRedemptionIdentityProviderConfiguration: {}
-      isServiceDefault: {}
-      tenantRestrictions: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings:
-    fields:
-      inboundAllowed: {}
-      outboundAllowed: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting:
-    fields:
-      applications: {}
-      usersAndGroups: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.target:
-    fields:
-      target: {}
-      targetType: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.policies.crossTenantAccessPolicyDefault.b2bSetting.targetConfig:
-    fields:
-      accessType: {}
-      targets: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.policies.crossTenantAccessPolicyDefault.inboundTrust:
-    fields:
-      isCompliantDeviceAccepted: {}
-      isHybridAzureADJoinedDeviceAccepted: {}
-      isMfaAccepted: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.policies.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration:
-    fields:
-      fallbackIdentityProvider: {}
-      primaryIdentityProviderPrecedenceOrder: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.policies.externalIdentitiesPolicy:
-    fields:
-      allowExternalIdentitiesToLeave: {}
-      description: {}
-      displayName: {}
-      id: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
-  microsoft.policies.systemCredentialPreferences:
-    fields:
-      excludeTargets: {}
-      includeTargets: {}
-      state: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
   microsoft.rolemanagement:
     fields:
       roleDefinitions: {}
@@ -786,6 +779,13 @@ resources:
     fields:
       name: {}
       value: {}
+    min_mondoo_version: 9.0.0
+  microsoft.systemCredentialPreferences:
+    fields:
+      excludeTargets: {}
+      includeTargets: {}
+      state: {}
+    is_private: true
     min_mondoo_version: 9.0.0
   microsoft.tenant:
     fields:
