@@ -156,6 +156,10 @@ github.organization @defaults("login name") {
   hasRepositoryProjects bool
   // Organization custom properties
   customProperties() []github.organization.customProperty
+  // Organization audit log entries (requires GitHub Enterprise Cloud)
+  auditLog() []github.auditLogEntry
+  // Organization self-hosted runners
+  runners() []github.runner
 }
 
 // GitHub organization-level custom property
@@ -410,6 +414,12 @@ github.repository @defaults("fullName") {
   secretScanningAlerts() []github.secretScanningAlert
   // Code scanning alerts for the repository
   codeScanningAlerts() []github.codeScanningAlert
+  // Self-hosted runners for the repository
+  runners() []github.runner
+  // Deployment environments for the repository
+  environments() []github.environment
+  // Deployments for the repository
+  deployments() []github.deployment
 }
 
 // GitHub license
@@ -838,4 +848,166 @@ private github.codeScanningAlert @defaults("number state") {
   dismissedComment string
   // Most recent instance of this alert
   mostRecentInstance dict
+}
+
+// GitHub organization audit log entry
+private github.auditLogEntry @defaults("action actor timestamp") {
+  // Unique document ID
+  documentId string
+  // The action that was performed (e.g., user.login, repo.create)
+  action string
+  // The actor who performed the action
+  actor string
+  // Actor ID
+  actorId int
+  // Actor location country code
+  actorLocation string
+  // Business name (if applicable)
+  business string
+  // Business ID (if applicable)
+  businessId int
+  // Organization name
+  org string
+  // Organization ID
+  orgId int
+  // The user affected by the action
+  user string
+  // User ID
+  userId int
+  // Event creation time
+  createdAt time
+  // Timestamp when the event occurred
+  timestamp time
+  // External identity SAML NameID
+  externalIdentityNameId string
+  // External identity username
+  externalIdentityUsername string
+  // Hashed token (if applicable)
+  hashedToken string
+  // Token ID (if applicable)
+  tokenId int
+  // Token scopes (if applicable)
+  tokenScopes string
+  // Additional event data
+  data dict
+  // Additional fields not explicitly defined
+  additionalFields dict
+}
+
+// GitHub Actions self-hosted runner
+private github.runner @defaults("id name os status") {
+  // Runner ID
+  id int
+  // Runner name
+  name string
+  // Operating system (linux, macos, windows)
+  os string
+  // Runner status (online, offline)
+  status string
+  // Whether the runner is currently executing a job
+  busy bool
+  // Labels assigned to the runner
+  labels []github.runnerLabel
+}
+
+// GitHub Actions runner label
+private github.runnerLabel @defaults("name type") {
+  // Label ID
+  id int
+  // Label name
+  name string
+  // Label type (read-only or custom)
+  type string
+}
+
+// GitHub deployment environment
+private github.environment @defaults("name id") {
+  // Environment ID
+  id int
+  // Environment name
+  name string
+  // Environment URL
+  url string
+  // Environment web URL
+  htmlUrl string
+  // Wait timer in minutes before deployments can proceed
+  waitTimer int
+  // Whether admins can bypass protection rules
+  canAdminsBypass bool
+  // Environment creation time
+  createdAt time
+  // Environment update time
+  updatedAt time
+  // Whether only protected branches can deploy
+  protectedBranches bool
+  // Whether custom branch policies are enabled
+  customBranchPolicies bool
+  // Protection rules for this environment
+  protectionRules []github.environmentProtectionRule
+}
+
+// GitHub environment protection rule
+private github.environmentProtectionRule @defaults("type") {
+  // Rule ID
+  id int
+  // Rule type (required_reviewers, wait_timer, branch_policy)
+  type string
+  // Wait timer in minutes (for wait_timer type)
+  waitTimer int
+  // Whether to prevent self-review
+  preventSelfReview bool
+  // Required reviewers (users or teams)
+  reviewers []dict
+}
+
+// GitHub deployment
+private github.deployment @defaults("id environment sha") {
+  // Deployment ID
+  id int
+  // Git SHA being deployed
+  sha string
+  // Git ref (branch, tag, or SHA)
+  ref string
+  // Deployment task (e.g., "deploy")
+  task string
+  // Target environment name
+  environment string
+  // Deployment description
+  description string
+  // User who created the deployment
+  creator github.user
+  // Deployment creation time
+  createdAt time
+  // Deployment update time
+  updatedAt time
+  // Deployment payload (custom data)
+  payload dict
+  // Statuses URL
+  statusesUrl string
+  // Latest deployment status
+  latestStatus() github.deploymentStatus
+}
+
+// GitHub deployment status
+private github.deploymentStatus @defaults("id state") {
+  // Status ID
+  id int
+  // Deployment state (pending, success, failure, error, inactive, in_progress, queued)
+  state string
+  // Status description
+  description string
+  // Target environment name
+  environment string
+  // User who created the status
+  creator github.user
+  // Status creation time
+  createdAt time
+  // Status update time
+  updatedAt time
+  // Target URL for the deployment
+  targetUrl string
+  // Log URL
+  logUrl string
+  // Environment URL
+  environmentUrl string
 }
