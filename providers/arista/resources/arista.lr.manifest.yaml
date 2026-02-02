@@ -10,10 +10,16 @@ resources:
       ipInterfaces: {}
       ntp: {}
       roles: {}
+      routes:
+        min_mondoo_version: 9.0.0
       snmp: {}
+      switchports:
+        min_mondoo_version: 9.0.0
       systemConfig: {}
       users: {}
       version: {}
+      vlans:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -81,6 +87,27 @@ resources:
     platform:
       name:
       - arista-eos
+  arista.eos.route:
+    fields:
+      destination: {}
+      hardwareProgrammed: {}
+      kernelProgrammed: {}
+      metric: {}
+      nextHops: {}
+      preference: {}
+      routeAction: {}
+      routeType: {}
+      vrf: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - arista-eos
+    snippets:
+    - query: arista.eos.routes { destination routeType nextHops }
+      title: Display IP routing table
+    - query: arista.eos.routes.where(routeType == "static") { destination nextHops
+        }
+      title: Display static routes
   arista.eos.runningConfig:
     fields:
       content: {}
@@ -151,6 +178,24 @@ resources:
     platform:
       name:
       - arista-eos
+  arista.eos.switchport:
+    fields:
+      accessVlan: {}
+      mode: {}
+      name: {}
+      trunkAllowedVlans: {}
+      trunkGroups: {}
+      trunkNativeVlan: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - arista-eos
+    snippets:
+    - query: arista.eos.switchports { name mode accessVlan trunkNativeVlan }
+      title: Display switchport configurations
+    - query: arista.eos.switchports.where(mode == "trunk") { name trunkAllowedVlans
+        trunkNativeVlan }
+      title: Display trunk ports
   arista.eos.user:
     fields:
       format: {}
@@ -164,3 +209,18 @@ resources:
     platform:
       name:
       - arista-eos
+  arista.eos.vlan:
+    fields:
+      id: {}
+      name: {}
+      state: {}
+      trunkGroups: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - arista-eos
+    snippets:
+    - query: arista.eos.vlans { id name state }
+      title: Display configured VLANs
+    - query: arista.eos.vlans.where(state == "active") { id name }
+      title: Display active VLANs

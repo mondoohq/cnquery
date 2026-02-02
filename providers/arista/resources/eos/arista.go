@@ -277,3 +277,66 @@ func (eos *Eos) ShowHostname() (*showHostname, error) {
 
 	return shIntRsp, nil
 }
+
+// Vlans returns all configured VLANs using the goeapi module
+func (eos *Eos) Vlans() map[string]module.VlanConfig {
+	vlanModule := module.Vlan(eos.node)
+	return vlanModule.GetAll()
+}
+
+// Switchports returns all switchport configurations using the goeapi module
+func (eos *Eos) Switchports() map[string]module.SwitchPortConfig {
+	switchportModule := module.SwitchPort(eos.node)
+	return switchportModule.GetAll()
+}
+
+// showIPRoute represents the response from "show ip route"
+type showIPRoute struct {
+	VRFs map[string]showIPRouteVRF `json:"vrfs"`
+}
+
+func (s *showIPRoute) GetCmd() string {
+	return "show ip route"
+}
+
+type showIPRouteVRF struct {
+	Routes map[string]showIPRouteEntry `json:"routes"`
+}
+
+type showIPRouteEntry struct {
+	KernelProgrammed   bool             `json:"kernelProgrammed"`
+	DirectlyConnected  bool             `json:"directlyConnected"`
+	Preference         int              `json:"preference"`
+	RouteAction        string           `json:"routeAction"`
+	Vias               []showIPRouteVia `json:"vias"`
+	Metric             int              `json:"metric"`
+	HardwareProgrammed bool             `json:"hardwareProgrammed"`
+	RouteType          string           `json:"routeType"`
+}
+
+type showIPRouteVia struct {
+	Interface   string `json:"interface"`
+	NexthopAddr string `json:"nexthopAddr"`
+}
+
+// ShowIPRoute returns the IP routing table
+func (eos *Eos) ShowIPRoute() (*showIPRoute, error) {
+	shRsp := &showIPRoute{}
+
+	handle, err := eos.node.GetHandle("json")
+	if err != nil {
+		return nil, err
+	}
+	err = handle.AddCommand(shRsp)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handle.Call(); err != nil {
+		return nil, err
+	}
+
+	handle.Close()
+
+	return shRsp, nil
+}

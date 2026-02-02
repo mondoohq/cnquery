@@ -28,6 +28,9 @@ const (
 	ResourceAristaEosStp                  string = "arista.eos.stp"
 	ResourceAristaEosStpMst               string = "arista.eos.stp.mst"
 	ResourceAristaEosSptMstInterface      string = "arista.eos.spt.mstInterface"
+	ResourceAristaEosVlan                 string = "arista.eos.vlan"
+	ResourceAristaEosRoute                string = "arista.eos.route"
+	ResourceAristaEosSwitchport           string = "arista.eos.switchport"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -81,6 +84,18 @@ func init() {
 		"arista.eos.spt.mstInterface": {
 			// to override args, implement: initAristaEosSptMstInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAristaEosSptMstInterface,
+		},
+		"arista.eos.vlan": {
+			// to override args, implement: initAristaEosVlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosVlan,
+		},
+		"arista.eos.route": {
+			// to override args, implement: initAristaEosRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosRoute,
+		},
+		"arista.eos.switchport": {
+			// to override args, implement: initAristaEosSwitchport(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosSwitchport,
 		},
 	}
 }
@@ -191,6 +206,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.ntp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetNtp()).ToDataRes(types.Resource("arista.eos.ntpSetting"))
+	},
+	"arista.eos.vlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetVlans()).ToDataRes(types.Array(types.Resource("arista.eos.vlan")))
+	},
+	"arista.eos.routes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetRoutes()).ToDataRes(types.Array(types.Resource("arista.eos.route")))
+	},
+	"arista.eos.switchports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetSwitchports()).ToDataRes(types.Array(types.Resource("arista.eos.switchport")))
 	},
 	"arista.eos.runningConfig.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosRunningConfig).GetContent()).ToDataRes(types.String)
@@ -369,6 +393,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.spt.mstInterface.features": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSptMstInterface).GetFeatures()).ToDataRes(types.Dict)
 	},
+	"arista.eos.vlan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosVlan).GetId()).ToDataRes(types.String)
+	},
+	"arista.eos.vlan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosVlan).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.vlan.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosVlan).GetState()).ToDataRes(types.String)
+	},
+	"arista.eos.vlan.trunkGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosVlan).GetTrunkGroups()).ToDataRes(types.Array(types.String))
+	},
+	"arista.eos.route.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRoute).GetDestination()).ToDataRes(types.String)
+	},
+	"arista.eos.route.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRoute).GetVrf()).ToDataRes(types.String)
+	},
+	"arista.eos.route.routeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRoute).GetRouteType()).ToDataRes(types.String)
+	},
+	"arista.eos.route.preference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRoute).GetPreference()).ToDataRes(types.Int)
+	},
+	"arista.eos.route.metric": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRoute).GetMetric()).ToDataRes(types.Int)
+	},
+	"arista.eos.route.hardwareProgrammed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRoute).GetHardwareProgrammed()).ToDataRes(types.Bool)
+	},
+	"arista.eos.route.kernelProgrammed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRoute).GetKernelProgrammed()).ToDataRes(types.Bool)
+	},
+	"arista.eos.route.routeAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRoute).GetRouteAction()).ToDataRes(types.String)
+	},
+	"arista.eos.route.nextHops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRoute).GetNextHops()).ToDataRes(types.Array(types.Dict))
+	},
+	"arista.eos.switchport.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSwitchport).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.switchport.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSwitchport).GetMode()).ToDataRes(types.String)
+	},
+	"arista.eos.switchport.accessVlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSwitchport).GetAccessVlan()).ToDataRes(types.String)
+	},
+	"arista.eos.switchport.trunkNativeVlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSwitchport).GetTrunkNativeVlan()).ToDataRes(types.String)
+	},
+	"arista.eos.switchport.trunkAllowedVlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSwitchport).GetTrunkAllowedVlans()).ToDataRes(types.String)
+	},
+	"arista.eos.switchport.trunkGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSwitchport).GetTrunkGroups()).ToDataRes(types.Array(types.String))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -423,6 +504,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.ntp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEos).Ntp, ok = plugin.RawToTValue[*mqlAristaEosNtpSetting](v.Value, v.Error)
+		return
+	},
+	"arista.eos.vlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).Vlans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).Routes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.switchports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).Switchports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.runningConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -705,6 +798,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosSptMstInterface).Features, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"arista.eos.vlan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosVlan).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.vlan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosVlan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.vlan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosVlan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.vlan.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosVlan).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.vlan.trunkGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosVlan).TrunkGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.route.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.route.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.route.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.route.routeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).RouteType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.route.preference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).Preference, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.route.metric": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).Metric, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.route.hardwareProgrammed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).HardwareProgrammed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.route.kernelProgrammed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).KernelProgrammed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.route.routeAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).RouteAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.route.nextHops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).NextHops, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.switchport.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSwitchport).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.switchport.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSwitchport).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.switchport.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSwitchport).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.switchport.accessVlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSwitchport).AccessVlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.switchport.trunkNativeVlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSwitchport).TrunkNativeVlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.switchport.trunkAllowedVlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSwitchport).TrunkAllowedVlans, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.switchport.trunkGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSwitchport).TrunkGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -744,6 +925,9 @@ type mqlAristaEos struct {
 	Roles        plugin.TValue[[]any]
 	Snmp         plugin.TValue[*mqlAristaEosSnmpSetting]
 	Ntp          plugin.TValue[*mqlAristaEosNtpSetting]
+	Vlans        plugin.TValue[[]any]
+	Routes       plugin.TValue[[]any]
+	Switchports  plugin.TValue[[]any]
 }
 
 // createAristaEos creates a new instance of this resource
@@ -900,6 +1084,54 @@ func (c *mqlAristaEos) GetNtp() *plugin.TValue[*mqlAristaEosNtpSetting] {
 		}
 
 		return c.ntp()
+	})
+}
+
+func (c *mqlAristaEos) GetVlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vlans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "vlans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vlans()
+	})
+}
+
+func (c *mqlAristaEos) GetRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Routes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "routes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routes()
+	})
+}
+
+func (c *mqlAristaEos) GetSwitchports() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Switchports, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "switchports")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.switchports()
 	})
 }
 
@@ -1704,4 +1936,231 @@ func (c *mqlAristaEosSptMstInterface) GetFeatures() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Features, func() (any, error) {
 		return c.features()
 	})
+}
+
+// mqlAristaEosVlan for the arista.eos.vlan resource
+type mqlAristaEosVlan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosVlanInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	State       plugin.TValue[string]
+	TrunkGroups plugin.TValue[[]any]
+}
+
+// createAristaEosVlan creates a new instance of this resource
+func createAristaEosVlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosVlan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.vlan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosVlan) MqlName() string {
+	return "arista.eos.vlan"
+}
+
+func (c *mqlAristaEosVlan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosVlan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAristaEosVlan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosVlan) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAristaEosVlan) GetTrunkGroups() *plugin.TValue[[]any] {
+	return &c.TrunkGroups
+}
+
+// mqlAristaEosRoute for the arista.eos.route resource
+type mqlAristaEosRoute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosRouteInternal it will be used here
+	Destination        plugin.TValue[string]
+	Vrf                plugin.TValue[string]
+	RouteType          plugin.TValue[string]
+	Preference         plugin.TValue[int64]
+	Metric             plugin.TValue[int64]
+	HardwareProgrammed plugin.TValue[bool]
+	KernelProgrammed   plugin.TValue[bool]
+	RouteAction        plugin.TValue[string]
+	NextHops           plugin.TValue[[]any]
+}
+
+// createAristaEosRoute creates a new instance of this resource
+func createAristaEosRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosRoute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.route", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosRoute) MqlName() string {
+	return "arista.eos.route"
+}
+
+func (c *mqlAristaEosRoute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosRoute) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlAristaEosRoute) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlAristaEosRoute) GetRouteType() *plugin.TValue[string] {
+	return &c.RouteType
+}
+
+func (c *mqlAristaEosRoute) GetPreference() *plugin.TValue[int64] {
+	return &c.Preference
+}
+
+func (c *mqlAristaEosRoute) GetMetric() *plugin.TValue[int64] {
+	return &c.Metric
+}
+
+func (c *mqlAristaEosRoute) GetHardwareProgrammed() *plugin.TValue[bool] {
+	return &c.HardwareProgrammed
+}
+
+func (c *mqlAristaEosRoute) GetKernelProgrammed() *plugin.TValue[bool] {
+	return &c.KernelProgrammed
+}
+
+func (c *mqlAristaEosRoute) GetRouteAction() *plugin.TValue[string] {
+	return &c.RouteAction
+}
+
+func (c *mqlAristaEosRoute) GetNextHops() *plugin.TValue[[]any] {
+	return &c.NextHops
+}
+
+// mqlAristaEosSwitchport for the arista.eos.switchport resource
+type mqlAristaEosSwitchport struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosSwitchportInternal it will be used here
+	Name              plugin.TValue[string]
+	Mode              plugin.TValue[string]
+	AccessVlan        plugin.TValue[string]
+	TrunkNativeVlan   plugin.TValue[string]
+	TrunkAllowedVlans plugin.TValue[string]
+	TrunkGroups       plugin.TValue[[]any]
+}
+
+// createAristaEosSwitchport creates a new instance of this resource
+func createAristaEosSwitchport(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosSwitchport{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.switchport", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosSwitchport) MqlName() string {
+	return "arista.eos.switchport"
+}
+
+func (c *mqlAristaEosSwitchport) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosSwitchport) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosSwitchport) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAristaEosSwitchport) GetAccessVlan() *plugin.TValue[string] {
+	return &c.AccessVlan
+}
+
+func (c *mqlAristaEosSwitchport) GetTrunkNativeVlan() *plugin.TValue[string] {
+	return &c.TrunkNativeVlan
+}
+
+func (c *mqlAristaEosSwitchport) GetTrunkAllowedVlans() *plugin.TValue[string] {
+	return &c.TrunkAllowedVlans
+}
+
+func (c *mqlAristaEosSwitchport) GetTrunkGroups() *plugin.TValue[[]any] {
+	return &c.TrunkGroups
 }
