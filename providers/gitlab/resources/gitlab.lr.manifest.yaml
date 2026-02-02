@@ -125,6 +125,8 @@ resources:
       packagesEnabled:
         min_mondoo_version: 9.0.0
       path: {}
+      pipelines:
+        min_mondoo_version: 9.0.0
       projectFiles:
         min_mondoo_version: 9.0.0
       projectMembers:
@@ -136,6 +138,8 @@ resources:
       removeSourceBranchAfterMerge:
         min_mondoo_version: 9.0.0
       requirementsEnabled:
+        min_mondoo_version: 9.0.0
+      runners:
         min_mondoo_version: 9.0.0
       serviceDeskEnabled:
         min_mondoo_version: 9.0.0
@@ -249,6 +253,21 @@ resources:
       updatedAt: {}
     is_private: true
     min_mondoo_version: 9.0.0
+  gitlab.project.pipeline:
+    fields:
+      createdAt: {}
+      id: {}
+      internalId: {}
+      name: {}
+      projectId: {}
+      ref: {}
+      sha: {}
+      source: {}
+      status: {}
+      updatedAt: {}
+      webURL: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
   gitlab.project.protectedBranch:
     fields:
       allowForcePush: {}
@@ -265,6 +284,18 @@ resources:
       name: {}
       releasedAt: {}
       tagName: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  gitlab.project.runner:
+    fields:
+      description: {}
+      id: {}
+      isShared: {}
+      name: {}
+      online: {}
+      paused: {}
+      runnerType: {}
+      status: {}
     is_private: true
     min_mondoo_version: 9.0.0
   gitlab.project.variable:

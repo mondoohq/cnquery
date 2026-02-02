@@ -834,3 +834,124 @@ func (p *mqlGitlabProject) labels() ([]any, error) {
 
 	return mqlLabels, nil
 }
+
+// id function for gitlab.project.pipeline
+func (p *mqlGitlabProjectPipeline) id() (string, error) {
+	return strconv.FormatInt(p.Id.Data, 10), nil
+}
+
+// pipelines fetches the list of CI/CD pipelines for the project
+func (p *mqlGitlabProject) pipelines() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	// Fetch all pipelines with pagination
+	perPage := int64(50)
+	page := int64(1)
+	var allPipelines []*gitlab.PipelineInfo
+
+	for {
+		pipelines, resp, err := conn.Client().Pipelines.ListProjectPipelines(projectID, &gitlab.ListProjectPipelinesOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allPipelines = append(allPipelines, pipelines...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlPipelines []any
+	for _, pipeline := range allPipelines {
+		pipelineInfo := map[string]*llx.RawData{
+			"id":         llx.IntData(pipeline.ID),
+			"internalId": llx.IntData(pipeline.IID),
+			"projectId":  llx.IntData(pipeline.ProjectID),
+			"status":     llx.StringData(pipeline.Status),
+			"source":     llx.StringData(pipeline.Source),
+			"ref":        llx.StringData(pipeline.Ref),
+			"sha":        llx.StringData(pipeline.SHA),
+			"name":       llx.StringData(pipeline.Name),
+			"webURL":     llx.StringData(pipeline.WebURL),
+			"createdAt":  llx.TimeDataPtr(pipeline.CreatedAt),
+			"updatedAt":  llx.TimeDataPtr(pipeline.UpdatedAt),
+		}
+
+		mqlPipeline, err := CreateResource(p.MqlRuntime, "gitlab.project.pipeline", pipelineInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlPipelines = append(mqlPipelines, mqlPipeline)
+	}
+
+	return mqlPipelines, nil
+}
+
+// id function for gitlab.project.runner
+func (r *mqlGitlabProjectRunner) id() (string, error) {
+	return strconv.FormatInt(r.Id.Data, 10), nil
+}
+
+// runners fetches the list of runners available to the project
+func (p *mqlGitlabProject) runners() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	// Fetch all runners with pagination
+	perPage := int64(50)
+	page := int64(1)
+	var allRunners []*gitlab.Runner
+
+	for {
+		runners, resp, err := conn.Client().Runners.ListProjectRunners(projectID, &gitlab.ListProjectRunnersOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allRunners = append(allRunners, runners...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlRunners []any
+	for _, runner := range allRunners {
+		runnerInfo := map[string]*llx.RawData{
+			"id":          llx.IntData(runner.ID),
+			"description": llx.StringData(runner.Description),
+			"name":        llx.StringData(runner.Name),
+			"runnerType":  llx.StringData(runner.RunnerType),
+			"paused":      llx.BoolData(runner.Paused),
+			"isShared":    llx.BoolData(runner.IsShared),
+			"online":      llx.BoolData(runner.Online),
+			"status":      llx.StringData(runner.Status),
+		}
+
+		mqlRunner, err := CreateResource(p.MqlRuntime, "gitlab.project.runner", runnerInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlRunners = append(mqlRunners, mqlRunner)
+	}
+
+	return mqlRunners, nil
+}

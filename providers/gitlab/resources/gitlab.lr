@@ -188,6 +188,10 @@ gitlab.project @defaults("fullName visibility webURL") {
   milestones() []gitlab.project.milestone
   // List of labels for the project
   labels() []gitlab.project.label
+  // List of CI/CD pipelines for the project
+  pipelines() []gitlab.project.pipeline
+  // List of runners available to the project
+  runners() []gitlab.project.runner
 }
 
 // GitLab project approval rule
@@ -432,4 +436,50 @@ private gitlab.group.label @defaults("name color") {
   priority int
   // Whether this is a project label (vs. group label)
   isProjectLabel bool
+}
+
+// GitLab CI/CD pipeline
+private gitlab.project.pipeline @defaults("id status ref") {
+  // Pipeline ID
+  id int
+  // Pipeline internal ID (project-scoped)
+  internalId int
+  // Project ID
+  projectId int
+  // Pipeline status (created, waiting_for_resource, preparing, pending, running, success, failed, canceled, skipped, manual, scheduled)
+  status string
+  // Pipeline source (push, web, trigger, schedule, api, external, pipeline, chat, webide, merge_request_event, external_pull_request_event, parent_pipeline, ondemand_dast_scan, ondemand_dast_validation)
+  source string
+  // Git reference (branch or tag name)
+  ref string
+  // Git commit SHA
+  sha string
+  // Pipeline name
+  name string
+  // Pipeline web URL
+  webURL string
+  // Pipeline creation time
+  createdAt time
+  // Pipeline last update time
+  updatedAt time
+}
+
+// GitLab CI/CD runner
+private gitlab.project.runner @defaults("id description status") {
+  // Runner ID
+  id int
+  // Runner description
+  description string
+  // Runner name
+  name string
+  // Runner type (instance_type, group_type, project_type)
+  runnerType string
+  // Whether the runner is paused
+  paused bool
+  // Whether this is a shared runner
+  isShared bool
+  // Whether the runner is online
+  online bool
+  // Runner status (online, offline, stale, never_contacted, active, paused)
+  status string
 }

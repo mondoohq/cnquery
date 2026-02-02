@@ -29,6 +29,7 @@ ctx
 CUSTOMERID
 customresources
 cyclonedx
+dast
 databricks
 datapath
 DATAUSER
@@ -109,6 +110,7 @@ nullgroup
 nullstring
 oidc
 OIDs
+ondemand
 opcplc
 openssh
 openssl
@@ -165,6 +167,7 @@ virtualmachine
 Vtpm
 vulnerabilityassessmentsettings
 vulnmgmt
+webide
 wil
 xoxp
 xssmatchstatement
