@@ -34,6 +34,8 @@ ansible.play @defaults("name") {
   ignoreUnreachable bool
   // Whether any task failure aborts the play
   anyErrorsFatal bool
+  // Whether to gather facts about remote hosts
+  gatherFacts string
   // Play-level variables
   vars map[string]dict
   // Roles to apply
