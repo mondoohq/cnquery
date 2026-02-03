@@ -25,7 +25,7 @@ Examples:
   cnquery shell arista <user@host> --pasword <password>
   cnspec scan arista <user@host> --ask-pass
 
-Note: The arista provider uses requires access to the Arista API over HTTPS
+Note: The arista provider uses requires access to the Arista API over HTTPS. You may be able to SSH to a device, but not access the API. To view the status of the API run 'show management api http-commands' on the device.
 `,
 			Discovery: []string{},
 			MinArgs:   1,
