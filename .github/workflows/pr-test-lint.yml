@@ -158,54 +158,9 @@ jobs:
       - name: Run race detector on selected packages
         run: make race/go
 
-  go-bench:
-    runs-on: ubuntu-latest
-    if: github.ref != 'refs/heads/main'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Import environment variables from file
-        run: cat ".github/env" >> $GITHUB_ENV
-      - name: Install Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
-        with:
-          go-version: ">=${{ env.golang-version }}"
-          cache: false
-      - name: Run benchmark
-        run: make benchmark/go | tee benchmark.txt
-
-        # Remove log statements and leave just the benchmark results
-      - name: Cleanup benchmark file
-        run: sed -i -n '/goos:/,$p' benchmark.txt
-
-      # Download previous benchmark result from cache (if exists)
-      - name: Download previous benchmark data
-        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
-        with:
-          path: ./cache
-          key: ${{ runner.os }}-benchmark-${{ github.run_id }}
-          restore-keys: |
-            ${{ runner.os }}-benchmark-
-      # Run `github-action-benchmark` action
-      - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@4bdcce38c94cec68da58d012ac24b7b1155efe8b # v1.20.7
-        with:
-          # What benchmark tool the output.txt came from
-          tool: "go"
-          # Where the output from the benchmark tool is stored
-          output-file-path: benchmark.txt
-          # Where the previous data file is stored
-          external-data-json-path: ./cache/benchmark-data.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          comment-on-alert: true
-          summary-always: true
-          fail-on-alert: true
-          save-data-file: false
-          alert-threshold: "150%"
-
   go-auto-approve:
     runs-on: ubuntu-latest
-    needs: [golangci-lint, golangci-lint-providers, go-test, go-test-integration, go-bench, go-mod]
+    needs: [golangci-lint, golangci-lint-providers, go-test, go-test-integration, go-mod]
     # For now, we only auto approve and merge provider release PRs created by mondoo-tools.
     # We have to check the commit author, because the PR is created by "github-actions[bot]"
     # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions#startswith

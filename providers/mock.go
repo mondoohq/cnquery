@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v12/explorer/resources"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
@@ -123,7 +122,7 @@ func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 			return nil, err
 		}
 
-		explorer, err := resources.NewRemoteServices(client.ApiEndpoint, client.Plugins, client.HttpClient)
+		explorer, err := recording.NewRemoteServices(client.ApiEndpoint, client.Plugins, client.HttpClient)
 		if err != nil {
 			return nil, err
 		}

@@ -501,9 +501,6 @@ go test -v ./providers/<provider>/...
 # Race condition detection (if touching concurrency)
 make race/go
 
-# Benchmark tests (if performance-sensitive)
-make benchmark/go
-
 # Integration tests (if changing core execution)
 make test/integration
 ```

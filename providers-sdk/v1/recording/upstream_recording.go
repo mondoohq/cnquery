@@ -9,20 +9,19 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/explorer/resources"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
 type Upstream struct {
 	ctx            context.Context
-	service        resources.ResourcesExplorer
+	service        ResourcesExplorer
 	asset          *inventory.Asset
 	lock           sync.Mutex
 	resourcesCache map[string]resourceCache
 }
 
-func NewUpstreamRecording(ctx context.Context, service resources.ResourcesExplorer, assetMrn string) (*Upstream, error) {
+func NewUpstreamRecording(ctx context.Context, service ResourcesExplorer, assetMrn string) (*Upstream, error) {
 	recording := &Upstream{
 		ctx:     ctx,
 		service: service,
@@ -115,9 +114,9 @@ func (n *Upstream) GetResource(_ uint32, resource string, id string) (map[string
 		return exist.fields, true
 	}
 
-	res, err := n.service.GetResourcesData(n.ctx, &resources.EntityResourcesReq{
+	res, err := n.service.GetResourcesData(n.ctx, &EntityResourcesReq{
 		EntityMrn: n.asset.Mrn,
-		Resources: []*resources.ResourceDataReq{{
+		Resources: []*ResourceDataReq{{
 			Resource: resource,
 			Id:       id,
 		}},
