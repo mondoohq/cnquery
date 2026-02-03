@@ -77,6 +77,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
 	}
 
+	// Validate that password was provided
+	if len(conn.Credentials) == 0 {
+		return nil, errors.New("password is required. Use --password or --ask-pass to provide credentials")
+	}
+
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conn},
 	}
