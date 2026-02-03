@@ -141,9 +141,6 @@ make test/lint
 # Extended linting (more comprehensive)
 make test/lint/extended
 
-# Run benchmarks
-make benchmark/go
-
 # Race condition detection
 make race/go
 ```
@@ -488,9 +485,6 @@ go test -v ./providers/<provider>/...
 ```bash
 # Race condition detection (if touching concurrency)
 make race/go
-
-# Benchmark tests (if performance-sensitive)
-make benchmark/go
 
 # Integration tests (if changing core execution)
 make test/integration
