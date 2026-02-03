@@ -163,8 +163,10 @@ resources:
       environment: {}
       id: {}
       latestStatus: {}
+      owner: {}
       payload: {}
       ref: {}
+      repoName: {}
       sha: {}
       statusesUrl: {}
       task: {}

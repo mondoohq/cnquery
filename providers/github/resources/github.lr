@@ -964,6 +964,10 @@ private github.environmentProtectionRule @defaults("type") {
 private github.deployment @defaults("id environment sha") {
   // Deployment ID
   id int
+  // Deployment repository name
+  repoName string
+  // Deployment repository owner
+  owner github.user
   // Git SHA being deployed
   sha string
   // Git ref (branch, tag, or SHA)

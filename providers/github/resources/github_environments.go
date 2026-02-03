@@ -221,6 +221,14 @@ func deploymentsToMql(runtime *plugin.Runtime, owner, repo string, deployments [
 			creator = creatorRes.(*mqlGithubUser)
 		}
 
+		// Create owner user resource
+		ownerRes, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
+			"login": llx.StringData(owner),
+		})
+		if err != nil {
+			return nil, err
+		}
+
 		// Convert payload to dict
 		var payload map[string]any
 		if d.Payload != nil {
@@ -229,6 +237,8 @@ func deploymentsToMql(runtime *plugin.Runtime, owner, repo string, deployments [
 
 		deploymentRes, err := CreateResource(runtime, "github.deployment", map[string]*llx.RawData{
 			"id":          llx.IntDataDefault(d.ID, 0),
+			"repoName":    llx.StringData(repo),
+			"owner":       llx.ResourceData(ownerRes.(*mqlGithubUser), "github.user"),
 			"sha":         llx.StringDataPtr(d.SHA),
 			"ref":         llx.StringDataPtr(d.Ref),
 			"task":        llx.StringDataPtr(d.Task),

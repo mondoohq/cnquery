@@ -1518,6 +1518,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubDeployment).GetId()).ToDataRes(types.Int)
 	},
+	"github.deployment.repoName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDeployment).GetRepoName()).ToDataRes(types.String)
+	},
+	"github.deployment.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDeployment).GetOwner()).ToDataRes(types.Resource("github.user"))
+	},
 	"github.deployment.sha": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubDeployment).GetSha()).ToDataRes(types.String)
 	},
@@ -3375,6 +3381,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubDeployment).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.deployment.repoName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDeployment).RepoName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.deployment.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDeployment).Owner, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
 		return
 	},
 	"github.deployment.sha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7717,6 +7731,8 @@ type mqlGithubDeployment struct {
 	__id       string
 	mqlGithubDeploymentInternal
 	Id           plugin.TValue[int64]
+	RepoName     plugin.TValue[string]
+	Owner        plugin.TValue[*mqlGithubUser]
 	Sha          plugin.TValue[string]
 	Ref          plugin.TValue[string]
 	Task         plugin.TValue[string]
@@ -7769,6 +7785,14 @@ func (c *mqlGithubDeployment) MqlID() string {
 
 func (c *mqlGithubDeployment) GetId() *plugin.TValue[int64] {
 	return &c.Id
+}
+
+func (c *mqlGithubDeployment) GetRepoName() *plugin.TValue[string] {
+	return &c.RepoName
+}
+
+func (c *mqlGithubDeployment) GetOwner() *plugin.TValue[*mqlGithubUser] {
+	return &c.Owner
 }
 
 func (c *mqlGithubDeployment) GetSha() *plugin.TValue[string] {
