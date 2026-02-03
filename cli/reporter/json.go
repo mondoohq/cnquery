@@ -4,14 +4,13 @@
 package reporter
 
 import (
-	"encoding/json"
 	"errors"
 
-	"go.mondoo.com/cnquery/v12/explorer"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/utils/iox"
 )
 
+// CodeBundleToJSON converts a code bundle and its results to JSON output
 func CodeBundleToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult, out iox.OutputHelper) error {
 	var checksums []string
 	eps := code.CodeV2.Entrypoints()
@@ -40,78 +39,6 @@ func CodeBundleToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult, o
 	}
 
 	out.WriteString("}")
-
-	return nil
-}
-
-func ConvertToJSON(data *explorer.ReportCollection, out iox.OutputHelper) error {
-	if data == nil {
-		return nil
-	}
-
-	queryMrnIdx := map[string]string{}
-
-	// this case can happen when all assets error out, eg. no query pack is available that matches
-	if data.Bundle != nil {
-		for i := range data.Bundle.Packs {
-			pack := data.Bundle.Packs[i]
-			for j := range pack.Queries {
-				query := pack.Queries[j]
-				queryMrnIdx[query.CodeId] = query.Mrn
-			}
-		}
-	}
-
-	out.WriteString(
-		"{" +
-			"\"assets\":")
-	assets, err := json.Marshal(data.Assets)
-	if err != nil {
-		return err
-	}
-	out.WriteString(string(assets))
-
-	out.WriteString("," +
-		"\"data\":" +
-		"{")
-	pre := ""
-	for id, report := range data.Reports {
-		out.WriteString(pre + llx.PrettyPrintString(id) + ":{")
-		pre = ","
-
-		resolved, ok := data.Resolved[id]
-		if !ok {
-			return errors.New("cannot find resolved pack for " + id + " in report")
-		}
-
-		results := report.RawResults()
-		pre2 := ""
-		for qid, query := range resolved.ExecutionJob.Queries {
-			printID := queryMrnIdx[qid]
-			if printID == "" {
-				printID = qid
-			}
-
-			out.WriteString(pre2 + llx.PrettyPrintString(printID) + ":")
-			pre2 = ","
-
-			err := CodeBundleToJSON(query.Code, results, out)
-			if err != nil {
-				return err
-			}
-		}
-		out.WriteString("}")
-	}
-
-	out.WriteString("}," +
-		"\"errors\":" +
-		"{")
-	pre = ""
-	for id, errStatus := range data.Errors {
-		out.WriteString(pre + llx.PrettyPrintString(id) + ":" + llx.PrettyPrintString(errStatus.Message))
-		pre = ","
-	}
-	out.WriteString("}}")
 
 	return nil
 }

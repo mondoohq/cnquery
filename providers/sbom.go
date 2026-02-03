@@ -10,7 +10,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/uuid"
-	"go.mondoo.com/cnquery/v12/explorer/resources"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
@@ -188,7 +187,7 @@ func (s *sbomProviderService) Init(running *RunningProvider) {
 }
 
 // implement resource explorer interface
-func (s *sbomProviderService) GetResourcesData(ctx context.Context, req *resources.EntityResourcesReq) (*resources.EntityResourcesRes, error) {
+func (s *sbomProviderService) GetResourcesData(ctx context.Context, req *recording.EntityResourcesReq) (*recording.EntityResourcesRes, error) {
 	list := []*llx.ResourceRecording{}
 	for i := range req.Resources {
 		request := req.Resources[i]
@@ -208,13 +207,13 @@ func (s *sbomProviderService) GetResourcesData(ctx context.Context, req *resourc
 		}
 	}
 
-	return &resources.EntityResourcesRes{
+	return &recording.EntityResourcesRes{
 		EntityMrn: req.EntityMrn,
 		Resources: list,
 	}, nil
 }
 
-func (s *sbomProviderService) ListResources(ctx context.Context, req *resources.ListResourcesReq) (*resources.ListResourcesRes, error) {
+func (s *sbomProviderService) ListResources(ctx context.Context, req *recording.ListResourcesReq) (*recording.ListResourcesRes, error) {
 	list := make([]*llx.ResourceRecording, len(s.recording.Resources))
 	for i := range s.recording.Resources {
 		cur := s.recording.Resources[i]
@@ -223,7 +222,7 @@ func (s *sbomProviderService) ListResources(ctx context.Context, req *resources.
 			Id:       cur.ID,
 		}
 	}
-	return &resources.ListResourcesRes{
+	return &recording.ListResourcesRes{
 		EntityMrn: req.EntityMrn,
 		Resources: list,
 	}, nil
