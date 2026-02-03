@@ -31,6 +31,13 @@ const (
 	ResourceAristaEosVlan                 string = "arista.eos.vlan"
 	ResourceAristaEosRoute                string = "arista.eos.route"
 	ResourceAristaEosSwitchport           string = "arista.eos.switchport"
+	ResourceAristaEosBgp                  string = "arista.eos.bgp"
+	ResourceAristaEosBgpVrf               string = "arista.eos.bgp.vrf"
+	ResourceAristaEosBgpPeer              string = "arista.eos.bgp.peer"
+	ResourceAristaEosMlag                 string = "arista.eos.mlag"
+	ResourceAristaEosMlagInterface        string = "arista.eos.mlag.interface"
+	ResourceAristaEosAcl                  string = "arista.eos.acl"
+	ResourceAristaEosAclEntry             string = "arista.eos.acl.entry"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -96,6 +103,34 @@ func init() {
 		"arista.eos.switchport": {
 			// to override args, implement: initAristaEosSwitchport(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAristaEosSwitchport,
+		},
+		"arista.eos.bgp": {
+			// to override args, implement: initAristaEosBgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosBgp,
+		},
+		"arista.eos.bgp.vrf": {
+			// to override args, implement: initAristaEosBgpVrf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosBgpVrf,
+		},
+		"arista.eos.bgp.peer": {
+			// to override args, implement: initAristaEosBgpPeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosBgpPeer,
+		},
+		"arista.eos.mlag": {
+			// to override args, implement: initAristaEosMlag(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosMlag,
+		},
+		"arista.eos.mlag.interface": {
+			// to override args, implement: initAristaEosMlagInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosMlagInterface,
+		},
+		"arista.eos.acl": {
+			// to override args, implement: initAristaEosAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosAcl,
+		},
+		"arista.eos.acl.entry": {
+			// to override args, implement: initAristaEosAclEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosAclEntry,
 		},
 	}
 }
@@ -216,6 +251,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.switchports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetSwitchports()).ToDataRes(types.Array(types.Resource("arista.eos.switchport")))
 	},
+	"arista.eos.bgp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetBgp()).ToDataRes(types.Resource("arista.eos.bgp"))
+	},
+	"arista.eos.mlag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetMlag()).ToDataRes(types.Resource("arista.eos.mlag"))
+	},
+	"arista.eos.acls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetAcls()).ToDataRes(types.Array(types.Resource("arista.eos.acl")))
+	},
 	"arista.eos.runningConfig.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosRunningConfig).GetContent()).ToDataRes(types.String)
 	},
@@ -245,6 +289,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.user.sshkey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosUser).GetSshkey()).ToDataRes(types.String)
+	},
+	"arista.eos.user.locked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosUser).GetLocked()).ToDataRes(types.Bool)
 	},
 	"arista.eos.role.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosRole).GetName()).ToDataRes(types.String)
@@ -314,6 +361,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.interface.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosInterface).GetStatus()).ToDataRes(types.Dict)
+	},
+	"arista.eos.interface.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosInterface).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"arista.eos.interface.duplex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosInterface).GetDuplex()).ToDataRes(types.String)
+	},
+	"arista.eos.interface.autoNegotiate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosInterface).GetAutoNegotiate()).ToDataRes(types.Bool)
 	},
 	"arista.eos.ipInterface.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosIpInterface).GetName()).ToDataRes(types.String)
@@ -405,6 +461,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.vlan.trunkGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosVlan).GetTrunkGroups()).ToDataRes(types.Array(types.String))
 	},
+	"arista.eos.vlan.dynamic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosVlan).GetDynamic()).ToDataRes(types.Bool)
+	},
+	"arista.eos.vlan.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosVlan).GetInterfaces()).ToDataRes(types.Array(types.String))
+	},
 	"arista.eos.route.destination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosRoute).GetDestination()).ToDataRes(types.String)
 	},
@@ -432,6 +494,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.route.nextHops": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosRoute).GetNextHops()).ToDataRes(types.Array(types.Dict))
 	},
+	"arista.eos.route.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosRoute).GetActive()).ToDataRes(types.Bool)
+	},
 	"arista.eos.switchport.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSwitchport).GetName()).ToDataRes(types.String)
 	},
@@ -449,6 +514,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.switchport.trunkGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSwitchport).GetTrunkGroups()).ToDataRes(types.Array(types.String))
+	},
+	"arista.eos.bgp.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgp).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"arista.eos.bgp.asNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgp).GetAsNumber()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.routerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgp).GetRouterId()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.vrfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgp).GetVrfs()).ToDataRes(types.Array(types.Resource("arista.eos.bgp.vrf")))
+	},
+	"arista.eos.bgp.vrf.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpVrf).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.vrf.routerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpVrf).GetRouterId()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.vrf.asNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpVrf).GetAsNumber()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.vrf.peers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpVrf).GetPeers()).ToDataRes(types.Array(types.Resource("arista.eos.bgp.peer")))
+	},
+	"arista.eos.bgp.peer.vrfName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetVrfName()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.peer.peerAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetPeerAddress()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.peer.remoteAs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetRemoteAs()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.peer.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetState()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.peer.uptime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetUptime()).ToDataRes(types.Int)
+	},
+	"arista.eos.bgp.peer.prefixesReceived": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetPrefixesReceived()).ToDataRes(types.Int)
+	},
+	"arista.eos.bgp.peer.prefixesAccepted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetPrefixesAccepted()).ToDataRes(types.Int)
+	},
+	"arista.eos.bgp.peer.inboundRouteMap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetInboundRouteMap()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.peer.outboundRouteMap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetOutboundRouteMap()).ToDataRes(types.String)
+	},
+	"arista.eos.bgp.peer.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetDescription()).ToDataRes(types.String)
+	},
+	"arista.eos.mlag.domainId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosMlag).GetDomainId()).ToDataRes(types.String)
+	},
+	"arista.eos.mlag.localInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosMlag).GetLocalInterface()).ToDataRes(types.String)
+	},
+	"arista.eos.mlag.peerAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosMlag).GetPeerAddress()).ToDataRes(types.String)
+	},
+	"arista.eos.mlag.peerLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosMlag).GetPeerLink()).ToDataRes(types.String)
+	},
+	"arista.eos.mlag.shutdown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosMlag).GetShutdown()).ToDataRes(types.Bool)
+	},
+	"arista.eos.mlag.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosMlag).GetInterfaces()).ToDataRes(types.Array(types.Resource("arista.eos.mlag.interface")))
+	},
+	"arista.eos.mlag.interface.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosMlagInterface).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.mlag.interface.mlagId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosMlagInterface).GetMlagId()).ToDataRes(types.String)
+	},
+	"arista.eos.acl.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAcl).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.acl.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAcl).GetType()).ToDataRes(types.String)
+	},
+	"arista.eos.acl.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAcl).GetEntries()).ToDataRes(types.Array(types.Resource("arista.eos.acl.entry")))
+	},
+	"arista.eos.acl.entry.aclName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetAclName()).ToDataRes(types.String)
+	},
+	"arista.eos.acl.entry.sequenceNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetSequenceNumber()).ToDataRes(types.Int)
+	},
+	"arista.eos.acl.entry.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetAction()).ToDataRes(types.String)
+	},
+	"arista.eos.acl.entry.srcAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetSrcAddress()).ToDataRes(types.String)
+	},
+	"arista.eos.acl.entry.srcPrefixLen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetSrcPrefixLen()).ToDataRes(types.Int)
+	},
+	"arista.eos.acl.entry.log": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclEntry).GetLog()).ToDataRes(types.Bool)
 	},
 }
 
@@ -518,6 +688,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEos).Switchports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"arista.eos.bgp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).Bgp, ok = plugin.RawToTValue[*mqlAristaEosBgp](v.Value, v.Error)
+		return
+	},
+	"arista.eos.mlag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).Mlag, ok = plugin.RawToTValue[*mqlAristaEosMlag](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"arista.eos.runningConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosRunningConfig).__id, ok = v.Value.(string)
 		return
@@ -568,6 +750,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.user.sshkey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosUser).Sshkey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.user.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosUser).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"arista.eos.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -676,6 +862,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.interface.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosInterface).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.interface.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosInterface).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.interface.duplex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosInterface).Duplex, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.interface.autoNegotiate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosInterface).AutoNegotiate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"arista.eos.ipInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -818,6 +1016,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosVlan).TrunkGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"arista.eos.vlan.dynamic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosVlan).Dynamic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.vlan.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosVlan).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"arista.eos.route.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosRoute).__id, ok = v.Value.(string)
 		return
@@ -858,6 +1064,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosRoute).NextHops, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"arista.eos.route.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosRoute).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"arista.eos.switchport.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosSwitchport).__id, ok = v.Value.(string)
 		return
@@ -884,6 +1094,174 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.switchport.trunkGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosSwitchport).TrunkGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgp).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.bgp.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgp).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.asNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgp).AsNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.routerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgp).RouterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.vrfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgp).Vrfs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.vrf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpVrf).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.bgp.vrf.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpVrf).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.vrf.routerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpVrf).RouterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.vrf.asNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpVrf).AsNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.vrf.peers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpVrf).Peers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.bgp.peer.vrfName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).VrfName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.peerAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).PeerAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.remoteAs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).RemoteAs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.uptime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).Uptime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.prefixesReceived": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).PrefixesReceived, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.prefixesAccepted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).PrefixesAccepted, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.inboundRouteMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).InboundRouteMap, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.outboundRouteMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).OutboundRouteMap, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.mlag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosMlag).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.mlag.domainId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosMlag).DomainId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.mlag.localInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosMlag).LocalInterface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.mlag.peerAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosMlag).PeerAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.mlag.peerLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosMlag).PeerLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.mlag.shutdown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosMlag).Shutdown, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.mlag.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosMlag).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.mlag.interface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosMlagInterface).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.mlag.interface.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosMlagInterface).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.mlag.interface.mlagId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosMlagInterface).MlagId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAcl).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.acl.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAcl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAcl).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAcl).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.acl.entry.aclName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).AclName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.sequenceNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).SequenceNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.srcAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).SrcAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.srcPrefixLen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).SrcPrefixLen, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.acl.entry.log": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclEntry).Log, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -928,6 +1306,9 @@ type mqlAristaEos struct {
 	Vlans        plugin.TValue[[]any]
 	Routes       plugin.TValue[[]any]
 	Switchports  plugin.TValue[[]any]
+	Bgp          plugin.TValue[*mqlAristaEosBgp]
+	Mlag         plugin.TValue[*mqlAristaEosMlag]
+	Acls         plugin.TValue[[]any]
 }
 
 // createAristaEos creates a new instance of this resource
@@ -1135,6 +1516,54 @@ func (c *mqlAristaEos) GetSwitchports() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAristaEos) GetBgp() *plugin.TValue[*mqlAristaEosBgp] {
+	return plugin.GetOrCompute[*mqlAristaEosBgp](&c.Bgp, func() (*mqlAristaEosBgp, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "bgp")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosBgp), nil
+			}
+		}
+
+		return c.bgp()
+	})
+}
+
+func (c *mqlAristaEos) GetMlag() *plugin.TValue[*mqlAristaEosMlag] {
+	return plugin.GetOrCompute[*mqlAristaEosMlag](&c.Mlag, func() (*mqlAristaEosMlag, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "mlag")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosMlag), nil
+			}
+		}
+
+		return c.mlag()
+	})
+}
+
+func (c *mqlAristaEos) GetAcls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Acls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "acls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.acls()
+	})
+}
+
 // mqlAristaEosRunningConfig for the arista.eos.runningConfig resource
 type mqlAristaEosRunningConfig struct {
 	MqlRuntime *plugin.Runtime
@@ -1254,6 +1683,7 @@ type mqlAristaEosUser struct {
 	Format     plugin.TValue[string]
 	Secret     plugin.TValue[string]
 	Sshkey     plugin.TValue[string]
+	Locked     plugin.TValue[bool]
 }
 
 // createAristaEosUser creates a new instance of this resource
@@ -1319,6 +1749,12 @@ func (c *mqlAristaEosUser) GetSecret() *plugin.TValue[string] {
 
 func (c *mqlAristaEosUser) GetSshkey() *plugin.TValue[string] {
 	return &c.Sshkey
+}
+
+func (c *mqlAristaEosUser) GetLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Locked, func() (bool, error) {
+		return c.locked()
+	})
 }
 
 // mqlAristaEosRole for the arista.eos.role resource
@@ -1507,6 +1943,9 @@ type mqlAristaEosInterface struct {
 	Mtu                       plugin.TValue[int64]
 	PhysicalAddress           plugin.TValue[string]
 	Status                    plugin.TValue[any]
+	Enabled                   plugin.TValue[bool]
+	Duplex                    plugin.TValue[string]
+	AutoNegotiate             plugin.TValue[bool]
 }
 
 // createAristaEosInterface creates a new instance of this resource
@@ -1613,6 +2052,24 @@ func (c *mqlAristaEosInterface) GetPhysicalAddress() *plugin.TValue[string] {
 func (c *mqlAristaEosInterface) GetStatus() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
 		return c.status()
+	})
+}
+
+func (c *mqlAristaEosInterface) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlAristaEosInterface) GetDuplex() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Duplex, func() (string, error) {
+		return c.duplex()
+	})
+}
+
+func (c *mqlAristaEosInterface) GetAutoNegotiate() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutoNegotiate, func() (bool, error) {
+		return c.autoNegotiate()
 	})
 }
 
@@ -1947,6 +2404,8 @@ type mqlAristaEosVlan struct {
 	Name        plugin.TValue[string]
 	State       plugin.TValue[string]
 	TrunkGroups plugin.TValue[[]any]
+	Dynamic     plugin.TValue[bool]
+	Interfaces  plugin.TValue[[]any]
 }
 
 // createAristaEosVlan creates a new instance of this resource
@@ -2002,6 +2461,16 @@ func (c *mqlAristaEosVlan) GetTrunkGroups() *plugin.TValue[[]any] {
 	return &c.TrunkGroups
 }
 
+func (c *mqlAristaEosVlan) GetDynamic() *plugin.TValue[bool] {
+	return &c.Dynamic
+}
+
+func (c *mqlAristaEosVlan) GetInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Interfaces, func() ([]any, error) {
+		return c.interfaces()
+	})
+}
+
 // mqlAristaEosRoute for the arista.eos.route resource
 type mqlAristaEosRoute struct {
 	MqlRuntime *plugin.Runtime
@@ -2016,6 +2485,7 @@ type mqlAristaEosRoute struct {
 	KernelProgrammed   plugin.TValue[bool]
 	RouteAction        plugin.TValue[string]
 	NextHops           plugin.TValue[[]any]
+	Active             plugin.TValue[bool]
 }
 
 // createAristaEosRoute creates a new instance of this resource
@@ -2091,6 +2561,12 @@ func (c *mqlAristaEosRoute) GetNextHops() *plugin.TValue[[]any] {
 	return &c.NextHops
 }
 
+func (c *mqlAristaEosRoute) GetActive() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Active, func() (bool, error) {
+		return c.active()
+	})
+}
+
 // mqlAristaEosSwitchport for the arista.eos.switchport resource
 type mqlAristaEosSwitchport struct {
 	MqlRuntime *plugin.Runtime
@@ -2163,4 +2639,523 @@ func (c *mqlAristaEosSwitchport) GetTrunkAllowedVlans() *plugin.TValue[string] {
 
 func (c *mqlAristaEosSwitchport) GetTrunkGroups() *plugin.TValue[[]any] {
 	return &c.TrunkGroups
+}
+
+// mqlAristaEosBgp for the arista.eos.bgp resource
+type mqlAristaEosBgp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosBgpInternal it will be used here
+	Enabled  plugin.TValue[bool]
+	AsNumber plugin.TValue[string]
+	RouterId plugin.TValue[string]
+	Vrfs     plugin.TValue[[]any]
+}
+
+// createAristaEosBgp creates a new instance of this resource
+func createAristaEosBgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosBgp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.bgp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosBgp) MqlName() string {
+	return "arista.eos.bgp"
+}
+
+func (c *mqlAristaEosBgp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosBgp) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAristaEosBgp) GetAsNumber() *plugin.TValue[string] {
+	return &c.AsNumber
+}
+
+func (c *mqlAristaEosBgp) GetRouterId() *plugin.TValue[string] {
+	return &c.RouterId
+}
+
+func (c *mqlAristaEosBgp) GetVrfs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vrfs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.bgp", c.__id, "vrfs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vrfs()
+	})
+}
+
+// mqlAristaEosBgpVrf for the arista.eos.bgp.vrf resource
+type mqlAristaEosBgpVrf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosBgpVrfInternal it will be used here
+	Name     plugin.TValue[string]
+	RouterId plugin.TValue[string]
+	AsNumber plugin.TValue[string]
+	Peers    plugin.TValue[[]any]
+}
+
+// createAristaEosBgpVrf creates a new instance of this resource
+func createAristaEosBgpVrf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosBgpVrf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.bgp.vrf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosBgpVrf) MqlName() string {
+	return "arista.eos.bgp.vrf"
+}
+
+func (c *mqlAristaEosBgpVrf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosBgpVrf) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosBgpVrf) GetRouterId() *plugin.TValue[string] {
+	return &c.RouterId
+}
+
+func (c *mqlAristaEosBgpVrf) GetAsNumber() *plugin.TValue[string] {
+	return &c.AsNumber
+}
+
+func (c *mqlAristaEosBgpVrf) GetPeers() *plugin.TValue[[]any] {
+	return &c.Peers
+}
+
+// mqlAristaEosBgpPeer for the arista.eos.bgp.peer resource
+type mqlAristaEosBgpPeer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosBgpPeerInternal it will be used here
+	VrfName          plugin.TValue[string]
+	PeerAddress      plugin.TValue[string]
+	RemoteAs         plugin.TValue[string]
+	State            plugin.TValue[string]
+	Uptime           plugin.TValue[int64]
+	PrefixesReceived plugin.TValue[int64]
+	PrefixesAccepted plugin.TValue[int64]
+	InboundRouteMap  plugin.TValue[string]
+	OutboundRouteMap plugin.TValue[string]
+	Description      plugin.TValue[string]
+}
+
+// createAristaEosBgpPeer creates a new instance of this resource
+func createAristaEosBgpPeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosBgpPeer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.bgp.peer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosBgpPeer) MqlName() string {
+	return "arista.eos.bgp.peer"
+}
+
+func (c *mqlAristaEosBgpPeer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosBgpPeer) GetVrfName() *plugin.TValue[string] {
+	return &c.VrfName
+}
+
+func (c *mqlAristaEosBgpPeer) GetPeerAddress() *plugin.TValue[string] {
+	return &c.PeerAddress
+}
+
+func (c *mqlAristaEosBgpPeer) GetRemoteAs() *plugin.TValue[string] {
+	return &c.RemoteAs
+}
+
+func (c *mqlAristaEosBgpPeer) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAristaEosBgpPeer) GetUptime() *plugin.TValue[int64] {
+	return &c.Uptime
+}
+
+func (c *mqlAristaEosBgpPeer) GetPrefixesReceived() *plugin.TValue[int64] {
+	return &c.PrefixesReceived
+}
+
+func (c *mqlAristaEosBgpPeer) GetPrefixesAccepted() *plugin.TValue[int64] {
+	return &c.PrefixesAccepted
+}
+
+func (c *mqlAristaEosBgpPeer) GetInboundRouteMap() *plugin.TValue[string] {
+	return &c.InboundRouteMap
+}
+
+func (c *mqlAristaEosBgpPeer) GetOutboundRouteMap() *plugin.TValue[string] {
+	return &c.OutboundRouteMap
+}
+
+func (c *mqlAristaEosBgpPeer) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+// mqlAristaEosMlag for the arista.eos.mlag resource
+type mqlAristaEosMlag struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosMlagInternal it will be used here
+	DomainId       plugin.TValue[string]
+	LocalInterface plugin.TValue[string]
+	PeerAddress    plugin.TValue[string]
+	PeerLink       plugin.TValue[string]
+	Shutdown       plugin.TValue[bool]
+	Interfaces     plugin.TValue[[]any]
+}
+
+// createAristaEosMlag creates a new instance of this resource
+func createAristaEosMlag(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosMlag{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.mlag", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosMlag) MqlName() string {
+	return "arista.eos.mlag"
+}
+
+func (c *mqlAristaEosMlag) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosMlag) GetDomainId() *plugin.TValue[string] {
+	return &c.DomainId
+}
+
+func (c *mqlAristaEosMlag) GetLocalInterface() *plugin.TValue[string] {
+	return &c.LocalInterface
+}
+
+func (c *mqlAristaEosMlag) GetPeerAddress() *plugin.TValue[string] {
+	return &c.PeerAddress
+}
+
+func (c *mqlAristaEosMlag) GetPeerLink() *plugin.TValue[string] {
+	return &c.PeerLink
+}
+
+func (c *mqlAristaEosMlag) GetShutdown() *plugin.TValue[bool] {
+	return &c.Shutdown
+}
+
+func (c *mqlAristaEosMlag) GetInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Interfaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.mlag", c.__id, "interfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.interfaces()
+	})
+}
+
+// mqlAristaEosMlagInterface for the arista.eos.mlag.interface resource
+type mqlAristaEosMlagInterface struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosMlagInterfaceInternal it will be used here
+	Name   plugin.TValue[string]
+	MlagId plugin.TValue[string]
+}
+
+// createAristaEosMlagInterface creates a new instance of this resource
+func createAristaEosMlagInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosMlagInterface{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.mlag.interface", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosMlagInterface) MqlName() string {
+	return "arista.eos.mlag.interface"
+}
+
+func (c *mqlAristaEosMlagInterface) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosMlagInterface) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosMlagInterface) GetMlagId() *plugin.TValue[string] {
+	return &c.MlagId
+}
+
+// mqlAristaEosAcl for the arista.eos.acl resource
+type mqlAristaEosAcl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosAclInternal it will be used here
+	Name    plugin.TValue[string]
+	Type    plugin.TValue[string]
+	Entries plugin.TValue[[]any]
+}
+
+// createAristaEosAcl creates a new instance of this resource
+func createAristaEosAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosAcl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.acl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosAcl) MqlName() string {
+	return "arista.eos.acl"
+}
+
+func (c *mqlAristaEosAcl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosAcl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosAcl) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAristaEosAcl) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.acl", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entries()
+	})
+}
+
+// mqlAristaEosAclEntry for the arista.eos.acl.entry resource
+type mqlAristaEosAclEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosAclEntryInternal it will be used here
+	AclName        plugin.TValue[string]
+	SequenceNumber plugin.TValue[int64]
+	Action         plugin.TValue[string]
+	SrcAddress     plugin.TValue[string]
+	SrcPrefixLen   plugin.TValue[int64]
+	Log            plugin.TValue[bool]
+}
+
+// createAristaEosAclEntry creates a new instance of this resource
+func createAristaEosAclEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosAclEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.acl.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosAclEntry) MqlName() string {
+	return "arista.eos.acl.entry"
+}
+
+func (c *mqlAristaEosAclEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosAclEntry) GetAclName() *plugin.TValue[string] {
+	return &c.AclName
+}
+
+func (c *mqlAristaEosAclEntry) GetSequenceNumber() *plugin.TValue[int64] {
+	return &c.SequenceNumber
+}
+
+func (c *mqlAristaEosAclEntry) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAristaEosAclEntry) GetSrcAddress() *plugin.TValue[string] {
+	return &c.SrcAddress
+}
+
+func (c *mqlAristaEosAclEntry) GetSrcPrefixLen() *plugin.TValue[int64] {
+	return &c.SrcPrefixLen
+}
+
+func (c *mqlAristaEosAclEntry) GetLog() *plugin.TValue[bool] {
+	return &c.Log
 }
