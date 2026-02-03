@@ -110,6 +110,7 @@ mfs
 mgroup
 minfree
 mkey
+mlag
 Mpim
 naflags
 natgateway

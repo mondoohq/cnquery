@@ -1,0 +1,33 @@
+{
+  "vrfs": {
+    "default": {
+      "peerList": [
+        {
+          "peerAddress": "10.0.0.2",
+          "description": "upstream-router",
+          "asn": "65002",
+          "inboundRouteMap": "IMPORT-FILTER",
+          "outboundRouteMap": "EXPORT-FILTER"
+        },
+        {
+          "peerAddress": "10.0.0.3",
+          "description": "backup-router",
+          "asn": "65003",
+          "inboundRouteMap": "",
+          "outboundRouteMap": ""
+        }
+      ]
+    },
+    "MGMT": {
+      "peerList": [
+        {
+          "peerAddress": "172.16.0.2",
+          "description": "mgmt-peer",
+          "asn": "65100",
+          "inboundRouteMap": "MGMT-IN",
+          "outboundRouteMap": ""
+        }
+      ]
+    }
+  }
+}
