@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v82/github"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
@@ -71,7 +72,11 @@ func (g *mqlGithubRepository) environments() ([]any, error) {
 	for {
 		envResp, resp, err := conn.Client().Repositories.ListEnvironments(conn.Context(), ownerLogin, repoName, opts)
 		if err != nil {
-			if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			if strings.Contains(err.Error(), "403") {
+				log.Debug().Msg("Deployment environments are not accessible for this repository")
 				return nil, nil
 			}
 			return nil, err
@@ -181,7 +186,11 @@ func (g *mqlGithubRepository) deployments() ([]any, error) {
 	for {
 		deployments, resp, err := conn.Client().Repositories.ListDeployments(conn.Context(), ownerLogin, repoName, opts)
 		if err != nil {
-			if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			if strings.Contains(err.Error(), "403") {
+				log.Debug().Msg("Deployments are not accessible for this repository")
 				return nil, nil
 			}
 			return nil, err
@@ -271,7 +280,11 @@ func (g *mqlGithubDeployment) latestStatus() (*mqlGithubDeploymentStatus, error)
 	opts := &github.ListOptions{PerPage: 1}
 	statuses, _, err := conn.Client().Repositories.ListDeploymentStatuses(conn.Context(), ownerLogin, repoName, deploymentID, opts)
 	if err != nil {
-		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		if strings.Contains(err.Error(), "403") {
+			log.Debug().Msg("Deployment statuses are not accessible for this deployment")
 			return nil, nil
 		}
 		return nil, err

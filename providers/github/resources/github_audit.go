@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v82/github"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/github/connection"
@@ -39,7 +40,11 @@ func (g *mqlGithubOrganization) auditLog() ([]any, error) {
 		entries, resp, err := conn.Client().Organizations.GetAuditLog(conn.Context(), orgLogin, opts)
 		if err != nil {
 			// Audit log is only available for GitHub Enterprise Cloud
-			if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			if strings.Contains(err.Error(), "403") {
+				log.Debug().Msg("Audit log is not accessible for this organization (requires GitHub Enterprise Cloud)")
 				return nil, nil
 			}
 			return nil, err

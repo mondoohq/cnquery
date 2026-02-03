@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v82/github"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/github/connection"
@@ -45,7 +46,11 @@ func (g *mqlGithubOrganization) runners() ([]any, error) {
 	for {
 		runners, resp, err := conn.Client().Actions.ListOrganizationRunners(conn.Context(), orgLogin, opts)
 		if err != nil {
-			if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			if strings.Contains(err.Error(), "403") {
+				log.Debug().Msg("Self-hosted runners are not accessible for this organization")
 				return nil, nil
 			}
 			return nil, err
@@ -87,7 +92,11 @@ func (g *mqlGithubRepository) runners() ([]any, error) {
 	for {
 		runners, resp, err := conn.Client().Actions.ListRunners(conn.Context(), ownerLogin, repoName, opts)
 		if err != nil {
-			if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			if strings.Contains(err.Error(), "403") {
+				log.Debug().Msg("Self-hosted runners are not accessible for this repository")
 				return nil, nil
 			}
 			return nil, err
