@@ -78,3 +78,8 @@ Features:
   idx: 13
   start: v12.x
   status: new
+- id: AutoUpdateEngine
+  desc: Auto-update the execution engine
+  idx: 14
+  start: v13.x
+  status: new

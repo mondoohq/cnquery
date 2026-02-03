@@ -197,6 +197,13 @@ func GetAutoUpdate() bool {
 	return true
 }
 
+// GetFeatures returns the features from viper config.
+// This can be called after InitViperConfig() to get features before cobra initialization.
+func GetFeatures() cnquery.Features {
+	features, _ := cnquery.InitFeatures(viper.GetStringSlice("features")...)
+	return features
+}
+
 func Read() (*Config, error) {
 	// load viper config into a struct
 	var opts Config
