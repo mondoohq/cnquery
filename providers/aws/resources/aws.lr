@@ -2383,7 +2383,10 @@ private aws.s3.bucket @defaults("name location public") {
   // Logging status and user permissions for bucket logging status
   logging() map[string]string
   // Website configuration for the bucket
+  // Deprecated: Use `website` instead
   staticWebsiteHosting() map[string]string
+  // Website configuration for the bucket
+  website() aws.s3.bucket.websiteConfiguration
   // Whether the bucket is locked by default
   defaultLock() string
   // Bucket cross-region replication configuration
@@ -2442,6 +2445,51 @@ private aws.s3.bucket.policy @defaults("bucketName version") {
   version() string
   // List of statements for the policy
   statements() []dict
+}
+
+private aws.s3.bucket.websiteConfiguration {
+  // Name of the index document
+  indexDocument string
+  // Name of the error document
+  errorDocument string
+  // Redirect configuration
+  redirectAllRequestsTo aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf
+  // Routing rules for the website
+  routingRules []aws.s3.bucket.websiteConfiguration.routingRule
+}
+
+private aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf @defaults("hostname protocol") {
+  // Hostname to redirect all requests to
+  hostname string
+  // Protocol to use when redirecting requests (http, https)
+  protocol string
+}
+
+private aws.s3.bucket.websiteConfiguration.routingRule {
+  // Redirect configuration for the routing rule
+  redirect aws.s3.bucket.websiteConfiguration.routingRule.redirectConf
+  // Condition for the routing rule
+  condition aws.s3.bucket.websiteConfiguration.routingRule.conditionConf
+}
+
+private aws.s3.bucket.websiteConfiguration.routingRule.redirectConf {
+  // Hostname to redirect to
+  hostname string
+  // HTTP redirect code to use
+  httpRedirectCode string
+  // Protocol to use when redirecting requests (http, https)
+  protocol string
+  // Key prefix to replace in the request
+  replaceKeyPrefixWith string
+  // Key to replace in the request
+  replaceKeyWith string
+}
+
+private aws.s3.bucket.websiteConfiguration.routingRule.conditionConf {
+  // HTTP error code to apply the routing rule to
+  httpErrorCodeReturnedEquals string
+  // Key prefix to apply the routing rule to
+  keyPrefixEquals string
 }
 
 // AWS Application Auto Scaling
