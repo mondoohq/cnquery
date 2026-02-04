@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.10
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.6
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.5
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.63.1
@@ -25,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.5
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.54.0
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.285.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9
@@ -45,7 +45,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.0
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.9
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.43.9
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.1
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.57.1
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.114.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.0

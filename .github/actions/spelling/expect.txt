@@ -113,6 +113,7 @@ oidc
 OIDs
 ondemand
 opcplc
+opensearch
 openssh
 openssl
 orstatement

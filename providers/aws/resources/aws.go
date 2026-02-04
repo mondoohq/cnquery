@@ -116,6 +116,18 @@ func Is400InstanceNotFoundError(err error) bool {
 	return false
 }
 
+// IsServiceNotAvailableInRegionError checks if the error indicates the service is not available in the region
+// This typically happens with DNS lookup failures for regional services like MemoryDB
+func IsServiceNotAvailableInRegionError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := err.Error()
+	return strings.Contains(errStr, "no such host") ||
+		strings.Contains(errStr, "UnknownEndpoint") ||
+		strings.Contains(errStr, "could not resolve endpoint")
+}
+
 func toInterfaceMap(m map[string]string) map[string]any {
 	res := make(map[string]any)
 	for k, v := range m {

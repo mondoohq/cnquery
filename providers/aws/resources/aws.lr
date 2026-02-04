@@ -1295,6 +1295,94 @@ private aws.es.domain @defaults("arn name") {
   domainName string
 }
 
+// Amazon OpenSearch Service
+aws.opensearch @defaults("domains") {
+  // List of OpenSearch domains
+  domains() []aws.opensearch.domain
+}
+
+// Amazon OpenSearch Service domain
+private aws.opensearch.domain @defaults("name engineVersion") {
+  // ARN for the OpenSearch domain
+  arn string
+  // Name of the domain
+  name string
+  // Domain ID
+  domainId string
+  // Region where the domain exists
+  region string
+  // OpenSearch or Elasticsearch engine version
+  engineVersion string
+  // Connection endpoint for the domain
+  endpoint string
+  // Whether encryption at rest is enabled
+  encryptionAtRestEnabled bool
+  // KMS key ID for encryption at rest
+  encryptionAtRestKmsKeyId string
+  // Whether node-to-node encryption is enabled
+  nodeToNodeEncryptionEnabled bool
+  // Whether the domain is created with a dedicated master node
+  dedicatedMasterEnabled bool
+  // Instance type of the dedicated master nodes
+  dedicatedMasterType string
+  // Number of dedicated master nodes
+  dedicatedMasterCount int
+  // Instance type of data nodes
+  instanceType string
+  // Number of data nodes
+  instanceCount int
+  // Whether zone awareness is enabled
+  zoneAwarenessEnabled bool
+  // Number of availability zones
+  availabilityZoneCount int
+  // Whether warm storage is enabled
+  warmEnabled bool
+  // Warm instance type
+  warmType string
+  // Number of warm nodes
+  warmCount int
+  // Whether cold storage is enabled
+  coldStorageEnabled bool
+  // EBS storage enabled
+  ebsEnabled bool
+  // EBS volume type
+  ebsVolumeType string
+  // EBS volume size in GB
+  ebsVolumeSize int
+  // EBS IOPS
+  ebsIops int
+  // EBS throughput
+  ebsThroughput int
+  // VPC ID if domain is in a VPC
+  vpcId string
+  // Whether HTTPS is required
+  enforceHTTPS bool
+  // TLS security policy
+  tlsSecurityPolicy string
+  // Whether SAML is enabled
+  samlEnabled bool
+  // Whether anonymous auth is enabled
+  anonymousAuthEnabled bool
+  // Whether internal user database is enabled
+  internalUserDatabaseEnabled bool
+  // Whether fine-grained access control is enabled
+  advancedSecurityEnabled bool
+  // Domain processing status
+  processing bool
+  // Domain upgrade processing status
+  upgradeProcessing bool
+  // Created timestamp
+  createdAt time
+  // Whether auto-tune is enabled
+  autoTuneState string
+  // Tags for the domain
+  tags map[string]string
+  // Security groups associated with the VPC domain
+  securityGroups() []aws.ec2.securitygroup
+  // Subnets for the VPC domain
+  subnets() []aws.vpc.subnet
+}
+
 // AWS Certificate Manager resource (for assessing the configuration of AWS Certificate Manager)
 aws.acm @defaults("certificates") {
   // List of `aws.acm.certificate` objects representing ACM certificates configured within the account
