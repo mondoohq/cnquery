@@ -82,7 +82,7 @@ terraform.module @defaults("key source") {
   source string
   // Module version
   version string
-  //  Path to the directory where the module is stored
+  // Path to the directory where the module is stored
   dir string
 
   // Block (including the configuration)

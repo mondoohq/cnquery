@@ -276,7 +276,7 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   etag string
   // Pool identity configuration
   identity dict
-  // Pool properties
+  // Pool configuration settings including scale, network, and task scheduling options
   properties dict
   // Pool provisioning state
   provisioningState string
@@ -1110,11 +1110,11 @@ private azure.subscription.storageService.account.fileProperties.protocolSetting
 private azure.subscription.storageService.account.service.properties @defaults("id") {
   // ID of the service
   id string
-  // Hourly metrics properties
+  // Hourly metrics collection settings
   hourMetrics azure.subscription.storageService.account.service.properties.metrics
-  // Minute metrics properties
+  // Minute metrics collection settings
   minuteMetrics azure.subscription.storageService.account.service.properties.metrics
-  // Logging properties
+  // Storage analytics logging configuration (read, write, delete operations)
   logging azure.subscription.storageService.account.service.properties.logging
 }
 
@@ -1122,11 +1122,11 @@ private azure.subscription.storageService.account.service.properties @defaults("
 private azure.subscription.storageService.account.service.blobProperties @defaults("id") {
   // ID of the service
   id string
-  // Hourly metrics properties
+  // Hourly metrics collection settings
   hourMetrics azure.subscription.storageService.account.service.properties.metrics
-  // Minute metrics properties
+  // Minute metrics collection settings
   minuteMetrics azure.subscription.storageService.account.service.properties.metrics
-  // Logging properties
+  // Storage analytics logging configuration (read, write, delete operations)
   logging azure.subscription.storageService.account.service.properties.logging
   // Whether versioning is enabled for blobs
   isVersioningEnabled bool
@@ -1378,25 +1378,25 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
 
 // Azure App Service Hosting Environment
 private azure.subscription.webService.hostingEnvironment @defaults("id name") {
-  // environment ID
+  // Environment ID
   id string
-  // environment name
+  // Environment name
   name string
-  // environment type
+  // Environment type
   type string
   // Kind of resource (e.g., "app,linux,container")
   kind string
-  // environment location
+  // Environment location
   location string
-  // environment tags
+  // Environment tags
   tags map[string]string
-  // environment properties
+  // Environment properties
   properties dict
   // Provisioning state of the environment
   provisioningState string
-  // status of the environment
+  // Status of the environment
   status string
-  // true if the environment is suspended
+  // Whether the environment is suspended
   suspended bool
   // DNS suffix of the environment
   dnsSuffix string
@@ -2391,7 +2391,7 @@ private azure.subscription.advisorService.recommendation @defaults("name categor
   category string
   // Recommendation risk
   risk string
-  // Recommendation risk
+  // Recommendation impact
   impact string
   // Recommendation description
   description string

@@ -462,7 +462,7 @@ private github.file @defaults("name type") {
 
 // GitHub release
 private github.release @defaults("name tagName") {
-  // Release url
+  // Release URL
   url string
   // Release name
   name string
@@ -488,7 +488,7 @@ private github.webhook @defaults("id name") {
   url string
   // List of events for the webhook
   events []string
-  // Webhook config
+  // Webhook configuration including content type, secret, and SSL verification settings
   config dict
   // Whether the webhook is active
   active bool

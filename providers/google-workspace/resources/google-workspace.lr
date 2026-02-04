@@ -110,7 +110,7 @@ private googleworkspace.user @defaults("primaryEmail") {
   isMailboxSetup bool
   // User's last login time
   lastLoginTime time
-  //  User's account creation time
+  // User's account creation time
   creationTime time
   // Retrieves latest report for the user
   usageReport() googleworkspace.report.usage

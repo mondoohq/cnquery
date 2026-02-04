@@ -367,7 +367,7 @@ dns.record @defaults("name type") {
   class string
   // DNS type
   type string
-  // Resource data
+  // DNS record response data (IP addresses, hostnames, or other values depending on record type)
   rdata []string
 }
 
