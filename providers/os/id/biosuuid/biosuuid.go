@@ -5,9 +5,9 @@ package biosuuid
 
 import (
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/smbios"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/smbios"
 )
 
 // BiosUUID returns the BIOS UUID (SMBIOS System UUID) for the platform.
