@@ -1,2 +1,2 @@
-golang-version=1.25.1
-protoc-version=31.x
+golang-version=1.25.6
+protoc-version=33.x
