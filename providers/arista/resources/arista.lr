@@ -26,6 +26,12 @@ arista.eos {
   snmp() arista.eos.snmpSetting
   // NTP synchronization status
   ntp() arista.eos.ntpSetting
+  // Configured VLANs
+  vlans() []arista.eos.vlan
+  // IP routing table entries
+  routes() []arista.eos.route
+  // Layer 2 switchport configurations
+  switchports() []arista.eos.switchport
 }
 
 // Arista EOS system's operating configuration
@@ -187,4 +193,54 @@ arista.eos.spt.mstInterface @defaults("name") {
   counters() dict
   // Interface features: BPDU filter, specifies the BPDU reception rate & link type of the interface
   features() dict
+}
+
+// Arista EOS VLAN configuration
+arista.eos.vlan @defaults("id name") {
+  // VLAN ID
+  id string
+  // VLAN name
+  name string
+  // VLAN state (active, suspend)
+  state string
+  // Trunk groups associated with the VLAN
+  trunkGroups []string
+}
+
+// Arista EOS IP route entry
+arista.eos.route @defaults("destination") {
+  // Route destination prefix (e.g., "10.0.0.0/8")
+  destination string
+  // VRF name
+  vrf string
+  // Route type (connected, static, bgp, ospf, etc.)
+  routeType string
+  // Administrative distance
+  preference int
+  // Route metric
+  metric int
+  // Whether the route is programmed in hardware
+  hardwareProgrammed bool
+  // Whether the route is programmed in kernel
+  kernelProgrammed bool
+  // Route action
+  routeAction string
+  // Next-hop information (interface, nexthop address)
+  nextHops []dict
+}
+
+// Arista EOS Layer 2 switchport configuration
+arista.eos.switchport @defaults("name mode") {
+  // Interface name
+  name string
+  // Switchport mode (access, trunk)
+  mode string
+  // Access VLAN ID (for access mode)
+  accessVlan string
+  // Native VLAN ID (for trunk mode)
+  trunkNativeVlan string
+  // Allowed VLANs on trunk (e.g., "1-4094", "100,200,300")
+  trunkAllowedVlans string
+  // Trunk groups
+  trunkGroups []string
 }

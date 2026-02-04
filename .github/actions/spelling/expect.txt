@@ -98,6 +98,7 @@ mpim
 naflags
 natgateway
 networkinterface
+nexthop
 nmap
 nocerts
 nodegroup
@@ -115,6 +116,7 @@ opcplc
 openssh
 openssl
 orstatement
+ospf
 paravirtual
 PAYG
 Pids
@@ -152,6 +154,7 @@ sqlimatchstatement
 sqlserver
 Sspr
 superusers
+switchports
 tailscale
 targetgroup
 tde
@@ -164,6 +167,8 @@ usb
 VAULTNAME
 vdcs
 virtualmachine
+vlans
+vrf
 Vtpm
 vulnerabilityassessmentsettings
 vulnmgmt

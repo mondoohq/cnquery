@@ -451,3 +451,111 @@ func (a *mqlAristaEosSptMstInterface) features() (map[string]any, error) {
 
 	return convert.JsonToDict(mstInstanceDetails.Features)
 }
+
+func (v *mqlAristaEosVlan) id() (string, error) {
+	return "arista.eos.vlan/" + v.Id.Data, v.Id.Error
+}
+
+func (a *mqlAristaEos) vlans() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+	vlans := eosClient.Vlans()
+
+	res := make([]any, 0, len(vlans))
+	for vid, vlanCfg := range vlans {
+		trunkGroups := vlanCfg.TrunkGroups()
+		trunkGroupsData := make([]any, len(trunkGroups))
+		for i, tg := range trunkGroups {
+			trunkGroupsData[i] = tg
+		}
+
+		mqlVlan, err := CreateResource(a.MqlRuntime, "arista.eos.vlan", map[string]*llx.RawData{
+			"id":          llx.StringData(vid),
+			"name":        llx.StringData(vlanCfg.Name()),
+			"state":       llx.StringData(vlanCfg.State()),
+			"trunkGroups": llx.ArrayData(trunkGroupsData, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlVlan)
+	}
+
+	return res, nil
+}
+
+func (v *mqlAristaEosRoute) id() (string, error) {
+	return "arista.eos.route/" + v.Vrf.Data + "/" + v.Destination.Data, v.Destination.Error
+}
+
+func (a *mqlAristaEos) routes() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+	routeTable, err := eosClient.ShowIPRoute()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for vrfName, vrf := range routeTable.VRFs {
+		for dest, route := range vrf.Routes {
+			nextHops := make([]any, len(route.Vias))
+			for i, via := range route.Vias {
+				hop, err := convert.JsonToDict(via)
+				if err != nil {
+					return nil, err
+				}
+				nextHops[i] = hop
+			}
+
+			mqlRoute, err := CreateResource(a.MqlRuntime, "arista.eos.route", map[string]*llx.RawData{
+				"destination":        llx.StringData(dest),
+				"vrf":                llx.StringData(vrfName),
+				"routeType":          llx.StringData(route.RouteType),
+				"preference":         llx.IntData(int64(route.Preference)),
+				"metric":             llx.IntData(int64(route.Metric)),
+				"hardwareProgrammed": llx.BoolData(route.HardwareProgrammed),
+				"kernelProgrammed":   llx.BoolData(route.KernelProgrammed),
+				"routeAction":        llx.StringData(route.RouteAction),
+				"nextHops":           llx.ArrayData(nextHops, types.Dict),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRoute)
+		}
+	}
+
+	return res, nil
+}
+
+func (v *mqlAristaEosSwitchport) id() (string, error) {
+	return "arista.eos.switchport/" + v.Name.Data, v.Name.Error
+}
+
+func (a *mqlAristaEos) switchports() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+	switchports := eosClient.Switchports()
+
+	res := make([]any, 0, len(switchports))
+	for name, spCfg := range switchports {
+		trunkGroups := spCfg.TrunkGroups()
+		trunkGroupsData := make([]any, len(trunkGroups))
+		for i, tg := range trunkGroups {
+			trunkGroupsData[i] = tg
+		}
+
+		mqlSwitchport, err := CreateResource(a.MqlRuntime, "arista.eos.switchport", map[string]*llx.RawData{
+			"name":              llx.StringData(name),
+			"mode":              llx.StringData(spCfg.Mode()),
+			"accessVlan":        llx.StringData(spCfg.AccessVlan()),
+			"trunkNativeVlan":   llx.StringData(spCfg.TrunkNativeVlan()),
+			"trunkAllowedVlans": llx.StringData(spCfg.TrunkAllowedVlans()),
+			"trunkGroups":       llx.ArrayData(trunkGroupsData, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSwitchport)
+	}
+
+	return res, nil
+}
