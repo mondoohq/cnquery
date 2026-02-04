@@ -5,7 +5,6 @@ resources:
   tailscale:
     fields:
       devices: {}
-      dns: {}
       nameservers: {}
       tailnet: {}
       users: {}
@@ -16,19 +15,15 @@ resources:
       authorized: {}
       blocksIncomingConnections: {}
       clientVersion: {}
-      created: {}
       createdAt: {}
-      expires: {}
       expiresAt: {}
       hostname: {}
       id: {}
       isExternal: {}
       keyExpiryDisabled: {}
-      lastSeen: {}
       lastSeenAt: {}
       machineKey: {}
       name: {}
-      nodeId: {}
       nodeKey: {}
       os: {}
       tags: {}
@@ -39,7 +34,6 @@ resources:
     min_mondoo_version: 9.0.0
   tailscale.user:
     fields:
-      ProfilePicUrl: {}
       createdAt: {}
       deviceCount: {}
       displayName: {}

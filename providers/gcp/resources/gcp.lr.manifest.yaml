@@ -2135,7 +2135,6 @@ resources:
   gcp.project.redisService.instance:
     fields:
       AuthorizedNetwork: {}
-      Labels: {}
       authEnabled: {}
       availableMaintenanceVersions: {}
       connectMode: {}

@@ -10,7 +10,6 @@ resources:
       modules: {}
       outputs: {}
       providers: {}
-      resources: {}
       tfvars: {}
       variables: {}
     maturity: experimental

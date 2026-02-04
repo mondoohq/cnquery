@@ -772,30 +772,6 @@ resources:
     platform:
       name:
       - aws
-  aws.codedeploy.deploymentgroup:
-    fields:
-      applicationName: {}
-      arn: {}
-      autoScalingGroups: {}
-      blueGreenDeploymentConfiguration: {}
-      computePlatform: {}
-      deploymentGroupId: {}
-      deploymentGroupName: {}
-      deploymentStyle: {}
-      deployments: {}
-      ec2TagFilters: {}
-      lastAttemptedDeployment: {}
-      lastSuccessfulDeployment: {}
-      loadBalancerInfo: {}
-      onPremisesInstanceTagFilters: {}
-      region: {}
-      serviceRoleArn: {}
-      tags: {}
-      targetRevision: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - aws
   aws.config:
     docs:
       desc: |
