@@ -23,10 +23,14 @@ func main() {
 
 	// Check for self-update before anything else
 	if shouldTrySelfUpdate() {
+		releaseURL := selfupdate.DefaultReleaseURL
+		if updatesURL := config.GetUpdatesURL(); updatesURL != "" {
+			releaseURL = updatesURL + "/cnquery/latest.json"
+		}
 		cfg := selfupdate.Config{
 			Enabled:         true,
 			RefreshInterval: selfupdate.DefaultRefreshInterval,
-			ReleaseURL:      selfupdate.DefaultReleaseURL,
+			ReleaseURL:      releaseURL,
 		}
 		if updated, err := selfupdate.CheckAndUpdate(cfg); err != nil {
 			// Log warning but don't block - only show in debug mode

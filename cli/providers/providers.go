@@ -60,9 +60,19 @@ func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Comm
 
 	config.InitViperConfig()
 
+	// Determine the providers URL:
+	// 1. If providers_url is explicitly set, use it (deprecated)
+	// 2. Otherwise, if updates_url is set, use updates_url + "/providers"
+	// 3. Otherwise, use the default
 	if viper.IsSet("providers_url") {
 		if providersURL := viper.GetString("providers_url"); providersURL != "" {
+			updatesURL := strings.TrimSuffix(providersURL, "/providers")
+			log.Warn().Msgf("providers_url is deprecated, please use updates_url: %s", updatesURL)
 			providers.SetProviderRegistry(providers.NewMondooProviderRegistry(providers.WithBaseURL(providersURL)))
+		}
+	} else if viper.IsSet("updates_url") {
+		if updatesURL := viper.GetString("updates_url"); updatesURL != "" {
+			providers.SetProviderRegistry(providers.NewMondooProviderRegistry(providers.WithBaseURL(updatesURL + "/providers")))
 		}
 	}
 

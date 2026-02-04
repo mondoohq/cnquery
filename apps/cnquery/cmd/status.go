@@ -104,7 +104,16 @@ func checkStatus() (Status, error) {
 	}
 	s.Upstream = upstreamStatus
 
-	latestVersion, err := cnquery.GetLatestVersion(httpClient)
+	// Determine the updates URL (used for cnquery version checks)
+	if opts.UpdatesURL != "" {
+		s.Client.UpdatesURL = opts.UpdatesURL
+	} else {
+		s.Client.UpdatesURL = providers.DefaultUpdatesURL
+	}
+
+	// Fetch latest version using the configured updates URL
+	releaseURL := s.Client.UpdatesURL + "/cnquery/latest.json?ignoreCache=1"
+	latestVersion, err := cnquery.GetLatestReleaseName(releaseURL, httpClient)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get latest version")
 	}
@@ -143,8 +152,16 @@ func checkStatus() (Status, error) {
 		}
 	}
 
+	// Determine the providers URL:
+	// 1. If providers_url is explicitly set, use it (deprecated)
+	// 2. Otherwise, if updates_url is set, use updates_url + "/providers"
+	// 3. Otherwise, use the default
 	if opts.ProvidersURL != "" {
+		updatesURL := strings.TrimSuffix(opts.ProvidersURL, "/providers")
+		log.Warn().Msgf("providers_url is deprecated, please use updates_url: %s", updatesURL)
 		s.Client.ProvidersURL = opts.ProvidersURL
+	} else if opts.UpdatesURL != "" {
+		s.Client.ProvidersURL = opts.UpdatesURL + "/providers"
 	} else {
 		s.Client.ProvidersURL = providers.DefaultProviderRegistryURL
 	}
@@ -171,6 +188,7 @@ type ClientStatus struct {
 	Hostname       string              `json:"hostname,omitempty"`
 	Registered     bool                `json:"registered,omitempty"`
 	PingPongError  error               `json:"pingPongError,omitempty"`
+	UpdatesURL     string              `json:"updatesUrl,omitempty"`
 	ProvidersURL   string              `json:"providersUrl,omitempty"`
 }
 
@@ -196,6 +214,7 @@ func (s Status) RenderCliStatus() {
 		}
 	}
 
+	log.Info().Msg("Updates URL:\t\t" + s.Client.UpdatesURL)
 	log.Info().Msg("Providers URL:\t" + s.Client.ProvidersURL)
 
 	installed, outdated, err := getProviders()
