@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	JIRA_TIME_FORMAT        = "2006-01-02T15:04:05.999-0700"
 	JIRA_SEARCH_MAX_RESULTS = 1000
 )
 
@@ -42,12 +41,16 @@ func (a *mqlAtlassianJira) users() ([]any, error) {
 		}
 
 		for _, user := range users {
+			var picture string
+			if user.AvatarURLs != nil {
+				picture = user.AvatarURLs.One6X16
+			}
 			mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
 				map[string]*llx.RawData{
 					"id":      llx.StringData(user.AccountID),
 					"name":    llx.StringData(user.DisplayName),
 					"type":    llx.StringData(user.AccountType),
-					"picture": llx.StringData(user.AvatarUrls.One6X16),
+					"picture": llx.StringData(picture),
 				})
 			if err != nil {
 				return nil, err
@@ -221,33 +224,60 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 			return nil, err
 		}
 		for _, issue := range issues.Issues {
-			created, err := time.Parse(JIRA_TIME_FORMAT, issue.Fields.Created)
+			if issue.Fields == nil {
+				continue
+			}
+
+			var created time.Time
+			if issue.Fields.Created != nil {
+				created = time.Time(*issue.Fields.Created)
+			}
+
+			creatorData := map[string]*llx.RawData{
+				"id":      llx.StringData(""),
+				"name":    llx.StringData(""),
+				"type":    llx.StringData(""),
+				"picture": llx.StringData(""),
+			}
+			if creator := issue.Fields.Creator; creator != nil {
+				creatorData["id"] = llx.StringData(creator.AccountID)
+				creatorData["name"] = llx.StringData(creator.DisplayName)
+				creatorData["type"] = llx.StringData(creator.AccountType)
+				if creator.AvatarURLs != nil {
+					creatorData["picture"] = llx.StringData(creator.AvatarURLs.One6X16)
+				}
+			}
+			mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user", creatorData)
 			if err != nil {
 				return nil, err
 			}
 
-			creator := issue.Fields.Creator
-			mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
-				map[string]*llx.RawData{
-					"id":      llx.StringData(creator.AccountID),
-					"name":    llx.StringData(creator.DisplayName),
-					"type":    llx.StringData(creator.AccountType),
-					"picture": llx.StringData(creator.AvatarUrls.One6X16),
-				})
-			if err != nil {
-				return nil, err
+			var projectName, projectKey string
+			if issue.Fields.Project != nil {
+				projectName = issue.Fields.Project.Name
+				projectKey = issue.Fields.Project.Key
+			}
+
+			var statusName string
+			if issue.Fields.Status != nil {
+				statusName = issue.Fields.Status.Name
+			}
+
+			var issueTypeName string
+			if issue.Fields.IssueType != nil {
+				issueTypeName = issue.Fields.IssueType.Name
 			}
 
 			mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
 				map[string]*llx.RawData{
 					"id":          llx.StringData(issue.ID),
-					"project":     llx.StringData(issue.Fields.Project.Name),
-					"projectKey":  llx.StringData(issue.Fields.Project.Key),
-					"status":      llx.StringData(issue.Fields.Status.Name),
+					"project":     llx.StringData(projectName),
+					"projectKey":  llx.StringData(projectKey),
+					"status":      llx.StringData(statusName),
 					"description": llx.StringData(issue.Fields.Description),
 					"createdAt":   llx.TimeData(created.UTC()),
 					"creator":     llx.AnyData(mqlAtlassianJiraUser),
-					"typeName":    llx.StringData(issue.Fields.IssueType.Name),
+					"typeName":    llx.StringData(issueTypeName),
 				})
 			if err != nil {
 				return nil, err
