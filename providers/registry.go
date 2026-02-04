@@ -15,7 +15,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var DefaultProviderRegistryURL = "https://releases.mondoo.com/providers"
+var DefaultUpdatesURL = "https://releases.mondoo.com"
+var DefaultProviderRegistryURL = DefaultUpdatesURL + "/providers"
 
 var registry ProviderRegistry = NewMondooProviderRegistry()
 
