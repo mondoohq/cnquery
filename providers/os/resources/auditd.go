@@ -276,6 +276,7 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 		resourceName := "auditd.rule.control"
 		args := map[string]*llx.RawData{}
 		rawFields := []string{}
+		rawComparisons := []string{}
 		syscalls := []any{}
 		other := [][2]string{}
 
@@ -292,6 +293,9 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 
 			case "-F":
 				rawFields = append(rawFields, v)
+
+			case "-C":
+				rawComparisons = append(rawComparisons, v)
 
 			case "-w":
 				resourceName = "auditd.rule.file"
@@ -343,6 +347,22 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 				}
 			}
 			args["fields"] = llx.ArrayData(fields, types.Dict)
+
+			comparisons := make([]any, len(rawComparisons))
+			for i, raw := range rawComparisons {
+				op := reOperator.FindString(raw)
+				if op == "" {
+					comparisons[i] = map[string]any{"field1": raw}
+					continue
+				}
+				idx := strings.Index(raw, op)
+				comparisons[i] = map[string]any{
+					"field1": raw[0:idx],
+					"op":     raw[idx : idx+len(op)],
+					"field2": raw[idx+len(op):],
+				}
+			}
+			args["comparisons"] = llx.ArrayData(comparisons, types.Dict)
 
 			if _, ok := args["keyname"]; !ok {
 				args["keyname"] = llx.StringData("")
@@ -411,6 +431,12 @@ func (s *mqlAuditdRuleSyscall) id() (string, error) {
 	}
 	for i := range s.Fields.Data {
 		c := s.Fields.Data[i].(map[string]any)
+		for k, v := range c {
+			f = f.Add(k).Add(v.(string))
+		}
+	}
+	for i := range s.Comparisons.Data {
+		c := s.Comparisons.Data[i].(map[string]any)
 		for k, v := range c {
 			f = f.Add(k).Add(v.(string))
 		}

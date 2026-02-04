@@ -1716,6 +1716,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"auditd.rule.syscall.fields": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdRuleSyscall).GetFields()).ToDataRes(types.Array(types.Dict))
 	},
+	"auditd.rule.syscall.comparisons": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleSyscall).GetComparisons()).ToDataRes(types.Array(types.Dict))
+	},
 	"auditd.rule.syscall.keyname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdRuleSyscall).GetKeyname()).ToDataRes(types.String)
 	},
@@ -4640,6 +4643,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"auditd.rule.syscall.fields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdRuleSyscall).Fields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.syscall.comparisons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleSyscall).Comparisons, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"auditd.rule.syscall.keyname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12014,11 +12021,12 @@ type mqlAuditdRuleSyscall struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAuditdRuleSyscallInternal it will be used here
-	Action   plugin.TValue[string]
-	List     plugin.TValue[string]
-	Syscalls plugin.TValue[[]any]
-	Fields   plugin.TValue[[]any]
-	Keyname  plugin.TValue[string]
+	Action      plugin.TValue[string]
+	List        plugin.TValue[string]
+	Syscalls    plugin.TValue[[]any]
+	Fields      plugin.TValue[[]any]
+	Comparisons plugin.TValue[[]any]
+	Keyname     plugin.TValue[string]
 }
 
 // createAuditdRuleSyscall creates a new instance of this resource
@@ -12072,6 +12080,10 @@ func (c *mqlAuditdRuleSyscall) GetSyscalls() *plugin.TValue[[]any] {
 
 func (c *mqlAuditdRuleSyscall) GetFields() *plugin.TValue[[]any] {
 	return &c.Fields
+}
+
+func (c *mqlAuditdRuleSyscall) GetComparisons() *plugin.TValue[[]any] {
+	return &c.Comparisons
 }
 
 func (c *mqlAuditdRuleSyscall) GetKeyname() *plugin.TValue[string] {

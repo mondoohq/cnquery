@@ -214,7 +214,7 @@
           "Fields": {
             "content": {
               "type": "\u0007",
-              "value": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\n\u003cdict\u003e\n\t\u003ckey\u003eallowdownloadsignedenabled\u003c/key\u003e\n\t\u003cinteger\u003e1\u003c/integer\u003e\n\t\u003ckey\u003eallowsignedenabled\u003c/key\u003e\n\t\u003cinteger\u003e1\u003c/integer\u003e\n\t\u003ckey\u003eapplications\u003c/key\u003e\n\t\u003carray/\u003e\n\t\u003ckey\u003eexceptions\u003c/key\u003e\n\t\u003carray\u003e\n\t\t\u003cdict\u003e\n\t\t\t\u003ckey\u003epath\u003c/key\u003e\n\t\t\t\u003cstring\u003e/usr/libexec/configd\u003c/string\u003e\n\t\t\t\u003ckey\u003estate\u003c/key\u003e\n\t\t\t\u003cinteger\u003e3\u003c/integer\u003e\n\t\t\u003c/dict\u003e\n\t\t\u003cdict\u003e\n\t\t\t\u003ckey\u003ebundleid\u003c/key\u003e\n\t\t\t\u003cstring\u003ecom.apple.EmbeddedOSInstallService\u003c/string\u003e\n\t\t\t\u003ckey\u003epath\u003c/key\u003e\n\t\t\t\u003cstring\u003e/System/Library/PrivateFrameworks/EmbeddedOSInstall.framework/Versions/A/XPCServices/EmbeddedOSInstallService.xpc/\u003c/string\u003e\n\t\t\t\u003ckey\u003estate\u003c/key\u003e\n\t\t\t\u003cinteger\u003e3\u003c/integer\u003e\n\t\t\u003c/dict\u003e\n\t\u003c/array\u003e\n\t\u003ckey\u003eexplicitauths\u003c/key\u003e\n\t\u003carray\u003e\n\t\t\u003cdict\u003e\n\t\t\t\u003ckey\u003eid\u003c/key\u003e\n\t\t\t\u003cstring\u003eorg.python.python.app\u003c/string\u003e\n\t\t\u003c/dict\u003e\n\t\t\u003cdict\u003e\n\t\t\t\u003ckey\u003eid\u003c/key\u003e\n\t\t\t\u003cstring\u003ecom.apple.ksh\u003c/string\u003e\n\t\t\u003c/dict\u003e\n\t\u003c/array\u003e\n\t\u003ckey\u003efirewall\u003c/key\u003e\n\t\u003cdict\u003e\n\t\t\u003ckey\u003eApple Remote Desktop\u003c/key\u003e\n\t\t\u003cdict\u003e\n\t\t\t\u003ckey\u003eproc\u003c/key\u003e\n\t\t\t\u003cstring\u003eAppleVNCServer\u003c/string\u003e\n\t\t\t\u003ckey\u003estate\u003c/key\u003e\n\t\t\t\u003cinteger\u003e0\u003c/integer\u003e\n\t\t\u003c/dict\u003e\n\t\u003c/dict\u003e\n\t\u003ckey\u003eloggingenabled\u003c/key\u003e\n\t\u003cinteger\u003e1\u003c/integer\u003e\n\t\u003ckey\u003eversion\u003c/key\u003e\n\t\u003cstring\u003e1.6\u003c/string\u003e\n\u003c/dict\u003e\n\u003c/plist\u003e\n"
+              "value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>allowdownloadsignedenabled</key>\n\t<integer>1</integer>\n\t<key>allowsignedenabled</key>\n\t<integer>1</integer>\n\t<key>applications</key>\n\t<array/>\n\t<key>exceptions</key>\n\t<array>\n\t\t<dict>\n\t\t\t<key>path</key>\n\t\t\t<string>/usr/libexec/configd</string>\n\t\t\t<key>state</key>\n\t\t\t<integer>3</integer>\n\t\t</dict>\n\t\t<dict>\n\t\t\t<key>bundleid</key>\n\t\t\t<string>com.apple.EmbeddedOSInstallService</string>\n\t\t\t<key>path</key>\n\t\t\t<string>/System/Library/PrivateFrameworks/EmbeddedOSInstall.framework/Versions/A/XPCServices/EmbeddedOSInstallService.xpc/</string>\n\t\t\t<key>state</key>\n\t\t\t<integer>3</integer>\n\t\t</dict>\n\t</array>\n\t<key>explicitauths</key>\n\t<array>\n\t\t<dict>\n\t\t\t<key>id</key>\n\t\t\t<string>org.python.python.app</string>\n\t\t</dict>\n\t\t<dict>\n\t\t\t<key>id</key>\n\t\t\t<string>com.apple.ksh</string>\n\t\t</dict>\n\t</array>\n\t<key>firewall</key>\n\t<dict>\n\t\t<key>Apple Remote Desktop</key>\n\t\t<dict>\n\t\t\t<key>proc</key>\n\t\t\t<string>AppleVNCServer</string>\n\t\t\t<key>state</key>\n\t\t\t<integer>0</integer>\n\t\t</dict>\n\t</dict>\n\t<key>loggingenabled</key>\n\t<integer>1</integer>\n\t<key>version</key>\n\t<string>1.6</string>\n</dict>\n</plist>\n"
             },
             "path": {
               "type": "\u0007",
@@ -289,7 +289,7 @@
           "Fields": {
             "content": {
               "type": "\u0007",
-              "value": "\u003croot\u003e\n  \u003cbox\u003e\n    \u003chello a=\"1\"/\u003e\n  \u003c/box\u003e\n  \u003cbox\u003e\n    \u003cworld b=\"2\"\u003e\n      \u003cc\u003e3\u003c/c\u003e\n      4\n    \u003c/world\u003e\n  \u003c/box\u003e\n  \u003cbox\u003e🌎\u003c/box\u003e\n\u003c/root\u003e\n\n"
+              "value": "<root>\n  <box>\n    <hello a=\"1\"/>\n  </box>\n  <box>\n    <world b=\"2\">\n      <c>3</c>\n      4\n    </world>\n  </box>\n  <box>🌎</box>\n</root>\n\n"
             },
             "path": {
               "type": "\u0007",
@@ -1377,6 +1377,10 @@
             "syscalls": {
               "type": "\u0019\u0007",
               "value": []
+            },
+            "comparisons": {
+              "type": "\u0019\n",
+              "value": []
             }
           }
         },
@@ -1429,6 +1433,10 @@
             "syscalls": {
               "type": "\u0019\u0007",
               "value": []
+            },
+            "comparisons": {
+              "type": "\u0019\n",
+              "value": []
             }
           }
         },
@@ -1478,6 +1486,10 @@
               "value": [
                 "setresuid"
               ]
+            },
+            "comparisons": {
+              "type": "\u0019\n",
+              "value": []
             }
           }
         },
@@ -1585,7 +1597,65 @@
                 {
                   "Name": "auditd.rule.syscall",
                   "ID": "CQdwgOphN0c="
+                },
+                {
+                  "Name": "auditd.rule.syscall",
+                  "ID": "TestComparisonsRule="
                 }
+              ]
+            }
+          }
+        },
+        {
+          "Resource": "auditd.rule.syscall",
+          "ID": "TestComparisonsRule=",
+          "Fields": {
+            "action": {
+              "type": "\u0007",
+              "value": "always"
+            },
+            "comparisons": {
+              "type": "\u0019\n",
+              "value": [
+                {
+                  "field1": "uid",
+                  "op": "!=",
+                  "field2": "euid"
+                },
+                {
+                  "field1": "gid",
+                  "op": "!=",
+                  "field2": "egid"
+                }
+              ]
+            },
+            "fields": {
+              "type": "\u0019\n",
+              "value": [
+                {
+                  "key": "arch",
+                  "op": "=",
+                  "value": "b64"
+                },
+                {
+                  "key": "auid",
+                  "op": "!=",
+                  "value": "unset"
+                }
+              ]
+            },
+            "keyname": {
+              "type": "\u0007",
+              "value": "priv_escalation"
+            },
+            "list": {
+              "type": "\u0007",
+              "value": "exit"
+            },
+            "syscalls": {
+              "type": "\u0019\u0007",
+              "value": [
+                "execve"
               ]
             }
           }

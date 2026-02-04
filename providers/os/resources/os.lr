@@ -816,6 +816,8 @@ private auditd.rule.syscall @defaults("action list") {
   syscalls []string
   // all field entries as raw values as specified by -F
   fields []dict
+  // all inter-field comparisons as specified by -C
+  comparisons []dict
   // the key name for related rules as specified by -k
   keyname string
 }
