@@ -683,38 +683,19 @@ func (a *mqlAwsS3Bucket) defaultLock() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {
-	bucketname := a.Name.Data
-	region := a.Location.Data
-
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3(region)
-	ctx := context.Background()
-
-	website, err := svc.GetBucketWebsite(ctx, &s3.GetBucketWebsiteInput{
-		Bucket: &bucketname,
-	})
-	if err != nil {
-		if isNotFoundForS3(err) {
-			a.StaticWebsiteHosting.State = plugin.StateIsNull | plugin.StateIsSet
-			return nil, nil
-		}
-		return nil, err
+	website := a.GetWebsite()
+	if website.Error != nil {
+		return nil, website.Error
+	}
+	if website.State != plugin.StateIsSet {
+		a.StaticWebsiteHosting.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
 
-	res := map[string]any{}
-
-	if website != nil {
-		if website.ErrorDocument != nil {
-			res["ErrorDocument"] = convert.ToValue(website.ErrorDocument.Key)
-		}
-
-		if website.IndexDocument != nil {
-			res["IndexDocument"] = convert.ToValue(website.IndexDocument.Suffix)
-		}
-	}
-
-	return res, nil
+	return map[string]any{
+		"ErrorDocument": website.Data.GetErrorDocument().Data,
+		"IndexDocument": website.Data.GetIndexDocument().Data,
+	}, nil
 }
 
 func (a *mqlAwsS3Bucket) website() (*mqlAwsS3BucketWebsiteConfiguration, error) {
