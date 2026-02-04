@@ -566,6 +566,50 @@ resources:
       configuration: {}
       process: {}
     min_mondoo_version: latest
+  launchd:
+    docs:
+      desc: |
+        The `launchd` resource provides access to macOS launchd job configurations.
+        It collects jobs from system, library, and user launchd directories for
+        both daemons and agents. This resource is only available on macOS.
+    fields:
+      jobs: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - macos
+  launchd.job:
+    docs:
+      desc: |
+        The `launchd.job` resource represents a single launchd job configuration
+        from a plist file on macOS.
+    fields:
+      content: {}
+      disabled: {}
+      environmentVariables: {}
+      file: {}
+      groupName: {}
+      keepAlive: {}
+      label: {}
+      machServices: {}
+      path: {}
+      processType: {}
+      program: {}
+      programArguments: {}
+      runAtLoad: {}
+      sockets: {}
+      source: {}
+      startCalendarInterval: {}
+      startInterval: {}
+      type: {}
+      userName: {}
+      watchPaths: {}
+      workingDirectory: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - macos
   limits:
     fields:
       entries: {}

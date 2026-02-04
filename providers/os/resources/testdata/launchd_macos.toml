@@ -1,0 +1,116 @@
+# Test data for launchd resource parsing
+
+[files."/Library/LaunchDaemons"]
+stat.isdir = true
+content = """com.example.daemon.plist
+com.example.minimal.plist
+com.example.scheduled.plist
+not-a-plist.txt
+"""
+
+[files."/Library/LaunchDaemons/com.example.daemon.plist"]
+content = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.example.daemon</string>
+	<key>Program</key>
+	<string>/usr/local/bin/example</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/local/bin/example</string>
+		<string>--daemon</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>Disabled</key>
+	<false/>
+	<key>KeepAlive</key>
+	<dict>
+		<key>SuccessfulExit</key>
+		<false/>
+	</dict>
+	<key>WorkingDirectory</key>
+	<string>/var/lib/example</string>
+	<key>UserName</key>
+	<string>daemon</string>
+	<key>GroupName</key>
+	<string>daemon</string>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>StartInterval</key>
+	<integer>300</integer>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>LOG_LEVEL</key>
+		<string>info</string>
+	</dict>
+	<key>WatchPaths</key>
+	<array>
+		<string>/etc/example.conf</string>
+	</array>
+	<key>Sockets</key>
+	<dict>
+		<key>Listeners</key>
+		<dict>
+			<key>SockType</key>
+			<string>stream</string>
+		</dict>
+	</dict>
+	<key>MachServices</key>
+	<dict>
+		<key>com.example.service</key>
+		<true/>
+	</dict>
+	<key>StartCalendarInterval</key>
+	<array>
+		<dict>
+			<key>Hour</key>
+			<integer>3</integer>
+			<key>Minute</key>
+			<integer>0</integer>
+		</dict>
+	</array>
+</dict>
+</plist>"""
+
+[files."/Library/LaunchDaemons/com.example.minimal.plist"]
+content = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.example.minimal</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/local/bin/minimal</string>
+	</array>
+</dict>
+</plist>"""
+
+[files."/Library/LaunchDaemons/com.example.scheduled.plist"]
+content = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.example.scheduled</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/local/bin/scheduled</string>
+	</array>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>2</integer>
+		<key>Minute</key>
+		<integer>30</integer>
+	</dict>
+	<key>KeepAlive</key>
+	<true/>
+</dict>
+</plist>"""
+
+[files."/Library/LaunchDaemons/not-a-plist.txt"]
+content = """This is not a plist file"""

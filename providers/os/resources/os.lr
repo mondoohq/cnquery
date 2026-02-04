@@ -1924,6 +1924,59 @@ private safari.extension @defaults("name version identifier") {
   containerAppName string
 }
 
+// macOS launchd job configurations
+launchd {
+  // All launchd jobs from system and user directories
+  jobs() []launchd.job
+}
+
+// Individual launchd job configuration
+private launchd.job @defaults("label type") {
+  // Unique identifier for the job (from Label key)
+  label string
+  // Path to the plist file
+  path string
+  // Type: "daemon" or "agent"
+  type string
+  // Source: "system", "library", or "user"
+  source string
+  // Whether this job runs at load
+  runAtLoad bool
+  // The program to execute
+  program string
+  // Command arguments
+  programArguments []string
+  // Whether the job is disabled
+  disabled bool
+  // Keep alive configuration, normalized to: {"enabled": bool} for simple values,
+  // {"enabled": true, "conditions": {...}} for conditional keep-alive, or null if not specified
+  keepAlive dict
+  // Working directory
+  workingDirectory string
+  // Environment variables
+  environmentVariables map[string]string
+  // User the job runs as
+  userName string
+  // Group the job runs as
+  groupName string
+  // Process type
+  processType string
+  // Interval between runs (seconds)
+  startInterval int
+  // Calendar-based schedule
+  startCalendarInterval []dict
+  // Socket configuration
+  sockets dict
+  // Mach services
+  machServices dict
+  // Watch paths that trigger the job
+  watchPaths []string
+  // The plist file resource
+  file file
+  // Full parsed plist content
+  content dict
+}
+
 // Windows hotfix resource
 windows.hotfix {
   init(hotfixId string)
