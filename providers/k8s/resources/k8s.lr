@@ -373,7 +373,7 @@ private k8s.container @defaults("name") {
   workingDir string
   // Whether this container should allocate a TTY for itself
   tty bool
-  // env variables
+  // Environment variables
   env dict
   // envFrom settings
   envFrom dict
@@ -423,7 +423,7 @@ private k8s.initContainer @defaults("name") {
   workingDir string
   // Whether this container should allocate a TTY for itself
   tty bool
-  // env variables
+  // Environment variables
   env dict
   // envFrom settings
   envFrom dict
@@ -455,7 +455,7 @@ private k8s.ephemeralContainer @defaults("name") {
   workingDir string
   // Whether this container should allocate a TTY for itself
   tty bool
-  // env variables
+  // Environment variables
   env dict
   // envFrom settings
   envFrom dict
@@ -511,7 +511,7 @@ private k8s.configmap @defaults("namespace name created") {
   created time
   // Full resource manifest
   manifest() dict
-  // Configuration data
+  // Key-value pairs containing the configuration data
   data map[string]string
 }
 

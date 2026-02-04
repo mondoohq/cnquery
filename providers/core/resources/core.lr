@@ -147,7 +147,7 @@ cpe @defaults("uri") {
   targetSw() string
   // Target hardware of the CPE
   targetHw() string
-  // Other of the CPE
+  // Additional CPE attributes not covered by other fields
   other() string
 }
 

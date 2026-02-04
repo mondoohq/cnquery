@@ -11,8 +11,8 @@ extend asset {
   // Common Platform Enumeration (CPE) for the asset
   cpes() []core.cpe
   // Advisory & vulnerability report
-  // Will be deprecated in version 12.0; Full advisory & vulnerability report
-  // use vulnmgmt instead
+  // Deprecated: will be removed in version 13.0; Full advisory & vulnerability report
+  // Use vulnmgmt instead
   vulnerabilityReport() dict
 }
 
@@ -281,7 +281,7 @@ private esxi.vib @defaults("id name") {
   id string
   // Bundle name
   name string
-  // Acceptance level
+  // Acceptance level (VMwareCertified, VMwareAccepted, PartnerSupported, CommunitySupported)
   acceptanceLevel string
   // Creation date
   creationDate time

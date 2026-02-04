@@ -6,7 +6,7 @@ option go_package = "go.mondoo.com/cnquery/v12/providers/ms365/resources"
 
 alias microsoft.organization = microsoft.tenant
 
-// Microsoft
+// Microsoft 365 services and resources
 microsoft {
   // Deprecated: use `microsoft.tenant` instead
   organizations() []microsoft.tenant
@@ -42,7 +42,7 @@ microsoft {
 microsoft.identityAndAccess.accessReviews {
   []microsoft.identityAndAccess.accessReviewDefinition
   init(filter? string)
-  // filter access review definitions. e.g., "contains(scope/microsoft.graph.accessReviewQueryScope/query, './members')"
+  // Filter access review definitions, e.g., "contains(scope/microsoft.graph.accessReviewQueryScope/query, './members')"
   filter string
 }
 
@@ -129,7 +129,7 @@ microsoft.applications {
   length() int
 }
 
-//  Microsoft Entra tenant
+// Microsoft Entra tenant
 microsoft.tenant @defaults("name") {
   // Organization ID
   id string
@@ -234,8 +234,8 @@ microsoft.users {
 microsoft.identityAndAccess {
   []microsoft.identityAndAccess.policy
   init(filter? string)
-  // filter by scopeId and scopeType
-  // scopeId eq '/' and scopeType eq 'Directory'
+  // Filter by scopeId and scopeType
+  // e.g., "scopeId eq '/' and scopeType eq 'Directory'"
   filter string
 
   // Get the instances of role eligibilities
@@ -659,13 +659,13 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   userPrincipalName string
   // User type
   userType string
-  // User settings
+  // User's mailbox and contribution settings
   settings() dict
-  // Job information
+  // User's job title, department, company name, and office location
   job() dict
-  // Contact information
+  // User's business phones, mobile phone, and other contact details
   contact() dict
-  // Authentication information
+  // User's configured authentication methods (passwords, MFA, security keys, etc.)
   authMethods() microsoft.user.authenticationMethods
   // Whether MFA is enabled for the user
   mfaEnabled() bool
@@ -1003,7 +1003,7 @@ microsoft.application @defaults("id displayName hasExpiredCredentials") {
   samlMetadataUrl string
   // Default redirect URI
   defaultRedirectUri string
-  // Certification metadata
+  // App certification details including compliance status and certifier
   certification dict
   // Optional claims
   optionalClaims dict
@@ -1205,9 +1205,9 @@ microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUp
   user() microsoft.user
   // Risk detail
   riskDetail string
-  // Risk level
+  // Risk level (low, medium, high, hidden, none, unknownFutureValue)
   riskLevel string
-  // Risk state
+  // Risk state (none, confirmedSafe, remediated, dismissed, atRisk, confirmedCompromised, unknownFutureValue)
   riskState string
   // Risk last updated
   lastUpdatedAt time
@@ -1375,9 +1375,9 @@ private microsoft.policies.crossTenantAccessPolicyDefault @defaults("isServiceDe
 
 // Automatic user consent settings for cross-tenant access policy
 private microsoft.policies.crossTenantAccessPolicyDefault.automaticUserConsentSettings @defaults("inboundAllowed outboundAllowed") {
-  // if automatic consent for inbound collaboration is enabled.
+  // Whether automatic consent for inbound collaboration is enabled
   inboundAllowed bool
-  // if automatic consent for outbound collaboration is enabled.
+  // Whether automatic consent for outbound collaboration is enabled
   outboundAllowed bool
 }
 

@@ -20,7 +20,7 @@ extend asset {
   // Common Platform Enumeration (CPE) for the asset
   cpes() []core.cpe
   // Advisory & vulnerability report
-  // Deprecated; will be removed in version 12.0 (use vulnmgmt instead)
+  // Deprecated; will be removed in version 13.0 (use vulnmgmt instead)
   vulnerabilityReport() dict
   // Platform URL in the package URL format (as opposed to the CPE format)
   purl() string
@@ -45,7 +45,7 @@ private mondoo.eol {
   date() time
 }
 
-// Deprecated; will be removed in version 12.0
+// Deprecated; will be removed in version 13.0
 // Use asset.eol instead.
 platform.eol @defaults("date") {
   // Documentation URL
@@ -57,8 +57,8 @@ platform.eol @defaults("date") {
 }
 
 platform {
-  // Deprecated; will be removed in version 12.0
-  // use vulnmgmt instead
+  // Deprecated; will be removed in version 13.0
+  // Use vulnmgmt instead
   vulnerabilityReport() dict
 }
 
@@ -430,7 +430,7 @@ files.find {
   []file
   // Sets the starting point for the search operation
   from string
-  // Whether other devices to search
+  // Whether to search across other devices
   xdev bool
   // What types of files to list (directories, files, devices, etc)
   type string
@@ -592,7 +592,7 @@ authorizedkeys.entry @defaults("key") {
   key string
   // Key label
   label string
-  // Key options
+  // SSH key options (e.g., command restrictions, source IP limits)
   options []string
   // Key file
   file file
@@ -619,7 +619,7 @@ groups {
 // Package on the platform or OS
 package @defaults("name version") {
   // May be initialized with the name only, in which case it will look up
-  // the package with the given name on the system.
+  // The package with the given name on the system.
   init(name string)
 
   // Name of the package
@@ -757,13 +757,13 @@ auditd.config {
 // auditd (Linux Audit Daemon) rules aggregated on disk
 // via /etc/audit/audit.rules by default
 auditd.rules {
-  // path to folder to look up rules
+  // Path to folder to look up rules
   path() string
-  // all controls for auditd
+  // All controls for auditd
   controls(path) []auditd.rule.control
-  // all file rules
+  // All file rules
   files(path) []auditd.rule.file
-  // all syscall rules
+  // All syscall rules
   syscalls(path) []auditd.rule.syscall
 }
 
@@ -776,9 +776,9 @@ private auditd.rule {}
 // eg: -b 8192                    =>  {flag: "-b", value: "8192"}
 // eg: -D                         =>  {flag: "-D", value: nil}
 private auditd.rule.control @defaults("flag value") {
-  // the flag used for this control, i.e. the first part of the control including any leading `-`
+  // The flag used for this control, i.e. the first part of the control including any leading `-`
   flag string
-  // the value of the control which may be specified
+  // The value of the control, which may be specified
   value string
 }
 
@@ -786,11 +786,11 @@ private auditd.rule.control @defaults("flag value") {
 // eg: -w /etc/shadow -p rw -k shadow_access
 //  => {path: "/etc/shadow", permissions: "rw", keyname: "shadow_access"}
 private auditd.rule.file @defaults("path permissions") {
-  // the path this rule matches as specified by -w
+  // The path this rule matches as specified by -w
   path string
-  // the permissions specified by this rule via -p
+  // The permissions specified by this rule via -p
   permissions string
-  // the key name for related rules as specified by -k
+  // The key name for related rules as specified by -k
   keyname string
 }
 
@@ -808,17 +808,17 @@ private auditd.rule.file @defaults("path permissions") {
 //    keyname: nil,
 // }
 private auditd.rule.syscall @defaults("action list") {
-  // the action specified by -a
+  // The action specified by -a
   action string
-  // the list, the second value specified by -a
+  // The list, the second value specified by -a
   list string
-  // the list of syscalls that this rule matches specified by -S
+  // The list of syscalls that this rule matches, specified by -S
   syscalls []string
-  // all field entries as raw values as specified by -F
+  // All field entries as raw values, as specified by -F
   fields []dict
-  // all inter-field comparisons as specified by -C
+  // All inter-field comparisons as specified by -C
   comparisons []dict
-  // the key name for related rules as specified by -k
+  // The key name for related rules as specified by -k
   keyname string
 }
 
@@ -859,7 +859,7 @@ service @defaults("name running enabled type") {
   running bool
   // Whether the service is enabled (start at boot)
   enabled bool
-  // Type information
+  // Service type (e.g., simple, forking, oneshot, notify)
   type string
   // Whether the service is masked
   masked bool
@@ -1038,7 +1038,7 @@ docker.container @defaults("names.first status"){
   imageid string
   // Container names
   names []string
-  // Container state
+  // Container state (e.g., created, running, paused, restarting, exited, dead)
   state string
   // Status message
   status string
@@ -1587,7 +1587,7 @@ npm.packages {
   // Files used to determine the packages
   files() []pkgFileInfo
 
-  // scripts defined in package json
+  // Scripts defined in package.json
   scripts() map[string]string
 }
 
@@ -1660,7 +1660,7 @@ macos.alf {
   globalState int
   // Whether alf.log is used
   loggingEnabled int
-  // Logging flags
+  // Logging option flags (0=disabled, 1=detail, 2=brief, 3=throttled)
   loggingOption int
   // Whether the firewall service is in stealth mode
   stealthEnabled int
@@ -2039,19 +2039,19 @@ private windows.security.product {
 
 // Health of the Windows security provider
 windows.security.health {
-  // Firewall information
+  // Windows Firewall status and configuration
   firewall dict
-  // Automatic update information
+  // Windows Update automatic update settings
   autoUpdate dict
-  // Antivirus information
+  // Installed antivirus software status and details
   antiVirus dict
-  // Spyware information
+  // Anti-spyware protection status and details
   antiSpyware dict
   // Internet settings information
   internetSettings dict
-  // User account control information
+  // User Account Control (UAC) configuration
   uac dict
-  // Security Center service information
+  // Windows Security Center service status
   securityCenterService dict
 }
 
@@ -2123,11 +2123,11 @@ private networkInterface @defaults("name mac active") {
 // Collection of routing table entries on the system.
 private networkRoutes {
   []networkRoute
-  // default routes found on the machine
+  // Default routes found on the machine
   defaults() []networkRoute
 }
 
-// information on the network routes
+// Network route information
 private networkRoute @defaults("destination flags"){
   // Destination network or destination subnet for this route
   destination string

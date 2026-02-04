@@ -106,9 +106,9 @@ private gcp.project.redisService.instance @defaults("name") {
   replicaCount int
   // Info per node
   nodes []gcp.project.redisService.instance.nodeInfo
-  // Hostname or IP address of the exposed readonly Redis endpoint
+  // Hostname or IP address of the exposed read-only Redis endpoint
   readEndpoint string
-  // The port number of the exposed readonly redis endpoint
+  // The port number of the exposed read-only Redis endpoint
   readEndpointPort int
   // The KMS key reference that the customer provides when trying to create the instance
   customerManagedKey string
@@ -269,7 +269,7 @@ gcp.recommendation {
 
 // Google Cloud (GCP) Resource Manager binding
 private gcp.resourcemanager.binding {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Principals requesting access for a Google Cloud resource
   members []string
@@ -451,7 +451,7 @@ private gcp.project.computeService.machineType @defaults("name") {
   projectId string
   // Name of the resource
   name string
-  // Resource Description
+  // Resource description
   description string
   // Number of virtual CPUs that are available to the instance
   guestCpus int
@@ -477,7 +477,7 @@ private gcp.project.computeService.instance @defaults("name") {
   projectId string
   // User-friendly name for this instance
   name string
-  // User-friendly name for this instance
+  // Optional description for this instance
   description string
   // Confidential instance configuration
   confidentialInstanceConfig dict
@@ -507,7 +507,7 @@ private gcp.project.computeService.instance @defaults("name") {
   lastStopTimestamp time
   // Last suspended timestamp
   lastSuspendedTimestamp time
-  // Instance metadata
+  // Custom key-value pairs assigned to the instance
   metadata map[string]string
   // Minimum CPU platform for the VM instance
   minCpuPlatform string
@@ -521,7 +521,7 @@ private gcp.project.computeService.instance @defaults("name") {
   resourcePolicies []string
   // Resource status for physical host
   physicalHostResourceStatus string
-  // Scheduling options
+  // Scheduling options including preemptibility, automatic restart, and maintenance behavior
   scheduling dict
   // Whether Shielded Instance integrity monitoring is enabled
   enableIntegrityMonitoring bool
@@ -569,7 +569,7 @@ private gcp.project.computeService.disk @defaults("name") {
   architecture string
   // Optional description
   description string
-  // Features to enable on the guest operating
+  // Features to enable on the guest operating system
   guestOsFeatures []string
   // Labels to apply to this disk
   labels map[string]string
@@ -615,7 +615,7 @@ private gcp.project.computeService.attachedDisk {
   diskSizeGb int
   // Whether to force attach the regional disk
   forceAttach bool
-  // Features to enable on the guest operating
+  // Features to enable on the guest operating system
   guestOsFeatures []string
   // Index to this disk
   index int
@@ -623,11 +623,11 @@ private gcp.project.computeService.attachedDisk {
   interface string
   // Publicly visible licenses
   licenses []string
-  // Mode in which to the disk is attached
+  // Mode in which the disk is attached
   mode string
   // Attached Persistent Disk resource
   source() gcp.project.computeService.disk
-  // Disk Type
+  // Disk type
   type string
 }
 
@@ -657,9 +657,9 @@ private gcp.project.computeService.snapshot @defaults("name") {
   storageBytesStatus string
   // Snapshot type
   snapshotType string
-  // Public visible licenses
+  // Publicly visible licenses
   licenses []string
-  // Snapshot Labels
+  // Snapshot labels
   labels map[string]string
   // Creation timestamp
   created time
@@ -677,7 +677,7 @@ private gcp.project.computeService.image @defaults("id name") {
   name string
   // Optional description
   description string
-  // Architecture of the snapshot
+  // Architecture of the image
   architecture string
   // Size of the image tar.gz archive stored in Google Cloud Storage (in bytes)
   archiveSizeBytes int
@@ -685,9 +685,9 @@ private gcp.project.computeService.image @defaults("id name") {
   diskSizeGb int
   // The name of the image family to which this image belongs
   family string
-  // Public visible licenses
+  // Publicly visible licenses
   licenses []string
-  // Snapshot Labels
+  // Image labels
   labels map[string]string
   // Creation timestamp
   created time
@@ -707,7 +707,7 @@ private gcp.project.computeService.firewall @defaults("name") {
   description string
   // Priority for this rule
   priority int
-  //  Direction of traffic
+  // Direction of traffic
   direction string
   // Whether the firewall rule is disabled
   disabled bool
@@ -813,7 +813,7 @@ private gcp.project.computeService.subnetwork @defaults("name") {
 
 // Google Cloud (GCP) Compute VPC network partitioning log configuration
 private gcp.project.computeService.subnetwork.logConfig @defaults("enable") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Toggles the aggregation interval for collecting flow logs
   aggregationInterval string
@@ -909,7 +909,7 @@ private gcp.project.computeService.backendService @defaults("name") {
   regionUrl string
   // Security policy URL
   securityPolicyUrl string
-  // Security settings
+  // Client TLS policy and subject alternative names for the backend service
   securitySettings dict
   // Service binding URLs
   serviceBindingUrls []string
@@ -921,7 +921,7 @@ private gcp.project.computeService.backendService @defaults("name") {
 
 // Google Cloud (GCP) Compute backend service backend
 private gcp.project.computeService.backendService.backend @defaults("description") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // How to determine whether the backend of a load balancer can handle additional traffic or is fully loaded
   balancingMode string
@@ -951,7 +951,7 @@ private gcp.project.computeService.backendService.backend @defaults("description
 
 // Google Cloud (GCP) Compute backend service CDN policy
 private gcp.project.computeService.backendService.cdnPolicy {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Bypass the cache when the specified request headers are matched
   bypassCacheOnRequestHeaders []dict
@@ -1113,7 +1113,7 @@ private gcp.project.sqlService.instance @defaults("name") {
   connectionName string
   // Creation timestamp
   created time
-  // Deprecated
+  // Deprecated: This field is no longer used
   currentDiskSize int
   // Current database version running on the instance
   databaseInstalledVersion string
@@ -1173,7 +1173,7 @@ private gcp.project.sqlService.instance.database @defaults("name") {
 
 // Google Cloud (GCP) SQL instance IP mapping
 private gcp.project.sqlService.instance.ipMapping @defaults("ipAddress") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Assigned IP address
   ipAddress string
@@ -1247,7 +1247,7 @@ private gcp.project.sqlService.instance.settings {
 
 // Google Cloud (GCP) SQL instance settings backup configuration
 private gcp.project.sqlService.instance.settings.backupconfiguration {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Backup retention settings
   backupRetentionSettings dict
@@ -1267,7 +1267,7 @@ private gcp.project.sqlService.instance.settings.backupconfiguration {
 
 // Google Cloud (GCP) SQL instance settings deny maintenance period
 private gcp.project.sqlService.instance.settings.denyMaintenancePeriod @defaults("startDate endDate") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Deny maintenance period end date
   endDate string
@@ -1279,7 +1279,7 @@ private gcp.project.sqlService.instance.settings.denyMaintenancePeriod @defaults
 
 // Google Cloud (GCP) SQL instance settings IP configuration
 private gcp.project.sqlService.instance.settings.ipConfiguration {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Name of the allocated IP range for the private IP Cloud SQL instance
   allocatedIpRange string
@@ -1299,7 +1299,7 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
 
 // Google Cloud (GCP) SQL instance settings maintenance window
 private gcp.project.sqlService.instance.settings.maintenanceWindow @defaults("day hour") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Day of week (1-7, 1 is Monday)
   day int
@@ -1311,7 +1311,7 @@ private gcp.project.sqlService.instance.settings.maintenanceWindow @defaults("da
 
 // Google Cloud (GCP) SQL instance settings password validation policy
 private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defaults("enabledPasswordPolicy") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Password complexity
   complexity string
@@ -1369,7 +1369,7 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
 
 // Google Cloud (GCP) BigQuery dataset access entry
 private gcp.project.bigqueryService.dataset.accessEntry @defaults("role entity entityType") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Dataset ID
   datasetId string
@@ -1417,7 +1417,7 @@ private gcp.project.bigqueryService.table @defaults("id") {
   numLongTermBytes int
   // Number of rows of data in this table
   numRows int
-  // Table Type
+  // Table type
   type string
   // Time when this table expires
   expirationTime time
@@ -1461,7 +1461,7 @@ private gcp.project.bigqueryService.model @defaults("id") {
   created time
   // Modified timestamp
   modified time
-  // Type of the mode
+  // Type of the model
   type string
   // Expiration time of the model
   expirationTime time
@@ -1651,7 +1651,7 @@ private gcp.project.gkeService.cluster @defaults("name description zone status c
 
 // Google Kubernetes Engine (GKE) cluster addons config
 private gcp.project.gkeService.cluster.addonsConfig {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Configuration for the HTTP (L7) load balancing controller addon
   httpLoadBalancing dict
@@ -1681,7 +1681,7 @@ private gcp.project.gkeService.cluster.addonsConfig {
 
 // Google Kubernetes Engine (GKE) cluster IP allocation policy
 private gcp.project.gkeService.cluster.ipAllocationPolicy {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Whether alias IPs are used for pod IPs in the cluster
   useIpAliases bool
@@ -1711,7 +1711,7 @@ private gcp.project.gkeService.cluster.ipAllocationPolicy {
 
 // Google Kubernetes Engine (GKE) cluster network config
 private gcp.project.gkeService.cluster.networkConfig @defaults("networkPath") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Relative path of the network to which the cluster is connected
   networkPath string
@@ -1745,7 +1745,7 @@ private gcp.project.gkeService.cluster.networkConfig @defaults("networkPath") {
 
 // Google Kubernetes Engine (GKE) cluster node pool
 private gcp.project.gkeService.cluster.nodepool @defaults("name") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // The name of the node pool
   name string
@@ -1794,7 +1794,7 @@ private gcp.project.gkeService.cluster.nodepool.autoscaling @defaults( "enabled"
 
 // Google Kubernetes Engine (GKE) node pool-Level network configuration
 private gcp.project.gkeService.cluster.nodepool.networkConfig @defaults("podRange podIpv4CidrBlock") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // The ID of the secondary range for pod IPs
   podRange string
@@ -1806,7 +1806,7 @@ private gcp.project.gkeService.cluster.nodepool.networkConfig @defaults("podRang
 
 // Google Kubernetes Engine (GKE) node pool network performance configuration
 private gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig @defaults("totalEgressBandwidthTier") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Specifies the total network bandwidth tier for the node pool
   totalEgressBandwidthTier string
@@ -1814,7 +1814,7 @@ private gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig 
 
 // Google Kubernetes Engine (GKE) node pool configuration
 private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType diskSizeGb") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Project ID
   projectId string
@@ -1874,7 +1874,7 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
 
 // Google Kubernetes Engine (GKE) node pool hardware accelerators configuration
 private gcp.project.gkeService.cluster.nodepool.config.accelerator @defaults("type count") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // The number of the accelerator cards exposed to an instance
   count int
@@ -1888,7 +1888,7 @@ private gcp.project.gkeService.cluster.nodepool.config.accelerator @defaults("ty
 
 // Google Kubernetes Engine (GKE) GPU sharing configuration
 private gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig @defaults("strategy") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // The max number of containers that can share a GPU
   maxSharedClientsPerGpu int
@@ -1898,7 +1898,7 @@ private gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingCon
 
 // Google Kubernetes Engine (GKE) Kubernetes node taint
 private gcp.project.gkeService.cluster.nodepool.config.nodeTaint @defaults("key value effect") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Key for the taint
   key string
@@ -1910,7 +1910,7 @@ private gcp.project.gkeService.cluster.nodepool.config.nodeTaint @defaults("key 
 
 // Google Kubernetes Engine (GKE) node pool sandbox configuration
 private gcp.project.gkeService.cluster.nodepool.config.sandboxConfig @defaults("type") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Type of the sandbox to use for this node
   type string
@@ -1918,7 +1918,7 @@ private gcp.project.gkeService.cluster.nodepool.config.sandboxConfig @defaults("
 
 // Google Kubernetes Engine (GKE) node pool shielded instance configuration
 private gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig @defaults("enableSecureBoot enableIntegrityMonitoring") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Whether the instance has Secure Boot enabled
   enableSecureBoot bool
@@ -1928,7 +1928,7 @@ private gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig @d
 
 // Google Kubernetes Engine (GKE) node pool parameters that can be configured on Linux nodes
 private gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig @defaults("sysctls") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // The Linux kernel parameters to apply to the nodes and all pods running on them
   sysctls map[string]string
@@ -1936,7 +1936,7 @@ private gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig @defaults
 
 // Google Kubernetes Engine (GKE) Node Pool kubelet configuration
 private gcp.project.gkeService.cluster.nodepool.config.kubeletConfig @defaults("cpuManagerPolicy podPidsLimit") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Control the CPU management policy on the node
   cpuManagerPolicy string
@@ -1948,7 +1948,7 @@ private gcp.project.gkeService.cluster.nodepool.config.kubeletConfig @defaults("
 
 // Google Kubernetes Engine (GKE) node pool GCFS configuration
 private gcp.project.gkeService.cluster.nodepool.config.gcfsConfig @defaults("enabled") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Whether to use GCFS
   enabled bool
@@ -1956,7 +1956,7 @@ private gcp.project.gkeService.cluster.nodepool.config.gcfsConfig @defaults("ena
 
 // Google Kubernetes Engine (GKE) node pool advanced machine features configuration
 private gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures @defaults("threadsPerCore") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Number of threads per physical core (if unset, assumes the maximum number of threads supported per core by the underlying processor)
   threadsPerCore int
@@ -1964,7 +1964,7 @@ private gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures @
 
 // Google Kubernetes Engine (GKE) node pool gVNIC configuration
 private gcp.project.gkeService.cluster.nodepool.config.gvnicConfig @defaults("enabled") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Whether to use gVNIC
   enabled bool
@@ -1972,7 +1972,7 @@ private gcp.project.gkeService.cluster.nodepool.config.gvnicConfig @defaults("en
 
 // Google Kubernetes Engine (GKE) node pool confidential nodes configuration
 private gcp.project.gkeService.cluster.nodepool.config.confidentialNodes @defaults("enabled") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Whether to use confidential nodes
   enabled bool
@@ -2070,7 +2070,7 @@ private gcp.project.pubsubService.snapshot @defaults("name") {
   projectId string
   // Subscription name
   name string
-  // The topic for which the snapshot is
+  // The topic associated with the snapshot
   topic gcp.project.pubsubService.topic
   // When the snapshot expires
   expiration time
@@ -2287,7 +2287,7 @@ private gcp.project.loggingservice.bucket @defaults("name") {
   name string
   // Log entry field paths that are denied access in this bucket
   restrictedFields []string
-  // Amount of time for which logs will be retained by default, after which they're' automatically deleted
+  // Amount of time for which logs will be retained by default, after which they're automatically deleted
   retentionDays int
   // Last update timestamp of the bucket
   updated time
@@ -2295,7 +2295,7 @@ private gcp.project.loggingservice.bucket @defaults("name") {
 
 // Google Cloud (GCP) Logging bucket index config
 private gcp.project.loggingservice.bucket.indexConfig @defaults("id") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Creation timestamp
   created time
@@ -2527,7 +2527,7 @@ private gcp.project.dataprocService.cluster.config {
 
 // Google Cloud (GCP) Dataproc cluster endpoint config
 private gcp.project.dataprocService.cluster.config.gceCluster {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Project ID
   projectId string
@@ -2563,7 +2563,7 @@ private gcp.project.dataprocService.cluster.config.gceCluster {
 
 // Google Cloud (GCP) Dataproc cluster GCE cluster reservation affinity config
 private gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Type of reservation to consume
   consumeReservationType string
@@ -2575,7 +2575,7 @@ private gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinit
 
 // Google Cloud (GCP) Dataproc cluster GCE cluster shielded instance config
 private gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Whether the instances have integrity monitoring enabled
   enableIntegrityMonitoring bool
@@ -2587,7 +2587,7 @@ private gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceCo
 
 // Google Cloud (GCP) Dataproc cluster GKE cluster config
 private gcp.project.dataprocService.cluster.config.gkeCluster {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Target GKE cluster
   gkeClusterTarget string
@@ -2597,7 +2597,7 @@ private gcp.project.dataprocService.cluster.config.gkeCluster {
 
 // Google Cloud (GCP) Dataproc cluster lifecycle config
 private gcp.project.dataprocService.cluster.config.lifecycle {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Time when the cluster will be auto-deleted
   autoDeleteTime string
@@ -2611,7 +2611,7 @@ private gcp.project.dataprocService.cluster.config.lifecycle {
 
 // Google Cloud (GCP) Dataproc cluster instance config
 private gcp.project.dataprocService.cluster.config.instance {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Compute Engine accelerators
   accelerators []dict
@@ -2639,7 +2639,7 @@ private gcp.project.dataprocService.cluster.config.instance {
 
 // Google Cloud (GCP) Dataproc cluster instance disk config
 private gcp.project.dataprocService.cluster.config.instance.diskConfig {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Size in GB of the boot disk
   bootDiskSizeGb int
@@ -2653,7 +2653,7 @@ private gcp.project.dataprocService.cluster.config.instance.diskConfig {
 
 // Google Cloud (GCP) Dataproc cluster status
 private gcp.project.dataprocService.cluster.status @defaults("state") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Details of the cluster's state
   detail string
@@ -2758,7 +2758,7 @@ private gcp.project.cloudRunService.service @defaults("name") {
 
 // Google Cloud (GCP) Run service revision template
 private gcp.project.cloudRunService.service.revisionTemplate @defaults("name") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Project ID
   projectId string
@@ -2792,7 +2792,7 @@ private gcp.project.cloudRunService.service.revisionTemplate @defaults("name") {
 
 // Google Cloud (GCP) Run service revision template container
 private gcp.project.cloudRunService.container @defaults("name image") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Container name
   name string
@@ -2821,7 +2821,7 @@ private gcp.project.cloudRunService.container @defaults("name image") {
 
 // Google Cloud (GCP) Run service revision template container probe
 private gcp.project.cloudRunService.container.probe {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Number of seconds after the container has started before the probe is initiated
   initialDelaySeconds int
@@ -2839,7 +2839,7 @@ private gcp.project.cloudRunService.container.probe {
 
 // Google Cloud (GCP) Run condition
 private gcp.project.cloudRunService.condition @defaults("type state message") {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Status of the reconciliation process
   type string
@@ -2903,7 +2903,7 @@ private gcp.project.cloudRunService.job {
 
 // Google Cloud (GCP) Run job execution template
 private gcp.project.cloudRunService.job.executionTemplate {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // User-defined labels
   labels map[string]string
@@ -2919,7 +2919,7 @@ private gcp.project.cloudRunService.job.executionTemplate {
 
 // Google Cloud (GCP) Run job execution template task template
 private gcp.project.cloudRunService.job.executionTemplate.taskTemplate {
-  // Internal ID
+  // Internal ID for this resource
   id string
   // Project ID
   projectId string

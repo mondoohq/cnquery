@@ -150,7 +150,7 @@ private cloudflare.streams.liveInput @defaults("uid name") {
 
 // Cloudflare videos and recordings
 private cloudflare.streams.video @defaults("name id") {
-	// cnquery resource id
+	// cnquery resource ID
 	id string
 
 	// Unique identifier

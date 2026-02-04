@@ -24,7 +24,7 @@ opcua.server {
   currentTime time
   // Time when the server started
   startTime time
-  // Server state
+  // Server state (e.g., Running, Failed, NoConfiguration, Suspended, Shutdown)
   state string
 }
 
