@@ -1264,7 +1264,6 @@ logindefs {
 
 // System resource limits configuration
 limits {
-  init(path? string)
   // List of files that make up the limits configuration
   files() []file
   // Parsed limits entries
