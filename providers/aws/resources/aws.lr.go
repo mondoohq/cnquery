@@ -162,6 +162,11 @@ const (
 	ResourceAwsS3BucketGrant                                                    string = "aws.s3.bucket.grant"
 	ResourceAwsS3BucketCorsrule                                                 string = "aws.s3.bucket.corsrule"
 	ResourceAwsS3BucketPolicy                                                   string = "aws.s3.bucket.policy"
+	ResourceAwsS3BucketWebsiteConfiguration                                     string = "aws.s3.bucket.websiteConfiguration"
+	ResourceAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf            string = "aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf"
+	ResourceAwsS3BucketWebsiteConfigurationRoutingRule                          string = "aws.s3.bucket.websiteConfiguration.routingRule"
+	ResourceAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf              string = "aws.s3.bucket.websiteConfiguration.routingRule.redirectConf"
+	ResourceAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf             string = "aws.s3.bucket.websiteConfiguration.routingRule.conditionConf"
 	ResourceAwsApplicationAutoscaling                                           string = "aws.applicationAutoscaling"
 	ResourceAwsApplicationAutoscalingTarget                                     string = "aws.applicationAutoscaling.target"
 	ResourceAwsDrs                                                              string = "aws.drs"
@@ -839,6 +844,26 @@ func init() {
 		"aws.s3.bucket.policy": {
 			Init:   initAwsS3BucketPolicy,
 			Create: createAwsS3BucketPolicy,
+		},
+		"aws.s3.bucket.websiteConfiguration": {
+			// to override args, implement: initAwsS3BucketWebsiteConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketWebsiteConfiguration,
+		},
+		"aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf": {
+			// to override args, implement: initAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf,
+		},
+		"aws.s3.bucket.websiteConfiguration.routingRule": {
+			// to override args, implement: initAwsS3BucketWebsiteConfigurationRoutingRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketWebsiteConfigurationRoutingRule,
+		},
+		"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf": {
+			// to override args, implement: initAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf,
+		},
+		"aws.s3.bucket.websiteConfiguration.routingRule.conditionConf": {
+			// to override args, implement: initAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf,
 		},
 		"aws.applicationAutoscaling": {
 			// to override args, implement: initAwsApplicationAutoscaling(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3973,6 +3998,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.staticWebsiteHosting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetStaticWebsiteHosting()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.s3.bucket.website": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetWebsite()).ToDataRes(types.Resource("aws.s3.bucket.websiteConfiguration"))
+	},
 	"aws.s3.bucket.defaultLock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetDefaultLock()).ToDataRes(types.String)
 	},
@@ -4041,6 +4069,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.policy.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketPolicy).GetStatements()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.s3.bucket.websiteConfiguration.indexDocument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfiguration).GetIndexDocument()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.websiteConfiguration.errorDocument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfiguration).GetErrorDocument()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.websiteConfiguration.redirectAllRequestsTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfiguration).GetRedirectAllRequestsTo()).ToDataRes(types.Resource("aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf"))
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfiguration).GetRoutingRules()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.websiteConfiguration.routingRule")))
+	},
+	"aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf).GetHostname()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRule).GetRedirect()).ToDataRes(types.Resource("aws.s3.bucket.websiteConfiguration.routingRule.redirectConf"))
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRule).GetCondition()).ToDataRes(types.Resource("aws.s3.bucket.websiteConfiguration.routingRule.conditionConf"))
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).GetHostname()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.httpRedirectCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).GetHttpRedirectCode()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.replaceKeyPrefixWith": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).GetReplaceKeyPrefixWith()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.replaceKeyWith": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).GetReplaceKeyWith()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.conditionConf.httpErrorCodeReturnedEquals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf).GetHttpErrorCodeReturnedEquals()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.conditionConf.keyPrefixEquals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf).GetKeyPrefixEquals()).ToDataRes(types.String)
 	},
 	"aws.applicationAutoscaling.namespace": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApplicationAutoscaling).GetNamespace()).ToDataRes(types.String)
@@ -10809,6 +10882,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3Bucket).StaticWebsiteHosting, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.s3.bucket.website": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Website, ok = plugin.RawToTValue[*mqlAwsS3BucketWebsiteConfiguration](v.Value, v.Error)
+		return
+	},
 	"aws.s3.bucket.defaultLock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).DefaultLock, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -10911,6 +10988,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.s3.bucket.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3BucketPolicy).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.indexDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfiguration).IndexDocument, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.errorDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfiguration).ErrorDocument, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.redirectAllRequestsTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfiguration).RedirectAllRequestsTo, ok = plugin.RawToTValue[*mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfiguration).RoutingRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRule).Redirect, ok = plugin.RawToTValue[*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRule).Condition, ok = plugin.RawToTValue[*mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.httpRedirectCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).HttpRedirectCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.replaceKeyPrefixWith": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).ReplaceKeyPrefixWith, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.redirectConf.replaceKeyWith": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf).ReplaceKeyWith, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.conditionConf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.conditionConf.httpErrorCodeReturnedEquals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf).HttpErrorCodeReturnedEquals, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.websiteConfiguration.routingRule.conditionConf.keyPrefixEquals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf).KeyPrefixEquals, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.applicationAutoscaling.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26933,6 +27090,7 @@ type mqlAwsS3Bucket struct {
 	Versioning           plugin.TValue[map[string]any]
 	Logging              plugin.TValue[map[string]any]
 	StaticWebsiteHosting plugin.TValue[map[string]any]
+	Website              plugin.TValue[*mqlAwsS3BucketWebsiteConfiguration]
 	DefaultLock          plugin.TValue[string]
 	Replication          plugin.TValue[any]
 	Encryption           plugin.TValue[any]
@@ -27074,6 +27232,22 @@ func (c *mqlAwsS3Bucket) GetLogging() *plugin.TValue[map[string]any] {
 func (c *mqlAwsS3Bucket) GetStaticWebsiteHosting() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.StaticWebsiteHosting, func() (map[string]any, error) {
 		return c.staticWebsiteHosting()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetWebsite() *plugin.TValue[*mqlAwsS3BucketWebsiteConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsS3BucketWebsiteConfiguration](&c.Website, func() (*mqlAwsS3BucketWebsiteConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "website")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3BucketWebsiteConfiguration), nil
+			}
+		}
+
+		return c.website()
 	})
 }
 
@@ -27327,6 +27501,276 @@ func (c *mqlAwsS3BucketPolicy) GetStatements() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Statements, func() ([]any, error) {
 		return c.statements()
 	})
+}
+
+// mqlAwsS3BucketWebsiteConfiguration for the aws.s3.bucket.websiteConfiguration resource
+type mqlAwsS3BucketWebsiteConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsS3BucketWebsiteConfigurationInternal it will be used here
+	IndexDocument         plugin.TValue[string]
+	ErrorDocument         plugin.TValue[string]
+	RedirectAllRequestsTo plugin.TValue[*mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf]
+	RoutingRules          plugin.TValue[[]any]
+}
+
+// createAwsS3BucketWebsiteConfiguration creates a new instance of this resource
+func createAwsS3BucketWebsiteConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketWebsiteConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.websiteConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketWebsiteConfiguration) MqlName() string {
+	return "aws.s3.bucket.websiteConfiguration"
+}
+
+func (c *mqlAwsS3BucketWebsiteConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketWebsiteConfiguration) GetIndexDocument() *plugin.TValue[string] {
+	return &c.IndexDocument
+}
+
+func (c *mqlAwsS3BucketWebsiteConfiguration) GetErrorDocument() *plugin.TValue[string] {
+	return &c.ErrorDocument
+}
+
+func (c *mqlAwsS3BucketWebsiteConfiguration) GetRedirectAllRequestsTo() *plugin.TValue[*mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf] {
+	return &c.RedirectAllRequestsTo
+}
+
+func (c *mqlAwsS3BucketWebsiteConfiguration) GetRoutingRules() *plugin.TValue[[]any] {
+	return &c.RoutingRules
+}
+
+// mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf for the aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf resource
+type mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConfInternal it will be used here
+	Hostname plugin.TValue[string]
+	Protocol plugin.TValue[string]
+}
+
+// createAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf creates a new instance of this resource
+func createAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf) MqlName() string {
+	return "aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf"
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf) GetHostname() *plugin.TValue[string] {
+	return &c.Hostname
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+// mqlAwsS3BucketWebsiteConfigurationRoutingRule for the aws.s3.bucket.websiteConfiguration.routingRule resource
+type mqlAwsS3BucketWebsiteConfigurationRoutingRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsS3BucketWebsiteConfigurationRoutingRuleInternal it will be used here
+	Redirect  plugin.TValue[*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf]
+	Condition plugin.TValue[*mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf]
+}
+
+// createAwsS3BucketWebsiteConfigurationRoutingRule creates a new instance of this resource
+func createAwsS3BucketWebsiteConfigurationRoutingRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketWebsiteConfigurationRoutingRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.websiteConfiguration.routingRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRule) MqlName() string {
+	return "aws.s3.bucket.websiteConfiguration.routingRule"
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRule) GetRedirect() *plugin.TValue[*mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf] {
+	return &c.Redirect
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRule) GetCondition() *plugin.TValue[*mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf] {
+	return &c.Condition
+}
+
+// mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf for the aws.s3.bucket.websiteConfiguration.routingRule.redirectConf resource
+type mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConfInternal it will be used here
+	Hostname             plugin.TValue[string]
+	HttpRedirectCode     plugin.TValue[string]
+	Protocol             plugin.TValue[string]
+	ReplaceKeyPrefixWith plugin.TValue[string]
+	ReplaceKeyWith       plugin.TValue[string]
+}
+
+// createAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf creates a new instance of this resource
+func createAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.websiteConfiguration.routingRule.redirectConf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf) MqlName() string {
+	return "aws.s3.bucket.websiteConfiguration.routingRule.redirectConf"
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf) GetHostname() *plugin.TValue[string] {
+	return &c.Hostname
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf) GetHttpRedirectCode() *plugin.TValue[string] {
+	return &c.HttpRedirectCode
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf) GetReplaceKeyPrefixWith() *plugin.TValue[string] {
+	return &c.ReplaceKeyPrefixWith
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf) GetReplaceKeyWith() *plugin.TValue[string] {
+	return &c.ReplaceKeyWith
+}
+
+// mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf for the aws.s3.bucket.websiteConfiguration.routingRule.conditionConf resource
+type mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConfInternal it will be used here
+	HttpErrorCodeReturnedEquals plugin.TValue[string]
+	KeyPrefixEquals             plugin.TValue[string]
+}
+
+// createAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf creates a new instance of this resource
+func createAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.websiteConfiguration.routingRule.conditionConf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf) MqlName() string {
+	return "aws.s3.bucket.websiteConfiguration.routingRule.conditionConf"
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf) GetHttpErrorCodeReturnedEquals() *plugin.TValue[string] {
+	return &c.HttpErrorCodeReturnedEquals
+}
+
+func (c *mqlAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf) GetKeyPrefixEquals() *plugin.TValue[string] {
+	return &c.KeyPrefixEquals
 }
 
 // mqlAwsApplicationAutoscaling for the aws.applicationAutoscaling resource

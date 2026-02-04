@@ -696,6 +696,7 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {
 	})
 	if err != nil {
 		if isNotFoundForS3(err) {
+			a.StaticWebsiteHosting.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
 		return nil, err
@@ -714,6 +715,97 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlAwsS3Bucket) website() (*mqlAwsS3BucketWebsiteConfiguration, error) {
+	bucketname := a.Name.Data
+	region := a.Location.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.S3(region)
+	ctx := context.Background()
+
+	website, err := svc.GetBucketWebsite(ctx, &s3.GetBucketWebsiteInput{
+		Bucket: &bucketname,
+	})
+	if err != nil {
+		if isNotFoundForS3(err) {
+			a.Website.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	if website == nil {
+		a.Website.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	args := map[string]*llx.RawData{
+		"errorDocument":         llx.NilData,
+		"indexDocument":         llx.NilData,
+		"redirectAllRequestsTo": llx.NilData,
+	}
+	if website.ErrorDocument != nil {
+		args["errorDocument"] = llx.StringData(convert.ToValue(website.ErrorDocument.Key))
+	}
+	if website.IndexDocument != nil {
+		args["indexDocument"] = llx.StringData(convert.ToValue(website.IndexDocument.Suffix))
+	}
+	if website.RedirectAllRequestsTo != nil {
+		res, err := CreateResource(a.MqlRuntime, ResourceAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf, map[string]*llx.RawData{
+			"hostname": llx.StringData(convert.ToValue(website.RedirectAllRequestsTo.HostName)),
+			"protocol": llx.StringData(string(website.RedirectAllRequestsTo.Protocol)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		args["redirectAllRequestsTo"] = llx.ResourceData(res, ResourceAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf)
+	}
+
+	routingRules := []any{}
+	for _, rule := range website.RoutingRules {
+		args := map[string]*llx.RawData{}
+		if rule.Redirect != nil {
+			redirectRes, err := CreateResource(a.MqlRuntime, ResourceAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf, map[string]*llx.RawData{
+				"hostname":             llx.StringData(convert.ToValue(rule.Redirect.HostName)),
+				"httpRedirectCode":     llx.StringData(convert.ToValue(rule.Redirect.HttpRedirectCode)),
+				"protocol":             llx.StringData(string(rule.Redirect.Protocol)),
+				"replaceKeyPrefixWith": llx.StringData(convert.ToValue(rule.Redirect.ReplaceKeyPrefixWith)),
+				"replaceKeyWith":       llx.StringData(convert.ToValue(rule.Redirect.ReplaceKeyWith)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			args["redirect"] = llx.ResourceData(redirectRes, ResourceAwsS3BucketWebsiteConfigurationRoutingRuleRedirectConf)
+		}
+
+		if rule.Condition != nil {
+			condition, err := CreateResource(a.MqlRuntime, ResourceAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf, map[string]*llx.RawData{
+				"httpErrorCodeReturnedEquals": llx.StringData(convert.ToValue(rule.Condition.HttpErrorCodeReturnedEquals)),
+				"keyPrefixEquals":             llx.StringData(convert.ToValue(rule.Condition.KeyPrefixEquals)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			args["condition"] = llx.ResourceData(condition, ResourceAwsS3BucketWebsiteConfigurationRoutingRuleConditionConf)
+		}
+
+		ruleRes, err := CreateResource(a.MqlRuntime, ResourceAwsS3BucketWebsiteConfigurationRoutingRule, args)
+		if err != nil {
+			return nil, err
+		}
+
+		routingRules = append(routingRules, ruleRes)
+	}
+	args["routingRules"] = llx.ArrayData(routingRules, types.Resource(ResourceAwsS3BucketWebsiteConfigurationRoutingRule))
+
+	mqlWebsiteConfig, err := CreateResource(a.MqlRuntime, ResourceAwsS3BucketWebsiteConfiguration, args)
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlWebsiteConfig.(*mqlAwsS3BucketWebsiteConfiguration), nil
 }
 
 func (a *mqlAwsS3BucketGrant) id() (string, error) {

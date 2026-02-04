@@ -3691,6 +3691,8 @@ resources:
       staticWebsiteHosting: {}
       tags: {}
       versioning: {}
+      website:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -3747,6 +3749,57 @@ resources:
     refs:
     - title: 'AWS Documentation: Using bucket policies'
       url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-policies.html
+  aws.s3.bucket.websiteConfiguration:
+    fields:
+      enabled: {}
+      errorDocument: {}
+      indexDocument: {}
+      redirectAllRequestsTo: {}
+      routingRules: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf:
+    fields:
+      hostname: {}
+      protocol: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.s3.bucket.websiteConfiguration.routingRule:
+    fields:
+      condition: {}
+      redirect: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.s3.bucket.websiteConfiguration.routingRule.conditionConf:
+    fields:
+      httpErrorCodeReturnedEquals: {}
+      keyPrefixEquals: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.s3.bucket.websiteConfiguration.routingRule.redirectConf:
+    fields:
+      hostname: {}
+      httpRedirectCode: {}
+      protocol: {}
+      replaceKeyPrefixWith: {}
+      replaceKeyWith: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.s3control:
     fields:
       accountPublicAccessBlock: {}
