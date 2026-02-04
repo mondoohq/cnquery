@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	JIRA_TIME_FORMAT        = "2006-01-02T15:04:05.999-0700"
 	JIRA_SEARCH_MAX_RESULTS = 1000
 )
 
@@ -47,7 +46,7 @@ func (a *mqlAtlassianJira) users() ([]any, error) {
 					"id":      llx.StringData(user.AccountID),
 					"name":    llx.StringData(user.DisplayName),
 					"type":    llx.StringData(user.AccountType),
-					"picture": llx.StringData(user.AvatarUrls.One6X16),
+					"picture": llx.StringData(user.AvatarURLs.One6X16),
 				})
 			if err != nil {
 				return nil, err
@@ -221,9 +220,9 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 			return nil, err
 		}
 		for _, issue := range issues.Issues {
-			created, err := time.Parse(JIRA_TIME_FORMAT, issue.Fields.Created)
-			if err != nil {
-				return nil, err
+			var created time.Time
+			if issue.Fields.Created != nil {
+				created = time.Time(*issue.Fields.Created)
 			}
 
 			creator := issue.Fields.Creator
@@ -232,7 +231,7 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 					"id":      llx.StringData(creator.AccountID),
 					"name":    llx.StringData(creator.DisplayName),
 					"type":    llx.StringData(creator.AccountType),
-					"picture": llx.StringData(creator.AvatarUrls.One6X16),
+					"picture": llx.StringData(creator.AvatarURLs.One6X16),
 				})
 			if err != nil {
 				return nil, err
