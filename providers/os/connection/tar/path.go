@@ -1,6 +1,6 @@
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
-// Original source: https://golang.org/src/path/path.go
+// Original source: https://go.dev/src/path/path.go
 
 // The following code is adapted from golang but removes the cross-compile code so
 // that it always behaves unix style no matter for which platform it was compiled

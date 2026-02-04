@@ -125,8 +125,8 @@ type smbiosSystemProduct struct {
 	IdentifyingNumber string `json:"IdentifyingNumber"`
 }
 
-// see https://docs.microsoft.com/en-us/windows-hardware/drivers/bringup/sample-powershell-script-to-query-smbios-locally
-// https://docs.microsoft.com/en-us/windows-hardware/drivers/bringup/smbios
+// see https://learn.microsoft.com/en-us/windows-hardware/drivers/bringup/sample-powershell-script-to-query-smbios-locally
+// https://learn.microsoft.com/en-us/windows-hardware/drivers/bringup/smbios
 type WindowsSmbiosManager struct {
 	provider shared.Connection
 	smInfo   *SmBiosInfo

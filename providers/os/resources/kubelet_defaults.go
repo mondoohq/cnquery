@@ -78,7 +78,7 @@ var DefaultEvictionHard = map[string]string{
 var (
 	zeroDuration = metav1.Duration{}
 	// TODO: Move these constants to k8s.io/kubelet/config/v1beta1 instead?
-	// Refer to [Node Allocatable](https://git.k8s.io/design-proposals-archive/node/node-allocatable.md) doc for more information.
+	// Refer to [Node Allocatable](https://github.com/kubernetes/design-proposals-archive/blob/main/node/node-allocatable.md) doc for more information.
 	DefaultNodeAllocatableEnforcement = []string{"pods"}
 )
 

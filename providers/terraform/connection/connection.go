@@ -15,7 +15,7 @@ type ConnectionType string
 var _ plugin.Closer = (*Connection)(nil)
 
 // References:
-// - https://www.terraform.io/docs/language/syntax/configuration.html
+// - https://developer.hashicorp.com/terraform/language/syntax/configuration
 // - https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md
 type Connection struct {
 	plugin.Connection

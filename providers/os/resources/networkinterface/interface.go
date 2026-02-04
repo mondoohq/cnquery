@@ -22,7 +22,7 @@ import (
 
 var errNoSuchInterface = errors.New("no such network interface")
 
-// mimics https://golang.org/src/net/interface.go to provide a similar api
+// mimics https://go.dev/src/net/interface.go to provide a similar api
 type Interface struct {
 	Index          int              // positive integer that starts at one, zero is never used
 	MTU            int              // maximum transmission unit
@@ -332,7 +332,7 @@ const (
 	IF_TYPE_IEEE1394           = 144
 )
 
-// derived from https://golang.org/src/net/interface_windows.go
+// derived from https://go.dev/src/net/interface_windows.go
 func windowsInterfaceFlags(status string, ifType int) net.Flags {
 	var flags net.Flags
 	if status == "Up" {

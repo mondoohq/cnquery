@@ -16,10 +16,10 @@ import (
 // PowerShell does not offer a native method to gather this information, therefore we need
 // to write a C# script that is encapsulated in PowerShell
 //
-// https://docs.microsoft.com/en-us/windows/win32/api/Wscapi/ne-wscapi-wsc_security_provider
+// https://learn.microsoft.com/en-us/windows/win32/api/Wscapi/ne-wscapi-wsc_security_provider
 // https://github.com/microsoft/Windows-classic-samples/tree/main/Samples/WebSecurityCenter
 
-// https://docs.microsoft.com/en-us/windows/win32/api/wscapi/ne-wscapi-wsc_security_provider_health
+// https://learn.microsoft.com/en-us/windows/win32/api/wscapi/ne-wscapi-wsc_security_provider_health
 var securityHealthStatusValues = map[int64]string{
 	0: "GOOD",
 	1: "NOT_MONITORED",
@@ -28,7 +28,7 @@ var securityHealthStatusValues = map[int64]string{
 }
 
 // The available security provider are documented in
-// https://docs.microsoft.com/en-us/windows/win32/api/wscapi/ne-wscapi-wsc_security_provider
+// https://learn.microsoft.com/en-us/windows/win32/api/wscapi/ne-wscapi-wsc_security_provider
 const windowsSecurityHealthScript = `
 $MethodDefinition = @"
 [DllImport("wscapi.dll",CharSet = CharSet.Unicode, SetLastError = true)]

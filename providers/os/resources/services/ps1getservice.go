@@ -74,7 +74,7 @@ func (s WindowsService) IsRunning() bool {
 	return s.State() == ServiceRunning
 }
 
-// Modes are documented in https://docs.microsoft.com/en-us/dotnet/api/system.serviceprocess.servicestartmode?view=netframework-4.8
+// Modes are documented in https://learn.microsoft.com/en-us/dotnet/api/system.serviceprocess.servicestartmode?view=netframework-4.8
 // NOTE: only newer powershell versions support this approach, we may need WMI fallback later
 // see: https://mikefrobbins.com/2015/12/17/starttype-property-added-to-get-service-in-powershell-version-5-build-10586-on-windows-10-version-1511/
 // 0: Boot
