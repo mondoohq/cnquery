@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	v2 "github.com/ctreminiom/go-atlassian/jira/v2"
+	v2 "github.com/ctreminiom/go-atlassian/v2/jira/v2"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/atlassian/connection/shared"
