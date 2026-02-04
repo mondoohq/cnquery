@@ -197,6 +197,18 @@ func GetAutoUpdate() bool {
 	return true
 }
 
+// GetUpdatesURL returns the updates_url setting from viper config.
+// Returns empty string if not set (caller should use default).
+func GetUpdatesURL() string {
+	return viper.GetString("updates_url")
+}
+
+// GetProvidersURL returns the providers_url setting from viper config.
+// Returns empty string if not set (caller should use default).
+func GetProvidersURL() string {
+	return viper.GetString("providers_url")
+}
+
 // GetFeatures returns the features from viper config.
 // This can be called after InitViperConfig() to get features before cobra initialization.
 func GetFeatures() cnquery.Features {
@@ -258,9 +270,16 @@ type CommonOpts struct {
 	// annotations that will be applied to all assets
 	Annotations map[string]string `json:"annotations,omitempty" mapstructure:"annotations"`
 
+	// UpdatesURL is the base URL where updates are fetched from
+	// if not set, the default Mondoo releases URL is used (https://releases.mondoo.com)
+	// This can be a custom URL for an internal release registry
+	// If ProvidersURL is not set, providers will be fetched from UpdatesURL + "/providers"
+	UpdatesURL string `json:"updates_url,omitempty" mapstructure:"updates_url"`
+
 	// ProvidersURL is the URL where providers are downloaded from
 	// if not set, the default Mondoo provider URL is used
 	// This can be a custom URL for an internal provider registry
+	// Deprecated: use UpdatesURL instead
 	ProvidersURL string `json:"providers_url,omitempty" mapstructure:"providers_url"`
 }
 

@@ -104,6 +104,7 @@ func init() {
 	viper.BindPFlag("api_proxy", rootCmd.PersistentFlags().Lookup("api-proxy"))
 	viper.BindPFlag("auto_update", rootCmd.PersistentFlags().Lookup("auto-update"))
 	_ = viper.BindEnv("features")
+	_ = viper.BindEnv("updates_url")
 	_ = viper.BindEnv("providers_url")
 
 	config.Init(rootCmd)
