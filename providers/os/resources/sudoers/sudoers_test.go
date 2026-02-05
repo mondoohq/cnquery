@@ -1,19 +1,23 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package sudoers
+package sudoers_test
 
 import (
+	"io"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v12/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/sudoers"
 )
 
 func TestParseLine_BasicUserSpec(t *testing.T) {
 	line := "root ALL=(ALL:ALL) ALL"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, "user_spec", parsed.EntryType)
@@ -26,7 +30,7 @@ func TestParseLine_BasicUserSpec(t *testing.T) {
 
 func TestParseLine_GroupSpec(t *testing.T) {
 	line := "%sudo ALL=(ALL:ALL) ALL"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, "user_spec", parsed.EntryType)
@@ -38,7 +42,7 @@ func TestParseLine_GroupSpec(t *testing.T) {
 
 func TestParseLine_NoPassword(t *testing.T) {
 	line := "john ALL=(ALL) NOPASSWD: ALL"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, "user_spec", parsed.EntryType)
@@ -52,7 +56,7 @@ func TestParseLine_NoPassword(t *testing.T) {
 
 func TestParseLine_SpecificCommands(t *testing.T) {
 	line := "jane ALL=(root) NOPASSWD: /usr/bin/systemctl restart nginx, /usr/bin/systemctl reload nginx"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, "user_spec", parsed.EntryType)
@@ -68,7 +72,7 @@ func TestParseLine_SpecificCommands(t *testing.T) {
 
 func TestParseLine_MultipleTags(t *testing.T) {
 	line := "bob ALL=(ALL) NOPASSWD: SETENV: /usr/bin/docker"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, "user_spec", parsed.EntryType)
@@ -79,7 +83,7 @@ func TestParseLine_MultipleTags(t *testing.T) {
 
 func TestParseLine_MultipleUsers(t *testing.T) {
 	line := "john, jane, bob ALL=(ALL) ALL"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, "user_spec", parsed.EntryType)
@@ -89,7 +93,7 @@ func TestParseLine_MultipleUsers(t *testing.T) {
 
 func TestParseLine_SpecificHost(t *testing.T) {
 	line := "admin webserver01, webserver02=(ALL) ALL"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, "user_spec", parsed.EntryType)
@@ -99,7 +103,7 @@ func TestParseLine_SpecificHost(t *testing.T) {
 
 func TestParseLine_RunAsGroupOnly(t *testing.T) {
 	line := "developer ALL=(ALL) ALL"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, "user_spec", parsed.EntryType)
@@ -110,7 +114,7 @@ func TestParseLine_RunAsGroupOnly(t *testing.T) {
 
 func TestParseLine_ComplexCommand(t *testing.T) {
 	line := "backup ALL=(root) NOPASSWD: /usr/bin/rsync -av /data/ /backup/"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, "user_spec", parsed.EntryType)
@@ -123,19 +127,19 @@ func TestParseLine_ComplexCommand(t *testing.T) {
 
 func TestParseLine_EmptyLine(t *testing.T) {
 	line := ""
-	parsed := ParseLine(line)
+	parsed := sudoers.ParseLine(line)
 	assert.Nil(t, parsed)
 }
 
 func TestParseLine_CommentLine(t *testing.T) {
 	line := "# This is a comment"
-	parsed := ParseLine(line)
+	parsed := sudoers.ParseLine(line)
 	assert.Nil(t, parsed)
 }
 
 func TestParseLine_NoExecTag(t *testing.T) {
 	line := "test ALL=(ALL) NOEXEC: /usr/bin/vim"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, []string{"NOEXEC"}, parsed.Tags)
@@ -143,7 +147,7 @@ func TestParseLine_NoExecTag(t *testing.T) {
 
 func TestParseLine_LogInputOutputTags(t *testing.T) {
 	line := "admin ALL=(ALL) LOG_INPUT: LOG_OUTPUT: /usr/bin/bash"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, []string{"LOG_INPUT", "LOG_OUTPUT"}, parsed.Tags)
@@ -151,7 +155,7 @@ func TestParseLine_LogInputOutputTags(t *testing.T) {
 
 func TestParseLine_MailTag(t *testing.T) {
 	line := "user ALL=(ALL) MAIL: /usr/bin/command"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, []string{"MAIL"}, parsed.Tags)
@@ -159,7 +163,7 @@ func TestParseLine_MailTag(t *testing.T) {
 
 func TestParseLine_NegatedUser(t *testing.T) {
 	line := "!root ALL=(ALL) ALL"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, []string{"!root"}, parsed.Users)
@@ -167,7 +171,7 @@ func TestParseLine_NegatedUser(t *testing.T) {
 
 func TestParseLine_NegatedCommand(t *testing.T) {
 	line := "john ALL=(ALL) ALL, !/usr/bin/su"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, 2, len(parsed.Commands))
@@ -177,14 +181,14 @@ func TestParseLine_NegatedCommand(t *testing.T) {
 
 func TestParseLine_WildcardCommand(t *testing.T) {
 	line := "john ALL=(ALL) /usr/bin/*"
-	parsed := ToParsedLine(ParseLine(line))
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
 
 	require.NotNil(t, parsed)
 	assert.Equal(t, []string{"/usr/bin/*"}, parsed.Commands)
 }
 
 func TestParseDefaultsLine_Global(t *testing.T) {
-	scope, target, parameter, value, operation, negated := ParseDefaultsLine("Defaults env_reset")
+	scope, target, parameter, value, operation, negated := sudoers.ParseDefaultsLine("Defaults env_reset")
 
 	assert.Equal(t, "global", scope)
 	assert.Equal(t, "", target)
@@ -195,7 +199,7 @@ func TestParseDefaultsLine_Global(t *testing.T) {
 }
 
 func TestParseDefaultsLine_WithValue(t *testing.T) {
-	scope, target, parameter, value, operation, negated := ParseDefaultsLine("Defaults secure_path=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"")
+	scope, target, parameter, value, operation, negated := sudoers.ParseDefaultsLine("Defaults secure_path=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"")
 
 	assert.Equal(t, "global", scope)
 	assert.Equal(t, "", target)
@@ -206,7 +210,7 @@ func TestParseDefaultsLine_WithValue(t *testing.T) {
 }
 
 func TestParseDefaultsLine_UserScope(t *testing.T) {
-	scope, target, parameter, value, operation, negated := ParseDefaultsLine("Defaults:john !requiretty")
+	scope, target, parameter, value, operation, negated := sudoers.ParseDefaultsLine("Defaults:john !requiretty")
 
 	assert.Equal(t, "user", scope)
 	assert.Equal(t, "john", target)
@@ -217,7 +221,7 @@ func TestParseDefaultsLine_UserScope(t *testing.T) {
 }
 
 func TestParseDefaultsLine_HostScope(t *testing.T) {
-	scope, target, parameter, value, operation, negated := ParseDefaultsLine("Defaults@webserver env_keep += \"FOO\"")
+	scope, target, parameter, value, operation, negated := sudoers.ParseDefaultsLine("Defaults@webserver env_keep += \"FOO\"")
 
 	assert.Equal(t, "host", scope)
 	assert.Equal(t, "webserver", target)
@@ -228,7 +232,7 @@ func TestParseDefaultsLine_HostScope(t *testing.T) {
 }
 
 func TestParseDefaultsLine_RunasScope(t *testing.T) {
-	scope, target, parameter, value, operation, negated := ParseDefaultsLine("Defaults>root env_reset")
+	scope, target, parameter, value, operation, negated := sudoers.ParseDefaultsLine("Defaults>root env_reset")
 
 	assert.Equal(t, "runas", scope)
 	assert.Equal(t, "root", target)
@@ -239,7 +243,7 @@ func TestParseDefaultsLine_RunasScope(t *testing.T) {
 }
 
 func TestParseDefaultsLine_CommandScope(t *testing.T) {
-	scope, target, parameter, value, operation, negated := ParseDefaultsLine("Defaults!/usr/bin/su !authenticate")
+	scope, target, parameter, value, operation, negated := sudoers.ParseDefaultsLine("Defaults!/usr/bin/su !authenticate")
 
 	assert.Equal(t, "command", scope)
 	assert.Equal(t, "/usr/bin/su", target)
@@ -250,27 +254,27 @@ func TestParseDefaultsLine_CommandScope(t *testing.T) {
 }
 
 func TestSmartSplit_BasicSplit(t *testing.T) {
-	result := SmartSplit("user host command")
+	result := sudoers.SmartSplit("user host command")
 	assert.Equal(t, []string{"user", "host", "command"}, result)
 }
 
 func TestSmartSplit_WithQuotes(t *testing.T) {
-	result := SmartSplit(`user host "command with spaces"`)
+	result := sudoers.SmartSplit(`user host "command with spaces"`)
 	assert.Equal(t, []string{"user", "host", `"command with spaces"`}, result)
 }
 
 func TestSmartSplit_WithEscapes(t *testing.T) {
-	result := SmartSplit(`user host command\ with\ escape`)
+	result := sudoers.SmartSplit(`user host command\ with\ escape`)
 	assert.Equal(t, []string{"user", "host", `command\ with\ escape`}, result)
 }
 
 func TestSplitCommands_SingleCommand(t *testing.T) {
-	result := SplitCommands("/usr/bin/systemctl restart nginx")
+	result := sudoers.SplitCommands("/usr/bin/systemctl restart nginx")
 	assert.Equal(t, []string{"/usr/bin/systemctl restart nginx"}, result)
 }
 
 func TestSplitCommands_MultipleCommands(t *testing.T) {
-	result := SplitCommands("/usr/bin/systemctl restart nginx, /usr/bin/systemctl reload nginx")
+	result := sudoers.SplitCommands("/usr/bin/systemctl restart nginx, /usr/bin/systemctl reload nginx")
 	assert.Equal(t, []string{
 		"/usr/bin/systemctl restart nginx",
 		"/usr/bin/systemctl reload nginx",
@@ -278,7 +282,7 @@ func TestSplitCommands_MultipleCommands(t *testing.T) {
 }
 
 func TestSplitCommands_WithQuotedComma(t *testing.T) {
-	result := SplitCommands(`/usr/bin/echo "hello, world", /usr/bin/echo goodbye`)
+	result := sudoers.SplitCommands(`/usr/bin/echo "hello, world", /usr/bin/echo goodbye`)
 	assert.Equal(t, []string{
 		`/usr/bin/echo "hello, world"`,
 		"/usr/bin/echo goodbye",
@@ -286,22 +290,22 @@ func TestSplitCommands_WithQuotedComma(t *testing.T) {
 }
 
 func TestSplitAndTrim_BasicSplit(t *testing.T) {
-	result := SplitAndTrim("john, jane, bob", ",")
+	result := sudoers.SplitAndTrim("john, jane, bob", ",")
 	assert.Equal(t, []string{"john", "jane", "bob"}, result)
 }
 
 func TestSplitAndTrim_WithExtraSpaces(t *testing.T) {
-	result := SplitAndTrim("  john  ,  jane  ,  bob  ", ",")
+	result := sudoers.SplitAndTrim("  john  ,  jane  ,  bob  ", ",")
 	assert.Equal(t, []string{"john", "jane", "bob"}, result)
 }
 
 func TestSplitAndTrim_EmptyString(t *testing.T) {
-	result := SplitAndTrim("", ",")
+	result := sudoers.SplitAndTrim("", ",")
 	assert.Empty(t, result)
 }
 
 func TestSplitAndTrim_SingleItem(t *testing.T) {
-	result := SplitAndTrim("john", ",")
+	result := sudoers.SplitAndTrim("john", ",")
 	assert.Equal(t, []string{"john"}, result)
 }
 
@@ -316,7 +320,7 @@ func TestIncludeRegex_AtInclude(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		matches := IncludeRegex.FindStringSubmatch(tt.line)
+		matches := sudoers.IncludeRegex.FindStringSubmatch(tt.line)
 		require.NotNil(t, matches, "line: %s", tt.line)
 		assert.Equal(t, tt.expected, strings.TrimSpace(matches[1]))
 	}
@@ -332,7 +336,7 @@ func TestIncludeRegex_HashInclude(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		matches := IncludeRegex.FindStringSubmatch(tt.line)
+		matches := sudoers.IncludeRegex.FindStringSubmatch(tt.line)
 		require.NotNil(t, matches, "line: %s", tt.line)
 		assert.Equal(t, tt.expected, strings.TrimSpace(matches[1]))
 	}
@@ -349,7 +353,7 @@ func TestIncludedirRegex_AtIncludedir(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		matches := IncludedirRegex.FindStringSubmatch(tt.line)
+		matches := sudoers.IncludedirRegex.FindStringSubmatch(tt.line)
 		require.NotNil(t, matches, "line: %s", tt.line)
 		assert.Equal(t, tt.expected, strings.TrimSpace(matches[1]))
 	}
@@ -365,7 +369,7 @@ func TestIncludedirRegex_HashIncludedir(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		matches := IncludedirRegex.FindStringSubmatch(tt.line)
+		matches := sudoers.IncludedirRegex.FindStringSubmatch(tt.line)
 		require.NotNil(t, matches, "line: %s", tt.line)
 		assert.Equal(t, tt.expected, strings.TrimSpace(matches[1]))
 	}
@@ -380,7 +384,7 @@ func TestIncludeRegex_NotMatchingLines(t *testing.T) {
 	}
 
 	for _, line := range lines {
-		matches := IncludeRegex.FindStringSubmatch(line)
+		matches := sudoers.IncludeRegex.FindStringSubmatch(line)
 		assert.Nil(t, matches, "line should not match: %s", line)
 	}
 }
@@ -394,7 +398,7 @@ func TestIncludedirRegex_NotMatchingLines(t *testing.T) {
 	}
 
 	for _, line := range lines {
-		matches := IncludedirRegex.FindStringSubmatch(line)
+		matches := sudoers.IncludedirRegex.FindStringSubmatch(line)
 		assert.Nil(t, matches, "line should not match: %s", line)
 	}
 }
@@ -405,7 +409,7 @@ root ALL=(ALL:ALL) ALL
 %sudo ALL=(ALL:ALL) ALL
 john ALL=(ALL) NOPASSWD: ALL
 `
-	specs := ParseUserSpecs("/etc/sudoers", content)
+	specs := sudoers.ParseUserSpecs("/etc/sudoers", content)
 
 	require.Len(t, specs, 3)
 
@@ -427,7 +431,7 @@ Defaults env_reset
 Defaults secure_path="/usr/local/sbin:/usr/local/bin"
 Defaults:john !requiretty
 `
-	defaults := ParseDefaults("/etc/sudoers", content)
+	defaults := sudoers.ParseDefaults("/etc/sudoers", content)
 
 	require.Len(t, defaults, 3)
 
@@ -449,7 +453,7 @@ User_Alias ADMINS = john, jane, bob
 Host_Alias WEBSERVERS = web1, web2, web3
 Cmnd_Alias SERVICES = /usr/bin/systemctl, /usr/bin/service
 `
-	aliases := ParseAliases("/etc/sudoers", content)
+	aliases := sudoers.ParseAliases("/etc/sudoers", content)
 
 	require.Len(t, aliases, 3)
 
@@ -469,10 +473,256 @@ func TestParseUserSpecs_LineContinuation(t *testing.T) {
     /usr/bin/systemctl restart nginx, \
     /usr/bin/systemctl reload nginx
 `
-	specs := ParseUserSpecs("/etc/sudoers", content)
+	specs := sudoers.ParseUserSpecs("/etc/sudoers", content)
 
 	require.Len(t, specs, 1)
 	assert.Equal(t, 1, specs[0].LineNumber)
 	assert.Equal(t, []string{"john"}, specs[0].Users)
 	assert.Len(t, specs[0].Commands, 2)
+}
+
+// Tests using TOML-based mock connection
+
+func TestSudoersParser_MainConfig(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
+	require.NoError(t, err)
+
+	f, err := conn.FileSystem().Open("/etc/sudoers")
+	require.NoError(t, err)
+	defer f.Close()
+
+	content, err := io.ReadAll(f)
+	require.NoError(t, err)
+
+	// Test parsing user specs
+	specs := sudoers.ParseUserSpecs("/etc/sudoers", string(content))
+	require.NotEmpty(t, specs)
+
+	// First entry: root ALL=(ALL:ALL) ALL
+	var rootSpec *sudoers.UserSpec
+	for i := range specs {
+		if len(specs[i].Users) > 0 && specs[i].Users[0] == "root" {
+			rootSpec = &specs[i]
+			break
+		}
+	}
+	require.NotNil(t, rootSpec, "root user spec should exist")
+	assert.Equal(t, "/etc/sudoers", rootSpec.File)
+	assert.Equal(t, []string{"ALL"}, rootSpec.Hosts)
+	assert.Equal(t, []string{"ALL"}, rootSpec.RunasUsers)
+	assert.Equal(t, []string{"ALL"}, rootSpec.RunasGroups)
+	assert.Equal(t, []string{"ALL"}, rootSpec.Commands)
+
+	// %admin ALL=(ALL) ALL
+	var adminSpec *sudoers.UserSpec
+	for i := range specs {
+		if len(specs[i].Users) > 0 && specs[i].Users[0] == "%admin" {
+			adminSpec = &specs[i]
+			break
+		}
+	}
+	require.NotNil(t, adminSpec, "%admin user spec should exist")
+	assert.Equal(t, []string{"ALL"}, adminSpec.Hosts)
+
+	// ADMINS ALL=(ALL) NOPASSWD: SHUTDOWN
+	var adminsSpec *sudoers.UserSpec
+	for i := range specs {
+		if len(specs[i].Users) > 0 && specs[i].Users[0] == "ADMINS" {
+			adminsSpec = &specs[i]
+			break
+		}
+	}
+	require.NotNil(t, adminsSpec, "ADMINS user spec should exist")
+	assert.Equal(t, []string{"NOPASSWD"}, adminsSpec.Tags)
+	assert.Equal(t, []string{"SHUTDOWN"}, adminsSpec.Commands)
+}
+
+func TestSudoersParser_Defaults(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
+	require.NoError(t, err)
+
+	f, err := conn.FileSystem().Open("/etc/sudoers")
+	require.NoError(t, err)
+	defer f.Close()
+
+	content, err := io.ReadAll(f)
+	require.NoError(t, err)
+
+	defaults := sudoers.ParseDefaults("/etc/sudoers", string(content))
+	require.NotEmpty(t, defaults)
+
+	// Find env_reset default
+	var envReset *sudoers.Default
+	for i := range defaults {
+		if defaults[i].Parameter == "env_reset" {
+			envReset = &defaults[i]
+			break
+		}
+	}
+	require.NotNil(t, envReset, "env_reset default should exist")
+	assert.Equal(t, "global", envReset.Scope)
+	assert.Equal(t, "", envReset.Target)
+	assert.False(t, envReset.Negated)
+
+	// Find secure_path default
+	var securePath *sudoers.Default
+	for i := range defaults {
+		if defaults[i].Parameter == "secure_path" {
+			securePath = &defaults[i]
+			break
+		}
+	}
+	require.NotNil(t, securePath, "secure_path default should exist")
+	assert.Equal(t, "global", securePath.Scope)
+	assert.Contains(t, securePath.Value, "/usr/local/sbin")
+	assert.Equal(t, "=", securePath.Operation)
+
+	// Find user-scoped default: Defaults:root !requiretty
+	var rootDefault *sudoers.Default
+	for i := range defaults {
+		if defaults[i].Scope == "user" && defaults[i].Target == "root" {
+			rootDefault = &defaults[i]
+			break
+		}
+	}
+	require.NotNil(t, rootDefault, "root user-scoped default should exist")
+	assert.Equal(t, "requiretty", rootDefault.Parameter)
+	assert.True(t, rootDefault.Negated)
+
+	// Find host-scoped default: Defaults@webservers log_output
+	var hostDefault *sudoers.Default
+	for i := range defaults {
+		if defaults[i].Scope == "host" && defaults[i].Target == "webservers" {
+			hostDefault = &defaults[i]
+			break
+		}
+	}
+	require.NotNil(t, hostDefault, "webservers host-scoped default should exist")
+	assert.Equal(t, "log_output", hostDefault.Parameter)
+}
+
+func TestSudoersParser_Aliases(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
+	require.NoError(t, err)
+
+	f, err := conn.FileSystem().Open("/etc/sudoers")
+	require.NoError(t, err)
+	defer f.Close()
+
+	content, err := io.ReadAll(f)
+	require.NoError(t, err)
+
+	aliases := sudoers.ParseAliases("/etc/sudoers", string(content))
+	require.NotEmpty(t, aliases)
+
+	// Find Host_Alias WEBSERVERS
+	var webserversAlias *sudoers.Alias
+	for i := range aliases {
+		if aliases[i].Name == "WEBSERVERS" {
+			webserversAlias = &aliases[i]
+			break
+		}
+	}
+	require.NotNil(t, webserversAlias, "WEBSERVERS alias should exist")
+	assert.Equal(t, "host", webserversAlias.Type)
+	assert.Equal(t, []string{"www1", "www2", "www3"}, webserversAlias.Members)
+
+	// Find User_Alias ADMINS
+	var adminsAlias *sudoers.Alias
+	for i := range aliases {
+		if aliases[i].Name == "ADMINS" {
+			adminsAlias = &aliases[i]
+			break
+		}
+	}
+	require.NotNil(t, adminsAlias, "ADMINS alias should exist")
+	assert.Equal(t, "user", adminsAlias.Type)
+	assert.Equal(t, []string{"alice", "bob", "charlie"}, adminsAlias.Members)
+
+	// Find Cmnd_Alias SHUTDOWN
+	var shutdownAlias *sudoers.Alias
+	for i := range aliases {
+		if aliases[i].Name == "SHUTDOWN" {
+			shutdownAlias = &aliases[i]
+			break
+		}
+	}
+	require.NotNil(t, shutdownAlias, "SHUTDOWN alias should exist")
+	assert.Equal(t, "cmnd", shutdownAlias.Type)
+	assert.Contains(t, shutdownAlias.Members, "/sbin/halt")
+	assert.Contains(t, shutdownAlias.Members, "/sbin/shutdown")
+	assert.Contains(t, shutdownAlias.Members, "/sbin/reboot")
+
+	// Find Runas_Alias DBA
+	var dbaAlias *sudoers.Alias
+	for i := range aliases {
+		if aliases[i].Name == "DBA" {
+			dbaAlias = &aliases[i]
+			break
+		}
+	}
+	require.NotNil(t, dbaAlias, "DBA alias should exist")
+	assert.Equal(t, "runas", dbaAlias.Type)
+	assert.Equal(t, []string{"postgres", "mysql"}, dbaAlias.Members)
+}
+
+func TestSudoersParser_DropInFile(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
+	require.NoError(t, err)
+
+	f, err := conn.FileSystem().Open("/etc/sudoers.d/10-developers")
+	require.NoError(t, err)
+	defer f.Close()
+
+	content, err := io.ReadAll(f)
+	require.NoError(t, err)
+
+	specs := sudoers.ParseUserSpecs("/etc/sudoers.d/10-developers", string(content))
+	require.Len(t, specs, 2)
+
+	// %developers ALL=(ALL) NOPASSWD: /usr/bin/docker, /usr/bin/docker-compose
+	assert.Equal(t, "/etc/sudoers.d/10-developers", specs[0].File)
+	assert.Equal(t, []string{"%developers"}, specs[0].Users)
+	assert.Equal(t, []string{"NOPASSWD"}, specs[0].Tags)
+	assert.Contains(t, specs[0].Commands, "/usr/bin/docker")
+	assert.Contains(t, specs[0].Commands, "/usr/bin/docker-compose")
+
+	// developer1 ALL=(www-data) NOPASSWD: ALL
+	assert.Equal(t, []string{"developer1"}, specs[1].Users)
+	assert.Equal(t, []string{"www-data"}, specs[1].RunasUsers)
+	assert.Equal(t, []string{"ALL"}, specs[1].Commands)
+}
+
+func TestSudoersParser_MonitoringDropIn(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
+	require.NoError(t, err)
+
+	f, err := conn.FileSystem().Open("/etc/sudoers.d/99-monitoring")
+	require.NoError(t, err)
+	defer f.Close()
+
+	content, err := io.ReadAll(f)
+	require.NoError(t, err)
+
+	specs := sudoers.ParseUserSpecs("/etc/sudoers.d/99-monitoring", string(content))
+	require.Len(t, specs, 2)
+
+	// nagios ALL=(root) NOPASSWD: /usr/lib/nagios/plugins/*, /usr/bin/systemctl status *
+	assert.Equal(t, []string{"nagios"}, specs[0].Users)
+	assert.Equal(t, []string{"root"}, specs[0].RunasUsers)
+	assert.Equal(t, []string{"NOPASSWD"}, specs[0].Tags)
+
+	// zabbix ALL=(root) NOPASSWD: /usr/sbin/dmidecode, /usr/bin/lsof
+	assert.Equal(t, []string{"zabbix"}, specs[1].Users)
+	assert.Contains(t, specs[1].Commands, "/usr/sbin/dmidecode")
+	assert.Contains(t, specs[1].Commands, "/usr/bin/lsof")
+}
+
+func TestSudoersParser_DirectoryExists(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
+	require.NoError(t, err)
+
+	stat, err := conn.FileSystem().Stat("/etc/sudoers.d")
+	require.NoError(t, err)
+	assert.True(t, stat.IsDir())
 }
