@@ -72,8 +72,61 @@ Implement the generated interfaces in the provider's Go code. Use one of these p
   ```
   **Why?** The `command` resource ensures proper execution context, authentication, connection handling, and works seamlessly across different connection types (local, SSH, container, etc.). See [lsblk.go](providers/os/resources/lsblk.go) for a complete example.
 
-### Step 4: Verification (Interactive)
-Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard.**
+### Step 4: Testing (Required)
+**Integration tests are required for new resources.** Interactive testing alone is not sufficient.
+
+#### 4a. Unit Tests for Parsing Logic
+If your resource parses configuration files or data formats, extract the parsing logic into a separate package and write unit tests:
+```
+providers/os/resources/
+├── limits.go                    # MQL resource wiring
+└── limits/
+    ├── limits.go                # Pure parsing logic (no MQL dependencies)
+    ├── limits_test.go           # Unit tests with TOML mock data
+    └── testdata/
+        └── linux.toml           # Mock file data
+```
+
+See `logindefs/`, `limits/`, `sshd/` for examples of this pattern.
+
+#### 4b. Integration Tests (MQL-level)
+Write tests that verify the MQL resource works correctly.
+
+**For OS provider resources**, use TOML-based mock connections:
+
+```go
+func TestLimitsParser_MainConfig(t *testing.T) {
+    conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
+    require.NoError(t, err)
+
+    f, err := conn.FileSystem().Open("/etc/security/limits.conf")
+    require.NoError(t, err)
+    defer f.Close()
+
+    content, err := io.ReadAll(f)
+    require.NoError(t, err)
+
+    entries := limits.ParseLines("/etc/security/limits.conf", string(content))
+    require.Len(t, entries, 6)
+    // ... assertions
+}
+```
+
+TOML test data format (OS provider only):
+```toml
+[files."/etc/security/limits.conf"]
+content = """# limits.conf content here
+* soft nofile 65536
+"""
+
+[files."/etc/security/limits.d"]
+stat.isdir = true
+```
+
+**For other providers** (AWS, GCP, Azure, etc.), look at existing test patterns in those providers. Each provider may have its own mocking approach.
+
+#### 4c. Interactive Verification
+After tests pass, verify interactively:
 
 1.  **Install**: `make cnquery/install` (one-time, or when changing cnquery core).
 2.  **Provider**: `make providers/build/<provider> && make providers/install/<provider>` (after each provider change).
@@ -424,11 +477,15 @@ for {
 - Use `make providers/mqlr` for faster provider-specific regeneration
 
 ### Testing & Verification
-- If you want to test simple changes, build and install the provider and use cnquery run .... 
+- **Integration tests are required for new resources** - do not skip this step
+- For OS provider resources, use TOML-based mock connections (see `limits/`, `logindefs/` for examples)
+- For other providers, follow existing test patterns in that provider's codebase
+- Extract parsing logic into separate packages for easier unit testing
+- If you want to test simple changes, build and install the provider and use cnquery run ....
 - Otherwise set it as builtin and use go run ...
 - Use `demo.agent.credentials.json` for local development with service accounts
 - Verify credentials exist before testing: `~/.aws/credentials`, etc.
-- Test error conditions and edge cases during development.
+- Test error conditions and edge cases during development
 - Use `providers-sdk/v1/testutils` for mock providers in unit tests
 - Recording/replay system available for reproducible provider tests
 
@@ -499,6 +556,7 @@ make test/integration
 ### Quick Pre-Commit Checklist
 - [ ] Generated files are up-to-date (`.lr.go`, `.pb.go`)
 - [ ] Linting passes (`make test/lint`)
+- [ ] **New resources have integration tests** (required, not optional)
 - [ ] Changes work interactively (`cnquery shell <provider>`)
 - [ ] `go.mod` is clean (`go mod tidy`)
 - [ ] No spelling errors in new comments/docs
