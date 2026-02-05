@@ -5,8 +5,11 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	opensearch_types "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/rs/zerolog/log"
@@ -108,6 +111,71 @@ func (a *mqlAwsOpensearch) getDomains(conn *connection.AwsConnection) []*jobpool
 
 func (a *mqlAwsOpensearchDomain) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func initAwsOpensearchDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	// Get asset identifier if no args provided
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil && args["name"] == nil {
+		return nil, nil, errors.New("arn or name required to fetch opensearch domain")
+	}
+
+	// If we have an ARN but missing region or name, extract from ARN
+	// ARN format: arn:aws:es:REGION:ACCOUNT:domain/DOMAIN_NAME
+	if args["arn"] != nil && (args["region"] == nil || args["name"] == nil) {
+		arnVal := args["arn"].Value.(string)
+		parsedArn, err := arn.Parse(arnVal)
+		if err != nil {
+			return nil, nil, errors.New("invalid arn for opensearch domain")
+		}
+		if args["region"] == nil {
+			args["region"] = llx.StringData(parsedArn.Region)
+		}
+		if args["name"] == nil {
+			args["name"] = llx.StringData(strings.TrimPrefix(parsedArn.Resource, "domain/"))
+		}
+	}
+
+	if args["name"] == nil || args["region"] == nil {
+		return nil, nil, errors.New("arn, or name and region required to fetch opensearch domain")
+	}
+
+	name := args["name"].Value.(string)
+	region := args["region"].Value.(string)
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.OpenSearch(region)
+	ctx := context.Background()
+
+	// Describe the specific domain
+	descResp, err := svc.DescribeDomains(ctx, &opensearch.DescribeDomainsInput{
+		DomainNames: []string{name},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(descResp.DomainStatusList) == 0 {
+		return nil, nil, errors.New("opensearch domain not found")
+	}
+
+	domain := descResp.DomainStatusList[0]
+	mqlDomain, err := newMqlAwsOpensearchDomain(runtime, region, conn.AccountId(), domain)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return nil, mqlDomain, nil
 }
 
 type mqlAwsOpensearchDomainInternal struct {
