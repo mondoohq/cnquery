@@ -11,121 +11,124 @@ import (
 )
 
 func TestResource_Sudoers(t *testing.T) {
-	// Uses the global 'x' tester from os_test.go which is LinuxMock()
-	// The Linux mock (arch.json) may not include sudoers test data
-	// These tests verify the resource handles missing files gracefully
-	// For parsing tests, see the unit tests in sudoers/sudoers_test.go
+	// Uses the global 'x' tester from os_test.go (LinuxMock with arch.json)
+	// For parsing unit tests, see sudoers/sudoers_test.go
 
-	t.Run("sudoers resource exists", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers")
-		require.NotEmpty(t, res)
-	})
-
-	t.Run("sudoers files returns empty when no config files exist", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers.files")
-		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
-		// When sudoers files don't exist, returns empty array
-		files, ok := res[0].Data.Value.([]any)
-		require.True(t, ok)
-		assert.GreaterOrEqual(t, len(files), 0)
-	})
-
-	t.Run("sudoers files length is accessible", func(t *testing.T) {
+	t.Run("files are discovered", func(t *testing.T) {
 		res := x.TestQuery(t, "sudoers.files.length")
 		require.NotEmpty(t, res)
 		require.NoError(t, res[0].Data.Error)
-		// Length should be 0 or more
-		assert.GreaterOrEqual(t, res[0].Data.Value.(int64), int64(0))
+		assert.Equal(t, int64(1), res[0].Data.Value)
 	})
 
-	t.Run("sudoers userSpecs returns empty when no config files exist", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers.userSpecs")
-		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
-		// When sudoers files don't exist, returns empty array
-		specs, ok := res[0].Data.Value.([]any)
-		require.True(t, ok)
-		assert.GreaterOrEqual(t, len(specs), 0)
-	})
-
-	t.Run("sudoers userSpecs length is accessible", func(t *testing.T) {
+	t.Run("userSpecs parsing", func(t *testing.T) {
 		res := x.TestQuery(t, "sudoers.userSpecs.length")
 		require.NotEmpty(t, res)
 		require.NoError(t, res[0].Data.Error)
-		// Length should be 0 or more
-		assert.GreaterOrEqual(t, res[0].Data.Value.(int64), int64(0))
+		assert.Equal(t, int64(6), res[0].Data.Value)
 	})
 
-	t.Run("sudoers defaults returns empty when no config files exist", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers.defaults")
+	t.Run("userSpec fields", func(t *testing.T) {
+		// Test root user spec has all expected fields populated
+		res := x.TestQuery(t, "sudoers.userSpecs.where(users.contains(\"root\")).first")
 		require.NotEmpty(t, res)
 		require.NoError(t, res[0].Data.Error)
-		// When sudoers files don't exist, returns empty array
-		defaults, ok := res[0].Data.Value.([]any)
+
+		// Verify hosts field
+		res = x.TestQuery(t, "sudoers.userSpecs.where(users.contains(\"root\")).first.hosts")
+		require.NotEmpty(t, res)
+		hosts, ok := res[0].Data.Value.([]any)
 		require.True(t, ok)
-		assert.GreaterOrEqual(t, len(defaults), 0)
+		assert.Contains(t, hosts, "ALL")
+
+		// Verify commands field
+		res = x.TestQuery(t, "sudoers.userSpecs.where(users.contains(\"root\")).first.commands")
+		require.NotEmpty(t, res)
+		commands, ok := res[0].Data.Value.([]any)
+		require.True(t, ok)
+		assert.Contains(t, commands, "ALL")
 	})
 
-	t.Run("sudoers defaults length is accessible", func(t *testing.T) {
+	t.Run("userSpec with NOPASSWD tag", func(t *testing.T) {
+		res := x.TestQuery(t, "sudoers.userSpecs.where(tags.contains(\"NOPASSWD\")).length")
+		require.NotEmpty(t, res)
+		require.NoError(t, res[0].Data.Error)
+		assert.Equal(t, int64(2), res[0].Data.Value)
+	})
+
+	t.Run("defaults parsing", func(t *testing.T) {
 		res := x.TestQuery(t, "sudoers.defaults.length")
 		require.NotEmpty(t, res)
 		require.NoError(t, res[0].Data.Error)
-		// Length should be 0 or more
-		assert.GreaterOrEqual(t, res[0].Data.Value.(int64), int64(0))
+		assert.Equal(t, int64(6), res[0].Data.Value)
 	})
 
-	t.Run("sudoers aliases returns empty when no config files exist", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers.aliases")
+	t.Run("defaults fields", func(t *testing.T) {
+		// Test secure_path has correct value
+		res := x.TestQuery(t, "sudoers.defaults.where(parameter == \"secure_path\").first.value")
 		require.NotEmpty(t, res)
 		require.NoError(t, res[0].Data.Error)
-		// When sudoers files don't exist, returns empty array
-		aliases, ok := res[0].Data.Value.([]any)
-		require.True(t, ok)
-		assert.GreaterOrEqual(t, len(aliases), 0)
+		assert.Equal(t, "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", res[0].Data.Value)
+
+		// Test negated flag (!lecture)
+		res = x.TestQuery(t, "sudoers.defaults.where(parameter == \"lecture\").first.negated")
+		require.NotEmpty(t, res)
+		require.NoError(t, res[0].Data.Error)
+		assert.Equal(t, true, res[0].Data.Value)
 	})
 
-	t.Run("sudoers aliases length is accessible", func(t *testing.T) {
+	t.Run("defaults scoped entries", func(t *testing.T) {
+		// Test host-scoped default
+		res := x.TestQuery(t, "sudoers.defaults.where(scope == \"host\").first.target")
+		require.NotEmpty(t, res)
+		require.NoError(t, res[0].Data.Error)
+		assert.Equal(t, "webservers", res[0].Data.Value)
+	})
+
+	t.Run("aliases parsing", func(t *testing.T) {
 		res := x.TestQuery(t, "sudoers.aliases.length")
 		require.NotEmpty(t, res)
 		require.NoError(t, res[0].Data.Error)
-		// Length should be 0 or more
-		assert.GreaterOrEqual(t, res[0].Data.Value.(int64), int64(0))
+		assert.Equal(t, int64(7), res[0].Data.Value)
 	})
 
-	t.Run("sudoers where filter works on empty userSpecs", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers.userSpecs.where(users.contains(\"root\"))")
+	t.Run("alias fields", func(t *testing.T) {
+		// Note: alias type is stored as lowercase without "_Alias" suffix
+		res := x.TestQuery(t, "sudoers.aliases.where(type == \"user\" && name == \"ADMINS\").first.members")
 		require.NotEmpty(t, res)
 		require.NoError(t, res[0].Data.Error)
+		members, ok := res[0].Data.Value.([]any)
+		require.True(t, ok)
+		assert.Equal(t, 3, len(members))
+		assert.Contains(t, members, "alice")
 	})
 
-	t.Run("sudoers map works on empty userSpecs", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers.userSpecs.map(users)")
+	t.Run("all alias types present", func(t *testing.T) {
+		// Verify all 4 alias types are parsed
+		res := x.TestQuery(t, "sudoers.aliases.where(type == \"host\").length")
 		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
+		assert.Equal(t, int64(2), res[0].Data.Value)
+
+		res = x.TestQuery(t, "sudoers.aliases.where(type == \"cmnd\").length")
+		require.NotEmpty(t, res)
+		assert.Equal(t, int64(2), res[0].Data.Value)
+
+		res = x.TestQuery(t, "sudoers.aliases.where(type == \"runas\").length")
+		require.NotEmpty(t, res)
+		assert.Equal(t, int64(1), res[0].Data.Value)
 	})
 
-	t.Run("sudoers where filter works on empty defaults", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers.defaults.where(parameter == \"env_reset\")")
+	t.Run("metadata fields", func(t *testing.T) {
+		// Test file and lineNumber are populated
+		res := x.TestQuery(t, "sudoers.userSpecs.first.file")
 		require.NotEmpty(t, res)
 		require.NoError(t, res[0].Data.Error)
-	})
+		assert.Equal(t, "/etc/sudoers", res[0].Data.Value)
 
-	t.Run("sudoers map works on empty defaults", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers.defaults.map(parameter)")
+		res = x.TestQuery(t, "sudoers.userSpecs.first.lineNumber")
 		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
-	})
-
-	t.Run("sudoers where filter works on empty aliases", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers.aliases.where(type == \"User_Alias\")")
-		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
-	})
-
-	t.Run("sudoers map works on empty aliases", func(t *testing.T) {
-		res := x.TestQuery(t, "sudoers.aliases.map(name)")
-		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
+		lineNum, ok := res[0].Data.Value.(int64)
+		require.True(t, ok)
+		assert.Greater(t, lineNum, int64(0))
 	})
 }

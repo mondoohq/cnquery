@@ -6,7 +6,6 @@ package resources
 import (
 	"errors"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 
@@ -129,20 +128,14 @@ func (s *mqlSudoers) collectSudoersFiles(conn shared.Connection, path string, vi
 	*allFiles = append(*allFiles, f)
 
 	// Read file content to find include directives
-	file, err := conn.FileSystem().Open(path)
-	if err != nil {
-		*errs = append(*errs, fmt.Errorf("failed to open %s: %w", path, err))
-		return
-	}
-	raw, err := io.ReadAll(file)
-	file.Close()
-	if err != nil {
-		*errs = append(*errs, fmt.Errorf("failed to read %s: %w", path, err))
+	content := f.GetContent()
+	if content.Error != nil {
+		*errs = append(*errs, fmt.Errorf("failed to read %s: %w", path, content.Error))
 		return
 	}
 
 	// Parse include directives
-	lines := strings.Split(string(raw), "\n")
+	lines := strings.Split(content.Data, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 

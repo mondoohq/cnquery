@@ -4,14 +4,11 @@
 package sudoers_test
 
 import (
-	"io"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v12/providers/os/resources/sudoers"
 )
 
@@ -481,24 +478,60 @@ func TestParseUserSpecs_LineContinuation(t *testing.T) {
 	assert.Len(t, specs[0].Commands, 2)
 }
 
-// Tests using TOML-based mock connection
+// Tests with realistic sudoers content
 
-func TestSudoersParser_MainConfig(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
-	require.NoError(t, err)
+func TestParseUserSpecs_RealisticConfig(t *testing.T) {
+	content := `# /etc/sudoers
+#
+# This file MUST be edited with the 'visudo' command as root.
 
-	f, err := conn.FileSystem().Open("/etc/sudoers")
-	require.NoError(t, err)
-	defer f.Close()
+# Defaults specification
+Defaults env_reset
+Defaults mail_badpass
+Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Defaults:root !requiretty
+Defaults@webservers log_output
 
-	content, err := io.ReadAll(f)
-	require.NoError(t, err)
+# Host alias specification
+Host_Alias WEBSERVERS = www1, www2, www3
+Host_Alias DBSERVERS = db1, db2
 
-	// Test parsing user specs
-	specs := sudoers.ParseUserSpecs("/etc/sudoers", string(content))
+# User alias specification
+User_Alias ADMINS = alice, bob, charlie
+User_Alias OPERATORS = dave, eve
+
+# Cmnd alias specification
+Cmnd_Alias SHUTDOWN = /sbin/halt, /sbin/shutdown, /sbin/reboot
+Cmnd_Alias SERVICES = /usr/bin/systemctl restart *, /usr/bin/systemctl stop *
+
+# Runas alias specification
+Runas_Alias DBA = postgres, mysql
+
+# User privilege specification
+root ALL=(ALL:ALL) ALL
+
+# Members of the admin group may gain root privileges
+%admin ALL=(ALL) ALL
+
+# Allow members of group sudo to execute any command
+%sudo ALL=(ALL:ALL) ALL
+
+# ADMINS can run shutdown commands without password
+ADMINS ALL=(ALL) NOPASSWD: SHUTDOWN
+
+# Operators can manage services
+OPERATORS WEBSERVERS=(root) SERVICES
+
+# User dave can run commands as DBA users
+dave ALL=(DBA) /usr/bin/psql, /usr/bin/mysql
+
+# Include drop-in directory
+@includedir /etc/sudoers.d
+`
+	specs := sudoers.ParseUserSpecs("/etc/sudoers", content)
 	require.NotEmpty(t, specs)
 
-	// First entry: root ALL=(ALL:ALL) ALL
+	// Find root spec
 	var rootSpec *sudoers.UserSpec
 	for i := range specs {
 		if len(specs[i].Users) > 0 && specs[i].Users[0] == "root" {
@@ -513,7 +546,7 @@ func TestSudoersParser_MainConfig(t *testing.T) {
 	assert.Equal(t, []string{"ALL"}, rootSpec.RunasGroups)
 	assert.Equal(t, []string{"ALL"}, rootSpec.Commands)
 
-	// %admin ALL=(ALL) ALL
+	// Find %admin spec
 	var adminSpec *sudoers.UserSpec
 	for i := range specs {
 		if len(specs[i].Users) > 0 && specs[i].Users[0] == "%admin" {
@@ -524,7 +557,7 @@ func TestSudoersParser_MainConfig(t *testing.T) {
 	require.NotNil(t, adminSpec, "%admin user spec should exist")
 	assert.Equal(t, []string{"ALL"}, adminSpec.Hosts)
 
-	// ADMINS ALL=(ALL) NOPASSWD: SHUTDOWN
+	// Find ADMINS spec with NOPASSWD
 	var adminsSpec *sudoers.UserSpec
 	for i := range specs {
 		if len(specs[i].Users) > 0 && specs[i].Users[0] == "ADMINS" {
@@ -537,21 +570,18 @@ func TestSudoersParser_MainConfig(t *testing.T) {
 	assert.Equal(t, []string{"SHUTDOWN"}, adminsSpec.Commands)
 }
 
-func TestSudoersParser_Defaults(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
-	require.NoError(t, err)
-
-	f, err := conn.FileSystem().Open("/etc/sudoers")
-	require.NoError(t, err)
-	defer f.Close()
-
-	content, err := io.ReadAll(f)
-	require.NoError(t, err)
-
-	defaults := sudoers.ParseDefaults("/etc/sudoers", string(content))
+func TestParseDefaults_RealisticConfig(t *testing.T) {
+	content := `# /etc/sudoers
+Defaults env_reset
+Defaults mail_badpass
+Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Defaults:root !requiretty
+Defaults@webservers log_output
+`
+	defaults := sudoers.ParseDefaults("/etc/sudoers", content)
 	require.NotEmpty(t, defaults)
 
-	// Find env_reset default
+	// Find env_reset
 	var envReset *sudoers.Default
 	for i := range defaults {
 		if defaults[i].Parameter == "env_reset" {
@@ -561,10 +591,9 @@ func TestSudoersParser_Defaults(t *testing.T) {
 	}
 	require.NotNil(t, envReset, "env_reset default should exist")
 	assert.Equal(t, "global", envReset.Scope)
-	assert.Equal(t, "", envReset.Target)
 	assert.False(t, envReset.Negated)
 
-	// Find secure_path default
+	// Find secure_path
 	var securePath *sudoers.Default
 	for i := range defaults {
 		if defaults[i].Parameter == "secure_path" {
@@ -573,11 +602,10 @@ func TestSudoersParser_Defaults(t *testing.T) {
 		}
 	}
 	require.NotNil(t, securePath, "secure_path default should exist")
-	assert.Equal(t, "global", securePath.Scope)
 	assert.Contains(t, securePath.Value, "/usr/local/sbin")
 	assert.Equal(t, "=", securePath.Operation)
 
-	// Find user-scoped default: Defaults:root !requiretty
+	// Find user-scoped default
 	var rootDefault *sudoers.Default
 	for i := range defaults {
 		if defaults[i].Scope == "user" && defaults[i].Target == "root" {
@@ -589,7 +617,7 @@ func TestSudoersParser_Defaults(t *testing.T) {
 	assert.Equal(t, "requiretty", rootDefault.Parameter)
 	assert.True(t, rootDefault.Negated)
 
-	// Find host-scoped default: Defaults@webservers log_output
+	// Find host-scoped default
 	var hostDefault *sudoers.Default
 	for i := range defaults {
 		if defaults[i].Scope == "host" && defaults[i].Target == "webservers" {
@@ -601,21 +629,20 @@ func TestSudoersParser_Defaults(t *testing.T) {
 	assert.Equal(t, "log_output", hostDefault.Parameter)
 }
 
-func TestSudoersParser_Aliases(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
-	require.NoError(t, err)
-
-	f, err := conn.FileSystem().Open("/etc/sudoers")
-	require.NoError(t, err)
-	defer f.Close()
-
-	content, err := io.ReadAll(f)
-	require.NoError(t, err)
-
-	aliases := sudoers.ParseAliases("/etc/sudoers", string(content))
+func TestParseAliases_RealisticConfig(t *testing.T) {
+	content := `# Alias definitions
+Host_Alias WEBSERVERS = www1, www2, www3
+Host_Alias DBSERVERS = db1, db2
+User_Alias ADMINS = alice, bob, charlie
+User_Alias OPERATORS = dave, eve
+Cmnd_Alias SHUTDOWN = /sbin/halt, /sbin/shutdown, /sbin/reboot
+Cmnd_Alias SERVICES = /usr/bin/systemctl restart *, /usr/bin/systemctl stop *
+Runas_Alias DBA = postgres, mysql
+`
+	aliases := sudoers.ParseAliases("/etc/sudoers", content)
 	require.NotEmpty(t, aliases)
 
-	// Find Host_Alias WEBSERVERS
+	// Find WEBSERVERS
 	var webserversAlias *sudoers.Alias
 	for i := range aliases {
 		if aliases[i].Name == "WEBSERVERS" {
@@ -627,7 +654,7 @@ func TestSudoersParser_Aliases(t *testing.T) {
 	assert.Equal(t, "host", webserversAlias.Type)
 	assert.Equal(t, []string{"www1", "www2", "www3"}, webserversAlias.Members)
 
-	// Find User_Alias ADMINS
+	// Find ADMINS
 	var adminsAlias *sudoers.Alias
 	for i := range aliases {
 		if aliases[i].Name == "ADMINS" {
@@ -639,7 +666,7 @@ func TestSudoersParser_Aliases(t *testing.T) {
 	assert.Equal(t, "user", adminsAlias.Type)
 	assert.Equal(t, []string{"alice", "bob", "charlie"}, adminsAlias.Members)
 
-	// Find Cmnd_Alias SHUTDOWN
+	// Find SHUTDOWN
 	var shutdownAlias *sudoers.Alias
 	for i := range aliases {
 		if aliases[i].Name == "SHUTDOWN" {
@@ -653,7 +680,7 @@ func TestSudoersParser_Aliases(t *testing.T) {
 	assert.Contains(t, shutdownAlias.Members, "/sbin/shutdown")
 	assert.Contains(t, shutdownAlias.Members, "/sbin/reboot")
 
-	// Find Runas_Alias DBA
+	// Find DBA
 	var dbaAlias *sudoers.Alias
 	for i := range aliases {
 		if aliases[i].Name == "DBA" {
@@ -666,63 +693,42 @@ func TestSudoersParser_Aliases(t *testing.T) {
 	assert.Equal(t, []string{"postgres", "mysql"}, dbaAlias.Members)
 }
 
-func TestSudoersParser_DropInFile(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
-	require.NoError(t, err)
-
-	f, err := conn.FileSystem().Open("/etc/sudoers.d/10-developers")
-	require.NoError(t, err)
-	defer f.Close()
-
-	content, err := io.ReadAll(f)
-	require.NoError(t, err)
-
-	specs := sudoers.ParseUserSpecs("/etc/sudoers.d/10-developers", string(content))
+func TestParseUserSpecs_DropInFile(t *testing.T) {
+	content := `# Developer access rules
+%developers ALL=(ALL) NOPASSWD: /usr/bin/docker, /usr/bin/docker-compose
+developer1 ALL=(www-data) NOPASSWD: ALL
+`
+	specs := sudoers.ParseUserSpecs("/etc/sudoers.d/10-developers", content)
 	require.Len(t, specs, 2)
 
-	// %developers ALL=(ALL) NOPASSWD: /usr/bin/docker, /usr/bin/docker-compose
+	// %developers rule
 	assert.Equal(t, "/etc/sudoers.d/10-developers", specs[0].File)
 	assert.Equal(t, []string{"%developers"}, specs[0].Users)
 	assert.Equal(t, []string{"NOPASSWD"}, specs[0].Tags)
 	assert.Contains(t, specs[0].Commands, "/usr/bin/docker")
 	assert.Contains(t, specs[0].Commands, "/usr/bin/docker-compose")
 
-	// developer1 ALL=(www-data) NOPASSWD: ALL
+	// developer1 rule
 	assert.Equal(t, []string{"developer1"}, specs[1].Users)
 	assert.Equal(t, []string{"www-data"}, specs[1].RunasUsers)
 	assert.Equal(t, []string{"ALL"}, specs[1].Commands)
 }
 
-func TestSudoersParser_MonitoringDropIn(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
-	require.NoError(t, err)
-
-	f, err := conn.FileSystem().Open("/etc/sudoers.d/99-monitoring")
-	require.NoError(t, err)
-	defer f.Close()
-
-	content, err := io.ReadAll(f)
-	require.NoError(t, err)
-
-	specs := sudoers.ParseUserSpecs("/etc/sudoers.d/99-monitoring", string(content))
+func TestParseUserSpecs_MonitoringDropIn(t *testing.T) {
+	content := `# Monitoring access
+nagios ALL=(root) NOPASSWD: /usr/lib/nagios/plugins/*, /usr/bin/systemctl status *
+zabbix ALL=(root) NOPASSWD: /usr/sbin/dmidecode, /usr/bin/lsof
+`
+	specs := sudoers.ParseUserSpecs("/etc/sudoers.d/99-monitoring", content)
 	require.Len(t, specs, 2)
 
-	// nagios ALL=(root) NOPASSWD: /usr/lib/nagios/plugins/*, /usr/bin/systemctl status *
+	// nagios rule
 	assert.Equal(t, []string{"nagios"}, specs[0].Users)
 	assert.Equal(t, []string{"root"}, specs[0].RunasUsers)
 	assert.Equal(t, []string{"NOPASSWD"}, specs[0].Tags)
 
-	// zabbix ALL=(root) NOPASSWD: /usr/sbin/dmidecode, /usr/bin/lsof
+	// zabbix rule
 	assert.Equal(t, []string{"zabbix"}, specs[1].Users)
 	assert.Contains(t, specs[1].Commands, "/usr/sbin/dmidecode")
 	assert.Contains(t, specs[1].Commands, "/usr/bin/lsof")
-}
-
-func TestSudoersParser_DirectoryExists(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux.toml"))
-	require.NoError(t, err)
-
-	stat, err := conn.FileSystem().Stat("/etc/sudoers.d")
-	require.NoError(t, err)
-	assert.True(t, stat.IsDir())
 }
