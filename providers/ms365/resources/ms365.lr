@@ -242,9 +242,9 @@ microsoft.identityAndAccess {
   roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
   // Identity and sign-in policies
   identityAndSignIn() microsoft.identityAndAccess.identityAndSignIn
-  // List of mobile device management policies
+  // Mobile device management (MDM) policies that control device enrollment and management
   mobileDeviceManagementPolicies() []microsoft.identityAndAccess.mobileDeviceManagementPolicy
-  // List of mobility management policies
+  // Mobile application management (MAM) policies that control app-level protection without device enrollment
   mobilityManagementPolicies() []microsoft.identityAndAccess.mobilityManagementPolicy
 }
 
@@ -270,59 +270,59 @@ private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("m
   roleEligibilityScheduleId string
 }
 
-// Mobile device management policy
+// Mobile device management (MDM) policy for enrolling and managing devices with services like Microsoft Intune
 private microsoft.identityAndAccess.mobileDeviceManagementPolicy @defaults("id displayName appliesTo") {
-  // The unique identifier for the policy
+  // Unique identifier for the policy
   id string
-  // The policy display name
+  // Display name of the policy
   displayName string
-  // The policy description
+  // Description of the policy
   description string
-  // Identifies whether the policy applies to all users or selected groups
+  // Scope of the policy: "none", "all", or "selected" (specific groups)
   appliesTo string
-  // The URL endpoint for compliance check
+  // URL for the MDM compliance endpoint
   complianceUrl string
-  // The URL endpoint for discovery
+  // URL for the MDM discovery endpoint used during device enrollment
   discoveryUrl string
-  // The URL for terms of use
+  // URL for the MDM terms of use
   termsOfUseUrl string
-  // List of groups included in the policy
+  // Groups targeted by this policy when appliesTo is "selected"
   includedGroups []microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup
 }
 
-// Group included in a mobile device management policy
+// Group targeted by a mobile device management policy
 private microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup @defaults("id displayName") {
-  // The unique identifier for the group
+  // Unique identifier of the group
   id string
-  // The group display name
+  // Display name of the group
   displayName string
 }
 
-// Mobility management policy
+// Mobile application management (MAM) policy for protecting apps without requiring device enrollment
 private microsoft.identityAndAccess.mobilityManagementPolicy @defaults("id displayName appliesTo") {
-  // The unique identifier for the policy
+  // Unique identifier for the policy
   id string
-  // The policy display name
+  // Display name of the policy
   displayName string
-  // The policy description
+  // Description of the policy
   description string
-  // Identifies whether the policy applies to all users or selected groups
+  // Scope of the policy: "none", "all", or "selected" (specific groups)
   appliesTo string
-  // The URL endpoint for compliance check
+  // URL for the MAM compliance endpoint
   complianceUrl string
-  // The URL endpoint for discovery
+  // URL for the MAM discovery endpoint
   discoveryUrl string
-  // The URL for terms of use
+  // URL for the MAM terms of use
   termsOfUseUrl string
-  // List of groups included in the policy
+  // Groups targeted by this policy when appliesTo is "selected"
   includedGroups []microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup
 }
 
-// Group included in a mobility management policy
+// Group targeted by a mobile application management policy
 private microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup @defaults("id displayName") {
-  // The unique identifier for the group
+  // Unique identifier of the group
   id string
-  // The group display name
+  // Display name of the group
   displayName string
 }
 
