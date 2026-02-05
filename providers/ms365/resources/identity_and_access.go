@@ -560,6 +560,7 @@ func newMqlMobileDeviceManagementPolicy(runtime *plugin.Runtime, policy betamode
 }
 
 // Implementation for mobilityManagementPolicies
+// Required Microsoft Graph permissions: Policy.Read.All or Policy.ReadWrite.MobilityManagement.
 func (a *mqlMicrosoftIdentityAndAccess) mobilityManagementPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	betaGraphClient, err := conn.BetaGraphClient()
