@@ -17,7 +17,7 @@ func resetEnv(env []string) {
 }
 
 func TestDockerEnvParsing(t *testing.T) {
-	// reset env from https://golang.org/src/os/env_test.go
+	// reset env from https://go.dev/src/os/env_test.go
 	defer func(origEnv []string) {
 		for _, pair := range origEnv {
 			i := strings.Index(pair[1:], "=") + 1

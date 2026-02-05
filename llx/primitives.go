@@ -385,10 +385,10 @@ func PrettyPrintString(s string) string {
 	return res
 }
 
-// Estimation based on https://golang.org/src/runtime/slice.go
+// Estimation based on https://go.dev/src/runtime/slice.go
 const arrayOverhead = 2 * 4
 
-// Estimation based on https://golang.org/src/runtime/slice.go
+// Estimation based on https://go.dev/src/runtime/slice.go
 const mapOverhead = 4 + 1 + 1 + 2 + 4
 
 // Size returns the approximate size of the primitive in bytes

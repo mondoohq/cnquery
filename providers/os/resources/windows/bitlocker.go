@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
 )
 
-// https://docs.microsoft.com/en-us/windows/win32/secprov/getconversionstatus-win32-encryptablevolume
+// https://learn.microsoft.com/en-us/windows/win32/secprov/getconversionstatus-win32-encryptablevolume
 var conversionStatusValues = map[int64]string{
 	0: "FullyDecrypted",
 	1: "FullyEncrypted",
@@ -22,7 +22,7 @@ var conversionStatusValues = map[int64]string{
 	5: "DecryptionPaused",
 }
 
-// https://docs.microsoft.com/en-us/windows/win32/secprov/getconversionstatus-win32-encryptablevolume
+// https://learn.microsoft.com/en-us/windows/win32/secprov/getconversionstatus-win32-encryptablevolume
 var wipingStatusValues = map[int64]string{
 	0: "FreeSpaceNotWiped",
 	1: "FreeSpaceWiped",
@@ -30,7 +30,7 @@ var wipingStatusValues = map[int64]string{
 	3: "FreeSpaceWipingPaused",
 }
 
-// https://docs.microsoft.com/en-us/windows/win32/secprov/getencryptionmethod-win32-encryptablevolume
+// https://learn.microsoft.com/en-us/windows/win32/secprov/getencryptionmethod-win32-encryptablevolume
 var encryptionMethodValues = map[int64]string{
 	0: "NONE",
 	1: "AES_128_WITH_DIFFUSER",
@@ -48,7 +48,7 @@ var fveVersionValues = map[int64]string{
 	2: "Win7",
 }
 
-// https://docs.microsoft.com/en-us/windows/win32/secprov/getprotectionstatus-win32-encryptablevolume
+// https://learn.microsoft.com/en-us/windows/win32/secprov/getprotectionstatus-win32-encryptablevolume
 var protectionStatusValues = map[int64]string{
 	0: "Unprotected",
 	1: "Protected",

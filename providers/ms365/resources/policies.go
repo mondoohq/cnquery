@@ -48,8 +48,8 @@ func (a *mqlMicrosoftPolicies) identitySecurityDefaultsEnforcementPolicy() (any,
 	return convert.JsonToDict(newIdentitySecurityDefaultsEnforcementPolicy(policy))
 }
 
-// https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
-// https://docs.microsoft.com/en-us/graph/api/permissiongrantpolicy-list?view=graph-rest-1.0&tabs=http
+// https://learn.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
+// https://learn.microsoft.com/en-us/graph/api/permissiongrantpolicy-list?view=graph-rest-1.0&tabs=http
 func (a *mqlMicrosoftPolicies) permissionGrantPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
@@ -283,7 +283,7 @@ func (a *mqlMicrosoftPoliciesAuthenticationMethodsPolicy) systemCredentialPrefer
 	return mqlSystemCredPrefs.(*mqlMicrosoftPoliciesSystemCredentialPreferences), nil
 }
 
-// https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-
+// https://learn.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-1.0
 func (a *mqlMicrosoftPolicies) adminConsentRequestPolicy() (*mqlMicrosoftAdminConsentRequestPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()

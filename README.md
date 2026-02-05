@@ -86,7 +86,7 @@ For automation, it is often helpful to convert the output to JSON. Use `-j` or `
 cnquery run local -c "services { * }" -j
 ```
 
-You can then pipe the output to [jq](https://jqlang.github.io/jq/) or other applications.
+You can then pipe the output to [jq](https://jqlang.org/) or other applications.
 
 ## Query packs
 

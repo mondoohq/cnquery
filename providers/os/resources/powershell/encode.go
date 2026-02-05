@@ -14,10 +14,10 @@ import (
 // Encode encodes a long powershell script as base64 and returns the wrapped command
 //
 // wraps a script to deactivate progress listener
-// https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7
+// https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7
 //
 // deactivates loading powershell profile
-// https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/powershell
+// https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/powershell
 func Encode(cmd string) string {
 	// avoid messages to stderr that are not required in our execution
 	script := "$ProgressPreference='SilentlyContinue';" + cmd

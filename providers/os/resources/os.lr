@@ -1763,7 +1763,7 @@ openBSMAudit @defaults("path") {
 // Windows-specific resource to get operating system details
 windows {
   // A consolidated object of system and operating system properties
-  // see https://docs.microsoft.com/en-us/dotnet/api/microsoft.powershell.commands.computerinfo?view=powershellsdk-1.1.0 for more information
+  // see https://learn.microsoft.com/en-us/dotnet/api/microsoft.powershell.commands.computerinfo?view=powershellsdk-1.1.0 for more information
   computerInfo() dict
 
   // Hotfixes installed on the computer
@@ -1905,7 +1905,7 @@ windows.firewall {
 }
 
 // Windows Firewall profile entry
-// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallprofile
+// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallprofile
 windows.firewall.profile {
   instanceID string
   // Name of the profile
@@ -1945,7 +1945,7 @@ windows.firewall.profile {
 }
 
 // Windows Firewall rule entry
-// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallrule
+// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallrule
 windows.firewall.rule {
   // A string that uniquely identifies this instance within the policy store
   instanceID string

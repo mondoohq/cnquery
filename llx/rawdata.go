@@ -282,7 +282,7 @@ func isTruthy(data any, typ types.Type) (bool, bool) {
 	case types.Time:
 		dt := data.(*time.Time)
 
-		// needs separate testing due to: https://golang.org/doc/faq#nil_error
+		// needs separate testing due to: https://go.dev/doc/faq#nil_error
 		if dt == nil {
 			return false, true
 		}

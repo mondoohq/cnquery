@@ -216,7 +216,7 @@ var TLS10_CIPHERS = map[string]string{
 }
 
 var TLS13_CIPHERS = map[string]string{
-	// See https://tools.ietf.org/html/rfc8446#appendix-B.4
+	// See https://datatracker.ietf.org/doc/html/rfc8446#appendix-B.4
 	"\x13\x01": "TLS_AES_128_GCM_SHA256",
 	"\x13\x02": "TLS_AES_256_GCM_SHA384",
 	"\x13\x03": "TLS_CHACHA20_POLY1305_SHA256",

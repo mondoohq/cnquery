@@ -135,7 +135,7 @@ func (k *RegistryKeyValue) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 
-	// see https://docs.microsoft.com/en-us/powershell/scripting/samples/working-with-registry-entries?view=powershell-7
+	// see https://learn.microsoft.com/en-us/powershell/scripting/samples/working-with-registry-entries?view=powershell-7
 	switch raw.Kind {
 	case NONE:
 		// ignore

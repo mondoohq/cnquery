@@ -26,7 +26,7 @@ import (
 // - `enabled`:        Alias for `enable`
 //
 //   - `listen`:         Sets the listen address for the profiler http server. See
-//     https://golang.org/pkg/net/http/pprof for more info about the
+//     https://pkg.go.dev/net/http/pprof for more info about the
 //     endpoints provided
 //
 // - `memprofilerate`: Sets runtime.MemProfileRate to the provided value

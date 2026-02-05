@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 )
 
-// This is designed around https://www.terraform.io/internals/json-format
+// This is designed around https://developer.hashicorp.com/terraform/internals/json-format
 // NOTE: it is very similar to the plan file format, but not exactly the same.
 
 type State struct {

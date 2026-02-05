@@ -30,8 +30,8 @@ import (
 )
 
 // ProcessorArchitecture Enum
-// https://docs.microsoft.com/en-us/uwp/api/windows.system.processorarchitecture
-// https://docs.microsoft.com/en-us/dotnet/api/system.reflection.processorarchitecture?redirectedfrom=MSDN&view=netframework-4.8
+// https://learn.microsoft.com/en-us/uwp/api/windows.system.processorarchitecture
+// https://learn.microsoft.com/en-us/dotnet/api/system.reflection.processorarchitecture?redirectedfrom=MSDN&view=netframework-4.8
 // Microsoft.Windows.Appx.PackageManager.Commands.AppxPackage
 // https://github.com/tpn/winsdk-10/blob/master/Include/10.0.10240.0/um/appxpackaging.idl#L60-L67
 const (
@@ -44,7 +44,7 @@ const (
 	WinArchX86OnArm64 = 14
 )
 
-// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ff357803(v=vs.85)
+// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ff357803(v=vs.85)
 var (
 	wsusClassificationGUID = map[string]WSUSClassification{
 		"5c9376ab-8ce6-464a-b136-22113dd69801": Application,

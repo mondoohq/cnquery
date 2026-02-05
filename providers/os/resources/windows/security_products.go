@@ -21,7 +21,7 @@ import (
 // which adds the firewall to the list. Instead, the firewall is being exposed via separate resources.
 //
 // References:
-// https://docs.microsoft.com/en-us/windows/win32/api/iwscapi/
+// https://learn.microsoft.com/en-us/windows/win32/api/iwscapi/
 // https://social.msdn.microsoft.com/Forums/en-US/8da083a9-59bf-4e93-9f1b-209a2c5b9c72/how-to-use-wscapidll-in-c-for-getting-details-about-antivirus-softwares?forum=csharpgeneral
 // https://social.msdn.microsoft.com/Forums/vstudio/en-US/8da083a9-59bf-4e93-9f1b-209a2c5b9c72/how-to-use-wscapidll-in-c-for-getting-details-about-antivirus-softwares?forum=csharpgeneral
 
@@ -73,7 +73,7 @@ func parseTimestamp(timestamp string) time.Time {
 	return ts
 }
 
-// https://docs.microsoft.com/en-us/windows/win32/api/iwscapi/ne-iwscapi-wsc_security_product_state
+// https://learn.microsoft.com/en-us/windows/win32/api/iwscapi/ne-iwscapi-wsc_security_product_state
 var securityProductStatusValues = map[uint32]string{
 	0: "ON",
 	1: "OFF",
@@ -81,7 +81,7 @@ var securityProductStatusValues = map[uint32]string{
 	3: "EXPIRED",
 }
 
-// https://docs.microsoft.com/en-us/windows/win32/api/iwscapi/ne-iwscapi-wsc_security_signature_status
+// https://learn.microsoft.com/en-us/windows/win32/api/iwscapi/ne-iwscapi-wsc_security_signature_status
 var securitySignatureStatusValues = map[uint32]string{
 	0: "OUT-OF-DATE",
 	1: "UP-TO-DATE",

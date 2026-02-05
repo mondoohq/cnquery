@@ -992,8 +992,8 @@ const (
 	EXTENSION_KeyShare          string = "\x00\x33"
 )
 
-// https://tools.ietf.org/html/rfc5246#appendix-A.3
-// https://tools.ietf.org/html/rfc8446#appendix-B.2
+// https://datatracker.ietf.org/doc/html/rfc5246#appendix-A.3
+// https://datatracker.ietf.org/doc/html/rfc8446#appendix-B.2
 var ALERT_DESCRIPTIONS = map[byte]string{
 	'\x00': "CLOSE_NOTIFY",
 	'\x0A': "UNEXPECTED_MESSAGE",
