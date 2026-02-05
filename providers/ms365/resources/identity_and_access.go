@@ -485,6 +485,9 @@ func newMqlAccessReviewDefinition(runtime *plugin.Runtime, d models.AccessReview
 }
 
 // Implementation for mobileDeviceManagementPolicies
+// Required Microsoft Graph permissions (application or delegated):
+//   - Policy.Read.All, or
+//   - Policy.ReadWrite.MobilityManagement
 func (a *mqlMicrosoftIdentityAndAccess) mobileDeviceManagementPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	betaGraphClient, err := conn.BetaGraphClient()
