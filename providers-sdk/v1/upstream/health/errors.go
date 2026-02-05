@@ -75,6 +75,47 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 	log.Info().Msg("reported panic to Mondoo Platform")
 }
 
+func ReportError(product, version, build, err string) {
+	reportError(product, version, build, err)
+}
+
+// reportError sends an error to the mondoo platform for further analysis if the
+// service account is configured.
+// This function does not return an error as it is not critical to send the error to the platform.
+func reportError(product, version, build string, errMsg string) {
+	// 1. read config
+	opts, err := config.Read()
+	if err != nil {
+		log.Error().Err(err).Msg("failed to read config")
+		return
+	}
+
+	serviceAccount := opts.GetServiceCredential()
+	if serviceAccount == nil {
+		log.Error().Msg("no service account configured")
+		return
+	}
+
+	// 2. create local support bundle
+	event := &SendErrorReq{
+		ServiceAccountMrn: opts.ServiceAccountMrn,
+		AgentMrn:          opts.AgentMrn,
+		Product: &ProductInfo{
+			Name:    product,
+			Version: version,
+			Build:   build,
+		},
+		Error: &ErrorInfo{
+			Message: errMsg,
+		},
+	}
+
+	// 3. send error to mondoo platform
+	sendErrorToMondooPlatform(serviceAccount, event)
+
+	log.Info().Msg("reported error to Mondoo Platform")
+}
+
 type SlowQueryInfo struct {
 	CodeID   string
 	Query    string
