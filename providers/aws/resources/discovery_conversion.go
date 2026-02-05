@@ -212,6 +212,10 @@ func getPlatformName(awsObject awsObject) string {
 		if awsObject.objectType == "cluster" {
 			return "aws-eks-cluster"
 		}
+	case "opensearch":
+		if awsObject.objectType == "domain" {
+			return "aws-opensearch-domain"
+		}
 	}
 	return ""
 }
