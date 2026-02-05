@@ -568,7 +568,7 @@ func (a *mqlMicrosoftIdentityAndAccess) mobilityManagementPolicies() ([]any, err
 	}
 
 	ctx := context.Background()
-	policies, err := betaGraphClient.Policies().MobileDeviceManagementPolicies().Get(ctx, nil)
+	policies, err := betaGraphClient.Policies().MobileAppManagementPolicies().Get(ctx, nil)
 	if err != nil {
 		return nil, transformError(err)
 	}
