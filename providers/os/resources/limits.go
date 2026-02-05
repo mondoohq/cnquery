@@ -6,14 +6,12 @@ package resources
 import (
 	"errors"
 	"fmt"
-	"io"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
 )
 
 const (
@@ -115,28 +113,19 @@ func (l *mqlLimits) files() ([]any, error) {
 
 // entries parses all limits files and returns structured entries
 func (l *mqlLimits) entries(files []any) ([]any, error) {
-	conn := l.MqlRuntime.Connection.(shared.Connection)
-
 	var allEntries []any
 	var errs []error
 
 	for i := range files {
 		file := files[i].(*mqlFile)
 
-		f, err := conn.FileSystem().Open(file.Path.Data)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to open %s: %w", file.Path.Data, err))
+		content := file.GetContent()
+		if content.Error != nil {
+			errs = append(errs, fmt.Errorf("failed to read %s: %w", file.Path.Data, content.Error))
 			continue
 		}
 
-		raw, err := io.ReadAll(f)
-		f.Close()
-		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to read %s: %w", file.Path.Data, err))
-			continue
-		}
-
-		entries, err := parseLimitsContent(l.MqlRuntime, file.Path.Data, string(raw))
+		entries, err := parseLimitsContent(l.MqlRuntime, file.Path.Data, content.Data)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to parse %s: %w", file.Path.Data, err))
 			continue
@@ -152,8 +141,8 @@ func (l *mqlLimits) entries(files []any) ([]any, error) {
 	return allEntries, nil
 }
 
-// limitsEntry represents a parsed limits entry (used for testing)
-type limitsEntry struct {
+// LimitsEntry represents a parsed limits entry
+type LimitsEntry struct {
 	File       string
 	LineNumber int
 	Domain     string
@@ -162,10 +151,10 @@ type limitsEntry struct {
 	Value      string
 }
 
-// parseLimitsLines parses the content of a limits file and returns structured entries
+// ParseLimitsLines parses the content of a limits file and returns structured entries
 // This function is separated from resource creation for testability
-func parseLimitsLines(filePath string, content string) []limitsEntry {
-	var entries []limitsEntry
+func ParseLimitsLines(filePath string, content string) []LimitsEntry {
+	var entries []LimitsEntry
 	lines := strings.Split(content, "\n")
 
 	for lineNum, line := range lines {
@@ -184,7 +173,7 @@ func parseLimitsLines(filePath string, content string) []limitsEntry {
 			continue
 		}
 
-		entries = append(entries, limitsEntry{
+		entries = append(entries, LimitsEntry{
 			File:       filePath,
 			LineNumber: actualLineNum,
 			Domain:     matches[1],
@@ -199,7 +188,7 @@ func parseLimitsLines(filePath string, content string) []limitsEntry {
 
 // parseLimitsContent parses the content of a limits file and creates MQL resources
 func parseLimitsContent(runtime *plugin.Runtime, filePath string, content string) ([]any, error) {
-	parsed := parseLimitsLines(filePath, content)
+	parsed := ParseLimitsLines(filePath, content)
 	var entries []any
 
 	for _, e := range parsed {

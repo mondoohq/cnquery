@@ -1,0 +1,26 @@
+# Test data for limits.conf parsing
+
+[files."/etc/security/limits.conf"]
+content = """# /etc/security/limits.conf
+#
+#<domain>      <type>  <item>         <value>
+#
+* soft core 0
+* hard core unlimited
+* soft nofile 65536
+* hard nofile 65536
+@admin soft nproc unlimited
+root - nofile 1000000
+"""
+
+[files."/etc/security/limits.d"]
+stat.isdir = true
+content = """99-custom.conf
+"""
+
+[files."/etc/security/limits.d/99-custom.conf"]
+content = """# Custom limits for developers
+@developers - nofile 100000
+postgres soft nproc 65536
+postgres hard nproc 65536
+"""

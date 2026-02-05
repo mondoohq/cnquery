@@ -225,7 +225,7 @@ func TestParseLimitsLine_MsgQueue(t *testing.T) {
 // Tests for parseLimitsLines function
 
 func TestParseLimitsLines_EmptyContent(t *testing.T) {
-	entries := parseLimitsLines("/etc/security/limits.conf", "")
+	entries := ParseLimitsLines("/etc/security/limits.conf", "")
 	assert.Empty(t, entries)
 }
 
@@ -233,7 +233,7 @@ func TestParseLimitsLines_OnlyComments(t *testing.T) {
 	content := `# This is a comment
 # Another comment
 # /etc/security/limits.conf`
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 	assert.Empty(t, entries)
 }
 
@@ -242,13 +242,13 @@ func TestParseLimitsLines_OnlyEmptyLines(t *testing.T) {
 
 
 `
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 	assert.Empty(t, entries)
 }
 
 func TestParseLimitsLines_SingleEntry(t *testing.T) {
 	content := "* soft nofile 65536"
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 1)
 	assert.Equal(t, "/etc/security/limits.conf", entries[0].File)
@@ -263,7 +263,7 @@ func TestParseLimitsLines_MultipleEntries(t *testing.T) {
 	content := `* soft nofile 65536
 * hard nofile 65536
 @admin soft nproc unlimited`
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 3)
 
@@ -298,7 +298,7 @@ func TestParseLimitsLines_MixedWithComments(t *testing.T) {
 # Increase file limits for all users
 * soft nofile 65536
 * hard nofile 65536`
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 3)
 
@@ -321,7 +321,7 @@ func TestParseLimitsLines_MixedWithEmptyLines(t *testing.T) {
 * hard core unlimited
 
 @developers - nofile 100000`
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 3)
 
@@ -336,7 +336,7 @@ invalid line here
 * hard nofile 65536
 another invalid
 root - nproc unlimited`
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 3)
 
@@ -383,7 +383,7 @@ root soft nofile 1000000
 root hard nofile 1000000
 
 # End of file`
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 7)
 
@@ -408,11 +408,11 @@ func TestParseLimitsLines_FilePath(t *testing.T) {
 	content := "* soft nofile 65536"
 
 	// Test with main config file
-	entries1 := parseLimitsLines("/etc/security/limits.conf", content)
+	entries1 := ParseLimitsLines("/etc/security/limits.conf", content)
 	assert.Equal(t, "/etc/security/limits.conf", entries1[0].File)
 
 	// Test with limits.d file
-	entries2 := parseLimitsLines("/etc/security/limits.d/99-custom.conf", content)
+	entries2 := ParseLimitsLines("/etc/security/limits.d/99-custom.conf", content)
 	assert.Equal(t, "/etc/security/limits.d/99-custom.conf", entries2[0].File)
 }
 
@@ -422,7 +422,7 @@ root soft nofile 2000
 @admin soft nofile 3000
 %group soft nofile 4000`
 
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 4)
 	assert.Equal(t, "*", entries[0].Domain)      // wildcard
@@ -436,7 +436,7 @@ func TestParseLimitsLines_AllLimitTypes(t *testing.T) {
 * hard nofile 2000
 * - nofile 3000`
 
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 3)
 	assert.Equal(t, "soft", entries[0].Type)
@@ -464,7 +464,7 @@ func TestParseLimitsLines_AllCommonItems(t *testing.T) {
 * soft nice 0
 * soft rtprio 0`
 
-	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	entries := ParseLimitsLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 18)
 
