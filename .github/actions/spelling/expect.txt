@@ -76,6 +76,7 @@ iotedge
 ipc
 ipsetforwardedipconfig
 ipsetreferencestatement
+isdir
 istio
 jira
 jsonbody
