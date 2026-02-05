@@ -22117,7 +22117,9 @@ func (c *mqlAwsOpensearchDomain) GetAutoTuneState() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsOpensearchDomain) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsOpensearchDomain) GetSecurityGroups() *plugin.TValue[[]any] {

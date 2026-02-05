@@ -1376,7 +1376,7 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   // Whether auto-tune is enabled
   autoTuneState string
   // Tags for the domain
-  tags map[string]string
+  tags() map[string]string
   // Security groups associated with the VPC domain
   securityGroups() []aws.ec2.securitygroup
   // Subnets for the VPC domain
