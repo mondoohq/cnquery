@@ -594,7 +594,7 @@ func (a *mqlAwsVpc) flowLogs() ([]any, error) {
 }
 
 func (a *mqlAwsVpcRoutetable) id() (string, error) {
-	return a.Id.Data, nil
+	return a.Arn.Data, nil
 }
 
 func (a *mqlAwsVpc) routeTables() ([]any, error) {
@@ -627,7 +627,9 @@ func (a *mqlAwsVpc) routeTables() ([]any, error) {
 			}
 			mqlRouteTable, err := CreateResource(a.MqlRuntime, ResourceAwsVpcRoutetable,
 				map[string]*llx.RawData{
+					"arn":    llx.StringData(fmt.Sprintf(routeTableArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(routeTable.RouteTableId))),
 					"id":     llx.StringDataPtr(routeTable.RouteTableId),
+					"region": llx.StringData(a.Region.Data),
 					"routes": llx.ArrayData(dictRoutes, types.Any),
 					"tags":   llx.MapData(toInterfaceMap(ec2TagsToMap(routeTable.Tags)), types.String),
 				})
@@ -694,6 +696,99 @@ func (a *mqlAwsVpcSubnet) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+type mqlAwsVpcSubnetInternal struct {
+	cacheVpcId string
+}
+
+func (a *mqlAwsVpcSubnet) routeTables() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	subnetId := a.Id.Data
+	vpcId := a.cacheVpcId
+
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+	res := []any{}
+
+	// If we don't have the VPC ID cached, we need to look it up
+	if vpcId == "" {
+		subnets, err := svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
+			SubnetIds: []string{subnetId},
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(subnets.Subnets) > 0 {
+			vpcId = convert.ToValue(subnets.Subnets[0].VpcId)
+		}
+	}
+
+	if vpcId == "" {
+		return res, nil
+	}
+
+	// Get all route tables for this VPC
+	params := &ec2.DescribeRouteTablesInput{
+		Filters: []vpctypes.Filter{{Name: aws.String("vpc-id"), Values: []string{vpcId}}},
+	}
+
+	paginator := ec2.NewDescribeRouteTablesPaginator(svc, params)
+	var mainRouteTable *vpctypes.RouteTable
+	var explicitRouteTable *vpctypes.RouteTable
+
+	for paginator.HasMorePages() {
+		routeTables, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range routeTables.RouteTables {
+			routeTable := routeTables.RouteTables[i]
+			for _, assoc := range routeTable.Associations {
+				// Check if this is the main route table
+				if assoc.Main != nil && *assoc.Main {
+					mainRouteTable = &routeTable
+				}
+				// Check if this route table has an explicit association with our subnet
+				if assoc.SubnetId != nil && *assoc.SubnetId == subnetId {
+					explicitRouteTable = &routeTable
+				}
+			}
+		}
+	}
+
+	// Use explicit association if exists, otherwise use main route table
+	var routeTableToReturn *vpctypes.RouteTable
+	if explicitRouteTable != nil {
+		routeTableToReturn = explicitRouteTable
+	} else if mainRouteTable != nil {
+		routeTableToReturn = mainRouteTable
+	}
+
+	if routeTableToReturn != nil {
+		dictRoutes, err := convert.JsonToDictSlice(routeTableToReturn.Routes)
+		if err != nil {
+			return nil, err
+		}
+		mqlRouteTable, err := CreateResource(a.MqlRuntime, ResourceAwsVpcRoutetable,
+			map[string]*llx.RawData{
+				"arn":    llx.StringData(fmt.Sprintf(routeTableArnPattern, region, conn.AccountId(), convert.ToValue(routeTableToReturn.RouteTableId))),
+				"id":     llx.StringDataPtr(routeTableToReturn.RouteTableId),
+				"region": llx.StringData(region),
+				"routes": llx.ArrayData(dictRoutes, types.Any),
+				"tags":   llx.MapData(toInterfaceMap(ec2TagsToMap(routeTableToReturn.Tags)), types.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRouteTable)
+		mqlRouteTable.(*mqlAwsVpcRoutetable).cacheAssociations = routeTableToReturn.Associations
+		mqlRouteTable.(*mqlAwsVpcRoutetable).region = region
+	}
+
+	return res, nil
+}
+
 func (a *mqlAwsVpc) subnets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpcVal := a.Id.Data
@@ -718,6 +813,7 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 				continue
 			}
 
+			tagsMap := ec2TagsToMap(subnet.Tags)
 			subnetResource, err := CreateResource(a.MqlRuntime, ResourceAwsVpcSubnet,
 				map[string]*llx.RawData{
 					"arn":                         llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(subnet.SubnetId))),
@@ -729,12 +825,15 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 					"id":                          llx.StringDataPtr(subnet.SubnetId),
 					"internetGatewayBlockMode":    llx.StringData(string(subnet.BlockPublicAccessStates.InternetGatewayBlockMode)),
 					"mapPublicIpOnLaunch":         llx.BoolDataPtr(subnet.MapPublicIpOnLaunch),
+					"name":                        llx.StringData(tagsMap["Name"]),
 					"region":                      llx.StringData(a.Region.Data),
 					"state":                       llx.StringData(string(subnet.State)),
+					"tags":                        llx.MapData(toInterfaceMap(tagsMap), types.String),
 				})
 			if err != nil {
 				return nil, err
 			}
+			subnetResource.(*mqlAwsVpcSubnet).cacheVpcId = vpcVal
 			res = append(res, subnetResource)
 		}
 	}
@@ -782,6 +881,7 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 
 	if len(subnets.Subnets) > 0 {
 		subnet := subnets.Subnets[0]
+		tagsMap := ec2TagsToMap(subnet.Tags)
 		if arnValue != "" {
 			args["arn"] = llx.StringData(arnValue)
 		} else {
@@ -789,12 +889,16 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		}
 		args["assignIpv6AddressOnCreation"] = llx.BoolDataPtr(subnet.AssignIpv6AddressOnCreation)
 		args["availabilityZone"] = llx.StringDataPtr(subnet.AvailabilityZone)
+		args["availableIpAddressCount"] = llx.IntDataPtr(subnet.AvailableIpAddressCount)
 		args["cidrs"] = llx.StringDataPtr(subnet.CidrBlock)
 		args["defaultForAvailabilityZone"] = llx.BoolDataPtr(subnet.DefaultForAz)
 		args["id"] = llx.StringDataPtr(subnet.SubnetId)
+		args["internetGatewayBlockMode"] = llx.StringData(string(subnet.BlockPublicAccessStates.InternetGatewayBlockMode))
 		args["mapPublicIpOnLaunch"] = llx.BoolDataPtr(subnet.MapPublicIpOnLaunch)
+		args["name"] = llx.StringData(tagsMap["Name"])
 		args["region"] = llx.StringData(region)
 		args["state"] = llx.StringData(string(subnet.State))
+		args["tags"] = llx.MapData(toInterfaceMap(tagsMap), types.String)
 		return args, nil, nil
 	}
 	return nil, nil, errors.New("subnet not found")
@@ -852,4 +956,194 @@ func vpcFilter(vpcId string) vpctypes.Filter {
 		Name:   aws.String("vpc-id"),
 		Values: []string{vpcId},
 	}
+}
+
+// Internet Gateway implementation
+
+func (a *mqlAwsVpcInternetGateway) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+const internetGatewayArnPattern = "arn:aws:ec2:%s:%s:internet-gateway/%s"
+
+func (a *mqlAwsVpc) internetGateways() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	vpcId := a.Id.Data
+
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+	igws := []any{}
+
+	filterKeyVal := "attachment.vpc-id"
+	params := &ec2.DescribeInternetGatewaysInput{
+		Filters: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpcId}}},
+	}
+
+	resp, err := svc.DescribeInternetGateways(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, igw := range resp.InternetGateways {
+		attachments, err := convert.JsonToDictSlice(igw.Attachments)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlIgw, err := CreateResource(a.MqlRuntime, ResourceAwsVpcInternetGateway,
+			map[string]*llx.RawData{
+				"id":          llx.StringDataPtr(igw.InternetGatewayId),
+				"arn":         llx.StringData(fmt.Sprintf(internetGatewayArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(igw.InternetGatewayId))),
+				"region":      llx.StringData(a.Region.Data),
+				"attachments": llx.ArrayData(attachments, types.Any),
+				"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(igw.Tags)), types.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+		igws = append(igws, mqlIgw)
+	}
+	return igws, nil
+}
+
+// Security Groups link implementation
+
+func (a *mqlAwsVpc) securityGroups() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	vpcId := a.Id.Data
+
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+	sgs := []any{}
+
+	filters := conn.Filters.General.ToServerSideEc2Filters()
+	filters = append(filters, vpcFilter(vpcId))
+	params := &ec2.DescribeSecurityGroupsInput{Filters: filters}
+	paginator := ec2.NewDescribeSecurityGroupsPaginator(svc, params)
+
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, sg := range resp.SecurityGroups {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(sg.Tags)) {
+				log.Debug().Interface("security_group", sg.GroupId).Msg("excluding security group due to filters")
+				continue
+			}
+
+			mqlSg, err := NewResource(a.MqlRuntime, ResourceAwsEc2Securitygroup,
+				map[string]*llx.RawData{
+					"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(sg.GroupId))),
+				})
+			if err != nil {
+				return nil, err
+			}
+			sgs = append(sgs, mqlSg)
+		}
+	}
+	return sgs, nil
+}
+
+// Network ACLs link implementation
+
+func (a *mqlAwsVpc) networkAcls() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	vpcId := a.Id.Data
+
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+	acls := []any{}
+
+	filters := conn.Filters.General.ToServerSideEc2Filters()
+	filters = append(filters, vpcFilter(vpcId))
+	params := &ec2.DescribeNetworkAclsInput{Filters: filters}
+	paginator := ec2.NewDescribeNetworkAclsPaginator(svc, params)
+
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, acl := range resp.NetworkAcls {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(acl.Tags)) {
+				log.Debug().Interface("network_acl", acl.NetworkAclId).Msg("excluding network acl due to filters")
+				continue
+			}
+
+			mqlAcl, err := NewResource(a.MqlRuntime, ResourceAwsEc2Networkacl,
+				map[string]*llx.RawData{
+					"arn": llx.StringData(fmt.Sprintf(networkAclArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(acl.NetworkAclId))),
+				})
+			if err != nil {
+				return nil, err
+			}
+			acls = append(acls, mqlAcl)
+		}
+	}
+	return acls, nil
+}
+
+// VPN Gateway implementation
+
+func (a *mqlAwsVpcVpnGateway) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+const vpnGatewayArnPattern = "arn:aws:ec2:%s:%s:vpn-gateway/%s"
+
+func (a *mqlAwsVpc) vpnGateways() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	vpcId := a.Id.Data
+
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+	vgws := []any{}
+
+	filterKeyVal := "attachment.vpc-id"
+	params := &ec2.DescribeVpnGatewaysInput{
+		Filters: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpcId}}},
+	}
+
+	resp, err := svc.DescribeVpnGateways(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, vgw := range resp.VpnGateways {
+		attachments, err := convert.JsonToDictSlice(vgw.VpcAttachments)
+		if err != nil {
+			return nil, err
+		}
+
+		var availabilityZone string
+		if vgw.AvailabilityZone != nil {
+			availabilityZone = *vgw.AvailabilityZone
+		}
+
+		var amazonSideAsn int64
+		if vgw.AmazonSideAsn != nil {
+			amazonSideAsn = *vgw.AmazonSideAsn
+		}
+
+		mqlVgw, err := CreateResource(a.MqlRuntime, ResourceAwsVpcVpnGateway,
+			map[string]*llx.RawData{
+				"id":               llx.StringDataPtr(vgw.VpnGatewayId),
+				"arn":              llx.StringData(fmt.Sprintf(vpnGatewayArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(vgw.VpnGatewayId))),
+				"region":           llx.StringData(a.Region.Data),
+				"state":            llx.StringData(string(vgw.State)),
+				"type":             llx.StringData(string(vgw.Type)),
+				"amazonSideAsn":    llx.IntData(amazonSideAsn),
+				"availabilityZone": llx.StringData(availabilityZone),
+				"attachments":      llx.ArrayData(attachments, types.Any),
+				"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(vgw.Tags)), types.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+		vgws = append(vgws, mqlVgw)
+	}
+	return vgws, nil
 }

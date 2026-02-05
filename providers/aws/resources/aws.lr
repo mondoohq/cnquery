@@ -82,7 +82,7 @@ aws.organization @defaults("id masterAccountEmail") {
 }
 
 // Amazon Virtual Private Cloud (VPC)
-private aws.vpc @defaults("id isDefault cidrBlock region") {
+aws.vpc @defaults("id isDefault cidrBlock region") {
   // ARN of the VPC
   arn string
   // ID of the VPC
@@ -119,14 +119,26 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
   internetGatewayBlockMode string
   // ID of the set of DHCP options associated with the VPC
   dhcpOptionsId string
+  // Internet gateways attached to the VPC
+  internetGateways() []aws.vpc.internetGateway
+  // Security groups in this VPC
+  securityGroups() []aws.ec2.securitygroup
+  // Network ACLs in this VPC
+  networkAcls() []aws.ec2.networkacl
+  // Virtual private gateways attached to the VPC
+  vpnGateways() []aws.vpc.vpnGateway
 }
 
 // Amazon Virtual Private Cloud (VPC) route table
 private aws.vpc.routetable @defaults("id routes.length") {
+  // ARN of the route table
+  arn string
   // A list of association descriptions
   associations() []aws.vpc.routetable.association
   // Unique ID of the route table
   id string
+  // Region where the route table exists
+  region string
   // A list of route descriptions
   routes []dict
   // Tags on the route table
@@ -155,6 +167,8 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   arn string
   // Unique ID of the subnet
   id string
+  // Name of the subnet (from tags)
+  name string
   // List of CIDR descriptions
   cidrs string
   // Whether instances launched in this subnet receive public IPv4 addresses
@@ -173,6 +187,10 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   availableIpAddressCount int
   // Internet gateway blocking mode: block-bidirectional, block-ingress, or off
   internetGatewayBlockMode string
+  // Tags on the subnet
+  tags map[string]string
+  // Route tables associated with this subnet
+  routeTables() []aws.vpc.routetable
 }
 
 // Amazon Virtual Private Cloud (VPC) endpoint
@@ -225,6 +243,42 @@ private aws.vpc.flowlog @defaults("id region status") {
   maxAggregationInterval int
   // Type of traffic to monitor: ACCEPT, ALL, and REJECT
   trafficType string
+}
+
+// Amazon Virtual Private Cloud (VPC) internet gateway
+private aws.vpc.internetGateway @defaults("id") {
+  // ID of the internet gateway
+  id string
+  // ARN of the internet gateway
+  arn string
+  // Region where the internet gateway exists
+  region string
+  // VPC attachments for the internet gateway
+  attachments []dict
+  // Tags on the internet gateway
+  tags map[string]string
+}
+
+// Amazon Virtual Private Cloud (VPC) virtual private gateway
+private aws.vpc.vpnGateway @defaults("id state") {
+  // ID of the virtual private gateway
+  id string
+  // ARN of the virtual private gateway
+  arn string
+  // Region where the virtual private gateway exists
+  region string
+  // State of the virtual private gateway: pending, available, deleting, or deleted
+  state string
+  // Type of VPN connection the virtual private gateway supports (ipsec.1)
+  type string
+  // Private Autonomous System Number (ASN) for the Amazon side of a BGP session
+  amazonSideAsn int
+  // Availability zone for the virtual private gateway
+  availabilityZone string
+  // VPC attachments for the virtual private gateway
+  attachments []dict
+  // Tags on the virtual private gateway
+  tags map[string]string
 }
 
 // Amazon WAF v2

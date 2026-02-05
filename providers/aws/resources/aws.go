@@ -38,6 +38,7 @@ const (
 	imageArnPattern             = "arn:aws:ec2:%s:%s:image/%s"
 	keypairArnPattern           = "arn:aws:ec2:%s:%s:keypair/%s"
 	subnetArnPattern            = "arn:aws:ec2:%s:%s:subnet/%s"
+	routeTableArnPattern        = "arn:aws:ec2:%s:%s:route-table/%s"
 	s3ArnPattern                = "arn:aws:s3:::%s"
 	dynamoTableArnPattern       = "arn:aws:dynamodb:%s:%s:table/%s"
 	limitsArn                   = "arn:aws:dynamodb:%s:%s"
