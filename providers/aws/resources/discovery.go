@@ -51,6 +51,7 @@ const (
 	DiscoveryAPIGatewayRestAPIs         = "gateway-restapis"
 	DiscoveryELBLoadBalancers           = "elb-loadbalancers"
 	DiscoveryESDomains                  = "es-domains"
+	DiscoveryOpenSearchDomains          = "opensearch-domains"
 	DiscoveryKMSKeys                    = "kms-keys"
 	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances"
 	DiscoverySecretsManagerSecrets      = "secretsmanager-secrets"
@@ -90,6 +91,7 @@ var Auto = []string{
 	DiscoveryAPIGatewayRestAPIs,
 	DiscoveryELBLoadBalancers,
 	DiscoveryESDomains,
+	DiscoveryOpenSearchDomains,
 	DiscoveryKMSKeys,
 	DiscoverySagemakerNotebookInstances,
 	DiscoverySecretsManagerSecrets,
@@ -120,6 +122,7 @@ var AllAPIResources = []string{
 	DiscoveryAPIGatewayRestAPIs,
 	DiscoveryELBLoadBalancers,
 	DiscoveryESDomains,
+	DiscoveryOpenSearchDomains,
 	DiscoveryKMSKeys,
 	DiscoverySagemakerNotebookInstances,
 	DiscoverySecretsManagerSecrets,
@@ -911,6 +914,36 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				awsObject: awsObject{
 					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
 					id: f.Name.Data, service: "es", objectType: "domain",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryOpenSearchDomains:
+		res, err := NewResource(runtime, "aws.opensearch", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		os := res.(*mqlAwsOpensearch)
+
+		ras := os.GetDomains()
+		if ras == nil {
+			return assetList, nil
+		}
+
+		for i := range ras.Data {
+			f := ras.Data[i].(*mqlAwsOpensearchDomain)
+
+			var tags map[string]string
+			tagsResult := f.GetTags()
+			if tagsResult != nil && tagsResult.Data != nil {
+				tags = mapStringInterfaceToStringString(tagsResult.Data)
+			}
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "opensearch", objectType: "domain",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
