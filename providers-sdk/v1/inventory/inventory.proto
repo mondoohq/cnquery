@@ -277,16 +277,18 @@ message TypeMeta {
   // Kind is a string value representing the REST resource this object 
   // represents. Servers may infer this from the endpoint the client submits 
   // requests to. Cannot be updated. In CamelCase.
-  // More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture
-  // /api-conventions.md#types-kinds
+  // More info:
+  // https://github.com/kubernetes/community/blob/master/contributors/
+  // devel/sig-architecture/api-conventions.md#types-kinds
   // +optional
   string kind = 1;
 
   // APIVersion defines the versioned schema of this representation of an 
   // object. Servers should convert recognized schemas to the latest internal 
   // value, and may reject unrecognized values.
-  // More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture
-  // /api-conventions.md#resources
+  // More info:
+  // https://github.com/kubernetes/community/blob/master/contributors/
+  // devel/sig-architecture/api-conventions.md#resources
   // +optional
   // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string apiVersion = 2;
@@ -372,8 +374,9 @@ message OwnerReference {
   string apiVersion = 5;
 
   // Kind of the referent.
-  // More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture
-  // /api-conventions.md#types-kinds
+  // More info:
+  // https://github.com/kubernetes/community/blob/master/contributors/
+  // devel/sig-architecture/api-conventions.md#types-kinds
   string kind = 1;
 
   // Name of the referent.
@@ -388,8 +391,9 @@ message OwnerReference {
 // Inventory declares the all assets and their credentials
 message Inventory {
   // Standard object's metadata.
-  // More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture
-  // /api-conventions.md#metadata
+  // More info:
+  // https://github.com/kubernetes/community/blob/master/contributors/
+  // devel/sig-architecture/api-conventions.md#metadata
   ObjectMeta metadata = 1;
 
   // Specification of the desired behavior of the Inventory.
