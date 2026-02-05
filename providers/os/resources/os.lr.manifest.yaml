@@ -570,7 +570,7 @@ resources:
     fields:
       entries: {}
       files: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: latest
   limits.entry:
     fields:
       domain: {}
@@ -580,7 +580,7 @@ resources:
       type: {}
       value: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: latest
   logindefs:
     fields:
       content: {}

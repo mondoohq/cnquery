@@ -221,3 +221,266 @@ func TestParseLimitsLine_MsgQueue(t *testing.T) {
 	assert.Equal(t, "msgqueue", matches[3]) // item
 	assert.Equal(t, "819200", matches[4])   // value
 }
+
+// Tests for parseLimitsLines function
+
+func TestParseLimitsLines_EmptyContent(t *testing.T) {
+	entries := parseLimitsLines("/etc/security/limits.conf", "")
+	assert.Empty(t, entries)
+}
+
+func TestParseLimitsLines_OnlyComments(t *testing.T) {
+	content := `# This is a comment
+# Another comment
+# /etc/security/limits.conf`
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	assert.Empty(t, entries)
+}
+
+func TestParseLimitsLines_OnlyEmptyLines(t *testing.T) {
+	content := `
+
+
+`
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+	assert.Empty(t, entries)
+}
+
+func TestParseLimitsLines_SingleEntry(t *testing.T) {
+	content := "* soft nofile 65536"
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+
+	require.Len(t, entries, 1)
+	assert.Equal(t, "/etc/security/limits.conf", entries[0].File)
+	assert.Equal(t, 1, entries[0].LineNumber)
+	assert.Equal(t, "*", entries[0].Domain)
+	assert.Equal(t, "soft", entries[0].Type)
+	assert.Equal(t, "nofile", entries[0].Item)
+	assert.Equal(t, "65536", entries[0].Value)
+}
+
+func TestParseLimitsLines_MultipleEntries(t *testing.T) {
+	content := `* soft nofile 65536
+* hard nofile 65536
+@admin soft nproc unlimited`
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+
+	require.Len(t, entries, 3)
+
+	// First entry
+	assert.Equal(t, 1, entries[0].LineNumber)
+	assert.Equal(t, "*", entries[0].Domain)
+	assert.Equal(t, "soft", entries[0].Type)
+	assert.Equal(t, "nofile", entries[0].Item)
+	assert.Equal(t, "65536", entries[0].Value)
+
+	// Second entry
+	assert.Equal(t, 2, entries[1].LineNumber)
+	assert.Equal(t, "*", entries[1].Domain)
+	assert.Equal(t, "hard", entries[1].Type)
+	assert.Equal(t, "nofile", entries[1].Item)
+	assert.Equal(t, "65536", entries[1].Value)
+
+	// Third entry
+	assert.Equal(t, 3, entries[2].LineNumber)
+	assert.Equal(t, "@admin", entries[2].Domain)
+	assert.Equal(t, "soft", entries[2].Type)
+	assert.Equal(t, "nproc", entries[2].Item)
+	assert.Equal(t, "unlimited", entries[2].Value)
+}
+
+func TestParseLimitsLines_MixedWithComments(t *testing.T) {
+	content := `# /etc/security/limits.conf
+#
+# This file sets resource limits for users
+#
+* soft core 0
+# Increase file limits for all users
+* soft nofile 65536
+* hard nofile 65536`
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+
+	require.Len(t, entries, 3)
+
+	// Line numbers should skip comments
+	assert.Equal(t, 5, entries[0].LineNumber)
+	assert.Equal(t, "core", entries[0].Item)
+
+	assert.Equal(t, 7, entries[1].LineNumber)
+	assert.Equal(t, "nofile", entries[1].Item)
+	assert.Equal(t, "soft", entries[1].Type)
+
+	assert.Equal(t, 8, entries[2].LineNumber)
+	assert.Equal(t, "nofile", entries[2].Item)
+	assert.Equal(t, "hard", entries[2].Type)
+}
+
+func TestParseLimitsLines_MixedWithEmptyLines(t *testing.T) {
+	content := `* soft core 0
+
+* hard core unlimited
+
+@developers - nofile 100000`
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+
+	require.Len(t, entries, 3)
+
+	assert.Equal(t, 1, entries[0].LineNumber)
+	assert.Equal(t, 3, entries[1].LineNumber)
+	assert.Equal(t, 5, entries[2].LineNumber)
+}
+
+func TestParseLimitsLines_SkipsInvalidLines(t *testing.T) {
+	content := `* soft nofile 65536
+invalid line here
+* hard nofile 65536
+another invalid
+root - nproc unlimited`
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+
+	require.Len(t, entries, 3)
+
+	assert.Equal(t, 1, entries[0].LineNumber)
+	assert.Equal(t, "soft", entries[0].Type)
+
+	assert.Equal(t, 3, entries[1].LineNumber)
+	assert.Equal(t, "hard", entries[1].Type)
+
+	assert.Equal(t, 5, entries[2].LineNumber)
+	assert.Equal(t, "root", entries[2].Domain)
+}
+
+func TestParseLimitsLines_RealWorldConfig(t *testing.T) {
+	// Simulates a real-world limits.conf file
+	content := `# /etc/security/limits.conf
+#
+#Each line describes a limit for a user in the form:
+#
+#<domain>        <type>  <item>  <value>
+#
+#Where:
+#<domain> can be:
+#        - a user name
+#        - a group name, with @group syntax
+#        - the wildcard *, for default entry
+#
+#<type> can have the two values:
+#        - "soft" for enforcing the soft limits
+#        - "hard" for enforcing hard limits
+#
+#<item> can be one of the following:
+#        - core - limits the core file size (KB)
+#        - nofile - max number of open files
+#        - nproc - max number of processes
+#
+
+* soft core 0
+* hard core unlimited
+* soft nofile 65536
+* hard nofile 65536
+@wheel - nproc unlimited
+root soft nofile 1000000
+root hard nofile 1000000
+
+# End of file`
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+
+	require.Len(t, entries, 7)
+
+	// Verify correct parsing
+	assert.Equal(t, "*", entries[0].Domain)
+	assert.Equal(t, "core", entries[0].Item)
+	assert.Equal(t, "0", entries[0].Value)
+
+	assert.Equal(t, "*", entries[1].Domain)
+	assert.Equal(t, "core", entries[1].Item)
+	assert.Equal(t, "unlimited", entries[1].Value)
+
+	assert.Equal(t, "@wheel", entries[4].Domain)
+	assert.Equal(t, "-", entries[4].Type)
+	assert.Equal(t, "nproc", entries[4].Item)
+
+	assert.Equal(t, "root", entries[5].Domain)
+	assert.Equal(t, "1000000", entries[5].Value)
+}
+
+func TestParseLimitsLines_FilePath(t *testing.T) {
+	content := "* soft nofile 65536"
+
+	// Test with main config file
+	entries1 := parseLimitsLines("/etc/security/limits.conf", content)
+	assert.Equal(t, "/etc/security/limits.conf", entries1[0].File)
+
+	// Test with limits.d file
+	entries2 := parseLimitsLines("/etc/security/limits.d/99-custom.conf", content)
+	assert.Equal(t, "/etc/security/limits.d/99-custom.conf", entries2[0].File)
+}
+
+func TestParseLimitsLines_AllDomainTypes(t *testing.T) {
+	content := `* soft nofile 1000
+root soft nofile 2000
+@admin soft nofile 3000
+%group soft nofile 4000`
+
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+
+	require.Len(t, entries, 4)
+	assert.Equal(t, "*", entries[0].Domain)      // wildcard
+	assert.Equal(t, "root", entries[1].Domain)   // user
+	assert.Equal(t, "@admin", entries[2].Domain) // group with @
+	assert.Equal(t, "%group", entries[3].Domain) // group with %
+}
+
+func TestParseLimitsLines_AllLimitTypes(t *testing.T) {
+	content := `* soft nofile 1000
+* hard nofile 2000
+* - nofile 3000`
+
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+
+	require.Len(t, entries, 3)
+	assert.Equal(t, "soft", entries[0].Type)
+	assert.Equal(t, "hard", entries[1].Type)
+	assert.Equal(t, "-", entries[2].Type) // both soft and hard
+}
+
+func TestParseLimitsLines_AllCommonItems(t *testing.T) {
+	content := `* soft core 0
+* soft data unlimited
+* soft fsize unlimited
+* soft memlock 64
+* soft nofile 1024
+* soft rss 10000
+* soft stack 8192
+* soft cpu 60
+* soft nproc 50
+* soft as unlimited
+* soft maxlogins 4
+* soft maxsyslogins 10
+* soft priority 0
+* soft locks 100
+* soft sigpending 1024
+* soft msgqueue 819200
+* soft nice 0
+* soft rtprio 0`
+
+	entries := parseLimitsLines("/etc/security/limits.conf", content)
+
+	require.Len(t, entries, 18)
+
+	// Verify all items were parsed
+	items := make([]string, len(entries))
+	for i, e := range entries {
+		items[i] = e.Item
+	}
+
+	expectedItems := []string{
+		"core", "data", "fsize", "memlock", "nofile", "rss", "stack",
+		"cpu", "nproc", "as", "maxlogins", "maxsyslogins", "priority",
+		"locks", "sigpending", "msgqueue", "nice", "rtprio",
+	}
+
+	for _, expected := range expectedItems {
+		assert.Contains(t, items, expected, "missing item: %s", expected)
+	}
+}

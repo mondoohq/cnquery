@@ -4,12 +4,13 @@
 package resources
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12/checksums"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
@@ -31,12 +32,7 @@ func initLimits(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 }
 
 func (l *mqlLimits) id() (string, error) {
-	checksum := checksums.New
-	for i := range l.Files.Data {
-		path := l.Files.Data[i].(*mqlFile).Path.Data
-		checksum = checksum.Add(path)
-	}
-	return checksum.String(), nil
+	return "limits", nil
 }
 
 func (le *mqlLimitsEntry) id() (string, error) {
@@ -122,35 +118,54 @@ func (l *mqlLimits) entries(files []any) ([]any, error) {
 	conn := l.MqlRuntime.Connection.(shared.Connection)
 
 	var allEntries []any
+	var errs []error
 
 	for i := range files {
 		file := files[i].(*mqlFile)
 
 		f, err := conn.FileSystem().Open(file.Path.Data)
 		if err != nil {
-			return nil, err
+			errs = append(errs, fmt.Errorf("failed to open %s: %w", file.Path.Data, err))
+			continue
 		}
 
 		raw, err := io.ReadAll(f)
 		f.Close()
 		if err != nil {
-			return nil, err
+			errs = append(errs, fmt.Errorf("failed to read %s: %w", file.Path.Data, err))
+			continue
 		}
 
 		entries, err := parseLimitsContent(l.MqlRuntime, file.Path.Data, string(raw))
 		if err != nil {
-			return nil, err
+			errs = append(errs, fmt.Errorf("failed to parse %s: %w", file.Path.Data, err))
+			continue
 		}
 
 		allEntries = append(allEntries, entries...)
 	}
 
+	if len(errs) > 0 {
+		return allEntries, errors.Join(errs...)
+	}
+
 	return allEntries, nil
 }
 
-// parseLimitsContent parses the content of a limits file
-func parseLimitsContent(runtime *plugin.Runtime, filePath string, content string) ([]any, error) {
-	var entries []any
+// limitsEntry represents a parsed limits entry (used for testing)
+type limitsEntry struct {
+	File       string
+	LineNumber int
+	Domain     string
+	Type       string
+	Item       string
+	Value      string
+}
+
+// parseLimitsLines parses the content of a limits file and returns structured entries
+// This function is separated from resource creation for testability
+func parseLimitsLines(filePath string, content string) []limitsEntry {
+	var entries []limitsEntry
 	lines := strings.Split(content, "\n")
 
 	for lineNum, line := range lines {
@@ -169,19 +184,32 @@ func parseLimitsContent(runtime *plugin.Runtime, filePath string, content string
 			continue
 		}
 
-		// Extract fields: domain, type, item, value
-		domain := matches[1]
-		limitType := matches[2]
-		item := matches[3]
-		value := matches[4]
+		entries = append(entries, limitsEntry{
+			File:       filePath,
+			LineNumber: actualLineNum,
+			Domain:     matches[1],
+			Type:       matches[2],
+			Item:       matches[3],
+			Value:      matches[4],
+		})
+	}
 
+	return entries
+}
+
+// parseLimitsContent parses the content of a limits file and creates MQL resources
+func parseLimitsContent(runtime *plugin.Runtime, filePath string, content string) ([]any, error) {
+	parsed := parseLimitsLines(filePath, content)
+	var entries []any
+
+	for _, e := range parsed {
 		entry, err := CreateResource(runtime, "limits.entry", map[string]*llx.RawData{
-			"file":       llx.StringData(filePath),
-			"lineNumber": llx.IntData(int64(actualLineNum)),
-			"domain":     llx.StringData(domain),
-			"type":       llx.StringData(limitType),
-			"item":       llx.StringData(item),
-			"value":      llx.StringData(value),
+			"file":       llx.StringData(e.File),
+			"lineNumber": llx.IntData(int64(e.LineNumber)),
+			"domain":     llx.StringData(e.Domain),
+			"type":       llx.StringData(e.Type),
+			"item":       llx.StringData(e.Item),
+			"value":      llx.StringData(e.Value),
 		})
 		if err != nil {
 			return nil, err
