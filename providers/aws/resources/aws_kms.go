@@ -284,10 +284,7 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		}
 	}
 
-	// Key not found in cache - return partial resource with what we know
-	log.Debug().Str("arn", normalizedArn).Msg("KMS key not found in cache")
-	args["id"] = llx.StringData(extractKmsKeyId(arnVal.Resource))
-	return args, nil, nil
+	return nil, nil, errors.New("key not found")
 }
 
 // extractKmsKeyId extracts the key ID from an ARN resource string like "key/uuid"
