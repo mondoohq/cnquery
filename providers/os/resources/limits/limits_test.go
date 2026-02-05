@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v12/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v12/providers/os/resources"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/limits"
 )
 
 func TestLimitsParser_MainConfig(t *testing.T) {
@@ -25,7 +25,7 @@ func TestLimitsParser_MainConfig(t *testing.T) {
 	content, err := io.ReadAll(f)
 	require.NoError(t, err)
 
-	entries := resources.ParseLimitsLines("/etc/security/limits.conf", string(content))
+	entries := limits.ParseLines("/etc/security/limits.conf", string(content))
 
 	require.Len(t, entries, 6)
 
@@ -72,7 +72,7 @@ func TestLimitsParser_CustomConfig(t *testing.T) {
 	content, err := io.ReadAll(f)
 	require.NoError(t, err)
 
-	entries := resources.ParseLimitsLines("/etc/security/limits.d/99-custom.conf", string(content))
+	entries := limits.ParseLines("/etc/security/limits.d/99-custom.conf", string(content))
 
 	require.Len(t, entries, 3)
 

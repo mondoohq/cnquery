@@ -6,23 +6,17 @@ package resources
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/limits"
 )
 
 const (
 	defaultLimitsFile = "/etc/security/limits.conf"
 	defaultLimitsDir  = "/etc/security/limits.d"
-)
-
-var (
-	// Regular expression for parsing limits entries
-	// Format: <domain> <type> <item> <value>
-	limitsEntryRegex = regexp.MustCompile(`^(\S+)\s+(soft|hard|-)\s+(\S+)\s+(\S+)`)
 )
 
 func initLimits(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -141,54 +135,9 @@ func (l *mqlLimits) entries(files []any) ([]any, error) {
 	return allEntries, nil
 }
 
-// LimitsEntry represents a parsed limits entry
-type LimitsEntry struct {
-	File       string
-	LineNumber int
-	Domain     string
-	Type       string
-	Item       string
-	Value      string
-}
-
-// ParseLimitsLines parses the content of a limits file and returns structured entries
-// This function is separated from resource creation for testability
-func ParseLimitsLines(filePath string, content string) []LimitsEntry {
-	var entries []LimitsEntry
-	lines := strings.Split(content, "\n")
-
-	for lineNum, line := range lines {
-		actualLineNum := lineNum + 1
-
-		// Skip empty lines and comments
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-
-		// Parse the line using regex
-		matches := limitsEntryRegex.FindStringSubmatch(line)
-		if matches == nil {
-			// Invalid format, skip
-			continue
-		}
-
-		entries = append(entries, LimitsEntry{
-			File:       filePath,
-			LineNumber: actualLineNum,
-			Domain:     matches[1],
-			Type:       matches[2],
-			Item:       matches[3],
-			Value:      matches[4],
-		})
-	}
-
-	return entries
-}
-
 // parseLimitsContent parses the content of a limits file and creates MQL resources
 func parseLimitsContent(runtime *plugin.Runtime, filePath string, content string) ([]any, error) {
-	parsed := ParseLimitsLines(filePath, content)
+	parsed := limits.ParseLines(filePath, content)
 	var entries []any
 
 	for _, e := range parsed {

@@ -9,11 +9,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v12/providers/os/resources/limits"
 )
 
 func TestParseLimitsLine_Wildcard(t *testing.T) {
 	content := "* soft core 0"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "*", matches[1])    // domain
@@ -24,7 +25,7 @@ func TestParseLimitsLine_Wildcard(t *testing.T) {
 
 func TestParseLimitsLine_HardLimit(t *testing.T) {
 	content := "* hard rss 10000"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "*", matches[1])     // domain
@@ -35,7 +36,7 @@ func TestParseLimitsLine_HardLimit(t *testing.T) {
 
 func TestParseLimitsLine_BothType(t *testing.T) {
 	content := "@student - maxlogins 4"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "@student", matches[1])  // domain (group)
@@ -46,7 +47,7 @@ func TestParseLimitsLine_BothType(t *testing.T) {
 
 func TestParseLimitsLine_Username(t *testing.T) {
 	content := "john soft nofile 4096"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "john", matches[1])   // domain (user)
@@ -57,7 +58,7 @@ func TestParseLimitsLine_Username(t *testing.T) {
 
 func TestParseLimitsLine_GroupName(t *testing.T) {
 	content := "@admin hard nproc 50"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "@admin", matches[1]) // domain (group)
@@ -68,7 +69,7 @@ func TestParseLimitsLine_GroupName(t *testing.T) {
 
 func TestParseLimitsLine_Unlimited(t *testing.T) {
 	content := "root soft core unlimited"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "root", matches[1])      // domain
@@ -79,7 +80,7 @@ func TestParseLimitsLine_Unlimited(t *testing.T) {
 
 func TestParseLimitsLine_MemoryLock(t *testing.T) {
 	content := "* hard memlock 64"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "*", matches[1])       // domain
@@ -90,7 +91,7 @@ func TestParseLimitsLine_MemoryLock(t *testing.T) {
 
 func TestParseLimitsLine_Stack(t *testing.T) {
 	content := "apache soft stack 8192"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "apache", matches[1]) // domain
@@ -101,7 +102,7 @@ func TestParseLimitsLine_Stack(t *testing.T) {
 
 func TestParseLimitsLine_CPUTime(t *testing.T) {
 	content := "@users hard cpu 60"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "@users", matches[1]) // domain
@@ -112,7 +113,7 @@ func TestParseLimitsLine_CPUTime(t *testing.T) {
 
 func TestParseLimitsLine_Priority(t *testing.T) {
 	content := "@realtime hard priority 10"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "@realtime", matches[1]) // domain
@@ -123,7 +124,7 @@ func TestParseLimitsLine_Priority(t *testing.T) {
 
 func TestParseLimitsLine_Nice(t *testing.T) {
 	content := "postgres - nice -10"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "postgres", matches[1]) // domain
@@ -134,7 +135,7 @@ func TestParseLimitsLine_Nice(t *testing.T) {
 
 func TestParseLimitsLine_Comment(t *testing.T) {
 	content := "# This is a comment"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	// Comments should not match
 	assert.Nil(t, matches)
@@ -142,7 +143,7 @@ func TestParseLimitsLine_Comment(t *testing.T) {
 
 func TestParseLimitsLine_EmptyLine(t *testing.T) {
 	content := ""
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	// Empty lines should not match
 	assert.Nil(t, matches)
@@ -150,7 +151,7 @@ func TestParseLimitsLine_EmptyLine(t *testing.T) {
 
 func TestParseLimitsLine_InvalidFormat(t *testing.T) {
 	content := "invalid line without proper format"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	// Invalid format should not match
 	assert.Nil(t, matches)
@@ -158,7 +159,7 @@ func TestParseLimitsLine_InvalidFormat(t *testing.T) {
 
 func TestParseLimitsLine_ExtraWhitespace(t *testing.T) {
 	content := "  *     soft     nofile     65536  "
-	matches := limitsEntryRegex.FindStringSubmatch(strings.TrimSpace(content))
+	matches := limits.EntryRegex.FindStringSubmatch(strings.TrimSpace(content))
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "*", matches[1])      // domain
@@ -169,7 +170,7 @@ func TestParseLimitsLine_ExtraWhitespace(t *testing.T) {
 
 func TestParseLimitsLine_FileSize(t *testing.T) {
 	content := "* hard fsize 1000000"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "*", matches[1])       // domain
@@ -180,7 +181,7 @@ func TestParseLimitsLine_FileSize(t *testing.T) {
 
 func TestParseLimitsLine_DataSegment(t *testing.T) {
 	content := "oracle soft data unlimited"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "oracle", matches[1])    // domain
@@ -191,7 +192,7 @@ func TestParseLimitsLine_DataSegment(t *testing.T) {
 
 func TestParseLimitsLine_Locks(t *testing.T) {
 	content := "database hard locks 2048"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "database", matches[1]) // domain
@@ -202,7 +203,7 @@ func TestParseLimitsLine_Locks(t *testing.T) {
 
 func TestParseLimitsLine_SigPending(t *testing.T) {
 	content := "* soft sigpending 1024"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "*", matches[1])          // domain
@@ -213,7 +214,7 @@ func TestParseLimitsLine_SigPending(t *testing.T) {
 
 func TestParseLimitsLine_MsgQueue(t *testing.T) {
 	content := "* soft msgqueue 819200"
-	matches := limitsEntryRegex.FindStringSubmatch(content)
+	matches := limits.EntryRegex.FindStringSubmatch(content)
 
 	require.NotNil(t, matches)
 	assert.Equal(t, "*", matches[1])        // domain
@@ -222,10 +223,10 @@ func TestParseLimitsLine_MsgQueue(t *testing.T) {
 	assert.Equal(t, "819200", matches[4])   // value
 }
 
-// Tests for parseLimitsLines function
+// Tests for limits.ParseLines function
 
 func TestParseLimitsLines_EmptyContent(t *testing.T) {
-	entries := ParseLimitsLines("/etc/security/limits.conf", "")
+	entries := limits.ParseLines("/etc/security/limits.conf", "")
 	assert.Empty(t, entries)
 }
 
@@ -233,7 +234,7 @@ func TestParseLimitsLines_OnlyComments(t *testing.T) {
 	content := `# This is a comment
 # Another comment
 # /etc/security/limits.conf`
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 	assert.Empty(t, entries)
 }
 
@@ -242,13 +243,13 @@ func TestParseLimitsLines_OnlyEmptyLines(t *testing.T) {
 
 
 `
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 	assert.Empty(t, entries)
 }
 
 func TestParseLimitsLines_SingleEntry(t *testing.T) {
 	content := "* soft nofile 65536"
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 1)
 	assert.Equal(t, "/etc/security/limits.conf", entries[0].File)
@@ -263,7 +264,7 @@ func TestParseLimitsLines_MultipleEntries(t *testing.T) {
 	content := `* soft nofile 65536
 * hard nofile 65536
 @admin soft nproc unlimited`
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 3)
 
@@ -298,7 +299,7 @@ func TestParseLimitsLines_MixedWithComments(t *testing.T) {
 # Increase file limits for all users
 * soft nofile 65536
 * hard nofile 65536`
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 3)
 
@@ -321,7 +322,7 @@ func TestParseLimitsLines_MixedWithEmptyLines(t *testing.T) {
 * hard core unlimited
 
 @developers - nofile 100000`
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 3)
 
@@ -336,7 +337,7 @@ invalid line here
 * hard nofile 65536
 another invalid
 root - nproc unlimited`
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 3)
 
@@ -383,7 +384,7 @@ root soft nofile 1000000
 root hard nofile 1000000
 
 # End of file`
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 7)
 
@@ -408,11 +409,11 @@ func TestParseLimitsLines_FilePath(t *testing.T) {
 	content := "* soft nofile 65536"
 
 	// Test with main config file
-	entries1 := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries1 := limits.ParseLines("/etc/security/limits.conf", content)
 	assert.Equal(t, "/etc/security/limits.conf", entries1[0].File)
 
 	// Test with limits.d file
-	entries2 := ParseLimitsLines("/etc/security/limits.d/99-custom.conf", content)
+	entries2 := limits.ParseLines("/etc/security/limits.d/99-custom.conf", content)
 	assert.Equal(t, "/etc/security/limits.d/99-custom.conf", entries2[0].File)
 }
 
@@ -422,7 +423,7 @@ root soft nofile 2000
 @admin soft nofile 3000
 %group soft nofile 4000`
 
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 4)
 	assert.Equal(t, "*", entries[0].Domain)      // wildcard
@@ -436,7 +437,7 @@ func TestParseLimitsLines_AllLimitTypes(t *testing.T) {
 * hard nofile 2000
 * - nofile 3000`
 
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 3)
 	assert.Equal(t, "soft", entries[0].Type)
@@ -464,7 +465,7 @@ func TestParseLimitsLines_AllCommonItems(t *testing.T) {
 * soft nice 0
 * soft rtprio 0`
 
-	entries := ParseLimitsLines("/etc/security/limits.conf", content)
+	entries := limits.ParseLines("/etc/security/limits.conf", content)
 
 	require.Len(t, entries, 18)
 
