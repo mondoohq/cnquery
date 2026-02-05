@@ -32,7 +32,7 @@ func (le *mqlLimitsEntry) id() (string, error) {
 	lineNum := strconv.FormatInt(le.LineNumber.Data, 10)
 
 	// Create unique ID from file path and line number
-	id := file + ":" + lineNum
+	id := file.Path.Data + ":" + lineNum
 
 	return id, nil
 }
@@ -119,7 +119,7 @@ func (l *mqlLimits) entries(files []any) ([]any, error) {
 			continue
 		}
 
-		entries, err := parseLimitsContent(l.MqlRuntime, file.Path.Data, content.Data)
+		entries, err := parseLimitsContent(l.MqlRuntime, file, content.Data)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to parse %s: %w", file.Path.Data, err))
 			continue
@@ -136,13 +136,13 @@ func (l *mqlLimits) entries(files []any) ([]any, error) {
 }
 
 // parseLimitsContent parses the content of a limits file and creates MQL resources
-func parseLimitsContent(runtime *plugin.Runtime, filePath string, content string) ([]any, error) {
-	parsed := limits.ParseLines(filePath, content)
+func parseLimitsContent(runtime *plugin.Runtime, file *mqlFile, content string) ([]any, error) {
+	parsed := limits.ParseLines(file.Path.Data, content)
 	var entries []any
 
 	for _, e := range parsed {
 		entry, err := CreateResource(runtime, "limits.entry", map[string]*llx.RawData{
-			"file":       llx.StringData(e.File),
+			"file":       llx.ResourceData(file, "file"),
 			"lineNumber": llx.IntData(int64(e.LineNumber)),
 			"domain":     llx.StringData(e.Domain),
 			"type":       llx.StringData(e.Type),

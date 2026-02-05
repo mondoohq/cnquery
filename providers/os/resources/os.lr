@@ -1273,7 +1273,7 @@ limits {
 // Resource limit entry
 private limits.entry @defaults("domain item") {
   // File where this entry is defined
-  file string
+  file file
   // Line number in the file
   lineNumber int
   // Domain (username, @groupname, *, %)

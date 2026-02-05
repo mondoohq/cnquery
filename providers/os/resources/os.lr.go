@@ -2192,7 +2192,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlLimits).GetEntries()).ToDataRes(types.Array(types.Resource("limits.entry")))
 	},
 	"limits.entry.file": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlLimitsEntry).GetFile()).ToDataRes(types.String)
+		return (r.(*mqlLimitsEntry).GetFile()).ToDataRes(types.Resource("file"))
 	},
 	"limits.entry.lineNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLimitsEntry).GetLineNumber()).ToDataRes(types.Int)
@@ -5456,7 +5456,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"limits.entry.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlLimitsEntry).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlLimitsEntry).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
 	},
 	"limits.entry.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14946,7 +14946,7 @@ type mqlLimitsEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlLimitsEntryInternal it will be used here
-	File       plugin.TValue[string]
+	File       plugin.TValue[*mqlFile]
 	LineNumber plugin.TValue[int64]
 	Domain     plugin.TValue[string]
 	Type       plugin.TValue[string]
@@ -14991,7 +14991,7 @@ func (c *mqlLimitsEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlLimitsEntry) GetFile() *plugin.TValue[string] {
+func (c *mqlLimitsEntry) GetFile() *plugin.TValue[*mqlFile] {
 	return &c.File
 }
 
