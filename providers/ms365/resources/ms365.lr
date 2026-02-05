@@ -242,6 +242,10 @@ microsoft.identityAndAccess {
   roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
   // Identity and sign-in policies
   identityAndSignIn() microsoft.identityAndAccess.identityAndSignIn
+  // List of mobile device management policies
+  mobileDeviceManagementPolicies() []microsoft.identityAndAccess.mobileDeviceManagementPolicy
+  // List of mobility management policies
+  mobilityManagementPolicies() []microsoft.identityAndAccess.mobilityManagementPolicy
 }
 
 // Represents an instance of a role eligibility in PIM
@@ -264,6 +268,62 @@ private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("m
   memberType string
   // The identifier of the role eligibility schedule from which this instance is created
   roleEligibilityScheduleId string
+}
+
+// Mobile device management policy
+private microsoft.identityAndAccess.mobileDeviceManagementPolicy @defaults("id displayName appliesTo") {
+  // The unique identifier for the policy
+  id string
+  // The policy display name
+  displayName string
+  // The policy description
+  description string
+  // Identifies whether the policy applies to all users or selected groups
+  appliesTo string
+  // The URL endpoint for compliance check
+  complianceUrl string
+  // The URL endpoint for discovery
+  discoveryUrl string
+  // The URL for terms of use
+  termsOfUseUrl string
+  // List of groups included in the policy
+  includedGroups []microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup
+}
+
+// Group included in a mobile device management policy
+private microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup @defaults("id displayName") {
+  // The unique identifier for the group
+  id string
+  // The group display name
+  displayName string
+}
+
+// Mobility management policy
+private microsoft.identityAndAccess.mobilityManagementPolicy @defaults("id displayName appliesTo") {
+  // The unique identifier for the policy
+  id string
+  // The policy display name
+  displayName string
+  // The policy description
+  description string
+  // Identifies whether the policy applies to all users or selected groups
+  appliesTo string
+  // The URL endpoint for compliance check
+  complianceUrl string
+  // The URL endpoint for discovery
+  discoveryUrl string
+  // The URL for terms of use
+  termsOfUseUrl string
+  // List of groups included in the policy
+  includedGroups []microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup
+}
+
+// Group included in a mobility management policy
+private microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup @defaults("id displayName") {
+  // The unique identifier for the group
+  id string
+  // The group display name
+  displayName string
 }
 
 // A PIM role management policy for Microsoft Entra ID roles

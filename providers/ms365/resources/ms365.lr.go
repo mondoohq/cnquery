@@ -34,6 +34,10 @@ const (
 	ResourceMicrosoftUsers                                                                                   string = "microsoft.users"
 	ResourceMicrosoftIdentityAndAccess                                                                       string = "microsoft.identityAndAccess"
 	ResourceMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance                                        string = "microsoft.identityAndAccess.roleEligibilityScheduleInstance"
+	ResourceMicrosoftIdentityAndAccessMobileDeviceManagementPolicy                                           string = "microsoft.identityAndAccess.mobileDeviceManagementPolicy"
+	ResourceMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup                              string = "microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup"
+	ResourceMicrosoftIdentityAndAccessMobilityManagementPolicy                                               string = "microsoft.identityAndAccess.mobilityManagementPolicy"
+	ResourceMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup                                  string = "microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup"
 	ResourceMicrosoftIdentityAndAccessPolicy                                                                 string = "microsoft.identityAndAccess.policy"
 	ResourceMicrosoftIdentityAndAccessPolicyRule                                                             string = "microsoft.identityAndAccess.policy.rule"
 	ResourceMicrosoftIdentityAndAccessPolicyRuleTarget                                                       string = "microsoft.identityAndAccess.policy.ruleTarget"
@@ -205,6 +209,22 @@ func init() {
 		"microsoft.identityAndAccess.roleEligibilityScheduleInstance": {
 			// to override args, implement: initMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance,
+		},
+		"microsoft.identityAndAccess.mobileDeviceManagementPolicy": {
+			// to override args, implement: initMicrosoftIdentityAndAccessMobileDeviceManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessMobileDeviceManagementPolicy,
+		},
+		"microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup": {
+			// to override args, implement: initMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup,
+		},
+		"microsoft.identityAndAccess.mobilityManagementPolicy": {
+			// to override args, implement: initMicrosoftIdentityAndAccessMobilityManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessMobilityManagementPolicy,
+		},
+		"microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup": {
+			// to override args, implement: initMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup,
 		},
 		"microsoft.identityAndAccess.policy": {
 			// to override args, implement: initMicrosoftIdentityAndAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -933,6 +953,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess.identityAndSignIn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccess).GetIdentityAndSignIn()).ToDataRes(types.Resource("microsoft.identityAndAccess.identityAndSignIn"))
 	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccess).GetMobileDeviceManagementPolicies()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.mobileDeviceManagementPolicy")))
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccess).GetMobilityManagementPolicies()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.mobilityManagementPolicy")))
+	},
 	"microsoft.identityAndAccess.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccess).GetList()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.policy")))
 	},
@@ -962,6 +988,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleEligibilityScheduleId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetRoleEligibilityScheduleId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.appliesTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).GetAppliesTo()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.complianceUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).GetComplianceUrl()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.discoveryUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).GetDiscoveryUrl()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.termsOfUseUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).GetTermsOfUseUrl()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).GetIncludedGroups()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup")))
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.appliesTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).GetAppliesTo()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.complianceUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).GetComplianceUrl()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.discoveryUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).GetDiscoveryUrl()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.termsOfUseUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).GetTermsOfUseUrl()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.includedGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).GetIncludedGroups()).ToDataRes(types.Array(types.Resource("microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup")))
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup).GetDisplayName()).ToDataRes(types.String)
 	},
 	"microsoft.identityAndAccess.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessPolicy).GetId()).ToDataRes(types.String)
@@ -3233,6 +3319,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftIdentityAndAccess).IdentityAndSignIn, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignIn](v.Value, v.Error)
 		return
 	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccess).MobileDeviceManagementPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccess).MobilityManagementPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.identityAndAccess.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccess).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3275,6 +3369,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleEligibilityScheduleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).RoleEligibilityScheduleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.appliesTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).AppliesTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.complianceUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).ComplianceUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.discoveryUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).DiscoveryUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.termsOfUseUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).TermsOfUseUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy).IncludedGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.appliesTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).AppliesTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.complianceUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).ComplianceUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.discoveryUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).DiscoveryUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.termsOfUseUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).TermsOfUseUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.includedGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy).IncludedGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7423,6 +7613,8 @@ type mqlMicrosoftIdentityAndAccess struct {
 	Filter                           plugin.TValue[string]
 	RoleEligibilityScheduleInstances plugin.TValue[[]any]
 	IdentityAndSignIn                plugin.TValue[*mqlMicrosoftIdentityAndAccessIdentityAndSignIn]
+	MobileDeviceManagementPolicies   plugin.TValue[[]any]
+	MobilityManagementPolicies       plugin.TValue[[]any]
 	List                             plugin.TValue[[]any]
 }
 
@@ -7491,6 +7683,38 @@ func (c *mqlMicrosoftIdentityAndAccess) GetIdentityAndSignIn() *plugin.TValue[*m
 		}
 
 		return c.identityAndSignIn()
+	})
+}
+
+func (c *mqlMicrosoftIdentityAndAccess) GetMobileDeviceManagementPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MobileDeviceManagementPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess", c.__id, "mobileDeviceManagementPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mobileDeviceManagementPolicies()
+	})
+}
+
+func (c *mqlMicrosoftIdentityAndAccess) GetMobilityManagementPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MobilityManagementPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess", c.__id, "mobilityManagementPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mobilityManagementPolicies()
 	})
 }
 
@@ -7592,6 +7816,262 @@ func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetMember
 
 func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetRoleEligibilityScheduleId() *plugin.TValue[string] {
 	return &c.RoleEligibilityScheduleId
+}
+
+// mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy for the microsoft.identityAndAccess.mobileDeviceManagementPolicy resource
+type mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyInternal it will be used here
+	Id             plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Description    plugin.TValue[string]
+	AppliesTo      plugin.TValue[string]
+	ComplianceUrl  plugin.TValue[string]
+	DiscoveryUrl   plugin.TValue[string]
+	TermsOfUseUrl  plugin.TValue[string]
+	IncludedGroups plugin.TValue[[]any]
+}
+
+// createMicrosoftIdentityAndAccessMobileDeviceManagementPolicy creates a new instance of this resource
+func createMicrosoftIdentityAndAccessMobileDeviceManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.mobileDeviceManagementPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy) MqlName() string {
+	return "microsoft.identityAndAccess.mobileDeviceManagementPolicy"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy) GetAppliesTo() *plugin.TValue[string] {
+	return &c.AppliesTo
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy) GetComplianceUrl() *plugin.TValue[string] {
+	return &c.ComplianceUrl
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy) GetDiscoveryUrl() *plugin.TValue[string] {
+	return &c.DiscoveryUrl
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy) GetTermsOfUseUrl() *plugin.TValue[string] {
+	return &c.TermsOfUseUrl
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy) GetIncludedGroups() *plugin.TValue[[]any] {
+	return &c.IncludedGroups
+}
+
+// mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup for the microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup resource
+type mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroupInternal it will be used here
+	Id          plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+}
+
+// createMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup creates a new instance of this resource
+func createMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup) MqlName() string {
+	return "microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicyIncludedGroup) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+// mqlMicrosoftIdentityAndAccessMobilityManagementPolicy for the microsoft.identityAndAccess.mobilityManagementPolicy resource
+type mqlMicrosoftIdentityAndAccessMobilityManagementPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftIdentityAndAccessMobilityManagementPolicyInternal it will be used here
+	Id             plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Description    plugin.TValue[string]
+	AppliesTo      plugin.TValue[string]
+	ComplianceUrl  plugin.TValue[string]
+	DiscoveryUrl   plugin.TValue[string]
+	TermsOfUseUrl  plugin.TValue[string]
+	IncludedGroups plugin.TValue[[]any]
+}
+
+// createMicrosoftIdentityAndAccessMobilityManagementPolicy creates a new instance of this resource
+func createMicrosoftIdentityAndAccessMobilityManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessMobilityManagementPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.mobilityManagementPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicy) MqlName() string {
+	return "microsoft.identityAndAccess.mobilityManagementPolicy"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicy) GetAppliesTo() *plugin.TValue[string] {
+	return &c.AppliesTo
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicy) GetComplianceUrl() *plugin.TValue[string] {
+	return &c.ComplianceUrl
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicy) GetDiscoveryUrl() *plugin.TValue[string] {
+	return &c.DiscoveryUrl
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicy) GetTermsOfUseUrl() *plugin.TValue[string] {
+	return &c.TermsOfUseUrl
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicy) GetIncludedGroups() *plugin.TValue[[]any] {
+	return &c.IncludedGroups
+}
+
+// mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup for the microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup resource
+type mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroupInternal it will be used here
+	Id          plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+}
+
+// createMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup creates a new instance of this resource
+func createMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup) MqlName() string {
+	return "microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup"
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftIdentityAndAccessMobilityManagementPolicyIncludedGroup) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
 }
 
 // mqlMicrosoftIdentityAndAccessPolicy for the microsoft.identityAndAccess.policy resource
