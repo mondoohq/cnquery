@@ -1287,7 +1287,7 @@ private limits.entry @defaults("domain item") {
 }
 
 // Sudoers configuration
-sudoers {
+sudoers @defaults("files") {
   init(path? string)
   // List of files that make up the sudoers configuration
   files() []file
