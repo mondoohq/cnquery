@@ -602,6 +602,39 @@
         },
         {
           "Resource": "file",
+          "ID": "/etc/sudoers",
+          "Fields": {
+            "basename": {
+              "type": "\u0007",
+              "value": "sudoers"
+            },
+            "content": {
+              "type": "\u0007",
+              "value": "# /etc/sudoers\n#\n# This file MUST be edited with the 'visudo' command as root.\n\n# Defaults specification\nDefaults env_reset\nDefaults mail_badpass\nDefaults secure_path=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"\nDefaults logfile=/var/log/sudo.log\nDefaults:FULLTIMERS !lecture\nDefaults@webservers log_year\n\n# User alias specification\nUser_Alias ADMINS = alice, bob, charlie\nUser_Alias DEVS = dev1, dev2\n\n# Runas alias specification\nRunas_Alias OPERATORS = root, operator\n\n# Host alias specification\nHost_Alias SERVERS = server1, server2, server3\nHost_Alias WORKSTATIONS = ws1, ws2\n\n# Cmnd alias specification\nCmnd_Alias SHUTDOWN = /sbin/shutdown, /sbin/reboot, /sbin/halt\nCmnd_Alias NETWORKING = /sbin/ifconfig, /sbin/route\n\n# User privilege specification\nroot ALL=(ALL:ALL) ALL\n\n# Members of the admin group may gain root privileges\n%admin ALL=(ALL) ALL\n\n# Members of the sudo group may execute any command\n%sudo ALL=(ALL:ALL) ALL\n\n# ADMINS may run anything without password\nADMINS ALL=(ALL) NOPASSWD: ALL\n\n# DEVS can run specific commands\nDEVS SERVERS=(OPERATORS) NETWORKING\n\n# A user can run shutdown commands on workstations\njohn WORKSTATIONS=(root) NOPASSWD: SHUTDOWN\n"
+            },
+            "exists": {
+              "type": "\u0004",
+              "value": true
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/sudoers"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-r--r-----"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 1200
+            }
+          }
+        },
+        {
+          "Resource": "file",
           "ID": "/etc/ssl/cert.pem",
           "Fields": {
             "content": {

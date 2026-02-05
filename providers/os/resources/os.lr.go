@@ -116,6 +116,10 @@ const (
 	ResourceLogindefs                  string = "logindefs"
 	ResourceLimits                     string = "limits"
 	ResourceLimitsEntry                string = "limits.entry"
+	ResourceSudoers                    string = "sudoers"
+	ResourceSudoersUserSpec            string = "sudoers.userSpec"
+	ResourceSudoersDefault             string = "sudoers.default"
+	ResourceSudoersAlias               string = "sudoers.alias"
 	ResourceLsblk                      string = "lsblk"
 	ResourceLsblkEntry                 string = "lsblk.entry"
 	ResourceModprobe                   string = "modprobe"
@@ -580,6 +584,22 @@ func init() {
 		"limits.entry": {
 			// to override args, implement: initLimitsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createLimitsEntry,
+		},
+		"sudoers": {
+			Init:   initSudoers,
+			Create: createSudoers,
+		},
+		"sudoers.userSpec": {
+			// to override args, implement: initSudoersUserSpec(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSudoersUserSpec,
+		},
+		"sudoers.default": {
+			// to override args, implement: initSudoersDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSudoersDefault,
+		},
+		"sudoers.alias": {
+			// to override args, implement: initSudoersAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSudoersAlias,
 		},
 		"lsblk": {
 			// to override args, implement: initLsblk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2208,6 +2228,87 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"limits.entry.value": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLimitsEntry).GetValue()).ToDataRes(types.String)
+	},
+	"sudoers.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoers).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"sudoers.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoers).GetContent()).ToDataRes(types.String)
+	},
+	"sudoers.userSpecs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoers).GetUserSpecs()).ToDataRes(types.Array(types.Resource("sudoers.userSpec")))
+	},
+	"sudoers.defaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoers).GetDefaults()).ToDataRes(types.Array(types.Resource("sudoers.default")))
+	},
+	"sudoers.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoers).GetAliases()).ToDataRes(types.Array(types.Resource("sudoers.alias")))
+	},
+	"sudoers.userSpec.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersUserSpec).GetFile()).ToDataRes(types.String)
+	},
+	"sudoers.userSpec.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersUserSpec).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"sudoers.userSpec.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersUserSpec).GetUsers()).ToDataRes(types.Array(types.String))
+	},
+	"sudoers.userSpec.hosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersUserSpec).GetHosts()).ToDataRes(types.Array(types.String))
+	},
+	"sudoers.userSpec.runasUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersUserSpec).GetRunasUsers()).ToDataRes(types.Array(types.String))
+	},
+	"sudoers.userSpec.runasGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersUserSpec).GetRunasGroups()).ToDataRes(types.Array(types.String))
+	},
+	"sudoers.userSpec.commands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersUserSpec).GetCommands()).ToDataRes(types.Array(types.String))
+	},
+	"sudoers.userSpec.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersUserSpec).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"sudoers.default.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersDefault).GetFile()).ToDataRes(types.String)
+	},
+	"sudoers.default.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersDefault).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"sudoers.default.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersDefault).GetRaw()).ToDataRes(types.String)
+	},
+	"sudoers.default.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersDefault).GetScope()).ToDataRes(types.String)
+	},
+	"sudoers.default.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersDefault).GetTarget()).ToDataRes(types.String)
+	},
+	"sudoers.default.parameter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersDefault).GetParameter()).ToDataRes(types.String)
+	},
+	"sudoers.default.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersDefault).GetValue()).ToDataRes(types.String)
+	},
+	"sudoers.default.operation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersDefault).GetOperation()).ToDataRes(types.String)
+	},
+	"sudoers.default.negated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersDefault).GetNegated()).ToDataRes(types.Bool)
+	},
+	"sudoers.alias.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersAlias).GetFile()).ToDataRes(types.String)
+	},
+	"sudoers.alias.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersAlias).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"sudoers.alias.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersAlias).GetType()).ToDataRes(types.String)
+	},
+	"sudoers.alias.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersAlias).GetName()).ToDataRes(types.String)
+	},
+	"sudoers.alias.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoersAlias).GetMembers()).ToDataRes(types.Array(types.String))
 	},
 	"lsblk.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLsblk).GetList()).ToDataRes(types.Array(types.Resource("lsblk.entry")))
@@ -5477,6 +5578,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"limits.entry.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLimitsEntry).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoers).__id, ok = v.Value.(string)
+		return
+	},
+	"sudoers.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoers).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudoers.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoers).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.userSpecs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoers).UserSpecs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudoers.defaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoers).Defaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudoers.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoers).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudoers.userSpec.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersUserSpec).__id, ok = v.Value.(string)
+		return
+	},
+	"sudoers.userSpec.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersUserSpec).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.userSpec.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersUserSpec).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sudoers.userSpec.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersUserSpec).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudoers.userSpec.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersUserSpec).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudoers.userSpec.runasUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersUserSpec).RunasUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudoers.userSpec.runasGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersUserSpec).RunasGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudoers.userSpec.commands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersUserSpec).Commands, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudoers.userSpec.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersUserSpec).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudoers.default.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersDefault).__id, ok = v.Value.(string)
+		return
+	},
+	"sudoers.default.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersDefault).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.default.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersDefault).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sudoers.default.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersDefault).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.default.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersDefault).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.default.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersDefault).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.default.parameter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersDefault).Parameter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.default.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersDefault).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.default.operation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersDefault).Operation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.default.negated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersDefault).Negated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"sudoers.alias.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersAlias).__id, ok = v.Value.(string)
+		return
+	},
+	"sudoers.alias.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersAlias).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.alias.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersAlias).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sudoers.alias.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersAlias).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.alias.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersAlias).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudoers.alias.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoersAlias).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"lsblk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15013,6 +15238,387 @@ func (c *mqlLimitsEntry) GetItem() *plugin.TValue[string] {
 
 func (c *mqlLimitsEntry) GetValue() *plugin.TValue[string] {
 	return &c.Value
+}
+
+// mqlSudoers for the sudoers resource
+type mqlSudoers struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSudoersInternal it will be used here
+	Files     plugin.TValue[[]any]
+	Content   plugin.TValue[string]
+	UserSpecs plugin.TValue[[]any]
+	Defaults  plugin.TValue[[]any]
+	Aliases   plugin.TValue[[]any]
+}
+
+// createSudoers creates a new instance of this resource
+func createSudoers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSudoers{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sudoers", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSudoers) MqlName() string {
+	return "sudoers"
+}
+
+func (c *mqlSudoers) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSudoers) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudoers", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlSudoers) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return "", vargFiles.Error
+		}
+
+		return c.content(vargFiles.Data)
+	})
+}
+
+func (c *mqlSudoers) GetUserSpecs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserSpecs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudoers", c.__id, "userSpecs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.userSpecs(vargFiles.Data)
+	})
+}
+
+func (c *mqlSudoers) GetDefaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Defaults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudoers", c.__id, "defaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.defaults(vargFiles.Data)
+	})
+}
+
+func (c *mqlSudoers) GetAliases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aliases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudoers", c.__id, "aliases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.aliases(vargFiles.Data)
+	})
+}
+
+// mqlSudoersUserSpec for the sudoers.userSpec resource
+type mqlSudoersUserSpec struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSudoersUserSpecInternal it will be used here
+	File        plugin.TValue[string]
+	LineNumber  plugin.TValue[int64]
+	Users       plugin.TValue[[]any]
+	Hosts       plugin.TValue[[]any]
+	RunasUsers  plugin.TValue[[]any]
+	RunasGroups plugin.TValue[[]any]
+	Commands    plugin.TValue[[]any]
+	Tags        plugin.TValue[[]any]
+}
+
+// createSudoersUserSpec creates a new instance of this resource
+func createSudoersUserSpec(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSudoersUserSpec{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sudoers.userSpec", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSudoersUserSpec) MqlName() string {
+	return "sudoers.userSpec"
+}
+
+func (c *mqlSudoersUserSpec) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSudoersUserSpec) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlSudoersUserSpec) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlSudoersUserSpec) GetUsers() *plugin.TValue[[]any] {
+	return &c.Users
+}
+
+func (c *mqlSudoersUserSpec) GetHosts() *plugin.TValue[[]any] {
+	return &c.Hosts
+}
+
+func (c *mqlSudoersUserSpec) GetRunasUsers() *plugin.TValue[[]any] {
+	return &c.RunasUsers
+}
+
+func (c *mqlSudoersUserSpec) GetRunasGroups() *plugin.TValue[[]any] {
+	return &c.RunasGroups
+}
+
+func (c *mqlSudoersUserSpec) GetCommands() *plugin.TValue[[]any] {
+	return &c.Commands
+}
+
+func (c *mqlSudoersUserSpec) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+// mqlSudoersDefault for the sudoers.default resource
+type mqlSudoersDefault struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSudoersDefaultInternal it will be used here
+	File       plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	Raw        plugin.TValue[string]
+	Scope      plugin.TValue[string]
+	Target     plugin.TValue[string]
+	Parameter  plugin.TValue[string]
+	Value      plugin.TValue[string]
+	Operation  plugin.TValue[string]
+	Negated    plugin.TValue[bool]
+}
+
+// createSudoersDefault creates a new instance of this resource
+func createSudoersDefault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSudoersDefault{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sudoers.default", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSudoersDefault) MqlName() string {
+	return "sudoers.default"
+}
+
+func (c *mqlSudoersDefault) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSudoersDefault) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlSudoersDefault) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlSudoersDefault) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+func (c *mqlSudoersDefault) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlSudoersDefault) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlSudoersDefault) GetParameter() *plugin.TValue[string] {
+	return &c.Parameter
+}
+
+func (c *mqlSudoersDefault) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlSudoersDefault) GetOperation() *plugin.TValue[string] {
+	return &c.Operation
+}
+
+func (c *mqlSudoersDefault) GetNegated() *plugin.TValue[bool] {
+	return &c.Negated
+}
+
+// mqlSudoersAlias for the sudoers.alias resource
+type mqlSudoersAlias struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSudoersAliasInternal it will be used here
+	File       plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	Type       plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Members    plugin.TValue[[]any]
+}
+
+// createSudoersAlias creates a new instance of this resource
+func createSudoersAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSudoersAlias{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sudoers.alias", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSudoersAlias) MqlName() string {
+	return "sudoers.alias"
+}
+
+func (c *mqlSudoersAlias) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSudoersAlias) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlSudoersAlias) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlSudoersAlias) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSudoersAlias) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSudoersAlias) GetMembers() *plugin.TValue[[]any] {
+	return &c.Members
 }
 
 // mqlLsblk for the lsblk resource
