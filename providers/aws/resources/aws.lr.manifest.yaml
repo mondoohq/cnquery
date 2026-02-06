@@ -1668,6 +1668,7 @@ resources:
       arn: {}
       configuration: {}
       containerInstances: {}
+      fargateEphemeralStorageKmsKey: {}
       name: {}
       pendingTasksCount: {}
       region: {}
@@ -1882,7 +1883,6 @@ resources:
       - aws
   aws.ecs.taskDefinition.ephemeralStorage:
     fields:
-      kmsKeyId: {}
       sizeInGiB: {}
     is_private: true
     min_mondoo_version: 9.0.0

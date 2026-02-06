@@ -177,7 +177,7 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 	svc := conn.Ecs(region)
 	ctx := context.Background()
-	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{a}, Include: []ecstypes.ClusterField{ecstypes.ClusterFieldTags}})
+	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{a}, Include: []ecstypes.ClusterField{ecstypes.ClusterFieldConfigurations, ecstypes.ClusterFieldTags}})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -199,6 +199,34 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["status"] = llx.StringDataPtr(c.Status)
 	args["tags"] = llx.MapData(ecsTagsToMap(c.Tags), types.String)
 	return args, nil, nil
+}
+
+func (a *mqlAwsEcsCluster) fargateEphemeralStorageKmsKey() (*mqlAwsKmsKey, error) {
+	config, ok := a.Configuration.Data.(map[string]any)
+	if !ok || config == nil {
+		a.FargateEphemeralStorageKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	msc, ok := config["ManagedStorageConfiguration"].(map[string]any)
+	if !ok {
+		a.FargateEphemeralStorageKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	keyId, ok := msc["FargateEphemeralStorageKmsKeyId"].(string)
+	if !ok || keyId == "" {
+		a.FargateEphemeralStorageKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey, map[string]*llx.RawData{
+		"arn": llx.StringData(keyId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
