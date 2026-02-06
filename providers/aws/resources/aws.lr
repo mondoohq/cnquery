@@ -1469,6 +1469,18 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   defaultInstanceWarmup int
   // EC2 instances associated with the group
   instances() []aws.ec2.instance
+  // Unit of measurement for desired capacity (attribute-based instance type selection)
+  desiredCapacityType string
+  // Current size of the warm pool
+  warmPoolSize int
+  // Predicted capacity from predictive scaling
+  predictedCapacity int
+  // Name of the placement group for launched instances
+  placementGroup string
+  // Whether newly launched instances are protected from scale-in termination
+  newInstancesProtectedFromScaleIn bool
+  // Target groups associated with the group
+  targetGroups() []aws.elb.targetgroup
 }
 
 // AWS Auto Scaling group tag
@@ -2595,6 +2607,10 @@ private aws.applicationAutoscaling.target @defaults("arn") {
   namespace string
   // ARN of the auto scaling target
   arn string
+  // Resource identifier for the target
+  resourceId string
+  // Region where the target exists
+  region string
   // Scalable dimension for the target
   scalableDimension string
   // Minimum capacity set for the auto scaling target
@@ -2605,6 +2621,62 @@ private aws.applicationAutoscaling.target @defaults("arn") {
   suspendedState dict
   // Creation date for the auto scaling target
   createdAt time
+  // Scaling policies attached to this target
+  policies() []aws.applicationAutoscaling.policy
+  // Scheduled scaling actions for this target
+  scheduledActions() []aws.applicationAutoscaling.scheduledAction
+}
+
+// AWS Application Auto Scaling policy
+private aws.applicationAutoscaling.policy @defaults("arn name policyType") {
+  // ARN of the scaling policy
+  arn string
+  // Name of the scaling policy
+  name string
+  // Type of scaling policy: TargetTrackingScaling, StepScaling, or PredictiveScaling
+  policyType string
+  // Resource identifier associated with the policy
+  resourceId string
+  // Scalable dimension associated with the policy
+  scalableDimension string
+  // Service namespace
+  namespace string
+  // Date the policy was created
+  createdAt time
+  // CloudWatch alarms associated with the policy
+  alarms []dict
+  // Target tracking scaling policy configuration
+  targetTrackingConfig dict
+  // Step scaling policy configuration
+  stepScalingConfig dict
+  // Predictive scaling policy configuration
+  predictiveScalingConfig dict
+}
+
+// AWS Application Auto Scaling scheduled action
+private aws.applicationAutoscaling.scheduledAction @defaults("arn name schedule") {
+  // ARN of the scheduled action
+  arn string
+  // Name of the scheduled action
+  name string
+  // Schedule expression (cron, rate, or at)
+  schedule string
+  // Timezone for the schedule
+  timezone string
+  // Resource identifier associated with the action
+  resourceId string
+  // Scalable dimension associated with the action
+  scalableDimension string
+  // Service namespace
+  namespace string
+  // Date the scheduled action was created
+  createdAt time
+  // Date the action is scheduled to start
+  startAt time
+  // Date the action is scheduled to end
+  endAt time
+  // Min and max capacity to set when the action runs
+  scalableTargetAction dict
 }
 
 // AWS Elastic Disaster Recovery (DRS)
@@ -3488,6 +3560,20 @@ private aws.apigateway.restapi @defaults("name id") {
   region string
   // Tags for the REST API
   tags map[string]string
+  // Source of the API key for metering requests (HEADER or AUTHORIZER)
+  apiKeySource string
+  // Whether the default execute-api endpoint is disabled
+  disableExecuteApiEndpoint bool
+  // Minimum payload size in bytes for compression (0 to enable for all, -1 if disabled)
+  minimumCompressionSize int
+  // Supported binary media types
+  binaryMediaTypes []string
+  // Version identifier for the API
+  version string
+  // TLS version and cipher suite for the API (TLS_1_0 or TLS_1_2)
+  securityPolicy string
+  // Resource policy for the API (JSON string)
+  policy string
 }
 
 // Amazon API Gateway REST API stages
@@ -3504,6 +3590,26 @@ private aws.apigateway.stage @defaults("arn") {
   deploymentId string
   // Method settings for the stage
   methodSettings dict
+  // Whether a cache cluster is enabled for the stage
+  cacheClusterEnabled bool
+  // Size of the cache cluster (0.5, 1.6, 6.1, 13.5, 28.4, 58.2, 118, 237)
+  cacheClusterSize string
+  // Status of the cache cluster
+  cacheClusterStatus string
+  // Client certificate ID for mutual TLS with backend
+  clientCertificateId string
+  // ARN of the WAF web ACL associated with the stage
+  webAclArn string
+  // Time when the stage was created
+  createdAt time
+  // Time when the stage was last updated
+  lastUpdatedAt time
+  // Documentation version associated with the stage
+  documentationVersion string
+  // Stage variables
+  variables map[string]string
+  // Tags for the stage
+  tags map[string]string
 }
 
 // AWS Lambda

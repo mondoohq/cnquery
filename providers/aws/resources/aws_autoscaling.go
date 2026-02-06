@@ -62,9 +62,25 @@ func (a *mqlAwsAutoscalingGroup) instances() ([]any, error) {
 	return groupInstances, nil
 }
 
+func (a *mqlAwsAutoscalingGroup) targetGroups() ([]any, error) {
+	res := []any{}
+	for _, tgArn := range a.targetGroupArns {
+		mqlTg, err := NewResource(a.MqlRuntime, "aws.elb.targetgroup",
+			map[string]*llx.RawData{
+				"arn": llx.StringData(tgArn),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlTg)
+	}
+	return res, nil
+}
+
 type mqlAwsAutoscalingGroupInternal struct {
-	groupInstances []ec2types.Instance
-	region         string
+	groupInstances  []ec2types.Instance
+	targetGroupArns []string
+	region          string
 }
 
 func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -119,11 +135,17 @@ func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		args["region"] = llx.StringData(region)
 		args["tags"] = llx.MapData(autoscalingTagsToMap(group.Tags), types.String)
 		args["tagSpecifications"] = llx.ArrayData(tagSpecs, types.Resource(ResourceAwsAutoscalingGroupTag))
+		args["desiredCapacityType"] = llx.StringDataPtr(group.DesiredCapacityType)
+		args["warmPoolSize"] = llx.IntDataDefault(group.WarmPoolSize, 0)
+		args["predictedCapacity"] = llx.IntDataDefault(group.PredictedCapacity, 0)
+		args["placementGroup"] = llx.StringDataPtr(group.PlacementGroup)
+		args["newInstancesProtectedFromScaleIn"] = llx.BoolDataPtr(group.NewInstancesProtectedFromScaleIn)
 		mqlGroup, err := CreateResource(runtime, ResourceAwsAutoscalingGroup, args)
 		if err != nil {
 			return args, nil, err
 		}
 		mqlGroup.(*mqlAwsAutoscalingGroup).groupInstances = group.Instances
+		mqlGroup.(*mqlAwsAutoscalingGroup).targetGroupArns = group.TargetGroupARNs
 		mqlGroup.(*mqlAwsAutoscalingGroup).region = region
 		return args, mqlGroup, nil
 	}
@@ -172,28 +194,36 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 
 					mqlGroup, err := CreateResource(a.MqlRuntime, ResourceAwsAutoscalingGroup,
 						map[string]*llx.RawData{
-							"arn":                     llx.StringData(groupArn),
-							"availabilityZones":       llx.ArrayData(availabilityZones, types.String),
-							"capacityRebalance":       llx.BoolDataPtr(group.CapacityRebalance),
-							"createdAt":               llx.TimeDataPtr(group.CreatedTime),
-							"defaultCooldown":         llx.IntDataDefault(group.DefaultCooldown, 0),
-							"defaultInstanceWarmup":   llx.IntDataDefault(group.DefaultInstanceWarmup, 0),
-							"desiredCapacity":         llx.IntDataDefault(group.DesiredCapacity, 0),
-							"healthCheckGracePeriod":  llx.IntDataDefault(group.HealthCheckGracePeriod, 0),
-							"healthCheckType":         llx.StringDataPtr(group.HealthCheckType),
-							"launchConfigurationName": llx.StringDataPtr(group.LaunchConfigurationName),
-							"loadBalancerNames":       llx.ArrayData(lbNames, types.String),
-							"maxInstanceLifetime":     llx.IntDataDefault(group.MaxInstanceLifetime, 0),
-							"maxSize":                 llx.IntDataDefault(group.MaxSize, 0),
-							"minSize":                 llx.IntDataDefault(group.MinSize, 0),
-							"name":                    llx.StringDataPtr(group.AutoScalingGroupName),
-							"region":                  llx.StringData(region),
-							"tags":                    llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
-							"tagSpecifications":       llx.ArrayData(tagSpecs, types.Resource(ResourceAwsAutoscalingGroupTag)),
+							"arn":                              llx.StringData(groupArn),
+							"availabilityZones":                llx.ArrayData(availabilityZones, types.String),
+							"capacityRebalance":                llx.BoolDataPtr(group.CapacityRebalance),
+							"createdAt":                        llx.TimeDataPtr(group.CreatedTime),
+							"defaultCooldown":                  llx.IntDataDefault(group.DefaultCooldown, 0),
+							"defaultInstanceWarmup":            llx.IntDataDefault(group.DefaultInstanceWarmup, 0),
+							"desiredCapacity":                  llx.IntDataDefault(group.DesiredCapacity, 0),
+							"healthCheckGracePeriod":           llx.IntDataDefault(group.HealthCheckGracePeriod, 0),
+							"healthCheckType":                  llx.StringDataPtr(group.HealthCheckType),
+							"launchConfigurationName":          llx.StringDataPtr(group.LaunchConfigurationName),
+							"loadBalancerNames":                llx.ArrayData(lbNames, types.String),
+							"maxInstanceLifetime":              llx.IntDataDefault(group.MaxInstanceLifetime, 0),
+							"maxSize":                          llx.IntDataDefault(group.MaxSize, 0),
+							"minSize":                          llx.IntDataDefault(group.MinSize, 0),
+							"name":                             llx.StringDataPtr(group.AutoScalingGroupName),
+							"region":                           llx.StringData(region),
+							"tags":                             llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
+							"tagSpecifications":                llx.ArrayData(tagSpecs, types.Resource(ResourceAwsAutoscalingGroupTag)),
+							"desiredCapacityType":              llx.StringDataPtr(group.DesiredCapacityType),
+							"warmPoolSize":                     llx.IntDataDefault(group.WarmPoolSize, 0),
+							"predictedCapacity":                llx.IntDataDefault(group.PredictedCapacity, 0),
+							"placementGroup":                   llx.StringDataPtr(group.PlacementGroup),
+							"newInstancesProtectedFromScaleIn": llx.BoolDataPtr(group.NewInstancesProtectedFromScaleIn),
 						})
 					if err != nil {
 						return nil, err
 					}
+					mqlGroup.(*mqlAwsAutoscalingGroup).groupInstances = group.Instances
+					mqlGroup.(*mqlAwsAutoscalingGroup).targetGroupArns = group.TargetGroupARNs
+					mqlGroup.(*mqlAwsAutoscalingGroup).region = region
 					res = append(res, mqlGroup)
 				}
 			}

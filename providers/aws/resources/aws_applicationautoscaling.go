@@ -26,6 +26,14 @@ func (a *mqlAwsApplicationAutoscalingTarget) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsApplicationAutoscalingPolicy) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsApplicationAutoscalingScheduledAction) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
 func (a *mqlAwsApplicationAutoscaling) scalableTargets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	namespace := a.Namespace.Data
@@ -85,6 +93,8 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 						map[string]*llx.RawData{
 							"arn":               llx.StringData(fmt.Sprintf("arn:aws:application-autoscaling:%s:%s:%s/%s", region, conn.AccountId(), namespace, convert.ToValue(target.ResourceId))),
 							"namespace":         llx.StringData(string(target.ServiceNamespace)),
+							"resourceId":        llx.StringData(convert.ToValue(target.ResourceId)),
+							"region":            llx.StringData(region),
 							"scalableDimension": llx.StringData(string(target.ScalableDimension)),
 							"minCapacity":       llx.IntDataDefault(target.MinCapacity, 0),
 							"maxCapacity":       llx.IntDataDefault(target.MaxCapacity, 0),
@@ -102,4 +112,133 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (a *mqlAwsApplicationAutoscalingTarget) policies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	namespace := a.Namespace.Data
+	resourceId := a.ResourceId.Data
+	scalableDimension := a.ScalableDimension.Data
+
+	svc := conn.ApplicationAutoscaling(region)
+	ctx := context.Background()
+	res := []any{}
+
+	ns := aatypes.ServiceNamespace(namespace)
+	sd := aatypes.ScalableDimension(scalableDimension)
+	params := &applicationautoscaling.DescribeScalingPoliciesInput{
+		ServiceNamespace:  ns,
+		ResourceId:        &resourceId,
+		ScalableDimension: sd,
+	}
+	paginator := applicationautoscaling.NewDescribeScalingPoliciesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not gather application autoscaling policies")
+		}
+
+		for _, policy := range page.ScalingPolicies {
+			alarms := []any{}
+			for _, alarm := range policy.Alarms {
+				alarmDict, err := convert.JsonToDict(alarm)
+				if err != nil {
+					return nil, err
+				}
+				alarms = append(alarms, alarmDict)
+			}
+
+			targetTrackingConfig, err := convert.JsonToDict(policy.TargetTrackingScalingPolicyConfiguration)
+			if err != nil {
+				return nil, err
+			}
+
+			stepScalingConfig, err := convert.JsonToDict(policy.StepScalingPolicyConfiguration)
+			if err != nil {
+				return nil, err
+			}
+
+			predictiveScalingConfig, err := convert.JsonToDict(policy.PredictiveScalingPolicyConfiguration)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlPolicy, err := CreateResource(a.MqlRuntime, "aws.applicationAutoscaling.policy",
+				map[string]*llx.RawData{
+					"arn":                     llx.StringDataPtr(policy.PolicyARN),
+					"name":                    llx.StringDataPtr(policy.PolicyName),
+					"policyType":              llx.StringData(string(policy.PolicyType)),
+					"resourceId":              llx.StringDataPtr(policy.ResourceId),
+					"scalableDimension":       llx.StringData(string(policy.ScalableDimension)),
+					"namespace":               llx.StringData(string(policy.ServiceNamespace)),
+					"createdAt":               llx.TimeDataPtr(policy.CreationTime),
+					"alarms":                  llx.ArrayData(alarms, types.Dict),
+					"targetTrackingConfig":    llx.DictData(targetTrackingConfig),
+					"stepScalingConfig":       llx.DictData(stepScalingConfig),
+					"predictiveScalingConfig": llx.DictData(predictiveScalingConfig),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlPolicy)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsApplicationAutoscalingTarget) scheduledActions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	namespace := a.Namespace.Data
+	resourceId := a.ResourceId.Data
+	scalableDimension := a.ScalableDimension.Data
+
+	svc := conn.ApplicationAutoscaling(region)
+	ctx := context.Background()
+	res := []any{}
+
+	ns := aatypes.ServiceNamespace(namespace)
+	sd := aatypes.ScalableDimension(scalableDimension)
+	params := &applicationautoscaling.DescribeScheduledActionsInput{
+		ServiceNamespace:  ns,
+		ResourceId:        &resourceId,
+		ScalableDimension: sd,
+	}
+	paginator := applicationautoscaling.NewDescribeScheduledActionsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not gather application autoscaling scheduled actions")
+		}
+
+		for _, action := range page.ScheduledActions {
+			scalableTargetAction, err := convert.JsonToDict(action.ScalableTargetAction)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlAction, err := CreateResource(a.MqlRuntime, "aws.applicationAutoscaling.scheduledAction",
+				map[string]*llx.RawData{
+					"arn":                  llx.StringDataPtr(action.ScheduledActionARN),
+					"name":                 llx.StringDataPtr(action.ScheduledActionName),
+					"schedule":             llx.StringDataPtr(action.Schedule),
+					"timezone":             llx.StringDataPtr(action.Timezone),
+					"resourceId":           llx.StringDataPtr(action.ResourceId),
+					"scalableDimension":    llx.StringData(string(action.ScalableDimension)),
+					"namespace":            llx.StringData(string(action.ServiceNamespace)),
+					"createdAt":            llx.TimeDataPtr(action.CreationTime),
+					"startAt":              llx.TimeDataPtr(action.StartTime),
+					"endAt":                llx.TimeDataPtr(action.EndTime),
+					"scalableTargetAction": llx.DictData(scalableTargetAction),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAction)
+		}
+	}
+
+	return res, nil
 }

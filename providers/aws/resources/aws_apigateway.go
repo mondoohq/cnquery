@@ -76,13 +76,20 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 
 					mqlRestApi, err := CreateResource(a.MqlRuntime, ResourceAwsApigatewayRestapi,
 						map[string]*llx.RawData{
-							"arn":         llx.StringData(fmt.Sprintf(apiArnPattern, region, conn.AccountId(), convert.ToValue(restApi.Id))),
-							"id":          llx.StringData(convert.ToValue(restApi.Id)),
-							"name":        llx.StringData(convert.ToValue(restApi.Name)),
-							"description": llx.StringData(convert.ToValue(restApi.Description)),
-							"createdDate": llx.TimeDataPtr(restApi.CreatedDate),
-							"region":      llx.StringData(region),
-							"tags":        llx.MapData(toInterfaceMap(restApi.Tags), types.String),
+							"arn":                       llx.StringData(fmt.Sprintf(apiArnPattern, region, conn.AccountId(), convert.ToValue(restApi.Id))),
+							"id":                        llx.StringData(convert.ToValue(restApi.Id)),
+							"name":                      llx.StringData(convert.ToValue(restApi.Name)),
+							"description":               llx.StringData(convert.ToValue(restApi.Description)),
+							"createdDate":               llx.TimeDataPtr(restApi.CreatedDate),
+							"region":                    llx.StringData(region),
+							"tags":                      llx.MapData(toInterfaceMap(restApi.Tags), types.String),
+							"apiKeySource":              llx.StringData(string(restApi.ApiKeySource)),
+							"disableExecuteApiEndpoint": llx.BoolData(restApi.DisableExecuteApiEndpoint),
+							"minimumCompressionSize":    llx.IntDataDefault(restApi.MinimumCompressionSize, -1),
+							"binaryMediaTypes":          llx.ArrayData(convert.SliceAnyToInterface(restApi.BinaryMediaTypes), types.String),
+							"version":                   llx.StringData(convert.ToValue(restApi.Version)),
+							"securityPolicy":            llx.StringData(string(restApi.SecurityPolicy)),
+							"policy":                    llx.StringData(convert.ToValue(restApi.Policy)),
 						})
 					if err != nil {
 						return nil, err
@@ -164,12 +171,22 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 		}
 		mqlStage, err := CreateResource(a.MqlRuntime, ResourceAwsApigatewayStage,
 			map[string]*llx.RawData{
-				"arn":            llx.StringData(fmt.Sprintf(apiStageArnPattern, region, conn.AccountId(), restApiId, convert.ToValue(stage.StageName))),
-				"name":           llx.StringData(convert.ToValue(stage.StageName)),
-				"description":    llx.StringData(convert.ToValue(stage.Description)),
-				"tracingEnabled": llx.BoolData(stage.TracingEnabled),
-				"deploymentId":   llx.StringData(convert.ToValue(stage.DeploymentId)),
-				"methodSettings": llx.MapData(dictMethodSettings, types.Any),
+				"arn":                  llx.StringData(fmt.Sprintf(apiStageArnPattern, region, conn.AccountId(), restApiId, convert.ToValue(stage.StageName))),
+				"name":                 llx.StringData(convert.ToValue(stage.StageName)),
+				"description":          llx.StringData(convert.ToValue(stage.Description)),
+				"tracingEnabled":       llx.BoolData(stage.TracingEnabled),
+				"deploymentId":         llx.StringData(convert.ToValue(stage.DeploymentId)),
+				"methodSettings":       llx.MapData(dictMethodSettings, types.Any),
+				"cacheClusterEnabled":  llx.BoolData(stage.CacheClusterEnabled),
+				"cacheClusterSize":     llx.StringData(string(stage.CacheClusterSize)),
+				"cacheClusterStatus":   llx.StringData(string(stage.CacheClusterStatus)),
+				"clientCertificateId":  llx.StringData(convert.ToValue(stage.ClientCertificateId)),
+				"webAclArn":            llx.StringData(convert.ToValue(stage.WebAclArn)),
+				"createdAt":            llx.TimeDataPtr(stage.CreatedDate),
+				"lastUpdatedAt":        llx.TimeDataPtr(stage.LastUpdatedDate),
+				"documentationVersion": llx.StringData(convert.ToValue(stage.DocumentationVersion)),
+				"variables":            llx.MapData(toInterfaceMap(stage.Variables), types.String),
+				"tags":                 llx.MapData(toInterfaceMap(stage.Tags), types.String),
 			})
 		if err != nil {
 			return nil, err
