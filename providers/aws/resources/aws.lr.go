@@ -584,7 +584,7 @@ func init() {
 			Create: createAwsOpensearch,
 		},
 		"aws.opensearch.domain": {
-			// to override args, implement: initAwsOpensearchDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsOpensearchDomain,
 			Create: createAwsOpensearchDomain,
 		},
 		"aws.acm": {
