@@ -1741,6 +1741,7 @@ resources:
       status: {}
       tags: {}
       taskDefinition: {}
+      taskSets: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
@@ -1936,6 +1937,42 @@ resources:
   aws.ecs.taskDefinition.volume.host:
     fields:
       sourcePath: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskSet:
+    fields:
+      arn: {}
+      clusterArn: {}
+      computedDesiredCount: {}
+      createdAt: {}
+      externalId: {}
+      id: {}
+      launchType: {}
+      networkConfiguration: {}
+      pendingCount: {}
+      platformFamily: {}
+      platformVersion: {}
+      runningCount: {}
+      serviceArn: {}
+      stabilityStatus: {}
+      startedBy: {}
+      status: {}
+      tags: {}
+      taskDefinition: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.ecs.taskSet.networkConfiguration:
+    fields:
+      assignPublicIp: {}
+      securityGroups: {}
+      subnets: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

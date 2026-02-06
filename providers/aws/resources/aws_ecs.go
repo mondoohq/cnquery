@@ -1595,3 +1595,129 @@ func createNetworkConfigurationResource(runtime *plugin.Runtime, nc *ecstypes.Ne
 
 	return CreateResource(runtime, ResourceAwsEcsServiceNetworkConfiguration, args)
 }
+
+func (t *mqlAwsEcsTaskSet) id() (string, error) {
+	return t.Arn.Data, nil
+}
+
+func (n *mqlAwsEcsTaskSetNetworkConfiguration) id() (string, error) {
+	return n.__id, nil
+}
+
+func (t *mqlAwsEcsTaskSet) networkConfiguration() (*mqlAwsEcsTaskSetNetworkConfiguration, error) {
+	if !t.NetworkConfiguration.IsSet() {
+		return nil, errors.New("networkConfiguration not initialized")
+	}
+	if t.NetworkConfiguration.Error != nil {
+		return nil, t.NetworkConfiguration.Error
+	}
+	return t.NetworkConfiguration.Data, nil
+}
+
+func (s *mqlAwsEcsService) taskSets() ([]any, error) {
+	conn := s.MqlRuntime.Connection.(*connection.AwsConnection)
+	serviceArn := s.Arn.Data
+	clusterArn := s.ClusterArn.Data
+
+	parsedARN, err := arn.Parse(serviceArn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse service ARN")
+	}
+	region := parsedARN.Region
+
+	svc := conn.Ecs(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeTaskSets(ctx, &ecsservice.DescribeTaskSetsInput{
+		Cluster: &clusterArn,
+		Service: &serviceArn,
+		Include: []ecstypes.TaskSetField{ecstypes.TaskSetFieldTags},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			log.Warn().Str("service", serviceArn).Msg("error accessing task sets for service")
+			return []any{}, nil
+		}
+		// DescribeTaskSets returns InvalidParameterException for services that
+		// don't use EXTERNAL or CODE_DEPLOY deployment controllers
+		if strings.Contains(err.Error(), "InvalidParameterException") {
+			return []any{}, nil
+		}
+		return nil, errors.Wrap(err, "could not describe task sets")
+	}
+
+	res := []any{}
+	for _, ts := range resp.TaskSets {
+		taskSetArn := convert.ToValue(ts.TaskSetArn)
+
+		// Create network configuration resource
+		var networkConfigResource plugin.Resource
+		if ts.NetworkConfiguration != nil && ts.NetworkConfiguration.AwsvpcConfiguration != nil {
+			ncRes, err := createTaskSetNetworkConfigurationResource(s.MqlRuntime, ts.NetworkConfiguration, taskSetArn)
+			if err != nil {
+				return nil, err
+			}
+			networkConfigResource = ncRes.(plugin.Resource)
+		}
+
+		args := map[string]*llx.RawData{
+			"arn":                  llx.StringData(taskSetArn),
+			"id":                   llx.StringData(convert.ToValue(ts.Id)),
+			"clusterArn":           llx.StringData(convert.ToValue(ts.ClusterArn)),
+			"serviceArn":           llx.StringData(convert.ToValue(ts.ServiceArn)),
+			"status":               llx.StringData(convert.ToValue(ts.Status)),
+			"taskDefinition":       llx.StringData(convert.ToValue(ts.TaskDefinition)),
+			"launchType":           llx.StringData(string(ts.LaunchType)),
+			"platformVersion":      llx.StringData(convert.ToValue(ts.PlatformVersion)),
+			"platformFamily":       llx.StringData(convert.ToValue(ts.PlatformFamily)),
+			"tags":                 llx.MapData(ecsTagsToMap(ts.Tags), types.String),
+			"createdAt":            llx.TimeDataPtr(ts.CreatedAt),
+			"updatedAt":            llx.TimeDataPtr(ts.UpdatedAt),
+			"runningCount":         llx.IntData(int64(ts.RunningCount)),
+			"pendingCount":         llx.IntData(int64(ts.PendingCount)),
+			"computedDesiredCount": llx.IntData(int64(ts.ComputedDesiredCount)),
+			"stabilityStatus":      llx.StringData(string(ts.StabilityStatus)),
+			"externalId":           llx.StringData(convert.ToValue(ts.ExternalId)),
+			"startedBy":            llx.StringData(convert.ToValue(ts.StartedBy)),
+		}
+
+		if networkConfigResource != nil {
+			args["networkConfiguration"] = llx.ResourceData(networkConfigResource, ResourceAwsEcsTaskSetNetworkConfiguration)
+		} else {
+			args["networkConfiguration"] = llx.NilData
+		}
+
+		mqlTaskSet, err := CreateResource(s.MqlRuntime, ResourceAwsEcsTaskSet, args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlTaskSet)
+	}
+
+	return res, nil
+}
+
+func createTaskSetNetworkConfigurationResource(runtime *plugin.Runtime, nc *ecstypes.NetworkConfiguration, taskSetArn string) (any, error) {
+	assignPublicIp := ""
+	subnets := []any{}
+	securityGroups := []any{}
+
+	if nc.AwsvpcConfiguration != nil {
+		awsvpc := nc.AwsvpcConfiguration
+		assignPublicIp = string(awsvpc.AssignPublicIp)
+		for _, subnet := range awsvpc.Subnets {
+			subnets = append(subnets, subnet)
+		}
+		for _, sg := range awsvpc.SecurityGroups {
+			securityGroups = append(securityGroups, sg)
+		}
+	}
+
+	return CreateResource(runtime, ResourceAwsEcsTaskSetNetworkConfiguration,
+		map[string]*llx.RawData{
+			"__id":           llx.StringData(taskSetArn + "/networkConfiguration"),
+			"assignPublicIp": llx.StringData(assignPublicIp),
+			"subnets":        llx.ArrayData(subnets, types.String),
+			"securityGroups": llx.ArrayData(securityGroups, types.String),
+		})
+}
