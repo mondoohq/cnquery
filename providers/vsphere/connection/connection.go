@@ -84,3 +84,9 @@ func (c *VsphereConnection) Asset() *inventory.Asset {
 func (c *VsphereConnection) Client() *govmomi.Client {
 	return c.client
 }
+
+func (c *VsphereConnection) Close() {
+	if c.client != nil {
+		c.client.Logout(context.Background())
+	}
+}
