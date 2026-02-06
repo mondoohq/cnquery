@@ -66,6 +66,7 @@ groupname
 gvnic
 headerorder
 hostkeys
+hotlink
 hvm
 iana
 iap
@@ -189,3 +190,4 @@ WEBSERVERS
 wil
 xoxp
 xssmatchstatement
+zrt

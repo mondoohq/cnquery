@@ -37,6 +37,28 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 			return nil, err
 		}
 
+		owner, err := NewResource(c.MqlRuntime, "cloudflare.zone.owner", map[string]*llx.RawData{
+			"id":        llx.StringData(zone.Owner.ID),
+			"email":     llx.StringData(zone.Owner.Email),
+			"name":      llx.StringData(zone.Owner.Name),
+			"ownerType": llx.StringData(zone.Owner.OwnerType),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		plan, err := NewResource(c.MqlRuntime, "cloudflare.zone.plan", map[string]*llx.RawData{
+			"id":           llx.StringData(zone.Plan.ID),
+			"name":         llx.StringData(zone.Plan.Name),
+			"price":        llx.IntData(zone.Plan.Price),
+			"currency":     llx.StringData(zone.Plan.Currency),
+			"frequency":    llx.StringData(zone.Plan.Frequency),
+			"isSubscribed": llx.BoolData(zone.Plan.IsSubscribed),
+		})
+		if err != nil {
+			return nil, err
+		}
+
 		r, err := NewResource(c.MqlRuntime, "cloudflare.zone", map[string]*llx.RawData{
 			"id":   llx.StringData(zone.ID),
 			"name": llx.StringData(zone.Name),
@@ -49,6 +71,8 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 			"type":   llx.StringData(zone.Type),
 
 			"account": llx.ResourceData(acc, acc.MqlName()),
+			"owner":   llx.ResourceData(owner, owner.MqlName()),
+			"plan":    llx.ResourceData(plan, plan.MqlName()),
 
 			"createdOn":  llx.TimeData(zone.CreatedOn),
 			"modifiedOn": llx.TimeData(zone.ModifiedOn),
@@ -94,6 +118,7 @@ func (c *mqlCloudflare) accounts() ([]any, error) {
 			res, err := NewResource(c.MqlRuntime, "cloudflare.account", map[string]*llx.RawData{
 				"id":        llx.StringData(acc.ID),
 				"name":      llx.StringData(acc.Name),
+				"type":      llx.StringData(acc.Type),
 				"settings":  llx.ResourceData(settings, settings.MqlName()),
 				"createdOn": llx.TimeData(acc.CreatedOn),
 			})

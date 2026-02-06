@@ -1,0 +1,451 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+packs:
+  - uid: mondoo-cloudflare-inventory
+    name: Cloudflare Inventory Pack
+    version: 1.0.0
+    license: BUSL-1.1
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: cloudflare,cloud,saas
+      mondoo.com/category: best-practices
+    docs:
+      desc: |
+        ### Overview
+
+        The Cloudflare Inventory Pack retrieves configuration and resource information from Cloudflare zones and accounts, including DNS records, certificates, security settings, Workers, R2 storage, Streams, and Cloudflare One (Zero Trust) applications.
+
+        ### Prerequisites
+
+        To run this query pack, you will need:
+
+        - The cnquery binary installed ([Get Started with cnquery](https://mondoo.com/docs/cnquery/))
+        - A Cloudflare API token with appropriate permissions
+
+        ### Run query pack
+
+        To run this query pack against a Cloudflare zone:
+
+        ```bash
+        cnquery scan cloudflare --zone <zone-name> -f mondoo-cloudflare-inventory.mql.yaml
+        ```
+
+        To run this query pack against a Cloudflare account:
+
+        ```bash
+        cnquery scan cloudflare --account <account-name> -f mondoo-cloudflare-inventory.mql.yaml
+        ```
+    groups:
+      - title: Zone Inventory
+        filters: asset.platform == "cloudflare-zone"
+        queries:
+          - uid: mondoo-cloudflare-inventory-zones
+          - uid: mondoo-cloudflare-inventory-zone-settings
+          - uid: mondoo-cloudflare-inventory-zone-plan
+          - uid: mondoo-cloudflare-inventory-zone-nameservers
+      - title: DNS Records
+        filters: asset.platform == "cloudflare-zone"
+        queries:
+          - uid: mondoo-cloudflare-inventory-dns-records
+          - uid: mondoo-cloudflare-inventory-dns-proxied-records
+      - title: Certificate Inventory
+        filters: asset.platform == "cloudflare-zone"
+        queries:
+          - uid: mondoo-cloudflare-inventory-custom-certificates
+          - uid: mondoo-cloudflare-inventory-certificate-packs
+      - title: Workers Inventory
+        filters: asset.platform == "cloudflare-zone"
+        queries:
+          - uid: mondoo-cloudflare-inventory-workers
+          - uid: mondoo-cloudflare-inventory-pages
+      - title: R2 Storage Inventory
+        filters: asset.platform == "cloudflare-zone"
+        queries:
+          - uid: mondoo-cloudflare-inventory-r2-buckets
+      - title: Streams Inventory
+        filters: asset.platform == "cloudflare-zone"
+        queries:
+          - uid: mondoo-cloudflare-inventory-live-inputs
+          - uid: mondoo-cloudflare-inventory-videos
+      - title: Cloudflare One (Zero Trust) Inventory
+        filters: asset.platform == "cloudflare-zone"
+        queries:
+          - uid: mondoo-cloudflare-inventory-one-apps
+          - uid: mondoo-cloudflare-inventory-one-idps
+      - title: Account Inventory
+        filters: asset.platform == "cloudflare-account"
+        queries:
+          - uid: mondoo-cloudflare-inventory-accounts
+          - uid: mondoo-cloudflare-inventory-account-settings
+
+queries:
+  # ---------------------------------------------------------------------------
+  # Zone Inventory
+  # ---------------------------------------------------------------------------
+  - uid: mondoo-cloudflare-inventory-zones
+    title: Retrieve Cloudflare zone details
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns details about all Cloudflare zones including their status, type, account, and owner information.
+    mql: |
+      cloudflare.zones {
+        id
+        name
+        status
+        paused
+        type
+        createdOn
+        modifiedOn
+        account {
+          id
+          name
+        }
+        owner {
+          email
+          ownerType
+        }
+      }
+
+  - uid: mondoo-cloudflare-inventory-zone-settings
+    title: Retrieve zone security settings
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns the security and performance settings for each zone including SSL mode, TLS version, WAF status, and other security features.
+    mql: |
+      cloudflare.zones {
+        name
+        settings {
+          ssl
+          alwaysUseHttps
+          minTlsVersion
+          tls13
+          automaticHttpsRewrites
+          securityLevel
+          waf
+          browserCheck
+          opportunisticEncryption
+          emailObfuscation
+          hotlinkProtection
+          serverSideExcludes
+        }
+      }
+
+  - uid: mondoo-cloudflare-inventory-zone-plan
+    title: Retrieve zone plan information
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns the pricing plan associated with each zone, including subscription status and pricing details.
+    mql: |
+      cloudflare.zones {
+        name
+        plan {
+          name
+          price
+          currency
+          frequency
+          isSubscribed
+        }
+      }
+
+  - uid: mondoo-cloudflare-inventory-zone-nameservers
+    title: Retrieve zone nameserver configuration
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns the assigned and original nameservers for each zone.
+    mql: |
+      cloudflare.zones {
+        name
+        nameServers
+        originalNameServers
+      }
+
+  # ---------------------------------------------------------------------------
+  # DNS Records
+  # ---------------------------------------------------------------------------
+  - uid: mondoo-cloudflare-inventory-dns-records
+    title: Retrieve all DNS records
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns all DNS records for zones including record type, content, TTL, and proxy status.
+    mql: |
+      cloudflare.zones {
+        name
+        dns.records {
+          name
+          type
+          content
+          ttl
+          proxied
+          proxiable
+          comment
+          tags
+          createdOn
+          modifiedOn
+        }
+      }
+
+  - uid: mondoo-cloudflare-inventory-dns-proxied-records
+    title: Retrieve DNS records with proxy enabled
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns DNS records that have Cloudflare proxy (orange cloud) enabled, showing which records are routed through Cloudflare's network.
+    mql: |
+      cloudflare.zones {
+        name
+        dns.records.where(proxied == true) {
+          name
+          type
+          content
+          ttl
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Certificate Inventory
+  # ---------------------------------------------------------------------------
+  - uid: mondoo-cloudflare-inventory-custom-certificates
+    title: Retrieve custom SSL certificates
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns user-uploaded custom SSL/TLS certificates including their status, expiration, and associated hosts.
+    mql: |
+      cloudflare.zones {
+        name
+        customCertificates {
+          id
+          hosts
+          issuer
+          signature
+          status
+          bundleMethod
+          expiresAt
+          uploadedAt
+          modifiedAt
+          priority
+        }
+      }
+
+  - uid: mondoo-cloudflare-inventory-certificate-packs
+    title: Retrieve Cloudflare-managed certificate packs
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns Cloudflare-issued certificate packs including their type, validation method, status, and certificate authority.
+    mql: |
+      cloudflare.zones {
+        name
+        certificatePacks {
+          id
+          type
+          hosts
+          status
+          validationMethod
+          validityDays
+          certificateAuthority
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Workers Inventory
+  # ---------------------------------------------------------------------------
+  - uid: mondoo-cloudflare-inventory-workers
+    title: Retrieve Cloudflare Workers
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns all Cloudflare Workers deployed in the zone including their deployment details, size, and configuration.
+    mql: |
+      cloudflare.zones {
+        name
+        workers.workers {
+          id
+          size
+          deploymentId
+          placementMode
+          lastDeployedFrom
+          logPush
+          createdOn
+          modifiedOn
+        }
+      }
+
+  - uid: mondoo-cloudflare-inventory-pages
+    title: Retrieve Cloudflare Pages projects
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns all Cloudflare Pages projects including their deployment URLs, environments, and production branches.
+    mql: |
+      cloudflare.zones {
+        name
+        workers.pages {
+          shortId
+          projectName
+          environment
+          url
+          aliases
+          productionBranch
+          createdOn
+          modifiedOn
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # R2 Storage Inventory
+  # ---------------------------------------------------------------------------
+  - uid: mondoo-cloudflare-inventory-r2-buckets
+    title: Retrieve R2 storage buckets
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns all Cloudflare R2 object storage buckets including their name, location, and creation date.
+    mql: |
+      cloudflare.zones {
+        name
+        r2.buckets {
+          name
+          location
+          createdOn
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Streams Inventory
+  # ---------------------------------------------------------------------------
+  - uid: mondoo-cloudflare-inventory-live-inputs
+    title: Retrieve Cloudflare Stream live inputs
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns all live streaming inputs configured in the zone, including retention settings.
+    mql: |
+      cloudflare.zones {
+        name
+        liveInputs {
+          uid
+          name
+          deleteRecordingAfterDays
+        }
+      }
+
+  - uid: mondoo-cloudflare-inventory-videos
+    title: Retrieve Cloudflare Stream videos
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns all videos in Cloudflare Stream including metadata, dimensions, playback URLs, and readiness status.
+    mql: |
+      cloudflare.zones {
+        name
+        videos {
+          uid
+          name
+          creator
+          duration
+          height
+          width
+          size
+          ready
+          requireSignedUrls
+          dash
+          hls
+          uploaded
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Cloudflare One (Zero Trust) Inventory
+  # ---------------------------------------------------------------------------
+  - uid: mondoo-cloudflare-inventory-one-apps
+    title: Retrieve Cloudflare One Access applications
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns all Cloudflare Access (Zero Trust) applications including their type, domain, identity provider settings, CORS configuration, and security properties.
+    mql: |
+      cloudflare.zones {
+        name
+        one.apps {
+          id
+          name
+          domain
+          type
+          allowedIdentityProviders
+          autoRedirectToIdentity
+          appLauncherVisible
+          sessionDuration
+          enableBindingCookie
+          httpOnlyCookieAttribute
+          sameSiteCookieAttribute
+          serviceAuth401Redirect
+          corsHeaders {
+            allowAllHeaders
+            allowAllMethods
+            allowAllOrigins
+            allowCredentials
+            allowedHeaders
+            allowedMethods
+            allowedOrigins
+            maxAge
+          }
+          createdAt
+          updatedAt
+        }
+      }
+
+  - uid: mondoo-cloudflare-inventory-one-idps
+    title: Retrieve Cloudflare One identity providers
+    filters: asset.platform == "cloudflare-zone"
+    docs:
+      desc: |
+        Returns all identity providers configured for Cloudflare One (Zero Trust) including their type and name.
+    mql: |
+      cloudflare.zones {
+        name
+        one.identityProviders {
+          id
+          name
+          type
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Account Inventory
+  # ---------------------------------------------------------------------------
+  - uid: mondoo-cloudflare-inventory-accounts
+    title: Retrieve Cloudflare account details
+    filters: asset.platform == "cloudflare-account"
+    docs:
+      desc: |
+        Returns details about all Cloudflare accounts including their name, type, and creation date.
+    mql: |
+      cloudflare.accounts {
+        id
+        name
+        type
+        createdOn
+      }
+
+  - uid: mondoo-cloudflare-inventory-account-settings
+    title: Retrieve Cloudflare account settings
+    filters: asset.platform == "cloudflare-account"
+    docs:
+      desc: |
+        Returns account-level settings including two-factor authentication enforcement status.
+    mql: |
+      cloudflare.accounts {
+        name
+        settings {
+          enforceTwoFactor
+        }
+      }

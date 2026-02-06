@@ -38,6 +38,17 @@ private cloudflare.zone @defaults("name account.name") {
 
 	// Zone owner account
   account cloudflare.zone.account
+	// Zone owner
+	owner cloudflare.zone.owner
+	// Zone plan
+	plan cloudflare.zone.plan
+
+	// Zone security settings
+	settings() cloudflare.zone.settings
+	// Custom SSL certificates (user-uploaded)
+	customCertificates() []cloudflare.zone.customCertificate
+	// Managed certificate packs (Cloudflare-issued)
+	certificatePacks() []cloudflare.zone.certificatePack
 
 	// DNS records associated with the zone
 	dns() cloudflare.dns
@@ -69,6 +80,104 @@ private cloudflare.zone.account @defaults("name") {
 	email string
 }
 
+// Cloudflare zone owner
+private cloudflare.zone.owner @defaults("name") {
+	// Owner identifier
+	id string
+	// Owner email
+	email string
+	// Owner name
+	name string
+	// Owner type
+	ownerType string
+}
+
+// Cloudflare zone plan
+private cloudflare.zone.plan @defaults("name") {
+	// Plan identifier
+	id string
+	// Plan name
+	name string
+	// Plan price
+	price int
+	// Plan currency
+	currency string
+	// Plan frequency
+	frequency string
+	// Whether the zone is subscribed to this plan
+	isSubscribed bool
+}
+
+// Cloudflare zone security settings
+private cloudflare.zone.settings {
+	// SSL/TLS encryption mode (off, flexible, full, strict)
+	ssl string
+	// Whether HTTPS is always used (on, off)
+	alwaysUseHttps string
+	// Minimum TLS version (1.0, 1.1, 1.2, 1.3)
+	minTlsVersion string
+	// TLS 1.3 support (on, off, zrt)
+	tls13 string
+	// Automatic HTTPS rewrites (on, off)
+	automaticHttpsRewrites string
+	// Security level (essentially_off, low, medium, high, under_attack)
+	securityLevel string
+	// Web Application Firewall (on, off)
+	waf string
+	// Browser integrity check (on, off)
+	browserCheck string
+	// Opportunistic encryption (on, off)
+	opportunisticEncryption string
+	// Email obfuscation (on, off)
+	emailObfuscation string
+	// Hotlink protection (on, off)
+	hotlinkProtection string
+	// Server-side excludes (on, off)
+	serverSideExcludes string
+}
+
+// Cloudflare custom SSL certificate (user-uploaded)
+private cloudflare.zone.customCertificate @defaults("id status") {
+	// Certificate identifier
+	id string
+	// Hostnames covered by the certificate
+	hosts []string
+	// Certificate issuer
+	issuer string
+	// Signature type
+	signature string
+	// Certificate status
+	status string
+	// Certificate bundle method
+	bundleMethod string
+	// Time the certificate expires
+	expiresAt time
+	// Time the certificate was uploaded
+	uploadedAt time
+	// Time the certificate was last modified
+	modifiedAt time
+	// Certificate priority
+	priority int
+}
+
+// Cloudflare managed certificate pack (Cloudflare-issued)
+private cloudflare.zone.certificatePack @defaults("id status") {
+	// Certificate pack identifier
+	id string
+	// Certificate pack type
+	type string
+	// Hostnames covered by the certificate pack
+	hosts []string
+	// Certificate pack status
+	status string
+	// Domain control validation method
+	validationMethod string
+	// Certificate validity in days
+	validityDays int
+	// Certificate authority used
+	certificateAuthority string
+}
+
 // Cloudflare DNS
 private cloudflare.dns {
 	// List all DNS records
@@ -98,6 +207,9 @@ private cloudflare.dns.record @defaults("type content name") {
 	// Time to live (in seconds)
 	ttl int
 
+	// Record priority (used by MX, SRV, and URI records)
+	priority int
+
 	// Time the record was created
 	createdOn time
 	// Time the record was last modified
@@ -111,6 +223,9 @@ private cloudflare.account @defaults("name") {
 
 	// Account name
 	name string
+
+	// Account type
+	type string
 
 	// Settings
 	settings cloudflare.account.settings
