@@ -72,6 +72,8 @@ func getServiceName(platformName string) string {
 		return "elb"
 	case "aws-es-domain":
 		return "es"
+	case "aws-opensearch-domain":
+		return "opensearch"
 	case "aws-kms-key":
 		return "kms"
 	case "aws-sagemaker-notebookinstance":
@@ -126,6 +128,8 @@ func getTitleForPlatformName(name string) string {
 		return "AWS ELB Load Balancer"
 	case "aws-es-domain":
 		return "AWS ES Domain"
+	case "aws-opensearch-domain":
+		return "AWS OpenSearch Domain"
 	case "aws-kms-key":
 		return "AWS KMS Key"
 	case "aws-sagemaker-notebookinstance":
