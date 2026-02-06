@@ -1,0 +1,24 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.8.0-45-generic"
+
+[files."/etc/os-release"]
+content = """
+PRETTY_NAME="KDE neon 6.2"
+NAME="KDE neon"
+VERSION_ID="22.04"
+VERSION="6.2"
+VERSION_CODENAME=jammy
+ID=neon
+ID_LIKE="ubuntu debian"
+HOME_URL="https://neon.kde.org/"
+SUPPORT_URL="https://neon.kde.org/"
+BUG_REPORT_URL="https://neon.kde.org/"
+PRIVACY_POLICY_URL="https://kde.org/privacypolicy/"
+UBUNTU_CODENAME=jammy
+"""

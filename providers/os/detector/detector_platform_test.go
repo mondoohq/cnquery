@@ -1109,3 +1109,36 @@ func TestCachyOSDetector(t *testing.T) {
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"arch", "linux", "unix", "os"}, di.Family)
 }
+
+func TestTailsDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-tails.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "tails", di.Name, "os name should be identified")
+	assert.Equal(t, "Tails", di.Title, "os title should be identified")
+	assert.Equal(t, "6.11", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
+func TestKDENeonDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-kdeneon.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "neon", di.Name, "os name should be identified")
+	assert.Equal(t, "KDE neon 6.2", di.Title, "os title should be identified")
+	assert.Equal(t, "22.04", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
+func TestQubesOSDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-qubes.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "qubes", di.Name, "os name should be identified")
+	assert.Equal(t, "Qubes OS 4.2 (R4.2)", di.Title, "os title should be identified")
+	assert.Equal(t, "4.2", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}

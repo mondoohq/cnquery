@@ -359,6 +359,39 @@ var nobara = &PlatformResolver{
 	},
 }
 
+var qubes = &PlatformResolver{
+	Name:     "qubes",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "qubes" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
+var tails = &PlatformResolver{
+	Name:     "tails",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "tails" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
+var kdeneon = &PlatformResolver{
+	Name:     "neon",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "neon" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 // rhel PlatformResolver only detects redhat and no derivatives
 var rhel = &PlatformResolver{
 	Name:     "redhat",
@@ -576,7 +609,7 @@ var bottlerocket = &PlatformResolver{
 			pf.Build = osr["BUILD_ID"]
 		}
 
-		return false, nil
+		return true, nil
 	},
 }
 
@@ -637,30 +670,9 @@ var gentoo = &PlatformResolver{
 	Name:     "gentoo",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		f, err := conn.FileSystem().Open("/etc/gentoo-release")
-		if err != nil {
-			return false, nil
+		if pf.Name == "gentoo" {
+			return true, nil
 		}
-		defer f.Close()
-
-		c, err := io.ReadAll(f)
-		if err != nil || len(c) == 0 {
-			log.Debug().Err(err)
-			return false, nil
-		}
-
-		content := strings.TrimSpace(string(c))
-		name, release, err := ParseRhelVersion(content)
-		if err == nil {
-			// only set title if not already properly detected by lsb or os-release
-			if len(pf.Title) == 0 {
-				pf.Title = name
-			}
-			if len(pf.Version) == 0 {
-				pf.Version = release
-			}
-		}
-
 		return false, nil
 	},
 }
@@ -1058,7 +1070,7 @@ var redhatFamily = &PlatformResolver{
 	IsFamily: true,
 	// NOTE: oracle pretends to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
 	// want to check that platform before redhat
-	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux, nobara},
+	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux, nobara, qubes},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		f, err := conn.FileSystem().Open("/etc/redhat-release")
 		if err != nil {
@@ -1106,7 +1118,7 @@ var redhatFamily = &PlatformResolver{
 var debianFamily = &PlatformResolver{
 	Name:     "debian",
 	IsFamily: true,
-	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot, cumulus, gardenlinux},
+	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot, cumulus, gardenlinux, tails, kdeneon},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},
