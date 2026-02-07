@@ -21,14 +21,14 @@ func init() {
 	VaultCmd.AddCommand(vaultListCmd)
 
 	vaultConfigureCmd.Flags().String("type", "", "possible values: "+strings.Join(vault.TypeIds(), " | "))
-	vaultConfigureCmd.Flags().StringToString("option", nil, "addition vault connection options, multiple options via --option key=value")
-	vaultConfigureCmd.Flags().String("inventory-file", "", "Set the path to the inventory file")
+	vaultConfigureCmd.Flags().StringToString("option", nil, "additional vault connection options, multiple options via --option key=value")
+	vaultConfigureCmd.Flags().String("inventory-file", "", "path to the inventory file")
 	VaultCmd.AddCommand(vaultConfigureCmd)
 
 	VaultCmd.AddCommand(vaultRemoveCmd)
 	VaultCmd.AddCommand(vaultResetCmd)
 
-	vaultAddSecretCmd.Flags().String("inventory-file", "", "Set the path to the inventory file")
+	vaultAddSecretCmd.Flags().String("inventory-file", "", "path to the inventory file")
 	vaultAddSecretCmd.MarkFlagRequired("inventory-file")
 	VaultCmd.AddCommand(vaultAddSecretCmd)
 
