@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"slices"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
@@ -57,26 +56,6 @@ func FromAsset(asset *inventory.Asset) (*recording, error) {
 // ReadOnly converts the recording into a read-only recording
 func (r *recording) ReadOnly() *readOnly {
 	return &readOnly{r}
-}
-
-type readOnly struct {
-	*recording
-}
-
-func (n *readOnly) Save() error {
-	return nil
-}
-
-func (n *readOnly) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
-	// For read-only recordings we are still loading from file, so that means
-	// we are severely lacking connection IDs.
-	existing := n.getExistingAsset(asset)
-	if existing != nil {
-		n.assets.Set(fmt.Sprintf("%d", connectionID), existing)
-	}
-}
-
-func (n *readOnly) AddData(req llx.AddDataReq) {
 }
 
 type RecordingOptions struct {
@@ -196,20 +175,48 @@ func (r *recording) Save() error {
 	return nil
 }
 
+func mrnKey(mrn string) string {
+	return "mrn:" + mrn
+}
+
+func platformIdKey(pid string) string {
+	return "pid:" + pid
+}
+
+func connIdKey(id uint32) string {
+	return fmt.Sprintf("conn-id:%d", id)
+}
+
 func (r *recording) refreshCache() {
 	r.assets = syncx.Map[*Asset]{}
 	for _, asset := range r.Assets {
 		asset.RefreshCache()
+		r.resyncAsset(asset)
+	}
+}
 
-		for _, conn := range asset.Connections {
-			// only connection ID's != 0 are valid IDs. We get lots of 0 when we
-			// initially load this object, so we won't know yet which asset belongs
-			// to which connection.
-			if conn.Id != 0 {
-				r.assets.Set(fmt.Sprintf("%d", conn.Id), asset)
-			}
+// resolveAsset looks up an asset by the given lookup criteria.
+// Priority: asset MRN > platform IDs > connection ID.
+func (r *recording) resolveAsset(lookup llx.AssetRecordingLookup) (*Asset, bool) {
+	if lookup.Mrn != "" {
+		if asset, ok := r.assets.Get(mrnKey(lookup.Mrn)); ok {
+			return asset, true
 		}
 	}
+
+	for _, pid := range lookup.PlatformIds {
+		if asset, ok := r.assets.Get(platformIdKey(pid)); ok {
+			return asset, true
+		}
+	}
+
+	if lookup.ConnectionId > 0 {
+		if asset, ok := r.assets.Get(connIdKey(lookup.ConnectionId)); ok {
+			return asset, true
+		}
+	}
+
+	return nil, false
 }
 
 func (r *recording) reconnectResources() error {
@@ -312,35 +319,22 @@ func (r *recording) finalize() {
 	}
 }
 
-func (r *recording) getExistingAsset(asset *inventory.Asset) *Asset {
-	for _, existing := range r.Assets {
-		id := existing.Asset.Id
-		if id == asset.Mrn {
-			return existing
-		}
-
-		for _, pidExisting := range existing.Asset.PlatformIds {
-			if slices.Contains(asset.PlatformIds, pidExisting) {
-				return existing
-			}
-		}
-	}
-
-	return nil
-}
-
 func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, connectionID uint32, conf *inventory.Config) {
 	if asset.Platform == nil {
 		log.Warn().Msg("cannot store asset in recording, asset has no platform")
 		return
 	}
-	id := getAssetIdForRecording(asset)
-	if id == "" {
+	if asset.Mrn == "" && len(asset.PlatformIds) == 0 {
 		log.Debug().Msg("cannot store asset in recording, asset has no mrn or platform ids")
 		return
 	}
-	recordingAsset := r.getExistingAsset(asset)
-	if recordingAsset == nil {
+
+	lookup := llx.AssetRecordingLookup{
+		Mrn:         asset.Mrn,
+		PlatformIds: asset.PlatformIds,
+	}
+	recordingAsset, ok := r.resolveAsset(lookup)
+	if !ok {
 		recordingAsset = &Asset{
 			Asset:       asset,
 			connections: map[string]*connection{},
@@ -348,24 +342,45 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 		}
 		r.Assets = append(r.Assets, recordingAsset)
 	}
-	// always update the id for the asset, sometimes we get assets by id and then
-	// they get updated with an MRN attached
-	recordingAsset.Asset.Id = getAssetIdForRecording(asset)
-	if len(asset.PlatformIds) != 0 {
+
+	// always update the mrn and platform ids for the asset, sometimes we
+	// get assets by id and then they get updated with an MRN attached
+	if asset.Mrn != "" {
+		recordingAsset.Asset.Mrn = asset.Mrn
+	}
+	if len(asset.PlatformIds) > 0 {
 		recordingAsset.Asset.PlatformIds = asset.PlatformIds
 	}
 
-	recordingAsset.connections[fmt.Sprintf("%d", conf.Id)] = &connection{
-		Url:        conf.ToUrl(),
-		ProviderID: providerID,
-		Connector:  conf.Type,
-		Id:         conf.Id,
+	if conf.Id > 0 {
+		recordingAsset.connections[fmt.Sprintf("%d", conf.Id)] = &connection{
+			Url:        conf.ToUrl(),
+			ProviderID: providerID,
+			Connector:  conf.Type,
+			Id:         conf.Id,
+		}
 	}
-	r.assets.Set(fmt.Sprintf("%d", conf.Id), recordingAsset)
+
+	r.resyncAsset(recordingAsset)
+}
+
+func (r *recording) resyncAsset(recordingAsset *Asset) {
+	if recordingAsset.Asset.Mrn != "" {
+		r.assets.Set(mrnKey(recordingAsset.Asset.Mrn), recordingAsset)
+	}
+	for _, pid := range recordingAsset.Asset.PlatformIds {
+		r.assets.Set(platformIdKey(pid), recordingAsset)
+	}
+	// Index by connection IDs from the runtime connections (added via EnsureAsset)
+	for _, conn := range recordingAsset.connections {
+		if conn.Id > 0 {
+			r.assets.Set(connIdKey(conn.Id), recordingAsset)
+		}
+	}
 }
 
 func (r *recording) AddData(req llx.AddDataReq) {
-	asset, ok := r.assets.Get(fmt.Sprintf("%d", req.ConnectionID))
+	asset, ok := r.assets.Get(connIdKey(req.ConnectionID))
 	if !ok {
 		return
 	}
@@ -393,10 +408,10 @@ func (r *recording) AddData(req llx.AddDataReq) {
 	}
 }
 
-func (r *recording) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
-	asset, ok := r.assets.Get(fmt.Sprintf("%d", connectionID))
+func (r *recording) resolveResource(lookup llx.AssetRecordingLookup, resource string, id string) (*Resource, string, bool) {
+	asset, ok := r.resolveAsset(lookup)
 	if !ok {
-		return nil, false
+		return nil, "", false
 	}
 
 	// overwrite resourceId if there exists a lookup entry
@@ -406,29 +421,33 @@ func (r *recording) GetData(connectionID uint32, resource string, id string, fie
 
 	obj, exist := asset.resources[resource+"\x00"+id]
 	if !exist {
+		return nil, "", false
+	}
+
+	return obj, id, true
+}
+
+func (r *recording) GetData(lookup llx.AssetRecordingLookup, resource string, id string, field string) (*llx.RawData, bool) {
+	obj, resolvedID, ok := r.resolveResource(lookup, resource, id)
+	if !ok {
 		return nil, false
 	}
 
 	if field == "" {
-		return &llx.RawData{Type: types.Resource(resource), Value: id}, true
+		return &llx.RawData{Type: types.Resource(resource), Value: resolvedID}, true
 	}
 
 	data, ok := obj.Fields[field]
 	if !ok && field == "id" {
-		return llx.StringData(id), true
+		return llx.StringData(resolvedID), true
 	}
 
 	return data, ok
 }
 
-func (r *recording) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
-	asset, ok := r.assets.Get(fmt.Sprintf("%d", connectionID))
+func (r *recording) GetResource(lookup llx.AssetRecordingLookup, resource string, id string) (map[string]*llx.RawData, bool) {
+	obj, _, ok := r.resolveResource(lookup, resource, id)
 	if !ok {
-		return nil, false
-	}
-
-	obj, exist := asset.resources[resource+"\x00"+id]
-	if !exist {
 		return nil, false
 	}
 
@@ -436,33 +455,27 @@ func (r *recording) GetResource(connectionID uint32, resource string, id string)
 }
 
 func (r *recording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecording, bool) {
-	var cur *Asset
-	for i := range r.Assets {
-		cur = r.Assets[i]
-		if assetMrn == "" && len(r.Assets) == 1 {
-			// next
-		} else if cur.Asset.Id != assetMrn {
-			continue
-		}
-
-		ensureAssetMetadata(cur.resources, cur.Asset)
-
-		res := make(map[string]*llx.ResourceRecording, len(cur.resources))
-		for k, v := range cur.resources {
-			fields := make(map[string]*llx.Result, len(v.Fields))
-			for fk, fv := range v.Fields {
-				fields[fk] = fv.Result()
-			}
-			res[k] = &llx.ResourceRecording{
-				Resource: v.Resource,
-				Id:       v.ID,
-				Fields:   fields,
-			}
-		}
-
-		return res, true
+	cur, ok := r.resolveAsset(llx.AssetRecordingLookup{Mrn: assetMrn})
+	if !ok {
+		return nil, false
 	}
-	return nil, false
+
+	ensureAssetMetadata(cur.resources, cur.Asset)
+
+	res := make(map[string]*llx.ResourceRecording, len(cur.resources))
+	for k, v := range cur.resources {
+		fields := make(map[string]*llx.Result, len(v.Fields))
+		for fk, fv := range v.Fields {
+			fields[fk] = fv.Result()
+		}
+		res[k] = &llx.ResourceRecording{
+			Resource: v.Resource,
+			Id:       v.ID,
+			Fields:   fields,
+		}
+	}
+
+	return res, true
 }
 
 func (r *recording) GetAssetRecordings() []*Asset {
@@ -470,7 +483,7 @@ func (r *recording) GetAssetRecordings() []*Asset {
 }
 
 func (r *recording) SetAssetRecording(id uint32, reco *Asset) {
-	r.assets.Set(fmt.Sprintf("%d", id), reco)
+	r.assets.Set(connIdKey(id), reco)
 }
 
 // This method makes sure the asset metadata is always included in the data
@@ -513,32 +526,4 @@ func ensureAssetMetadata(resources map[string]*Resource, asset *inventory.Asset)
 		}
 		existing.Fields["ids"] = llx.ArrayData(arr, types.String)
 	}
-}
-
-func RawDataArgsToResultArgs(args map[string]*llx.RawData) (map[string]*llx.Result, error) {
-	all := make(map[string]*llx.Result, len(args))
-	var err multierr.Errors
-	for k, v := range args {
-		res := v.Result()
-		if res.Error != "" {
-			err.Add(errors.New("failed to convert '" + k + "': " + res.Error))
-		} else {
-			all[k] = res
-		}
-	}
-
-	return all, err.Deduplicate()
-}
-
-func getAssetIdForRecording(asset *inventory.Asset) string {
-	if asset.Mrn != "" {
-		return asset.Mrn
-	}
-
-	slices.Sort(asset.PlatformIds)
-	if len(asset.PlatformIds) > 0 {
-		return asset.PlatformIds[0]
-	}
-
-	return ""
 }

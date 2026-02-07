@@ -339,7 +339,7 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 		return nil, err
 	}
 
-	if _, ok := r.Recording().GetResource(provider.Connection.Id, name, string(res.Data.Value)); !ok {
+	if _, ok := r.Recording().GetResource(llx.AssetRecordingLookup{ConnectionId: provider.Connection.Id}, name, string(res.Data.Value)); !ok {
 		addDataReq := llx.AddDataReq{
 			ConnectionID:      provider.Connection.Id,
 			Resource:          name,
@@ -441,7 +441,7 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 		}
 	}
 
-	if cached, ok := r.Recording().GetData(provider.Connection.Id, resource, resourceID, field); ok {
+	if cached, ok := r.Recording().GetData(llx.AssetRecordingLookup{ConnectionId: provider.Connection.Id}, resource, resourceID, field); ok {
 		return cached, nil
 	}
 

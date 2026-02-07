@@ -22,11 +22,11 @@ func (n Null) EnsureAsset(asset *inventory.Asset, provider string, connectionID 
 func (n Null) AddData(req llx.AddDataReq) {
 }
 
-func (n Null) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
+func (n Null) GetData(lookup llx.AssetRecordingLookup, resource string, id string, field string) (*llx.RawData, bool) {
 	return nil, false
 }
 
-func (n Null) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
+func (n Null) GetResource(lookup llx.AssetRecordingLookup, resource string, id string) (map[string]*llx.RawData, bool) {
 	return nil, false
 }
 
