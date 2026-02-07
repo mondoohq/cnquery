@@ -51,4 +51,14 @@ var builtinProviders = map[string]*builtinProvider{
 		},
 		Config: sbomProvider.Provider,
 	},
+	recordingProviderInstance.ID: {
+		Runtime: &RunningProvider{
+			Name:     recordingProviderInstance.Name,
+			ID:       recordingProviderInstance.ID,
+			Plugin:   &recordingProvider{},
+			Schema:   &resources.Schema{},
+			isClosed: false,
+		},
+		Config: recordingProviderInstance.Provider,
+	},
 }

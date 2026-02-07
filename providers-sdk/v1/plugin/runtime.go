@@ -134,7 +134,6 @@ func (r *Runtime) initResourcesFromRecording(val any, typ types.Type) (any, erro
 	case typ.IsResource():
 		// It has to be a mock resource if we loaded it from recording.
 		// We also do this as a kind of safety check (instead of using the interface)
-
 		resource := val.(*llx.MockResource)
 		args, err := r.ResourceFromRecording(resource.Name, resource.ID)
 		if err != nil {

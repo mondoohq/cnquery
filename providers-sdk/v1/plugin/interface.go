@@ -32,6 +32,11 @@ type ProviderCallback interface {
 	GetData(req *DataReq) (*DataRes, error)
 }
 
+// StaticProvider is a provider that requires no connection to other providers.
+type StaticProvider interface {
+	StaticName() string
+}
+
 // ProviderPlugin is the interface that we're exposing as a plugin.
 type ProviderPlugin interface {
 	Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error)

@@ -53,4 +53,5 @@ type Recording interface {
 	GetData(lookup AssetRecordingLookup, resource string, resourceId string, field string) (*RawData, bool)
 	GetResource(lookup AssetRecordingLookup, resource string, resourceId string) (map[string]*RawData, bool)
 	GetAssetData(assetMrn string) (map[string]*ResourceRecording, bool)
+	GetAssets() []*inventory.Asset
 }

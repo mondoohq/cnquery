@@ -11,6 +11,15 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
+func NewAssetRecording(asset *inventory.Asset) *Asset {
+	return &Asset{
+		Asset:       asset,
+		connections: map[string]*connection{},
+		resources:   map[string]*Resource{},
+		IdsLookup:   map[string]string{},
+	}
+}
+
 type Asset struct {
 	Asset       *inventory.Asset `json:"asset"`
 	Connections []connection     `json:"connections"`
