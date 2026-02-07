@@ -33,3 +33,7 @@ func (n Null) GetResource(lookup llx.AssetRecordingLookup, resource string, id s
 func (n Null) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecording, bool) {
 	return nil, false
 }
+
+func (n Null) GetAssets() []*inventory.Asset {
+	return []*inventory.Asset{}
+}

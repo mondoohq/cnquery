@@ -12,10 +12,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	core "go.mondoo.com/cnquery/v12/providers/core/provider"
 	"go.mondoo.com/cnquery/v12/types"
 	"go.mondoo.com/cnquery/v12/utils/multierr"
 	"go.mondoo.com/cnquery/v12/utils/syncx"
 )
+
+var _ llx.Recording = &recording{}
 
 const internalLookupId = "mql/internal-lookup-id"
 
@@ -30,15 +33,6 @@ type recording struct {
 	doNotSave bool `json:"-"`
 }
 
-func NewAssetRecording(asset *inventory.Asset) *Asset {
-	return &Asset{
-		Asset:       asset,
-		connections: map[string]*connection{},
-		resources:   map[string]*Resource{},
-		IdsLookup:   map[string]string{},
-	}
-}
-
 // Creates a recording that holds only the specified asset
 func FromAsset(asset *inventory.Asset) (*recording, error) {
 	r := &recording{
@@ -50,6 +44,14 @@ func FromAsset(asset *inventory.Asset) (*recording, error) {
 	r.refreshCache()
 	if err := r.reconnectResources(); err != nil {
 		return nil, err
+	}
+
+	return r, nil
+}
+
+func FromAssetRecording(assetRec *Asset) (*recording, error) {
+	r := &recording{
+		Assets: []*Asset{assetRec},
 	}
 
 	return r, nil
@@ -295,7 +297,7 @@ func tryReconnect(typ types.Type, v any, resource *Resource) (any, error) {
 func reconnectResource(v any, resource *Resource) (any, error) {
 	vals, ok := v.(map[string]any)
 	if !ok {
-		return nil, errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect reference")
+		return nil, fmt.Errorf("error in recording: resource '%s' (ID:%s) has incorrect reference %T type", resource.Resource, resource.ID, v)
 	}
 	name, ok := vals["Name"].(string)
 	if !ok {
@@ -421,12 +423,28 @@ func (r *recording) resolveResource(lookup llx.AssetRecordingLookup, resource st
 		id = lookupId
 	}
 
+	// special case: we're asking for the asset. we can use the recording's asset directly
+	// since that provides the most detailed information about the asset
+	if resource == "asset" {
+		assetResource := createResourceAsset(asset.Asset, id)
+		return assetResource, id, true
+	}
+
 	obj, exist := asset.resources[resource+"\x00"+id]
 	if !exist {
 		return nil, "", false
 	}
 
 	return obj, id, true
+}
+
+func createResourceAsset(asset *inventory.Asset, id string) *Resource {
+	args := core.CreateAssetResourceArgs(asset)
+	return &Resource{
+		Resource: "asset",
+		ID:       id,
+		Fields:   args,
+	}
 }
 
 func (r *recording) GetData(lookup llx.AssetRecordingLookup, resource string, id string, field string) (*llx.RawData, bool) {
@@ -495,6 +513,14 @@ func (r *recording) GetAssetRecordings() []*Asset {
 	return r.Assets
 }
 
+func (r *recording) GetAssets() []*inventory.Asset {
+	assets := make([]*inventory.Asset, len(r.Assets))
+	for i := range r.Assets {
+		assets[i] = r.Assets[i].Asset
+	}
+	return assets
+}
+
 func (r *recording) SetAssetRecording(id uint32, reco *Asset) {
 	r.assets.Set(connIdKey(id), reco)
 }
@@ -513,30 +539,5 @@ func ensureAssetMetadata(resources map[string]*Resource, asset *inventory.Asset)
 		resources[id] = existing
 	}
 
-	if _, ok := existing.Fields["platform"]; !ok {
-		existing.Fields["platform"] = llx.StringData(asset.Name)
-	}
-	if _, ok := existing.Fields["version"]; !ok {
-		existing.Fields["version"] = llx.StringData(asset.Platform.Version)
-	}
-	if _, ok := existing.Fields["kind"]; !ok {
-		existing.Fields["kind"] = llx.StringData(asset.Platform.Kind)
-	}
-	if _, ok := existing.Fields["runtime"]; !ok {
-		existing.Fields["runtime"] = llx.StringData(asset.Platform.Runtime)
-	}
-	if _, ok := existing.Fields["arch"]; !ok {
-		existing.Fields["arch"] = llx.StringData(asset.Platform.Arch)
-	}
-	if _, ok := existing.Fields["title"]; !ok {
-		existing.Fields["title"] = llx.StringData(asset.Platform.Title)
-	}
-
-	if _, ok := existing.Fields["ids"]; !ok {
-		arr := make([]any, len(asset.PlatformIds))
-		for i := range asset.PlatformIds {
-			arr[i] = asset.PlatformIds[i]
-		}
-		existing.Fields["ids"] = llx.ArrayData(arr, types.String)
-	}
+	existing.Fields = core.CreateAssetResourceArgs(asset)
 }

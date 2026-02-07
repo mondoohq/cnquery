@@ -379,6 +379,11 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 		return &sbomProvider, nil
 	}
 
+	if search.ID == recordingProviderInstance.ID || search.ConnName == "recording" || search.ConnType == "recording" {
+		existing.Add(&recordingProviderInstance)
+		return &recordingProviderInstance, nil
+	}
+
 	upstream := DefaultProviders.Lookup(search)
 	if upstream == nil {
 		// we can't find any provider for this connector in our default set
