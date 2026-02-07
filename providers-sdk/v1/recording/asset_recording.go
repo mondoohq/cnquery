@@ -4,6 +4,7 @@
 package recording
 
 import (
+	"fmt"
 	"sort"
 
 	"go.mondoo.com/cnquery/v12/llx"
@@ -82,6 +83,6 @@ func (asset *Asset) RefreshCache() {
 	}
 
 	for _, conn := range asset.Connections {
-		asset.connections[conn.Url] = &conn
+		asset.connections[fmt.Sprintf("%d", conn.Id)] = &conn
 	}
 }
