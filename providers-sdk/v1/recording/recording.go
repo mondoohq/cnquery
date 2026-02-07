@@ -539,6 +539,5 @@ func ensureAssetMetadata(resources map[string]*Resource, asset *inventory.Asset)
 		resources[id] = existing
 	}
 
-	assetArgs := core.CreateAssetResourceArgs(asset)
-	existing.Fields = assetArgs
+	existing.Fields = core.CreateAssetResourceArgs(asset)
 }
