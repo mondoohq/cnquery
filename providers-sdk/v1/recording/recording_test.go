@@ -7,14 +7,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
 )
 
 func TestLoadRecording(t *testing.T) {
 	record, err := LoadRecordingFile("testdata/recording.json")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, record)
 }
 
@@ -58,7 +57,7 @@ func TestAddAndGetData(t *testing.T) {
 		// Verify the resource was created
 		resourceKey := "aws.ec2.instance\x00i-12345"
 		res, exists := r.Assets[0].resources[resourceKey]
-		require.True(t, exists)
+		assert.True(t, exists)
 		assert.Equal(t, "aws.ec2.instance", res.Resource)
 		assert.Equal(t, "i-12345", res.ID)
 		assert.NotNil(t, res.Fields["name"])
@@ -66,12 +65,12 @@ func TestAddAndGetData(t *testing.T) {
 
 		// Verify GetData retrieves the field correctly
 		data, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 1}, "aws.ec2.instance", "i-12345", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "test-instance", data.Value)
 
 		// Verify GetData retrieves the resource id when the field is empty
 		data, ok = r.GetData(llx.AssetRecordingLookup{ConnectionId: 1}, "aws.ec2.instance", "i-12345", "")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "i-12345", data.Value)
 	})
 
@@ -103,18 +102,18 @@ func TestAddAndGetData(t *testing.T) {
 		// Verify both fields exist
 		resourceKey := "aws.ec2.instance\x00i-67890"
 		res, exists := r.Assets[0].resources[resourceKey]
-		require.True(t, exists)
+		assert.True(t, exists)
 		assert.Equal(t, 2, len(res.Fields))
 		assert.Equal(t, "instance-1", res.Fields["name"].Value)
 		assert.Equal(t, "running", res.Fields["state"].Value)
 
 		// Verify GetData retrieves both fields correctly
 		nameData, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 2}, "aws.ec2.instance", "i-67890", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "instance-1", nameData.Value)
 
 		stateData, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 2}, "aws.ec2.instance", "i-67890", "state")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "running", stateData.Value)
 	})
 
@@ -134,11 +133,11 @@ func TestAddAndGetData(t *testing.T) {
 
 		lookupKey := "aws.ec2.instance\x00"
 		actualID, exists := r.Assets[0].IdsLookup[lookupKey]
-		require.True(t, exists)
+		assert.True(t, exists)
 		assert.Equal(t, "arn:aws:ec2:us-east-1:123456789012:instance/i-abc123", actualID)
 
 		data, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 3}, "aws.ec2.instance", "", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "test-instance", data.Value)
 	})
 
@@ -162,7 +161,7 @@ func TestAddAndGetData(t *testing.T) {
 
 		// Verify GetData retrieves the data using the resource ID
 		data, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 4}, "aws.ec2.instance", "i-xyz789", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "same-id-instance", data.Value)
 	})
 
@@ -205,19 +204,19 @@ func TestAddAndGetData(t *testing.T) {
 		// Verify resource exists but has no fields
 		resourceKey := "aws.ec2.instance\x00i-field-test"
 		res, exists := r.Assets[0].resources[resourceKey]
-		require.True(t, exists)
+		assert.True(t, exists)
 		assert.Equal(t, "aws.ec2.instance", res.Resource)
 		assert.Equal(t, "i-field-test", res.ID)
 		assert.Equal(t, 0, len(res.Fields))
 
 		// Verify GetData with empty field returns the resource id
 		data, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 6}, "aws.ec2.instance", "i-field-test", "")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "i-field-test", data.Value)
 
 		// Verify GetData for "id" field returns the resource id
 		data, ok = r.GetData(llx.AssetRecordingLookup{ConnectionId: 6}, "aws.ec2.instance", "i-field-test", "id")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "i-field-test", data.Value)
 	})
 
@@ -237,7 +236,7 @@ func TestAddAndGetData(t *testing.T) {
 
 		// Verify initial value via GetData
 		data, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 7}, "aws.ec2.instance", "i-overwrite", "state")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "pending", data.Value)
 
 		// Overwrite the same field
@@ -254,13 +253,13 @@ func TestAddAndGetData(t *testing.T) {
 		// Verify the field was overwritten
 		resourceKey := "aws.ec2.instance\x00i-overwrite"
 		res, exists := r.Assets[0].resources[resourceKey]
-		require.True(t, exists)
+		assert.True(t, exists)
 		assert.Equal(t, 1, len(res.Fields))
 		assert.Equal(t, "running", res.Fields["state"].Value)
 
 		// Verify GetData retrieves the updated value
 		data, ok = r.GetData(llx.AssetRecordingLookup{ConnectionId: 7}, "aws.ec2.instance", "i-overwrite", "state")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "running", data.Value)
 	})
 
@@ -302,28 +301,28 @@ func TestAddAndGetData(t *testing.T) {
 		assert.Equal(t, 3, len(r.Assets[0].resources))
 
 		res1, exists := r.Assets[0].resources["aws.ec2.instance\x00i-multi-1"]
-		require.True(t, exists)
+		assert.True(t, exists)
 		assert.Equal(t, "instance-1", res1.Fields["name"].Value)
 
 		res2, exists := r.Assets[0].resources["aws.ec2.instance\x00i-multi-2"]
-		require.True(t, exists)
+		assert.True(t, exists)
 		assert.Equal(t, "instance-2", res2.Fields["name"].Value)
 
 		res3, exists := r.Assets[0].resources["aws.s3.bucket\x00bucket-1"]
-		require.True(t, exists)
+		assert.True(t, exists)
 		assert.Equal(t, "my-bucket", res3.Fields["name"].Value)
 
 		// Verify GetData retrieves all resources correctly
 		data1, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 8}, "aws.ec2.instance", "i-multi-1", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "instance-1", data1.Value)
 
 		data2, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 8}, "aws.ec2.instance", "i-multi-2", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "instance-2", data2.Value)
 
 		data3, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 8}, "aws.s3.bucket", "bucket-1", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "my-bucket", data3.Value)
 	})
 }
@@ -349,28 +348,28 @@ func TestGetDataLookupTypes(t *testing.T) {
 	t.Run("GetData by MRN", func(t *testing.T) {
 		r := setup(t)
 		data, ok := r.GetData(llx.AssetRecordingLookup{Mrn: "test-mrn"}, "aws.ec2.instance", "i-lookup", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "lookup-instance", data.Value)
 	})
 
 	t.Run("GetData by platform ID", func(t *testing.T) {
 		r := setup(t)
 		data, ok := r.GetData(llx.AssetRecordingLookup{PlatformIds: []string{"pid-1"}}, "aws.ec2.instance", "i-lookup", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "lookup-instance", data.Value)
 	})
 
 	t.Run("GetData by second platform ID", func(t *testing.T) {
 		r := setup(t)
 		data, ok := r.GetData(llx.AssetRecordingLookup{PlatformIds: []string{"pid-2"}}, "aws.ec2.instance", "i-lookup", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "lookup-instance", data.Value)
 	})
 
 	t.Run("GetData by connection ID", func(t *testing.T) {
 		r := setup(t)
 		data, ok := r.GetData(llx.AssetRecordingLookup{ConnectionId: 10}, "aws.ec2.instance", "i-lookup", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "lookup-instance", data.Value)
 	})
 
@@ -382,7 +381,7 @@ func TestGetDataLookupTypes(t *testing.T) {
 			PlatformIds:  []string{"pid-1"},
 			ConnectionId: 10,
 		}, "aws.ec2.instance", "i-lookup", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "lookup-instance", data.Value)
 	})
 
@@ -392,7 +391,7 @@ func TestGetDataLookupTypes(t *testing.T) {
 			Mrn:         "nonexistent-mrn",
 			PlatformIds: []string{"pid-1"},
 		}, "aws.ec2.instance", "i-lookup", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "lookup-instance", data.Value)
 	})
 
@@ -403,7 +402,7 @@ func TestGetDataLookupTypes(t *testing.T) {
 			PlatformIds:  []string{"nonexistent-pid"},
 			ConnectionId: 10,
 		}, "aws.ec2.instance", "i-lookup", "name")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "lookup-instance", data.Value)
 	})
 
@@ -416,6 +415,166 @@ func TestGetDataLookupTypes(t *testing.T) {
 		}, "aws.ec2.instance", "i-lookup", "name")
 		assert.False(t, ok)
 		assert.Nil(t, data)
+	})
+}
+
+func TestGetAssetData(t *testing.T) {
+	t.Run("returns false when asset MRN not found", func(t *testing.T) {
+		r := newTestRecording(t, "test-mrn", []string{"pid-1"}, 1)
+
+		data, ok := r.GetAssetData("nonexistent-mrn")
+		assert.False(t, ok)
+		assert.Nil(t, data)
+	})
+
+	t.Run("returns asset data with resource recordings", func(t *testing.T) {
+		r := newTestRecording(t, "test-mrn", []string{"pid-1"}, 1)
+
+		// Add a resource with fields
+		req := llx.AddDataReq{
+			ConnectionID:      1,
+			Resource:          "aws.ec2.instance",
+			ResourceID:        "i-12345",
+			RequestResourceId: "i-12345",
+			Field:             "name",
+			Data:              llx.StringData("test-instance"),
+		}
+		r.AddData(req)
+
+		data, ok := r.GetAssetData("test-mrn")
+		assert.True(t, ok)
+
+		// Verify the resource recording exists
+		resourceKey := "aws.ec2.instance\x00i-12345"
+		rec, exists := data[resourceKey]
+		assert.True(t, exists)
+		assert.Equal(t, "aws.ec2.instance", rec.Resource)
+		assert.Equal(t, "i-12345", rec.Id)
+		assert.Equal(t, "test-instance", string(rec.Fields["name"].Data.Value))
+	})
+
+	t.Run("includes asset metadata", func(t *testing.T) {
+		r := newTestRecording(t, "test-mrn", []string{"pid-1"}, 1)
+
+		data, ok := r.GetAssetData("test-mrn")
+		assert.True(t, ok)
+
+		// Verify asset metadata is included
+		assetKey := "asset\x00"
+		rec, exists := data[assetKey]
+		assert.True(t, exists)
+		assert.Equal(t, "asset", rec.Resource)
+		assert.Equal(t, "", rec.Id)
+		// ensureAssetMetadata populates platform from asset.Name (empty in test setup)
+		// and ids from asset.PlatformIds
+		assert.Equal(t, "", string(rec.Fields["platform"].Data.Value))
+		assert.Equal(t, 1, len(rec.Fields["ids"].Data.Array))
+		assert.Equal(t, "pid-1", string(rec.Fields["ids"].Data.Array[0].Value))
+	})
+
+	t.Run("includes IdsLookup entries as internal lookup resources", func(t *testing.T) {
+		r := newTestRecording(t, "test-mrn", []string{"pid-1"}, 1)
+
+		// Add data where request ID differs from actual ID to create a lookup entry
+		req := llx.AddDataReq{
+			ConnectionID:      1,
+			Resource:          "aws.ec2.instance",
+			ResourceID:        "arn:aws:ec2:us-east-1:123456789012:instance/i-abc123",
+			RequestResourceId: "", // Empty request ID creates a lookup entry
+			Field:             "name",
+			Data:              llx.StringData("test-instance"),
+		}
+		r.AddData(req)
+
+		data, ok := r.GetAssetData("test-mrn")
+		assert.True(t, ok)
+
+		// Verify the lookup entry is stored as an internal lookup resource
+		lookupKey := "mql/internal-lookup-id\x00aws.ec2.instance\x00"
+		rec, exists := data[lookupKey]
+		assert.True(t, exists, "internal lookup resource should exist")
+		assert.Equal(t, "mql/internal-lookup-id", rec.Resource)
+		assert.Equal(t, "aws.ec2.instance\x00", rec.Id)
+		assert.Equal(t, "arn:aws:ec2:us-east-1:123456789012:instance/i-abc123", string(rec.Fields["value"].Data.Value))
+	})
+
+	t.Run("returns multiple resources for the same asset", func(t *testing.T) {
+		r := newTestRecording(t, "test-mrn", []string{"pid-1"}, 1)
+
+		// Add multiple resources
+		r.AddData(llx.AddDataReq{
+			ConnectionID:      1,
+			Resource:          "aws.ec2.instance",
+			ResourceID:        "i-1",
+			RequestResourceId: "i-1",
+			Field:             "name",
+			Data:              llx.StringData("instance-1"),
+		})
+		r.AddData(llx.AddDataReq{
+			ConnectionID:      1,
+			Resource:          "aws.ec2.instance",
+			ResourceID:        "i-2",
+			RequestResourceId: "i-2",
+			Field:             "name",
+			Data:              llx.StringData("instance-2"),
+		})
+		r.AddData(llx.AddDataReq{
+			ConnectionID:      1,
+			Resource:          "aws.s3.bucket",
+			ResourceID:        "my-bucket",
+			RequestResourceId: "my-bucket",
+			Field:             "name",
+			Data:              llx.StringData("bucket-name"),
+		})
+
+		data, ok := r.GetAssetData("test-mrn")
+		assert.True(t, ok)
+
+		// Verify all resources are included (3 resources + 1 asset metadata)
+		assert.Equal(t, 4, len(data))
+
+		rec1, exists := data["aws.ec2.instance\x00i-1"]
+		assert.True(t, exists)
+		assert.Equal(t, "instance-1", string(rec1.Fields["name"].Data.Value))
+
+		rec2, exists := data["aws.ec2.instance\x00i-2"]
+		assert.True(t, exists)
+		assert.Equal(t, "instance-2", string(rec2.Fields["name"].Data.Value))
+
+		rec3, exists := data["aws.s3.bucket\x00my-bucket"]
+		assert.True(t, exists)
+		assert.Equal(t, "bucket-name", string(rec3.Fields["name"].Data.Value))
+	})
+
+	t.Run("converts multiple fields per resource", func(t *testing.T) {
+		r := newTestRecording(t, "test-mrn", []string{"pid-1"}, 1)
+
+		// Add multiple fields to the same resource
+		r.AddData(llx.AddDataReq{
+			ConnectionID:      1,
+			Resource:          "aws.ec2.instance",
+			ResourceID:        "i-multi",
+			RequestResourceId: "i-multi",
+			Field:             "name",
+			Data:              llx.StringData("my-instance"),
+		})
+		r.AddData(llx.AddDataReq{
+			ConnectionID:      1,
+			Resource:          "aws.ec2.instance",
+			ResourceID:        "i-multi",
+			RequestResourceId: "i-multi",
+			Field:             "state",
+			Data:              llx.StringData("running"),
+		})
+
+		data, ok := r.GetAssetData("test-mrn")
+		assert.True(t, ok)
+
+		rec, exists := data["aws.ec2.instance\x00i-multi"]
+		assert.True(t, exists)
+		assert.Equal(t, 2, len(rec.Fields))
+		assert.Equal(t, "my-instance", string(rec.Fields["name"].Data.Value))
+		assert.Equal(t, "running", string(rec.Fields["state"].Data.Value))
 	})
 }
 
@@ -440,21 +599,21 @@ func TestGetResourceLookupTypes(t *testing.T) {
 	t.Run("GetResource by MRN", func(t *testing.T) {
 		r := setup(t)
 		fields, ok := r.GetResource(llx.AssetRecordingLookup{Mrn: "test-mrn"}, "aws.ec2.instance", "i-res")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "running", fields["state"].Value)
 	})
 
 	t.Run("GetResource by platform ID", func(t *testing.T) {
 		r := setup(t)
 		fields, ok := r.GetResource(llx.AssetRecordingLookup{PlatformIds: []string{"pid-1"}}, "aws.ec2.instance", "i-res")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "running", fields["state"].Value)
 	})
 
 	t.Run("GetResource by connection ID", func(t *testing.T) {
 		r := setup(t)
 		fields, ok := r.GetResource(llx.AssetRecordingLookup{ConnectionId: 10}, "aws.ec2.instance", "i-res")
-		require.True(t, ok)
+		assert.True(t, ok)
 		assert.Equal(t, "running", fields["state"].Value)
 	})
 
