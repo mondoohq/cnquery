@@ -17,6 +17,8 @@ import (
 	"go.mondoo.com/cnquery/v12/utils/syncx"
 )
 
+const internalLookupId = "mql/internal-lookup-id"
+
 type recording struct {
 	Assets []*Asset `json:"assets"`
 	Path   string   `json:"-"`
@@ -472,6 +474,17 @@ func (r *recording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecor
 			Resource: v.Resource,
 			Id:       v.ID,
 			Fields:   fields,
+		}
+	}
+	// we need to also store the id lookups as part of the resource recording
+	// so that they can be reused later when only reading the resource recording
+	for k, v := range cur.IdsLookup {
+		res[internalLookupId+"\x00"+k] = &llx.ResourceRecording{
+			Resource: internalLookupId,
+			Id:       k,
+			Fields: map[string]*llx.Result{
+				"value": llx.StringData(v).Result(),
+			},
 		}
 	}
 
