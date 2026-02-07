@@ -37,7 +37,7 @@ func init() {
 	LoginCmd.Flags().StringP("token", "t", "", "Set a client registration token")
 	LoginCmd.Flags().StringToString("annotation", nil, "Set the client annotations")
 	LoginCmd.Flags().String("providers-url", "", "Set the providers URL")
-	LoginCmd.Flags().String("name", "", "Set asset name")
+	LoginCmd.Flags().String("name", "", "Set the asset name")
 	LoginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint")
 	LoginCmd.Flags().Int("timer", 0, "Set the scan interval in minutes")
 	LoginCmd.Flags().Int("splay", 0, "Randomize the timer by up to this many minutes")

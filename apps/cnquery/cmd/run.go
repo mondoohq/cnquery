@@ -19,7 +19,7 @@ import (
 func init() {
 	rootCmd.AddCommand(RunCmd)
 
-	_ = RunCmd.Flags().StringP("command", "c", "", "MQL query to execute in the shell")
+	_ = RunCmd.Flags().StringP("command", "c", "", "MQL query to execute")
 	_ = RunCmd.Flags().Bool("parse", false, "Parse the query and return the logical structure")
 	_ = RunCmd.Flags().Bool("ast", false, "Parse the query and return the abstract syntax tree (AST)")
 	_ = RunCmd.Flags().Bool("info", false, "Parse the query and provide information about it")
@@ -39,7 +39,7 @@ func init() {
 var RunCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run an MQL query",
-	Long:  `Run an MQL query on the CLI and displays its results.`,
+	Long:  `Run an MQL query on the CLI and display its results.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		_ = viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
 		_ = viper.BindPFlag("annotations", cmd.Flags().Lookup("annotations"))

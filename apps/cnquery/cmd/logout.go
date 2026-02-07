@@ -21,7 +21,7 @@ import (
 
 func init() {
 	rootCmd.AddCommand(LogoutCmd)
-	LogoutCmd.Flags().Bool("force", false, "Force re-authentication")
+	LogoutCmd.Flags().Bool("force", false, "Force the logout without confirmation")
 }
 
 var LogoutCmd = &cobra.Command{

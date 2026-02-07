@@ -29,7 +29,7 @@ import (
 )
 
 func init() {
-	StatusCmd.Flags().StringP("output", "o", "", "Set output format. Accepts json or yaml.")
+	StatusCmd.Flags().StringP("output", "o", "", "Set the output format: json, yaml")
 	rootCmd.AddCommand(StatusCmd)
 }
 

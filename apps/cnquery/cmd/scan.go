@@ -26,7 +26,7 @@ import (
 func init() {
 	rootCmd.AddCommand(scanCmd)
 
-	_ = scanCmd.Flags().StringP("output", "o", "compact", "Set output format: "+reporter.AllFormats())
+	_ = scanCmd.Flags().StringP("output", "o", "compact", "Set the output format: "+reporter.AllFormats())
 	_ = scanCmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure")
 	_ = scanCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID")
 
@@ -47,15 +47,15 @@ func init() {
 		"Set the query packs to execute. This requires `querypack-bundle`. You can specify multiple UIDs")
 	_ = scanCmd.Flags().StringSliceP("querypack-bundle",
 		"f",
-		nil, "Path to local query pack file")
+		nil, "Set the path to a local query pack file")
 	// flag completion command
 	_ = scanCmd.RegisterFlagCompletionFunc("querypack", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return getQueryPacksForCompletion(), cobra.ShellCompDirectiveDefault
 	})
-	_ = scanCmd.Flags().String("asset-name", "", "User-override for the asset name")
+	_ = scanCmd.Flags().String("asset-name", "", "Override the asset name")
 	_ = scanCmd.Flags().StringToString("annotation", nil, "Add an annotation to the asset") // user-added, editable
-	_ = scanCmd.Flags().StringToString("props", nil, "Custom values for properties")
-	_ = scanCmd.Flags().String("trace-id", "", "Trace identifier")
+	_ = scanCmd.Flags().StringToString("props", nil, "Set custom values for properties")
+	_ = scanCmd.Flags().String("trace-id", "", "Set a trace identifier")
 
 	// v6 should make detect-cicd and category flag public
 	_ = scanCmd.Flags().Bool("detect-cicd", true, "Try to detect CI/CD environments. If detected, set the asset category to 'cicd'")
