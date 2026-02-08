@@ -57,6 +57,12 @@ func (c *mqlCloudflareDns) records() ([]any, error) {
 
 		for i := range records {
 			rec := records[i]
+
+			priority := 0
+			if rec.Priority != nil {
+				priority = int(*rec.Priority)
+			}
+
 			res, err := NewResource(c.MqlRuntime, "cloudflare.dns.record", map[string]*llx.RawData{
 				"id":        llx.StringData(rec.ID),
 				"name":      llx.StringData(rec.Name),
@@ -65,9 +71,10 @@ func (c *mqlCloudflareDns) records() ([]any, error) {
 				"proxiable": llx.BoolData(rec.Proxiable),
 				"comment":   llx.StringData(rec.Comment),
 
-				"type":    llx.StringData(rec.Type),
-				"content": llx.StringData(rec.Content),
-				"ttl":     llx.IntData(rec.TTL),
+				"type":     llx.StringData(rec.Type),
+				"content":  llx.StringData(rec.Content),
+				"ttl":      llx.IntData(rec.TTL),
+				"priority": llx.IntData(priority),
 
 				"createdOn":  llx.TimeData(rec.CreatedOn),
 				"modifiedOn": llx.TimeData(rec.ModifiedOn),
