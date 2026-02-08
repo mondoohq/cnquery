@@ -308,9 +308,7 @@ func initAwsEc2Networkacl(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		match = func(acl *mqlAwsEc2Networkacl) bool {
 			return acl.Arn.Data == arnVal
 		}
-	}
-
-	if args["id"] != nil {
+	} else if args["id"] != nil {
 		idVal := args["id"].Value.(string)
 		match = func(acl *mqlAwsEc2Networkacl) bool {
 			return acl.Id.Data == idVal

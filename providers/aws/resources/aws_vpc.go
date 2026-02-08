@@ -820,7 +820,6 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 					"cidrs":                       llx.StringDataPtr(subnet.CidrBlock),
 					"defaultForAvailabilityZone":  llx.BoolDataPtr(subnet.DefaultForAz),
 					"id":                          llx.StringDataPtr(subnet.SubnetId),
-					"internetGatewayBlockMode":    llx.StringData(string(subnet.BlockPublicAccessStates.InternetGatewayBlockMode)),
 					"mapPublicIpOnLaunch":         llx.BoolDataPtr(subnet.MapPublicIpOnLaunch),
 					"name":                        llx.StringData(tagsMap["Name"]),
 					"region":                      llx.StringData(a.Region.Data),
@@ -829,6 +828,9 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 				})
 			if err != nil {
 				return nil, err
+			}
+			if subnet.BlockPublicAccessStates != nil {
+				subnetResource.(*mqlAwsVpcSubnet).InternetGatewayBlockMode = plugin.TValue[string]{Data: string(subnet.BlockPublicAccessStates.InternetGatewayBlockMode), State: plugin.StateIsSet}
 			}
 			subnetResource.(*mqlAwsVpcSubnet).cacheVpcId = vpcVal
 			res = append(res, subnetResource)
@@ -890,7 +892,9 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		args["cidrs"] = llx.StringDataPtr(subnet.CidrBlock)
 		args["defaultForAvailabilityZone"] = llx.BoolDataPtr(subnet.DefaultForAz)
 		args["id"] = llx.StringDataPtr(subnet.SubnetId)
-		args["internetGatewayBlockMode"] = llx.StringData(string(subnet.BlockPublicAccessStates.InternetGatewayBlockMode))
+		if subnet.BlockPublicAccessStates != nil {
+			args["internetGatewayBlockMode"] = llx.StringData(string(subnet.BlockPublicAccessStates.InternetGatewayBlockMode))
+		}
 		args["mapPublicIpOnLaunch"] = llx.BoolDataPtr(subnet.MapPublicIpOnLaunch)
 		args["name"] = llx.StringData(tagsMap["Name"])
 		args["region"] = llx.StringData(region)
