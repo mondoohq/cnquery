@@ -588,28 +588,26 @@ var bottlerocket = &PlatformResolver{
 			return false, nil
 		}
 
-		content := strings.TrimSpace(string(c))
-		osr, err := ParseOsRelease(content)
-		if err != nil || osr["ID"] != "bottlerocket" {
-			return false, nil
+		osr, err := ParseOsRelease(strings.TrimSpace(string(c)))
+		if err == nil {
+			if len(osr["ID"]) > 0 {
+				pf.Name = osr["ID"]
+			}
+			if len(osr["PRETTY_NAME"]) > 0 {
+				pf.Title = osr["PRETTY_NAME"]
+			}
+			if len(osr["VERSION_ID"]) > 0 {
+				pf.Version = osr["VERSION_ID"]
+			}
+			if len(osr["BUILD_ID"]) > 0 {
+				pf.Build = osr["BUILD_ID"]
+			}
 		}
 
-		if len(osr["ID"]) > 0 {
-			pf.Name = osr["ID"]
+		if pf.Name == "bottlerocket" {
+			return true, nil
 		}
-
-		if len(osr["PRETTY_NAME"]) > 0 {
-			pf.Title = osr["PRETTY_NAME"]
-		}
-		if len(osr["VERSION_ID"]) > 0 {
-			pf.Version = osr["VERSION_ID"]
-		}
-
-		if len(osr["BUILD_ID"]) > 0 {
-			pf.Build = osr["BUILD_ID"]
-		}
-
-		return true, nil
+		return false, nil
 	},
 }
 
