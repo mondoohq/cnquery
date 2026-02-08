@@ -35,7 +35,7 @@ func ParseLine(s []rune) (SshdLine, error) {
 	l.key, s = parseKeyword(s)
 
 	var err error
-	l.args, s, err = parseArgs(s)
+	l.args, _, err = parseArgs(s)
 	if err != nil {
 		return l, err
 	}

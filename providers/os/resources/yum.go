@@ -9,12 +9,12 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/yum"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/yum"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/stringx"
 )
 
 var supportedPlatforms = []string{"amazonlinux"}
@@ -34,6 +34,9 @@ func (y *mqlYum) repos() ([]any, error) {
 	o, err := CreateResource(y.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("yum -v repolist all"),
 	})
+	if err != nil {
+		return nil, err
+	}
 	cmd := o.(*mqlCommand)
 	if exit := cmd.GetExitcode(); exit.Data != 0 {
 		return nil, errors.New("could not retrieve yum repo list")
@@ -100,6 +103,9 @@ func (y *mqlYum) vars() (map[string]any, error) {
 	o, err := CreateResource(y.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData(script),
 	})
+	if err != nil {
+		return nil, err
+	}
 	cmd := o.(*mqlCommand)
 	if exit := cmd.GetExitcode(); exit.Data != 0 {
 		return nil, errors.New("could not retrieve yum repo list")

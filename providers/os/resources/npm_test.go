@@ -10,13 +10,13 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/fs"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/languages"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/syncx"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/fs"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/syncx"
 )
 
 func TestNpmPackage_unique(t *testing.T) {

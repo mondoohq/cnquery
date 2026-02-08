@@ -4,14 +4,14 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/cloudformation/provider"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/cloudformation/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "cloudformation",
-	ID:              "go.mondoo.com/cnquery/v12/providers/cloudformation",
+	ID:              "go.mondoo.com/mql/providers/cloudformation",
 	Version:         "11.0.124",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{

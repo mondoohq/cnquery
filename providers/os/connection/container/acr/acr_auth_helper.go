@@ -16,7 +16,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/azauth"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/azauth"
 )
 
 const (

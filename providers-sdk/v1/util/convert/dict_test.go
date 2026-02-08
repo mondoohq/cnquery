@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	subject "go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	subject "go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 )
 
 func TestDictToMapStr_Int(t *testing.T) {

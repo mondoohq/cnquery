@@ -14,10 +14,10 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/multierr"
 )
 
 // ResultCallback function type
@@ -993,7 +993,7 @@ func (e *blockExecutor) triggerChainError(ref uint64, err error) {
 			if len(remaining) == 0 {
 				break
 			}
-			cur = remaining[0]
+			nxt = []uint64{remaining[0]}
 			remaining = remaining[1:]
 		}
 		if len(nxt) == 0 {

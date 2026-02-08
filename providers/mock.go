@@ -7,16 +7,17 @@ import (
 	"context"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
 )
 
 var mockProvider = Provider{
 	Provider: &plugin.Provider{
 		Name:    "mock",
-		ID:      "go.mondoo.com/cnquery/v12/providers/mock",
-		Version: "9.0.0",
+		ID:      "go.mondoo.com/mql/providers/mock",
+		Version: mql.GetVersion(),
 		Connectors: []plugin.Connector{
 			{
 				Name:  "mock",

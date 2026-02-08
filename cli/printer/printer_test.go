@@ -9,10 +9,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
-	"go.mondoo.com/cnquery/v12/utils/sortx"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/v13/utils/sortx"
 )
 
 var x = testutils.InitTester(testutils.LinuxMock())
@@ -88,7 +88,7 @@ func TestPrinter(t *testing.T) {
 			"if ( mondoo.version != null ) { mondoo.build }",
 			"", // ignore
 			[]string{
-				"mondoo.version: \"unstable\"",
+				"mondoo.version: \"v13.0.0-rolling\"",
 				"if: {\n" +
 					"  mondoo.build: \"development\"\n" +
 					"}",
@@ -135,14 +135,14 @@ func TestPrinter(t *testing.T) {
 			"mondoo { version }",
 			"-> block 1\n   entrypoints: [<1,2>]\n   1: mondoo \n   2: {} bind: <1,1> type:block (=> <2,0>)\n-> block 2\n   entrypoints: [<2,2>]\n   1: mondoo id = context\n   2: version bind: <2,1> type:string\n",
 			[]string{
-				"mondoo: {\n  version: \"unstable\"\n}",
+				"mondoo: {\n  version: \"v13.0.0-rolling\"\n}",
 			},
 		},
 		{
 			"mondoo { _.version }",
 			"-> block 1\n   entrypoints: [<1,2>]\n   1: mondoo \n   2: {} bind: <1,1> type:block (=> <2,0>)\n-> block 2\n   entrypoints: [<2,2>]\n   1: mondoo id = context\n   2: version bind: <2,1> type:string\n",
 			[]string{
-				"mondoo: {\n  version: \"unstable\"\n}",
+				"mondoo: {\n  version: \"v13.0.0-rolling\"\n}",
 			},
 		},
 		{
@@ -161,7 +161,7 @@ func TestPrinter(t *testing.T) {
 			"mondoo",
 			"", // ignore
 			[]string{
-				"mondoo: mondoo version=\"unstable\"",
+				"mondoo: mondoo version=\"v13.0.0-rolling\"",
 			},
 		},
 		{
@@ -236,7 +236,7 @@ func TestPrinter_Assessment(t *testing.T) {
 				"  [failed] mondoo.build == 1",
 				"    expected: == 1",
 				"    actual:   \"development\"",
-				"  [ok] value: \"unstable\"",
+				"  [ok] value: \"v13.0.0-rolling\"",
 				"",
 			}, "\n"),
 		},
@@ -275,13 +275,13 @@ func TestPrinter_Assessment(t *testing.T) {
 			}, "\n"),
 		},
 		{
-			"mondoo.build == 1;mondoo.version =='unstable';",
+			"mondoo.build == 1;mondoo.version =='v13.0.0-rolling';",
 			strings.Join([]string{
-				"[failed] mondoo.build == 1;mondoo.version =='unstable';",
+				"[failed] mondoo.build == 1;mondoo.version =='v13.0.0-rolling';",
 				"  [failed] mondoo.build == 1",
 				"    expected: == 1",
 				"    actual:   \"development\"",
-				"  [ok] value: \"unstable\"",
+				"  [ok] value: \"v13.0.0-rolling\"",
 				"",
 			}, "\n"),
 		},
@@ -574,7 +574,7 @@ func TestPrinter_Buggy(t *testing.T) {
 			"mondoo",
 			"", // ignore
 			[]string{
-				"mondoo: mondoo version=\"unstable\"",
+				"mondoo: mondoo version=\"v13.0.0-rolling\"",
 			},
 		},
 	})

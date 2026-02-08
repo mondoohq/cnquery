@@ -4,13 +4,13 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/snowflake/provider"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/snowflake/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "snowflake",
-	ID:              "go.mondoo.com/cnquery/v12/providers/snowflake",
+	ID:              "go.mondoo.com/mql/providers/snowflake",
 	Version:         "11.0.118",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{

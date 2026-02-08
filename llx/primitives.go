@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // UnsetPrimitive is the unset primitive

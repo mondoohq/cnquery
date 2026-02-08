@@ -15,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/aws/connection"
-	"go.mondoo.com/cnquery/v12/providers/network/resources/certificates"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/providers/network/resources/certificates"
+	"go.mondoo.com/mql/v13/types"
 	"k8s.io/client-go/util/cert"
 )
 

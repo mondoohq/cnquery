@@ -6,22 +6,22 @@ package shared
 import (
 	hclog "github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
-	"go.mondoo.com/cnquery/v12/providers"
-	"go.mondoo.com/cnquery/v12/shared/proto"
-	"go.mondoo.com/cnquery/v12/utils/iox"
+	"go.mondoo.com/mql/v13/providers"
+	"go.mondoo.com/mql/v13/shared/proto"
+	"go.mondoo.com/mql/v13/utils/iox"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 func init() {
-	var x CNQuery = &GRPCClient{}
+	var x MqlQuery = &GRPCClient{}
 	_ = x
 }
 
 // GRPCClient is an implementation of KV that talks over RPC.
 type GRPCClient struct {
 	broker *plugin.GRPCBroker
-	client proto.CNQueryClient
+	client proto.MqlQueryClient
 }
 
 func (m *GRPCClient) RunQuery(conf *proto.RunQueryConfig, runtime *providers.Runtime, out iox.OutputHelper) error {
@@ -48,9 +48,9 @@ func (m *GRPCClient) RunQuery(conf *proto.RunQueryConfig, runtime *providers.Run
 // Here is the gRPC server that GRPCClient talks to.
 type GRPCServer struct {
 	// This is the real implementation
-	Impl   CNQuery
+	Impl   MqlQuery
 	broker *plugin.GRPCBroker
-	proto.UnimplementedCNQueryServer
+	proto.UnimplementedMqlQueryServer
 }
 
 func (m *GRPCServer) RunQuery(ctx context.Context, req *proto.RunQueryConfig) (*proto.Empty, error) {

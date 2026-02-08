@@ -9,15 +9,15 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/v13/utils/stringx"
 	"google.golang.org/grpc/status"
 )
 
@@ -685,6 +685,16 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 
 	providerConn := r.Provider.Instance.ID
 	crossProviderList := []string{
+		"go.mondoo.com/mql/providers/core",
+		"go.mondoo.com/mql/providers/network",
+		"go.mondoo.com/mql/providers/os",
+		"go.mondoo.com/mql/providers/ms365",
+		"go.mondoo.com/mql/providers/azure",
+		"go.mondoo.com/mql/providers/networkdiscovery",
+		"go.mondoo.com/mql/providers/ai",
+		"go.mondoo.com/mql/providers/ipinfo",
+		"go.mondoo.com/mql/providers/yara",
+		// FIXME: DEPRECATED, remove in v14.0 vv
 		"go.mondoo.com/cnquery/providers/core",
 		"go.mondoo.com/cnquery/providers/network",
 		"go.mondoo.com/cnquery/providers/os",
@@ -697,7 +707,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		// FIXME: DEPRECATED, remove in v12.0 vv
 		// Providers traditionally had a version indication in their ID. With v10
 		// this is no longer necessary (but still supported due to a bug,
-		// see https://github.com/mondoohq/cnquery/pull/3053).
+		// see https://github.com/mondoohq/mql/pull/3053).
 		// Once we get far enough away from legacy
 		// version support, we can safely remove this.
 		"go.mondoo.com/cnquery/v9/providers/core",

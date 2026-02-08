@@ -16,7 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// extractTarGz extracts a tar.gz archive and returns the name of the cnquery binary
+// extractTarGz extracts a tar.gz archive and returns the name of the mql binary
 func extractTarGz(reader io.Reader, destPath string) (string, error) {
 	gzReader, err := gzip.NewReader(reader)
 	if err != nil {
@@ -48,10 +48,10 @@ func extractTarGz(reader io.Reader, destPath string) (string, error) {
 			continue
 		}
 
-		// Only extract the cnquery binary
+		// Only extract the mql binary
 		baseName := filepath.Base(name)
-		if !strings.HasPrefix(baseName, "cnquery") {
-			log.Debug().Str("name", name).Msg("self-update: skipping non-cnquery file")
+		if !strings.HasPrefix(baseName, "mql") {
+			log.Debug().Str("name", name).Msg("self-update: skipping non-mql file")
 			continue
 		}
 
@@ -72,19 +72,19 @@ func extractTarGz(reader io.Reader, destPath string) (string, error) {
 		f.Close()
 
 		// Track the binary name (without .exe for consistency)
-		if baseName == "cnquery" || baseName == "cnquery.exe" {
+		if baseName == "mql" || baseName == "mql.exe" {
 			binaryName = baseName
 		}
 	}
 
 	if binaryName == "" {
-		return "", errors.New("cnquery binary not found in archive")
+		return "", errors.New("mql binary not found in archive")
 	}
 
 	return binaryName, nil
 }
 
-// extractZip extracts a zip archive and returns the name of the cnquery binary.
+// extractZip extracts a zip archive and returns the name of the mql binary.
 // Note: zip requires random access, so we need the file path, not just a reader.
 func extractZip(reader io.Reader, destPath string, archivePath string) (string, error) {
 	// For zip, we need to use the file path because zip requires random access
@@ -109,10 +109,10 @@ func extractZip(reader io.Reader, destPath string, archivePath string) (string, 
 			continue
 		}
 
-		// Only extract the cnquery binary
+		// Only extract the mql binary
 		baseName := filepath.Base(name)
-		if !strings.HasPrefix(baseName, "cnquery") {
-			log.Debug().Str("name", name).Msg("self-update: skipping non-cnquery file")
+		if !strings.HasPrefix(baseName, "mql") {
+			log.Debug().Str("name", name).Msg("self-update: skipping non-mql file")
 			continue
 		}
 
@@ -142,13 +142,13 @@ func extractZip(reader io.Reader, destPath string, archivePath string) (string, 
 		rc.Close()
 
 		// Track the binary name
-		if baseName == "cnquery" || baseName == "cnquery.exe" {
+		if baseName == "mql" || baseName == "mql.exe" {
 			binaryName = baseName
 		}
 	}
 
 	if binaryName == "" {
-		return "", errors.New("cnquery binary not found in archive")
+		return "", errors.New("mql binary not found in archive")
 	}
 
 	return binaryName, nil

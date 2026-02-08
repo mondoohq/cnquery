@@ -21,7 +21,7 @@ var testDir string
 
 func setup() {
 	// build cnquery
-	cmd := exec.Command("go", "build", "../../apps/cnquery/cnquery.go")
+	cmd := exec.Command("go", "build", "../../apps/mql/mql.go")
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	if err := cmd.Run(); err != nil {
@@ -76,6 +76,6 @@ func TestCompare(t *testing.T) {
 	os.Setenv("MONDOO_AUTO_UPDATE", "false")
 
 	ts.DisableLogging = true
-	ts.Commands["cnquery"] = cmdtest.Program("cnquery")
+	ts.Commands["mql"] = cmdtest.Program("mql")
 	ts.Run(t, false) // set to true to update test files
 }

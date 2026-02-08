@@ -13,7 +13,7 @@ const PSGetComputerInfo = `Get-ComputerInfo | ConvertTo-Json`
 
 // PSGetComputerInfoCustom is a PowerShell script that retrieves computer information. It
 // implements a fallback to work on systems with winrm disabled. See
-// https://github.com/mondoohq/cnquery/pull/4520 for more information.
+// https://github.com/mondoohq/mql/pull/4520 for more information.
 const PSGetComputerInfoCustom = `
 function Get-CustomComputerInfo {
     $bios = Get-CimInstance -ClassName Win32_BIOS

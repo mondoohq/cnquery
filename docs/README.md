@@ -37,7 +37,7 @@ Install-Mondoo -Product cnquery;
 
 ### Install manually
 
-Manual installation packages are available on [GitHub releases](https://github.com/mondoohq/cnquery/releases/latest).
+Manual installation packages are available on [GitHub releases](https://github.com/mondoohq/mql/releases/latest).
 
 <Callout>
 If you install cnquery on machines that can't download and install updates (because they're air-gapped or don't give cnquery write access), you must install cnquery providers. To learn more, read [Manage cnquery Providers](/cnquery/providers/).

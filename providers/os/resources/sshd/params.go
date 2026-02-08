@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/utils/sortx"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/utils/sortx"
 )
 
 type MatchBlock struct {

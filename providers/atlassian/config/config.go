@@ -4,16 +4,16 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/atlassian/connection"
-	"go.mondoo.com/cnquery/v12/providers/atlassian/connection/confluence"
-	"go.mondoo.com/cnquery/v12/providers/atlassian/provider"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/atlassian/connection"
+	"go.mondoo.com/mql/v13/providers/atlassian/connection/confluence"
+	"go.mondoo.com/mql/v13/providers/atlassian/provider"
 )
 
 var Config = plugin.Provider{
 	Name:    "atlassian",
-	ID:      "go.mondoo.com/cnquery/v9/providers/atlassian",
+	ID:      "go.mondoo.com/mql/providers/atlassian",
 	Version: "11.0.135",
 	ConnectionTypes: []string{
 		provider.DefaultConnectionType,

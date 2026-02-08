@@ -3,7 +3,7 @@
 
 ---
 version: 2
-project_name: cnquery
+project_name: mql
 env:
   - CGO_ENABLED=0
 before:
@@ -11,8 +11,8 @@ before:
     - make providers
 builds:
   - id: linux
-    main: ./apps/cnquery/cnquery.go
-    binary: cnquery
+    main: ./apps/mql/mql.go
+    binary: mql
     goos:
       - linux
     goarch:
@@ -31,10 +31,10 @@ builds:
       - -tags="production netgo"
     ldflags:
       - "-extldflags=-static"
-      - -s -w -X go.mondoo.com/cnquery/v12.Version={{.Version}} -X go.mondoo.com/cnquery/v12.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v12.Date={{.Date}}
+      - -s -w -X go.mondoo.com/mql/v13.Version={{.Version}} -X go.mondoo.com/mql/v13.Build={{.ShortCommit}} -X go.mondoo.com/mql/v13.Date={{.Date}}
   - id: macos
-    main: ./apps/cnquery/cnquery.go
-    binary: cnquery
+    main: ./apps/mql/mql.go
+    binary: mql
     goos:
       - darwin
     goarch:
@@ -43,15 +43,15 @@ builds:
     flags: -tags production
     ldflags:
       # clang + macos does not support static: - -extldflags "-static"
-      - -s -w -X go.mondoo.com/cnquery/v12.Version={{.Version}} -X go.mondoo.com/cnquery/v12.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v12.Date={{.Date}}
+      - -s -w -X go.mondoo.com/mql/v13.Version={{.Version}} -X go.mondoo.com/mql/v13.Build={{.ShortCommit}} -X go.mondoo.com/mql/v13.Date={{.Date}}
     hooks:
       post:
         - cmd: /tmp/quill sign-and-notarize "{{ .Path }}" -vv || true
           env:
             - QUILL_LOG_FILE=/tmp/quill-{{ .Target }}.log
   - id: windows
-    main: ./apps/cnquery/cnquery.go
-    binary: cnquery
+    main: ./apps/mql/mql.go
+    binary: mql
     goos:
       - windows
     goarch:
@@ -61,7 +61,7 @@ builds:
     flags: -tags production -buildmode exe
     ldflags:
       - "-extldflags -static"
-      - -s -w -X go.mondoo.com/cnquery/v12.Version={{.Version}} -X go.mondoo.com/cnquery/v12.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v12.Date={{.Date}}
+      - -s -w -X go.mondoo.com/mql/v13.Version={{.Version}} -X go.mondoo.com/mql/v13.Build={{.ShortCommit}} -X go.mondoo.com/mql/v13.Date={{.Date}}
     hooks:
       post:
         - cmd: jsign --storetype TRUSTEDSIGNING --keystore {{ .Env.TSIGN_AZURE_ENDPOINT }} --storepass {{ .Env.TSIGN_ACCESS_TOKEN }} --alias {{ .Env.TSIGN_ACCOUNT_NAME }}/{{ .Env.TSIGN_CERT_PROFILE_NAME }} '{{ .Path }}'

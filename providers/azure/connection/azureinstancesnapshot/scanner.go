@@ -5,10 +5,10 @@ package azureinstancesnapshot
 
 import (
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v12/mrn"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/local"
-	"go.mondoo.com/cnquery/v12/providers/os/detector"
-	"go.mondoo.com/cnquery/v12/providers/os/id/azcompute"
+	"go.mondoo.com/mql/v13/mrn"
+	"go.mondoo.com/mql/v13/providers/os/connection/local"
+	"go.mondoo.com/mql/v13/providers/os/detector"
+	"go.mondoo.com/mql/v13/providers/os/id/azcompute"
 )
 
 // the VM from which we're performing the scan

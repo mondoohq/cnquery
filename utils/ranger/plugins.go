@@ -7,19 +7,19 @@ import (
 	"net/http"
 	"runtime"
 
-	"go.mondoo.com/cnquery/v12"
+	"go.mondoo.com/mql/v13"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/scope"
 )
 
-func DefaultRangerPlugins(features cnquery.Features) []ranger.ClientPlugin {
+func DefaultRangerPlugins(features mql.Features) []ranger.ClientPlugin {
 	plugins := []ranger.ClientPlugin{}
 	plugins = append(plugins, scope.NewRequestIDRangerPlugin())
 	plugins = append(plugins, sysInfoHeader(features))
 	return plugins
 }
 
-func sysInfoHeader(features cnquery.Features) ranger.ClientPlugin {
+func sysInfoHeader(features mql.Features) ranger.ClientPlugin {
 	const (
 		HttpHeaderUserAgent      = "User-Agent"
 		HttpHeaderClientFeatures = "Mondoo-Features"
@@ -28,8 +28,8 @@ func sysInfoHeader(features cnquery.Features) ranger.ClientPlugin {
 
 	h := http.Header{}
 	info := map[string]string{
-		"cnquery": cnquery.Version,
-		"build":   cnquery.Build,
+		"mql":   mql.Version,
+		"build": mql.Build,
 	}
 	info["PN"] = runtime.GOOS
 	// info["PR"] = sysInfo.Platform.Version

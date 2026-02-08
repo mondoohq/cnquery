@@ -9,12 +9,12 @@ import (
 	"io"
 	"regexp"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	cpe2 "go.mondoo.com/cnquery/v12/providers/os/resources/cpe"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/purl"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	cpe2 "go.mondoo.com/mql/v13/providers/os/resources/cpe"
+	"go.mondoo.com/mql/v13/providers/os/resources/purl"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
 const (
@@ -157,7 +157,7 @@ func (apm *AlpinePkgManager) List() ([]Package, error) {
 
 func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {
 	// it only works if apk is updated
-	apm.conn.RunCommand("apk update")
+	_, _ = apm.conn.RunCommand("apk update")
 
 	// determine package updates
 	cmd, err := apm.conn.RunCommand("apk version -v -l '<'")

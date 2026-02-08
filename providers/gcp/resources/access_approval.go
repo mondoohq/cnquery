@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
 
 	accessapproval "cloud.google.com/go/accessapproval/apiv1"
 	accessapprovalpb "cloud.google.com/go/accessapproval/apiv1/accessapprovalpb"

@@ -5,7 +5,7 @@ package shell
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"go.mondoo.com/cnquery/v12/cli/printer"
+	"go.mondoo.com/mql/v13/cli/printer"
 )
 
 // ShellTheme defines the visual appearance of the shell

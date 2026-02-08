@@ -7,8 +7,8 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers/atlassian/connection/scim"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers/atlassian/connection/scim"
 )
 
 func (a *mqlAtlassianScim) id() (string, error) {

@@ -24,7 +24,7 @@ If `go` is not installed or an older version exists, follow instructions on [the
 2. Clone this repository:
 
    ```bash
-   git clone https://github.com/mondoohq/cnquery.git
+   git clone https://github.com/mondoohq/mql.git
    cd cnquery
    ```
 
@@ -180,7 +180,7 @@ version update providers/*/ --increment=patch --commit
 → committed changes for os-9.0.2, slack-9.0.1, terraform-9.0.1, vcd-9.0.1, vsphere-9.0.1
 → running: git push -u origin version/os-9.0.2+slack-9.0.1+terraform-9.0.1+vcd-9.0.1+vsphere-9.0.1
 → updates pushed successfully, open:
-	https://github.com/mondoohq/cnquery/compare/version/os-9.0.2+slack-9.0.1+terraform-9.0.1+vcd-9.0.1+vsphere-9.0.1?expand=1
+	https://github.com/mondoohq/mql/compare/version/os-9.0.2+slack-9.0.1+terraform-9.0.1+vcd-9.0.1+vsphere-9.0.1?expand=1
 ```
 
 The final line of this message is the blueprint for the pull request.

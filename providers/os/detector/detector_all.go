@@ -11,8 +11,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
 const (
@@ -880,7 +880,7 @@ var netbsd = &PlatformResolver{
 	Name:     "netbsd",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		if strings.Contains(strings.ToLower(pf.Name), "netbsd") == false {
+		if !strings.Contains(strings.ToLower(pf.Name), "netbsd") {
 			return false, nil
 		}
 

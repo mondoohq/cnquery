@@ -6,7 +6,7 @@ package resources
 import (
 	"fmt"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"gopkg.in/yaml.v3"

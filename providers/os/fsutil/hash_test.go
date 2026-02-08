@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/local"
-	"go.mondoo.com/cnquery/v12/providers/os/fsutil"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/local"
+	"go.mondoo.com/mql/v13/providers/os/fsutil"
 )
 
 func TestFileResource(t *testing.T) {

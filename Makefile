@@ -14,7 +14,7 @@ ifndef VERSION
 # echo "read VERSION from git"
 VERSION=${LATEST_VERSION_TAG}+$(shell git rev-list --count HEAD)
 endif
-MAJOR_VERSION=v12
+MAJOR_VERSION=v13
 
 ifndef TARGETOS
 	TARGETOS = $(shell go env GOOS)
@@ -29,12 +29,12 @@ ifeq ($(TARGETOS),windows)
 	BIN_SUFFIX=".exe"
 endif
 
-LDFLAGS=-ldflags "-s -w -X go.mondoo.com/cnquery/${MAJOR_VERSION}.Version=${VERSION}" # -linkmode external -extldflags=-static
-LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery/${MAJOR_VERSION}.Version=${LATEST_VERSION_TAG} -s -w"
+LDFLAGS=-ldflags "-s -w -X go.mondoo.com/mql/${MAJOR_VERSION}.Version=${VERSION}" # -linkmode external -extldflags=-static
+LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/mql/${MAJOR_VERSION}.Version=${LATEST_VERSION_TAG} -s -w"
 
 .PHONY: info/ldflags
 info/ldflags:
-	$(info go run ${LDFLAGS} apps/cnquery/cnquery.go)
+	$(info go run ${LDFLAGS} apps/mql/mql.go)
 	@:
 
 #   🧹 CLEAN   #
@@ -70,9 +70,9 @@ prep/tools/mockgen:
 
 #   🌙 MQL/MOTOR   #
 
-cnquery/generate: clean/proto llx/generate shared/generate sbom/generate reporter/generate providers
+mql/generate: clean/proto llx/generate shared/generate sbom/generate reporter/generate providers
 
-cnquery/generate/core: clean/proto llx/generate shared/generate providers/proto providers/build/mock providers/build/core sbom/generate reporter/generate
+mql/generate/core: clean/proto llx/generate shared/generate providers/proto providers/build/mock providers/build/core sbom/generate reporter/generate
 
 define buildProvider
 	$(eval $@_HOME = $(1))
@@ -703,29 +703,29 @@ reporter/generate:
 
 #   🏗 Binary / Build   #
 
-.PHONY: cnquery/build
-cnquery/build:
-	go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
+.PHONY: mql/build
+mql/build:
+	go build ${LDFLAGSDIST} apps/mql/mql.go
 
-.PHONY: cnquery/build/linux
-cnquery/build/linux:
-	GOOS=linux GOARCH=amd64 go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
+.PHONY: mql/build/linux
+mql/build/linux:
+	GOOS=linux GOARCH=amd64 go build ${LDFLAGSDIST} apps/mql/mql.go
 
-.PHONY: cnquery/build/windows
-cnquery/build/windows:
-	GOOS=windows GOARCH=amd64 go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
+.PHONY: mql/build/windows
+mql/build/windows:
+	GOOS=windows GOARCH=amd64 go build ${LDFLAGSDIST} apps/mql/mql.go
 
-cnquery/build/darwin:
-	GOOS=darwin go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
+mql/build/darwin:
+	GOOS=darwin go build ${LDFLAGSDIST} apps/mql/mql.go
 
-.PHONY: cnquery/install
-cnquery/install:
-	GOBIN=${GOPATH}/bin go install ${LDFLAGSDIST} apps/cnquery/cnquery.go
+.PHONY: mql/install
+mql/install:
+	GOBIN=${GOPATH}/bin go install ${LDFLAGSDIST} apps/mql/mql.go
 
-cnquery/dist/goreleaser/stable:
+mql/dist/goreleaser/stable:
 	goreleaser release --clean --skip=validate,publish -f .goreleaser.yml --timeout 120m
 
-cnquery/dist/goreleaser/edge:
+mql/dist/goreleaser/edge:
 	goreleaser release --clean --skip=validate,publish -f .goreleaser.yml --timeout 120m --snapshot
 
 shared/generate:
@@ -743,12 +743,12 @@ test/lint: test/lint/golangci-lint/run
 test: test/go test/lint
 
 race/go:
-	go test -race go.mondoo.com/cnquery/${MAJOR_VERSION}/internal/workerpool
+	go test -race go.mondoo.com/mql/${MAJOR_VERSION}/internal/workerpool
 
 test/generate: prep/tools/mockgen
 	go generate ./providers/...
 
-test/go: cnquery/generate test/generate test/go/plain
+test/go: mql/generate test/generate test/go/plain
 
 test/go/plain:
 	go test -cover $(shell go list ./... | grep -v '/providers/' | grep -v '/test/')
@@ -781,9 +781,6 @@ test/lint/extended: prep/tools test/generate
 test/lint/proto: prep/tools/protolint
 	protolint lint .
 
-test/lint/packs:
-	cnquery bundle validate ./contenet
-
 license: license/headers/check
 
 license/headers/check:
@@ -797,7 +794,7 @@ license/headers/apply:
 metrics/start: metrics/grafana/start metrics/prometheus/start
 
 metrics/prometheus/start:
-	APP_NAME=cnquery VERSION=${VERSION} prometheus --config.file=prometheus.yml
+	APP_NAME=mql VERSION=${VERSION} prometheus --config.file=prometheus.yml
 
 metrics/grafana/start:
 	docker run -d --name=grafana \

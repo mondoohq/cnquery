@@ -7,8 +7,8 @@ package inventory
 import (
 	fmt "fmt"
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
-	upstream "go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
-	vault "go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	upstream "go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	vault "go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 	proto "google.golang.org/protobuf/proto"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"

@@ -3,7 +3,7 @@
 
 package tmp
 
-// This go package should be used across cnquery to generate temporary files
+// This go package should be used across mql to generate temporary files
 // and directories.
 
 import (

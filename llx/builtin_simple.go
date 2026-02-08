@@ -12,7 +12,7 @@ import (
 	"time"
 	"unicode"
 
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // run an operation that returns true/false on a bind data vs a chunk call.
@@ -561,14 +561,14 @@ func nilNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 // string ==/!= bool
 
 func opStringCmpBool(left any, right any) bool {
-	if right.(bool) == true {
+	if right.(bool) {
 		return left.(string) == "true"
 	}
 	return left.(string) == "false"
 }
 
 func opBoolCmpString(left any, right any) bool {
-	if left.(bool) == true {
+	if left.(bool) {
 		return right.(string) == "true"
 	}
 	return right.(string) == "false"

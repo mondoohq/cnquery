@@ -13,14 +13,14 @@ import (
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v12/providers/aws/connection"
-	"go.mondoo.com/cnquery/v12/providers/aws/connection/awsec2ebsconn"
-	awsec2ebstypes "go.mondoo.com/cnquery/v12/providers/aws/connection/awsec2ebsconn/types"
-	"go.mondoo.com/cnquery/v12/providers/os/id/awsec2"
-	"go.mondoo.com/cnquery/v12/providers/os/id/containerid"
-	"go.mondoo.com/cnquery/v12/providers/os/id/ids"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/providers/aws/connection/awsec2ebsconn"
+	awsec2ebstypes "go.mondoo.com/mql/v13/providers/aws/connection/awsec2ebsconn/types"
+	"go.mondoo.com/mql/v13/providers/os/id/awsec2"
+	"go.mondoo.com/mql/v13/providers/os/id/containerid"
+	"go.mondoo.com/mql/v13/providers/os/id/ids"
 )
 
 const (

@@ -18,8 +18,8 @@ import (
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/tliron/glsp/server"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/mqlr/lrcore"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 
 	// Must include a backend implementation for commonlog
 	_ "github.com/tliron/commonlog/simple"

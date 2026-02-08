@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/docker"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/docker"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
 type DockerTopManager struct {

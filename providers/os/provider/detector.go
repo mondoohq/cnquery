@@ -9,16 +9,16 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/detector"
-	"go.mondoo.com/cnquery/v12/providers/os/id"
-	"go.mondoo.com/cnquery/v12/providers/os/id/clouddetect"
-	"go.mondoo.com/cnquery/v12/providers/os/id/hostname"
-	"go.mondoo.com/cnquery/v12/providers/os/id/ids"
-	"go.mondoo.com/cnquery/v12/providers/os/id/machineid"
-	"go.mondoo.com/cnquery/v12/providers/os/id/sshhostkey"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/plist"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/detector"
+	"go.mondoo.com/mql/v13/providers/os/id"
+	"go.mondoo.com/mql/v13/providers/os/id/clouddetect"
+	"go.mondoo.com/mql/v13/providers/os/id/hostname"
+	"go.mondoo.com/mql/v13/providers/os/id/ids"
+	"go.mondoo.com/mql/v13/providers/os/id/machineid"
+	"go.mondoo.com/mql/v13/providers/os/id/sshhostkey"
+	"go.mondoo.com/mql/v13/providers/os/resources/plist"
 )
 
 // default id detectors

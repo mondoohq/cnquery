@@ -19,8 +19,8 @@ import (
 	"github.com/olekukonko/tablewriter/tw"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/mqlr/lrcore"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"sigs.k8s.io/yaml"
 )
 
@@ -185,7 +185,7 @@ func (l *lrSchemaRenderer) renderToc(packName string, description string, resour
 	table := tablewriter.NewTable(builder,
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
 			Borders: tw.Border{Left: tw.On, Top: tw.Off, Right: tw.On, Bottom: tw.Off},
-			Symbols: tw.NewSymbolCustom("cnquery").
+			Symbols: tw.NewSymbolCustom("mql").
 				WithCenter("|").
 				WithMidLeft("|").
 				WithMidRight("|"),
@@ -321,7 +321,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 		table := tablewriter.NewTable(builder,
 			tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
 				Borders: tw.Border{Left: tw.On, Top: tw.Off, Right: tw.On, Bottom: tw.Off},
-				Symbols: tw.NewSymbolCustom("cnquery").
+				Symbols: tw.NewSymbolCustom("mql").
 					WithCenter("|").
 					WithMidLeft("|").
 					WithMidRight("|"),

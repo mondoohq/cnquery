@@ -15,12 +15,12 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/container/auth"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/container/image"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/id/containerid"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers/os/connection/container/auth"
+	"go.mondoo.com/mql/v13/providers/os/connection/container/image"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/id/containerid"
 )
 
 func RemoteOptionsFromConfigOptions(cfg *inventory.Config) ([]remote.Option, error) {

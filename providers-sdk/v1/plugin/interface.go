@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-// Interface to use cnquery as a plugin
+// Interface to use mql as a plugin
 package plugin
 
 import (

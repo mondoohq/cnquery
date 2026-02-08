@@ -23,10 +23,10 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/cli/config"
-	"go.mondoo.com/cnquery/v12/logger/zerologadapter"
-	"go.mondoo.com/cnquery/v12/providers/core/resources/versions/semver"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/cli/config"
+	"go.mondoo.com/mql/v13/logger/zerologadapter"
+	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
 )
 
 const (
@@ -36,7 +36,7 @@ const (
 	// This is also set to "false" after an update to prevent infinite loops.
 	EnvAutoUpdate = "MONDOO_AUTO_UPDATE"
 	// DefaultReleaseURL is the URL to fetch the latest release information
-	DefaultReleaseURL = "https://releases.mondoo.com/cnquery/latest.json"
+	DefaultReleaseURL = "https://releases.mondoo.com/mql/latest.json"
 	// markerFileName is the file used to track when the last update check occurred
 	markerFileName = ".last-update-check"
 
@@ -80,7 +80,7 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	}
 
 	// Skip if version is "unstable" (dev build)
-	currentVersion := cnquery.GetVersion()
+	currentVersion := mql.GetVersion()
 	if currentVersion == "unstable" {
 		log.Debug().Msg("self-update: skipping, running unstable/dev build")
 		return false, nil
@@ -137,7 +137,7 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	log.Info().
 		Str("current", currentVersion).
 		Str("latest", release.Version).
-		Msg("new version of cnquery available, updating")
+		Msg("new version of mql available, updating")
 
 	// Check if the bin directory is writable
 	if err := checkWritable(binPath); err != nil {
@@ -175,15 +175,15 @@ func getBinPath() (string, error) {
 	return config.HomePath("bin")
 }
 
-// binaryName returns the cnquery binary name for the current platform
+// binaryName returns the mql binary name for the current platform
 func binaryName() string {
 	if runtime.GOOS == "windows" {
-		return "cnquery.exe"
+		return "mql.exe"
 	}
-	return "cnquery"
+	return "mql"
 }
 
-// execLocalIfNewer checks if there's a newer cnquery binary already installed
+// execLocalIfNewer checks if there's a newer mql binary already installed
 // in the bin path. If so, it execs to that binary. Returns true if exec happened.
 func execLocalIfNewer(binPath, currentVersion string) (bool, error) {
 	localBinary := filepath.Join(binPath, binaryName())
@@ -216,7 +216,7 @@ func execLocalIfNewer(binPath, currentVersion string) (bool, error) {
 
 	log.Info().
 		Str("installed", localVersion).
-		Msg("auto-update: using the latest version of cnquery")
+		Msg("auto-update: using the latest version of mql")
 	log.Debug().
 		Str("current", currentVersion).
 		Str("path", localBinary).
@@ -244,7 +244,7 @@ func getLocalBinaryVersion(binaryPath string) (string, error) {
 		return "", err
 	}
 
-	// Parse version from output like "cnquery 12.20.1 (376a12d7049b, 2026-01-28T00:55:02Z)"
+	// Parse version from output like "mql 13.0.0 (376a12d7049b, 2026-01-28T00:55:02Z)"
 	// We want to extract "12.20.1"
 	version := strings.TrimSpace(string(output))
 	parts := strings.Fields(version)
@@ -334,9 +334,9 @@ func getPlatformFile(release *Release) *ReleaseFile {
 	}
 
 	// Build the expected filename suffix
-	// Format: cnquery_<version>_<os>_<arch>.<ext>
+	// Format: mql_<version>_<os>_<arch>.<ext>
 	// Note: The Filename field in latest.json contains full URLs
-	suffix := fmt.Sprintf("cnquery_%s_%s_%s.%s", release.Version, goos, goarch, ext)
+	suffix := fmt.Sprintf("mql_%s_%s_%s.%s", release.Version, goos, goarch, ext)
 
 	for i := range release.Files {
 		// Match by suffix since Filename is a full URL
@@ -382,7 +382,7 @@ func downloadAndInstall(ctx context.Context, release *Release, destPath string) 
 	}
 
 	// Create a temporary file to store the download
-	tmpFile, err := os.CreateTemp("", "cnquery-update-*")
+	tmpFile, err := os.CreateTemp("", "mql-update-*")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create temp file")
 	}

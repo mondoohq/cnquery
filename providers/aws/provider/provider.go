@@ -11,14 +11,14 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v12/providers/aws/connection"
-	"go.mondoo.com/cnquery/v12/providers/aws/connection/awsec2ebsconn"
-	"go.mondoo.com/cnquery/v12/providers/aws/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/aws/resources"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/providers/aws/connection/awsec2ebsconn"
+	"go.mondoo.com/mql/v13/providers/aws/connection/shared"
+	"go.mondoo.com/mql/v13/providers/aws/resources"
 )
 
 const DefaultConnectionType = "aws"

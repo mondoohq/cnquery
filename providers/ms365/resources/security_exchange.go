@@ -12,11 +12,11 @@ import (
 	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/ms365/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // Note: outlookScope is already defined in ms365_exchange.go

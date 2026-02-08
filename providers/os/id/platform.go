@@ -8,20 +8,20 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/detector"
-	"go.mondoo.com/cnquery/v12/providers/os/id/awsec2"
-	"go.mondoo.com/cnquery/v12/providers/os/id/awsecs"
-	"go.mondoo.com/cnquery/v12/providers/os/id/clouddetect"
-	"go.mondoo.com/cnquery/v12/providers/os/id/hostname"
-	"go.mondoo.com/cnquery/v12/providers/os/id/hypervisor"
-	"go.mondoo.com/cnquery/v12/providers/os/id/ids"
-	"go.mondoo.com/cnquery/v12/providers/os/id/machineid"
-	"go.mondoo.com/cnquery/v12/providers/os/id/serialnumber"
-	"go.mondoo.com/cnquery/v12/providers/os/id/sshhostkey"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/detector"
+	"go.mondoo.com/mql/v13/providers/os/id/awsec2"
+	"go.mondoo.com/mql/v13/providers/os/id/awsecs"
+	"go.mondoo.com/mql/v13/providers/os/id/clouddetect"
+	"go.mondoo.com/mql/v13/providers/os/id/hostname"
+	"go.mondoo.com/mql/v13/providers/os/id/hypervisor"
+	"go.mondoo.com/mql/v13/providers/os/id/ids"
+	"go.mondoo.com/mql/v13/providers/os/id/machineid"
+	"go.mondoo.com/mql/v13/providers/os/id/serialnumber"
+	"go.mondoo.com/mql/v13/providers/os/id/sshhostkey"
 )
 
 type PlatformFingerprint struct {
@@ -62,7 +62,7 @@ func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *invento
 		switch conn.Type() {
 		case shared.Type_Local:
 			idDetectors = []string{ids.IdDetector_CloudDetect, ids.IdDetector_Hostname}
-			if cnquery.Features(req.Features).IsActive(cnquery.SerialNumberAsID) {
+			if mql.Features(req.Features).IsActive(mql.SerialNumberAsID) {
 				idDetectors = append(idDetectors, ids.IdDetector_SerialNumber)
 			}
 		case shared.Type_SSH:

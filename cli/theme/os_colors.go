@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v12/cli/printer"
-	"go.mondoo.com/cnquery/v12/cli/theme/colors"
+	"go.mondoo.com/mql/v13/cli/printer"
+	"go.mondoo.com/mql/v13/cli/theme/colors"
 )
 
 // OperatingSystemTheme for unix shell
@@ -26,6 +26,6 @@ var OperatingSystemTheme = &Theme{
 	},
 	Landing:       termenv.String(logo).Foreground(colors.DefaultColorTheme.Primary).String(),
 	Welcome:       logo + " interactive shell\n",
-	Prefix:        "cnquery> ",
+	Prefix:        "mql> ",
 	PolicyPrinter: printer.DefaultPrinter,
 }

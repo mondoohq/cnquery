@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/go-github/v81/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v12/providers/github/connection"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/github/connection"
 	"sigs.k8s.io/yaml"
 )
 

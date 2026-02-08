@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"sort"
 
-	"go.mondoo.com/cnquery/v12/checksums"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/checksums"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (b *Block) ChunkIndex() uint32 {
@@ -69,7 +69,6 @@ func (b *Block) AddArgumentPlaceholder(code *CodeV2, blockRef uint64, typ types.
 
 // PopChunk removes the last chunk from the block and returns it
 func (b *Block) PopChunk(code *CodeV2, blockRef uint64) (prev *Chunk, isEntrypoint bool, isDatapoint bool) {
-	prev = nil
 	isEntrypoint = false
 	isDatapoint = false
 
@@ -176,15 +175,15 @@ func (l *CodeV2) checksum() string {
 		checksum = checksum.Add(l.Checksums[ref])
 	}
 
-	if len(l.Blocks) == 0 || len(l.Blocks[0].Entrypoints) == 0 {
-		// Why do we even handle this case? Because at this point we still have
-		// all raw entrypoints, which may get shuffled around in the step after this.
-		// This also means entrypoints aren't sanitized. We may not have any.
-		//
-		// TODO: review this behavior!
-		// We may want to do the entrypoint handling earlier.
-		//panic("received a code without any entrypoints")
-	}
+	// TODO: review this behavior
+	// if len(l.Blocks) == 0 || len(l.Blocks[0].Entrypoints) == 0 {
+	//   panic("received a code without any entrypoints")
+	// }
+	// Why do we even handle this case? Because at this point we still have
+	// all raw entrypoints, which may get shuffled around in the step after this.
+	// This also means entrypoints aren't sanitized. We may not have any.
+	//
+	// We may want to do the entrypoint handling earlier.
 
 	return checksum.String()
 }
@@ -517,6 +516,7 @@ func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup fu
 			Type:  string(types.Any),
 			Value: []byte("< unknown actual value >"),
 		}
+		return &res
 	}
 
 	if types.Type(rightPrim.Type) != types.Ref {

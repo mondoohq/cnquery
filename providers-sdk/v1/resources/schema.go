@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/types"
 )
 
 type ResourcesSchema interface {

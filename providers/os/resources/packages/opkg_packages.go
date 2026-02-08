@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
 const (

@@ -14,9 +14,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 )
 
 /*
@@ -27,7 +27,7 @@ import (
 // Path is the currently loaded config location
 // or default if no config exits
 var (
-	Features cnquery.Features
+	Features mql.Features
 )
 
 const (
@@ -42,7 +42,7 @@ const (
 func Init(rootCmd *cobra.Command) {
 	cobra.OnInitialize(InitViperConfig, func() {
 		var err error
-		Features, err = cnquery.InitFeatures(viper.GetStringSlice("features")...)
+		Features, err = mql.InitFeatures(viper.GetStringSlice("features")...)
 		if err != nil {
 			log.Error().Msg(err.Error())
 		}
@@ -131,7 +131,7 @@ func InitViperConfig() {
 		logger.UseJSONLogging(logger.LogOutputWriter)
 	}
 
-	if viper.GetBool("log.color") == true {
+	if viper.GetBool("log.color") {
 		logger.CliCompactLogger(logger.LogOutputWriter)
 	}
 
@@ -211,8 +211,8 @@ func GetProvidersURL() string {
 
 // GetFeatures returns the features from viper config.
 // This can be called after InitViperConfig() to get features before cobra initialization.
-func GetFeatures() cnquery.Features {
-	features, _ := cnquery.InitFeatures(viper.GetStringSlice("features")...)
+func GetFeatures() mql.Features {
+	features, _ := mql.InitFeatures(viper.GetStringSlice("features")...)
 	return features
 }
 
@@ -298,11 +298,11 @@ type CliConfigAuthentication struct {
 	Method string `json:"method,omitempty" mapstructure:"method"`
 }
 
-func (c *CommonOpts) GetFeatures() cnquery.Features {
+func (c *CommonOpts) GetFeatures() mql.Features {
 	bitSet := make([]bool, 256)
 	flags := []byte{}
 
-	for _, f := range cnquery.DefaultFeatures {
+	for _, f := range mql.DefaultFeatures {
 		if !bitSet[f] {
 			bitSet[f] = true
 			flags = append(flags, f)
@@ -310,7 +310,7 @@ func (c *CommonOpts) GetFeatures() cnquery.Features {
 	}
 
 	for _, name := range c.Features {
-		flag, ok := cnquery.FeaturesValue[name]
+		flag, ok := mql.FeaturesValue[name]
 		if ok {
 			if !bitSet[byte(flag)] {
 				bitSet[byte(flag)] = true

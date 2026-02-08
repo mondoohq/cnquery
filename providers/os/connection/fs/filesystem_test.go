@@ -9,10 +9,10 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/fs"
-	"go.mondoo.com/cnquery/v12/providers/os/detector"
-	"go.mondoo.com/cnquery/v12/providers/os/fsutil"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/fs"
+	"go.mondoo.com/mql/v13/providers/os/detector"
+	"go.mondoo.com/mql/v13/providers/os/fsutil"
 )
 
 func TestOsDetection(t *testing.T) {
@@ -40,7 +40,9 @@ func TestMountedDirectoryFile(t *testing.T) {
 	defer f.Close()
 
 	afutil := afero.Afero{Fs: conn.FileSystem()}
-	afutil.Exists(f.Name())
+	exists, err := afutil.Exists(f.Name())
+	assert.NoError(t, err)
+	assert.True(t, exists, "file should exist")
 
 	p := f.Name()
 	assert.Equal(t, "/etc/os-release", p, "path should be correct")
@@ -54,13 +56,13 @@ func TestMountedDirectoryFile(t *testing.T) {
 	assert.Equal(t, 332, len(content), "should read the full content")
 
 	// reset reader
-	f.Seek(0, 0)
+	_, _ = f.Seek(0, 0)
 	sha, err := fsutil.Sha256(f)
 	assert.Equal(t, "6c5f622e7011184134511fb18af399d5ba13164d1472e3df8dcfed346a376f70", sha, "sha256 output should be correct")
 	assert.Nil(t, err, "should execute without error")
 
 	// reset reader
-	f.Seek(0, 0)
+	_, _ = f.Seek(0, 0)
 	md5, err := fsutil.Md5(f)
 	assert.Equal(t, "1c61d1e243561194a84bd1210c7f58ce", md5, "md5 output should be correct")
 	assert.Nil(t, err, "should execute without error")

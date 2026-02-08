@@ -3,7 +3,7 @@
 
 package plugin
 
-import inventory "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+import inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 
 type Connection interface {
 	ID() uint32

@@ -4,15 +4,15 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/github/connection"
-	"go.mondoo.com/cnquery/v12/providers/github/provider"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/github/connection"
+	"go.mondoo.com/mql/v13/providers/github/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "github",
-	ID:              "go.mondoo.com/cnquery/v9/providers/github",
+	ID:              "go.mondoo.com/mql/providers/github",
 	Version:         "11.4.119",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{

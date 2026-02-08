@@ -1,4 +1,4 @@
-module go.mondoo.com/cnquery/v12
+module go.mondoo.com/mql/v13
 
 go 1.25.1
 
@@ -91,7 +91,7 @@ require (
 	golang.org/x/term v0.39.0
 	golang.org/x/text v0.33.0
 	golang.org/x/tools v0.41.0
-	google.golang.org/genproto v0.0.0-20240823204242-4ba0660f739c
+	google.golang.org/genproto v0.0.0-20240823204242-4ba0660f739c // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260122232226-8e98ce8d340d // indirect
 	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11

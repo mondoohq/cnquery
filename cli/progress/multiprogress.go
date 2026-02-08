@@ -13,9 +13,9 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/muesli/reflow/ansi"
-	"go.mondoo.com/cnquery/v12/cli/components"
-	"go.mondoo.com/cnquery/v12/cli/theme"
-	"go.mondoo.com/cnquery/v12/logger"
+	"go.mondoo.com/mql/v13/cli/components"
+	"go.mondoo.com/mql/v13/cli/theme"
+	"go.mondoo.com/mql/v13/logger"
 )
 
 type ProgressOption = func(*modelMultiProgress)
@@ -77,7 +77,7 @@ type MsgProgress struct {
 	Percent float64
 }
 
-// For cnquery the progressbar is completed, when percent is 1.0
+// For mql the progressbar is completed, when percent is 1.0
 // But for cnspec we also need the score, which is displayed after the progressbar
 // So we need a second message to indicate when the progressbar is completed
 type MsgCompleted struct {
@@ -202,7 +202,7 @@ func (m *multiProgressBars) NotApplicable(index string) {
 }
 
 // Set a single bar to completed
-// For cnquery this should be called after the progress is 100%
+// For mql this should be called after the progress is 100%
 // For cnspec this should be called after the score is set
 func (m *multiProgressBars) Completed(index string) {
 	m.program.Send(MsgCompleted{

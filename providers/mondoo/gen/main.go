@@ -4,8 +4,8 @@
 package main
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin/gen"
-	"go.mondoo.com/cnquery/v12/providers/mondoo/config"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin/gen"
+	"go.mondoo.com/mql/v13/providers/mondoo/config"
 )
 
 func main() {

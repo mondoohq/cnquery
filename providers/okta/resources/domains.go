@@ -7,10 +7,10 @@ import (
 	"context"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v12/providers/okta/connection"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/okta/connection"
 )
 
 func (o *mqlOkta) domains() ([]any, error) {

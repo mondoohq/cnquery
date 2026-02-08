@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault/inmemory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault/inmemory"
 )
 
 func TestMultiVault(t *testing.T) {
@@ -53,7 +53,7 @@ func TestMultiVault(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, secret2, sec)
 
-	sec, err = m.Get(ctx, &vault.SecretID{
+	_, err = m.Get(ctx, &vault.SecretID{
 		Key: secret3.Key,
 	})
 	require.Error(t, err)

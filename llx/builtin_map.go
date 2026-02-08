@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // mapFunctions are all the handlers for builtin array methods
@@ -410,9 +410,8 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 		}
 		// ^^ TODO
 
-		key := string(args[0].Value)
 		return &RawData{
-			Value: x[key],
+			Value: x[string(args[0].Value)],
 			Type:  bind.Type,
 		}, 0, nil
 	default:
@@ -726,7 +725,7 @@ func _stringWhere(e *blockExecutor, src string, chunk *Chunk, ref uint64, invert
 	}
 
 	var found *RawResult
-	err = e.runFunctionBlock([]*RawData{
+	_ = e.runFunctionBlock([]*RawData{
 		{Type: types.Nil, Value: nil},
 		{Type: types.StringSlice, Value: src},
 	}, fref, func(res *RawResult) {

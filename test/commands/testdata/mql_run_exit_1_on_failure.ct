@@ -1,0 +1,11 @@
+$ mql run local -c 1==2
+→ no Mondoo configuration file provided, using defaults
+[failed]  == 2
+  expected: == 2
+  actual:   1
+
+$ mql run local -c 1==2 --exit-1-on-failure --> FAIL
+→ no Mondoo configuration file provided, using defaults
+[failed]  == 2
+  expected: == 2
+  actual:   1

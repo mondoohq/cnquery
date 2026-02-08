@@ -6,14 +6,14 @@ package resources
 import (
 	"context"
 	"encoding/json"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"strings"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/snowflake/connection"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/snowflake/connection"
 )
 
 func (r *mqlSnowflakeAccount) networkPolicies() ([]any, error) {

@@ -49,7 +49,7 @@ func (s *CredentialType) UnmarshalJSON(data []byte) error {
 	}
 	if err != nil {
 		var name string
-		err = json.Unmarshal(data, &name)
+		_ = json.Unmarshal(data, &name)
 		code, ok := CredentialType_value[strings.TrimSpace(name)]
 		if !ok {
 			return errors.New("unknown type value: " + string(data))

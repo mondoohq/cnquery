@@ -8,8 +8,8 @@ import (
 	"errors"
 	"slices"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (l *mqlLsblk) id() (string, error) {
@@ -20,6 +20,9 @@ func (l *mqlLsblk) list() ([]any, error) {
 	o, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("lsblk --json --fs"),
 	})
+	if err != nil {
+		return nil, err
+	}
 	cmd := o.(*mqlCommand)
 	if exit := cmd.GetExitcode(); exit.Data != 0 {
 		return nil, errors.New("could not retrieve lsblk: " + cmd.Stderr.Data)

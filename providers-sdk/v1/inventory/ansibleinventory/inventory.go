@@ -10,8 +10,8 @@ import (
 
 	mapstructure "github.com/go-viper/mapstructure/v2"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 	"sigs.k8s.io/yaml"
 )
 

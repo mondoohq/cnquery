@@ -9,7 +9,7 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
 // curl fetches a single metadata path from the instance metadata service

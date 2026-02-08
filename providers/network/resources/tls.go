@@ -14,14 +14,14 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v12/providers/core/resources/regex"
-	"go.mondoo.com/cnquery/v12/providers/network/connection"
-	"go.mondoo.com/cnquery/v12/providers/network/resources/certificates"
-	"go.mondoo.com/cnquery/v12/providers/network/resources/tlsshake"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/core/resources/regex"
+	"go.mondoo.com/mql/v13/providers/network/connection"
+	"go.mondoo.com/mql/v13/providers/network/resources/certificates"
+	"go.mondoo.com/mql/v13/providers/network/resources/tlsshake"
+	"go.mondoo.com/mql/v13/types"
 )
 
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")

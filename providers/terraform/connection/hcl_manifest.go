@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func ParseTerraformModuleManifest(manifestPath string) (*ModuleManifest, error) {

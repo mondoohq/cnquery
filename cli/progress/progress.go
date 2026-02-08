@@ -13,8 +13,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mattn/go-isatty"
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/utils/multierr"
 )
 
 type Progress interface {
@@ -109,7 +109,7 @@ func (p *progressbar) Open() error {
 			for {
 				time.Sleep(time.Second / progressPipedFps)
 				o.ClearLines(2)
-				o.WriteString(p.View())
+				_, _ = o.WriteString(p.View())
 				p.lock.Lock()
 				complete := p.Data.complete
 				p.lock.Unlock()

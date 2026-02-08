@@ -11,7 +11,7 @@
 // features := []Feature{ MassResolver, LiveQueries }
 // features.IsActive( MassResolver )   // true
 
-package cnquery
+package mql
 
 //go:generate go run utils/featureflags/main.go features.yaml -type=Feature -out=features.go
 //go:generate go run golang.org/x/tools/cmd/stringer -type=Feature

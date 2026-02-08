@@ -10,8 +10,8 @@
 package inventory
 
 import (
-	upstream "go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
-	vault "go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	upstream "go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	vault "go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -1727,13 +1727,13 @@ const file_inventory_proto_rawDesc = "" +
 	"\tInventory\x12<\n" +
 	"\bmetadata\x18\x01 \x01(\v2 .cnquery.providers.v1.ObjectMetaR\bmetadata\x127\n" +
 	"\x04spec\x18\x02 \x01(\v2#.cnquery.providers.v1.InventorySpecR\x04spec\x12=\n" +
-	"\x06status\x18\x03 \x01(\v2%.cnquery.providers.v1.InventoryStatusR\x06status\"\xd3\x03\n" +
+	"\x06status\x18\x03 \x01(\v2%.cnquery.providers.v1.InventoryStatusR\x06status\"\xcf\x03\n" +
 	"\rInventorySpec\x123\n" +
 	"\x06assets\x18\x01 \x03(\v2\x1b.cnquery.providers.v1.AssetR\x06assets\x12V\n" +
 	"\vcredentials\x18\x02 \x03(\v24.cnquery.providers.v1.InventorySpec.CredentialsEntryR\vcredentials\x12>\n" +
 	"\x05vault\x18\x03 \x01(\v2(.cnquery.providers.v1.VaultConfigurationR\x05vault\x12)\n" +
-	"\x10credential_query\x18\x04 \x01(\tR\x0fcredentialQuery\x12h\n" +
-	"\x14upstream_credentials\x18\x10 \x01(\v25.mondoo.cnquery.upstream.v1.ServiceAccountCredentialsR\x13upstreamCredentials\x1a`\n" +
+	"\x10credential_query\x18\x04 \x01(\tR\x0fcredentialQuery\x12d\n" +
+	"\x14upstream_credentials\x18\x10 \x01(\v21.mondoo.mql.upstream.v1.ServiceAccountCredentialsR\x13upstreamCredentials\x1a`\n" +
 	"\x10CredentialsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x126\n" +
 	"\x05value\x18\x02 \x01(\v2 .cnquery.providers.v1.CredentialR\x05value:\x028\x01\"\x11\n" +
@@ -1795,7 +1795,7 @@ const file_inventory_proto_rawDesc = "" +
 	"\x03VCD\x10 \x12\a\n" +
 	"\x03OCI\x10!\x12\t\n" +
 	"\x05OPCUA\x10\"\x12!\n" +
-	"\x1dGCP_COMPUTE_INSTANCE_SNAPSHOT\x10#\"\x04\b\v\x10\vB6Z4go.mondoo.com/cnquery/v12/providers-sdk/v1/inventoryb\x06proto3"
+	"\x1dGCP_COMPUTE_INSTANCE_SNAPSHOT\x10#\"\x04\b\v\x10\vB2Z0go.mondoo.com/mql/v13/providers-sdk/v1/inventoryb\x06proto3"
 
 var (
 	file_inventory_proto_rawDescOnce sync.Once
@@ -1841,7 +1841,7 @@ var file_inventory_proto_goTypes = []any{
 	nil,                              // 26: cnquery.providers.v1.InventorySpec.CredentialsEntry
 	(*vault.Credential)(nil),         // 27: cnquery.providers.v1.Credential
 	(*vault.VaultConfiguration)(nil), // 28: cnquery.providers.v1.VaultConfiguration
-	(*upstream.ServiceAccountCredentials)(nil), // 29: mondoo.cnquery.upstream.v1.ServiceAccountCredentials
+	(*upstream.ServiceAccountCredentials)(nil), // 29: mondoo.mql.upstream.v1.ServiceAccountCredentials
 }
 var file_inventory_proto_depIdxs = []int32{
 	0,  // 0: cnquery.providers.v1.Asset.state:type_name -> cnquery.providers.v1.State
@@ -1871,7 +1871,7 @@ var file_inventory_proto_depIdxs = []int32{
 	3,  // 24: cnquery.providers.v1.InventorySpec.assets:type_name -> cnquery.providers.v1.Asset
 	26, // 25: cnquery.providers.v1.InventorySpec.credentials:type_name -> cnquery.providers.v1.InventorySpec.CredentialsEntry
 	28, // 26: cnquery.providers.v1.InventorySpec.vault:type_name -> cnquery.providers.v1.VaultConfiguration
-	29, // 27: cnquery.providers.v1.InventorySpec.upstream_credentials:type_name -> mondoo.cnquery.upstream.v1.ServiceAccountCredentials
+	29, // 27: cnquery.providers.v1.InventorySpec.upstream_credentials:type_name -> mondoo.mql.upstream.v1.ServiceAccountCredentials
 	4,  // 28: cnquery.providers.v1.AssetUrlBranch.ValuesEntry.value:type_name -> cnquery.providers.v1.AssetUrlBranch
 	27, // 29: cnquery.providers.v1.InventorySpec.CredentialsEntry.value:type_name -> cnquery.providers.v1.Credential
 	30, // [30:30] is the sub-list for method output_type

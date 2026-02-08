@@ -3,12 +3,12 @@
 
 syntax = "proto3";
 
-package cnquery.etl.v1;
+package mql.etl.v1;
 
-option go_package = "go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/etl";
+option go_package = "go.mondoo.com/mql/v13/providers-sdk/v1/upstream/etl";
 
 // VulnerabilityExchange are used for sharing information about vulnerabilities
-// across systems. Cnquery uses this format as a main mean to store detected
+// across systems. MQL uses this format as a main mean to store detected
 // vulnerability information. The same document is generated independently from
 // the source.
 message VulnerabilityExchange {

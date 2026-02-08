@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/mqlc/parser"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/sortx"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/mqlc/parser"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/sortx"
 )
 
 type ErrIdentifierNotFound struct {
@@ -90,7 +90,7 @@ type CompilerConfig struct {
 	Schema          resources.ResourcesSchema
 	UseAssetContext bool
 	Stats           CompilerStats
-	Features        cnquery.Features
+	Features        mql.Features
 }
 
 func (c *CompilerConfig) EnableStats() {
@@ -101,10 +101,10 @@ func (c *CompilerConfig) EnableMultiStats() {
 	c.Stats = newCompilerMultiStats()
 }
 
-func NewConfig(schema resources.ResourcesSchema, features cnquery.Features) CompilerConfig {
+func NewConfig(schema resources.ResourcesSchema, features mql.Features) CompilerConfig {
 	return CompilerConfig{
 		Schema:          schema,
-		UseAssetContext: features.IsActive(cnquery.MQLAssetContext),
+		UseAssetContext: features.IsActive(mql.MQLAssetContext),
 		Stats:           compilerStatsNull{},
 		Features:        features,
 	}
@@ -536,7 +536,7 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 		}
 	}
 
-	var lastType types.Type = types.Unset
+	var lastType = types.Unset
 	for i := 0; i < len(expressions); i += 2 {
 		err := c.compileSwitchCase(expressions[i], bind, chunk)
 		if err != nil {
@@ -1138,10 +1138,6 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 					return nil, types.Nil, err
 				}
 
-				if call != nil && len(calls) > 0 {
-					calls = calls[1:]
-				}
-
 				return restCalls[1:], typ, nil
 			}
 
@@ -1612,9 +1608,7 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 				return errors.New("return statement is followed by too many expressions")
 			}
 
-			if idx+1 == max {
-				// nothing else coming after this, return nil
-			}
+			// if idx+1 == max: nothing else coming after this, return nil
 
 			c.block.SingleValue = true
 			continue
@@ -1854,7 +1848,7 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 			return false
 		} else if chunk.Function != nil && len(chunk.Function.Args) > 0 {
 			// filter out nested function block that require other blocks
-			// This at least makes https://github.com/mondoohq/cnquery/issues/1339
+			// This at least makes https://github.com/mondoohq/mql/issues/1339
 			// not panic
 			for _, arg := range chunk.Function.Args {
 				if types.Type(arg.Type).Underlying() == types.Ref {
@@ -1943,7 +1937,7 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 		log.Warn().Msg("defaults somehow included external dependencies for resource " + info.Name)
 	}
 
-	if c.CompilerConfig.Features.IsActive(cnquery.ResourceContext) && info.Context != "" {
+	if c.CompilerConfig.Features.IsActive(mql.ResourceContext) && info.Context != "" {
 		// (Dom) Note: This is the very first expansion block implementation, so there are some
 		// serious limitations while we figure things out.
 		// 1. We can only expand a resource that has defaults defined. As soon as you add
@@ -2108,7 +2102,7 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 }
 
 func (c *compiler) failIfNoEntrypoints() error {
-	if c.Features.IsActive(cnquery.FailIfNoEntryPoints) {
+	if c.Features.IsActive(mql.FailIfNoEntryPoints) {
 		for _, b := range c.Result.CodeV2.Blocks {
 			if len(b.Datapoints) == 0 && len(b.Entrypoints) == 0 {
 				return errors.New("failed to compile: received an empty code structure. this is a bug with the query compilation")
@@ -2167,7 +2161,7 @@ func CompileAST(ast *parser.AST, props PropsHandler, conf CompilerConfig) (*llx.
 			Labels: map[string]string{},
 		},
 		Props:            map[string]string{},
-		Version:          cnquery.APIVersion(),
+		Version:          mql.APIVersion(),
 		MinMondooVersion: "",
 		AutoExpand:       map[string]uint64{},
 		Vars:             map[uint64]string{},

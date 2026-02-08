@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
 	mondoogql "go.mondoo.com/mondoo-go"
 	"go.mondoo.com/mondoo-go/option"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 )
 
 type MondooClient struct {

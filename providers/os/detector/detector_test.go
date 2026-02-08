@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	win "go.mondoo.com/cnquery/v12/providers/os/detector/windows"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	win "go.mondoo.com/mql/v13/providers/os/detector/windows"
 )
 
 func TestFamilyParents(t *testing.T) {

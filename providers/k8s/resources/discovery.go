@@ -11,13 +11,13 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/k8s/connection/shared"
+	"go.mondoo.com/mql/v13/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/stringx"
 	admissionv1 "k8s.io/api/admission/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -82,7 +82,7 @@ func (f *NamespaceFilterOpts) skipNamespace(namespace string) bool {
 	return false
 }
 
-func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.Inventory, error) {
+func Discover(runtime *plugin.Runtime, features mql.Features) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(shared.Connection)
 
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
@@ -1143,7 +1143,7 @@ func createPlatformData(objectKind, runtime string) (*inventory.Platform, error)
 	return platformData, nil
 }
 
-func setRelatedAssets(conn shared.Connection, root *inventory.Asset, assets []*inventory.Asset, od *PlatformIdOwnershipIndex, features cnquery.Features) {
+func setRelatedAssets(conn shared.Connection, root *inventory.Asset, assets []*inventory.Asset, od *PlatformIdOwnershipIndex, features mql.Features) {
 	// everything is connected to the root asset
 	root.RelatedAssets = append(root.RelatedAssets, assets...)
 
@@ -1165,7 +1165,7 @@ func setRelatedAssets(conn shared.Connection, root *inventory.Asset, assets []*i
 				// from the ownerReference field
 				if platformEntry, ok := od.GetKubernetesObjectData(ownerPlatformId); ok {
 					platformData, err := createPlatformData(platformEntry.Kind, conn.Runtime())
-					if err != nil || (!features.IsActive(cnquery.K8sNodeDiscovery) && platformData.Name == "k8s-node") {
+					if err != nil || (!features.IsActive(mql.K8sNodeDiscovery) && platformData.Name == "k8s-node") {
 						continue
 					}
 					a.RelatedAssets = append(a.RelatedAssets, &inventory.Asset{

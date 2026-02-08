@@ -11,17 +11,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/providers"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
-	k8s_conf "go.mondoo.com/cnquery/v12/providers/k8s/config"
-	"go.mondoo.com/cnquery/v12/providers/k8s/connection/manifest"
-	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared"
-	k8s_provider "go.mondoo.com/cnquery/v12/providers/k8s/provider"
-	"go.mondoo.com/cnquery/v12/providers/k8s/resources"
-	"go.mondoo.com/cnquery/v12/utils/syncx"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/providers"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
+	k8s_conf "go.mondoo.com/mql/v13/providers/k8s/config"
+	"go.mondoo.com/mql/v13/providers/k8s/connection/manifest"
+	"go.mondoo.com/mql/v13/providers/k8s/connection/shared"
+	k8s_provider "go.mondoo.com/mql/v13/providers/k8s/provider"
+	"go.mondoo.com/mql/v13/providers/k8s/resources"
+	"go.mondoo.com/mql/v13/utils/syncx"
 )
 
 func K8s() *providers.Runtime {
@@ -96,7 +96,7 @@ func TestManifestDiscovery(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
+	inv, err := resources.Discover(pluginRuntime, mql.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 3)
 
@@ -107,7 +107,7 @@ func TestManifestDiscovery(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err = resources.Discover(pluginRuntime, cnquery.Features{})
+	inv, err = resources.Discover(pluginRuntime, mql.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 3)
 
@@ -118,7 +118,7 @@ func TestManifestDiscovery(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err = resources.Discover(pluginRuntime, cnquery.Features{})
+	inv, err = resources.Discover(pluginRuntime, mql.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 1)
 }
@@ -152,7 +152,7 @@ func TestOperatorManifest(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
+	inv, err := resources.Discover(pluginRuntime, mql.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 4)
 
@@ -210,7 +210,7 @@ func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
+	inv, err := resources.Discover(pluginRuntime, mql.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 3)
 
@@ -266,7 +266,7 @@ func TestManifestNoObjects(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
+	inv, err := resources.Discover(pluginRuntime, mql.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 2)
 
@@ -312,7 +312,7 @@ func TestManifestDir(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
+	inv, err := resources.Discover(pluginRuntime, mql.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 5)
 
@@ -358,7 +358,7 @@ func TestManifest_InvalidManifests(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
+	inv, err := resources.Discover(pluginRuntime, mql.Features{})
 	require.NoError(t, err)
 	assert.Len(t, inv.Spec.Assets, 3)
 
