@@ -179,15 +179,31 @@ resources:
       desc: |
         The `aws.apigateway.restapi` resource provides fields representing an individual REST API configured within the AWS account. For usage, read the `aws.apigateway` resource documentation.
     fields:
+      apiKeySource:
+        min_mondoo_version: 9.0.0
       arn: {}
+      binaryMediaTypes:
+        min_mondoo_version: 9.0.0
+      createdAt:
+        min_mondoo_version: 9.0.0
       createdDate: {}
       description: {}
+      disableExecuteApiEndpoint:
+        min_mondoo_version: 9.0.0
       id: {}
+      minimumCompressionSize:
+        min_mondoo_version: 9.0.0
       name: {}
+      policy:
+        min_mondoo_version: 9.0.0
       region: {}
+      securityPolicy:
+        min_mondoo_version: 9.0.0
       stages: {}
       tags:
         min_mondoo_version: 5.16.0
+      version:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -199,11 +215,35 @@ resources:
         The `aws.apigateway.stage` resource provides fields representing an individual stage configured on a REST API. For usage, read the `aws.apigateway` resource documentation.
     fields:
       arn: {}
+      cacheClusterEnabled:
+        min_mondoo_version: 9.0.0
+      cacheClusterSize:
+        min_mondoo_version: 9.0.0
+      cacheClusterStatus:
+        min_mondoo_version: 9.0.0
+      clientCertificateId:
+        min_mondoo_version: 9.0.0
+      createdAt:
+        min_mondoo_version: 9.0.0
+      createdDate:
+        min_mondoo_version: 9.0.0
       deploymentId: {}
       description: {}
+      documentationVersion:
+        min_mondoo_version: 9.0.0
+      lastUpdatedAt:
+        min_mondoo_version: 9.0.0
+      lastUpdatedDate:
+        min_mondoo_version: 9.0.0
       methodSettings: {}
       name: {}
+      tags:
+        min_mondoo_version: 9.0.0
       tracingEnabled: {}
+      variables:
+        min_mondoo_version: 9.0.0
+      webAclArn:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -239,6 +279,42 @@ resources:
     platform:
       name:
       - aws
+  aws.applicationAutoscaling.policy:
+    fields:
+      alarms: {}
+      arn: {}
+      createdAt: {}
+      name: {}
+      namespace: {}
+      policyType: {}
+      predictiveScalingConfig: {}
+      resourceId: {}
+      scalableDimension: {}
+      stepScalingConfig: {}
+      targetTrackingConfig: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.applicationAutoscaling.scheduledAction:
+    fields:
+      arn: {}
+      createdAt: {}
+      endAt: {}
+      name: {}
+      namespace: {}
+      resourceId: {}
+      scalableDimension: {}
+      scalableTargetAction: {}
+      schedule: {}
+      startAt: {}
+      timezone: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.applicationAutoscaling.target:
     fields:
       arn: {}
@@ -247,7 +323,15 @@ resources:
       maxCapacity: {}
       minCapacity: {}
       namespace: {}
+      policies:
+        min_mondoo_version: 9.0.0
+      region:
+        min_mondoo_version: 9.0.0
+      resourceId:
+        min_mondoo_version: 9.0.0
       scalableDimension: {}
+      scheduledActions:
+        min_mondoo_version: 9.0.0
       suspendedState: {}
     is_private: true
     min_mondoo_version: 6.11.1
@@ -299,6 +383,8 @@ resources:
         min_mondoo_version: 9.0.0
       desiredCapacity:
         min_mondoo_version: 9.0.0
+      desiredCapacityType:
+        min_mondoo_version: 9.0.0
       healthCheckGracePeriod:
         min_mondoo_version: 9.0.0
       healthCheckType: {}
@@ -314,12 +400,22 @@ resources:
       minSize:
         min_mondoo_version: 9.0.0
       name: {}
+      newInstancesProtectedFromScaleIn:
+        min_mondoo_version: 9.0.0
+      placementGroup:
+        min_mondoo_version: 9.0.0
+      predictedCapacity:
+        min_mondoo_version: 9.0.0
       region:
         min_mondoo_version: 9.0.0
       tagSpecifications:
         min_mondoo_version: 9.0.0
       tags:
         min_mondoo_version: 5.16.0
+      targetGroups:
+        min_mondoo_version: 9.0.0
+      warmPoolSize:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
