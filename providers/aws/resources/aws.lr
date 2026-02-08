@@ -1878,6 +1878,8 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   region string
   // Number of services running in the cluster
   activeServicesCount int
+  // KMS key used to encrypt Fargate ephemeral storage
+  fargateEphemeralStorageKmsKey() aws.kms.key
 }
 
 // AWS ECS container instance

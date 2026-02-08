@@ -48,9 +48,7 @@ ekus
 elbv
 exo
 failback
-FARGATE
-filecache
-filesize
+fargate
 filesz
 firefox
 frontmatter
@@ -91,18 +89,15 @@ lsp
 manageddevice
 managedrulegroupstatement
 managedzone
-maxlogins
 mcp
 mcr
 meid
-memlock
 messagestoragepolicy
 mfs
 mgroup
 minfree
 mkey
 mpim
-msgqueue
 naflags
 natgateway
 networkinterface
@@ -139,7 +134,6 @@ ratebasedstatement
 regexmatchstatement
 regexpatternsetreferencestatement
 resourcegroup
-rtprio
 rtsp
 rulegroup
 rulegroupreferencestatement
@@ -153,7 +147,6 @@ SECRETVALUE
 serviceprincipals
 Sflags
 signin
-sigpending
 singlequeryargument
 sizeconstraintstatement
 Snat

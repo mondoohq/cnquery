@@ -3484,6 +3484,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.cluster.activeServicesCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetActiveServicesCount()).ToDataRes(types.Int)
 	},
+	"aws.ecs.cluster.fargateEphemeralStorageKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetFargateEphemeralStorageKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.ecs.instance.agentConnected": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsInstance).GetAgentConnected()).ToDataRes(types.Bool)
 	},
@@ -10307,6 +10310,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.cluster.activeServicesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsCluster).ActiveServicesCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.fargateEphemeralStorageKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).FargateEphemeralStorageKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24857,6 +24864,7 @@ type mqlAwsEcsCluster struct {
 	Services                          plugin.TValue[[]any]
 	Region                            plugin.TValue[string]
 	ActiveServicesCount               plugin.TValue[int64]
+	FargateEphemeralStorageKmsKey     plugin.TValue[*mqlAwsKmsKey]
 }
 
 // createAwsEcsCluster creates a new instance of this resource
@@ -24982,6 +24990,22 @@ func (c *mqlAwsEcsCluster) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsEcsCluster) GetActiveServicesCount() *plugin.TValue[int64] {
 	return &c.ActiveServicesCount
+}
+
+func (c *mqlAwsEcsCluster) GetFargateEphemeralStorageKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.FargateEphemeralStorageKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster", c.__id, "fargateEphemeralStorageKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.fargateEphemeralStorageKmsKey()
+	})
 }
 
 // mqlAwsEcsInstance for the aws.ecs.instance resource
