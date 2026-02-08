@@ -960,12 +960,6 @@ func vpcFilter(vpcId string) vpctypes.Filter {
 
 // Internet Gateway implementation
 
-func (a *mqlAwsVpcInternetGateway) id() (string, error) {
-	return a.Arn.Data, nil
-}
-
-const internetGatewayArnPattern = "arn:aws:ec2:%s:%s:internet-gateway/%s"
-
 func (a *mqlAwsVpc) internetGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpcId := a.Id.Data
@@ -979,29 +973,33 @@ func (a *mqlAwsVpc) internetGateways() ([]any, error) {
 		Filters: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpcId}}},
 	}
 
-	resp, err := svc.DescribeInternetGateways(ctx, params)
-	if err != nil {
-		return nil, err
-	}
+	paginator := ec2.NewDescribeInternetGatewaysPaginator(svc, params)
 
-	for _, igw := range resp.InternetGateways {
-		attachments, err := convert.JsonToDictSlice(igw.Attachments)
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		mqlIgw, err := CreateResource(a.MqlRuntime, ResourceAwsVpcInternetGateway,
-			map[string]*llx.RawData{
-				"id":          llx.StringDataPtr(igw.InternetGatewayId),
-				"arn":         llx.StringData(fmt.Sprintf(internetGatewayArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(igw.InternetGatewayId))),
-				"region":      llx.StringData(a.Region.Data),
-				"attachments": llx.ArrayData(attachments, types.Any),
-				"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(igw.Tags)), types.String),
-			})
-		if err != nil {
-			return nil, err
+		for _, igw := range resp.InternetGateways {
+			attachments, err := convert.JsonToDictSlice(igw.Attachments)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlIgw, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Internetgateway,
+				map[string]*llx.RawData{
+					"arn":         llx.StringData(fmt.Sprintf(internetGwArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(igw.InternetGatewayId))),
+					"id":          llx.StringDataPtr(igw.InternetGatewayId),
+					"region":      llx.StringData(a.Region.Data),
+					"attachments": llx.ArrayData(attachments, types.Any),
+					"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(igw.Tags)), types.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			igws = append(igws, mqlIgw)
 		}
-		igws = append(igws, mqlIgw)
 	}
 	return igws, nil
 }

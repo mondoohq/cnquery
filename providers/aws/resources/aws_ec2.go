@@ -2133,7 +2133,9 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 						map[string]*llx.RawData{
 							"arn":         llx.StringData(fmt.Sprintf(internetGwArnPattern, region, convert.ToValue(gateway.OwnerId), convert.ToValue(gateway.InternetGatewayId))),
 							"id":          llx.StringData(convert.ToValue(gateway.InternetGatewayId)),
+							"region":      llx.StringData(region),
 							"attachments": llx.ArrayData(jsonAttachments, types.Any),
+							"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(gateway.Tags)), types.String),
 						})
 					if err != nil {
 						return nil, err

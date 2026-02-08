@@ -120,7 +120,7 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   // ID of the set of DHCP options associated with the VPC
   dhcpOptionsId string
   // Internet gateways attached to the VPC
-  internetGateways() []aws.vpc.internetGateway
+  internetGateways() []aws.ec2.internetgateway
   // Security groups in this VPC
   securityGroups() []aws.ec2.securitygroup
   // Network ACLs in this VPC
@@ -243,20 +243,6 @@ private aws.vpc.flowlog @defaults("id region status") {
   maxAggregationInterval int
   // Type of traffic to monitor: ACCEPT, ALL, and REJECT
   trafficType string
-}
-
-// Amazon Virtual Private Cloud (VPC) internet gateway
-private aws.vpc.internetGateway @defaults("id") {
-  // ID of the internet gateway
-  id string
-  // ARN of the internet gateway
-  arn string
-  // Region where the internet gateway exists
-  region string
-  // VPC attachments for the internet gateway
-  attachments []dict
-  // Tags on the internet gateway
-  tags map[string]string
 }
 
 // Amazon Virtual Private Cloud (VPC) virtual private gateway
@@ -4152,8 +4138,12 @@ private aws.ec2.internetgateway @defaults("arn") {
   arn string
   // ID for the gateway
   id string
+  // Region where the internet gateway exists
+  region string
   // VPC attachments
   attachments []dict
+  // Tags on the internet gateway
+  tags map[string]string
 }
 
 // Amazon EC2 (EBS) snapshot

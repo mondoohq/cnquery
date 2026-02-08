@@ -1464,6 +1464,10 @@ resources:
       arn: {}
       attachments: {}
       id: {}
+      region:
+        min_mondoo_version: 9.0.0
+      tags:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -4403,18 +4407,6 @@ resources:
       vpc: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - aws
-  aws.vpc.internetGateway:
-    fields:
-      arn: {}
-      attachments: {}
-      id: {}
-      region: {}
-      tags: {}
-    is_private: true
-    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
