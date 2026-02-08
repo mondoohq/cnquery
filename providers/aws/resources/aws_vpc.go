@@ -638,7 +638,6 @@ func (a *mqlAwsVpc) routeTables() ([]any, error) {
 			}
 			res = append(res, mqlRouteTable)
 			mqlRouteTable.(*mqlAwsVpcRoutetable).cacheAssociations = routeTable.Associations
-			mqlRouteTable.(*mqlAwsVpcRoutetable).region = a.Region.Data
 		}
 	}
 	return res, nil
@@ -646,7 +645,6 @@ func (a *mqlAwsVpc) routeTables() ([]any, error) {
 
 type mqlAwsVpcRoutetableInternal struct {
 	cacheAssociations []vpctypes.RouteTableAssociation
-	region            string
 }
 
 func (a *mqlAwsVpcRoutetable) associations() ([]any, error) {
@@ -668,7 +666,7 @@ func (a *mqlAwsVpcRoutetable) associations() ([]any, error) {
 		}
 		res = append(res, mqlAssoc)
 		mqlAssoc.(*mqlAwsVpcRoutetableAssociation).cacheSubnetId = assoc.SubnetId
-		mqlAssoc.(*mqlAwsVpcRoutetableAssociation).region = a.region
+		mqlAssoc.(*mqlAwsVpcRoutetableAssociation).region = a.Region.Data
 	}
 	return res, nil
 }
@@ -783,7 +781,6 @@ func (a *mqlAwsVpcSubnet) routeTables() ([]any, error) {
 		}
 		res = append(res, mqlRouteTable)
 		mqlRouteTable.(*mqlAwsVpcRoutetable).cacheAssociations = routeTableToReturn.Associations
-		mqlRouteTable.(*mqlAwsVpcRoutetable).region = region
 	}
 
 	return res, nil
