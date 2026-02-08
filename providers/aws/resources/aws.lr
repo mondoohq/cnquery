@@ -2021,6 +2021,60 @@ private aws.ecs.service @defaults("arn name clusterArn status") {
   createdAt time
   // IAM principal that created the service
   createdBy string
+  // Task sets associated with the service (for services using EXTERNAL or CODE_DEPLOY deployment controllers)
+  taskSets() []aws.ecs.taskSet
+}
+
+// Amazon ECS Task Set
+private aws.ecs.taskSet @defaults("arn status taskDefinition launchType") {
+  // ARN of the task set
+  arn string
+  // ID of the task set
+  id string
+  // ARN of the cluster the task set belongs to
+  clusterArn string
+  // ARN of the service the task set belongs to
+  serviceArn string
+  // Status of the task set (PRIMARY, ACTIVE, DRAINING)
+  status string
+  // ARN of the task definition used by the task set
+  taskDefinition string
+  // Launch type for the task set (EC2, FARGATE, EXTERNAL)
+  launchType string
+  // Fargate platform version for the task set
+  platformVersion string
+  // Fargate platform family for the task set
+  platformFamily string
+  // Network configuration for the task set
+  networkConfiguration() aws.ecs.taskSet.networkConfiguration
+  // Tags associated with the task set
+  tags map[string]string
+  // Creation timestamp of the task set
+  createdAt time
+  // Last updated timestamp of the task set
+  updatedAt time
+  // Number of running tasks in the task set
+  runningCount int
+  // Number of pending tasks in the task set
+  pendingCount int
+  // Computed desired count for the task set
+  computedDesiredCount int
+  // Stability status of the task set (STEADY_STATE, STABILIZING)
+  stabilityStatus string
+  // External ID associated with the task set
+  externalId string
+  // Tag that identifies what started the task set (e.g., CODE_DEPLOY)
+  startedBy string
+}
+
+// Amazon ECS Task Set Network Configuration
+private aws.ecs.taskSet.networkConfiguration {
+  // Whether to assign a public IP address (ENABLED, DISABLED)
+  assignPublicIp string
+  // Subnets associated with the task set
+  subnets []string
+  // Security groups associated with the task set
+  securityGroups []string
 }
 
 // Amazon ECS Service Deployment Configuration

@@ -127,6 +127,8 @@ const (
 	ResourceAwsEcsContainer                                                     string = "aws.ecs.container"
 	ResourceAwsEcsTaskDefinition                                                string = "aws.ecs.taskDefinition"
 	ResourceAwsEcsService                                                       string = "aws.ecs.service"
+	ResourceAwsEcsTaskSet                                                       string = "aws.ecs.taskSet"
+	ResourceAwsEcsTaskSetNetworkConfiguration                                   string = "aws.ecs.taskSet.networkConfiguration"
 	ResourceAwsEcsServiceDeploymentConfiguration                                string = "aws.ecs.service.deploymentConfiguration"
 	ResourceAwsEcsServiceDeploymentConfigurationDeploymentCircuitBreaker        string = "aws.ecs.service.deploymentConfiguration.deploymentCircuitBreaker"
 	ResourceAwsEcsServiceNetworkConfiguration                                   string = "aws.ecs.service.networkConfiguration"
@@ -708,6 +710,14 @@ func init() {
 		"aws.ecs.service": {
 			Init:   initAwsEcsService,
 			Create: createAwsEcsService,
+		},
+		"aws.ecs.taskSet": {
+			// to override args, implement: initAwsEcsTaskSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskSet,
+		},
+		"aws.ecs.taskSet.networkConfiguration": {
+			// to override args, implement: initAwsEcsTaskSetNetworkConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskSetNetworkConfiguration,
 		},
 		"aws.ecs.service.deploymentConfiguration": {
 			// to override args, implement: initAwsEcsServiceDeploymentConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3666,6 +3676,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.service.createdBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsService).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"aws.ecs.service.taskSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetTaskSets()).ToDataRes(types.Array(types.Resource("aws.ecs.taskSet")))
+	},
+	"aws.ecs.taskSet.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetId()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.clusterArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetClusterArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.serviceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetServiceArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.taskDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetTaskDefinition()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.launchType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetLaunchType()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.platformVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetPlatformVersion()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.platformFamily": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetPlatformFamily()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.networkConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetNetworkConfiguration()).ToDataRes(types.Resource("aws.ecs.taskSet.networkConfiguration"))
+	},
+	"aws.ecs.taskSet.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.taskSet.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ecs.taskSet.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ecs.taskSet.runningCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetRunningCount()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskSet.pendingCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetPendingCount()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskSet.computedDesiredCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetComputedDesiredCount()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskSet.stabilityStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetStabilityStatus()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.externalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetExternalId()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.startedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSet).GetStartedBy()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.networkConfiguration.assignPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSetNetworkConfiguration).GetAssignPublicIp()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskSet.networkConfiguration.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSetNetworkConfiguration).GetSubnets()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecs.taskSet.networkConfiguration.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskSetNetworkConfiguration).GetSecurityGroups()).ToDataRes(types.Array(types.String))
 	},
 	"aws.ecs.service.deploymentConfiguration.maximumPercent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsServiceDeploymentConfiguration).GetMaximumPercent()).ToDataRes(types.Int)
@@ -10574,6 +10653,106 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.service.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsService).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.taskSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).TaskSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskSet.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.clusterArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).ClusterArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.serviceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).ServiceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.taskDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).TaskDefinition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.launchType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).LaunchType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.platformVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).PlatformVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.platformFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).PlatformFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.networkConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).NetworkConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsTaskSetNetworkConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.runningCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).RunningCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.pendingCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).PendingCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.computedDesiredCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).ComputedDesiredCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.stabilityStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).StabilityStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.externalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).ExternalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.startedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSet).StartedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.networkConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSetNetworkConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskSet.networkConfiguration.assignPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSetNetworkConfiguration).AssignPublicIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.networkConfiguration.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSetNetworkConfiguration).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskSet.networkConfiguration.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskSetNetworkConfiguration).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.service.deploymentConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25497,6 +25676,7 @@ type mqlAwsEcsService struct {
 	Tags                    plugin.TValue[map[string]any]
 	CreatedAt               plugin.TValue[*time.Time]
 	CreatedBy               plugin.TValue[string]
+	TaskSets                plugin.TValue[[]any]
 }
 
 // createAwsEcsService creates a new instance of this resource
@@ -25610,6 +25790,232 @@ func (c *mqlAwsEcsService) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsEcsService) GetCreatedBy() *plugin.TValue[string] {
 	return &c.CreatedBy
+}
+
+func (c *mqlAwsEcsService) GetTaskSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TaskSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.service", c.__id, "taskSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.taskSets()
+	})
+}
+
+// mqlAwsEcsTaskSet for the aws.ecs.taskSet resource
+type mqlAwsEcsTaskSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskSetInternal it will be used here
+	Arn                  plugin.TValue[string]
+	Id                   plugin.TValue[string]
+	ClusterArn           plugin.TValue[string]
+	ServiceArn           plugin.TValue[string]
+	Status               plugin.TValue[string]
+	TaskDefinition       plugin.TValue[string]
+	LaunchType           plugin.TValue[string]
+	PlatformVersion      plugin.TValue[string]
+	PlatformFamily       plugin.TValue[string]
+	NetworkConfiguration plugin.TValue[*mqlAwsEcsTaskSetNetworkConfiguration]
+	Tags                 plugin.TValue[map[string]any]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+	RunningCount         plugin.TValue[int64]
+	PendingCount         plugin.TValue[int64]
+	ComputedDesiredCount plugin.TValue[int64]
+	StabilityStatus      plugin.TValue[string]
+	ExternalId           plugin.TValue[string]
+	StartedBy            plugin.TValue[string]
+}
+
+// createAwsEcsTaskSet creates a new instance of this resource
+func createAwsEcsTaskSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskSet) MqlName() string {
+	return "aws.ecs.taskSet"
+}
+
+func (c *mqlAwsEcsTaskSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskSet) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEcsTaskSet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEcsTaskSet) GetClusterArn() *plugin.TValue[string] {
+	return &c.ClusterArn
+}
+
+func (c *mqlAwsEcsTaskSet) GetServiceArn() *plugin.TValue[string] {
+	return &c.ServiceArn
+}
+
+func (c *mqlAwsEcsTaskSet) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsEcsTaskSet) GetTaskDefinition() *plugin.TValue[string] {
+	return &c.TaskDefinition
+}
+
+func (c *mqlAwsEcsTaskSet) GetLaunchType() *plugin.TValue[string] {
+	return &c.LaunchType
+}
+
+func (c *mqlAwsEcsTaskSet) GetPlatformVersion() *plugin.TValue[string] {
+	return &c.PlatformVersion
+}
+
+func (c *mqlAwsEcsTaskSet) GetPlatformFamily() *plugin.TValue[string] {
+	return &c.PlatformFamily
+}
+
+func (c *mqlAwsEcsTaskSet) GetNetworkConfiguration() *plugin.TValue[*mqlAwsEcsTaskSetNetworkConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskSetNetworkConfiguration](&c.NetworkConfiguration, func() (*mqlAwsEcsTaskSetNetworkConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskSet", c.__id, "networkConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskSetNetworkConfiguration), nil
+			}
+		}
+
+		return c.networkConfiguration()
+	})
+}
+
+func (c *mqlAwsEcsTaskSet) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEcsTaskSet) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsEcsTaskSet) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsEcsTaskSet) GetRunningCount() *plugin.TValue[int64] {
+	return &c.RunningCount
+}
+
+func (c *mqlAwsEcsTaskSet) GetPendingCount() *plugin.TValue[int64] {
+	return &c.PendingCount
+}
+
+func (c *mqlAwsEcsTaskSet) GetComputedDesiredCount() *plugin.TValue[int64] {
+	return &c.ComputedDesiredCount
+}
+
+func (c *mqlAwsEcsTaskSet) GetStabilityStatus() *plugin.TValue[string] {
+	return &c.StabilityStatus
+}
+
+func (c *mqlAwsEcsTaskSet) GetExternalId() *plugin.TValue[string] {
+	return &c.ExternalId
+}
+
+func (c *mqlAwsEcsTaskSet) GetStartedBy() *plugin.TValue[string] {
+	return &c.StartedBy
+}
+
+// mqlAwsEcsTaskSetNetworkConfiguration for the aws.ecs.taskSet.networkConfiguration resource
+type mqlAwsEcsTaskSetNetworkConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskSetNetworkConfigurationInternal it will be used here
+	AssignPublicIp plugin.TValue[string]
+	Subnets        plugin.TValue[[]any]
+	SecurityGroups plugin.TValue[[]any]
+}
+
+// createAwsEcsTaskSetNetworkConfiguration creates a new instance of this resource
+func createAwsEcsTaskSetNetworkConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskSetNetworkConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskSet.networkConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskSetNetworkConfiguration) MqlName() string {
+	return "aws.ecs.taskSet.networkConfiguration"
+}
+
+func (c *mqlAwsEcsTaskSetNetworkConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskSetNetworkConfiguration) GetAssignPublicIp() *plugin.TValue[string] {
+	return &c.AssignPublicIp
+}
+
+func (c *mqlAwsEcsTaskSetNetworkConfiguration) GetSubnets() *plugin.TValue[[]any] {
+	return &c.Subnets
+}
+
+func (c *mqlAwsEcsTaskSetNetworkConfiguration) GetSecurityGroups() *plugin.TValue[[]any] {
+	return &c.SecurityGroups
 }
 
 // mqlAwsEcsServiceDeploymentConfiguration for the aws.ecs.service.deploymentConfiguration resource
