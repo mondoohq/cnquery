@@ -23,10 +23,10 @@ import (
 
 func init() {
 	rootCmd.AddCommand(sbomCmd)
-	sbomCmd.Flags().String("asset-name", "", "User-override for the asset name")
+	sbomCmd.Flags().String("asset-name", "", "Override the asset name")
 	sbomCmd.Flags().StringToString("annotation", nil, "Add an annotation to the asset") // user-added, editable
-	sbomCmd.Flags().StringP("output", "o", "list", "Set output format: "+sbom.AllFormats())
-	sbomCmd.Flags().String("output-target", "", "Set output target to which the SBOM report will be written")
+	sbomCmd.Flags().StringP("output", "o", "list", "Set the output format: "+sbom.AllFormats())
+	sbomCmd.Flags().String("output-target", "", "Set the output file for the SBOM report")
 	sbomCmd.Flags().Bool("with-evidence", false, "Include evidence for each component")
 	sbomCmd.Flags().Bool("with-cpes", false, "Generate CPEs for each component")
 }

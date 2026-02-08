@@ -17,11 +17,11 @@ import (
 )
 
 func init() {
-	vaultListCmd.Flags().Bool("show-options", false, "displays configured options")
+	vaultListCmd.Flags().Bool("show-options", false, "Display configured options")
 	VaultCmd.AddCommand(vaultListCmd)
 
-	vaultConfigureCmd.Flags().String("type", "", "possible values: "+strings.Join(vault.TypeIds(), " | "))
-	vaultConfigureCmd.Flags().StringToString("option", nil, "addition vault connection options, multiple options via --option key=value")
+	vaultConfigureCmd.Flags().String("type", "", "Set the vault type. Possible values: "+strings.Join(vault.TypeIds(), " | "))
+	vaultConfigureCmd.Flags().StringToString("option", nil, "Set additional vault connection options (use --option key=value for multiple)")
 	vaultConfigureCmd.Flags().String("inventory-file", "", "Set the path to the inventory file")
 	VaultCmd.AddCommand(vaultConfigureCmd)
 

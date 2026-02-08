@@ -24,8 +24,8 @@ func init() {
 	ProvidersCmd.AddCommand(listProvidersCmd)
 	ProvidersCmd.AddCommand(installProviderCmd)
 
-	installProviderCmd.Flags().StringP("file", "f", "", "install a provider via a file")
-	installProviderCmd.Flags().String("url", "", "install a provider via URL")
+	installProviderCmd.Flags().StringP("file", "f", "", "Install a provider via a file")
+	installProviderCmd.Flags().String("url", "", "Install a provider via a URL")
 }
 
 var ProvidersCmd = &cobra.Command{
