@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v12/llx"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v12/providers/oci/connection"
+	"go.mondoo.com/cnquery/v12/types"
 )
 
 func (e *mqlOciCompute) id() (string, error) {
@@ -108,12 +109,38 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 					created = &instance.TimeCreated.Time
 				}
 
+				freeformTags := make(map[string]interface{})
+				for k, v := range instance.FreeformTags {
+					freeformTags[k] = v
+				}
+
+				definedTags := make(map[string]interface{})
+				for k, v := range instance.DefinedTags {
+					definedTags[k] = v
+				}
+
+				// Create compartment resource reference
+				compartment, err := CreateResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
+					"id": llx.StringDataPtr(instance.CompartmentId),
+				})
+				if err != nil {
+					return nil, err
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.instance", map[string]*llx.RawData{
-					"id":      llx.StringDataPtr(instance.Id),
-					"name":    llx.StringDataPtr(instance.DisplayName),
-					"region":  llx.ResourceData(regionResource, "oci.region"),
-					"created": llx.TimeDataPtr(created),
-					"state":   llx.StringData(string(instance.LifecycleState)),
+					"id":                 llx.StringDataPtr(instance.Id),
+					"name":               llx.StringDataPtr(instance.DisplayName),
+					"region":             llx.ResourceData(regionResource, "oci.region"),
+					"created":            llx.TimeDataPtr(created),
+					"state":              llx.StringData(string(instance.LifecycleState)),
+					"shape":              llx.StringDataPtr(instance.Shape),
+					"availabilityDomain": llx.StringDataPtr(instance.AvailabilityDomain),
+					"compartment":        llx.ResourceData(compartment, "oci.compartment"),
+					"faultDomain":        llx.StringDataPtr(instance.FaultDomain),
+					"imageId":            llx.StringDataPtr(instance.ImageId),
+					"dedicatedVmHostId":  llx.StringDataPtr(instance.DedicatedVmHostId),
+					"freeformTags":       llx.MapData(freeformTags, types.String),
+					"definedTags":        llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -219,12 +246,41 @@ func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions 
 					created = &image.TimeCreated.Time
 				}
 
+				freeformTags := make(map[string]interface{})
+				for k, v := range image.FreeformTags {
+					freeformTags[k] = v
+				}
+
+				definedTags := make(map[string]interface{})
+				for k, v := range image.DefinedTags {
+					definedTags[k] = v
+				}
+
+				var sizeInMBs int64
+				if image.SizeInMBs != nil {
+					sizeInMBs = *image.SizeInMBs
+				}
+
+				// Create compartment resource reference
+				compartment, err := CreateResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
+					"id": llx.StringDataPtr(image.CompartmentId),
+				})
+				if err != nil {
+					return nil, err
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.image", map[string]*llx.RawData{
-					"id":      llx.StringDataPtr(image.Id),
-					"name":    llx.StringDataPtr(image.DisplayName),
-					"region":  llx.ResourceData(regionResource, "oci.region"),
-					"created": llx.TimeDataPtr(created),
-					"state":   llx.StringData(string(image.LifecycleState)),
+					"id":                     llx.StringDataPtr(image.Id),
+					"name":                   llx.StringDataPtr(image.DisplayName),
+					"region":                 llx.ResourceData(regionResource, "oci.region"),
+					"created":                llx.TimeDataPtr(created),
+					"state":                  llx.StringData(string(image.LifecycleState)),
+					"compartment":            llx.ResourceData(compartment, "oci.compartment"),
+					"operatingSystem":        llx.StringDataPtr(image.OperatingSystem),
+					"operatingSystemVersion": llx.StringDataPtr(image.OperatingSystemVersion),
+					"sizeInMBs":              llx.IntData(sizeInMBs),
+					"freeformTags":           llx.MapData(freeformTags, types.String),
+					"definedTags":            llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err

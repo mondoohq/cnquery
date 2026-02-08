@@ -37,7 +37,7 @@ private oci.region @defaults("id name") {
 }
 
 // Oracle Cloud Infrastructure (OCI) compartment
-private oci.compartment @defaults("name") {
+private oci.compartment @defaults("id name") {
   // Compartment OCID
   id string
   // Compartment name
@@ -86,6 +86,10 @@ private oci.identity.user @defaults("name") {
   lastLogin time
   // Previous successful login time
   previousLogin time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
   // API keys for API authentication
   apiKeys() []oci.identity.apiKey
   // Customer secret keys for Amazon S3 compatibility API
@@ -150,6 +154,10 @@ private oci.identity.group @defaults("name") {
   created time
   // Group lifecycle state (e.g., ACTIVE, INACTIVE)
   state string
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) IAM policy that grants group permissions to resources
@@ -168,6 +176,12 @@ private oci.identity.policy @defaults("name description") {
   state string
   // Policy statements defining permissions
   statements []string
+  // Policy version date
+  versionDate time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) Compute service
@@ -190,6 +204,22 @@ private oci.compute.instance @defaults("name") {
   created time
   // Instance lifecycle state (e.g., RUNNING, STOPPED, TERMINATED)
   state string
+  // Compute shape determining CPU and memory (e.g., VM.Standard2.1)
+  shape string
+  // Availability domain where the instance is placed (e.g., Uocm:PHX-AD-1)
+  availabilityDomain string
+  // Compartment containing the instance
+  compartment oci.compartment
+  // Fault domain for fault tolerance (e.g., FAULT-DOMAIN-1)
+  faultDomain string
+  // Image OCID used to launch the instance
+  imageId string
+  // Dedicated VM host OCID if running on dedicated infrastructure
+  dedicatedVmHostId string
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) Compute image
@@ -204,6 +234,18 @@ private oci.compute.image @defaults("name") {
   created time
   // Image lifecycle state (e.g., AVAILABLE, DISABLED, DELETED)
   state string
+  // Compartment containing the image
+  compartment oci.compartment
+  // Operating system name (e.g., Oracle Linux)
+  operatingSystem string
+  // Operating system version (e.g., 7.9)
+  operatingSystemVersion string
+  // Image size in megabytes
+  sizeInMBs int
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) Networking service
@@ -230,6 +272,20 @@ private oci.network.vcn @defaults("name") {
   cidrBlock string
   // IPv4 CIDR blocks for the VCN address space
   cidrBlocks []string
+  // VCN domain name for DNS resolution
+  vcnDomainName string
+  // Default DHCP options OCID for the VCN
+  defaultDhcpOptionsId string
+  // Default route table OCID for the VCN
+  defaultRouteTableId string
+  // Default security list OCID for the VCN
+  defaultSecurityListId string
+  // DNS label for the VCN
+  dnsLabel string
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) VCN security list (virtual firewall rules)
@@ -248,6 +304,12 @@ private oci.network.securityList @defaults("name") {
   egressSecurityRules []dict
   // Ingress security rules for inbound traffic
   ingressSecurityRules []dict
+  // VCN OCID that this security list belongs to
+  vcnId string
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) Object Storage service
@@ -282,4 +344,20 @@ private oci.objectStorage.bucket {
   objectEventsEnabled() bool
   // Whether the bucket is configured as a replication source
   replicationEnabled() bool
+  // Bucket OCID
+  id string
+  // Whether the bucket is read-only (true when configured as replication destination)
+  isReadOnly() bool
+  // Entity tag (ETag) for change detection
+  etag() string
+  // KMS key OCID for encryption
+  kmsKeyId() string
+  // Approximate number of objects in the bucket
+  approximateCount() int
+  // Approximate total size of objects in bytes
+  approximateSize() int
+  // Free-form tags for resource management
+  freeformTags() map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags() map[string]map[string]string
 }

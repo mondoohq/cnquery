@@ -116,6 +116,16 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 					capabilities["canUseOAuth2ClientCredentials"] = boolValue(user.Capabilities.CanUseOAuth2ClientCredentials)
 				}
 
+				freeformTags := make(map[string]interface{})
+				for k, v := range user.FreeformTags {
+					freeformTags[k] = v
+				}
+
+				definedTags := make(map[string]interface{})
+				for k, v := range user.DefinedTags {
+					definedTags[k] = v
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.user", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(user.Id),
 					"name":          llx.StringDataPtr(user.Name),
@@ -129,6 +139,8 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 					"capabilities":  llx.MapData(capabilities, types.Bool),
 					"lastLogin":     llx.TimeDataPtr(lastLogin),
 					"previousLogin": llx.TimeDataPtr(previousLogin),
+					"freeformTags":  llx.MapData(freeformTags, types.String),
+					"definedTags":   llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -418,6 +430,16 @@ func (o *mqlOciIdentity) getGroups(conn *connection.OciConnection) []*jobpool.Jo
 					created = &grp.TimeCreated.Time
 				}
 
+				freeformTags := make(map[string]interface{})
+				for k, v := range grp.FreeformTags {
+					freeformTags[k] = v
+				}
+
+				definedTags := make(map[string]interface{})
+				for k, v := range grp.DefinedTags {
+					definedTags[k] = v
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.group", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(grp.Id),
 					"name":          llx.StringDataPtr(grp.Name),
@@ -425,6 +447,8 @@ func (o *mqlOciIdentity) getGroups(conn *connection.OciConnection) []*jobpool.Jo
 					"created":       llx.TimeDataPtr(created),
 					"state":         llx.StringData(string(grp.LifecycleState)),
 					"compartmentID": llx.StringDataPtr(grp.CompartmentId),
+					"freeformTags":  llx.MapData(freeformTags, types.String),
+					"definedTags":   llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -518,6 +542,21 @@ func (o *mqlOciIdentity) getPolicies(conn *connection.OciConnection) []*jobpool.
 					created = &policy.TimeCreated.Time
 				}
 
+				var versionDate *time.Time
+				if policy.VersionDate != nil {
+					versionDate = &policy.VersionDate.Date
+				}
+
+				freeformTags := make(map[string]interface{})
+				for k, v := range policy.FreeformTags {
+					freeformTags[k] = v
+				}
+
+				definedTags := make(map[string]interface{})
+				for k, v := range policy.DefinedTags {
+					definedTags[k] = v
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.policy", map[string]*llx.RawData{
 					"id":            llx.StringDataPtr(policy.Id),
 					"name":          llx.StringDataPtr(policy.Name),
@@ -526,6 +565,9 @@ func (o *mqlOciIdentity) getPolicies(conn *connection.OciConnection) []*jobpool.
 					"state":         llx.StringData(string(policy.LifecycleState)),
 					"compartmentID": llx.StringDataPtr(policy.CompartmentId),
 					"statements":    llx.ArrayData(convert.SliceAnyToInterface(policy.Statements), types.String),
+					"versionDate":   llx.TimeDataPtr(versionDate),
+					"freeformTags":  llx.MapData(freeformTags, types.String),
+					"definedTags":   llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err
