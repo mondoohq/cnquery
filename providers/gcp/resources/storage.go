@@ -105,20 +105,38 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 			return nil, err
 		}
 
+		versioningEnabled := bucket.Versioning != nil && bucket.Versioning.Enabled
+		loggingEnabled := bucket.Logging != nil
+		var logBucket string
+		if bucket.Logging != nil {
+			logBucket = bucket.Logging.LogBucket
+		}
+		uniformBucketLevelAccess := bucket.IamConfiguration != nil &&
+			bucket.IamConfiguration.UniformBucketLevelAccess != nil &&
+			bucket.IamConfiguration.UniformBucketLevelAccess.Enabled
+		softDeleteEnabled := bucket.SoftDeletePolicy != nil &&
+			bucket.SoftDeletePolicy.RetentionDurationSeconds > 0
+
 		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
-			"id":               llx.StringData(bucket.Id),
-			"projectId":        llx.StringData(projectId),
-			"name":             llx.StringData(bucket.Name),
-			"labels":           llx.MapData(convert.MapToInterfaceMap(bucket.Labels), types.String),
-			"location":         llx.StringData(bucket.Location),
-			"locationType":     llx.StringData(bucket.LocationType),
-			"projectNumber":    llx.StringData(strconv.FormatUint(bucket.ProjectNumber, 10)),
-			"storageClass":     llx.StringData(bucket.StorageClass),
-			"created":          llx.TimeDataPtr(created),
-			"updated":          llx.TimeDataPtr(updated),
-			"iamConfiguration": llx.DictData(iamConfigurationDict),
-			"retentionPolicy":  llx.DictData(retentionPolicy),
-			"encryption":       llx.DictData(enc),
+			"id":                      llx.StringData(bucket.Id),
+			"projectId":               llx.StringData(projectId),
+			"name":                    llx.StringData(bucket.Name),
+			"labels":                  llx.MapData(convert.MapToInterfaceMap(bucket.Labels), types.String),
+			"location":                llx.StringData(bucket.Location),
+			"locationType":            llx.StringData(bucket.LocationType),
+			"projectNumber":           llx.StringData(strconv.FormatUint(bucket.ProjectNumber, 10)),
+			"storageClass":            llx.StringData(bucket.StorageClass),
+			"created":                 llx.TimeDataPtr(created),
+			"updated":                 llx.TimeDataPtr(updated),
+			"iamConfiguration":        llx.DictData(iamConfigurationDict),
+			"retentionPolicy":         llx.DictData(retentionPolicy),
+			"encryption":              llx.DictData(enc),
+			"versioningEnabled":       llx.BoolData(versioningEnabled),
+			"loggingEnabled":          llx.BoolData(loggingEnabled),
+			"logBucket":               llx.StringData(logBucket),
+			"defaultEventBasedHold":   llx.BoolData(bucket.DefaultEventBasedHold),
+			"uniformBucketLevelAccess": llx.BoolData(uniformBucketLevelAccess),
+			"softDeleteEnabled":       llx.BoolData(softDeleteEnabled),
 			"lifecycle": llx.ArrayData(
 				storageLifecycleRulesToArrayInterface(g.MqlRuntime, bucket.Id, bucket.Lifecycle),
 				types.Resource("gcp.project.storageService.bucket.lifecycleRule"),

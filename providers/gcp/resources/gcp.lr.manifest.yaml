@@ -177,6 +177,8 @@ resources:
     fields:
       access: {}
       created: {}
+      defaultPartitionExpirationMs: {}
+      defaultTableExpirationMs: {}
       description: {}
       id: {}
       kmsName: {}
@@ -519,6 +521,8 @@ resources:
   gcp.project.cloudRunService.service:
     fields:
       annotations: {}
+      binaryAuthorizationBreakglassJustification: {}
+      binaryAuthorizationEnabled: {}
       conditions: {}
       created: {}
       creator: {}
@@ -761,8 +765,13 @@ resources:
       name: {}
       physicalBlockSizeBytes: {}
       provisionedIops: {}
+      replicaZones: {}
+      resourcePolicies: {}
       sizeGb: {}
+      sourceImage: {}
+      sourceSnapshot: {}
       status: {}
+      type: {}
       zone: {}
     is_private: true
     min_mondoo_version: latest
@@ -2056,6 +2065,7 @@ resources:
     fields:
       ackDeadline: {}
       expirationPolicy: {}
+      filter: {}
       labels: {}
       projectId: {}
       pushConfig: {}
@@ -2101,6 +2111,7 @@ resources:
     fields:
       kmsKeyName: {}
       labels: {}
+      messageRetentionDuration: {}
       messageStoragePolicy: {}
       projectId: {}
       topicName: {}
@@ -2155,6 +2166,7 @@ resources:
       projectId: {}
       readEndpoint: {}
       readEndpointPort: {}
+      readReplicasMode: {}
       redisConfigs: {}
       redisVersion: {}
       replicaCount: {}
@@ -2162,6 +2174,7 @@ resources:
       secondaryIpRange: {}
       state: {}
       statusMessage: {}
+      transitEncryptionMode: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
@@ -2443,6 +2456,7 @@ resources:
   gcp.project.storageService.bucket:
     fields:
       created: {}
+      defaultEventBasedHold: {}
       encryption:
         min_mondoo_version: 9.0.0
       iamConfiguration: {}
@@ -2453,12 +2467,17 @@ resources:
         min_mondoo_version: 9.0.0
       location: {}
       locationType: {}
+      logBucket: {}
+      loggingEnabled: {}
       name: {}
       projectId: {}
       projectNumber: {}
       retentionPolicy: {}
+      softDeleteEnabled: {}
       storageClass: {}
+      uniformBucketLevelAccess: {}
       updated: {}
+      versioningEnabled: {}
     is_private: true
     min_mondoo_version: latest
     platform:

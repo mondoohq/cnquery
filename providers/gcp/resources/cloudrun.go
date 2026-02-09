@@ -370,7 +370,9 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					"latestCreatedRevision": llx.StringData(s.LatestCreatedRevision),
 					"trafficStatuses":       llx.ArrayData(mqlTrafficStatuses, types.Dict),
 					"uri":                   llx.StringData(s.Uri),
-					"reconciling":           llx.BoolData(s.Reconciling),
+					"reconciling":                                 llx.BoolData(s.Reconciling),
+					"binaryAuthorizationEnabled":                  llx.BoolData(s.BinaryAuthorization != nil && s.BinaryAuthorization.GetUseDefault()),
+					"binaryAuthorizationBreakglassJustification":  llx.StringData(binaryAuthBreakglass(s.BinaryAuthorization)),
 				})
 				if err != nil {
 					log.Error().Err(err).Send()
@@ -383,6 +385,13 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 	}
 	wg.Wait()
 	return services, nil
+}
+
+func binaryAuthBreakglass(ba *runpb.BinaryAuthorization) string {
+	if ba == nil {
+		return ""
+	}
+	return ba.GetBreakglassJustification()
 }
 
 func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {

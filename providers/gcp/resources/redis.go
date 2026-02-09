@@ -113,6 +113,8 @@ func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
 			"availableMaintenanceVersions": llx.ArrayData(
 				convert.SliceAnyToInterface(instance.AvailableMaintenanceVersions), types.String,
 			),
+			"transitEncryptionMode": llx.StringData(instance.TransitEncryptionMode.String()),
+			"readReplicasMode":      llx.StringData(instance.ReadReplicasMode.String()),
 			"nodes": llx.ArrayData(
 				redisInstanceNodesToArrayInterface(g.MqlRuntime, projectID, instance.Nodes),
 				types.Resource("gcp.project.redisService.instance.nodeInfo"),

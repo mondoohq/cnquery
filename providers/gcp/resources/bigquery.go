@@ -174,7 +174,9 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 			"created":     llx.TimeData(metadata.CreationTime),
 			"modified":    llx.TimeData(metadata.LastModifiedTime),
 			"tags":        llx.MapData(convert.MapToInterfaceMap(tags), types.String),
-			"kmsName":     llx.StringData(kmsName),
+			"kmsName":                      llx.StringData(kmsName),
+			"defaultTableExpirationMs":     llx.TimeData(llx.DurationToTime(int64(metadata.DefaultTableExpiration.Seconds()))),
+			"defaultPartitionExpirationMs": llx.TimeData(llx.DurationToTime(int64(metadata.DefaultPartitionExpiration.Seconds()))),
 			"access":      llx.ArrayData(access, types.Resource("gcp.project.bigqueryService.dataset.accessEntry")),
 		})
 		if err != nil {

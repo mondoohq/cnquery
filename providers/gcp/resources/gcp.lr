@@ -116,6 +116,10 @@ private gcp.project.redisService.instance @defaults("name") {
   maintenanceVersion string
   // The available maintenance versions that an instance could update to
   availableMaintenanceVersions []string
+  // The TLS mode of the Redis instance
+  transitEncryptionMode string
+  // Read replicas mode for the instance
+  readReplicasMode string
 }
 
 // Google Cloud (GCP) Redis instance node information
@@ -587,6 +591,16 @@ private gcp.project.computeService.disk @defaults("name") {
   physicalBlockSizeBytes int
   // How many IOPS to provision for the disk
   provisionedIops int
+  // Resource policies applied to this disk
+  resourcePolicies []string
+  // URL of the source image used to create this disk
+  sourceImage string
+  // URL of the source snapshot used to create this disk
+  sourceSnapshot string
+  // URLs of the zones where the disk should be replicated to
+  replicaZones []string
+  // URL of the disk type resource describing which disk type to use
+  type string
   // Size, in GB, of the persistent disk
   sizeGb int
   // The status of disk creation
@@ -1011,6 +1025,18 @@ private gcp.project.storageService.bucket @defaults("id") {
   created time
   // Update timestamp
   updated time
+  // Whether versioning is enabled for the bucket
+  versioningEnabled bool
+  // Whether access logging is enabled for the bucket
+  loggingEnabled bool
+  // The destination bucket where the current bucket's logs are placed
+  logBucket string
+  // Whether the default event-based hold is enabled for new objects in the bucket
+  defaultEventBasedHold bool
+  // Whether uniform bucket-level access is enabled
+  uniformBucketLevelAccess bool
+  // Whether soft delete policy is enabled for the bucket
+  softDeleteEnabled bool
   // IAM policy
   iamPolicy() []gcp.resourcemanager.binding
   // IAM configuration
@@ -1359,6 +1385,10 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   tags map[string]string
   // Cloud KMS encryption key that will be used to protect BigQuery table
   kmsName string
+  // Default expiration time for tables in the dataset
+  defaultTableExpirationMs time
+  // Default expiration time for partitions in the dataset
+  defaultPartitionExpirationMs time
   // Access permissions
   access []gcp.project.bigqueryService.dataset.accessEntry
   // Returns tables in the dataset
@@ -2012,6 +2042,8 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   labels map[string]string
   // Cloud KMS key used to protect access to messages published to the topic
   kmsKeyName string
+  // How long a published message is retained by the topic
+  messageRetentionDuration time
   // Message storage policy
   messageStoragePolicy gcp.project.pubsubService.topic.config.messagestoragepolicy
 }
@@ -2054,6 +2086,8 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   expirationPolicy time
   // The labels associated with this subscription
   labels map[string]string
+  // An expression written in the Pub/Sub filter language to filter messages
+  filter string
 }
 
 // GCP Pub/Sub configuration for subscriptions that operate in push mode
@@ -2756,6 +2790,10 @@ private gcp.project.cloudRunService.service @defaults("name") {
   uri string
   // Whether the service is currently being acted upon by the system to bring it into the desired state
   reconciling bool
+  // Whether binary authorization is enabled for the service
+  binaryAuthorizationEnabled bool
+  // Binary authorization breakglass justification
+  binaryAuthorizationBreakglassJustification string
 }
 
 // Google Cloud (GCP) Run service revision template

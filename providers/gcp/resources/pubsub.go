@@ -70,6 +70,16 @@ func (g *mqlGcpProjectPubsubServiceTopic) id() (string, error) {
 	return fmt.Sprintf("%s/%s", projectId, name), nil
 }
 
+func pubsubRetentionDuration(d interface{}) time.Time {
+	if d == nil {
+		return llx.DurationToTime(0)
+	}
+	if dur, ok := d.(time.Duration); ok {
+		return llx.DurationToTime(int64(dur.Seconds()))
+	}
+	return llx.DurationToTime(0)
+}
+
 func (g *mqlGcpProjectPubsubServiceTopicConfig) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -223,7 +233,8 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 		"projectId":            llx.StringData(projectId),
 		"topicName":            llx.StringData(t.ID()),
 		"labels":               llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
-		"kmsKeyName":           llx.StringData(cfg.KMSKeyName),
+		"kmsKeyName":                llx.StringData(cfg.KMSKeyName),
+		"messageRetentionDuration": llx.TimeData(pubsubRetentionDuration(cfg.RetentionDuration)),
 		"messageStoragePolicy": llx.ResourceData(messageStoragePolicy, "gcp.project.pubsubService.topic.config.messagestoragepolicy"),
 	})
 	if err != nil {
@@ -336,6 +347,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		"retentionDuration":   llx.TimeData(llx.DurationToTime(int64(cfg.RetentionDuration.Seconds()))),
 		"expirationPolicy":    llx.TimeData(expPolicy),
 		"labels":              llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
+		"filter":              llx.StringData(cfg.Filter),
 	})
 	if err != nil {
 		return nil, err
