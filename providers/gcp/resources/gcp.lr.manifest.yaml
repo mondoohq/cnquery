@@ -113,6 +113,7 @@ resources:
       recommendations: {}
       redis:
         min_mondoo_version: 9.0.0
+      secretmanager: {}
       services: {}
       sql: {}
       state: {}
@@ -2176,6 +2177,63 @@ resources:
     platform:
       name:
       - gcp
+  gcp.project.secretmanagerService:
+    fields:
+      projectId: {}
+      secrets: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcp
+    refs:
+    - title: Secret Manager documentation
+      url: https://cloud.google.com/secret-manager/docs
+  gcp.project.secretmanagerService.secret:
+    fields:
+      annotations: {}
+      created: {}
+      customerManagedEncryption: {}
+      etag: {}
+      expireTime: {}
+      iamPolicy: {}
+      labels: {}
+      name: {}
+      projectId: {}
+      replication: {}
+      resourcePath: {}
+      rotation: {}
+      topics: {}
+      versionAliases: {}
+      versionDestroyTtl: {}
+      versions: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcp
+    refs:
+    - title: Secret Manager documentation
+      url: https://cloud.google.com/secret-manager/docs
+  gcp.project.secretmanagerService.secret.version:
+    fields:
+      clientSpecifiedPayloadChecksum: {}
+      created: {}
+      customerManagedEncryption: {}
+      destroyed: {}
+      etag: {}
+      name: {}
+      resourcePath: {}
+      scheduledDestroyTime: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcp
+    refs:
+    - title: Secret Manager documentation
+      url: https://cloud.google.com/secret-manager/docs
   gcp.project.sqlService:
     fields:
       instances: {}

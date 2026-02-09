@@ -149,6 +149,9 @@ const (
 	ResourceGcpProjectBinaryAuthorizationControl                                      string = "gcp.project.binaryAuthorizationControl"
 	ResourceGcpProjectBinaryAuthorizationControlPolicy                                string = "gcp.project.binaryAuthorizationControl.policy"
 	ResourceGcpProjectBinaryAuthorizationControlAdmissionRule                         string = "gcp.project.binaryAuthorizationControl.admissionRule"
+	ResourceGcpProjectSecretmanagerService                                            string = "gcp.project.secretmanagerService"
+	ResourceGcpProjectSecretmanagerServiceSecret                                      string = "gcp.project.secretmanagerService.secret"
+	ResourceGcpProjectSecretmanagerServiceSecretVersion                               string = "gcp.project.secretmanagerService.secret.version"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -683,6 +686,18 @@ func init() {
 			// to override args, implement: initGcpProjectBinaryAuthorizationControlAdmissionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectBinaryAuthorizationControlAdmissionRule,
 		},
+		"gcp.project.secretmanagerService": {
+			Init:   initGcpProjectSecretmanagerService,
+			Create: createGcpProjectSecretmanagerService,
+		},
+		"gcp.project.secretmanagerService.secret": {
+			// to override args, implement: initGcpProjectSecretmanagerServiceSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSecretmanagerServiceSecret,
+		},
+		"gcp.project.secretmanagerService.secret.version": {
+			// to override args, implement: initGcpProjectSecretmanagerServiceSecretVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSecretmanagerServiceSecretVersion,
+		},
 	}
 }
 
@@ -1017,6 +1032,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.redis": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetRedis()).ToDataRes(types.Resource("gcp.project.redisService"))
+	},
+	"gcp.project.secretmanager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetSecretmanager()).ToDataRes(types.Resource("gcp.project.secretmanagerService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -4453,6 +4471,87 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.binaryAuthorizationControl.admissionRule.requireAttestationsBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).GetRequireAttestationsBy()).ToDataRes(types.Array(types.String))
 	},
+	"gcp.project.secretmanagerService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.secretmanagerService.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerService).GetSecrets()).ToDataRes(types.Array(types.Resource("gcp.project.secretmanagerService.secret")))
+	},
+	"gcp.project.secretmanagerService.secret.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.secretmanagerService.secret.resourcePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetResourcePath()).ToDataRes(types.String)
+	},
+	"gcp.project.secretmanagerService.secret.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.secretmanagerService.secret.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.secretmanagerService.secret.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.secretmanagerService.secret.replication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetReplication()).ToDataRes(types.Dict)
+	},
+	"gcp.project.secretmanagerService.secret.topics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetTopics()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.secretmanagerService.secret.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.secretmanagerService.secret.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.secretmanagerService.secret.rotation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetRotation()).ToDataRes(types.Dict)
+	},
+	"gcp.project.secretmanagerService.secret.versionAliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetVersionAliases()).ToDataRes(types.Dict)
+	},
+	"gcp.project.secretmanagerService.secret.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.secretmanagerService.secret.versionDestroyTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetVersionDestroyTtl()).ToDataRes(types.Time)
+	},
+	"gcp.project.secretmanagerService.secret.customerManagedEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetCustomerManagedEncryption()).ToDataRes(types.Dict)
+	},
+	"gcp.project.secretmanagerService.secret.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetVersions()).ToDataRes(types.Array(types.Resource("gcp.project.secretmanagerService.secret.version")))
+	},
+	"gcp.project.secretmanagerService.secret.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.secretmanagerService.secret.version.resourcePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetResourcePath()).ToDataRes(types.String)
+	},
+	"gcp.project.secretmanagerService.secret.version.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.secretmanagerService.secret.version.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.secretmanagerService.secret.version.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.secretmanagerService.secret.version.destroyed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetDestroyed()).ToDataRes(types.Time)
+	},
+	"gcp.project.secretmanagerService.secret.version.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.secretmanagerService.secret.version.clientSpecifiedPayloadChecksum": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetClientSpecifiedPayloadChecksum()).ToDataRes(types.Bool)
+	},
+	"gcp.project.secretmanagerService.secret.version.scheduledDestroyTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetScheduledDestroyTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.secretmanagerService.secret.version.customerManagedEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetCustomerManagedEncryption()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -4835,6 +4934,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.redis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).Redis, ok = plugin.RawToTValue[*mqlGcpProjectRedisService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Secretmanager, ok = plugin.RawToTValue[*mqlGcpProjectSecretmanagerService](v.Value, v.Error)
 		return
 	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9913,6 +10016,126 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectBinaryAuthorizationControlAdmissionRule).RequireAttestationsBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.secretmanagerService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.secretmanagerService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerService).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.replication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).Replication, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.rotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).Rotation, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.versionAliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).VersionAliases, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.versionDestroyTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).VersionDestroyTtl, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.customerManagedEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).CustomerManagedEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.version.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.version.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.version.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.version.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.version.destroyed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).Destroyed, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.version.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.version.clientSpecifiedPayloadChecksum": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).ClientSpecifiedPayloadChecksum, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.version.scheduledDestroyTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).ScheduledDestroyTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.version.customerManagedEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).CustomerManagedEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -10689,6 +10912,7 @@ type mqlGcpProject struct {
 	Monitoring             plugin.TValue[*mqlGcpProjectMonitoringService]
 	BinaryAuthorization    plugin.TValue[*mqlGcpProjectBinaryAuthorizationControl]
 	Redis                  plugin.TValue[*mqlGcpProjectRedisService]
+	Secretmanager          plugin.TValue[*mqlGcpProjectSecretmanagerService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -11129,6 +11353,22 @@ func (c *mqlGcpProject) GetRedis() *plugin.TValue[*mqlGcpProjectRedisService] {
 		}
 
 		return c.redis()
+	})
+}
+
+func (c *mqlGcpProject) GetSecretmanager() *plugin.TValue[*mqlGcpProjectSecretmanagerService] {
+	return plugin.GetOrCompute[*mqlGcpProjectSecretmanagerService](&c.Secretmanager, func() (*mqlGcpProjectSecretmanagerService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "secretmanager")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectSecretmanagerService), nil
+			}
+		}
+
+		return c.secretmanager()
 	})
 }
 
@@ -23030,4 +23270,307 @@ func (c *mqlGcpProjectBinaryAuthorizationControlAdmissionRule) GetEnforcementMod
 
 func (c *mqlGcpProjectBinaryAuthorizationControlAdmissionRule) GetRequireAttestationsBy() *plugin.TValue[[]any] {
 	return &c.RequireAttestationsBy
+}
+
+// mqlGcpProjectSecretmanagerService for the gcp.project.secretmanagerService resource
+type mqlGcpProjectSecretmanagerService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSecretmanagerServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Secrets   plugin.TValue[[]any]
+}
+
+// createGcpProjectSecretmanagerService creates a new instance of this resource
+func createGcpProjectSecretmanagerService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSecretmanagerService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.secretmanagerService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSecretmanagerService) MqlName() string {
+	return "gcp.project.secretmanagerService"
+}
+
+func (c *mqlGcpProjectSecretmanagerService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSecretmanagerService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSecretmanagerService) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.secretmanagerService", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
+}
+
+// mqlGcpProjectSecretmanagerServiceSecret for the gcp.project.secretmanagerService.secret resource
+type mqlGcpProjectSecretmanagerServiceSecret struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSecretmanagerServiceSecretInternal it will be used here
+	ProjectId                 plugin.TValue[string]
+	ResourcePath              plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Created                   plugin.TValue[*time.Time]
+	Labels                    plugin.TValue[map[string]any]
+	Replication               plugin.TValue[any]
+	Topics                    plugin.TValue[[]any]
+	ExpireTime                plugin.TValue[*time.Time]
+	Etag                      plugin.TValue[string]
+	Rotation                  plugin.TValue[any]
+	VersionAliases            plugin.TValue[any]
+	Annotations               plugin.TValue[map[string]any]
+	VersionDestroyTtl         plugin.TValue[*time.Time]
+	CustomerManagedEncryption plugin.TValue[any]
+	Versions                  plugin.TValue[[]any]
+	IamPolicy                 plugin.TValue[[]any]
+}
+
+// createGcpProjectSecretmanagerServiceSecret creates a new instance of this resource
+func createGcpProjectSecretmanagerServiceSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSecretmanagerServiceSecret{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.secretmanagerService.secret", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) MqlName() string {
+	return "gcp.project.secretmanagerService.secret"
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetResourcePath() *plugin.TValue[string] {
+	return &c.ResourcePath
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetReplication() *plugin.TValue[any] {
+	return &c.Replication
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetTopics() *plugin.TValue[[]any] {
+	return &c.Topics
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetRotation() *plugin.TValue[any] {
+	return &c.Rotation
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetVersionAliases() *plugin.TValue[any] {
+	return &c.VersionAliases
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetAnnotations() *plugin.TValue[map[string]any] {
+	return &c.Annotations
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetVersionDestroyTtl() *plugin.TValue[*time.Time] {
+	return &c.VersionDestroyTtl
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetCustomerManagedEncryption() *plugin.TValue[any] {
+	return &c.CustomerManagedEncryption
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.secretmanagerService.secret", c.__id, "versions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.versions()
+	})
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.secretmanagerService.secret", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
+// mqlGcpProjectSecretmanagerServiceSecretVersion for the gcp.project.secretmanagerService.secret.version resource
+type mqlGcpProjectSecretmanagerServiceSecretVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSecretmanagerServiceSecretVersionInternal it will be used here
+	ResourcePath                   plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	State                          plugin.TValue[string]
+	Created                        plugin.TValue[*time.Time]
+	Destroyed                      plugin.TValue[*time.Time]
+	Etag                           plugin.TValue[string]
+	ClientSpecifiedPayloadChecksum plugin.TValue[bool]
+	ScheduledDestroyTime           plugin.TValue[*time.Time]
+	CustomerManagedEncryption      plugin.TValue[any]
+}
+
+// createGcpProjectSecretmanagerServiceSecretVersion creates a new instance of this resource
+func createGcpProjectSecretmanagerServiceSecretVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSecretmanagerServiceSecretVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.secretmanagerService.secret.version", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) MqlName() string {
+	return "gcp.project.secretmanagerService.secret.version"
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetResourcePath() *plugin.TValue[string] {
+	return &c.ResourcePath
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetDestroyed() *plugin.TValue[*time.Time] {
+	return &c.Destroyed
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetClientSpecifiedPayloadChecksum() *plugin.TValue[bool] {
+	return &c.ClientSpecifiedPayloadChecksum
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetScheduledDestroyTime() *plugin.TValue[*time.Time] {
+	return &c.ScheduledDestroyTime
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetCustomerManagedEncryption() *plugin.TValue[any] {
+	return &c.CustomerManagedEncryption
 }

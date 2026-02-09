@@ -19,6 +19,7 @@ require (
 	cloud.google.com/go/recommender v1.13.6
 	cloud.google.com/go/redis v1.18.3
 	cloud.google.com/go/run v1.15.0
+	cloud.google.com/go/secretmanager v1.16.0
 	cloud.google.com/go/serviceusage v1.9.7
 	github.com/aws/smithy-go v1.24.0
 	github.com/cockroachdb/errors v1.12.0
@@ -129,7 +130,6 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/binaryauthorization v1.10.0
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
-	cloud.google.com/go/secretmanager v1.16.0 // indirect
 	cloud.google.com/go/storage v1.59.0 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
