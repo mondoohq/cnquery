@@ -141,7 +141,7 @@ jobs:
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           distribution: goreleaser
-          version: v2.5.1
+          version: v2.13.3
           args: >
             release
             --config .goreleaser.yml
@@ -151,6 +151,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          RPM_SIGNING_KEY_ID: ac69c65100e1c42b
           QUILL_SIGN_PASSWORD: ""
           QUILL_SIGN_P12: ${{ secrets.APPLE_SIGN_P12 }}
           QUILL_NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
@@ -166,7 +167,7 @@ jobs:
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           distribution: goreleaser
-          version: v2.5.1
+          version: v2.13.3
           args: >
             release
             ${{ inputs.goreleaser-snapshot == true && '--snapshot' || '' }}
@@ -177,6 +178,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          NFPM_RPM_SIGNING_KEY_ID: ac69c65100e1c42b
           QUILL_SIGN_PASSWORD: ""
           QUILL_SIGN_P12: ${{ secrets.APPLE_SIGN_P12 }}
           QUILL_NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
