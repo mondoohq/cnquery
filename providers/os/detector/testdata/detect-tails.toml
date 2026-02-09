@@ -1,0 +1,23 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.1.0-26-amd64"
+
+[files."/etc/os-release"]
+content = """
+NAME="Tails"
+ID="tails"
+ID_LIKE="debian"
+PRETTY_NAME="Tails"
+VERSION="6.11"
+HOME_URL="https://tails.net/"
+SUPPORT_URL="https://tails.net/support/"
+BUG_REPORT_URL="https://tails.net/doc/first_steps/bug_reporting/"
+TAILS_PRODUCT_NAME="Tails"
+TAILS_VERSION_ID="6.11"
+VERSION_ID="6.11"
+"""

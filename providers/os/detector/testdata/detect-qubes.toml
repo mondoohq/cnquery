@@ -1,0 +1,25 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.6.21-1.qubes.fc37.x86_64"
+
+[files."/etc/redhat-release"]
+content = "Qubes release 4.2 (R4.2)"
+
+[files."/etc/os-release"]
+content = """
+NAME="Qubes OS"
+VERSION="4.2 (R4.2)"
+ID=qubes
+ID_LIKE="fedora rhel centos"
+VERSION_ID=4.2
+PRETTY_NAME="Qubes OS 4.2 (R4.2)"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:qubesos:qubes:4.2"
+HOME_URL="https://www.qubes-os.org/"
+BUG_REPORT_URL="https://github.com/QubesOS/qubes-issues/issues"
+"""
