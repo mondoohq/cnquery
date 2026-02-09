@@ -196,6 +196,26 @@ var debian = &PlatformResolver{
 	},
 }
 
+var gardenlinux = &PlatformResolver{
+	Name:     "gardenlinux",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name != "gardenlinux" {
+			return false, nil
+		}
+		osrd := NewOSReleaseDetector(conn)
+
+		osr, err := osrd.osrelease()
+		if err != nil {
+			return false, nil
+		}
+
+		pf.Version = osr["GARDENLINUX_VERSION"]
+
+		return true, nil
+	},
+}
+
 var ubuntu = &PlatformResolver{
 	Name:     "ubuntu",
 	IsFamily: false,
@@ -1086,7 +1106,7 @@ var redhatFamily = &PlatformResolver{
 var debianFamily = &PlatformResolver{
 	Name:     "debian",
 	IsFamily: true,
-	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot, cumulus},
+	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot, cumulus, gardenlinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},
