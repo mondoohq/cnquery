@@ -298,9 +298,10 @@ func (a *mqlAwsRdsDbinstance) id() (string, error) {
 
 type mqlAwsRdsDbinstanceInternal struct {
 	securityGroupIdHandler
-	cacheSubnets  *rds_types.DBSubnetGroup
-	cacheKmsKeyId *string
-	region        string
+	cacheSubnets                     *rds_types.DBSubnetGroup
+	cacheKmsKeyId                    *string
+	cachePerformanceInsightsKmsKeyId *string
+	region                           string
 }
 
 func newMqlAwsParameterGroup(runtime *plugin.Runtime, region string, parameterGroup rds_types.DBParameterGroup) (*mqlAwsRdsParameterGroup, error) {
@@ -461,6 +462,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 			"preferredMaintenanceWindow":    llx.StringDataPtr(dbInstance.PreferredMaintenanceWindow),
 			"preferredBackupWindow":         llx.StringDataPtr(dbInstance.PreferredBackupWindow),
 			"performanceInsightsEnabled":    llx.BoolDataPtr(dbInstance.PerformanceInsightsEnabled),
+			"copyTagsToSnapshot":            llx.BoolDataPtr(dbInstance.CopyTagsToSnapshot),
 		})
 	if err != nil {
 		return nil, err
@@ -469,6 +471,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 	mqlDBInstance.region = region
 	mqlDBInstance.cacheSubnets = dbInstance.DBSubnetGroup
 	mqlDBInstance.cacheKmsKeyId = dbInstance.KmsKeyId
+	mqlDBInstance.cachePerformanceInsightsKmsKeyId = dbInstance.PerformanceInsightsKMSKeyId
 	mqlDBInstance.setSecurityGroupArns(sgsArn)
 	return mqlDBInstance, nil
 }
@@ -570,6 +573,21 @@ func (a *mqlAwsRdsDbinstance) kmsKey() (*mqlAwsKmsKey, error) {
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
 			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsRdsDbinstance) performanceInsightsKmsKey() (*mqlAwsKmsKey, error) {
+	if a.cachePerformanceInsightsKmsKeyId == nil || *a.cachePerformanceInsightsKmsKeyId == "" {
+		a.PerformanceInsightsKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cachePerformanceInsightsKmsKeyId),
 		})
 	if err != nil {
 		return nil, err

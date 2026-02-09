@@ -869,6 +869,14 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   aliases() []string
   // Current state of the key: Enabled, Disabled, PendingDeletion, PendingImport, PendingReplicaDeletion, Unavailable, or Updating
   keyState() string
+  // When the key was created
+  createdAt() time
+  // Scheduled deletion date for the key
+  deletedAt() time
+  // Whether the key is enabled
+  enabled() bool
+  // Description of the key
+  description() string
 }
 
 
@@ -1075,6 +1083,10 @@ private aws.iam.role @defaults("arn name") {
   lastUsedAt time
   // Region in which the role was last used
   lastUsedRegion string
+  // Maximum session duration in seconds for the role (3600-43200)
+  maxSessionDuration int
+  // ARN of the permissions boundary policy attached to the role (empty string if none)
+  permissionsBoundaryArn string
 }
 
 // AWS IAM group
@@ -1255,6 +1267,8 @@ private aws.sns.topic @defaults("arn") {
   attributes() dict
   // Tags for the topic
   tags() map[string]string
+  // Signature version used for Amazon SNS message signing (1 or 2)
+  signatureVersion() string
 }
 
 // AWS Simple Notification Service (SNS) subscription
@@ -1375,6 +1389,12 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   createdAt time
   // Whether auto-tune is enabled
   autoTuneState string
+  // Whether audit logging is enabled for the domain
+  auditLogEnabled bool
+  // IP address type for the domain (ipv4 or dualstack)
+  ipAddressType string
+  // New service software version available for the domain (empty string if up to date)
+  serviceSoftwareNewVersion string
   // Tags for the domain
   tags() map[string]string
   // Security groups associated with the VPC domain
@@ -2422,6 +2442,16 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   priceClass string
   // CNAMEs aliases if any for this distribution
   cnames []string
+  // Viewer protocol policy for the default cache behavior (allow-all, https-only, or redirect-to-https)
+  viewerProtocolPolicy string
+  // Minimum SSL/TLS protocol version for viewer connections (e.g., TLSv1.2_2021)
+  minimumProtocolVersion string
+  // ARN of the AWS WAF web ACL associated with the distribution (empty string if none)
+  webAclId string
+  // Type of geographic restriction applied to the distribution (none, whitelist, or blacklist)
+  geoRestrictionType string
+  // When the distribution was last modified
+  lastModifiedAt time
 }
 
 // Amazon CloudFront distribution origin
@@ -2500,6 +2530,10 @@ private aws.cloudtrail.trail @defaults("name region") {
   eventSelectors() []dict
   // Region in which the trail was created (home region)
   region string
+  // Whether CloudTrail Insights is enabled for the trail (detects unusual API activity)
+  hasInsightSelectors bool
+  // Whether custom event selectors are configured (enables data event logging for S3/Lambda/DynamoDB)
+  hasCustomEventSelectors bool
 }
 
 // Amazon S3 bucket control
@@ -3295,6 +3329,10 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   kmsKey() aws.kms.key
   // Whether Performance Insights is enabled for the DB instance
   performanceInsightsEnabled bool
+  // Whether tags are automatically copied to snapshots of the DB instance
+  copyTagsToSnapshot bool
+  // KMS key used to encrypt Performance Insights data
+  performanceInsightsKmsKey() aws.kms.key
 }
 
 // Amazon RDS pending maintenance action
@@ -3558,6 +3596,12 @@ private aws.ecr.repository @defaults("uri region") {
   region string
   // Whether the repository option to scan on image push is enabled
   imageScanOnPush bool
+  // Whether image tags are immutable (MUTABLE or IMMUTABLE); immutable tags prevent image overwrites
+  imageTagMutability string
+  // Encryption type for images at rest (AES256 or KMS)
+  encryptionType string
+  // When the repository was created
+  createdAt time
 }
 
 // AWS Elastic Container Registry image
@@ -3700,6 +3744,22 @@ private aws.lambda.function @defaults("arn") {
   ephemeralStorageSize int
   // Amount of memory available to the function at runtime in MB
   memorySize int
+  // IAM execution role for the function
+  role() aws.iam.role
+  // Maximum execution time in seconds before the function is stopped (1-900)
+  timeout int
+  // Function entry point handler (e.g., index.handler)
+  handler string
+  // AWS X-Ray tracing mode for the function (Active or PassThrough)
+  tracingMode string
+  // Deployment package type (Zip or Image)
+  packageType string
+  // SHA-256 hash of the function deployment package
+  codeSha256 string
+  // Human-readable description of the function
+  description string
+  // When the function was last updated
+  lastModifiedAt time
 }
 
 // Amazon Systems Manager
@@ -4138,6 +4198,10 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   httpTokens string
   // Status of the IMDS endpoint enabled on the instance
   httpEndpoint string
+  // Maximum number of hops for the instance metadata PUT response (1-64); values >1 increase SSRF risk
+  httpPutResponseHopLimit int
+  // Whether the instance is enabled for AWS Nitro Enclaves
+  enclaveEnabled bool
   // Patch state information about the instance
   patchState() dict
   // State of the instance: pending, running, stopping, stopped, rebooting, or terminated
@@ -4270,6 +4334,8 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   enaSupport bool
   // The supported TPM version. If the image is configured for NitroTPM support, the value is v2.0
   tpmSupport string
+  // Whether the AMI requires IMDSv2 (v2.0 means IMDSv2 required; empty means no requirement)
+  imdsSupport string
   // Current state of the image (available, pending, failed, etc.)
   state string
   // Whether the image is public
@@ -4554,6 +4620,12 @@ aws.eks.cluster @defaults("arn version status") {
   authenticationMode string
   // Whether deletion protection is enabled or not
   deletionProtection bool
+  // Whether the Kubernetes API server endpoint is publicly accessible
+  endpointPublicAccess bool
+  // Whether the Kubernetes API server endpoint is accessible via private VPC endpoint
+  endpointPrivateAccess bool
+  // CIDR blocks allowed to access the public Kubernetes API endpoint
+  publicAccessCidrs []string
 }
 
 // Amazon Neptune

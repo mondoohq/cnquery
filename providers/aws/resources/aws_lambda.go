@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"maps"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -102,6 +103,18 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 						ephemeralStorageSize = int64(*function.EphemeralStorage.Size)
 					}
 
+					var tracingMode string
+					if function.TracingConfig != nil {
+						tracingMode = string(function.TracingConfig.Mode)
+					}
+
+					var lastModifiedAt *time.Time
+					if function.LastModified != nil {
+						if t, err := time.Parse("2006-01-02T15:04:05.000-0700", *function.LastModified); err == nil {
+							lastModifiedAt = &t
+						}
+					}
+
 					mqlFunc, err := CreateResource(a.MqlRuntime, "aws.lambda.function",
 						map[string]*llx.RawData{
 							"arn":                  llx.StringDataPtr(function.FunctionArn),
@@ -114,10 +127,18 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 							"architectures":        llx.ArrayData(architectures, types.String),
 							"ephemeralStorageSize": llx.IntData(ephemeralStorageSize),
 							"memorySize":           llx.IntDataDefault(function.MemorySize, 0),
+							"timeout":              llx.IntDataDefault(function.Timeout, 3),
+							"handler":              llx.StringDataPtr(function.Handler),
+							"tracingMode":          llx.StringData(tracingMode),
+							"packageType":          llx.StringData(string(function.PackageType)),
+							"codeSha256":           llx.StringDataPtr(function.CodeSha256),
+							"description":          llx.StringDataPtr(function.Description),
+							"lastModifiedAt":       llx.TimeDataPtr(lastModifiedAt),
 						})
 					if err != nil {
 						return nil, err
 					}
+					mqlFunc.(*mqlAwsLambdaFunction).cacheRoleArn = function.Role
 					res = append(res, mqlFunc)
 				}
 			}
@@ -241,6 +262,25 @@ func (a *mqlAwsLambdaFunction) policy() (any, error) {
 
 func (a *mqlAwsLambdaFunction) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+type mqlAwsLambdaFunctionInternal struct {
+	cacheRoleArn *string
+}
+
+func (a *mqlAwsLambdaFunction) role() (*mqlAwsIamRole, error) {
+	if a.cacheRoleArn == nil || *a.cacheRoleArn == "" {
+		a.Role.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheRoleArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
 }
 
 type lambdaPolicyDocument struct {

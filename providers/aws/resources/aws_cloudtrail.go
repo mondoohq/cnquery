@@ -135,6 +135,8 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 					"cloudWatchLogsRoleArn":      llx.StringDataPtr(trail.CloudWatchLogsRoleArn),
 					"cloudWatchLogsLogGroupArn":  llx.StringDataPtr(trail.CloudWatchLogsLogGroupArn),
 					"region":                     llx.StringDataPtr(trail.HomeRegion),
+					"hasInsightSelectors":        llx.BoolDataPtr(trail.HasInsightSelectors),
+					"hasCustomEventSelectors":    llx.BoolDataPtr(trail.HasCustomEventSelectors),
 				}
 
 				mqlTrail, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail", args)

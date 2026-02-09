@@ -23,7 +23,7 @@
 #
 
 # s.b. Allow list
-\b[Ww]hitelist\b
+# \b[Ww]hitelist\b # used by aws cloudfront
 \b[Ww]hitelisting\b
 \b[Ww]hitelisted\b
 \b[Ww]hite list\b
@@ -31,7 +31,7 @@
 \b[Ww]hite listed\b
 
 # s.b. Block list
-# \b[Bb]lacklist\b # used by modprobe
+# \b[Bb]lacklist\b # used by modprobe / aws cloudfront
 \b[Bb]lacklisting\b
 # \b[Bb]lacklisted\b # used by modprobe
 \b[Bb]lack list\b

@@ -301,6 +301,15 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 		autoTuneState = string(domain.AutoTuneOptions.State)
 	}
 
+	// Audit log options
+	auditLogEnabled := parseAuditLogEnabled(domain.LogPublishingOptions)
+
+	// Service software options
+	var serviceSoftwareNewVersion string
+	if domain.ServiceSoftwareOptions != nil {
+		serviceSoftwareNewVersion = convert.ToValue(domain.ServiceSoftwareOptions.NewVersion)
+	}
+
 	// Created timestamp
 	var createdAt *llx.RawData
 	if domain.Created != nil && *domain.Created {
@@ -348,6 +357,9 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 			"upgradeProcessing":           llx.BoolDataPtr(domain.UpgradeProcessing),
 			"createdAt":                   createdAt,
 			"autoTuneState":               llx.StringData(autoTuneState),
+			"auditLogEnabled":             llx.BoolData(auditLogEnabled),
+			"ipAddressType":               llx.StringData(string(domain.IPAddressType)),
+			"serviceSoftwareNewVersion":   llx.StringData(serviceSoftwareNewVersion),
 		})
 	if err != nil {
 		return nil, err
@@ -405,4 +417,17 @@ func (a *mqlAwsOpensearchDomain) tags() (map[string]interface{}, error) {
 		}
 	}
 	return tags, nil
+}
+
+// parseAuditLogEnabled extracts whether audit logging is enabled from OpenSearch
+// LogPublishingOptions. Returns false if the map is nil, missing the AUDIT_LOGS
+// key, or if the Enabled field is nil/false.
+func parseAuditLogEnabled(opts map[string]opensearch_types.LogPublishingOption) bool {
+	if opts == nil {
+		return false
+	}
+	if auditLog, ok := opts["AUDIT_LOGS"]; ok {
+		return convert.ToValue(auditLog.Enabled)
+	}
+	return false
 }

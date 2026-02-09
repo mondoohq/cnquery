@@ -510,11 +510,21 @@ resources:
       defaultCacheBehavior: {}
       domainName: {}
       enabled: {}
+      geoRestrictionType:
+        min_mondoo_version: 9.0.0
       httpVersion: {}
       isIPV6Enabled: {}
+      lastModifiedAt:
+        min_mondoo_version: 9.0.0
+      minimumProtocolVersion:
+        min_mondoo_version: 9.0.0
       origins: {}
       priceClass: {}
       status: {}
+      viewerProtocolPolicy:
+        min_mondoo_version: 9.0.0
+      webAclId:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -596,6 +606,10 @@ resources:
       cloudWatchLogsLogGroupArn: {}
       cloudWatchLogsRoleArn: {}
       eventSelectors: {}
+      hasCustomEventSelectors:
+        min_mondoo_version: 9.0.0
+      hasInsightSelectors:
+        min_mondoo_version: 9.0.0
       includeGlobalServiceEvents: {}
       isMultiRegionTrail: {}
       isOrganizationTrail: {}
@@ -1296,6 +1310,8 @@ resources:
       encrypted:
         min_mondoo_version: 9.0.0
       id: {}
+      imdsSupport:
+        min_mondoo_version: 9.0.0
       launchPermissions:
         min_mondoo_version: latest
       name: {}
@@ -1374,7 +1390,11 @@ resources:
       ebsOptimized: {}
       enaSupported:
         min_mondoo_version: 9.0.0
+      enclaveEnabled:
+        min_mondoo_version: 9.0.0
       httpEndpoint:
+        min_mondoo_version: 9.0.0
+      httpPutResponseHopLimit:
         min_mondoo_version: 9.0.0
       httpTokens: {}
       hypervisor:
@@ -1727,8 +1747,14 @@ resources:
         Use the `aws.ecr.repository` resource to assess the Amazon Elastic Container Registry repositories.
     fields:
       arn: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
+      encryptionType:
+        min_mondoo_version: 9.0.0
       imageScanOnPush:
         min_mondoo_version: 8.19.0
+      imageTagMutability:
+        min_mondoo_version: 9.0.0
       images: {}
       name: {}
       public: {}
@@ -2213,6 +2239,10 @@ resources:
         min_mondoo_version: 9.0.0
       encryptionConfig: {}
       endpoint: {}
+      endpointPrivateAccess:
+        min_mondoo_version: 9.0.0
+      endpointPublicAccess:
+        min_mondoo_version: 9.0.0
       iamRole:
         min_mondoo_version: 9.0.0
       logging: {}
@@ -2221,6 +2251,8 @@ resources:
       nodeGroups:
         min_mondoo_version: 9.0.0
       platformVersion: {}
+      publicAccessCidrs:
+        min_mondoo_version: 9.0.0
       region: {}
       resourcesVpcConfig: {}
       status: {}
@@ -2921,7 +2953,11 @@ resources:
         min_mondoo_version: 9.0.0
       lastUsedRegion:
         min_mondoo_version: 9.0.0
+      maxSessionDuration:
+        min_mondoo_version: 9.0.0
       name: {}
+      permissionsBoundaryArn:
+        min_mondoo_version: 9.0.0
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
@@ -3098,6 +3134,14 @@ resources:
       aliases:
         min_mondoo_version: 9.0.0
       arn: {}
+      createdAt:
+        min_mondoo_version: 9.0.0
+      deletedAt:
+        min_mondoo_version: 9.0.0
+      description:
+        min_mondoo_version: 9.0.0
+      enabled:
+        min_mondoo_version: 9.0.0
       id: {}
       keyRotationEnabled: {}
       keyState:
@@ -3129,18 +3173,34 @@ resources:
       architectures:
         min_mondoo_version: 9.0.0
       arn: {}
+      codeSha256:
+        min_mondoo_version: 9.0.0
       concurrency: {}
+      description:
+        min_mondoo_version: 9.0.0
       dlqTargetArn: {}
       ephemeralStorageSize:
+        min_mondoo_version: 9.0.0
+      handler:
+        min_mondoo_version: 9.0.0
+      lastModifiedAt:
         min_mondoo_version: 9.0.0
       memorySize:
         min_mondoo_version: 9.0.0
       name: {}
+      packageType:
+        min_mondoo_version: 9.0.0
       policy: {}
       region: {}
+      role:
+        min_mondoo_version: 9.0.0
       runtime:
         min_mondoo_version: 8.28.0
       tags: {}
+      timeout:
+        min_mondoo_version: 9.0.0
+      tracingMode:
+        min_mondoo_version: 9.0.0
       vpcConfig: {}
     is_private: true
     min_mondoo_version: 5.15.0
@@ -3324,6 +3384,7 @@ resources:
       advancedSecurityEnabled: {}
       anonymousAuthEnabled: {}
       arn: {}
+      auditLogEnabled: {}
       autoTuneState: {}
       availabilityZoneCount: {}
       coldStorageEnabled: {}
@@ -3345,12 +3406,14 @@ resources:
       instanceCount: {}
       instanceType: {}
       internalUserDatabaseEnabled: {}
+      ipAddressType: {}
       name: {}
       nodeToNodeEncryptionEnabled: {}
       processing: {}
       region: {}
       samlEnabled: {}
       securityGroups: {}
+      serviceSoftwareNewVersion: {}
       subnets: {}
       tags: {}
       tlsSecurityPolicy: {}
@@ -3553,6 +3616,8 @@ resources:
         min_mondoo_version: latest
       certificateExpiresAt:
         min_mondoo_version: latest
+      copyTagsToSnapshot:
+        min_mondoo_version: 9.0.0
       createdAt:
         min_mondoo_version: 9.0.0
       createdTime:
@@ -3592,6 +3657,8 @@ resources:
       pendingMaintenanceActions:
         min_mondoo_version: 9.0.0
       performanceInsightsEnabled:
+        min_mondoo_version: 9.0.0
+      performanceInsightsKmsKey:
         min_mondoo_version: 9.0.0
       port:
         min_mondoo_version: 9.0.0
@@ -4097,6 +4164,8 @@ resources:
       arn: {}
       attributes: {}
       region: {}
+      signatureVersion:
+        min_mondoo_version: 9.0.0
       subscriptions: {}
       tags:
         min_mondoo_version: 5.23.0
