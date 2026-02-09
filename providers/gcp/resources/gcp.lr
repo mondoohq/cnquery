@@ -437,6 +437,8 @@ gcp.project @defaults("name") {
   binaryAuthorization() gcp.project.binaryAuthorizationControl
   // GCP Redis resources
   redis() gcp.project.redisService
+  // GCP Secret Manager resources
+  secretmanager() gcp.project.secretmanagerService
 }
 
 // Google Cloud (GCP) service
@@ -3252,4 +3254,70 @@ private gcp.project.binaryAuthorizationControl.admissionRule {
   enforcementMode string
   // The resource names of the attestors that must attest to a container image
   requireAttestationsBy []string
+}
+
+// Google Cloud (GCP) Secret Manager
+private gcp.project.secretmanagerService {
+  // Project ID
+  projectId string
+  // List of secrets in the current project
+  secrets() []gcp.project.secretmanagerService.secret
+}
+
+// Google Cloud (GCP) Secret Manager secret
+private gcp.project.secretmanagerService.secret @defaults("name created") {
+  // Project ID
+  projectId string
+  // Full resource path (projects/*/secrets/*)
+  resourcePath string
+  // Secret name
+  name string
+  // Time the secret was created
+  created time
+  // User-assigned labels
+  labels map[string]string
+  // Replication policy configuration
+  replication dict
+  // Pub/Sub topics for event notifications
+  topics []string
+  // Expiration time (if set)
+  expireTime time
+  // Etag of the secret
+  etag string
+  // Rotation policy configuration
+  rotation dict
+  // Version aliases mapping alias names to version numbers
+  versionAliases dict
+  // Custom metadata annotations
+  annotations map[string]string
+  // Version destroy TTL duration
+  versionDestroyTtl time
+  // Customer-managed encryption key configuration
+  customerManagedEncryption dict
+  // List of secret versions
+  versions() []gcp.project.secretmanagerService.secret.version
+  // IAM policy for this secret
+  iamPolicy() []gcp.resourcemanager.binding
+}
+
+// Google Cloud (GCP) Secret Manager secret version
+private gcp.project.secretmanagerService.secret.version @defaults("name state") {
+  // Full resource path (projects/*/secrets/*/versions/*)
+  resourcePath string
+  // Version number
+  name string
+  // Current state (ENABLED, DISABLED, DESTROYED)
+  state string
+  // Time the version was created
+  created time
+  // Time the version was destroyed
+  destroyed time
+  // Etag of the version
+  etag string
+  // Whether the client specified a payload checksum
+  clientSpecifiedPayloadChecksum bool
+  // Scheduled destroy time (for delayed destruction)
+  scheduledDestroyTime time
+  // Customer-managed encryption status
+  customerManagedEncryption dict
 }

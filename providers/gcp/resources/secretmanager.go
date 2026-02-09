@@ -1,0 +1,338 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strconv"
+	"time"
+
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v12/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v12/types"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
+	iampb "google.golang.org/genproto/googleapis/iam/v1"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
+)
+
+func (g *mqlGcpProjectSecretmanagerService) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+	return fmt.Sprintf("%s/gcp.project.secretmanagerService", projectId), nil
+}
+
+func initGcpProjectSecretmanagerService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+
+	projectId := conn.ResourceID()
+	args["projectId"] = llx.StringData(projectId)
+
+	return args, nil, nil
+}
+
+func (g *mqlGcpProject) secretmanager() (*mqlGcpProjectSecretmanagerService, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.secretmanagerService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectSecretmanagerService), nil
+}
+
+func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	creds, err := conn.Credentials(secretmanager.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	client, err := secretmanager.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListSecrets(ctx, &secretmanagerpb.ListSecretsRequest{
+		Parent: fmt.Sprintf("projects/%s", projectId),
+	})
+
+	var secrets []any
+	for {
+		s, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		var replicationDict map[string]interface{}
+		if s.Replication != nil {
+			replicationDict, err = secretReplicationToDict(s.Replication)
+			if err != nil {
+				log.Error().Err(err).Str("secret", s.Name).Msg("failed to convert replication")
+				continue
+			}
+		}
+
+		topicNames := make([]interface{}, 0, len(s.Topics))
+		for _, t := range s.Topics {
+			topicNames = append(topicNames, t.Name)
+		}
+
+		var rotationDict map[string]interface{}
+		if s.Rotation != nil {
+			rotationDict, err = convert.JsonToDict(mqlSecretRotation{
+				NextRotationTime: timestampToString(s.Rotation.NextRotationTime),
+				RotationPeriod:   durationToString(s.Rotation.RotationPeriod),
+			})
+			if err != nil {
+				log.Error().Err(err).Str("secret", s.Name).Msg("failed to convert rotation")
+				continue
+			}
+		}
+
+		versionAliasesDict := make(map[string]interface{})
+		for k, v := range s.VersionAliases {
+			versionAliasesDict[k] = v
+		}
+
+		var mqlVersionDestroyTtl *time.Time
+		if s.VersionDestroyTtl != nil {
+			v := llx.DurationToTime(s.VersionDestroyTtl.Seconds)
+			mqlVersionDestroyTtl = &v
+		}
+
+		var cmeDict map[string]interface{}
+		if s.CustomerManagedEncryption != nil {
+			cmeDict, err = convert.JsonToDict(mqlCustomerManagedEncryption{
+				KmsKeyName: s.CustomerManagedEncryption.KmsKeyName,
+			})
+			if err != nil {
+				log.Error().Err(err).Str("secret", s.Name).Msg("failed to convert customer managed encryption")
+				continue
+			}
+		}
+
+		mqlSecret, err := CreateResource(g.MqlRuntime, "gcp.project.secretmanagerService.secret", map[string]*llx.RawData{
+			"projectId":                 llx.StringData(projectId),
+			"resourcePath":              llx.StringData(s.Name),
+			"name":                      llx.StringData(parseResourceName(s.Name)),
+			"created":                   llx.TimeDataPtr(timestampAsTimePtr(s.CreateTime)),
+			"labels":                    llx.MapData(convert.MapToInterfaceMap(s.Labels), types.String),
+			"replication":               llx.DictData(replicationDict),
+			"topics":                    llx.ArrayData(topicNames, types.String),
+			"expireTime":                llx.TimeDataPtr(timestampAsTimePtr(s.GetExpireTime())),
+			"etag":                      llx.StringData(s.Etag),
+			"rotation":                  llx.DictData(rotationDict),
+			"versionAliases":            llx.DictData(versionAliasesDict),
+			"annotations":               llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
+			"versionDestroyTtl":         llx.TimeDataPtr(mqlVersionDestroyTtl),
+			"customerManagedEncryption": llx.DictData(cmeDict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		secrets = append(secrets, mqlSecret)
+	}
+	return secrets, nil
+}
+
+func (g *mqlGcpProjectSecretmanagerServiceSecret) id() (string, error) {
+	return g.ResourcePath.Data, g.ResourcePath.Error
+}
+
+func (g *mqlGcpProjectSecretmanagerServiceSecret) versions() ([]any, error) {
+	if g.ResourcePath.Error != nil {
+		return nil, g.ResourcePath.Error
+	}
+	secretPath := g.ResourcePath.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	creds, err := conn.Credentials(secretmanager.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	client, err := secretmanager.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListSecretVersions(ctx, &secretmanagerpb.ListSecretVersionsRequest{
+		Parent: secretPath,
+	})
+
+	var versions []any
+	for {
+		v, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		var cmeStatusDict map[string]interface{}
+		if v.CustomerManagedEncryption != nil {
+			cmeStatusDict, err = convert.JsonToDict(mqlCustomerManagedEncryptionStatus{
+				KmsKeyVersionName: v.CustomerManagedEncryption.KmsKeyVersionName,
+			})
+			if err != nil {
+				log.Error().Err(err).Str("version", v.Name).Msg("failed to convert customer managed encryption status")
+				continue
+			}
+		}
+
+		mqlVersion, err := CreateResource(g.MqlRuntime, "gcp.project.secretmanagerService.secret.version", map[string]*llx.RawData{
+			"resourcePath":                   llx.StringData(v.Name),
+			"name":                           llx.StringData(parseResourceName(v.Name)),
+			"state":                          llx.StringData(v.State.String()),
+			"created":                        llx.TimeDataPtr(timestampAsTimePtr(v.CreateTime)),
+			"destroyed":                      llx.TimeDataPtr(timestampAsTimePtr(v.DestroyTime)),
+			"etag":                           llx.StringData(v.Etag),
+			"clientSpecifiedPayloadChecksum": llx.BoolData(v.ClientSpecifiedPayloadChecksum),
+			"scheduledDestroyTime":           llx.TimeDataPtr(timestampAsTimePtr(v.ScheduledDestroyTime)),
+			"customerManagedEncryption":      llx.DictData(cmeStatusDict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		versions = append(versions, mqlVersion)
+	}
+	return versions, nil
+}
+
+func (g *mqlGcpProjectSecretmanagerServiceSecretVersion) id() (string, error) {
+	return g.ResourcePath.Data, g.ResourcePath.Error
+}
+
+func (g *mqlGcpProjectSecretmanagerServiceSecret) iamPolicy() ([]any, error) {
+	if g.ResourcePath.Error != nil {
+		return nil, g.ResourcePath.Error
+	}
+	secretPath := g.ResourcePath.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	creds, err := conn.Credentials(secretmanager.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	client, err := secretmanager.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: secretPath})
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(policy.Bindings))
+	for i, b := range policy.Bindings {
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(secretPath + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+// Helper types for dict conversion
+
+type mqlSecretReplication struct {
+	Type     string   `json:"type"`
+	Replicas []string `json:"replicas,omitempty"`
+}
+
+type mqlSecretRotation struct {
+	NextRotationTime string `json:"nextRotationTime,omitempty"`
+	RotationPeriod   string `json:"rotationPeriod,omitempty"`
+}
+
+type mqlCustomerManagedEncryption struct {
+	KmsKeyName string `json:"kmsKeyName"`
+}
+
+type mqlCustomerManagedEncryptionStatus struct {
+	KmsKeyVersionName string `json:"kmsKeyVersionName"`
+}
+
+func secretReplicationToDict(r *secretmanagerpb.Replication) (map[string]interface{}, error) {
+	if r.GetAutomatic() != nil {
+		return convert.JsonToDict(mqlSecretReplication{
+			Type: "AUTOMATIC",
+		})
+	}
+	if um := r.GetUserManaged(); um != nil {
+		locations := make([]string, 0, len(um.Replicas))
+		for _, replica := range um.Replicas {
+			locations = append(locations, replica.Location)
+		}
+		return convert.JsonToDict(mqlSecretReplication{
+			Type:     "USER_MANAGED",
+			Replicas: locations,
+		})
+	}
+	return nil, nil
+}
+
+func timestampToString(ts *timestamppb.Timestamp) string {
+	if ts == nil {
+		return ""
+	}
+	return ts.AsTime().Format(time.RFC3339)
+}
+
+func durationToString(d *durationpb.Duration) string {
+	if d == nil {
+		return ""
+	}
+	return fmt.Sprintf("%ds", d.Seconds)
+}
