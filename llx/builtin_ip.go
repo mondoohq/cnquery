@@ -219,7 +219,7 @@ func (i RawIP) Subnet() string {
 	}
 
 	mask := net.IPMask(b)
-	subnet := i.IP.Mask(mask)
+	subnet := i.Mask(mask)
 	res := subnet.String()
 
 	for hasMore := true; hasMore; {
@@ -242,7 +242,7 @@ func (i RawIP) prefix() net.IP {
 		return []byte{}
 	}
 	mask := net.IPMask(b)
-	return i.IP.Mask(mask)
+	return i.Mask(mask)
 }
 
 func (i RawIP) Prefix() string {
@@ -272,7 +272,7 @@ func (i RawIP) Suffix() string {
 		return ""
 	}
 	mask := flipMask(net.IPMask(b))
-	suffix := i.IP.Mask(mask)
+	suffix := i.Mask(mask)
 	return suffix.String()
 }
 

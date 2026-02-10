@@ -938,7 +938,7 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 		fieldPath, fieldinfos, ok := c.Schema.FindField(resource, id)
 		if ok {
 			fieldinfo := fieldinfos[len(fieldinfos)-1]
-			c.CompilerConfig.Stats.CallField(resource.Name, fieldinfo)
+			c.Stats.CallField(resource.Name, fieldinfo)
 
 			if call != nil && len(call.Function) > 0 && !fieldinfo.IsImplicitResource {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
@@ -1036,7 +1036,7 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 		calls = calls[1:]
 	}
 
-	c.CompilerConfig.Stats.CallResource(resource.Name)
+	c.Stats.CallResource(resource.Name)
 
 	var call *parser.Call
 	if len(calls) > 0 && calls[0].Function != nil {

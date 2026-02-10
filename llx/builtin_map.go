@@ -339,7 +339,7 @@ func mapValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(typ),
-			Error: errors.New("Failed to get values of `null`"),
+			Error: errors.New("failed to get values of `null`"),
 		}, 0, nil
 	}
 
@@ -677,7 +677,7 @@ func dictValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(types.Dict),
-			Error: errors.New("Failed to get values of `null`"),
+			Error: errors.New("failed to get values of `null`"),
 		}, 0, nil
 	}
 
@@ -711,7 +711,7 @@ func _stringWhere(e *blockExecutor, src string, chunk *Chunk, ref uint64, invert
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'where' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
@@ -740,7 +740,7 @@ func _dictArrayWhere(e *blockExecutor, list []any, chunk *Chunk, ref uint64, inv
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'where' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)

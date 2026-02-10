@@ -173,14 +173,15 @@ func (i *LinuxInterfaceHandler) ParseIpAddr(r io.Reader) ([]Interface, error) {
 		}
 
 		var ip net.IP
-		if m[3] == "inet" {
+		switch m[3] {
+		case "inet":
 			ipv4Addr, _, err := net.ParseCIDR(m[4])
 			if err != nil {
 				log.Error().Err(err).Msg("could not parse ipv4")
 			}
 
 			ip = ipv4Addr
-		} else if m[3] == "inet6" {
+		case "inet6":
 			ipv6Addr, _, err := net.ParseCIDR(m[4])
 			if err != nil {
 				log.Error().Err(err).Msg("could not parse ipv6")

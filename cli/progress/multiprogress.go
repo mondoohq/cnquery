@@ -476,8 +476,6 @@ func (m *modelMultiProgress) updateOverallProgress() {
 		overallPercent = 1.0
 	}
 	m.Progress[overallProgressIndexName].percent = overallPercent
-
-	return
 }
 
 func (m *modelMultiProgress) View() string {

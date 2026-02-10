@@ -55,11 +55,7 @@ func parseKeyword(s []rune) (string, []rune) {
 
 	i := 0
 LOOP:
-	for {
-		if i >= len(s) {
-			break
-		}
-
+	for i < len(s) {
 		switch s[i] {
 		case '#':
 			break LOOP

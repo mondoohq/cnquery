@@ -74,7 +74,7 @@ func (p *Pool[R]) Start() {
 			p.workers = append(p.workers, &w)
 		}
 
-		p.collector.start()
+		p.start()
 	})
 }
 
@@ -104,7 +104,7 @@ func (p *Pool[R]) GetValues() []R {
 //
 // It is recommended to call `Wait()` before reading the results.
 func (p *Pool[R]) GettErrors() []error {
-	return p.collector.GetErrors()
+	return p.GetErrors()
 }
 
 // Close waits for workers and collector to process all the requests, and then closes
@@ -127,7 +127,7 @@ func (p *Pool[R]) Wait() {
 
 // PendingRequests returns the number of pending requests.
 func (p *Pool[R]) PendingRequests() int64 {
-	return atomic.LoadInt64(&p.requestsSent) - p.collector.RequestsRead()
+	return atomic.LoadInt64(&p.requestsSent) - p.RequestsRead()
 }
 
 // Processing return true if tasks are being processed.

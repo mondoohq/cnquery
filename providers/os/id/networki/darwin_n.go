@@ -241,9 +241,10 @@ func (n *neti) getMacIfconfigInterfaces() (interfaces []Interface, err error) {
 			if strings.Contains(line, "status:") {
 				fields := strings.Fields(line)
 				if len(fields) > 1 {
-					if fields[1] == "active" {
+					switch fields[1] {
+					case "active":
 						currentInterface.Active = convert.ToPtr(true)
-					} else if fields[1] == "inactive" {
+					case "inactive":
 						currentInterface.Active = convert.ToPtr(false)
 					}
 				}

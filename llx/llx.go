@@ -465,14 +465,14 @@ func (a *arrayBlockCallResults) update(i int, res *RawResult) {
 	_, isEntrypoint := a.entrypoints[res.CodeID]
 	_, isDatapoint := a.datapoints[res.CodeID]
 
-	if !(isEntrypoint || isDatapoint) {
+	if !isEntrypoint && !isDatapoint {
 		return
 	}
 
 	_, hasEntrypointResult := a.results[i].entrypoints[res.CodeID]
 	_, hasDatapointResult := a.results[i].datapoints[res.CodeID]
 
-	if !(hasEntrypointResult || hasDatapointResult) {
+	if !hasEntrypointResult && !hasDatapointResult {
 		a.waiting[i]--
 		if a.waiting[i] == 0 {
 			a.unfinishedBlockCalls--

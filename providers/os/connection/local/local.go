@@ -120,7 +120,7 @@ type CommandRunner struct {
 }
 
 func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, error) {
-	c.Command.Stats.Start = time.Now()
+	c.Stats.Start = time.Now()
 
 	var cmd string
 	cmdArgs := []string{}
@@ -143,8 +143,8 @@ func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, er
 	var stderrBuffer bytes.Buffer
 
 	// create buffered stream
-	c.Command.Stdout = &stdoutBuffer
-	c.Command.Stderr = &stderrBuffer
+	c.Stdout = &stdoutBuffer
+	c.Stderr = &stderrBuffer
 
 	c.cmdExecutor.Stdout = c.Command.Stdout
 	c.cmdExecutor.Stderr = c.Command.Stderr

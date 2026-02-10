@@ -227,7 +227,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			userRaw = v
 
 		case *instructions.RunCommand:
-			script := strings.Join(v.ShellDependantCmdLine.CmdLine, "\n")
+			script := strings.Join(v.CmdLine, "\n")
 			runResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
 				"__id":   llx.StringData(p.locationID(v.Location())),
 				"script": llx.StringData(script),

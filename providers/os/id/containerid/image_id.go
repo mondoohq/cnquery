@@ -6,7 +6,7 @@ package containerid
 import "strings"
 
 func MondooContainerImageID(id string) string {
-	id = strings.Replace(id, "sha256:", "", -1)
+	id = strings.ReplaceAll(id, "sha256:", "")
 	return "//platformid.api.mondoo.app/runtime/docker/images/" + id
 }
 
@@ -18,7 +18,7 @@ func ShortContainerID(id string) string {
 }
 
 func ShortContainerImageID(id string) string {
-	id = strings.Replace(id, "sha256:", "", -1)
+	id = strings.ReplaceAll(id, "sha256:", "")
 	if len(id) > 12 {
 		return id[0:12]
 	}
