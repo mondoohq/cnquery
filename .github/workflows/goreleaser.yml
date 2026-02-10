@@ -129,12 +129,13 @@ jobs:
 
       # Run GoReleaser
       # This will build the binaries, create the docker images, and publish the release to Git
-      # we are currently pinned to v2.5.1 because of a bug in v2.6.0 that causes the release to fail
+      # we used to be pinned to v2.5.1 because of a bug in v2.6.0 that causes the release to fail
       # specifically with the signing of the RPM packages
       # if you upgrade then when validating the signatures 'rpm -qpi dist/*.rpm' it will error with
       # Header RSA signature: BAD (package tag 268: invalid OpenPGP signature)
-      # This is because a goreleaser dep was changed to https://github.com/goreleaser/nfpm/releases/tag/v2.41.2
-      # created a discussion on the issue here https://github.com/orgs/goreleaser/discussions/5943
+      # We were never able to get to the bottom of this issue, in the we have stopped goreleaser from signing the RPM packages,
+      # and instead we sign them in a separate step after go releaser is done. This is not ideal but rpm-sign is defacto standard for signing RPM packages
+      # and it works, so we are sticking with this approach for now.
 
       - name: Run GoReleaser (w/ Docker Release)
         if: ${{ inputs.skip-publish != true }}
@@ -151,7 +152,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          RPM_SIGNING_KEY_ID: ac69c65100e1c42b
           QUILL_SIGN_PASSWORD: ""
           QUILL_SIGN_P12: ${{ secrets.APPLE_SIGN_P12 }}
           QUILL_NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
@@ -178,7 +178,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          NFPM_RPM_SIGNING_KEY_ID: ac69c65100e1c42b
           QUILL_SIGN_PASSWORD: ""
           QUILL_SIGN_P12: ${{ secrets.APPLE_SIGN_P12 }}
           QUILL_NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
