@@ -254,7 +254,7 @@ func (p *parser) rewind(token lexer.Token) {
 }
 
 var (
-	reUnescape  = regexp.MustCompile("\\\\.")
+	reUnescape  = regexp.MustCompile(`\\.`)
 	unescapeMap = map[string]string{
 		"\\n": "\n",
 		"\\t": "\t",

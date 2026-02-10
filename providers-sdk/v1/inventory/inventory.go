@@ -268,9 +268,7 @@ func (p *Inventory) AddAssets(assetList ...*Asset) {
 	if p.Spec == nil {
 		p.Spec = &InventorySpec{}
 	}
-	for i := range assetList {
-		p.Spec.Assets = append(p.Spec.Assets, assetList[i])
-	}
+	p.Spec.Assets = append(p.Spec.Assets, assetList...)
 }
 
 func (p *Inventory) ApplyLabels(labels map[string]string) {

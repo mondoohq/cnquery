@@ -554,7 +554,7 @@ func (b *goBuilder) importName(symbol string) (string, bool) {
 	return "", false
 }
 
-func indent(s string, depth int) string {
+func indent(s string, depth int) string { //nolint:unused
 	space := ""
 	for i := 0; i < depth; i++ {
 		space += "\t"
@@ -570,7 +570,7 @@ func (r *Resource) structName(b *goBuilder) string {
 	return "mql" + r.interfaceName(b)
 }
 
-var reMethodName = regexp.MustCompile("\\.[a-z]")
+var reMethodName = regexp.MustCompile(`\.[a-z]`)
 
 func capitalizeDot(in []byte) []byte {
 	return bytes.ToUpper([]byte{in[1]})
@@ -606,7 +606,7 @@ func resource2goname(s string, b *goBuilder) string {
 	return name
 }
 
-func (b *ResourceDef) staticFields() []*BasicField {
+func (b *ResourceDef) staticFields() []*BasicField { //nolint:unused
 	res := []*BasicField{}
 	for _, f := range b.Fields {
 		if f.BasicField != nil {

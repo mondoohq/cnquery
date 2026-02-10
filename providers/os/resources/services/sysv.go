@@ -63,7 +63,7 @@ func (s *SysVServiceManager) List() ([]*Service, error) {
 			Name:      service,
 			Enabled:   len(rl[service]) > 0,
 			Installed: true,
-			Running:   running[service] == true,
+			Running:   running[service],
 			Type:      "sysv",
 		}
 

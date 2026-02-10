@@ -72,7 +72,7 @@ func (r *PlatformResolver) resolvePlatform(pf *inventory.Platform, conn shared.C
 	}
 
 	// if detection is true but we have a family
-	if detected == true && r.IsFamily == true {
+	if detected && r.IsFamily {
 		// we are a family and we may have children to try
 		for _, c := range r.Children {
 			detected, resolved := c.resolvePlatform(pf, conn)
@@ -90,7 +90,7 @@ func (r *PlatformResolver) resolvePlatform(pf *inventory.Platform, conn shared.C
 	}
 
 	// return if the detect is true and we have a leaf
-	if detected && r.IsFamily == false {
+	if detected && !r.IsFamily {
 		return pf, true
 	}
 

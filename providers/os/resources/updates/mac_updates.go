@@ -30,10 +30,10 @@ func (um *MacosUpdateManager) Format() string {
 
 func (um *MacosUpdateManager) List() ([]OperatingSystemUpdate, error) {
 	f, err := um.conn.FileSystem().Open("/Library/Preferences/com.apple.SoftwareUpdate.plist")
-	defer f.Close()
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
+	defer f.Close()
 	return ParseSoftwarePlistUpdates(f)
 }
 

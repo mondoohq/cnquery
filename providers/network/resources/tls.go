@@ -24,7 +24,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")
+var reTarget = regexp.MustCompile(`([^/:]+?)(:\d+)?$`)
 
 var rexUrlDomain = regexp.MustCompile(regex.UrlDomain)
 

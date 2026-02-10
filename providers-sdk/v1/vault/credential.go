@@ -122,7 +122,9 @@ func (s *SecretEncoding) UnmarshalJSON(data []byte) error {
 	}
 	if err != nil {
 		var name string
-		err = json.Unmarshal(data, &name)
+		if err := json.Unmarshal(data, &name); err != nil {
+			return errors.New("unknown type value: " + string(data))
+		}
 		code, ok := SecretEncoding_value["encoding_"+strings.ToLower(strings.TrimSpace(name))]
 		if !ok {
 			return errors.New("unknown type value: " + string(data))

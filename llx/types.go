@@ -119,7 +119,7 @@ func (c *Chunk) DereferencedTypeV1(stack *CodeV1) types.Type {
 
 // ArrayType for the given list of primitives
 func ArrayTypeV1(arr []*Primitive, stack *CodeV1) types.Type {
-	if arr == nil || len(arr) == 0 {
+	if len(arr) == 0 {
 		return types.Array(types.Unset)
 	}
 
@@ -156,7 +156,7 @@ func (p *Primitive) dereferenceTypeV2(typ types.Type, stack *CodeV2) types.Type 
 
 // ArrayType for the given list of primitives
 func ArrayTypeV2(arr []*Primitive, stack *CodeV2) types.Type {
-	if arr == nil || len(arr) == 0 {
+	if len(arr) == 0 {
 		return types.Array(types.Unset)
 	}
 

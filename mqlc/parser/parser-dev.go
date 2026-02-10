@@ -11,7 +11,7 @@ import (
 	"fmt"
 )
 
-func (p *parser) inspect(pos string) {
+func (p *parser) inspect(pos string) { //nolint:unused
 	fmt.Printf("%s: [%#v] - %#v\n", pos, p.nextTokens, p.token)
 }
 

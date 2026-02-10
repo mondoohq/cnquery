@@ -17,7 +17,7 @@ import (
 
 var _ shared.FileSearch = (*MountedFs)(nil)
 
-var notSupported = errors.New("not supported")
+var errNotSupported = errors.New("not supported")
 
 type MountedFs struct {
 	prefix string
@@ -48,11 +48,11 @@ func (t *MountedFs) Create(name string) (afero.File, error) {
 }
 
 func (t *MountedFs) Mkdir(name string, perm os.FileMode) error {
-	return notSupported
+	return errNotSupported
 }
 
 func (t *MountedFs) MkdirAll(path string, perm os.FileMode) error {
-	return notSupported
+	return errNotSupported
 }
 
 func (t *MountedFs) Open(name string) (afero.File, error) {
@@ -78,15 +78,15 @@ func (t *MountedFs) OpenFile(name string, flag int, perm os.FileMode) (afero.Fil
 }
 
 func (t *MountedFs) Remove(name string) error {
-	return notSupported
+	return errNotSupported
 }
 
 func (t *MountedFs) RemoveAll(path string) error {
-	return notSupported
+	return errNotSupported
 }
 
 func (t *MountedFs) Rename(oldname, newname string) error {
-	return notSupported
+	return errNotSupported
 }
 
 func (t *MountedFs) Stat(name string) (os.FileInfo, error) {
@@ -95,11 +95,11 @@ func (t *MountedFs) Stat(name string) (os.FileInfo, error) {
 }
 
 func (t *MountedFs) Chmod(name string, mode os.FileMode) error {
-	return notSupported
+	return errNotSupported
 }
 
 func (t *MountedFs) Chtimes(name string, atime time.Time, mtime time.Time) error {
-	return notSupported
+	return errNotSupported
 }
 
 func (t *MountedFs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
@@ -114,7 +114,7 @@ func (t *MountedFs) ReadlinkIfPossible(name string) (string, error) {
 }
 
 func (t *MountedFs) Chown(name string, uid, gid int) error {
-	return notSupported
+	return errNotSupported
 }
 
 func (t *MountedFs) Find(from string, r *regexp.Regexp, typ string, perm *uint32, depth *int) ([]string, error) {

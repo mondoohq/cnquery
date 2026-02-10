@@ -89,7 +89,7 @@ func ParseOpkgPackages(input io.Reader) ([]Package, error) {
 			pkg.Status = strings.TrimSpace(m[2])
 		case key == "Source":
 			o := OPKG_ORIGIN_REGEX.FindStringSubmatch(m[2])
-			if o != nil && len(o) >= 1 {
+			if len(o) >= 1 {
 				pkg.Origin = strings.TrimSpace(o[1])
 			} else {
 				log.Error().Str("origin", m[2]).Msg("cannot parse opkg origin")

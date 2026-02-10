@@ -4,12 +4,13 @@
 package shared
 
 import (
+	"context"
+
 	hclog "github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
 	"go.mondoo.com/mql/v13/providers"
 	"go.mondoo.com/mql/v13/shared/proto"
 	"go.mondoo.com/mql/v13/utils/iox"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 

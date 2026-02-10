@@ -35,7 +35,7 @@ func (m *MockResource) MqlID() string {
 }
 
 // resourceFunctions are all the shared handlers for resource calls
-var resourceFunctionsV2 map[string]chunkHandlerV2
+var resourceFunctionsV2 map[string]chunkHandlerV2 //nolint:unused
 
 func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
 	// where(resource.list, function)

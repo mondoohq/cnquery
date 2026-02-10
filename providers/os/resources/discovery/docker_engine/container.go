@@ -7,14 +7,13 @@ import (
 	"context"
 	"strings"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/id/containerid"
 )
 
-func (e *dockerEngineDiscovery) containerList() ([]types.Container, error) {
+func (e *dockerEngineDiscovery) containerList() ([]container.Summary, error) {
 	dc, err := e.client()
 	if err != nil {
 		return nil, err
@@ -98,7 +97,7 @@ func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
 		return ii, err
 	}
 
-	res, _, err := dc.ImageInspectWithRaw(context.Background(), name)
+	res, err := dc.ImageInspect(context.Background(), name)
 	if err != nil {
 		return ii, err
 	}

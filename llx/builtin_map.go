@@ -15,7 +15,7 @@ import (
 )
 
 // mapFunctions are all the handlers for builtin array methods
-var mapFunctions map[string]chunkHandlerV2
+var mapFunctions map[string]chunkHandlerV2 //nolint:unused
 
 func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
@@ -314,7 +314,7 @@ func mapKeysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(types.Dict),
-			Error: errors.New("Failed to get keys of `null`"),
+			Error: errors.New("failed to get keys of `null`"),
 		}, 0, nil
 	}
 
@@ -654,7 +654,7 @@ func dictKeysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(types.Dict),
-			Error: errors.New("Failed to get keys of `null`"),
+			Error: errors.New("failed to get keys of `null`"),
 		}, 0, nil
 	}
 
@@ -1634,7 +1634,7 @@ func opDictCmpNil(left any, right any) bool {
 	return left == nil
 }
 
-func opNilCmpDict(left any, right any) bool {
+func opNilCmpDict(left any, right any) bool { //nolint:unused
 	return right == nil
 }
 
@@ -1646,11 +1646,11 @@ func dictNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return boolNotOpV2(e, bind, chunk, ref, opDictCmpNil)
 }
 
-func nilCmpDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func nilCmpDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) { //nolint:unused
 	return boolOpV2(e, bind, chunk, ref, opNilCmpDict)
 }
 
-func nilNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func nilNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) { //nolint:unused
 	return boolNotOpV2(e, bind, chunk, ref, opNilCmpDict)
 }
 
@@ -1937,7 +1937,7 @@ func dictNotRegexarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 	return rawboolNotOpV2(e, bind, chunk, ref, opDictCmpRegexarray)
 }
 
-func opDictCmpBoolarray(left *RawData, right *RawData) bool {
+func opDictCmpBoolarray(left *RawData, right *RawData) bool { //nolint:unused
 	switch left.Value.(type) {
 	case string:
 		return cmpArrayOne(right, left, opBoolCmpString)
@@ -2133,7 +2133,7 @@ func opIntLTEDict(left any, right any) *RawData {
 	}
 }
 
-func opIntGTDict(left any, right any) *RawData {
+func opIntGTDict(left any, right any) *RawData { //nolint:unused
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(int64) > x)
@@ -2150,7 +2150,7 @@ func opIntGTDict(left any, right any) *RawData {
 	}
 }
 
-func opIntGTEDict(left any, right any) *RawData {
+func opIntGTEDict(left any, right any) *RawData { //nolint:unused
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(int64) >= x)
@@ -2867,7 +2867,7 @@ func opDictAndArray(left any, right any) bool {
 	return truthyDict(left) && (len(right.([]any)) != 0)
 }
 
-func opArrayAndDict(left any, right any) bool {
+func opArrayAndDict(left any, right any) bool { //nolint:unused
 	return truthyDict(right) && (len(left.([]any)) != 0)
 }
 
@@ -2875,7 +2875,7 @@ func opDictOrArray(left any, right any) bool {
 	return truthyDict(left) || (len(right.([]any)) != 0)
 }
 
-func opArrayOrDict(left any, right any) bool {
+func opArrayOrDict(left any, right any) bool { //nolint:unused
 	return truthyDict(right) || (len(left.([]any)) != 0)
 }
 
@@ -2887,11 +2887,11 @@ func dictOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return boolOpV2(e, bind, chunk, ref, opDictOrArray)
 }
 
-func arrayAndDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func arrayAndDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) { //nolint:unused
 	return boolOpV2(e, bind, chunk, ref, opArrayAndDict)
 }
 
-func arrayOrDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func arrayOrDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) { //nolint:unused
 	return boolOpV2(e, bind, chunk, ref, opArrayOrDict)
 }
 
@@ -2948,7 +2948,7 @@ func dictPlusStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	})
 }
 
-func stringPlusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func stringPlusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) { //nolint:unused
 	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(string)
 

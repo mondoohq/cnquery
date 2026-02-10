@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 )
 
-var notImplemented = errors.New("not implemented")
+var notImplemented = errors.New("not implemented") //nolint:unused
 
 func New() *Vault {
 	return &Vault{}

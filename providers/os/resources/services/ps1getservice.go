@@ -83,10 +83,7 @@ func (s WindowsService) IsRunning() bool {
 // 3: Manual
 // 4: Disabled
 func (s WindowsService) Enabled() bool {
-	if s.StartType <= 3 {
-		return true
-	}
-	return false
+	return s.StartType <= 3
 }
 
 func (s WindowsService) Service() *Service {

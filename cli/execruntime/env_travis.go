@@ -5,7 +5,7 @@ package execruntime
 
 const TRAVIS = "travis"
 
-var travisEnv = &RuntimeEnv{
+var travisEnv = &RuntimeEnv{ //nolint:unused
 	Id:        TRAVIS,
 	Name:      "Travis CI",
 	Namespace: "travis-ci.com",

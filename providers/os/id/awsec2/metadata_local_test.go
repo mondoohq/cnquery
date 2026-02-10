@@ -26,7 +26,7 @@ func fakeConfig() aws.Config {
 			URL: "https://endpoint",
 		}, nil
 	}
-	conf.EndpointResolver = aws.EndpointResolverFunc(localResolverFn)
+	conf.EndpointResolver = aws.EndpointResolverFunc(localResolverFn) //nolint:staticcheck // test uses deprecated AWS endpoint API
 	conf.Credentials = credentials.StaticCredentialsProvider{
 		Value: aws.Credentials{
 			AccessKeyID: "AKID", SecretAccessKey: "SECRET", SessionToken: "SESSION",

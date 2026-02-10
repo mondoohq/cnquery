@@ -14,7 +14,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 )
 
-var notImplemented = errors.New("not implemented")
+var notImplemented = errors.New("not implemented") //nolint:unused
 
 // https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html
 // https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_GetParameter.html

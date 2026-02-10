@@ -152,7 +152,7 @@ func compileArrayDuplicates(c *compiler, typ types.Type, ref uint64, id string, 
 	ct := typ.Child()
 	_, ok := types.Equal[ct]
 	if !ok {
-		return typ, errors.New("cannot extract duplicates from array, must be a basic type. Try using a field argument.")
+		return typ, errors.New("cannot extract duplicates from array, must be a basic type; try using a field argument")
 	}
 
 	c.addChunk(&llx.Chunk{

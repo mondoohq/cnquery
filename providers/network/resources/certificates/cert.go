@@ -45,7 +45,7 @@ var cipherSuites = map[string]uint16{
 	"TLS_AES_256_GCM_SHA384": tls.TLS_AES_256_GCM_SHA384,
 }
 
-var userTempl string
+var userTempl string //nolint:unused
 
 var TimeoutSeconds = 3
 

@@ -16,7 +16,7 @@ import (
 var arrayBlockType = types.Array(types.Block)
 
 // arrayFunctions are all the handlers for builtin array methods
-var arrayFunctions map[string]chunkHandlerV2
+var arrayFunctions map[string]chunkHandlerV2 //nolint:unused
 
 func arrayGetFirstIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
@@ -1031,10 +1031,7 @@ func compileLogicalArrayOp(underlying types.Type, op string) func(types.Type, ty
 
 func cmpArrays(left *RawData, right *RawData, f func(any, any) bool) bool {
 	if left.Value == nil {
-		if right.Value == nil {
-			return true
-		}
-		return false
+		return right.Value == nil
 	}
 	if right == nil || right.Value == nil {
 		return false

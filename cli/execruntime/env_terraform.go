@@ -5,7 +5,7 @@ package execruntime
 
 const TERRAFORM = "terraform"
 
-var terraformEnv = &RuntimeEnv{
+var terraformEnv = &RuntimeEnv{ //nolint:unused
 	Id:        TERRAFORM,
 	Name:      "Terraform",
 	Namespace: "terraform.io",
