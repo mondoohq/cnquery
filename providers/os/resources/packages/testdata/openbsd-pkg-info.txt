@@ -1,0 +1,11 @@
+aom-3.7.0           AV1 codec library
+bash-5.2.26         GNU Bourne Again Shell
+bzip2-1.0.8p0       block-sorting file compressor, unencumbered
+curl-8.6.0          command line tool for transferring data with URL syntax
+git-2.44.0          distributed version control system
+nano-7.2            small and friendly text editor, strstrippeddown Pico clone
+python-3.11.8p0     interpreted object-oriented programming language
+quirks-7.14         exceptions to the ports tree
+vim-9.1.100-no_x11  vi clone, many additional features
+xz-5.4.5            LZMA compression and decompression tools
+git-lfs-3.4.1       Git extension for versioning large files
