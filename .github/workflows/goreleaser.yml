@@ -206,8 +206,15 @@ jobs:
         if: ${{ inputs.upload-artifacts == true }}
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: windows-artifacts
-          path: dist/*.zip
+          name: cnquery-release-artifacts
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/*.rpm
+            dist/*.deb
+            dist/*.sig
+            dist/*_SHA256SUMS
+            dist/metadata.json
           retention-days: 7
 
       # At this point we know the docker container is published.
