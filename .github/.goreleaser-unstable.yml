@@ -75,9 +75,18 @@ nfpms:
     formats:
       - deb
       - rpm
-after:
-  hooks:
-    - cmd: ./scripts/sign-packages.sh
+signs:
+  - id: sign-my-rpms
+    # This is the key change: 
+    # 'package' tells GoReleaser to target .rpm and .deb files
+    artifacts: package
+    
+    # You can filter further if you only want to sign RPMs and not DEBs
+    # ids:
+    #   - my-rpm-id-from-nfpm-section
+
+    cmd: ./scripts/sign-packages.sh
+
 archives:
   - id: releases
     format_overrides:
