@@ -4,6 +4,7 @@
 package services
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -111,6 +112,9 @@ func TestParseServiceSystemDUnitFilesPhoton(t *testing.T) {
 }
 
 func TestSystemdFS(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping on Windows: testdata contains symlinks with absolute Unix paths")
+	}
 	s := SystemdFSServiceManager{
 		Fs: mountedfs.NewMountedFs("testdata/systemd"),
 	}
