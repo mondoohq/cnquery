@@ -247,11 +247,11 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	if docs != nil && docs.Platform != nil && (len(docs.Platform.Name) > 0 || len(docs.Platform.Family) > 0) {
 		builder.WriteString("**Supported platform**\n\n")
 		for r := range docs.Platform.Name {
-			builder.WriteString(fmt.Sprintf("- %s", docs.Platform.Name[r]))
+			fmt.Fprintf(builder, "- %s", docs.Platform.Name[r])
 			builder.WriteString("\n")
 		}
 		for r := range docs.Platform.Family {
-			builder.WriteString(fmt.Sprintf("- %s", docs.Platform.Name[r]))
+			fmt.Fprintf(builder, "- %s", docs.Platform.Name[r])
 			builder.WriteString("\n")
 		}
 		builder.WriteString("\n")

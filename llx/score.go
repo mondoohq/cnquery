@@ -69,10 +69,10 @@ var (
 	cvssv3multipliersPR     = []float64{0.85, 0.68, 0.5, 0.85, 0.62, 0.27} // 3 x changed, 3 x unchanged
 	cvssv3multipliersUI     = []float64{0.85, 0.62}
 	cvssv3multipliersCIA    = []float64{0.56, 0.22, 0}
-	cvssv3multipliersE      = []float64{1, 1, 0.97, 0.94, 0.91}
-	cvssv3multipliersRL     = []float64{1, 1, 0.97, 0.96, 0.95}
-	cvssv3multipliersRC     = []float64{1, 1, 0.96, 0.92}
-	cvssv3multipliersCRIRAR = []float64{1, 1.5, 1, 0.5}
+	cvssv3multipliersE      = []float64{1, 1, 0.97, 0.94, 0.91}           //nolint:unused
+	cvssv3multipliersRL     = []float64{1, 1, 0.97, 0.96, 0.95}           //nolint:unused
+	cvssv3multipliersRC     = []float64{1, 1, 0.96, 0.92}                 //nolint:unused
+	cvssv3multipliersCRIRAR = []float64{1, 1.5, 1, 0.5}                   //nolint:unused
 )
 
 func cvssv3vector(s string) []byte {

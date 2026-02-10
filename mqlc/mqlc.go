@@ -1469,7 +1469,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 				// we add simple accessors for maps and dicts, but this also requires
 				// the `id` to look like a regular accessor (to avoid matching against more
 				// native internal operators)
-				if !((typ == types.Dict || typ.IsMap()) && reAccessor.MatchString(id)) {
+				if (typ != types.Dict && !typ.IsMap()) || !reAccessor.MatchString(id) {
 					addFieldSuggestions(availableFields(c, typ), id, c.Result)
 					return nil, errors.New("cannot find field '" + id + "' in " + typ.Label())
 				}
@@ -1937,7 +1937,7 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 		log.Warn().Msg("defaults somehow included external dependencies for resource " + info.Name)
 	}
 
-	if c.CompilerConfig.Features.IsActive(mql.ResourceContext) && info.Context != "" {
+	if c.Features.IsActive(mql.ResourceContext) && info.Context != "" {
 		// (Dom) Note: This is the very first expansion block implementation, so there are some
 		// serious limitations while we figure things out.
 		// 1. We can only expand a resource that has defaults defined. As soon as you add

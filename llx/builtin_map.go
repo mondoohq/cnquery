@@ -1148,7 +1148,7 @@ func dictMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'map' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'map' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)

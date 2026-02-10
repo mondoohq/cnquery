@@ -179,7 +179,7 @@ func (x *mqlUsers) findID(id int64) (*mqlUser, error) {
 		return nil, x.Error
 	}
 
-	res, ok := x.mqlUsersInternal.usersByID[id]
+	res, ok := x.usersByID[id]
 	if !ok {
 		return nil, errors.New("cannot find user for uid " + strconv.Itoa(int(id)))
 	}

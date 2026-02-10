@@ -154,7 +154,7 @@ func genBuiltinGo(conf ProvidersConf) ([]byte, error) {
 
 	for _, provider := range conf.Builtin {
 		// imports cannot contain dashes
-		trimProvider := strings.Replace(provider.Name, "-", "", -1)
+		trimProvider := strings.ReplaceAll(provider.Name, "-", "")
 		imports += fmt.Sprintf("\t%sconf \"%s/config\"\n", trimProvider, provider.GoPackage)
 		imports += fmt.Sprintf("\t%s \"%s/provider\"\n", trimProvider, provider.GoPackage)
 

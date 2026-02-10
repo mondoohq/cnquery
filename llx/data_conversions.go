@@ -158,14 +158,6 @@ func bool2result(value any, typ types.Type) (*Primitive, error) {
 	return BoolPrimitive(v), nil
 }
 
-func ref2resultV2(value any, typ types.Type) (*Primitive, error) {
-	v, ok := value.(uint64)
-	if !ok {
-		return nil, errInvalidConversion(value, typ)
-	}
-	return RefPrimitiveV2(v), nil
-}
-
 func int2result(value any, typ types.Type) (*Primitive, error) {
 	if v, ok := value.(int64); ok {
 		return IntPrimitive(v), nil

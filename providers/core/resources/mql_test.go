@@ -796,10 +796,7 @@ func testSample(t *testing.T, mqlData string, sampleLen int, isMap bool) {
 
 		// check that the data is different; given enough samples with a good
 		// data length, this should very very rarely fail naturally
-		allDupes := true
-		if samplesCnt < 2 {
-			allDupes = false
-		}
+		allDupes := samplesCnt >= 2
 		samples := make([][samplesCnt]any, samplesCnt)
 		ref := [samplesCnt]any{}
 

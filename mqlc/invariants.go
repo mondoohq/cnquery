@@ -92,18 +92,3 @@ func checkReturnEntrypointsV2(code *llx.CodeV2) bool {
 	return true
 }
 
-func checkReturnEntrypointsV1(code *llx.CodeV1) bool {
-	if code.SingleValue {
-		if len(code.Entrypoints)+len(code.Datapoints) != 1 {
-			return false
-		}
-	}
-
-	for _, c := range code.Functions {
-		if !checkReturnEntrypointsV1(c) {
-			return false
-		}
-	}
-
-	return true
-}

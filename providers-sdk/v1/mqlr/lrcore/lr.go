@@ -46,6 +46,7 @@ func (m *Map) Capture(values []string) error {
 	return nil
 }
 
+// nolint: govet
 type Alias struct {
 	Definition SimpleType `@@`
 	Type       SimpleType `'=' @@`

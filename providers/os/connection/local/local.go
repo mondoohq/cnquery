@@ -146,11 +146,11 @@ func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, er
 	c.Stdout = &stdoutBuffer
 	c.Stderr = &stderrBuffer
 
-	c.cmdExecutor.Stdout = c.Command.Stdout
-	c.cmdExecutor.Stderr = c.Command.Stderr
+	c.cmdExecutor.Stdout = c.Stdout
+	c.cmdExecutor.Stderr = c.Stderr
 
 	err := c.cmdExecutor.Run()
-	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
+	c.Stats.Duration = time.Since(c.Stats.Start)
 
 	// command completed successfully, great :-)
 	if err == nil {

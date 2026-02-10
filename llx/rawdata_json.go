@@ -375,7 +375,7 @@ func rawDataJSON(typ types.Type, data any, codeID string, bundle *CodeBundle, bu
 			return nil
 		}
 
-		if *time == NeverPastTime || *time == NeverFutureTime {
+		if time.Equal(NeverPastTime) || time.Equal(NeverFutureTime) {
 			r := "\"" + "Never" + "\""
 
 			buf.WriteString(r)

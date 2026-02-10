@@ -239,7 +239,7 @@ func writeLine(lineNum int, line string, cfg *ExtractConfig, res *strings.Builde
 
 	if cfg.ShowLineNumbers && lineNum >= 0 {
 		if cfg.maxLineDigits > 0 {
-			res.WriteString(fmt.Sprintf("%"+strconv.Itoa(cfg.maxLineDigits)+"d:", lineNum))
+			fmt.Fprintf(res, "%"+strconv.Itoa(cfg.maxLineDigits)+"d:", lineNum)
 		} else {
 			res.WriteString(strconv.Itoa(int(lineNum)) + ":")
 		}

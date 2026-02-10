@@ -151,7 +151,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	user := ""
-	if len(req.Args) != 0 && !(strings.HasPrefix(req.Connector, "docker") || strings.HasPrefix(req.Connector, "container")) {
+	if len(req.Args) != 0 && (!strings.HasPrefix(req.Connector, "docker") && !strings.HasPrefix(req.Connector, "container")) {
 		target := req.Args[0]
 		if !strings.Contains(target, "://") {
 			target = "ssh://" + target

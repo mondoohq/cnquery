@@ -177,7 +177,7 @@ func (x *mqlGroups) findID(id int64) (*mqlGroup, error) {
 		return nil, x.Error
 	}
 
-	res, ok := x.mqlGroupsInternal.groupsByID[id]
+	res, ok := x.groupsByID[id]
 	if !ok {
 		return nil, errors.New("cannot find group for uid " + strconv.Itoa(int(id)))
 	}

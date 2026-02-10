@@ -54,10 +54,9 @@ func cipherSuite(suite string) ([]uint16, error) {
 		return nil, nil
 	}
 
-	var cs []uint16
-	cs = []uint16{cipherSuites[suite]}
+	cs := []uint16{cipherSuites[suite]}
 	if cs[0] == 0 {
-		return nil, fmt.Errorf("%s is unsupported cipher suite or tls1.3 cipher suite.", suite)
+		return nil, fmt.Errorf("%s is unsupported cipher suite or tls1.3 cipher suite", suite)
 	}
 	return cs, nil
 }

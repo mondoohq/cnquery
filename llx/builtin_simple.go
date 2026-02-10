@@ -282,7 +282,7 @@ func opTimeCmpTime(left any, right any) bool {
 		return false
 	}
 
-	if (*l == NeverPastTime || *l == NeverFutureTime) && (*r == NeverPastTime || *r == NeverFutureTime) {
+	if (l.Equal(NeverPastTime) || l.Equal(NeverFutureTime)) && (r.Equal(NeverPastTime) || r.Equal(NeverFutureTime)) {
 		return true
 	}
 
@@ -876,16 +876,16 @@ func timeMinusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 			return &RawData{Type: types.Time}
 		}
 
-		if *r == NeverPastTime {
+		if r.Equal(NeverPastTime) {
 			return NeverFuturePrimitive.RawData()
 		}
-		if *r == NeverFutureTime {
+		if r.Equal(NeverFutureTime) {
 			return NeverPastPrimitive.RawData()
 		}
-		if *l == NeverPastTime {
+		if l.Equal(NeverPastTime) {
 			return NeverPastPrimitive.RawData()
 		}
-		if *l == NeverFutureTime {
+		if l.Equal(NeverFutureTime) {
 			return NeverFuturePrimitive.RawData()
 		}
 
@@ -903,16 +903,16 @@ func timePlusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 			return &RawData{Type: types.Time}
 		}
 
-		if *r == NeverPastTime {
+		if r.Equal(NeverPastTime) {
 			return NeverFuturePrimitive.RawData()
 		}
-		if *r == NeverFutureTime {
+		if r.Equal(NeverFutureTime) {
 			return NeverPastPrimitive.RawData()
 		}
-		if *l == NeverPastTime {
+		if l.Equal(NeverPastTime) {
 			return NeverPastPrimitive.RawData()
 		}
-		if *l == NeverFutureTime {
+		if l.Equal(NeverFutureTime) {
 			return NeverFuturePrimitive.RawData()
 		}
 
@@ -946,10 +946,10 @@ func opTimeTimesInt(left any, right any) *RawData {
 		return &RawData{Type: types.Time}
 	}
 
-	if *l == NeverPastTime {
+	if l.Equal(NeverPastTime) {
 		return NeverPastPrimitive.RawData()
 	}
-	if *l == NeverFutureTime {
+	if l.Equal(NeverFutureTime) {
 		return NeverFuturePrimitive.RawData()
 	}
 
@@ -964,10 +964,10 @@ func opTimeTimesFloat(left any, right any) *RawData {
 		return &RawData{Type: types.Time}
 	}
 
-	if *l == NeverPastTime {
+	if l.Equal(NeverPastTime) {
 		return NeverPastPrimitive.RawData()
 	}
-	if *l == NeverFutureTime {
+	if l.Equal(NeverFutureTime) {
 		return NeverFuturePrimitive.RawData()
 	}
 

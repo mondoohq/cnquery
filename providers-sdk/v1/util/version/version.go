@@ -159,9 +159,9 @@ func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy, ignore
 			modPath = require.Mod.Path + "@" + require.Mod.Version
 		}
 
-		if require.Syntax.Comments.Before != nil {
-			for i := range require.Syntax.Comments.Before {
-				comment := require.Syntax.Comments.Before[i].Token
+		if require.Syntax.Before != nil {
+			for i := range require.Syntax.Before {
+				comment := require.Syntax.Before[i].Token
 				if strings.HasPrefix(comment, "// pin") {
 					version := strings.TrimSpace(strings.TrimPrefix(comment, "// pin"))
 					log.Info().Msgf("Found pin comment for %s: %s", require.Mod.Path, version)

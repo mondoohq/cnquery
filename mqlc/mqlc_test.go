@@ -1647,8 +1647,7 @@ func TestCompiler_LongResourceWithUnnamedArgs(t *testing.T) {
 	})
 }
 
-// FIXME: reactivate
-func testCompiler_EmbeddedResource(t *testing.T) {
+func TestCompiler_EmbeddedResource(t *testing.T) {
 	compileCtx(t, "docker.containers[0].os", func(res *llx.CodeBundle) {
 		assertFunction(t, "os", &llx.Function{
 			Type:    string(types.Resource("os.linux")),
@@ -1657,7 +1656,7 @@ func testCompiler_EmbeddedResource(t *testing.T) {
 	})
 }
 
-func testCompiler_EmbeddedResource_Lookup(t *testing.T) {
+func TestCompiler_EmbeddedResource_Lookup(t *testing.T) {
 	compileCtx(t, "docker.containers[0].hostname", func(res *llx.CodeBundle) {
 		assertFunction(t, "os", &llx.Function{
 			Type:    string(types.Resource("os.linux")),

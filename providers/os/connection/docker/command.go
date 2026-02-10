@@ -102,9 +102,10 @@ func (c *Command) transformHijack(docker io.Reader, stdout io.Writer, stderr io.
 		content := make([]byte, size)
 		_, err = docker.Read(content)
 
-		if header[0] == STDIN || header[0] == STDOUT {
+		switch header[0] {
+		case STDIN, STDOUT:
 			stdout.Write(content)
-		} else if header[0] == STDERR {
+		case STDERR:
 			stderr.Write(content)
 		}
 

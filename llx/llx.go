@@ -123,7 +123,6 @@ type MQLExecutorV2 struct {
 	id      string
 	runtime Runtime
 	code    *CodeV2
-	starts  []uint64
 	props   map[string]*Primitive
 
 	lock           sync.Mutex
@@ -661,10 +660,6 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 	})
 
 	return nil, 0, err
-}
-
-type resourceInterface interface {
-	MqlResource() Resource
 }
 
 func pargs2argmap(b *blockExecutor, ref uint64, args []*Primitive) (map[string]*Primitive, uint64, error) {

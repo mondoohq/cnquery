@@ -52,7 +52,7 @@ func ParseIP(s string) RawIP {
 		}
 	}
 
-	var explicitMask int = -1
+	var explicitMask = -1
 	if suffix != "" {
 		mask64, _ := strconv.ParseInt(suffix, 10, 0)
 		explicitMask = int(mask64)
@@ -425,7 +425,7 @@ func ipUnspecified(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if !ok {
 		return nil, 0, errors.New("incorrect internal data for IP type")
 	}
-	return BoolData(v.IP.IsUnspecified()), 0, nil
+	return BoolData(v.IsUnspecified()), 0, nil
 }
 
 func ipIsPublic(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {

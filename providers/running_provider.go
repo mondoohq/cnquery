@@ -382,7 +382,7 @@ func (p *RunningProvider) Reconnect() error {
 	defer p.lock.Unlock()
 	p.shutdownLock.Lock()
 	defer p.shutdownLock.Unlock()
-	if !(p.isClosed || p.isShutdown) {
+	if !p.isClosed && !p.isShutdown {
 		return nil
 	}
 
