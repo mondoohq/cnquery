@@ -248,7 +248,7 @@ type Process struct {
 // https://man7.org/linux/man-pages/man8/lsof.8.html#OUTPUT_FOR_OTHER_PROGRAMS
 func (p *Process) parseField(s string) error {
 	if s == "" {
-		return fmt.Errorf("Empty field")
+		return fmt.Errorf("empty field")
 	}
 	key := s[0]
 	value := s[1:]

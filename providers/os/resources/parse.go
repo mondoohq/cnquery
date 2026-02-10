@@ -23,7 +23,7 @@ func fileFromPathOrContent(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if x, ok := args["path"]; ok {
 		path, ok := x.Value.(string)
 		if !ok {
-			return errors.New("Wrong type for 'path' it must be a string")
+			return errors.New("wrong type for 'path' it must be a string")
 		}
 
 		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
@@ -255,7 +255,7 @@ func initParseCertificates(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if x, ok := args["path"]; ok {
 		path, ok := x.Value.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in certificates initialization, it must be a string")
+			return nil, nil, errors.New("wrong type for 'path' in certificates initialization, it must be a string")
 		}
 
 		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{

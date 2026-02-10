@@ -106,7 +106,7 @@ LOOP:
 	return string(s[0:i]), consumeWhitespace(s[i:])
 }
 
-var errUnexpectedEOF = errors.New("Unexpected EOF")
+var errUnexpectedEOF = errors.New("unexpected EOF")
 
 func parseQuotedArg(s []rune) (string, []rune, error) {
 	i := 1

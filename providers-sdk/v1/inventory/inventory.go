@@ -468,7 +468,7 @@ func (c *Config) ToUrl() string {
 
 	host := c.Host
 	if strings.HasPrefix(host, "sha256:") {
-		host = strings.Replace(host, "sha256:", "", -1)
+		host = strings.ReplaceAll(host, "sha256:", "")
 	}
 
 	path := c.Path

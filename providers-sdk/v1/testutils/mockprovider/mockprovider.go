@@ -16,7 +16,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:       "mock",
-	ID:         "go.mondoo.com/mql/v13/providers-sdk/v1/testutils/mockprovider",
+	ID:         "go.mondoo.com/mql/providers-sdk/v1/testutils/mockprovider",
 	Version:    "0.0.0",
 	Connectors: []plugin.Connector{},
 }

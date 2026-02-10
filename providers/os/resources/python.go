@@ -41,7 +41,7 @@ func initPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	if x, ok := args["path"]; ok {
 		_, ok := x.Value.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in python initialization, it must be a string")
+			return nil, nil, errors.New("wrong type for 'path' in python initialization, it must be a string")
 		}
 	} else {
 		// empty path means search through default locations
@@ -335,7 +335,7 @@ func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if x, ok := args["path"]; ok {
 		path, ok := x.Value.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in python.package initialization, it must be a string")
+			return nil, nil, errors.New("wrong type for 'path' in python.package initialization, it must be a string")
 		}
 
 		file, err := newFile(runtime, path)

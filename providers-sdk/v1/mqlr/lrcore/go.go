@@ -559,7 +559,7 @@ func indent(s string, depth int) string { //nolint:unused
 	for i := 0; i < depth; i++ {
 		space += "\t"
 	}
-	return space + strings.Replace(s, "\n", "\n"+space, -1)
+	return space + strings.ReplaceAll(s, "\n", "\n"+space)
 }
 
 func (r *Resource) constTypeName(b *goBuilder) string {

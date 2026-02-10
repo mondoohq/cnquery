@@ -15,7 +15,7 @@ func initNtpConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	if x, ok := args["path"]; ok {
 		path, ok := x.Value.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in ntp.conf initialization, it must be a string")
+			return nil, nil, errors.New("wrong type for 'path' in ntp.conf initialization, it must be a string")
 		}
 
 		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{

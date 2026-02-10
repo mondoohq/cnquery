@@ -99,7 +99,7 @@ func newVersion(str string) (version, error) {
 	}
 	// Verify format
 	if len(v.version) == 0 {
-		return version{}, errors.New("No version")
+		return version{}, errors.New("no version")
 	}
 
 	for i := 0; i < len(v.version); i = i + 1 {

@@ -69,13 +69,13 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 	defer stdOutWriter.Flush()
 	defer stdErrWriter.Flush()
 
-	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
+	c.Stats.Duration = time.Since(c.Stats.Start)
 
 	info, err := c.Client.ContainerExecInspect(ctx, res.ID)
 	if err != nil {
 		return nil, err
 	}
-	c.Command.ExitStatus = info.ExitCode
+	c.ExitStatus = info.ExitCode
 
 	return &c.Command, nil
 }
