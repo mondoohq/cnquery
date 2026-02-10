@@ -91,4 +91,3 @@ func checkReturnEntrypointsV2(code *llx.CodeV2) bool {
 
 	return true
 }
-

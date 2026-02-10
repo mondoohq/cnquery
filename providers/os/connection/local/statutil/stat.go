@@ -32,7 +32,7 @@ func ShellEscape(s string) string {
 		return "''"
 	}
 	if ESCAPEREGEX.MatchString(s) {
-		return "'" + strings.Replace(s, "'", "'\"'\"'", -1) + "'"
+		return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'"
 	}
 
 	return s

@@ -24,7 +24,7 @@ type Command struct {
 
 func (c *Command) Exec(command string) (*shared.Command, error) {
 	c.Command.Command = command
-	c.Command.Stats.Start = time.Now()
+	c.Stats.Start = time.Now()
 
 	ctx := context.Background()
 	res, err := c.Client.ContainerExecCreate(ctx, c.Container, container.ExecOptions{
@@ -57,8 +57,8 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 	var stderrBuffer bytes.Buffer
 
 	// create buffered stream
-	c.Command.Stdout = &stdoutBuffer
-	c.Command.Stderr = &stderrBuffer
+	c.Stdout = &stdoutBuffer
+	c.Stderr = &stderrBuffer
 
 	stdOutWriter := bufio.NewWriter(&stdoutBuffer)
 	stdErrWriter := bufio.NewWriter(&stderrBuffer)

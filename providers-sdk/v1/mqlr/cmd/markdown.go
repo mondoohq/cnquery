@@ -369,7 +369,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	if docs != nil && len(docs.Resources) > 0 {
 		builder.WriteString("**Resources**\n\n")
 		for r := range docs.Resources {
-			builder.WriteString(fmt.Sprintf("- [%s](%s)", docs.Resources[r].Title, docs.Resources[r].Url))
+			fmt.Fprintf(builder, "- [%s](%s)", docs.Resources[r].Title, docs.Resources[r].Url)
 			builder.WriteString("\n")
 		}
 		builder.WriteString("\n")
@@ -378,7 +378,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	if docs != nil && len(docs.Refs) > 0 {
 		builder.WriteString("**References**\n\n")
 		for r := range docs.Refs {
-			builder.WriteString(fmt.Sprintf("- [%s](%s)", docs.Refs[r].Title, docs.Refs[r].Url))
+			fmt.Fprintf(builder, "- [%s](%s)", docs.Refs[r].Title, docs.Refs[r].Url)
 			builder.WriteString("\n")
 		}
 		builder.WriteString("\n")

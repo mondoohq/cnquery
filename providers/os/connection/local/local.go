@@ -160,7 +160,7 @@ func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, er
 	// if the program failed, we do not return err but its exit code
 	if exiterr, ok := err.(*exec.ExitError); ok {
 		if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-			c.Command.ExitStatus = status.ExitStatus()
+			c.ExitStatus = status.ExitStatus()
 		}
 		return &c.Command, nil
 	}

@@ -337,7 +337,7 @@ func (p *Platform) PrettyTitle() string {
 	prettyTitle := p.Title
 
 	// extend the title only for OS and k8s objects
-	if !(p.IsFamily("k8s-workload") || p.IsFamily("os")) {
+	if !p.IsFamily("k8s-workload") && !p.IsFamily("os") {
 		return prettyTitle
 	}
 

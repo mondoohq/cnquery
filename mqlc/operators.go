@@ -296,7 +296,7 @@ func (c *compiler) generateEntrypoints(arg *llx.Primitive) error {
 
 	refobj := code.Chunk(ref)
 	if refobj == nil {
-		return errors.New("Failed to get code reference on expect call, this shouldn't happen")
+		return errors.New("failed to get code reference on expect call, this shouldn't happen")
 	}
 
 	reffunc := refobj.Function

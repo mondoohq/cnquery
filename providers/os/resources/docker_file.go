@@ -259,14 +259,14 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			copy = append(copy, resource)
 
 		case *instructions.AddCommand:
-			src := make([]any, len(v.SourcesAndDest.SourcePaths))
-			for i := range v.SourcesAndDest.SourcePaths {
-				src[i] = v.SourcesAndDest.SourcePaths[i]
+			src := make([]any, len(v.SourcePaths))
+			for i := range v.SourcePaths {
+				src[i] = v.SourcePaths[i]
 			}
 			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileAdd, map[string]*llx.RawData{
 				"__id":  llx.StringData(p.locationID(v.Location())),
 				"src":   llx.ArrayData(src, types.String),
-				"dst":   llx.StringData(v.SourcesAndDest.DestPath),
+				"dst":   llx.StringData(v.DestPath),
 				"chown": llx.StringData(v.Chown),
 				"chmod": llx.StringData(v.Chmod),
 			})

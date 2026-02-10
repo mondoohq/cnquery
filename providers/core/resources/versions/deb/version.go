@@ -61,7 +61,7 @@ func newVersion(str string) (version, error) {
 	str = strings.TrimSpace(str)
 
 	if len(str) == 0 {
-		return version{}, errors.New("Version string is empty")
+		return version{}, errors.New("version string is empty")
 	}
 
 	// Max/Min versions

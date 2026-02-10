@@ -30,7 +30,7 @@ func scoreString(vector string) ([]byte, error) {
 	case strings.HasPrefix(vector, "CVSS:3.1/"):
 		return cvssv3vector(vector[8:]), nil
 	default:
-		return nil, errors.New("Cannot parse this CVSS vector into a Mondoo score")
+		return nil, errors.New("cannot parse this CVSS vector into a Mondoo score")
 	}
 }
 
@@ -69,10 +69,10 @@ var (
 	cvssv3multipliersPR     = []float64{0.85, 0.68, 0.5, 0.85, 0.62, 0.27} // 3 x changed, 3 x unchanged
 	cvssv3multipliersUI     = []float64{0.85, 0.62}
 	cvssv3multipliersCIA    = []float64{0.56, 0.22, 0}
-	cvssv3multipliersE      = []float64{1, 1, 0.97, 0.94, 0.91}           //nolint:unused
-	cvssv3multipliersRL     = []float64{1, 1, 0.97, 0.96, 0.95}           //nolint:unused
-	cvssv3multipliersRC     = []float64{1, 1, 0.96, 0.92}                 //nolint:unused
-	cvssv3multipliersCRIRAR = []float64{1, 1.5, 1, 0.5}                   //nolint:unused
+	cvssv3multipliersE      = []float64{1, 1, 0.97, 0.94, 0.91} //nolint:unused
+	cvssv3multipliersRL     = []float64{1, 1, 0.97, 0.96, 0.95} //nolint:unused
+	cvssv3multipliersRC     = []float64{1, 1, 0.96, 0.92}       //nolint:unused
+	cvssv3multipliersCRIRAR = []float64{1, 1.5, 1, 0.5}         //nolint:unused
 )
 
 func cvssv3vector(s string) []byte {

@@ -140,8 +140,8 @@ func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 				return nil
 			}
 			// remove leading sysctl path
-			k := strings.Replace(path, sysctlPath, "", -1)
-			k = strings.Replace(k, "/", ".", -1)
+			k := strings.ReplaceAll(path, sysctlPath, "")
+			k = strings.ReplaceAll(k, "/", ".")
 			kernelParameters[k] = strings.TrimSpace(string(content))
 		}
 		return nil
