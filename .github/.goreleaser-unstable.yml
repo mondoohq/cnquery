@@ -75,9 +75,9 @@ nfpms:
     formats:
       - deb
       - rpm
-    rpm:
-      signature:
-        key_file: '{{ .Env.GPG_KEY_PATH }}'
+after:
+  hooks:
+    - cmd: ./scripts/sign-packages.sh
 archives:
   - id: releases
     format_overrides:
