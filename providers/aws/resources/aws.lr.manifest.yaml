@@ -4278,6 +4278,8 @@ resources:
       destinationType:
         min_mondoo_version: 9.0.0
       id: {}
+      logFormat:
+        min_mondoo_version: 9.0.0
       maxAggregationInterval:
         min_mondoo_version: 9.0.0
       region: {}

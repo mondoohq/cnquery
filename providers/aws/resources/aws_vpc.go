@@ -575,6 +575,7 @@ func (a *mqlAwsVpc) flowLogs() ([]any, error) {
 					"destinationType":        llx.StringData(string(flowLog.LogDestinationType)),
 					"deliverLogsStatus":      llx.StringDataPtr(flowLog.DeliverLogsStatus),
 					"id":                     llx.StringDataPtr(flowLog.FlowLogId),
+					"logFormat":              llx.StringDataPtr(flowLog.LogFormat),
 					"maxAggregationInterval": llx.IntDataDefault(flowLog.MaxAggregationInterval, 0),
 					"region":                 llx.StringData(a.Region.Data),
 					"status":                 llx.StringDataPtr(flowLog.FlowLogStatus),

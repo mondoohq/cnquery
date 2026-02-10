@@ -219,6 +219,8 @@ private aws.vpc.flowlog @defaults("id region status") {
   destinationType string
    // Delivery log status for the flow log data
   deliverLogsStatus string
+  // Format for the flow log
+  logFormat string
   // Maximum interval of time during which a flow of packets is captured and aggregated into a flow log record: 60 seconds (1 minute) or 600 seconds (10 minutes)
   maxAggregationInterval int
   // Type of traffic to monitor: ACCEPT, ALL, and REJECT
