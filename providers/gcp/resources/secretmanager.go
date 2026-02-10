@@ -137,9 +137,9 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 		}
 
 		var cmeDict map[string]interface{}
-		if s.CustomerManagedEncryption != nil {
+		if cme := extractCustomerManagedEncryption(s); cme != nil {
 			cmeDict, err = convert.JsonToDict(mqlCustomerManagedEncryption{
-				KmsKeyName: s.CustomerManagedEncryption.KmsKeyName,
+				KmsKeyName: cme.KmsKeyName,
 			})
 			if err != nil {
 				log.Error().Err(err).Str("secret", s.Name).Msg("failed to convert customer managed encryption")
@@ -302,6 +302,31 @@ type mqlCustomerManagedEncryption struct {
 
 type mqlCustomerManagedEncryptionStatus struct {
 	KmsKeyVersionName string `json:"kmsKeyVersionName"`
+}
+
+// extractCustomerManagedEncryption returns the CMEK configuration from a secret,
+// checking all possible locations depending on replication type:
+// - Top-level Secret.CustomerManagedEncryption (regionalized secrets)
+// - Replication.Automatic.CustomerManagedEncryption (automatic replication)
+// - Replication.UserManaged.Replicas[].CustomerManagedEncryption (user-managed replication)
+func extractCustomerManagedEncryption(s *secretmanagerpb.Secret) *secretmanagerpb.CustomerManagedEncryption {
+	if s.CustomerManagedEncryption != nil {
+		return s.CustomerManagedEncryption
+	}
+	if s.Replication == nil {
+		return nil
+	}
+	if auto := s.Replication.GetAutomatic(); auto != nil && auto.CustomerManagedEncryption != nil {
+		return auto.CustomerManagedEncryption
+	}
+	if um := s.Replication.GetUserManaged(); um != nil {
+		for _, replica := range um.Replicas {
+			if replica.CustomerManagedEncryption != nil {
+				return replica.CustomerManagedEncryption
+			}
+		}
+	}
+	return nil
 }
 
 func secretReplicationToDict(r *secretmanagerpb.Replication) (map[string]interface{}, error) {
