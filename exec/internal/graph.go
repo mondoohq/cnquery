@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	vrs "github.com/hashicorp/go-version"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 )
@@ -53,11 +52,10 @@ type nodeData interface {
 }
 
 type GraphExecutor struct {
-	nodes         map[NodeID]*Node
-	edges         map[NodeID][]NodeID
-	priorityMap   map[NodeID]int
-	queryTimeout  time.Duration
-	mondooVersion *vrs.Version
+	nodes        map[NodeID]*Node
+	edges        map[NodeID][]NodeID
+	priorityMap  map[NodeID]int
+	queryTimeout time.Duration
 
 	executionManager *executionManager
 	resultChan       chan *llx.RawResult

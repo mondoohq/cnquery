@@ -13,9 +13,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/discovery/docker_engine"
 )
 
-func resetEnv(env []string) {
-}
-
 func TestDockerEnvParsing(t *testing.T) {
 	// reset env from https://golang.org/src/os/env_test.go
 	defer func(origEnv []string) {

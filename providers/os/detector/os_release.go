@@ -118,22 +118,6 @@ func (d *OSReleaseDetector) darwin_swversion() (map[string]string, error) {
 	return ParseDarwinRelease(content)
 }
 
-// macosSystemVersion is a specifc identifier for the operating system on macos
-func (d *OSReleaseDetector) macosSystemVersion() (map[string]string, error) {
-	f, err := d.provider.FileSystem().Open("/System/Library/CoreServices/SystemVersion.plist")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	content, err := io.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-
-	return ParseMacOSSystemVersion(string(content))
-}
-
 var majorminor = regexp.MustCompile(`^(\d+)(?:.(\d*)){0,1}(?:.(.*)){0,1}`)
 
 type ReleaseVersion struct {

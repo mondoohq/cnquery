@@ -15,8 +15,6 @@ import (
 	"go.mondoo.com/mql/v13/utils/multierr"
 )
 
-var notImplemented = errors.New("not implemented")
-
 // https://cloud.google.com/secret-manager
 // https://cloud.google.com/secret-manager/docs/reference/libraries#client-libraries-install-go
 func New(projectID string) *Vault {

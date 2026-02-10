@@ -147,26 +147,6 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*inventory.Asset, error) {
 	return container, nil
 }
 
-func mapContainerState(state string) inventory.State {
-	switch state {
-	case "running":
-		return inventory.State_STATE_RUNNING
-	case "created":
-		return inventory.State_STATE_PENDING
-	case "paused":
-		return inventory.State_STATE_STOPPED
-	case "exited":
-		return inventory.State_STATE_TERMINATED
-	case "restarting":
-		return inventory.State_STATE_PENDING
-	case "dead":
-		return inventory.State_STATE_ERROR
-	default:
-		log.Warn().Str("state", state).Msg("unknown container state")
-		return inventory.State_STATE_UNKNOWN
-	}
-}
-
 // DockerDisplayNames removes the leading slash of the internal docker name
 // @see  https://github.com/moby/moby/issues/6705
 func DockerDisplayNames(names []string) []string {

@@ -127,9 +127,9 @@ type modelMultiProgress struct {
 type multiProgressBars struct {
 	program        *tea.Program
 	Progress       map[string]*modelProgress
-	maxNameWidth   int
-	maxItemsToShow int
-	orderedKeys    []string
+	maxNameWidth   int    //nolint:unused
+	maxItemsToShow int    //nolint:unused
+	orderedKeys    []string //nolint:unused
 }
 
 func newProgressBar() progress.Model {

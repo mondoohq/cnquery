@@ -7,7 +7,6 @@ import (
 	"archive/tar"
 	"bufio"
 	"errors"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -169,28 +168,6 @@ func (fs *FS) open(header *tar.Header) (*bufio.Reader, error) {
 		return nil, err
 	}
 	return reader, nil
-}
-
-func (fs *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
-	fReader, err := fs.open(header)
-	if err != nil {
-		return nil, err
-	}
-
-	// create a pipe
-	tarReader, tarWriter := io.Pipe()
-
-	// get file info, header my just include symlink fileinfo
-	fi, err := fs.stat(header)
-	if err != nil {
-		return nil, err
-	}
-
-	// convert raw stream to tar stream
-	go fsutil.StreamFileAsTar(header.Name, fi, io.NopCloser(fReader), tarWriter)
-
-	// return the reader
-	return tarReader, nil
 }
 
 // Find searches for files and returns the file info, regex can be nil

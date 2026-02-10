@@ -87,7 +87,7 @@ var securitySignatureStatusValues = map[uint32]string{
 	1: "UP-TO-DATE",
 }
 
-var securityProductOwner = map[uint32]string{
+var securityProductOwner = map[uint32]string{ //nolint:unused
 	0: "NonMS",
 	1: "Microsoft",
 }

@@ -146,15 +146,6 @@ func (x *extensibleSchema) FindField(resource *resources.ResourceInfo, field str
 	return x.roAggregate.FindField(resource, field)
 }
 
-// Prioritize the provider IDs in the order that is provided. Any other
-// provider comes later and in any random order.
-func (x *extensibleSchema) prioritizeIDs(prioritization ...string) {
-	x.sync.Lock()
-	x.prioritization = prioritization
-	x.unsafeRefresh()
-	x.sync.Unlock()
-}
-
 // ---------------------------- unsafe methods ----------------------------
 // |  Only use these calls inside of a lock.                              |
 // |  Do NOT lock the object during these calls.                          |

@@ -23,7 +23,7 @@ func (p *mqlRegex) url() (string, error) {
 	return regex.Url, nil
 }
 
-func (p *mqlRegex) domain() (string, error) {
+func (p *mqlRegex) domain() (string, error) { //nolint:unused
 	return regex.UrlDomain, nil
 }
 

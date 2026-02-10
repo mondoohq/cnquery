@@ -53,7 +53,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 
 type listModel struct {
 	list            list.Model
-	items           []item
+	items           []item //nolint:unused
 	choice          string
 	quitting        bool
 	selectedHandler func(s int)

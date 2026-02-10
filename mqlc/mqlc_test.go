@@ -1681,7 +1681,7 @@ func testCompiler_EmbeddedResource_Lookup(t *testing.T) {
 	})
 }
 
-func testCompiler_EmbeddedResource_ImplicitResource(t *testing.T) {
+func TestCompiler_EmbeddedResource_ImplicitResource(t *testing.T) {
 	compileCtx(t, "docker.containers[0].user(uid: 999).name", func(res *llx.CodeBundle) {
 		assertFunction(t, "createResource", &llx.Function{
 			Type: string(types.Resource("os.base.user")),
@@ -1702,7 +1702,7 @@ func testCompiler_EmbeddedResource_ImplicitResource(t *testing.T) {
 	})
 }
 
-func testCompiler_EmbeddedResource_ImplicitResource_Block(t *testing.T) {
+func TestCompiler_EmbeddedResource_ImplicitResource_Block(t *testing.T) {
 	compileCtx(t, "docker.containers[0].user(uid: 999) { name }", func(res *llx.CodeBundle) {
 		assertFunction(t, "createResource", &llx.Function{
 			Type:    string(types.Resource("os.base.user")),
@@ -1724,7 +1724,7 @@ func testCompiler_EmbeddedResource_ImplicitResource_Block(t *testing.T) {
 	})
 }
 
-func testCompiler_EmbeddedResource_ImplicitResource_List(t *testing.T) {
+func TestCompiler_EmbeddedResource_ImplicitResource_List(t *testing.T) {
 	compileCtx(t, "docker.containers[0].packages", func(res *llx.CodeBundle) {
 		assertFunction(t, "createResource", &llx.Function{
 			Type:    string(types.Resource("os.base.packages")),

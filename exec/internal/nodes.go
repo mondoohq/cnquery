@@ -59,12 +59,6 @@ func (p *executionQueryProperty) IsResolved() bool {
 	return p.resolved
 }
 
-type DataResult struct {
-	checksum string
-	resolved bool
-	value    *llx.RawResult
-}
-
 type queryRunState int
 
 const (
@@ -235,70 +229,6 @@ func (nodeData *DatapointNodeData) recalculate() *envelope {
 
 	return &envelope{
 		res: nodeData.res,
-	}
-}
-
-// ReportingQueryNodeData is the data for queries of type ReportingQueryNodeType.
-type ReportingQueryNodeData struct {
-	featureBoolAssertions bool
-	queryID               string
-
-	results     map[string]*DataResult
-	invalidated bool
-}
-
-func (nodeData *ReportingQueryNodeData) initialize() {
-	invalidated := len(nodeData.results) == 0
-	for _, dr := range nodeData.results {
-		invalidated = invalidated || dr.resolved
-	}
-	nodeData.invalidated = invalidated
-}
-
-// consume stores datapoint results sent to it. These represent entrypoints which
-// are needed to calculate the score
-func (nodeData *ReportingQueryNodeData) consume(from NodeID, data *envelope) {
-	dr, ok := nodeData.results[from]
-	if !ok {
-		return
-	}
-	if dr.resolved {
-		return
-	}
-
-	dr.value = data.res
-	dr.resolved = true
-	nodeData.invalidated = true
-}
-
-type reportingJobDatapoint struct {
-	res *llx.RawResult
-}
-
-// ReportingJobNodeData is the data for nodes of type ReportingJobNodeType
-type ReportingJobNodeData struct {
-	queryID string
-	isQuery bool
-
-	datapoints  map[NodeID]*reportingJobDatapoint
-	completed   bool
-	invalidated bool
-}
-
-func (nodeData *ReportingJobNodeData) initialize() {
-	nodeData.invalidated = true
-}
-
-// consume saves scores from dependent reporting queries and reporting jobs, and
-// results from dependent datapoints
-func (nodeData *ReportingJobNodeData) consume(from NodeID, data *envelope) {
-	if data.res != nil {
-		dp, ok := nodeData.datapoints[from]
-		if !ok {
-			panic("invalid datapoint report")
-		}
-		dp.res = data.res
-		nodeData.invalidated = true
 	}
 }
 

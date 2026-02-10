@@ -594,28 +594,6 @@ func (p *mqlOsBase) name() (string, error) {
 	return "", errors.New("your platform is not supported by operating system resource")
 }
 
-// returns the OS native machine UUID/GUID
-func (s *mqlOsBase) machineid() (string, error) {
-	conn := s.MqlRuntime.Connection.(shared.Connection)
-	platform := conn.Asset().Platform
-
-	uuidProvider, err := platformid.MachineIDProvider(conn, platform)
-	if err != nil {
-		return "", errors.Wrap(err, "cannot determine platform uuid")
-	}
-
-	if uuidProvider == nil {
-		return "", errors.New("cannot determine platform uuid")
-	}
-
-	id, err := uuidProvider.ID()
-	if err != nil {
-		return "", errors.Wrap(err, "cannot determine platform uuid")
-	}
-
-	return id, nil
-}
-
 func (s *mqlOsBase) machine() (*mqlMachine, error) {
 	res, err := CreateResource(s.MqlRuntime, "machine", map[string]*llx.RawData{})
 	if err != nil {

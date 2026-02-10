@@ -167,18 +167,3 @@ func (f *File) Tar() (io.ReadCloser, error) {
 // 	r.Close()
 // 	return true
 // }
-
-// returns all directories and files under /proc
-func (f *File) procls() []string {
-	c, err := f.connection.RunCommand("find /proc")
-	if err != nil {
-		return []string{}
-	}
-	content, err := io.ReadAll(c.Stdout)
-	if err != nil {
-		return []string{}
-	}
-
-	// all files
-	return strings.Split(string(content), "\n")
-}

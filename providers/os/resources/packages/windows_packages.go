@@ -46,7 +46,7 @@ const (
 
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ff357803(v=vs.85)
 var (
-	wsusClassificationGUID = map[string]WSUSClassification{
+	wsusClassificationGUID = map[string]WSUSClassification{ //nolint:unused
 		"5c9376ab-8ce6-464a-b136-22113dd69801": Application,
 		"434de588-ed14-48f5-8eed-a15e09a991f6": Connectors,
 		"e6cf1350-c01b-414d-a61f-263d14d133b4": CriticalUpdates,
