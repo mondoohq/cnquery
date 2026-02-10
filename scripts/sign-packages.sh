@@ -13,7 +13,7 @@ if ls dist/*.rpm 1> /dev/null 2>&1; then
     -v "$GPG_KEY_PATH":/tmp/signing-key \
     -e RPM_PASSPHRASE="$NFPM_DEFAULT_RPM_PASSPHRASE" \
     -e KEY_ID="$KEY_ID" \
-    registry.fedoraproject.org/fedora:latest \
+    rockylinux:9 \
     sh -c "
       dnf install -y rpm-sign pinentry
       
