@@ -19,3 +19,15 @@ CPE_NAME=cpe:/o:cumulusnetworks:cumulus_linux:5.12.1
 HOME_URL="http://www.cumulusnetworks.com/"
 SUPPORT_URL="http://support.cumulusnetworks.com/"
 """
+
+[files."/etc/image-release"]
+content = """
+IMAGE_ID="Cumulus Linux"
+IMAGE_RELEASE=5.12.1
+IMAGE_DESCRIPTION="Cumulus Linux 5.12.1"
+IMAGE_SWITCH_ARCHITECTURE=vx-amd64
+IMAGE_BUILD_ID=3e424a3zc5171f991
+IMAGE_BUILD_SERIAL_ID=5.12.1.0026
+IMAGE_BUILD_DATE=2024-02-08T01:04:32+00:00
+IMAGE_BUILD_USER=sw-r2d2-bot
+"""

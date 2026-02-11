@@ -242,10 +242,23 @@ var cumulus = &PlatformResolver{
 	Name:     "cumulus-linux",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		if pf.Name == "cumulus-linux" {
-			return true, nil
+		if pf.Name != "cumulus-linux" {
+			return false, nil
 		}
-		return false, nil
+
+		osrd := NewOSReleaseDetector(conn)
+
+		image, err := osrd.imagerelease()
+		if err != nil {
+			return false, nil
+		}
+
+		// Notice from the docs:
+		// The /etc/image-release file updates only when you run a Cumulus Linux image install.
+		// Therefore, if you run a Cumulus Linux image install of Cumulus Linux 5.13, followed by a package upgrade to 5.15, the /etc/image-release file continues to display Cumulus Linux 5.13, which is the originally installed base image.
+		pf.Build = image["IMAGE_BUILD_SERIAL_ID"]
+
+		return true, nil
 	},
 }
 

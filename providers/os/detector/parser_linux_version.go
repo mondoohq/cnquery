@@ -15,6 +15,10 @@ var (
 	RHEL_RELEASE_REGEX  = regexp.MustCompile(`release ([\d\.]+)`)
 )
 
+func ParseImageRelease(content string) (map[string]string, error) {
+	return parseKeyValue(content, OS_RELEASE_REGEX), nil
+}
+
 func ParseOsRelease(content string) (map[string]string, error) {
 	return parseKeyValue(content, OS_RELEASE_REGEX), nil
 }
