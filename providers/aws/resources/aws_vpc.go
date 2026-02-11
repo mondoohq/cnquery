@@ -83,21 +83,23 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 					name := tagsMap["Name"]
 					mqlVpc, err := CreateResource(a.MqlRuntime, ResourceAwsVpc,
 						map[string]*llx.RawData{
-							"arn":                      llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(vpc.VpcId))),
-							"cidrBlock":                llx.StringDataPtr(vpc.CidrBlock),
-							"dhcpOptionsId":            llx.StringDataPtr(vpc.DhcpOptionsId),
-							"id":                       llx.StringDataPtr(vpc.VpcId),
-							"instanceTenancy":          llx.StringData(string(vpc.InstanceTenancy)),
-							"internetGatewayBlockMode": llx.StringData(string(vpc.BlockPublicAccessStates.InternetGatewayBlockMode)),
-							"isDefault":                llx.BoolData(convert.ToValue(vpc.IsDefault)),
-							"name":                     llx.StringData(name),
-							"region":                   llx.StringData(region),
-							"state":                    llx.StringData(string(vpc.State)),
-							"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(vpc.Tags)), types.String),
+							"arn":             llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(vpc.VpcId))),
+							"cidrBlock":       llx.StringDataPtr(vpc.CidrBlock),
+							"dhcpOptionsId":   llx.StringDataPtr(vpc.DhcpOptionsId),
+							"id":              llx.StringDataPtr(vpc.VpcId),
+							"instanceTenancy": llx.StringData(string(vpc.InstanceTenancy)),
+							"isDefault":       llx.BoolData(convert.ToValue(vpc.IsDefault)),
+							"name":            llx.StringData(name),
+							"region":          llx.StringData(region),
+							"state":           llx.StringData(string(vpc.State)),
+							"tags":            llx.MapData(toInterfaceMap(ec2TagsToMap(vpc.Tags)), types.String),
 						})
 					if err != nil {
 						log.Error().Msg(err.Error())
 						continue
+					}
+					if vpc.BlockPublicAccessStates != nil {
+						mqlVpc.(*mqlAwsVpc).InternetGatewayBlockMode = plugin.TValue[string]{Data: string(vpc.BlockPublicAccessStates.InternetGatewayBlockMode), State: plugin.StateIsSet}
 					}
 					res = append(res, mqlVpc)
 				}
@@ -931,22 +933,22 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 
 	rawResources := a.GetVpcs()
 	if rawResources.Error != nil {
-		return nil, nil, err
+		return nil, nil, rawResources.Error
 	}
 
-	var match func(secGroup *mqlAwsVpc) bool
+	var match func(vpc *mqlAwsVpc) bool
 
 	if args["arn"] != nil {
 		arnVal := args["arn"].Value.(string)
-		match = func(vol *mqlAwsVpc) bool {
-			return vol.Arn.Data == arnVal
+		match = func(vpc *mqlAwsVpc) bool {
+			return vpc.Arn.Data == arnVal
 		}
 	}
 
 	for _, rawResource := range rawResources.Data {
-		volume := rawResource.(*mqlAwsVpc)
-		if match(volume) {
-			return args, volume, nil
+		vpc := rawResource.(*mqlAwsVpc)
+		if match(vpc) {
+			return args, vpc, nil
 		}
 	}
 
