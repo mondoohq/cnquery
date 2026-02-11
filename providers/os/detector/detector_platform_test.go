@@ -1033,6 +1033,8 @@ func TestCumulusOSDetector(t *testing.T) {
 	assert.Equal(t, "Cumulus Linux", di.Title, "os title should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+	assert.Equal(t, "5.12.1", di.Version)
+	assert.Equal(t, "5.12.1.0026", di.Build)
 }
 
 func TestNobaraDetector(t *testing.T) {

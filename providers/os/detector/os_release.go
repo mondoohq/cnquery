@@ -81,6 +81,21 @@ func (d *OSReleaseDetector) osrelease() (map[string]string, error) {
 	return ParseOsRelease(string(content))
 }
 
+func (d *OSReleaseDetector) imagerelease() (map[string]string, error) {
+	f, err := d.provider.FileSystem().Open("/etc/image-release")
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	content, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseImageRelease(string(content))
+}
+
 // lsbconfig reads /etc/lsb-release and parses the file
 // DISTRIB_ID=Ubuntu
 // DISTRIB_RELEASE=16.04
