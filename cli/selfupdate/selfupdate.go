@@ -23,7 +23,6 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/cli/config"
 	"go.mondoo.com/mql/v13/logger/zerologadapter"
 	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
@@ -50,6 +49,12 @@ type Config struct {
 	Enabled         bool
 	RefreshInterval int64
 	ReleaseURL      string
+	// BinaryName is the name of the binary to update (e.g., "mql", "cnspec").
+	// Used to match archive entries and construct platform-specific filenames.
+	BinaryName string
+	// CurrentVersion is the current version of the running binary.
+	// If "unstable", self-update is skipped.
+	CurrentVersion string
 }
 
 // Release represents the release information from latest.json
@@ -80,7 +85,7 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	}
 
 	// Skip if version is "unstable" (dev build)
-	currentVersion := mql.GetVersion()
+	currentVersion := cfg.CurrentVersion
 	if currentVersion == "unstable" {
 		log.Debug().Msg("self-update: skipping, running unstable/dev build")
 		return false, nil
@@ -92,10 +97,12 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 		return false, errors.Wrap(err, "failed to get bin path")
 	}
 
+	binName := platformBinaryName(cfg.BinaryName)
+
 	// First, check if there's already a newer binary installed locally.
 	// This allows us to immediately use an already-downloaded update without
 	// needing to check the network.
-	if execed, err := execLocalIfNewer(binPath, currentVersion); err != nil {
+	if execed, err := execLocalIfNewer(binPath, binName, currentVersion); err != nil {
 		log.Debug().Err(err).Msg("self-update: failed to check local binary")
 	} else if execed {
 		return true, nil
@@ -137,7 +144,7 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	log.Info().
 		Str("current", currentVersion).
 		Str("latest", release.Version).
-		Msg("new version of mql available, updating")
+		Msgf("new version of %s available, updating", cfg.BinaryName)
 
 	// Check if the bin directory is writable
 	if err := checkWritable(binPath); err != nil {
@@ -147,7 +154,7 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	}
 
 	// Download and install the update
-	binaryPath, err := downloadAndInstall(ctx, release, binPath)
+	binaryPath, err := downloadAndInstall(ctx, release, binPath, cfg.BinaryName)
 	if err != nil {
 		updateMarkerFile(binPath)
 		return false, errors.Wrap(err, "failed to download and install update")
@@ -175,18 +182,18 @@ func getBinPath() (string, error) {
 	return config.HomePath("bin")
 }
 
-// binaryName returns the mql binary name for the current platform
-func binaryName() string {
+// platformBinaryName returns the binary name with platform-specific extension
+func platformBinaryName(name string) string {
 	if runtime.GOOS == "windows" {
-		return "mql.exe"
+		return name + ".exe"
 	}
-	return "mql"
+	return name
 }
 
-// execLocalIfNewer checks if there's a newer mql binary already installed
+// execLocalIfNewer checks if there's a newer binary already installed
 // in the bin path. If so, it execs to that binary. Returns true if exec happened.
-func execLocalIfNewer(binPath, currentVersion string) (bool, error) {
-	localBinary := filepath.Join(binPath, binaryName())
+func execLocalIfNewer(binPath, binName, currentVersion string) (bool, error) {
+	localBinary := filepath.Join(binPath, binName)
 
 	// Check if local binary exists
 	if _, err := os.Stat(localBinary); err != nil {
@@ -216,7 +223,7 @@ func execLocalIfNewer(binPath, currentVersion string) (bool, error) {
 
 	log.Info().
 		Str("installed", localVersion).
-		Msg("auto-update: using the latest version of mql")
+		Msg("auto-update: using the latest installed version")
 	log.Debug().
 		Str("current", currentVersion).
 		Str("path", localBinary).
@@ -323,7 +330,7 @@ func getLatestRelease(ctx context.Context, releaseURL string) (*Release, error) 
 }
 
 // getPlatformFile finds the appropriate release file for the current platform
-func getPlatformFile(release *Release) *ReleaseFile {
+func getPlatformFile(release *Release, binaryName string) *ReleaseFile {
 	goos := runtime.GOOS
 	goarch := runtime.GOARCH
 
@@ -334,9 +341,9 @@ func getPlatformFile(release *Release) *ReleaseFile {
 	}
 
 	// Build the expected filename suffix
-	// Format: mql_<version>_<os>_<arch>.<ext>
+	// Format: <binary>_<version>_<os>_<arch>.<ext>
 	// Note: The Filename field in latest.json contains full URLs
-	suffix := fmt.Sprintf("mql_%s_%s_%s.%s", release.Version, goos, goarch, ext)
+	suffix := fmt.Sprintf("%s_%s_%s_%s.%s", binaryName, release.Version, goos, goarch, ext)
 
 	for i := range release.Files {
 		// Match by suffix since Filename is a full URL
@@ -349,8 +356,8 @@ func getPlatformFile(release *Release) *ReleaseFile {
 }
 
 // downloadAndInstall downloads and installs the release, returning the path to the new binary
-func downloadAndInstall(ctx context.Context, release *Release, destPath string) (string, error) {
-	file := getPlatformFile(release)
+func downloadAndInstall(ctx context.Context, release *Release, destPath string, binaryName string) (string, error) {
+	file := getPlatformFile(release, binaryName)
 	if file == nil {
 		return "", errors.Newf("no release file found for platform %s_%s", runtime.GOOS, runtime.GOARCH)
 	}
@@ -382,7 +389,7 @@ func downloadAndInstall(ctx context.Context, release *Release, destPath string) 
 	}
 
 	// Create a temporary file to store the download
-	tmpFile, err := os.CreateTemp("", "mql-update-*")
+	tmpFile, err := os.CreateTemp("", binaryName+"-update-*")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create temp file")
 	}
@@ -417,17 +424,17 @@ func downloadAndInstall(ctx context.Context, release *Release, destPath string) 
 	}
 	defer tmpArchive.Close()
 
-	var binaryName string
+	var extractedName string
 	if runtime.GOOS == "windows" {
-		binaryName, err = extractZip(tmpArchive, destPath, tmpPath)
+		extractedName, err = extractZip(tmpArchive, destPath, tmpPath, binaryName)
 	} else {
-		binaryName, err = extractTarGz(tmpArchive, destPath)
+		extractedName, err = extractTarGz(tmpArchive, destPath, binaryName)
 	}
 	if err != nil {
 		return "", errors.Wrap(err, "failed to extract archive")
 	}
 
-	binaryPath := filepath.Join(destPath, binaryName)
+	binaryPath := filepath.Join(destPath, extractedName)
 
 	// Set executable permissions on Unix
 	if runtime.GOOS != "windows" {
