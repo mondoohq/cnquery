@@ -136,16 +136,7 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			mqlVersionDestroyTtl = &v
 		}
 
-		var cmeDict map[string]interface{}
-		if cme := extractCustomerManagedEncryption(s); cme != nil {
-			cmeDict, err = convert.JsonToDict(mqlCustomerManagedEncryption{
-				KmsKeyName: cme.KmsKeyName,
-			})
-			if err != nil {
-				log.Error().Err(err).Str("secret", s.Name).Msg("failed to convert customer managed encryption")
-				continue
-			}
-		}
+		cmeKeys := extractCustomerManagedEncryptionKeys(s)
 
 		mqlSecret, err := CreateResource(g.MqlRuntime, "gcp.project.secretmanagerService.secret", map[string]*llx.RawData{
 			"projectId":                 llx.StringData(projectId),
@@ -161,7 +152,7 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			"versionAliases":            llx.DictData(versionAliasesDict),
 			"annotations":               llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
 			"versionDestroyTtl":         llx.TimeDataPtr(mqlVersionDestroyTtl),
-			"customerManagedEncryption": llx.DictData(cmeDict),
+			"customerManagedEncryption": llx.ArrayData(cmeKeys, types.String),
 		})
 		if err != nil {
 			return nil, err
@@ -287,8 +278,14 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) iamPolicy() ([]any, error) {
 // Helper types for dict conversion
 
 type mqlSecretReplication struct {
-	Type     string   `json:"type"`
-	Replicas []string `json:"replicas,omitempty"`
+	Type                      string                 `json:"type"`
+	CustomerManagedEncryption string                 `json:"customerManagedEncryption,omitempty"`
+	Replicas                  []mqlSecretReplicaInfo `json:"replicas,omitempty"`
+}
+
+type mqlSecretReplicaInfo struct {
+	Location                  string `json:"location"`
+	CustomerManagedEncryption string `json:"customerManagedEncryption,omitempty"`
 }
 
 type mqlSecretRotation struct {
@@ -296,53 +293,55 @@ type mqlSecretRotation struct {
 	RotationPeriod   string `json:"rotationPeriod,omitempty"`
 }
 
-type mqlCustomerManagedEncryption struct {
-	KmsKeyName string `json:"kmsKeyName"`
-}
-
 type mqlCustomerManagedEncryptionStatus struct {
 	KmsKeyVersionName string `json:"kmsKeyVersionName"`
 }
 
-// extractCustomerManagedEncryption returns the CMEK configuration from a secret,
+// extractCustomerManagedEncryptionKeys returns all CMEK key names from a secret,
 // checking all possible locations depending on replication type:
 // - Top-level Secret.CustomerManagedEncryption (regionalized secrets)
 // - Replication.Automatic.CustomerManagedEncryption (automatic replication)
 // - Replication.UserManaged.Replicas[].CustomerManagedEncryption (user-managed replication)
-func extractCustomerManagedEncryption(s *secretmanagerpb.Secret) *secretmanagerpb.CustomerManagedEncryption {
+func extractCustomerManagedEncryptionKeys(s *secretmanagerpb.Secret) []interface{} {
+	var keys []interface{}
 	if s.CustomerManagedEncryption != nil {
-		return s.CustomerManagedEncryption
+		keys = append(keys, s.CustomerManagedEncryption.KmsKeyName)
 	}
-	if s.Replication == nil {
-		return nil
-	}
-	if auto := s.Replication.GetAutomatic(); auto != nil && auto.CustomerManagedEncryption != nil {
-		return auto.CustomerManagedEncryption
-	}
-	if um := s.Replication.GetUserManaged(); um != nil {
-		for _, replica := range um.Replicas {
-			if replica.CustomerManagedEncryption != nil {
-				return replica.CustomerManagedEncryption
+	if s.Replication != nil {
+		if auto := s.Replication.GetAutomatic(); auto != nil && auto.CustomerManagedEncryption != nil {
+			keys = append(keys, auto.CustomerManagedEncryption.KmsKeyName)
+		}
+		if um := s.Replication.GetUserManaged(); um != nil {
+			for _, replica := range um.Replicas {
+				if replica.CustomerManagedEncryption != nil {
+					keys = append(keys, replica.CustomerManagedEncryption.KmsKeyName)
+				}
 			}
 		}
 	}
-	return nil
+	return keys
 }
 
 func secretReplicationToDict(r *secretmanagerpb.Replication) (map[string]interface{}, error) {
-	if r.GetAutomatic() != nil {
-		return convert.JsonToDict(mqlSecretReplication{
-			Type: "AUTOMATIC",
-		})
+	if auto := r.GetAutomatic(); auto != nil {
+		rep := mqlSecretReplication{Type: "AUTOMATIC"}
+		if auto.CustomerManagedEncryption != nil {
+			rep.CustomerManagedEncryption = auto.CustomerManagedEncryption.KmsKeyName
+		}
+		return convert.JsonToDict(rep)
 	}
 	if um := r.GetUserManaged(); um != nil {
-		locations := make([]string, 0, len(um.Replicas))
+		replicas := make([]mqlSecretReplicaInfo, 0, len(um.Replicas))
 		for _, replica := range um.Replicas {
-			locations = append(locations, replica.Location)
+			info := mqlSecretReplicaInfo{Location: replica.Location}
+			if replica.CustomerManagedEncryption != nil {
+				info.CustomerManagedEncryption = replica.CustomerManagedEncryption.KmsKeyName
+			}
+			replicas = append(replicas, info)
 		}
 		return convert.JsonToDict(mqlSecretReplication{
 			Type:     "USER_MANAGED",
-			Replicas: locations,
+			Replicas: replicas,
 		})
 	}
 	return nil, nil

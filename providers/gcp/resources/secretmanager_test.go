@@ -26,6 +26,25 @@ func TestSecretReplicationToDict_Automatic(t *testing.T) {
 	require.NotNil(t, result)
 	assert.Equal(t, "AUTOMATIC", result["type"])
 	assert.Nil(t, result["replicas"])
+	assert.Nil(t, result["customerManagedEncryption"])
+}
+
+func TestSecretReplicationToDict_AutomaticWithCMEK(t *testing.T) {
+	r := &secretmanagerpb.Replication{
+		Replication: &secretmanagerpb.Replication_Automatic_{
+			Automatic: &secretmanagerpb.Replication_Automatic{
+				CustomerManagedEncryption: &secretmanagerpb.CustomerManagedEncryption{
+					KmsKeyName: "projects/p/locations/global/keyRings/kr/cryptoKeys/key1",
+				},
+			},
+		},
+	}
+
+	result, err := secretReplicationToDict(r)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Equal(t, "AUTOMATIC", result["type"])
+	assert.Equal(t, "projects/p/locations/global/keyRings/kr/cryptoKeys/key1", result["customerManagedEncryption"])
 }
 
 func TestSecretReplicationToDict_UserManaged(t *testing.T) {
@@ -46,7 +65,49 @@ func TestSecretReplicationToDict_UserManaged(t *testing.T) {
 	assert.Equal(t, "USER_MANAGED", result["type"])
 	replicas, ok := result["replicas"].([]interface{})
 	require.True(t, ok)
-	assert.Equal(t, []interface{}{"us-east1", "europe-west1"}, replicas)
+	require.Len(t, replicas, 2)
+	r0 := replicas[0].(map[string]interface{})
+	assert.Equal(t, "us-east1", r0["location"])
+	assert.Nil(t, r0["customerManagedEncryption"])
+	r1 := replicas[1].(map[string]interface{})
+	assert.Equal(t, "europe-west1", r1["location"])
+}
+
+func TestSecretReplicationToDict_UserManagedWithCMEK(t *testing.T) {
+	r := &secretmanagerpb.Replication{
+		Replication: &secretmanagerpb.Replication_UserManaged_{
+			UserManaged: &secretmanagerpb.Replication_UserManaged{
+				Replicas: []*secretmanagerpb.Replication_UserManaged_Replica{
+					{
+						Location: "us-east1",
+						CustomerManagedEncryption: &secretmanagerpb.CustomerManagedEncryption{
+							KmsKeyName: "projects/p/locations/us-east1/keyRings/kr/cryptoKeys/key-a",
+						},
+					},
+					{
+						Location: "eu-west1",
+						CustomerManagedEncryption: &secretmanagerpb.CustomerManagedEncryption{
+							KmsKeyName: "projects/p/locations/eu-west1/keyRings/kr/cryptoKeys/key-b",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, err := secretReplicationToDict(r)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Equal(t, "USER_MANAGED", result["type"])
+	replicas, ok := result["replicas"].([]interface{})
+	require.True(t, ok)
+	require.Len(t, replicas, 2)
+	r0 := replicas[0].(map[string]interface{})
+	assert.Equal(t, "us-east1", r0["location"])
+	assert.Equal(t, "projects/p/locations/us-east1/keyRings/kr/cryptoKeys/key-a", r0["customerManagedEncryption"])
+	r1 := replicas[1].(map[string]interface{})
+	assert.Equal(t, "eu-west1", r1["location"])
+	assert.Equal(t, "projects/p/locations/eu-west1/keyRings/kr/cryptoKeys/key-b", r1["customerManagedEncryption"])
 }
 
 func TestSecretReplicationToDict_Nil(t *testing.T) {
@@ -57,16 +118,15 @@ func TestSecretReplicationToDict_Nil(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-func TestExtractCustomerManagedEncryption(t *testing.T) {
+func TestExtractCustomerManagedEncryptionKeys(t *testing.T) {
 	t.Run("top-level CMEK", func(t *testing.T) {
 		s := &secretmanagerpb.Secret{
 			CustomerManagedEncryption: &secretmanagerpb.CustomerManagedEncryption{
 				KmsKeyName: "projects/p/locations/global/keyRings/kr/cryptoKeys/key1",
 			},
 		}
-		cme := extractCustomerManagedEncryption(s)
-		require.NotNil(t, cme)
-		assert.Equal(t, "projects/p/locations/global/keyRings/kr/cryptoKeys/key1", cme.KmsKeyName)
+		keys := extractCustomerManagedEncryptionKeys(s)
+		assert.Equal(t, []interface{}{"projects/p/locations/global/keyRings/kr/cryptoKeys/key1"}, keys)
 	})
 
 	t.Run("automatic replication CMEK", func(t *testing.T) {
@@ -81,12 +141,11 @@ func TestExtractCustomerManagedEncryption(t *testing.T) {
 				},
 			},
 		}
-		cme := extractCustomerManagedEncryption(s)
-		require.NotNil(t, cme)
-		assert.Equal(t, "projects/p/locations/global/keyRings/kr/cryptoKeys/key2", cme.KmsKeyName)
+		keys := extractCustomerManagedEncryptionKeys(s)
+		assert.Equal(t, []interface{}{"projects/p/locations/global/keyRings/kr/cryptoKeys/key2"}, keys)
 	})
 
-	t.Run("user-managed replication CMEK", func(t *testing.T) {
+	t.Run("user-managed replication with multiple CMEK keys", func(t *testing.T) {
 		s := &secretmanagerpb.Secret{
 			Replication: &secretmanagerpb.Replication{
 				Replication: &secretmanagerpb.Replication_UserManaged_{
@@ -95,18 +154,26 @@ func TestExtractCustomerManagedEncryption(t *testing.T) {
 							{
 								Location: "us-east1",
 								CustomerManagedEncryption: &secretmanagerpb.CustomerManagedEncryption{
-									KmsKeyName: "projects/p/locations/us-east1/keyRings/kr/cryptoKeys/key3",
+									KmsKeyName: "projects/p/locations/us-east1/keyRings/kr/cryptoKeys/key-a",
 								},
 							},
-							{Location: "europe-west1"},
+							{
+								Location: "eu-west1",
+								CustomerManagedEncryption: &secretmanagerpb.CustomerManagedEncryption{
+									KmsKeyName: "projects/p/locations/eu-west1/keyRings/kr/cryptoKeys/key-b",
+								},
+							},
+							{Location: "asia-east1"},
 						},
 					},
 				},
 			},
 		}
-		cme := extractCustomerManagedEncryption(s)
-		require.NotNil(t, cme)
-		assert.Equal(t, "projects/p/locations/us-east1/keyRings/kr/cryptoKeys/key3", cme.KmsKeyName)
+		keys := extractCustomerManagedEncryptionKeys(s)
+		assert.Equal(t, []interface{}{
+			"projects/p/locations/us-east1/keyRings/kr/cryptoKeys/key-a",
+			"projects/p/locations/eu-west1/keyRings/kr/cryptoKeys/key-b",
+		}, keys)
 	})
 
 	t.Run("no CMEK anywhere", func(t *testing.T) {
@@ -117,32 +184,12 @@ func TestExtractCustomerManagedEncryption(t *testing.T) {
 				},
 			},
 		}
-		assert.Nil(t, extractCustomerManagedEncryption(s))
+		assert.Nil(t, extractCustomerManagedEncryptionKeys(s))
 	})
 
 	t.Run("nil replication", func(t *testing.T) {
 		s := &secretmanagerpb.Secret{}
-		assert.Nil(t, extractCustomerManagedEncryption(s))
-	})
-
-	t.Run("top-level takes precedence over replication", func(t *testing.T) {
-		s := &secretmanagerpb.Secret{
-			CustomerManagedEncryption: &secretmanagerpb.CustomerManagedEncryption{
-				KmsKeyName: "projects/p/locations/global/keyRings/kr/cryptoKeys/top-level",
-			},
-			Replication: &secretmanagerpb.Replication{
-				Replication: &secretmanagerpb.Replication_Automatic_{
-					Automatic: &secretmanagerpb.Replication_Automatic{
-						CustomerManagedEncryption: &secretmanagerpb.CustomerManagedEncryption{
-							KmsKeyName: "projects/p/locations/global/keyRings/kr/cryptoKeys/auto",
-						},
-					},
-				},
-			},
-		}
-		cme := extractCustomerManagedEncryption(s)
-		require.NotNil(t, cme)
-		assert.Equal(t, "projects/p/locations/global/keyRings/kr/cryptoKeys/top-level", cme.KmsKeyName)
+		assert.Nil(t, extractCustomerManagedEncryptionKeys(s))
 	})
 }
 

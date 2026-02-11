@@ -3292,8 +3292,8 @@ private gcp.project.secretmanagerService.secret @defaults("name created") {
   annotations map[string]string
   // Version destroy TTL duration
   versionDestroyTtl time
-  // Customer-managed encryption key configuration
-  customerManagedEncryption dict
+  // Customer-managed encryption key names from all replication locations
+  customerManagedEncryption []string
   // List of secret versions
   versions() []gcp.project.secretmanagerService.secret.version
   // IAM policy for this secret

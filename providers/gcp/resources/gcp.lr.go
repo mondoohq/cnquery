@@ -4833,7 +4833,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetVersionDestroyTtl()).ToDataRes(types.Time)
 	},
 	"gcp.project.secretmanagerService.secret.customerManagedEncryption": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetCustomerManagedEncryption()).ToDataRes(types.Dict)
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetCustomerManagedEncryption()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.secretmanagerService.secret.versions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetVersions()).ToDataRes(types.Array(types.Resource("gcp.project.secretmanagerService.secret.version")))
@@ -10801,7 +10801,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.secretmanagerService.secret.customerManagedEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectSecretmanagerServiceSecret).CustomerManagedEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).CustomerManagedEncryption, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.secretmanagerService.secret.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24908,7 +24908,7 @@ type mqlGcpProjectSecretmanagerServiceSecret struct {
 	VersionAliases            plugin.TValue[any]
 	Annotations               plugin.TValue[map[string]any]
 	VersionDestroyTtl         plugin.TValue[*time.Time]
-	CustomerManagedEncryption plugin.TValue[any]
+	CustomerManagedEncryption plugin.TValue[[]any]
 	Versions                  plugin.TValue[[]any]
 	IamPolicy                 plugin.TValue[[]any]
 }
@@ -25002,7 +25002,7 @@ func (c *mqlGcpProjectSecretmanagerServiceSecret) GetVersionDestroyTtl() *plugin
 	return &c.VersionDestroyTtl
 }
 
-func (c *mqlGcpProjectSecretmanagerServiceSecret) GetCustomerManagedEncryption() *plugin.TValue[any] {
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetCustomerManagedEncryption() *plugin.TValue[[]any] {
 	return &c.CustomerManagedEncryption
 }
 
