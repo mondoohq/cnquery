@@ -129,6 +129,7 @@ Pids
 portgroup
 posix
 postgre
+psc
 pushconfig
 querypack
 ratebasedstatement

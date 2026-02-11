@@ -32,19 +32,21 @@ const (
 	DiscoveryProjects     = "projects"
 
 	// resources
-	DiscoverCloudDNSZones       = "cloud-dns-zones"
-	DiscoverCloudKMSKeyrings    = "cloud-kms-keyrings"
-	DiscoverCloudSQLMySQL       = "cloud-sql-mysql"
-	DiscoverCloudSQLPostgreSQL  = "cloud-sql-postgresql"
-	DiscoverCloudSQLSQLServer   = "cloud-sql-sqlserver"
-	DiscoveryBigQueryDatasets   = "bigquery-datasets"
-	DiscoveryComputeFirewalls   = "compute-firewalls"
-	DiscoveryComputeImages      = "compute-images"
-	DiscoveryComputeNetworks    = "compute-networks"
-	DiscoveryComputeSubnetworks = "compute-subnetworks"
-	DiscoveryGkeClusters        = "gke-clusters"
-	DiscoveryComputeInstances   = "instances"
-	DiscoveryStorageBuckets     = "storage-buckets"
+	DiscoverCloudDNSZones           = "cloud-dns-zones"
+	DiscoverCloudKMSKeyrings        = "cloud-kms-keyrings"
+	DiscoverMemorystoreRedis        = "memorystore-redis"
+	DiscoverMemorystoreRedisCluster = "memorystore-rediscluster"
+	DiscoverCloudSQLMySQL           = "cloud-sql-mysql"
+	DiscoverCloudSQLPostgreSQL      = "cloud-sql-postgresql"
+	DiscoverCloudSQLSQLServer       = "cloud-sql-sqlserver"
+	DiscoveryBigQueryDatasets       = "bigquery-datasets"
+	DiscoveryComputeFirewalls       = "compute-firewalls"
+	DiscoveryComputeImages          = "compute-images"
+	DiscoveryComputeNetworks        = "compute-networks"
+	DiscoveryComputeSubnetworks     = "compute-subnetworks"
+	DiscoveryGkeClusters            = "gke-clusters"
+	DiscoveryComputeInstances       = "instances"
+	DiscoveryStorageBuckets         = "storage-buckets"
 )
 
 var All = []string{
@@ -73,6 +75,8 @@ var Auto = []string{
 	DiscoverCloudSQLSQLServer,
 	DiscoverCloudDNSZones,
 	DiscoverCloudKMSKeyrings,
+	DiscoverMemorystoreRedis,
+	DiscoverMemorystoreRedisCluster,
 	DiscoveryComputeInstances,
 }
 
@@ -89,6 +93,8 @@ var AllAPIResources = []string{
 	DiscoverCloudSQLSQLServer,
 	DiscoverCloudDNSZones,
 	DiscoverCloudKMSKeyrings,
+	DiscoverMemorystoreRedis,
+	DiscoverMemorystoreRedisCluster,
 	DiscoveryComputeInstances,
 }
 
@@ -550,6 +556,82 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverMemorystoreRedis) {
+		redisService := gcpProject.GetRedis()
+		if redisService.Error != nil {
+			return nil, redisService.Error
+		}
+		redisInstances := redisService.Data.GetInstances()
+		if redisInstances.Error != nil {
+			return nil, redisInstances.Error
+		}
+
+		for i := range redisInstances.Data {
+			redisInstance := redisInstances.Data[i].(*mqlGcpProjectRedisServiceInstance)
+
+			// Extract instance name from full resource path
+			// (projects/{project}/locations/{location}/instances/{instance_id})
+			nameParts := strings.Split(redisInstance.Name.Data, "/")
+			instanceName := nameParts[len(nameParts)-1]
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("memorystore", gcpProject.Id.Data, redisInstance.LocationId.Data, "redis", instanceName),
+				},
+				Name: instanceName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-memorystore-redis",
+					Title:                 connection.GetTitleForPlatformName("gcp-memorystore-redis"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("memorystore", gcpProject.Id.Data, redisInstance.LocationId.Data, "redis", instanceName),
+				},
+				Labels:      map[string]string{},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverMemorystoreRedisCluster) {
+		redisService := gcpProject.GetRedis()
+		if redisService.Error != nil {
+			return nil, redisService.Error
+		}
+		redisClusters := redisService.Data.GetClusters()
+		if redisClusters.Error != nil {
+			return nil, redisClusters.Error
+		}
+
+		for i := range redisClusters.Data {
+			redisCluster := redisClusters.Data[i].(*mqlGcpProjectRedisServiceCluster)
+
+			// Extract cluster name and location from full resource path
+			// (projects/{project}/locations/{location}/clusters/{cluster_id})
+			nameParts := strings.Split(redisCluster.Name.Data, "/")
+			clusterName := nameParts[len(nameParts)-1]
+			var location string
+			if len(nameParts) >= 4 {
+				location = nameParts[3]
+			}
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("memorystore", gcpProject.Id.Data, location, "rediscluster", clusterName),
+				},
+				Name: clusterName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-memorystore-rediscluster",
+					Title:                 connection.GetTitleForPlatformName("gcp-memorystore-rediscluster"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("memorystore", gcpProject.Id.Data, location, "rediscluster", clusterName),
+				},
+				Labels:      map[string]string{},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 			})
 		}
 	}

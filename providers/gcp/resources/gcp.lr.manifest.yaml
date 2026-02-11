@@ -2125,8 +2125,81 @@ resources:
       url: https://cloud.google.com/pubsub/docs/monitor-topic
   gcp.project.redisService:
     fields:
+      clusters: {}
       instances: {}
       projectId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.cluster:
+    fields:
+      authorizationMode: {}
+      automatedBackupConfig: {}
+      backupCollection: {}
+      createTime: {}
+      crossClusterReplicationConfig: {}
+      deletionProtectionEnabled: {}
+      discoveryEndpoints: {}
+      encryptionInfo: {}
+      kmsKey: {}
+      maintenancePolicy: {}
+      maintenanceSchedule: {}
+      name: {}
+      nodeType: {}
+      persistenceConfig: {}
+      preciseSizeGb: {}
+      projectId: {}
+      pscConfigs: {}
+      pscConnections: {}
+      redisConfigs: {}
+      replicaCount: {}
+      shardCount: {}
+      sizeGb: {}
+      state: {}
+      transitEncryptionMode: {}
+      uid: {}
+      zoneDistributionConfig: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.cluster.discoveryEndpoint:
+    fields:
+      address: {}
+      clusterName: {}
+      network: {}
+      port: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.cluster.pscConfig:
+    fields:
+      clusterName: {}
+      network: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.cluster.pscConnection:
+    fields:
+      address: {}
+      clusterName: {}
+      connectionProjectId: {}
+      connectionType: {}
+      forwardingRule: {}
+      network: {}
+      projectId: {}
+      pscConnectionId: {}
+      pscConnectionStatus: {}
+      serviceAttachment: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
@@ -2135,6 +2208,7 @@ resources:
   gcp.project.redisService.instance:
     fields:
       AuthorizedNetwork: {}
+      alternativeLocationId: {}
       authEnabled: {}
       availableMaintenanceVersions: {}
       connectMode: {}
@@ -2145,22 +2219,30 @@ resources:
       host: {}
       labels: {}
       locationId: {}
+      maintenancePolicy: {}
+      maintenanceSchedule: {}
       maintenanceVersion: {}
       memorySizeGb: {}
       name: {}
       nodes: {}
+      persistenceConfig: {}
       persistenceIamIdentity: {}
       port: {}
       projectId: {}
       readEndpoint: {}
       readEndpointPort: {}
+      readReplicasMode: {}
       redisConfigs: {}
       redisVersion: {}
       replicaCount: {}
       reservedIpRange: {}
       secondaryIpRange: {}
+      serverCaCerts: {}
       state: {}
       statusMessage: {}
+      suspensionReasons: {}
+      tier: {}
+      transitEncryptionMode: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
@@ -2171,6 +2253,19 @@ resources:
       id: {}
       projectId: {}
       zone: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.instance.serverCaCert:
+    fields:
+      cert: {}
+      createTime: {}
+      expireTime: {}
+      projectId: {}
+      serialNumber: {}
+      sha1Fingerprint: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
