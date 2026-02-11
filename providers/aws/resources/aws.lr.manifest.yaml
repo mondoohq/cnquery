@@ -4526,7 +4526,7 @@ resources:
       mapPublicIpOnLaunch: {}
       name: {}
       region: {}
-      routeTables: {}
+      routeTable: {}
       state: {}
       tags: {}
     is_private: true

@@ -1571,8 +1571,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.subnet.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcSubnet).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"aws.vpc.subnet.routeTables": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVpcSubnet).GetRouteTables()).ToDataRes(types.Array(types.Resource("aws.vpc.routetable")))
+	"aws.vpc.subnet.routeTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetRouteTable()).ToDataRes(types.Resource("aws.vpc.routetable"))
 	},
 	"aws.vpc.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetId()).ToDataRes(types.String)
@@ -7674,8 +7674,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcSubnet).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"aws.vpc.subnet.routeTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVpcSubnet).RouteTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.vpc.subnet.routeTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).RouteTable, ok = plugin.RawToTValue[*mqlAwsVpcRoutetable](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17219,7 +17219,7 @@ type mqlAwsVpcSubnet struct {
 	AvailableIpAddressCount     plugin.TValue[int64]
 	InternetGatewayBlockMode    plugin.TValue[string]
 	Tags                        plugin.TValue[map[string]any]
-	RouteTables                 plugin.TValue[[]any]
+	RouteTable                  plugin.TValue[*mqlAwsVpcRoutetable]
 }
 
 // createAwsVpcSubnet creates a new instance of this resource
@@ -17311,19 +17311,19 @@ func (c *mqlAwsVpcSubnet) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
-func (c *mqlAwsVpcSubnet) GetRouteTables() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.RouteTables, func() ([]any, error) {
+func (c *mqlAwsVpcSubnet) GetRouteTable() *plugin.TValue[*mqlAwsVpcRoutetable] {
+	return plugin.GetOrCompute[*mqlAwsVpcRoutetable](&c.RouteTable, func() (*mqlAwsVpcRoutetable, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.subnet", c.__id, "routeTables")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.subnet", c.__id, "routeTable")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.([]any), nil
+				return d.Value.(*mqlAwsVpcRoutetable), nil
 			}
 		}
 
-		return c.routeTables()
+		return c.routeTable()
 	})
 }
 

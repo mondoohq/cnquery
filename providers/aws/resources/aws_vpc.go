@@ -698,7 +698,7 @@ type mqlAwsVpcSubnetInternal struct {
 	cacheVpcId string
 }
 
-func (a *mqlAwsVpcSubnet) routeTables() ([]any, error) {
+func (a *mqlAwsVpcSubnet) routeTable() (*mqlAwsVpcRoutetable, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	region := a.Region.Data
 	subnetId := a.Id.Data
@@ -706,7 +706,6 @@ func (a *mqlAwsVpcSubnet) routeTables() ([]any, error) {
 
 	svc := conn.Ec2(region)
 	ctx := context.Background()
-	res := []any{}
 
 	// If we don't have the VPC ID cached, we need to look it up
 	if vpcId == "" {
@@ -722,7 +721,8 @@ func (a *mqlAwsVpcSubnet) routeTables() ([]any, error) {
 	}
 
 	if vpcId == "" {
-		return res, nil
+		a.RouteTable.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
 
 	// Get all route tables for this VPC
@@ -741,21 +741,21 @@ func (a *mqlAwsVpcSubnet) routeTables() ([]any, error) {
 		}
 
 		for i := range routeTables.RouteTables {
-			routeTable := routeTables.RouteTables[i]
-			for _, assoc := range routeTable.Associations {
+			rt := routeTables.RouteTables[i]
+			for _, assoc := range rt.Associations {
 				// Check if this is the main route table
 				if assoc.Main != nil && *assoc.Main {
-					mainRouteTable = &routeTable
+					mainRouteTable = &rt
 				}
 				// Check if this route table has an explicit association with our subnet
 				if assoc.SubnetId != nil && *assoc.SubnetId == subnetId {
-					explicitRouteTable = &routeTable
+					explicitRouteTable = &rt
 				}
 			}
 		}
 	}
 
-	// Use explicit association if exists, otherwise use main route table
+	// Use explicit association if exists, otherwise fall back to main route table
 	var routeTableToReturn *vpctypes.RouteTable
 	if explicitRouteTable != nil {
 		routeTableToReturn = explicitRouteTable
@@ -763,27 +763,28 @@ func (a *mqlAwsVpcSubnet) routeTables() ([]any, error) {
 		routeTableToReturn = mainRouteTable
 	}
 
-	if routeTableToReturn != nil {
-		dictRoutes, err := convert.JsonToDictSlice(routeTableToReturn.Routes)
-		if err != nil {
-			return nil, err
-		}
-		mqlRouteTable, err := CreateResource(a.MqlRuntime, ResourceAwsVpcRoutetable,
-			map[string]*llx.RawData{
-				"arn":    llx.StringData(fmt.Sprintf(routeTableArnPattern, region, conn.AccountId(), convert.ToValue(routeTableToReturn.RouteTableId))),
-				"id":     llx.StringDataPtr(routeTableToReturn.RouteTableId),
-				"region": llx.StringData(region),
-				"routes": llx.ArrayData(dictRoutes, types.Any),
-				"tags":   llx.MapData(toInterfaceMap(ec2TagsToMap(routeTableToReturn.Tags)), types.String),
-			})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlRouteTable)
-		mqlRouteTable.(*mqlAwsVpcRoutetable).cacheAssociations = routeTableToReturn.Associations
+	if routeTableToReturn == nil {
+		a.RouteTable.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
 
-	return res, nil
+	dictRoutes, err := convert.JsonToDictSlice(routeTableToReturn.Routes)
+	if err != nil {
+		return nil, err
+	}
+	mqlRouteTable, err := CreateResource(a.MqlRuntime, ResourceAwsVpcRoutetable,
+		map[string]*llx.RawData{
+			"arn":    llx.StringData(fmt.Sprintf(routeTableArnPattern, region, conn.AccountId(), convert.ToValue(routeTableToReturn.RouteTableId))),
+			"id":     llx.StringDataPtr(routeTableToReturn.RouteTableId),
+			"region": llx.StringData(region),
+			"routes": llx.ArrayData(dictRoutes, types.Any),
+			"tags":   llx.MapData(toInterfaceMap(ec2TagsToMap(routeTableToReturn.Tags)), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlRouteTable.(*mqlAwsVpcRoutetable).cacheAssociations = routeTableToReturn.Associations
+	return mqlRouteTable.(*mqlAwsVpcRoutetable), nil
 }
 
 func (a *mqlAwsVpc) subnets() ([]any, error) {

@@ -189,8 +189,8 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   internetGatewayBlockMode string
   // Tags on the subnet
   tags map[string]string
-  // Route tables associated with this subnet
-  routeTables() []aws.vpc.routetable
+  // Route table associated with this subnet
+  routeTable() aws.vpc.routetable
 }
 
 // Amazon Virtual Private Cloud (VPC) endpoint
