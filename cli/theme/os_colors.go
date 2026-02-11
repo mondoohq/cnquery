@@ -24,8 +24,6 @@ var OperatingSystemTheme = &Theme{
 		res := w.String()
 		return res[0 : len(res)-1]
 	},
-	Landing:       termenv.String(logo).Foreground(colors.DefaultColorTheme.Primary).String(),
-	Welcome:       logo + " interactive shell\n",
-	Prefix:        "mql> ",
+	Landing:       termenv.String(Logo).Foreground(colors.DefaultColorTheme.Primary).String(),
 	PolicyPrinter: printer.DefaultPrinter,
 }

@@ -6,6 +6,7 @@ package shell
 import (
 	"github.com/charmbracelet/lipgloss"
 	"go.mondoo.com/mql/v13/cli/printer"
+	"go.mondoo.com/mql/v13/cli/theme"
 )
 
 // ShellTheme defines the visual appearance of the shell
@@ -106,21 +107,12 @@ var DefaultShellTheme = &ShellTheme{
 		Foreground(colorDisabled),
 
 	// Text
-	Welcome: logo + " interactive shell\n",
+	Welcome: "\n" + theme.Logo + "\n interactive shell\n",
 	Prefix:  "> ",
 
 	// Printer
 	PolicyPrinter: printer.DefaultPrinter,
 }
-
-// logo for the shell
-const logo = `
-  ___ _ __   __ _ _   _  ___ _ __ _   _
- / __| '_ \ / _` + "`" + ` | | | |/ _ \ '__| | | |
-| (__| | | | (_| | |_| |  __/ |  | |_| |
- \___|_| |_|\__, |\__,_|\___|_|   \__, |
-  mondoo™      |_|                |___/
-`
 
 // Error formats a string as an error message
 func (t *ShellTheme) ErrorText(s string) string {

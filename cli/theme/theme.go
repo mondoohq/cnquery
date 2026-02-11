@@ -17,8 +17,6 @@ type Theme struct {
 
 	List          func(...string) string
 	Landing       string
-	Welcome       string
-	Prefix        string
 	PolicyPrinter printer.Printer
 }
 
