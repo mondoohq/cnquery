@@ -154,6 +154,8 @@ const (
 	ResourceMacosSystemExtension       string = "macos.systemExtension"
 	ResourceSafari                     string = "safari"
 	ResourceSafariExtension            string = "safari.extension"
+	ResourceLaunchd                    string = "launchd"
+	ResourceLaunchdJob                 string = "launchd.job"
 	ResourceWindowsHotfix              string = "windows.hotfix"
 	ResourceWindowsFeature             string = "windows.feature"
 	ResourceWindowsServerFeature       string = "windows.serverFeature"
@@ -736,6 +738,14 @@ func init() {
 		"safari.extension": {
 			// to override args, implement: initSafariExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSafariExtension,
+		},
+		"launchd": {
+			Init:   initLaunchd,
+			Create: createLaunchd,
+		},
+		"launchd.job": {
+			// to override args, implement: initLaunchdJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLaunchdJob,
 		},
 		"windows.hotfix": {
 			Init:   initWindowsHotfix,
@@ -2927,6 +2937,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"safari.extension.containerAppName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSafariExtension).GetContainerAppName()).ToDataRes(types.String)
+	},
+	"launchd.jobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchd).GetJobs()).ToDataRes(types.Array(types.Resource("launchd.job")))
+	},
+	"launchd.job.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetLabel()).ToDataRes(types.String)
+	},
+	"launchd.job.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetPath()).ToDataRes(types.String)
+	},
+	"launchd.job.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetType()).ToDataRes(types.String)
+	},
+	"launchd.job.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetSource()).ToDataRes(types.String)
+	},
+	"launchd.job.runAtLoad": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetRunAtLoad()).ToDataRes(types.Bool)
+	},
+	"launchd.job.program": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetProgram()).ToDataRes(types.String)
+	},
+	"launchd.job.programArguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetProgramArguments()).ToDataRes(types.Array(types.String))
+	},
+	"launchd.job.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"launchd.job.keepAlive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetKeepAlive()).ToDataRes(types.Dict)
+	},
+	"launchd.job.workingDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetWorkingDirectory()).ToDataRes(types.String)
+	},
+	"launchd.job.environmentVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetEnvironmentVariables()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"launchd.job.userName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetUserName()).ToDataRes(types.String)
+	},
+	"launchd.job.groupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetGroupName()).ToDataRes(types.String)
+	},
+	"launchd.job.processType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetProcessType()).ToDataRes(types.String)
+	},
+	"launchd.job.startInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetStartInterval()).ToDataRes(types.Int)
+	},
+	"launchd.job.startCalendarInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetStartCalendarInterval()).ToDataRes(types.Array(types.Dict))
+	},
+	"launchd.job.sockets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetSockets()).ToDataRes(types.Dict)
+	},
+	"launchd.job.machServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetMachServices()).ToDataRes(types.Dict)
+	},
+	"launchd.job.watchPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetWatchPaths()).ToDataRes(types.Array(types.String))
+	},
+	"launchd.job.stdoutPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetStdoutPath()).ToDataRes(types.String)
+	},
+	"launchd.job.stderrPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetStderrPath()).ToDataRes(types.String)
+	},
+	"launchd.job.rootDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetRootDirectory()).ToDataRes(types.String)
+	},
+	"launchd.job.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"launchd.job.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetContent()).ToDataRes(types.Dict)
 	},
 	"windows.hotfix.hotfixId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsHotfix).GetHotfixId()).ToDataRes(types.String)
@@ -6662,6 +6747,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"safari.extension.containerAppName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSafariExtension).ContainerAppName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchd).__id, ok = v.Value.(string)
+		return
+	},
+	"launchd.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchd).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"launchd.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).__id, ok = v.Value.(string)
+		return
+	},
+	"launchd.job.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.runAtLoad": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).RunAtLoad, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"launchd.job.program": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).Program, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.programArguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).ProgramArguments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"launchd.job.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"launchd.job.keepAlive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).KeepAlive, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"launchd.job.workingDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).WorkingDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.environmentVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).EnvironmentVariables, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"launchd.job.userName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).UserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.groupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).GroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.processType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).ProcessType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.startInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).StartInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"launchd.job.startCalendarInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).StartCalendarInterval, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"launchd.job.sockets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).Sockets, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"launchd.job.machServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).MachServices, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"launchd.job.watchPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).WatchPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"launchd.job.stdoutPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).StdoutPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.stderrPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).StderrPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.rootDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).RootDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"launchd.job.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).Content, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"windows.hotfix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18678,6 +18871,231 @@ func (c *mqlSafariExtension) GetContainerAppPath() *plugin.TValue[string] {
 
 func (c *mqlSafariExtension) GetContainerAppName() *plugin.TValue[string] {
 	return &c.ContainerAppName
+}
+
+// mqlLaunchd for the launchd resource
+type mqlLaunchd struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLaunchdInternal it will be used here
+	Jobs plugin.TValue[[]any]
+}
+
+// createLaunchd creates a new instance of this resource
+func createLaunchd(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLaunchd{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("launchd", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLaunchd) MqlName() string {
+	return "launchd"
+}
+
+func (c *mqlLaunchd) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLaunchd) GetJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("launchd", c.__id, "jobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.jobs()
+	})
+}
+
+// mqlLaunchdJob for the launchd.job resource
+type mqlLaunchdJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLaunchdJobInternal it will be used here
+	Label                 plugin.TValue[string]
+	Path                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	Source                plugin.TValue[string]
+	RunAtLoad             plugin.TValue[bool]
+	Program               plugin.TValue[string]
+	ProgramArguments      plugin.TValue[[]any]
+	Disabled              plugin.TValue[bool]
+	KeepAlive             plugin.TValue[any]
+	WorkingDirectory      plugin.TValue[string]
+	EnvironmentVariables  plugin.TValue[map[string]any]
+	UserName              plugin.TValue[string]
+	GroupName             plugin.TValue[string]
+	ProcessType           plugin.TValue[string]
+	StartInterval         plugin.TValue[int64]
+	StartCalendarInterval plugin.TValue[[]any]
+	Sockets               plugin.TValue[any]
+	MachServices          plugin.TValue[any]
+	WatchPaths            plugin.TValue[[]any]
+	StdoutPath            plugin.TValue[string]
+	StderrPath            plugin.TValue[string]
+	RootDirectory         plugin.TValue[string]
+	File                  plugin.TValue[*mqlFile]
+	Content               plugin.TValue[any]
+}
+
+// createLaunchdJob creates a new instance of this resource
+func createLaunchdJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLaunchdJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("launchd.job", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLaunchdJob) MqlName() string {
+	return "launchd.job"
+}
+
+func (c *mqlLaunchdJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLaunchdJob) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlLaunchdJob) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlLaunchdJob) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlLaunchdJob) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlLaunchdJob) GetRunAtLoad() *plugin.TValue[bool] {
+	return &c.RunAtLoad
+}
+
+func (c *mqlLaunchdJob) GetProgram() *plugin.TValue[string] {
+	return &c.Program
+}
+
+func (c *mqlLaunchdJob) GetProgramArguments() *plugin.TValue[[]any] {
+	return &c.ProgramArguments
+}
+
+func (c *mqlLaunchdJob) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlLaunchdJob) GetKeepAlive() *plugin.TValue[any] {
+	return &c.KeepAlive
+}
+
+func (c *mqlLaunchdJob) GetWorkingDirectory() *plugin.TValue[string] {
+	return &c.WorkingDirectory
+}
+
+func (c *mqlLaunchdJob) GetEnvironmentVariables() *plugin.TValue[map[string]any] {
+	return &c.EnvironmentVariables
+}
+
+func (c *mqlLaunchdJob) GetUserName() *plugin.TValue[string] {
+	return &c.UserName
+}
+
+func (c *mqlLaunchdJob) GetGroupName() *plugin.TValue[string] {
+	return &c.GroupName
+}
+
+func (c *mqlLaunchdJob) GetProcessType() *plugin.TValue[string] {
+	return &c.ProcessType
+}
+
+func (c *mqlLaunchdJob) GetStartInterval() *plugin.TValue[int64] {
+	return &c.StartInterval
+}
+
+func (c *mqlLaunchdJob) GetStartCalendarInterval() *plugin.TValue[[]any] {
+	return &c.StartCalendarInterval
+}
+
+func (c *mqlLaunchdJob) GetSockets() *plugin.TValue[any] {
+	return &c.Sockets
+}
+
+func (c *mqlLaunchdJob) GetMachServices() *plugin.TValue[any] {
+	return &c.MachServices
+}
+
+func (c *mqlLaunchdJob) GetWatchPaths() *plugin.TValue[[]any] {
+	return &c.WatchPaths
+}
+
+func (c *mqlLaunchdJob) GetStdoutPath() *plugin.TValue[string] {
+	return &c.StdoutPath
+}
+
+func (c *mqlLaunchdJob) GetStderrPath() *plugin.TValue[string] {
+	return &c.StderrPath
+}
+
+func (c *mqlLaunchdJob) GetRootDirectory() *plugin.TValue[string] {
+	return &c.RootDirectory
+}
+
+func (c *mqlLaunchdJob) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlLaunchdJob) GetContent() *plugin.TValue[any] {
+	return &c.Content
 }
 
 // mqlWindowsHotfix for the windows.hotfix resource
