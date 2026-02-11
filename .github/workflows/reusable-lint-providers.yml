@@ -1,0 +1,56 @@
+name: Lint Providers
+
+on:
+  workflow_call:
+    inputs:
+      only-new-issues:
+        description: 'Only report new issues (requires pull-requests: read permission at caller workflow level)'
+        type: boolean
+        default: false
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Import environment variables from file
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version: ">=${{ env.golang-version }}"
+          cache: false
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@e2e40021c9007020676c93680a36e3ab06c6cd33    #v2.8.0
+
+      - name: Run golangci-lint on all providers
+        env:
+          ONLY_NEW_ISSUES: ${{ inputs.only-new-issues }}
+        run: |
+          failed=""
+          extra_args=""
+          if [ "$ONLY_NEW_ISSUES" = "true" ] && [ -n "${BASE_SHA}" ]; then
+            git fetch origin "${BASE_SHA}"
+            extra_args="--new-from-rev=${BASE_SHA}"  
+          fi
+          for provider in providers/*/; do
+            # Skip providers without go.mod (they are part of the main module)
+            if [ ! -f "$provider/go.mod" ]; then
+              continue
+            fi
+            name=$(basename "$provider")
+            echo "=== Linting provider: $name ==="
+            if ! (cd "$provider" && golangci-lint run --timeout=30m $extra_args); then
+              failed="$failed $name"
+            fi
+          done
+          if [ -n "$failed" ]; then
+            echo "=== Failed providers:$failed ==="
+            exit 1
+          fi

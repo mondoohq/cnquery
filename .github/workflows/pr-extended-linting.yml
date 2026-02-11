@@ -7,9 +7,12 @@ on:
       - "**.go"
       - "**.mod"
       - "go.sum"
+      - ".github/workflows/pr-extended-linting.yml"
+      - ".github/workflows/reusable-lint-providers.yml"
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   golangci-lint:
@@ -40,3 +43,8 @@ jobs:
           args: --config=.github/.golangci.yaml --timeout=30m
           only-new-issues: true
           skip-cache: true
+
+  golangci-lint-providers:
+    uses: ./.github/workflows/reusable-lint-providers.yml
+    with:
+      only-new-issues: true
