@@ -1971,6 +1971,12 @@ private launchd.job @defaults("label type") {
   machServices dict
   // Watch paths that trigger the job
   watchPaths []string
+  // Path to redirect stdout
+  stdoutPath string
+  // Path to redirect stderr
+  stderrPath string
+  // Directory to chroot to before launch
+  rootDirectory string
   // The plist file resource
   file file
   // Full parsed plist content

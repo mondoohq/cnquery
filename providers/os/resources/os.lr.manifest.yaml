@@ -596,11 +596,14 @@ resources:
       processType: {}
       program: {}
       programArguments: {}
+      rootDirectory: {}
       runAtLoad: {}
       sockets: {}
       source: {}
       startCalendarInterval: {}
       startInterval: {}
+      stderrPath: {}
+      stdoutPath: {}
       type: {}
       userName: {}
       watchPaths: {}

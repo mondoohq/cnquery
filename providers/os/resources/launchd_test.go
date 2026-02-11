@@ -558,7 +558,10 @@ func TestLaunchdFullPlistParsing(t *testing.T) {
 		"StartCalendarInterval": []any{
 			map[string]any{"Hour": float64(3), "Minute": float64(0)},
 		},
-		"Disabled": false,
+		"StandardOutPath":   "/var/log/example.out.log",
+		"StandardErrorPath": "/var/log/example.err.log",
+		"RootDirectory":     "/var/lib/example",
+		"Disabled":          false,
 	}
 
 	// Test all field extractions
@@ -568,6 +571,9 @@ func TestLaunchdFullPlistParsing(t *testing.T) {
 	assert.Equal(t, "daemon", launchdGetString(data, "UserName"))
 	assert.Equal(t, "daemon", launchdGetString(data, "GroupName"))
 	assert.Equal(t, "Background", launchdGetString(data, "ProcessType"))
+	assert.Equal(t, "/var/log/example.out.log", launchdGetString(data, "StandardOutPath"))
+	assert.Equal(t, "/var/log/example.err.log", launchdGetString(data, "StandardErrorPath"))
+	assert.Equal(t, "/var/lib/example", launchdGetString(data, "RootDirectory"))
 
 	assert.True(t, launchdGetBool(data, "RunAtLoad"))
 	assert.False(t, launchdGetBool(data, "Disabled"))
@@ -612,6 +618,9 @@ func TestLaunchdMinimalPlist(t *testing.T) {
 	assert.Nil(t, launchdParseKeepAlive(data))
 	assert.Nil(t, launchdGetDict(data, "Sockets"))
 	assert.Equal(t, map[string]any{}, launchdGetStringMap(data, "EnvironmentVariables"))
+	assert.Equal(t, "", launchdGetString(data, "StandardOutPath"))
+	assert.Equal(t, "", launchdGetString(data, "StandardErrorPath"))
+	assert.Equal(t, "", launchdGetString(data, "RootDirectory"))
 }
 
 // Integration tests using TOML-based mock filesystem
@@ -640,6 +649,9 @@ func TestLaunchdPlistFromMockFS(t *testing.T) {
 	assert.Equal(t, "daemon", launchdGetString(data, "UserName"))
 	assert.Equal(t, "daemon", launchdGetString(data, "GroupName"))
 	assert.Equal(t, "Background", launchdGetString(data, "ProcessType"))
+	assert.Equal(t, "/var/log/example.out.log", launchdGetString(data, "StandardOutPath"))
+	assert.Equal(t, "/var/log/example.err.log", launchdGetString(data, "StandardErrorPath"))
+	assert.Equal(t, "/var/lib/example", launchdGetString(data, "RootDirectory"))
 
 	assert.Equal(t, []any{"/usr/local/bin/example", "--daemon"},
 		launchdGetStringArray(data, "ProgramArguments"))

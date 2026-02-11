@@ -27,8 +27,10 @@ var launchdDirectories = []struct {
 }{
 	{"/System/Library/LaunchDaemons", "system", "daemon"},
 	{"/Library/LaunchDaemons", "library", "daemon"},
+	{"/Library/Apple/System/Library/LaunchDaemons", "system", "daemon"},
 	{"/System/Library/LaunchAgents", "system", "agent"},
 	{"/Library/LaunchAgents", "library", "agent"},
+	{"/Library/Apple/System/Library/LaunchAgents", "system", "agent"},
 }
 
 // User agent directory (relative to home)
@@ -100,6 +102,11 @@ func (l *mqlLaunchd) parseUserAgents(afs *afero.Afero) ([]any, error) {
 		user := u.(*mqlUser)
 		home := user.GetHome()
 		if home.Error != nil || home.Data == "" {
+			continue
+		}
+
+		// Skip system accounts with well-known non-user home directories
+		if invalidHomeDirs[home.Data] {
 			continue
 		}
 
@@ -175,6 +182,9 @@ func (l *mqlLaunchd) parseJobFile(afs *afero.Afero, path, source, jobType string
 	startInterval := launchdGetInt(data, "StartInterval")
 	programArguments := launchdGetStringArray(data, "ProgramArguments")
 	watchPaths := launchdGetStringArray(data, "WatchPaths")
+	stdoutPath := launchdGetString(data, "StandardOutPath")
+	stderrPath := launchdGetString(data, "StandardErrorPath")
+	rootDirectory := launchdGetString(data, "RootDirectory")
 	keepAlive := launchdParseKeepAlive(data)
 	sockets := launchdGetDict(data, "Sockets")
 	machServices := launchdGetDict(data, "MachServices")
@@ -203,6 +213,9 @@ func (l *mqlLaunchd) parseJobFile(afs *afero.Afero, path, source, jobType string
 		"sockets":               llx.DictData(sockets),
 		"machServices":          llx.DictData(machServices),
 		"watchPaths":            llx.ArrayData(watchPaths, types.String),
+		"stdoutPath":            llx.StringData(stdoutPath),
+		"stderrPath":            llx.StringData(stderrPath),
+		"rootDirectory":         llx.StringData(rootDirectory),
 		"file":                  llx.ResourceData(fileRes, "file"),
 		"content":               llx.DictData(data),
 	})

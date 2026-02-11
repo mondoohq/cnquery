@@ -2998,6 +2998,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"launchd.job.watchPaths": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLaunchdJob).GetWatchPaths()).ToDataRes(types.Array(types.String))
 	},
+	"launchd.job.stdoutPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetStdoutPath()).ToDataRes(types.String)
+	},
+	"launchd.job.stderrPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetStderrPath()).ToDataRes(types.String)
+	},
+	"launchd.job.rootDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLaunchdJob).GetRootDirectory()).ToDataRes(types.String)
+	},
 	"launchd.job.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLaunchdJob).GetFile()).ToDataRes(types.Resource("file"))
 	},
@@ -6826,6 +6835,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"launchd.job.watchPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLaunchdJob).WatchPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"launchd.job.stdoutPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).StdoutPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.stderrPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).StderrPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"launchd.job.rootDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLaunchdJob).RootDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"launchd.job.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18937,6 +18958,9 @@ type mqlLaunchdJob struct {
 	Sockets               plugin.TValue[any]
 	MachServices          plugin.TValue[any]
 	WatchPaths            plugin.TValue[[]any]
+	StdoutPath            plugin.TValue[string]
+	StderrPath            plugin.TValue[string]
+	RootDirectory         plugin.TValue[string]
 	File                  plugin.TValue[*mqlFile]
 	Content               plugin.TValue[any]
 }
@@ -19052,6 +19076,18 @@ func (c *mqlLaunchdJob) GetMachServices() *plugin.TValue[any] {
 
 func (c *mqlLaunchdJob) GetWatchPaths() *plugin.TValue[[]any] {
 	return &c.WatchPaths
+}
+
+func (c *mqlLaunchdJob) GetStdoutPath() *plugin.TValue[string] {
+	return &c.StdoutPath
+}
+
+func (c *mqlLaunchdJob) GetStderrPath() *plugin.TValue[string] {
+	return &c.StderrPath
+}
+
+func (c *mqlLaunchdJob) GetRootDirectory() *plugin.TValue[string] {
+	return &c.RootDirectory
 }
 
 func (c *mqlLaunchdJob) GetFile() *plugin.TValue[*mqlFile] {
