@@ -28,6 +28,16 @@ import (
 	"go.mondoo.com/cnquery/v12/types"
 )
 
+// imdsSupport returns a human-readable IMDS support value. The AWS API only
+// returns a value ("v2.0") when IMDSv2 is explicitly configured on the AMI.
+// For all other images the field is empty, so we default to "none".
+func imdsSupport(v ec2types.ImdsSupportValues) string {
+	if v == "" {
+		return "none"
+	}
+	return string(v)
+}
+
 func (e *mqlAwsEc2) id() (string, error) {
 	return ResourceAwsEc2, nil
 }
@@ -802,6 +812,7 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 							"deprecatedAt":        llx.TimeDataPtr(deprecatedAt),
 							"enaSupport":          llx.BoolDataPtr(image.EnaSupport),
 							"tpmSupport":          llx.StringData(string(image.TpmSupport)),
+							"imdsSupport":         llx.StringData(imdsSupport(image.ImdsSupport)),
 							"state":               llx.StringData(string(image.State)),
 							"public":              llx.BoolDataPtr(image.Public),
 							"rootDeviceType":      llx.StringData(string(image.RootDeviceType)),
@@ -1045,12 +1056,20 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			"tpmSupport":            llx.StringDataPtr(instance.TpmSupport),
 		}
 
+		var enclaveEnabled bool
+		if instance.EnclaveOptions != nil {
+			enclaveEnabled = convert.ToValue(instance.EnclaveOptions.Enabled)
+		}
+		args["enclaveEnabled"] = llx.BoolData(enclaveEnabled)
+
 		if instance.MetadataOptions != nil {
 			args["httpEndpoint"] = llx.StringData(string(instance.MetadataOptions.HttpEndpoint))
 			args["httpTokens"] = llx.StringData(string(instance.MetadataOptions.HttpTokens))
+			args["httpPutResponseHopLimit"] = llx.IntDataDefault(instance.MetadataOptions.HttpPutResponseHopLimit, 1)
 		} else {
 			args["httpEndpoint"] = llx.NilData
 			args["httpTokens"] = llx.NilData
+			args["httpPutResponseHopLimit"] = llx.IntData(1)
 		}
 		// add vpc if there is one
 		if instance.VpcId != nil {
@@ -1304,6 +1323,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["createdAt"] = llx.NilData
 		args["deprecatedAt"] = llx.NilData
 		args["tpmSupport"] = llx.NilData
+		args["imdsSupport"] = llx.NilData
 		args["enaSupport"] = llx.NilData
 		args["state"] = llx.NilData
 		args["public"] = llx.NilData
@@ -1332,6 +1352,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["ownerAlias"] = llx.StringDataPtr(image.ImageOwnerAlias)
 		args["enaSupport"] = llx.BoolDataPtr(image.EnaSupport)
 		args["tpmSupport"] = llx.StringData(string(image.TpmSupport))
+		args["imdsSupport"] = llx.StringData(imdsSupport(image.ImdsSupport))
 		args["state"] = llx.StringData(string(image.State))
 		args["public"] = llx.BoolDataPtr(image.Public)
 		args["rootDeviceType"] = llx.StringData(string(image.RootDeviceType))

@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v12/providers/aws/connection"
 )
@@ -120,5 +121,15 @@ func TestShouldExcludeInstance(t *testing.T) {
 			},
 		}
 		require.False(t, shouldExcludeInstance(instance, filters))
+	})
+}
+
+func TestImdsSupport(t *testing.T) {
+	t.Run("empty value returns none", func(t *testing.T) {
+		assert.Equal(t, "none", imdsSupport(""))
+	})
+
+	t.Run("v2.0 value is preserved", func(t *testing.T) {
+		assert.Equal(t, "v2.0", imdsSupport(ec2types.ImdsSupportValuesV20))
 	})
 }

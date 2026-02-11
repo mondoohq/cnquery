@@ -98,24 +98,37 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 				kubernetesNetworkConfig, _ := convert.JsonToDict(cluster.KubernetesNetworkConfig)
 				vpcConfig, _ := convert.JsonToDict(cluster.ResourcesVpcConfig)
 
+				var endpointPublicAccess, endpointPrivateAccess bool
+				publicAccessCidrs := []any{}
+				if cluster.ResourcesVpcConfig != nil {
+					endpointPublicAccess = cluster.ResourcesVpcConfig.EndpointPublicAccess
+					endpointPrivateAccess = cluster.ResourcesVpcConfig.EndpointPrivateAccess
+					for _, cidr := range cluster.ResourcesVpcConfig.PublicAccessCidrs {
+						publicAccessCidrs = append(publicAccessCidrs, cidr)
+					}
+				}
+
 				args := map[string]*llx.RawData{
-					"arn":                llx.StringDataPtr(cluster.Arn),
-					"authenticationMode": llx.StringData(string(cluster.AccessConfig.AuthenticationMode)),
-					"createdAt":          llx.TimeDataPtr(cluster.CreatedAt),
-					"encryptionConfig":   llx.ArrayData(encryptionConfig, types.Any),
-					"endpoint":           llx.StringDataPtr(cluster.Endpoint),
-					"iamRole":            llx.NilData, // set iamRole to nil as default, if iam is not set
-					"logging":            llx.MapData(logging, types.Any),
-					"name":               llx.StringDataPtr(cluster.Name),
-					"networkConfig":      llx.MapData(kubernetesNetworkConfig, types.Any),
-					"platformVersion":    llx.StringDataPtr(cluster.PlatformVersion),
-					"region":             llx.StringData(region),
-					"resourcesVpcConfig": llx.MapData(vpcConfig, types.Any),
-					"status":             llx.StringData(string(cluster.Status)),
-					"supportType":        llx.StringData(string(cluster.UpgradePolicy.SupportType)),
-					"tags":               llx.MapData(toInterfaceMap(cluster.Tags), types.String),
-					"version":            llx.StringDataPtr(cluster.Version),
-					"deletionProtection": llx.BoolDataPtr(cluster.DeletionProtection),
+					"arn":                   llx.StringDataPtr(cluster.Arn),
+					"authenticationMode":    llx.StringData(string(cluster.AccessConfig.AuthenticationMode)),
+					"createdAt":             llx.TimeDataPtr(cluster.CreatedAt),
+					"encryptionConfig":      llx.ArrayData(encryptionConfig, types.Any),
+					"endpoint":              llx.StringDataPtr(cluster.Endpoint),
+					"iamRole":               llx.NilData, // set iamRole to nil as default, if iam is not set
+					"logging":               llx.MapData(logging, types.Any),
+					"name":                  llx.StringDataPtr(cluster.Name),
+					"networkConfig":         llx.MapData(kubernetesNetworkConfig, types.Any),
+					"platformVersion":       llx.StringDataPtr(cluster.PlatformVersion),
+					"region":                llx.StringData(region),
+					"resourcesVpcConfig":    llx.MapData(vpcConfig, types.Any),
+					"status":                llx.StringData(string(cluster.Status)),
+					"supportType":           llx.StringData(string(cluster.UpgradePolicy.SupportType)),
+					"tags":                  llx.MapData(toInterfaceMap(cluster.Tags), types.String),
+					"version":               llx.StringDataPtr(cluster.Version),
+					"deletionProtection":    llx.BoolDataPtr(cluster.DeletionProtection),
+					"endpointPublicAccess":  llx.BoolData(endpointPublicAccess),
+					"endpointPrivateAccess": llx.BoolData(endpointPrivateAccess),
+					"publicAccessCidrs":     llx.ArrayData(publicAccessCidrs, types.String),
 				}
 
 				if cluster.RoleArn != nil {

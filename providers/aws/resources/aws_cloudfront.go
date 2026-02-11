@@ -81,18 +81,36 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 				cnames = append(cnames, alias)
 			}
 
+			var viewerProtocolPolicy string
+			if distribution.DefaultCacheBehavior != nil {
+				viewerProtocolPolicy = string(distribution.DefaultCacheBehavior.ViewerProtocolPolicy)
+			}
+			var minimumProtocolVersion string
+			if distribution.ViewerCertificate != nil {
+				minimumProtocolVersion = string(distribution.ViewerCertificate.MinimumProtocolVersion)
+			}
+			var geoRestrictionType string
+			if distribution.Restrictions != nil && distribution.Restrictions.GeoRestriction != nil {
+				geoRestrictionType = string(distribution.Restrictions.GeoRestriction.RestrictionType)
+			}
+
 			args := map[string]*llx.RawData{
-				"arn":                  llx.StringDataPtr(distribution.ARN),
-				"cacheBehaviors":       llx.ArrayData(cacheBehaviors, types.Any),
-				"cnames":               llx.ArrayData(cnames, types.String),
-				"defaultCacheBehavior": llx.MapData(defaultCacheBehavior, types.Any),
-				"domainName":           llx.StringDataPtr(distribution.DomainName),
-				"enabled":              llx.BoolDataPtr(distribution.Enabled),
-				"httpVersion":          llx.StringData(string(distribution.HttpVersion)),
-				"isIPV6Enabled":        llx.BoolDataPtr(distribution.IsIPV6Enabled),
-				"origins":              llx.ArrayData(origins, types.Resource("aws.cloudfront.distribution.origin")),
-				"priceClass":           llx.StringData(string(distribution.PriceClass)),
-				"status":               llx.StringDataPtr(distribution.Status),
+				"arn":                    llx.StringDataPtr(distribution.ARN),
+				"cacheBehaviors":         llx.ArrayData(cacheBehaviors, types.Any),
+				"cnames":                 llx.ArrayData(cnames, types.String),
+				"defaultCacheBehavior":   llx.MapData(defaultCacheBehavior, types.Any),
+				"domainName":             llx.StringDataPtr(distribution.DomainName),
+				"enabled":                llx.BoolDataPtr(distribution.Enabled),
+				"httpVersion":            llx.StringData(string(distribution.HttpVersion)),
+				"isIPV6Enabled":          llx.BoolDataPtr(distribution.IsIPV6Enabled),
+				"origins":                llx.ArrayData(origins, types.Resource("aws.cloudfront.distribution.origin")),
+				"priceClass":             llx.StringData(string(distribution.PriceClass)),
+				"status":                 llx.StringDataPtr(distribution.Status),
+				"viewerProtocolPolicy":   llx.StringData(viewerProtocolPolicy),
+				"minimumProtocolVersion": llx.StringData(minimumProtocolVersion),
+				"webAclId":               llx.StringDataPtr(distribution.WebACLId),
+				"geoRestrictionType":     llx.StringData(geoRestrictionType),
+				"lastModifiedAt":         llx.TimeDataPtr(distribution.LastModifiedTime),
 			}
 
 			mqlAwsCloudfrontDist, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution", args)

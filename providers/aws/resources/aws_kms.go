@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
@@ -173,6 +174,60 @@ func (a *mqlAwsKmsKey) keyState() (string, error) {
 		return "", err
 	}
 	return string(keyMetadata.KeyMetadata.KeyState), nil
+}
+
+type mqlAwsKmsKeyInternal struct {
+	cachedKeyMetadata *types.KeyMetadata
+}
+
+func (a *mqlAwsKmsKey) getKeyMetadata() (*types.KeyMetadata, error) {
+	if a.cachedKeyMetadata != nil {
+		return a.cachedKeyMetadata, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	keyArn := a.Arn.Data
+
+	svc := conn.Kms(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeKey(ctx, &kms.DescribeKeyInput{KeyId: &keyArn})
+	if err != nil {
+		return nil, err
+	}
+	a.cachedKeyMetadata = resp.KeyMetadata
+	return a.cachedKeyMetadata, nil
+}
+
+func (a *mqlAwsKmsKey) createdAt() (*time.Time, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	return md.CreationDate, nil
+}
+
+func (a *mqlAwsKmsKey) deletedAt() (*time.Time, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	return md.DeletionDate, nil
+}
+
+func (a *mqlAwsKmsKey) enabled() (bool, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return false, err
+	}
+	return md.Enabled, nil
+}
+
+func (a *mqlAwsKmsKey) description() (string, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(md.Description), nil
 }
 
 func (a *mqlAwsKmsKey) id() (string, error) {

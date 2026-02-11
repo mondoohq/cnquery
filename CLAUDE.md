@@ -45,12 +45,11 @@ Use these rules to make fast choices without reading the full guide.
 
 ## 1. Project Context
 
-**cnquery** is a cloud-native infrastructure querying tool. It uses **MQL (Mondoo Query Language)** to query over 850 resources across cloud accounts (AWS, Azure, GCP), Kubernetes, containers, OS internals, and APIs.
+**cnquery** is a cloud-native infrastructure querying tool using **MQL (Mondoo Query Language)** to query resources across cloud accounts (AWS, Azure, GCP), Kubernetes, containers, OS internals, and APIs.
 
-### Critical Distinction
-*   **cnquery**: The core inventory tool. Defines resources, implements MQL, and handles **data gathering**.
-*   **cnspec**: The security scanning tool built *on top* of cnquery. It implements **policy assertions** and vulnerability checks.
-*   **Rule of Thumb:** For resource development (adding fields, new assets), you only need to work within **cnquery**.
+- **cnquery**: Core inventory tool. Resources, MQL, **data gathering**.
+- **cnspec**: Security scanner built *on top* of cnquery. **Policy assertions** and vulnerability checks.
+- For resource development (adding fields, new assets), you only work within **cnquery**.
 
 ## 2. Resource Development Lifecycle
 
@@ -401,9 +400,12 @@ for {
 
 ### Resource Field Naming & Constraints
 - Properties named "id" or "url" (case insensitive) must be prefixed with "userDefined:" (e.g., "userDefined:URL")
+- Time/date fields must use `createdAt`/`updatedAt`/`modifiedAt`/`deletedAt` naming convention — not `createDate`, `modifyTime`, `creation_time`, etc.
 - Date fields use expanded format: "date:{property}:start", "date:{property}:end", "date:{property}:is_datetime"
 - Place fields split into multiple properties: name, address, latitude, longitude, google_place_id
 - Use JavaScript number types for numeric fields, not strings
+- Prefer typed resource references over raw ID strings. Instead of a `vpcId string` field, define a `vpc aws.vpc` field that returns the actual resource. This enables MQL traversal (e.g., `aws.ec2.instance.vpc.cidrBlock`) instead of requiring users to manually look up IDs.
+- In `.lr.manifest.yaml`, new fields only need `min_mondoo_version` if the resource itself has an older `min_mondoo_version`. If the resource already requires a recent enough version, fields inherit it implicitly.
 
 ### Provider Modules & Dependencies
 - Each provider in `providers/` has its own `go.mod` for isolation
@@ -461,18 +463,22 @@ When work appears complete, present this checklist to the user for local verific
 
 ### Essential Checks (Run These)
 ```bash
-# 1. Ensure generated code is up-to-date
+# 1. Format all Go code with gofmt
+gofmt -w .
+git diff --exit-code  # Should show no changes if already formatted
+
+# 2. Ensure generated code is up-to-date
 make cnquery/generate
 git diff --exit-code  # Should show no changes
 
-# 2. Verify go.mod is clean
+# 3. Verify go.mod is clean
 go mod tidy
 git diff go.mod go.sum  # Should show no changes
 
-# 3. Run linting
+# 4. Run linting
 make test/lint
 
-# 4. Run unit tests
+# 5. Run unit tests
 make test/go/plain
 ```
 
@@ -503,6 +509,7 @@ make test/integration
 ```
 
 ### Quick Pre-Commit Checklist
+- [ ] All Go code is formatted with `gofmt -w .`
 - [ ] Generated files are up-to-date (`.lr.go`, `.pb.go`)
 - [ ] Linting passes (`make test/lint`)
 - [ ] **New resources have integration tests** (required, not optional)

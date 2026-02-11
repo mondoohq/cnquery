@@ -117,15 +117,22 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 					if r.ImageScanningConfiguration != nil {
 						imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
 					}
+					var encryptionType string
+					if r.EncryptionConfiguration != nil {
+						encryptionType = string(r.EncryptionConfiguration.EncryptionType)
+					}
 					mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
 						map[string]*llx.RawData{
-							"arn":             llx.StringDataPtr(r.RepositoryArn),
-							"name":            llx.StringDataPtr(r.RepositoryName),
-							"uri":             llx.StringDataPtr(r.RepositoryUri),
-							"registryId":      llx.StringDataPtr(r.RegistryId),
-							"public":          llx.BoolData(false),
-							"region":          llx.StringData(region),
-							"imageScanOnPush": llx.BoolData(imageScanOnPush),
+							"arn":                llx.StringDataPtr(r.RepositoryArn),
+							"name":               llx.StringDataPtr(r.RepositoryName),
+							"uri":                llx.StringDataPtr(r.RepositoryUri),
+							"registryId":         llx.StringDataPtr(r.RegistryId),
+							"public":             llx.BoolData(false),
+							"region":             llx.StringData(region),
+							"imageScanOnPush":    llx.BoolData(imageScanOnPush),
+							"imageTagMutability": llx.StringData(string(r.ImageTagMutability)),
+							"encryptionType":     llx.StringData(encryptionType),
+							"createdAt":          llx.TimeDataPtr(r.CreatedAt),
 						})
 					if err != nil {
 						return nil, err
@@ -294,13 +301,16 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 		for _, r := range repoResp.Repositories {
 			mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
 				map[string]*llx.RawData{
-					"arn":             llx.StringDataPtr(r.RepositoryArn),
-					"name":            llx.StringDataPtr(r.RepositoryName),
-					"uri":             llx.StringDataPtr(r.RepositoryUri),
-					"registryId":      llx.StringDataPtr(r.RegistryId),
-					"public":          llx.BoolData(true),
-					"region":          llx.StringData("us-east-1"),
-					"imageScanOnPush": llx.BoolData(false),
+					"arn":                llx.StringDataPtr(r.RepositoryArn),
+					"name":               llx.StringDataPtr(r.RepositoryName),
+					"uri":                llx.StringDataPtr(r.RepositoryUri),
+					"registryId":         llx.StringDataPtr(r.RegistryId),
+					"public":             llx.BoolData(true),
+					"region":             llx.StringData("us-east-1"),
+					"imageScanOnPush":    llx.BoolData(false),
+					"imageTagMutability": llx.StringData("IMMUTABLE"),
+					"encryptionType":     llx.StringData("AES256"),
+					"createdAt":          llx.TimeDataPtr(r.CreatedAt),
 				})
 			if err != nil {
 				return nil, err

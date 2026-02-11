@@ -505,6 +505,11 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 				lastUsedRegion = convert.ToValue(role.RoleLastUsed.Region)
 			}
 
+			var permBoundaryArn string
+			if role.PermissionsBoundary != nil {
+				permBoundaryArn = convert.ToValue(role.PermissionsBoundary.PermissionsBoundaryArn)
+			}
+
 			mqlAwsIamRole, err := CreateResource(a.MqlRuntime, ResourceAwsIamRole,
 				map[string]*llx.RawData{
 					"arn":                      llx.StringDataPtr(role.Arn),
@@ -516,6 +521,8 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 					"assumeRolePolicyDocument": llx.MapData(policyDocumentMap, types.Any),
 					"lastUsedAt":               llx.TimeDataPtr(lastUsedAt),
 					"lastUsedRegion":           llx.StringData(lastUsedRegion),
+					"maxSessionDuration":       llx.IntDataDefault(role.MaxSessionDuration, 3600),
+					"permissionsBoundaryArn":   llx.StringData(permBoundaryArn),
 				})
 			if err != nil {
 				return nil, err
@@ -1288,6 +1295,12 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		args["tags"] = llx.MapData(iamTagsToMap(role.Tags), types.String)
 		args["createdAt"] = llx.TimeDataPtr(role.CreateDate)
 		args["assumeRolePolicyDocument"] = llx.MapData(policyDocumentMap, types.Any)
+		var permBoundaryArn string
+		if role.PermissionsBoundary != nil {
+			permBoundaryArn = convert.ToValue(role.PermissionsBoundary.PermissionsBoundaryArn)
+		}
+		args["maxSessionDuration"] = llx.IntDataDefault(role.MaxSessionDuration, 3600)
+		args["permissionsBoundaryArn"] = llx.StringData(permBoundaryArn)
 		return args, nil, nil
 	}
 
