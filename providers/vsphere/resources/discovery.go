@@ -122,7 +122,7 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 			}
 
 			platformID := connection.VsphereResourceID(instanceUuid, mqlHost.Moid.Data)
-			clonedConfig := conn.Conf.Clone(inventory.WithoutDiscovery())
+			clonedConfig := conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))
 			clonedConfig.PlatformId = platformID
 
 			labels := map[string]string{
@@ -167,7 +167,7 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 			vm := vmList.Data[j].(*mqlVsphereVm)
 
 			platformID := connection.VsphereResourceID(instanceUuid, vm.Moid.Data)
-			clonedConfig := conn.Conf.Clone(inventory.WithoutDiscovery())
+			clonedConfig := conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))
 			clonedConfig.PlatformId = platformID
 
 			labels := map[string]string{
