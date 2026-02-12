@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"io"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -1315,7 +1316,8 @@ var unixFamily = &PlatformResolver{
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// in order to support linux container image detection, we cannot run
 		// processes here, lets just read files to detect a system
-		return true, nil
+		// We don't want to run unix detection on local windows connections
+		return conn.Type() != shared.Type_Local || runtime.GOOS != "windows", nil
 	},
 }
 
