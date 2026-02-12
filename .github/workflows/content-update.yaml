@@ -9,6 +9,8 @@ on:
 
 jobs:
   notify:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Notify about content updates
