@@ -176,7 +176,7 @@ func (o *mqlOciOnsTopic) subscriptions() ([]any, error) {
 
 		var created *time.Time
 		if sub.CreatedTime != nil {
-			t := time.Unix(0, *sub.CreatedTime*int64(time.Millisecond))
+			t := time.UnixMilli(*sub.CreatedTime)
 			created = &t
 		}
 

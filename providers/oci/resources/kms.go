@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -22,8 +23,18 @@ func (o *mqlOciKms) id() (string, error) {
 func (o *mqlOciKms) vaults() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	if err != nil {
+		return nil, err
+	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+
 	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getVaults(conn), 5)
+	poolOfJobs := jobpool.CreatePool(o.getVaults(conn, list.Data), 5)
 	poolOfJobs.Run()
 
 	if poolOfJobs.HasErrors() {
@@ -61,18 +72,18 @@ func (o *mqlOciKms) getVaultsForRegion(ctx context.Context, client *keymanagemen
 	return entries, nil
 }
 
-func (o *mqlOciKms) getVaults(conn *connection.OciConnection) []*jobpool.Job {
+func (o *mqlOciKms) getVaults(conn *connection.OciConnection, regions []any) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.GetRegions(ctx)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci kms with region %s", *region.RegionKey)
+			log.Debug().Msgf("calling oci kms with region %s", regionResource.Id.Data)
 
-			svc, err := conn.KmsVaultClient(*region.RegionKey)
+			svc, err := conn.KmsVaultClient(regionResource.Id.Data)
 			if err != nil {
 				return nil, err
 			}
