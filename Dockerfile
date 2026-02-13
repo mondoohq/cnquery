@@ -5,8 +5,8 @@ FROM alpine:3.23 AS root
 RUN apk update &&\
     apk add ca-certificates wget tar &&\
     rm -rf /var/cache/apk/*
-COPY cnquery /usr/local/bin
-ENTRYPOINT ["cnquery"]
+COPY mql /usr/local/bin
+ENTRYPOINT ["mql"]
 CMD ["help"]
 
 # Rootless version of the container

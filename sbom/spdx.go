@@ -168,12 +168,13 @@ func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
 
 func (s *Spdx) Parse(r io.ReadSeeker) (*Sbom, error) {
 	// try to parse all supported SPDX format
-	if s.Format == FormatSpdxTagValue {
+	switch s.Format {
+	case FormatSpdxTagValue:
 		doc, err := tagvalue.Read(r)
 		if err == nil && doc.SPDXVersion != "" {
 			return s.convertToSbom(doc), nil
 		}
-	} else if s.Format == FormatSpdxJSON {
+	case FormatSpdxJSON:
 		var doc spdx.Document
 		err := json.NewDecoder(r).Decode(&doc)
 		if err == nil && doc.SPDXVersion != "" {

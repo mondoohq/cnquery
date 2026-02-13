@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 )
 
-var notImplemented = errors.New("not implemented")
+var notImplemented = errors.New("not implemented") //nolint:unused
 
 // https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html
 // https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_GetParameter.html

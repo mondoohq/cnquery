@@ -11,11 +11,11 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // mapFunctions are all the handlers for builtin array methods
-var mapFunctions map[string]chunkHandlerV2
+var mapFunctions map[string]chunkHandlerV2 //nolint:unused
 
 func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
@@ -314,7 +314,7 @@ func mapKeysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(types.Dict),
-			Error: errors.New("Failed to get keys of `null`"),
+			Error: errors.New("failed to get keys of `null`"),
 		}, 0, nil
 	}
 
@@ -339,7 +339,7 @@ func mapValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(typ),
-			Error: errors.New("Failed to get values of `null`"),
+			Error: errors.New("failed to get values of `null`"),
 		}, 0, nil
 	}
 
@@ -410,9 +410,8 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 		}
 		// ^^ TODO
 
-		key := string(args[0].Value)
 		return &RawData{
-			Value: x[key],
+			Value: x[string(args[0].Value)],
 			Type:  bind.Type,
 		}, 0, nil
 	default:
@@ -655,7 +654,7 @@ func dictKeysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(types.Dict),
-			Error: errors.New("Failed to get keys of `null`"),
+			Error: errors.New("failed to get keys of `null`"),
 		}, 0, nil
 	}
 
@@ -678,7 +677,7 @@ func dictValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(types.Dict),
-			Error: errors.New("Failed to get values of `null`"),
+			Error: errors.New("failed to get values of `null`"),
 		}, 0, nil
 	}
 
@@ -712,7 +711,7 @@ func _stringWhere(e *blockExecutor, src string, chunk *Chunk, ref uint64, invert
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'where' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
@@ -726,7 +725,7 @@ func _stringWhere(e *blockExecutor, src string, chunk *Chunk, ref uint64, invert
 	}
 
 	var found *RawResult
-	err = e.runFunctionBlock([]*RawData{
+	_ = e.runFunctionBlock([]*RawData{
 		{Type: types.Nil, Value: nil},
 		{Type: types.StringSlice, Value: src},
 	}, fref, func(res *RawResult) {
@@ -741,7 +740,7 @@ func _dictArrayWhere(e *blockExecutor, list []any, chunk *Chunk, ref uint64, inv
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'where' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
@@ -1149,7 +1148,7 @@ func dictMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'map' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'map' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
@@ -1635,7 +1634,7 @@ func opDictCmpNil(left any, right any) bool {
 	return left == nil
 }
 
-func opNilCmpDict(left any, right any) bool {
+func opNilCmpDict(left any, right any) bool { //nolint:unused
 	return right == nil
 }
 
@@ -1647,11 +1646,11 @@ func dictNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return boolNotOpV2(e, bind, chunk, ref, opDictCmpNil)
 }
 
-func nilCmpDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func nilCmpDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) { //nolint:unused
 	return boolOpV2(e, bind, chunk, ref, opNilCmpDict)
 }
 
-func nilNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func nilNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) { //nolint:unused
 	return boolNotOpV2(e, bind, chunk, ref, opNilCmpDict)
 }
 
@@ -1938,7 +1937,7 @@ func dictNotRegexarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 	return rawboolNotOpV2(e, bind, chunk, ref, opDictCmpRegexarray)
 }
 
-func opDictCmpBoolarray(left *RawData, right *RawData) bool {
+func opDictCmpBoolarray(left *RawData, right *RawData) bool { //nolint:unused
 	switch left.Value.(type) {
 	case string:
 		return cmpArrayOne(right, left, opBoolCmpString)
@@ -2134,7 +2133,7 @@ func opIntLTEDict(left any, right any) *RawData {
 	}
 }
 
-func opIntGTDict(left any, right any) *RawData {
+func opIntGTDict(left any, right any) *RawData { //nolint:unused
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(int64) > x)
@@ -2151,7 +2150,7 @@ func opIntGTDict(left any, right any) *RawData {
 	}
 }
 
-func opIntGTEDict(left any, right any) *RawData {
+func opIntGTEDict(left any, right any) *RawData { //nolint:unused
 	switch x := right.(type) {
 	case int64:
 		return BoolData(left.(int64) >= x)
@@ -2868,7 +2867,7 @@ func opDictAndArray(left any, right any) bool {
 	return truthyDict(left) && (len(right.([]any)) != 0)
 }
 
-func opArrayAndDict(left any, right any) bool {
+func opArrayAndDict(left any, right any) bool { //nolint:unused
 	return truthyDict(right) && (len(left.([]any)) != 0)
 }
 
@@ -2876,7 +2875,7 @@ func opDictOrArray(left any, right any) bool {
 	return truthyDict(left) || (len(right.([]any)) != 0)
 }
 
-func opArrayOrDict(left any, right any) bool {
+func opArrayOrDict(left any, right any) bool { //nolint:unused
 	return truthyDict(right) || (len(left.([]any)) != 0)
 }
 
@@ -2888,11 +2887,11 @@ func dictOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return boolOpV2(e, bind, chunk, ref, opDictOrArray)
 }
 
-func arrayAndDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func arrayAndDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) { //nolint:unused
 	return boolOpV2(e, bind, chunk, ref, opArrayAndDict)
 }
 
-func arrayOrDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func arrayOrDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) { //nolint:unused
 	return boolOpV2(e, bind, chunk, ref, opArrayOrDict)
 }
 
@@ -2949,7 +2948,7 @@ func dictPlusStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	})
 }
 
-func stringPlusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func stringPlusDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) { //nolint:unused
 	return dataOpV2(e, bind, chunk, ref, types.Time, func(left any, right any) *RawData {
 		l := left.(string)
 

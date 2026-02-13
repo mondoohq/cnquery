@@ -81,15 +81,16 @@ func HomePath(childPath ...string) (string, error) {
 
 func systemPath(isConfig bool, childPath ...string) string {
 	var parts []string
-	if runtime.GOOS == "windows" {
+	switch runtime.GOOS {
+	case "windows":
 		parts = append([]string{`C:\ProgramData\Mondoo\`}, childPath...)
-	} else if runtime.GOOS == "darwin" {
+	case "darwin":
 		if isConfig {
 			parts = append([]string{"/Library", "Mondoo", "etc"}, childPath...)
 		} else {
 			parts = append([]string{"/Library", "Mondoo"}, childPath...)
 		}
-	} else {
+	default:
 		if isConfig {
 			parts = append([]string{"/etc", "opt", "mondoo"}, childPath...)
 		} else {

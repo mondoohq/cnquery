@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/gql"
-	"go.mondoo.com/cnquery/v12/providers/vsphere/connection"
 	mondoogql "go.mondoo.com/mondoo-go"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/gql"
+	"go.mondoo.com/mql/v13/providers/vsphere/connection"
 )
 
 type mqlVulnmgmtInternal struct {

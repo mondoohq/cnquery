@@ -6,7 +6,7 @@ package platformid
 import (
 	"io"
 
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
 const wmiMachineIDQuery = "SELECT UUID FROM Win32_ComputerSystemProduct"

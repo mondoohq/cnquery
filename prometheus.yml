@@ -10,7 +10,7 @@ global:
     build: $BUILD
 
 scrape_configs:
-  - job_name: 'cnquery'
+  - job_name: 'mql'
     static_configs:
       - targets: ['localhost:2112']
 

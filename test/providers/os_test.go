@@ -13,16 +13,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/test"
+	"go.mondoo.com/mql/v13/test"
 )
 
 var once sync.Once
 
-// setup builds cnquery locally
+// setup builds mql locally
 func setup() {
-	// build cnquery
-	if err := exec.Command("go", "build", "../../apps/cnquery/cnquery.go").Run(); err != nil {
-		log.Fatalf("building cnquery: %v", err)
+	// build mql
+	if err := exec.Command("go", "build", "../../apps/mql/mql.go").Run(); err != nil {
+		log.Fatalf("building mql: %v", err)
 	}
 
 	// install local provider
@@ -36,7 +36,7 @@ func setup() {
 		// provider install places the provider in the "$(HOME)/.config/mondoo/providers/${$@_NAME}") but we
 		// want to test it in isolation. Therefore, we copy the provider to the current directory .providers
 		osProviderPath := filepath.Join(providersPATH, "os")
-		if err := os.MkdirAll(osProviderPath, 0755); err != nil {
+		if err := os.MkdirAll(osProviderPath, 0o755); err != nil {
 			log.Fatalf("creating directory: %v", err)
 		}
 
@@ -79,7 +79,7 @@ func TestOsProviderSharedTests(t *testing.T) {
 	connections := connections{
 		{
 			name:   "local",
-			binary: "./cnquery",
+			binary: "./mql",
 			args:   []string{"run", "local"},
 			tests: []mqlTest{
 				{
@@ -109,7 +109,7 @@ func TestOsProviderSharedTests(t *testing.T) {
 		},
 		{
 			name:   "fs",
-			binary: "./cnquery",
+			binary: "./mql",
 			args:   []string{"run", "fs", "--path", "./testdata/fs"},
 			tests: []mqlTest{
 				{
@@ -139,7 +139,7 @@ func TestOsProviderSharedTests(t *testing.T) {
 		},
 		{
 			name:   "docker",
-			binary: "./cnquery",
+			binary: "./mql",
 			args:   []string{"run", "docker", "alpine:latest"},
 			tests: []mqlTest{
 				{
@@ -172,7 +172,6 @@ func TestOsProviderSharedTests(t *testing.T) {
 	// iterate over all tests for all connections
 	for _, cc := range connections {
 		for _, tt := range cc.tests {
-
 			t.Run(cc.name+"/"+tt.query, func(t *testing.T) {
 				r := test.NewCliTestRunner(cc.binary, append(cc.args, "-c", tt.query, "-j")...)
 				err := r.Run()
@@ -189,7 +188,7 @@ func TestOsProviderSharedTests(t *testing.T) {
 
 func TestProvidersEnvVarsLoading(t *testing.T) {
 	t.Run("command WITHOUT path should not find any package", func(t *testing.T) {
-		r := test.NewCliTestRunner("./cnquery", "run", "fs", "-c", mqlPackagesQuery, "-j")
+		r := test.NewCliTestRunner("./mql", "run", "fs", "-c", mqlPackagesQuery, "-j")
 		err := r.Run()
 		require.NoError(t, err)
 		assert.Equal(t, 0, r.ExitCode())
@@ -207,7 +206,7 @@ func TestProvidersEnvVarsLoading(t *testing.T) {
 		os.Setenv("MONDOO_PATH", "./testdata/fs")
 		defer os.Unsetenv("MONDOO_PATH")
 		// Note we are not passing the flag "--path ./testdata/fs"
-		r := test.NewCliTestRunner("./cnquery", "run", "fs", "-c", mqlPackagesQuery, "-j")
+		r := test.NewCliTestRunner("./mql", "run", "fs", "-c", mqlPackagesQuery, "-j")
 		err := r.Run()
 		require.NoError(t, err)
 		assert.Equal(t, 0, r.ExitCode())
@@ -228,7 +227,7 @@ func TestProvidersEnvVarsLoading(t *testing.T) {
 
 	t.Run("command with flags set to not bind to config (ConfigEntry=\"-\")", func(t *testing.T) {
 		t.Run("should work via direct flag", func(t *testing.T) {
-			r := test.NewCliTestRunner("./cnquery", "run", "ssh", "localhost", "-c", "ls", "-p", "test", "-v")
+			r := test.NewCliTestRunner("./mql", "run", "ssh", "localhost", "-c", "ls", "-p", "test", "-v")
 			err := r.Run()
 			require.NoError(t, err)
 			assert.Equal(t, 0, r.ExitCode())
@@ -241,7 +240,7 @@ func TestProvidersEnvVarsLoading(t *testing.T) {
 		t.Run("should NOT work via config/env-vars", func(t *testing.T) {
 			os.Setenv("MONDOO_PASSWORD", "test")
 			defer os.Unsetenv("MONDOO_PASSWORD")
-			r := test.NewCliTestRunner("./cnquery", "run", "ssh", "localhost", "-c", "ls", "-v")
+			r := test.NewCliTestRunner("./mql", "run", "ssh", "localhost", "-c", "ls", "-v")
 			err := r.Run()
 			require.NoError(t, err)
 			assert.Equal(t, 0, r.ExitCode())

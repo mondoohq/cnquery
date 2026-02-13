@@ -7,12 +7,12 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/local"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/ssh"
-	"go.mondoo.com/cnquery/v12/providers/os/id/ids"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers/os/connection/local"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/ssh"
+	"go.mondoo.com/mql/v13/providers/os/id/ids"
 )
 
 const (

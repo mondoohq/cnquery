@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
 )
 
 // Core Language constructs
@@ -616,7 +616,7 @@ func TestArrayBlockError(t *testing.T) {
 }
 
 func TestBrokenQueryExecutionGH674(t *testing.T) {
-	// See https://github.com/mondoohq/cnquery/issues/674
+	// See https://github.com/mondoohq/mql/issues/674
 	x := testutils.InitTester(testutils.LinuxMock())
 	bundle, err := x.Compile(`
 a = file("/tmp/ref1").content.trim

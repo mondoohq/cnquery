@@ -3,7 +3,7 @@
 
 package resources
 
-import "go.mondoo.com/cnquery/v12/providers/core/resources/regex"
+import "go.mondoo.com/mql/v13/providers/core/resources/regex"
 
 func (p *mqlRegex) id() (string, error) {
 	return "time", nil
@@ -23,7 +23,7 @@ func (p *mqlRegex) url() (string, error) {
 	return regex.Url, nil
 }
 
-func (p *mqlRegex) domain() (string, error) {
+func (p *mqlRegex) domain() (string, error) { //nolint:unused
 	return regex.UrlDomain, nil
 }
 

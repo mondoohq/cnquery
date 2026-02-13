@@ -16,27 +16,27 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/container"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/device"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/docker"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/fs"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/local"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/ssh"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/tar"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/vagrant"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/winrm"
-	"go.mondoo.com/cnquery/v12/providers/os/detector"
-	"go.mondoo.com/cnquery/v12/providers/os/id"
-	"go.mondoo.com/cnquery/v12/providers/os/resources"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/discovery/docker_engine"
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers/os/connection/container"
+	"go.mondoo.com/mql/v13/providers/os/connection/device"
+	"go.mondoo.com/mql/v13/providers/os/connection/docker"
+	"go.mondoo.com/mql/v13/providers/os/connection/fs"
+	"go.mondoo.com/mql/v13/providers/os/connection/local"
+	"go.mondoo.com/mql/v13/providers/os/connection/mock"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/ssh"
+	"go.mondoo.com/mql/v13/providers/os/connection/tar"
+	"go.mondoo.com/mql/v13/providers/os/connection/vagrant"
+	"go.mondoo.com/mql/v13/providers/os/connection/winrm"
+	"go.mondoo.com/mql/v13/providers/os/detector"
+	"go.mondoo.com/mql/v13/providers/os/id"
+	"go.mondoo.com/mql/v13/providers/os/resources"
+	"go.mondoo.com/mql/v13/providers/os/resources/discovery/docker_engine"
+	"go.mondoo.com/mql/v13/utils/stringx"
 )
 
 type Service struct {
@@ -151,7 +151,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	user := ""
-	if len(req.Args) != 0 && !(strings.HasPrefix(req.Connector, "docker") || strings.HasPrefix(req.Connector, "container")) {
+	if len(req.Args) != 0 && (!strings.HasPrefix(req.Connector, "docker") && !strings.HasPrefix(req.Connector, "container")) {
 		target := req.Args[0]
 		if !strings.Contains(target, "://") {
 			target = "ssh://" + target

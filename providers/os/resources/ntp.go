@@ -7,15 +7,15 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func initNtpConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if x, ok := args["path"]; ok {
 		path, ok := x.Value.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in ntp.conf initialization, it must be a string")
+			return nil, nil, errors.New("wrong type for 'path' in ntp.conf initialization, it must be a string")
 		}
 
 		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{

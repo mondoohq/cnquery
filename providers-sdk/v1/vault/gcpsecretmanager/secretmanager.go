@@ -10,12 +10,10 @@ import (
 	"strings"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
-	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
+	secretmanagerpb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/utils/multierr"
 )
-
-var notImplemented = errors.New("not implemented")
 
 // https://cloud.google.com/secret-manager
 // https://cloud.google.com/secret-manager/docs/reference/libraries#client-libraries-install-go

@@ -34,11 +34,11 @@ func (f *FileWrapper) Stat() (os.FileInfo, error) {
 }
 
 func (f *FileWrapper) Sync() error {
-	return notSupported
+	return errNotSupported
 }
 
 func (f *FileWrapper) Truncate(size int64) error {
-	return notSupported
+	return errNotSupported
 }
 
 func (f *FileWrapper) Read(b []byte) (n int, err error) {
@@ -62,13 +62,13 @@ func (f *FileWrapper) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (f *FileWrapper) Write(b []byte) (n int, err error) {
-	return 0, notSupported
+	return 0, errNotSupported
 }
 
 func (f *FileWrapper) WriteAt(b []byte, off int64) (n int, err error) {
-	return 0, notSupported
+	return 0, errNotSupported
 }
 
 func (f *FileWrapper) WriteString(s string) (ret int, err error) {
-	return 0, notSupported
+	return 0, errNotSupported
 }

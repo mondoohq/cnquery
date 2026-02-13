@@ -635,7 +635,7 @@ const file_resources_proto_rawDesc = "" +
 	"\vis_embedded\x18\x19 \x01(\bR\n" +
 	"isEmbedded\x12\x1a\n" +
 	"\bprovider\x18\x1b \x01(\tR\bprovider\x12/\n" +
-	"\x06others\x18\x1d \x03(\v2\x17.mondoo.resources.FieldR\x06othersB6Z4go.mondoo.com/cnquery/v12/providers-sdk/v1/resourcesb\x06proto3"
+	"\x06others\x18\x1d \x03(\v2\x17.mondoo.resources.FieldR\x06othersB2Z0go.mondoo.com/mql/v13/providers-sdk/v1/resourcesb\x06proto3"
 
 var (
 	file_resources_proto_rawDescOnce sync.Once

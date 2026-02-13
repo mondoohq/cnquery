@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 )
 
 func TestInventoryParser(t *testing.T) {

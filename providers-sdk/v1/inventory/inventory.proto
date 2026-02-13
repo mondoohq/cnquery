@@ -7,7 +7,7 @@ package cnquery.providers.v1;
 import "providers-sdk/v1/upstream/upstream.proto";
 import "providers-sdk/v1/vault/vault.proto";
 
-option go_package = "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory";
+option go_package = "go.mondoo.com/mql/v13/providers-sdk/v1/inventory";
 
 enum State {
   // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
@@ -406,7 +406,7 @@ message InventorySpec {
   string credential_query = 4;
 
   // optional: the upstream credentials to use for the inventory
-  mondoo.cnquery.upstream.v1.ServiceAccountCredentials 
+  mondoo.mql.upstream.v1.ServiceAccountCredentials 
     upstream_credentials = 16;
 }
 

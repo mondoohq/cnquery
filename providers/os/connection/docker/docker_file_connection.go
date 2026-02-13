@@ -11,11 +11,11 @@ import (
 	"path/filepath"
 	"slices"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/local"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
-	"go.mondoo.com/cnquery/v12/utils/urlx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/local"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/v13/utils/urlx"
 )
 
 var _ shared.Connection = &DockerfileConnection{}

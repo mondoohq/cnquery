@@ -18,9 +18,9 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/snapshot"
-	"go.mondoo.com/cnquery/v12/providers/os/mountedfs"
-	"go.mondoo.com/cnquery/v12/providers/os/resources"
+	"go.mondoo.com/mql/v13/providers/os/connection/snapshot"
+	"go.mondoo.com/mql/v13/providers/os/mountedfs"
+	"go.mondoo.com/mql/v13/providers/os/resources"
 )
 
 const (

@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 )
 
 func TestExtensibleSchema(t *testing.T) {
@@ -81,7 +81,7 @@ func TestExtensibleSchema(t *testing.T) {
 			},
 			Dependencies: map[string]*resources.ProviderInfo{
 				"core": {
-					Id:   "go.mondoo.com/cnquery/v9/providers/core",
+					Id:   "go.mondoo.com/mql/v9/providers/core",
 					Name: "core",
 				},
 			},
@@ -95,6 +95,6 @@ func TestExtensibleSchema(t *testing.T) {
 		// Check dependencies
 		deps := s.AllDependencies()
 		require.Len(t, deps, 1)
-		assert.Equal(t, "go.mondoo.com/cnquery/v9/providers/core", deps["core"].Id)
+		assert.Equal(t, "go.mondoo.com/mql/v9/providers/core", deps["core"].Id)
 	})
 }

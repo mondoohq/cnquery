@@ -125,7 +125,7 @@ jobs:
       - name: Display Provider PAth
         run: echo $PROVIDERS_PATH
 
-      - name: Test cnquery
+      - name: Test mql
         run: make test/go/plain-ci
 
       - name: Test Providers
@@ -162,7 +162,7 @@ jobs:
       - name: Display Provider PAth
         run: echo $PROVIDERS_PATH
 
-      - name: Test cnquery CLI and Providers
+      - name: Test mql CLI and Providers
         run: make test/integration
 
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0

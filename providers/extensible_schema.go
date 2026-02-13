@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 )
 
 type ExtensibleSchema interface {
@@ -144,15 +144,6 @@ func (x *extensibleSchema) FindField(resource *resources.ResourceInfo, field str
 	x.unsafeRefresh()
 
 	return x.roAggregate.FindField(resource, field)
-}
-
-// Prioritize the provider IDs in the order that is provided. Any other
-// provider comes later and in any random order.
-func (x *extensibleSchema) prioritizeIDs(prioritization ...string) {
-	x.sync.Lock()
-	x.prioritization = prioritization
-	x.unsafeRefresh()
-	x.sync.Unlock()
 }
 
 // ---------------------------- unsafe methods ----------------------------

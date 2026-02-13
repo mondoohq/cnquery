@@ -123,7 +123,7 @@ func ParseRepos(r io.Reader) ([]*YumRepo, error) {
 				// remove (0 more)
 				// split by ,
 				m := yumbaseurl.FindStringSubmatch(value)
-				if m != nil && len(m) >= 2 {
+				if len(m) >= 2 {
 					entries := strings.Split(m[1], ",")
 					entry.Baseurl = []string{}
 					for i := range entries {

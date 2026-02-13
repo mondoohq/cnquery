@@ -1,8 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/v9/providers/opcua"
-option go_package = "go.mondoo.com/cnquery/v12/providers/opcua/resources"
+option provider = "go.mondoo.com/mql/providers/opcua"
+option go_package = "go.mondoo.com/mql/v13/providers/opcua/resources"
 
 // OPC UA (Open Platform Communications Unified Architecture) server
 opcua {

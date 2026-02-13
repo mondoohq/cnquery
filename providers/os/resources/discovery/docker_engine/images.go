@@ -9,7 +9,7 @@ import (
 
 	"github.com/docker/docker/api/types/image"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
 // be aware that images are prefixed with sha256:, while containers are not
@@ -46,11 +46,8 @@ func (e *dockerEngineDiscovery) ListImages() ([]*inventory.Asset, error) {
 
 		// TODO: we need to use the digest sha
 		// docker does not always have a repo sha: docker images --digests
-		digest := digest(dImg.RepoDigests)
-		// fallback to docker id
-		if len(digest) == 0 {
-			digest = dImg.ID
-		}
+		_ = digest(dImg.RepoDigests)
+		// fallback to docker ID: if len(digest) == 0 => digest = dImg.ID
 
 		asset := &inventory.Asset{
 			Connections: []*inventory.Config{

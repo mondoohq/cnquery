@@ -14,10 +14,10 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/multierr"
 )
 
 // ResultCallback function type
@@ -123,7 +123,6 @@ type MQLExecutorV2 struct {
 	id      string
 	runtime Runtime
 	code    *CodeV2
-	starts  []uint64
 	props   map[string]*Primitive
 
 	lock           sync.Mutex
@@ -465,14 +464,14 @@ func (a *arrayBlockCallResults) update(i int, res *RawResult) {
 	_, isEntrypoint := a.entrypoints[res.CodeID]
 	_, isDatapoint := a.datapoints[res.CodeID]
 
-	if !(isEntrypoint || isDatapoint) {
+	if !isEntrypoint && !isDatapoint {
 		return
 	}
 
 	_, hasEntrypointResult := a.results[i].entrypoints[res.CodeID]
 	_, hasDatapointResult := a.results[i].datapoints[res.CodeID]
 
-	if !(hasEntrypointResult || hasDatapointResult) {
+	if !hasEntrypointResult && !hasDatapointResult {
 		a.waiting[i]--
 		if a.waiting[i] == 0 {
 			a.unfinishedBlockCalls--
@@ -661,10 +660,6 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 	})
 
 	return nil, 0, err
-}
-
-type resourceInterface interface {
-	MqlResource() Resource
 }
 
 func pargs2argmap(b *blockExecutor, ref uint64, args []*Primitive) (map[string]*Primitive, uint64, error) {
@@ -993,7 +988,7 @@ func (e *blockExecutor) triggerChainError(ref uint64, err error) {
 			if len(remaining) == 0 {
 				break
 			}
-			cur = remaining[0]
+			nxt = []uint64{remaining[0]}
 			remaining = remaining[1:]
 		}
 		if len(nxt) == 0 {

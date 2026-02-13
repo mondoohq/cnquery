@@ -10,13 +10,14 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/uuid"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v12/sbom"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/sbom"
+	"go.mondoo.com/mql/v13/types"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )
@@ -24,8 +25,8 @@ import (
 var sbomProvider = Provider{
 	Provider: &plugin.Provider{
 		Name:    "sbom",
-		ID:      "go.mondoo.com/cnquery/v12/providers/sbom",
-		Version: "11.0.0",
+		ID:      "go.mondoo.com/mql/providers/sbom",
+		Version: mql.GetVersion(),
 		Connectors: []plugin.Connector{
 			{
 				Name:    "sbom",

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // RangePrimitive creates a range primitive from the given
@@ -239,7 +239,7 @@ func writeLine(lineNum int, line string, cfg *ExtractConfig, res *strings.Builde
 
 	if cfg.ShowLineNumbers && lineNum >= 0 {
 		if cfg.maxLineDigits > 0 {
-			res.WriteString(fmt.Sprintf("%"+strconv.Itoa(cfg.maxLineDigits)+"d:", lineNum))
+			fmt.Fprintf(res, "%"+strconv.Itoa(cfg.maxLineDigits)+"d:", lineNum)
 		} else {
 			res.WriteString(strconv.Itoa(int(lineNum)) + ":")
 		}

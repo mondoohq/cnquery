@@ -35,7 +35,7 @@ func ParseLine(s []rune) (SshdLine, error) {
 	l.key, s = parseKeyword(s)
 
 	var err error
-	l.args, s, err = parseArgs(s)
+	l.args, _, err = parseArgs(s)
 	if err != nil {
 		return l, err
 	}
@@ -55,11 +55,7 @@ func parseKeyword(s []rune) (string, []rune) {
 
 	i := 0
 LOOP:
-	for {
-		if i >= len(s) {
-			break
-		}
-
+	for i < len(s) {
 		switch s[i] {
 		case '#':
 			break LOOP
@@ -110,7 +106,7 @@ LOOP:
 	return string(s[0:i]), consumeWhitespace(s[i:])
 }
 
-var errUnexpectedEOF = errors.New("Unexpected EOF")
+var errUnexpectedEOF = errors.New("unexpected EOF")
 
 func parseQuotedArg(s []rune) (string, []rune, error) {
 	i := 1

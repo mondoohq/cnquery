@@ -12,10 +12,10 @@ import (
 
 	"github.com/hashicorp/vault/api"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 )
 
-var notImplemented = errors.New("not implemented")
+var errNotImplemented = errors.New("not implemented") //nolint:unused
 
 func New(serverURL string, token string) *Vault {
 	log.Debug().Bool("token-sec", len(token) > 0).Msgf("Using HashiCorp Vault at %s", serverURL)

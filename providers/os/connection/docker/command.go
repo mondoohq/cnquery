@@ -13,7 +13,7 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
 type Command struct {
@@ -24,7 +24,7 @@ type Command struct {
 
 func (c *Command) Exec(command string) (*shared.Command, error) {
 	c.Command.Command = command
-	c.Command.Stats.Start = time.Now()
+	c.Stats.Start = time.Now()
 
 	ctx := context.Background()
 	res, err := c.Client.ContainerExecCreate(ctx, c.Container, container.ExecOptions{
@@ -57,8 +57,8 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 	var stderrBuffer bytes.Buffer
 
 	// create buffered stream
-	c.Command.Stdout = &stdoutBuffer
-	c.Command.Stderr = &stderrBuffer
+	c.Stdout = &stdoutBuffer
+	c.Stderr = &stderrBuffer
 
 	stdOutWriter := bufio.NewWriter(&stdoutBuffer)
 	stdErrWriter := bufio.NewWriter(&stderrBuffer)
@@ -69,13 +69,13 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 	defer stdOutWriter.Flush()
 	defer stdErrWriter.Flush()
 
-	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
+	c.Stats.Duration = time.Since(c.Stats.Start)
 
 	info, err := c.Client.ContainerExecInspect(ctx, res.ID)
 	if err != nil {
 		return nil, err
 	}
-	c.Command.ExitStatus = info.ExitCode
+	c.ExitStatus = info.ExitCode
 
 	return &c.Command, nil
 }
@@ -102,9 +102,10 @@ func (c *Command) transformHijack(docker io.Reader, stdout io.Writer, stderr io.
 		content := make([]byte, size)
 		_, err = docker.Read(content)
 
-		if header[0] == STDIN || header[0] == STDOUT {
+		switch header[0] {
+		case STDIN, STDOUT:
 			stdout.Write(content)
-		} else if header[0] == STDERR {
+		case STDERR:
 			stderr.Write(content)
 		}
 

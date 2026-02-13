@@ -13,10 +13,10 @@ import (
 
 func TestMacUpdatesParser(t *testing.T) {
 	f, err := os.Open("./testdata/com.apple.SoftwareUpdate.plist")
-	defer f.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 
 	m, err := ParseSoftwarePlistUpdates(f)
 	assert.Nil(t, err)

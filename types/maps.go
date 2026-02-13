@@ -16,7 +16,7 @@ func (c *StringSet) Delete(k string) { c.Map.Delete(k) }
 
 // Exist returns true if the string exists in the set
 func (c *StringSet) Exist(k string) bool {
-	_, ok := c.Map.Load(k)
+	_, ok := c.Load(k)
 	return ok
 }
 
@@ -66,7 +66,7 @@ func (s *StringToStrings) Exist(key string, value string) bool {
 // List all keys and their associations
 func (s *StringToStrings) List() map[string][]string {
 	res := make(map[string][]string)
-	s.Map.Range(func(key, value any) bool {
+	s.Range(func(key, value any) bool {
 		res[key.(string)] = value.(*StringSet).List()
 		return true
 	})

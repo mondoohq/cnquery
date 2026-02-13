@@ -15,9 +15,9 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 )
 
 var errNoSuchInterface = errors.New("no such network interface")
@@ -173,14 +173,15 @@ func (i *LinuxInterfaceHandler) ParseIpAddr(r io.Reader) ([]Interface, error) {
 		}
 
 		var ip net.IP
-		if m[3] == "inet" {
+		switch m[3] {
+		case "inet":
 			ipv4Addr, _, err := net.ParseCIDR(m[4])
 			if err != nil {
 				log.Error().Err(err).Msg("could not parse ipv4")
 			}
 
 			ip = ipv4Addr
-		} else if m[3] == "inet6" {
+		case "inet6":
 			ipv6Addr, _, err := net.ParseCIDR(m[4])
 			if err != nil {
 				log.Error().Err(err).Msg("could not parse ipv6")

@@ -6,9 +6,9 @@ package mqlc
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/mqlc/parser"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/mqlc/parser"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func compileDictQuery(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
@@ -437,12 +437,12 @@ func compileDictNone(c *compiler, typ types.Type, ref uint64, id string, call *p
 	return types.Bool, nil
 }
 
-func compileDictFlat(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileDictFlat(c *compiler, _ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call != nil && len(call.Function) > 0 {
 		return types.Nil, errors.New("no arguments supported for '" + id + "'")
 	}
 
-	typ = types.Array(types.Dict)
+	typ := types.Array(types.Dict)
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,

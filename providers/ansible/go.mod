@@ -1,13 +1,13 @@
-module go.mondoo.com/cnquery/v12/providers/ansible
+module go.mondoo.com/mql/v13/providers/ansible
 
 go 1.25.1
 
-replace go.mondoo.com/cnquery/v12 => ../..
+replace go.mondoo.com/mql/v13 => ../..
 
 require (
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/cnquery/v12 v12.19.2
+	go.mondoo.com/mql/v13 v13.0.0-pre1
 	gopkg.in/yaml.v3 v3.0.1
 )
 

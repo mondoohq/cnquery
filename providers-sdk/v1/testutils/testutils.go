@@ -16,26 +16,26 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/mql"
-	"go.mondoo.com/cnquery/v12/mqlc"
-	"go.mondoo.com/cnquery/v12/providers"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils/mockprovider"
-	networkconf "go.mondoo.com/cnquery/v12/providers/network/config"
-	networkprovider "go.mondoo.com/cnquery/v12/providers/network/provider"
-	osconf "go.mondoo.com/cnquery/v12/providers/os/config"
-	osprovider "go.mondoo.com/cnquery/v12/providers/os/provider"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/exec"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/v13/providers"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/mqlr/lrcore"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils/mockprovider"
+	networkconf "go.mondoo.com/mql/v13/providers/network/config"
+	networkprovider "go.mondoo.com/mql/v13/providers/network/provider"
+	osconf "go.mondoo.com/mql/v13/providers/os/config"
+	osprovider "go.mondoo.com/mql/v13/providers/os/provider"
 	"sigs.k8s.io/yaml"
 )
 
 var (
-	Features     cnquery.Features
+	Features     mql.Features
 	TestutilsDir string
 )
 
@@ -43,7 +43,7 @@ func init() {
 	logger.InitTestEnv()
 
 	var err error
-	Features, err = cnquery.InitFeatures(strings.Split(os.Getenv("FEATURES"), ",")...)
+	Features, err = mql.InitFeatures(strings.Split(os.Getenv("FEATURES"), ",")...)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 	}
@@ -51,7 +51,7 @@ func init() {
 
 	_, pathToFile, _, ok := runtime.Caller(0)
 	if !ok {
-		panic("unable to get runtime for testutils for cnquery providers")
+		panic("unable to get runtime for testutils for mql providers")
 	}
 	TestutilsDir = path.Dir(pathToFile)
 }
@@ -76,7 +76,7 @@ func (ctx *tester) Compile(query string) (*llx.CodeBundle, error) {
 }
 
 func (ctx *tester) ExecuteCode(bundle *llx.CodeBundle, props map[string]*llx.Primitive) (map[string]*llx.RawResult, error) {
-	return mql.ExecuteCode(ctx.Runtime, bundle, props, Features)
+	return exec.ExecuteCode(ctx.Runtime, bundle, props, Features)
 }
 
 func (ctx *tester) TestQueryPWithError(t *testing.T, query string, props mqlc.PropsHandler) ([]*llx.RawResult, error) {
@@ -110,7 +110,7 @@ func (ctx *tester) TestQuery(t *testing.T, query string) []*llx.RawResult {
 func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
 
-	resultMap, err := mql.ExecuteCode(ctx.Runtime, bundle, props, Features)
+	resultMap, err := exec.ExecuteCode(ctx.Runtime, bundle, props, Features)
 	require.NoError(t, err)
 
 	lastQueryResult := &llx.RawResult{}
@@ -254,15 +254,15 @@ func mockRuntime(testdata string) llx.Runtime {
 func MockFromRecording(recording llx.Recording) llx.Runtime {
 	runtime := Local().(*providers.Runtime)
 
-	err := runtime.SetMockRecording(recording, runtime.Provider.Instance.ID, true)
+	err := runtime.SetMockRecording(recording, runtime.Provider.Instance.ID, true) //nolint:staticcheck // TODO: migrate off deprecated API
 	if err != nil {
 		panic("failed to set recording: " + err.Error())
 	}
-	err = runtime.SetMockRecording(recording, networkconf.Config.ID, true)
+	err = runtime.SetMockRecording(recording, networkconf.Config.ID, true) //nolint:staticcheck // TODO: migrate off deprecated API
 	if err != nil {
 		panic("failed to set recording: " + err.Error())
 	}
-	err = runtime.SetMockRecording(recording, mockprovider.Config.ID, true)
+	err = runtime.SetMockRecording(recording, mockprovider.Config.ID, true) //nolint:staticcheck // TODO: migrate off deprecated API
 	if err != nil {
 		panic("failed to set recording: " + err.Error())
 	}

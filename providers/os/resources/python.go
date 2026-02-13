@@ -12,14 +12,14 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/fsutil"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/languages/python"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/languages/python/requirements"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/languages/python/wheelegg"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/fsutil"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/python"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/python/requirements"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/python/wheelegg"
+	"go.mondoo.com/mql/v13/types"
 )
 
 var defaultPythonPaths = []string{
@@ -41,7 +41,7 @@ func initPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	if x, ok := args["path"]; ok {
 		_, ok := x.Value.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in python initialization, it must be a string")
+			return nil, nil, errors.New("wrong type for 'path' in python initialization, it must be a string")
 		}
 	} else {
 		// empty path means search through default locations
@@ -335,7 +335,7 @@ func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if x, ok := args["path"]; ok {
 		path, ok := x.Value.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in python.package initialization, it must be a string")
+			return nil, nil, errors.New("wrong type for 'path' in python.package initialization, it must be a string")
 		}
 
 		file, err := newFile(runtime, path)

@@ -9,8 +9,8 @@ import (
 	"io"
 	"time"
 
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 )
 
 // This implementation reads the security products from Windows Desktop Systems
@@ -87,7 +87,7 @@ var securitySignatureStatusValues = map[uint32]string{
 	1: "UP-TO-DATE",
 }
 
-var securityProductOwner = map[uint32]string{
+var securityProductOwner = map[uint32]string{ //nolint:unused
 	0: "NonMS",
 	1: "Microsoft",
 }

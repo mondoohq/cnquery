@@ -78,15 +78,15 @@ func (l *hclogger) Log(level hclog.Level, format string, args ...any) {
 func (l *hclogger) SetLevel(level hclog.Level) {
 	switch level {
 	case hclog.Trace:
-		l.Logger = l.Logger.Level(zerolog.TraceLevel)
+		l.Logger = l.Level(zerolog.TraceLevel)
 	case hclog.Debug:
-		l.Logger = l.Logger.Level(zerolog.DebugLevel)
+		l.Logger = l.Level(zerolog.DebugLevel)
 	case hclog.Info:
-		l.Logger = l.Logger.Level(zerolog.InfoLevel)
+		l.Logger = l.Level(zerolog.InfoLevel)
 	case hclog.Warn:
-		l.Logger = l.Logger.Level(zerolog.WarnLevel)
+		l.Logger = l.Level(zerolog.WarnLevel)
 	case hclog.Error:
-		l.Logger = l.Logger.Level(zerolog.ErrorLevel)
+		l.Logger = l.Level(zerolog.ErrorLevel)
 	default:
 		log.Fatalf("unknown level %d", level)
 	}

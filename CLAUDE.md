@@ -521,7 +521,7 @@ Use emojis in commit messages (but don't worry about it, since you're NEVER goin
 - [Official Documentation](https://mondoo.com/docs/cnquery/home/)
 - [MQL Introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL Language Reference](https://mondoo.com/docs/mql/resources/)
-- [GitHub Repository](https://github.com/mondoohq/cnquery)
+- [GitHub Repository](https://github.com/mondoohq/mql)
 - [Community Discussions](https://github.com/orgs/mondoohq/discussions)
 
 ### Provider-Specific Documentation

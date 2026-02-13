@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
 func NewOrganizationPlatformID(id string) string {

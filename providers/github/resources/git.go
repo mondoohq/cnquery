@@ -5,8 +5,8 @@ package resources
 
 import (
 	"github.com/google/go-github/v81/github"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func (g *mqlGitGpgSignature) id() (string, error) {

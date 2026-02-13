@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
 )
 
 func TestResource_FilesFind(t *testing.T) {

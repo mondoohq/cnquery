@@ -136,7 +136,7 @@ func TestPackageJson(t *testing.T) {
 				},
 			},
 		},
-		// https://github.com/mondoohq/cnquery/issues/5235
+		// https://github.com/mondoohq/mql/issues/5235
 		{
 			Fixture: "./testdata/engines-malformed-GH5235.json",
 			Expected: packageJson{

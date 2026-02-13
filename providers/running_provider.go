@@ -12,8 +12,8 @@ import (
 
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
-	pp "go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	pp "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"google.golang.org/grpc/status"
 )
 
@@ -294,7 +294,7 @@ type RunningProvider struct {
 	hbCancelFunc context.CancelFunc
 }
 
-func SupervisedRunningProivder(name string, id string, plugin pp.ProviderPlugin, client *plugin.Client, schema resources.ResourcesSchema, reconnectFunc ReconnectFunc) (*RunningProvider, error) {
+func SupervisedRunningProvider(name string, id string, plugin pp.ProviderPlugin, client *plugin.Client, schema resources.ResourcesSchema, reconnectFunc ReconnectFunc) (*RunningProvider, error) {
 	hbCtx, hbCancelFunc := context.WithCancel(context.Background())
 
 	rp := &RunningProvider{
@@ -382,7 +382,7 @@ func (p *RunningProvider) Reconnect() error {
 	defer p.lock.Unlock()
 	p.shutdownLock.Lock()
 	defer p.shutdownLock.Unlock()
-	if !(p.isClosed || p.isShutdown) {
+	if !p.isClosed && !p.isShutdown {
 		return nil
 	}
 

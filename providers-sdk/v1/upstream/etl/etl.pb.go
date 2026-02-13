@@ -25,7 +25,7 @@ const (
 )
 
 // VulnerabilityExchange are used for sharing information about vulnerabilities
-// across systems. Cnquery uses this format as a main mean to store detected
+// across systems. MQL uses this format as a main mean to store detected
 // vulnerability information. The same document is generated independently from
 // the source.
 type VulnerabilityExchange struct {
@@ -150,14 +150,15 @@ var File_etl_proto protoreflect.FileDescriptor
 
 const file_etl_proto_rawDesc = "" +
 	"\n" +
-	"\tetl.proto\x12\x0ecnquery.etl.v1\"q\n" +
+	"\tetl.proto\x12\n" +
+	"mql.etl.v1\"m\n" +
 	"\x15VulnerabilityExchange\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\x12\x18\n" +
-	"\asummary\x18\x04 \x01(\tR\asummary\x12.\n" +
-	"\x06source\x18\a \x01(\v2\x16.cnquery.etl.v1.SourceR\x06source\".\n" +
+	"\asummary\x18\x04 \x01(\tR\asummary\x12*\n" +
+	"\x06source\x18\a \x01(\v2\x12.mql.etl.v1.SourceR\x06source\".\n" +
 	"\x06Source\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
-	"\x03url\x18\x02 \x01(\tR\x03urlB9Z7go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/etlb\x06proto3"
+	"\x03url\x18\x02 \x01(\tR\x03urlB5Z3go.mondoo.com/mql/v13/providers-sdk/v1/upstream/etlb\x06proto3"
 
 var (
 	file_etl_proto_rawDescOnce sync.Once
@@ -173,11 +174,11 @@ func file_etl_proto_rawDescGZIP() []byte {
 
 var file_etl_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_etl_proto_goTypes = []any{
-	(*VulnerabilityExchange)(nil), // 0: cnquery.etl.v1.VulnerabilityExchange
-	(*Source)(nil),                // 1: cnquery.etl.v1.Source
+	(*VulnerabilityExchange)(nil), // 0: mql.etl.v1.VulnerabilityExchange
+	(*Source)(nil),                // 1: mql.etl.v1.Source
 }
 var file_etl_proto_depIdxs = []int32{
-	1, // 0: cnquery.etl.v1.VulnerabilityExchange.source:type_name -> cnquery.etl.v1.Source
+	1, // 0: mql.etl.v1.VulnerabilityExchange.source:type_name -> mql.etl.v1.Source
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name

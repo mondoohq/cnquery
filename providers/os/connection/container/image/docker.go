@@ -43,7 +43,7 @@ func LoadImageFromDockerEngine(sha string, disableBuffer bool) (v1.Image, error)
 	if disableBuffer {
 		opts = append(opts, daemon.WithUnbufferedOpener())
 	}
-	img, err := daemon.Image(&ShaReference{SHA: strings.Replace(sha, "sha256:", "", -1)}, opts...)
+	img, err := daemon.Image(&ShaReference{SHA: strings.ReplaceAll(sha, "sha256:", "")}, opts...)
 	if err != nil {
 		return nil, err
 	}

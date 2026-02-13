@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v81/github"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers/github/connection"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers/github/connection"
 )
 
 func (g *mqlGithubTeam) id() (string, error) {

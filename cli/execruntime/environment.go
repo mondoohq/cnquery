@@ -93,7 +93,7 @@ func (c *RuntimeEnv) Labels() map[string]string {
 			// replace prefix of variable name and make it lowercase
 			valkey := strings.Replace(key, c.Prefix+"_", "", 1)
 			slug := strings.ToLower(valkey)
-			slug = strings.Replace(slug, "_", "-", -1)
+			slug = strings.ReplaceAll(slug, "_", "-")
 
 			// check if the env var has the generic prefix
 			if strings.HasPrefix(slug, "ci-") {

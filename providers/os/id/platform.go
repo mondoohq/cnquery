@@ -8,20 +8,20 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/detector"
-	"go.mondoo.com/cnquery/v12/providers/os/id/awsec2"
-	"go.mondoo.com/cnquery/v12/providers/os/id/awsecs"
-	"go.mondoo.com/cnquery/v12/providers/os/id/clouddetect"
-	"go.mondoo.com/cnquery/v12/providers/os/id/hostname"
-	"go.mondoo.com/cnquery/v12/providers/os/id/hypervisor"
-	"go.mondoo.com/cnquery/v12/providers/os/id/ids"
-	"go.mondoo.com/cnquery/v12/providers/os/id/machineid"
-	"go.mondoo.com/cnquery/v12/providers/os/id/serialnumber"
-	"go.mondoo.com/cnquery/v12/providers/os/id/sshhostkey"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/detector"
+	"go.mondoo.com/mql/v13/providers/os/id/awsec2"
+	"go.mondoo.com/mql/v13/providers/os/id/awsecs"
+	"go.mondoo.com/mql/v13/providers/os/id/clouddetect"
+	"go.mondoo.com/mql/v13/providers/os/id/hostname"
+	"go.mondoo.com/mql/v13/providers/os/id/hypervisor"
+	"go.mondoo.com/mql/v13/providers/os/id/ids"
+	"go.mondoo.com/mql/v13/providers/os/id/machineid"
+	"go.mondoo.com/mql/v13/providers/os/id/serialnumber"
+	"go.mondoo.com/mql/v13/providers/os/id/sshhostkey"
 )
 
 type PlatformFingerprint struct {
@@ -62,7 +62,7 @@ func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *invento
 		switch conn.Type() {
 		case shared.Type_Local:
 			idDetectors = []string{ids.IdDetector_CloudDetect, ids.IdDetector_Hostname}
-			if cnquery.Features(req.Features).IsActive(cnquery.SerialNumberAsID) {
+			if mql.Features(req.Features).IsActive(mql.SerialNumberAsID) {
 				idDetectors = append(idDetectors, ids.IdDetector_SerialNumber)
 			}
 		case shared.Type_SSH:
@@ -163,8 +163,8 @@ func ExtractPlatformAndKindFromPlatformId(id string) (string, string) {
 
 func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetector string) (*platformInfo, error) {
 	var identifier string
-	switch {
-	case idDetector == ids.IdDetector_Hostname:
+	switch idDetector {
+	case ids.IdDetector_Hostname:
 		// NOTE: we need to be careful with hostname's since they are not required to be unique
 		hostname, ok := hostname.Hostname(conn, pf)
 		if ok && len(hostname) > 0 {
@@ -176,7 +176,7 @@ func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 			}, nil
 		}
 		return &platformInfo{}, nil
-	case idDetector == ids.IdDetector_MachineID:
+	case ids.IdDetector_MachineID:
 		guid, hostErr := machineid.MachineId(conn, pf)
 		if hostErr == nil && len(guid) > 0 {
 			identifier = "//platformid.api.mondoo.app/machineid/" + guid
@@ -187,7 +187,7 @@ func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 			}, hostErr
 		}
 		return &platformInfo{}, nil
-	case idDetector == ids.IdDetector_SerialNumber:
+	case ids.IdDetector_SerialNumber:
 		serial, err := serialnumber.SerialNumber(conn, pf)
 		if err == nil && len(serial) > 0 {
 			identifier = "//platformid.api.mondoo.app/serialnumber/" + serial
@@ -198,7 +198,7 @@ func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 			}, nil
 		}
 		return &platformInfo{}, nil
-	case idDetector == ids.IdDetector_AwsEcs:
+	case ids.IdDetector_AwsEcs:
 		metadata, err := awsecs.Resolve(conn, pf)
 		if err != nil {
 			return nil, err
@@ -215,7 +215,7 @@ func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 			}, nil
 		}
 		return &platformInfo{}, nil
-	case idDetector == ids.IdDetector_CloudDetect:
+	case ids.IdDetector_CloudDetect:
 		cloudPlatformInfo := clouddetect.Detect(conn, pf)
 		if cloudPlatformInfo != nil {
 			return &platformInfo{
@@ -226,7 +226,7 @@ func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 			}, nil
 		}
 		return &platformInfo{}, nil
-	case idDetector == ids.IdDetector_SshHostkey:
+	case ids.IdDetector_SshHostkey:
 		identifier, err := sshhostkey.Detect(conn, pf)
 		if err != nil {
 			return nil, err
@@ -237,6 +237,6 @@ func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 			RelatedPlatformIDs: []string{},
 		}, nil
 	default:
-		return nil, errors.New(fmt.Sprintf("the provided id-detector is not supported: %s", idDetector))
+		return nil, fmt.Errorf("the provided id-detector is not supported: %s", idDetector)
 	}
 }

@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v12/providers/tailscale
+module go.mondoo.com/mql/v13/providers/tailscale
 
-replace go.mondoo.com/cnquery/v12 => ../..
+replace go.mondoo.com/mql/v13 => ../..
 
 go 1.25.1
 
@@ -8,7 +8,7 @@ require (
 	github.com/cockroachdb/errors v1.12.0
 	github.com/rs/zerolog v1.34.0
 	github.com/tailscale/tailscale-client-go/v2 v2.0.0-20250129222324-74c8fc3cb4d7
-	go.mondoo.com/cnquery/v12 v12.19.2
+	go.mondoo.com/mql/v13 v13.0.0-pre1
 )
 
 require (

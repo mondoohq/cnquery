@@ -1,13 +1,13 @@
-module go.mondoo.com/cnquery/v12/providers/shodan
+module go.mondoo.com/mql/v13/providers/shodan
 
-replace go.mondoo.com/cnquery/v12 => ../..
+replace go.mondoo.com/mql/v13 => ../..
 
 go 1.25.1
 
 require (
 	github.com/rs/zerolog v1.34.0
 	github.com/shadowscatcher/shodan v1.0.8
-	go.mondoo.com/cnquery/v12 v12.19.2
+	go.mondoo.com/mql/v13 v13.0.0-pre1
 )
 
 require (

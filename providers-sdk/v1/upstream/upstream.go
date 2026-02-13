@@ -11,9 +11,9 @@ import (
 
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
-	rangerUtils "go.mondoo.com/cnquery/v12/utils/ranger"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/utils/multierr"
+	rangerUtils "go.mondoo.com/mql/v13/utils/ranger"
 	"go.mondoo.com/ranger-rpc"
 	guard_cert_auth "go.mondoo.com/ranger-rpc/plugins/authentication/cert"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/crypto"
@@ -71,7 +71,7 @@ func (c *UpstreamConfig) InitClient(ctx context.Context) (*UpstreamClient, error
 		return nil, multierr.Wrap(err, "could not initialize client authentication")
 	}
 	plugins := []ranger.ClientPlugin{certAuth}
-	plugins = append(plugins, rangerUtils.DefaultRangerPlugins(cnquery.GetFeatures(ctx))...)
+	plugins = append(plugins, rangerUtils.DefaultRangerPlugins(mql.GetFeatures(ctx))...)
 
 	res := UpstreamClient{
 		UpstreamConfig: *c,

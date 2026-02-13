@@ -11,12 +11,12 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v81/github"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/github/connection"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/github/connection"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/stringx"
 	"go.mondoo.com/ranger-rpc"
 )
 

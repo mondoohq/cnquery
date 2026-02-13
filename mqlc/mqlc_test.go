@@ -11,17 +11,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/mqlc"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/v13/types"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
 )
 
 var (
-	features    = cnquery.Features{byte(cnquery.ResourceContext)}
+	features    = mql.Features{byte(mql.ResourceContext)}
 	core_schema = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"})
 	os_schema   = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"})
 	conf        = mqlc.NewConfig(
@@ -134,7 +134,7 @@ func TestCompiler_Buggy(t *testing.T) {
 		res  []*llx.Chunk
 		err  error
 	}{
-		// https://github.com/mondoohq/cnquery/issues/2223#issuecomment-1780528051
+		// https://github.com/mondoohq/mql/issues/2223#issuecomment-1780528051
 		{`user(name: "z").authorizedkeys.all()`, []*llx.Chunk{
 			{Id: "user", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
 				Type: string(types.Resource("user")),
@@ -245,7 +245,7 @@ func TestCompiler_FailIfNoEntrypoints(t *testing.T) {
 	}
 	for _, code := range data {
 		t.Run(code, func(t *testing.T) {
-			features := cnquery.Features{byte(cnquery.FailIfNoEntryPoints)}
+			features := mql.Features{byte(mql.FailIfNoEntryPoints)}
 			conf := mqlc.NewConfig(
 				core_schema.Add(os_schema),
 				features,
@@ -1208,7 +1208,7 @@ func TestCompiler_Empty_All_ANY_Issue5248(t *testing.T) {
 }
 
 func TestCompiler_All_Issue1316(t *testing.T) {
-	// https://github.com/mondoohq/cnquery/issues/1316
+	// https://github.com/mondoohq/mql/issues/1316
 	compileT(t, `files.find(from: ".", type: "file").all( permissions.other_readable == false )`, func(res *llx.CodeBundle) {
 		require.Equal(t, 3, len(res.CodeV2.Blocks))
 		require.Equal(t, 6, len(res.CodeV2.Blocks[2].Chunks))
@@ -1647,8 +1647,7 @@ func TestCompiler_LongResourceWithUnnamedArgs(t *testing.T) {
 	})
 }
 
-// FIXME: reactivate
-func testCompiler_EmbeddedResource(t *testing.T) {
+func TestCompiler_EmbeddedResource(t *testing.T) {
 	compileCtx(t, "docker.containers[0].os", func(res *llx.CodeBundle) {
 		assertFunction(t, "os", &llx.Function{
 			Type:    string(types.Resource("os.linux")),
@@ -1657,7 +1656,7 @@ func testCompiler_EmbeddedResource(t *testing.T) {
 	})
 }
 
-func testCompiler_EmbeddedResource_Lookup(t *testing.T) {
+func TestCompiler_EmbeddedResource_Lookup(t *testing.T) {
 	compileCtx(t, "docker.containers[0].hostname", func(res *llx.CodeBundle) {
 		assertFunction(t, "os", &llx.Function{
 			Type:    string(types.Resource("os.linux")),
@@ -1681,7 +1680,7 @@ func testCompiler_EmbeddedResource_Lookup(t *testing.T) {
 	})
 }
 
-func testCompiler_EmbeddedResource_ImplicitResource(t *testing.T) {
+func TestCompiler_EmbeddedResource_ImplicitResource(t *testing.T) {
 	compileCtx(t, "docker.containers[0].user(uid: 999).name", func(res *llx.CodeBundle) {
 		assertFunction(t, "createResource", &llx.Function{
 			Type: string(types.Resource("os.base.user")),
@@ -1702,7 +1701,7 @@ func testCompiler_EmbeddedResource_ImplicitResource(t *testing.T) {
 	})
 }
 
-func testCompiler_EmbeddedResource_ImplicitResource_Block(t *testing.T) {
+func TestCompiler_EmbeddedResource_ImplicitResource_Block(t *testing.T) {
 	compileCtx(t, "docker.containers[0].user(uid: 999) { name }", func(res *llx.CodeBundle) {
 		assertFunction(t, "createResource", &llx.Function{
 			Type:    string(types.Resource("os.base.user")),
@@ -1724,7 +1723,7 @@ func testCompiler_EmbeddedResource_ImplicitResource_Block(t *testing.T) {
 	})
 }
 
-func testCompiler_EmbeddedResource_ImplicitResource_List(t *testing.T) {
+func TestCompiler_EmbeddedResource_ImplicitResource_List(t *testing.T) {
 	compileCtx(t, "docker.containers[0].packages", func(res *llx.CodeBundle) {
 		assertFunction(t, "createResource", &llx.Function{
 			Type:    string(types.Resource("os.base.packages")),
@@ -2123,7 +2122,7 @@ func TestSuggestions(t *testing.T) {
 		code             string
 		suggestions      []string
 		err              error
-		requiredFeatures cnquery.Features
+		requiredFeatures mql.Features
 	}{
 		{
 			"does_not_get_suggestions",
@@ -2185,7 +2184,7 @@ func TestSuggestions(t *testing.T) {
 			"docker.containers[0].hostnam",
 			[]string{"hostname"},
 			errors.New("cannot find field 'hostnam' in docker.container"),
-			cnquery.Features{byte(cnquery.MQLAssetContext)},
+			mql.Features{byte(mql.MQLAssetContext)},
 		},
 		{
 			// embedded with asset context off

@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	berglas "github.com/GoogleCloudPlatform/berglas/v2/pkg/berglas"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/utils/multierr"
 )
 
 type storageType string

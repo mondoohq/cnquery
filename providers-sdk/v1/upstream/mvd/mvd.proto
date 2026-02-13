@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 import "providers-sdk/v1/upstream/mvd/cvss/cvss.proto";
 
 option go_package = 
-  "go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/mvd";
+  "go.mondoo.com/mql/v13/providers-sdk/v1/upstream/mvd";
 
 message Platform {
   string name = 1;
@@ -36,7 +36,8 @@ message Package {
   int32 score = 26;
   bool affected = 27;
 }
-// Implements the AdvisoryScanner interface from cnquery
+
+// Implements the AdvisoryScanner interface for vulnerability analysis
 service AdvisoryScanner {
   // Scans a list of packages for vulnerabilities
   rpc AnalyseAsset(AnalyseAssetRequest) returns (VulnReport);

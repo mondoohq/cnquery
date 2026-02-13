@@ -12,7 +12,7 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 // This package contains shared components for plugin generation.
@@ -47,7 +47,10 @@ func CLI(conf *plugin.Provider) {
 	}
 
 	distPath := filepath.Join(pluginPath, "dist")
-	ensureDir(distPath)
+	if err := ensureDir(distPath); err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
 
 	data, err := json.Marshal(conf)
 	if err != nil {

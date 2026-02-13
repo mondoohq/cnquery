@@ -11,7 +11,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
 const sysctlPath = "/proc/sys/"
@@ -140,8 +140,8 @@ func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 				return nil
 			}
 			// remove leading sysctl path
-			k := strings.Replace(path, sysctlPath, "", -1)
-			k = strings.Replace(k, "/", ".", -1)
+			k := strings.ReplaceAll(path, sysctlPath, "")
+			k = strings.ReplaceAll(k, "/", ".")
 			kernelParameters[k] = strings.TrimSpace(string(content))
 		}
 		return nil

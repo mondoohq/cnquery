@@ -6,8 +6,8 @@ package main
 import (
 	"fmt"
 
-	"go.mondoo.com/cnquery/v12/cli/components"
-	"go.mondoo.com/cnquery/v12/cli/theme"
+	"go.mondoo.com/mql/v13/cli/components"
+	"go.mondoo.com/mql/v13/cli/theme"
 )
 
 type CustomString string

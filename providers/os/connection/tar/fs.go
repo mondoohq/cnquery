@@ -7,7 +7,6 @@ import (
 	"archive/tar"
 	"bufio"
 	"errors"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -16,8 +15,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/fsutil"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/fsutil"
 )
 
 var _ shared.FileSearch = (*FS)(nil)
@@ -169,28 +168,6 @@ func (fs *FS) open(header *tar.Header) (*bufio.Reader, error) {
 		return nil, err
 	}
 	return reader, nil
-}
-
-func (fs *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
-	fReader, err := fs.open(header)
-	if err != nil {
-		return nil, err
-	}
-
-	// create a pipe
-	tarReader, tarWriter := io.Pipe()
-
-	// get file info, header my just include symlink fileinfo
-	fi, err := fs.stat(header)
-	if err != nil {
-		return nil, err
-	}
-
-	// convert raw stream to tar stream
-	go fsutil.StreamFileAsTar(header.Name, fi, io.NopCloser(fReader), tarWriter)
-
-	// return the reader
-	return tarReader, nil
 }
 
 // Find searches for files and returns the file info, regex can be nil

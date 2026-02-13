@@ -5,14 +5,14 @@ package config
 import (
 	"fmt"
 
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/tailscale/connection"
-	"go.mondoo.com/cnquery/v12/providers/tailscale/provider"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/tailscale/connection"
+	"go.mondoo.com/mql/v13/providers/tailscale/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "tailscale",
-	ID:              "go.mondoo.com/cnquery/v12/providers/tailscale",
+	ID:              "go.mondoo.com/mql/providers/tailscale",
 	Version:         "11.0.73",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{

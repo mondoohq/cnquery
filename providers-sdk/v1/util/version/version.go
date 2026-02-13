@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"go.mondoo.com/mql/v13/utils/stringx"
 
 	mastermind "github.com/Masterminds/semver"
 	tea "github.com/charmbracelet/bubbletea"
@@ -26,16 +26,16 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v12/cli/components"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/cli/components"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"golang.org/x/mod/modfile"
 )
 
 var rootCmd = &cobra.Command{
-	Short: "cnquery versioning tool",
+	Short: "mql versioning tool",
 	Long: `
-cnquery versioning tool allows us to update the version of one or more providers.
+mql versioning tool allows us to update the version of one or more providers.
 
 The tool will automatically detect the current version of the provider and
 suggest a new version. It will also create a commit with the new version and
@@ -159,9 +159,9 @@ func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy, ignore
 			modPath = require.Mod.Path + "@" + require.Mod.Version
 		}
 
-		if require.Syntax.Comments.Before != nil {
-			for i := range require.Syntax.Comments.Before {
-				comment := require.Syntax.Comments.Before[i].Token
+		if require.Syntax.Before != nil {
+			for i := range require.Syntax.Before {
+				comment := require.Syntax.Before[i].Token
 				if strings.HasPrefix(comment, "// pin") {
 					version := strings.TrimSpace(strings.TrimPrefix(comment, "// pin"))
 					log.Info().Msgf("Found pin comment for %s: %s", require.Mod.Path, version)
@@ -519,7 +519,7 @@ func commitChanges(confs updateConfs) error {
 	}
 	fmt.Println(" done")
 
-	body := "\n\nThis release was created by cnquery's provider versioning bot.\n\n" +
+	body := "\n\nThis release was created by mql's provider versioning bot.\n\n" +
 		"You can find me under: `providers-sdk/v1/util/version`.\n"
 
 	commit, err := worktree.Commit(confs.commitTitle()+body, &git.CommitOptions{
@@ -554,7 +554,7 @@ func commitChanges(confs updateConfs) error {
 	}
 
 	log.Info().Msg("updates pushed successfully, open: \n\t" +
-		"https://github.com/mondoohq/cnquery/compare/" + branchName + "?expand=1")
+		"https://github.com/mondoohq/mql/compare/" + branchName + "?expand=1")
 	return nil
 }
 

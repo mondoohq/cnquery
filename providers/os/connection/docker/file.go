@@ -16,8 +16,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/ssh/cat"
-	"go.mondoo.com/cnquery/v12/providers/os/fsutil"
+	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
+	"go.mondoo.com/mql/v13/providers/os/fsutil"
 )
 
 func FileOpen(dockerClient *client.Client, path string, container string, conn *ContainerConnection, catFs *cat.Fs) (afero.File, error) {
@@ -167,18 +167,3 @@ func (f *File) Tar() (io.ReadCloser, error) {
 // 	r.Close()
 // 	return true
 // }
-
-// returns all directories and files under /proc
-func (f *File) procls() []string {
-	c, err := f.connection.RunCommand("find /proc")
-	if err != nil {
-		return []string{}
-	}
-	content, err := io.ReadAll(c.Stdout)
-	if err != nil {
-		return []string{}
-	}
-
-	// all files
-	return strings.Split(string(content), "\n")
-}

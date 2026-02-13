@@ -7,14 +7,13 @@ import (
 	"context"
 	"strings"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/id/containerid"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/id/containerid"
 )
 
-func (e *dockerEngineDiscovery) containerList() ([]types.Container, error) {
+func (e *dockerEngineDiscovery) containerList() ([]container.Summary, error) {
 	dc, err := e.client()
 	if err != nil {
 		return nil, err
@@ -98,7 +97,7 @@ func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
 		return ii, err
 	}
 
-	res, _, err := dc.ImageInspectWithRaw(context.Background(), name)
+	res, err := dc.ImageInspect(context.Background(), name)
 	if err != nil {
 		return ii, err
 	}
@@ -146,26 +145,6 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*inventory.Asset, error) {
 		container[i] = asset
 	}
 	return container, nil
-}
-
-func mapContainerState(state string) inventory.State {
-	switch state {
-	case "running":
-		return inventory.State_STATE_RUNNING
-	case "created":
-		return inventory.State_STATE_PENDING
-	case "paused":
-		return inventory.State_STATE_STOPPED
-	case "exited":
-		return inventory.State_STATE_TERMINATED
-	case "restarting":
-		return inventory.State_STATE_PENDING
-	case "dead":
-		return inventory.State_STATE_ERROR
-	default:
-		log.Warn().Str("state", state).Msg("unknown container state")
-		return inventory.State_STATE_UNKNOWN
-	}
 }
 
 // DockerDisplayNames removes the leading slash of the internal docker name

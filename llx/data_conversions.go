@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -156,14 +156,6 @@ func bool2result(value any, typ types.Type) (*Primitive, error) {
 		return nil, errInvalidConversion(value, typ)
 	}
 	return BoolPrimitive(v), nil
-}
-
-func ref2resultV2(value any, typ types.Type) (*Primitive, error) {
-	v, ok := value.(uint64)
-	if !ok {
-		return nil, errInvalidConversion(value, typ)
-	}
-	return RefPrimitiveV2(v), nil
 }
 
 func int2result(value any, typ types.Type) (*Primitive, error) {

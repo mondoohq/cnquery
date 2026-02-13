@@ -5,7 +5,7 @@ package execruntime
 
 const AWS_CODEBUILD = "codebuild"
 
-var awscodebuildEnv = &RuntimeEnv{
+var awscodebuildEnv = &RuntimeEnv{ //nolint:unused
 	Id:        AWS_CODEBUILD,
 	Name:      "AWS CodeBuild",
 	Prefix:    "CODEBUILD",

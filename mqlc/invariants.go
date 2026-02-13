@@ -6,8 +6,8 @@ package mqlc
 import (
 	"fmt"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/utils/multierr"
 )
 
 // An Invariant is a condition that we expect compiled code to hold.
@@ -86,22 +86,6 @@ func checkReturnEntrypointsV2(code *llx.CodeV2) bool {
 			if len(code.Entrypoints())+len(code.Datapoints()) != 1 {
 				return false
 			}
-		}
-	}
-
-	return true
-}
-
-func checkReturnEntrypointsV1(code *llx.CodeV1) bool {
-	if code.SingleValue {
-		if len(code.Entrypoints)+len(code.Datapoints) != 1 {
-			return false
-		}
-	}
-
-	for _, c := range code.Functions {
-		if checkReturnEntrypointsV1(c) == false {
-			return false
 		}
 	}
 

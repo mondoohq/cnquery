@@ -3,9 +3,9 @@ FROM registry.access.redhat.com/ubi8-minimal AS root
 RUN microdnf upgrade -y &&\
     rm -rf /var/cache/dnf/*
 
-COPY cnquery /usr/local/bin
+COPY mql /usr/local/bin
 
-ENTRYPOINT [ "cnquery" ]
+ENTRYPOINT [ "mql" ]
 CMD ["help"]
 
 # Rootless version of the container

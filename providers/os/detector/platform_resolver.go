@@ -5,10 +5,10 @@ package detector
 
 import (
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/docker"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/tar"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/docker"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/tar"
 )
 
 type detect func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error)
@@ -72,7 +72,7 @@ func (r *PlatformResolver) resolvePlatform(pf *inventory.Platform, conn shared.C
 	}
 
 	// if detection is true but we have a family
-	if detected == true && r.IsFamily == true {
+	if detected && r.IsFamily {
 		// we are a family and we may have children to try
 		for _, c := range r.Children {
 			detected, resolved := c.resolvePlatform(pf, conn)
@@ -90,7 +90,7 @@ func (r *PlatformResolver) resolvePlatform(pf *inventory.Platform, conn shared.C
 	}
 
 	// return if the detect is true and we have a leaf
-	if detected && r.IsFamily == false {
+	if detected && !r.IsFamily {
 		return pf, true
 	}
 

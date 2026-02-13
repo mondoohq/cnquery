@@ -14,14 +14,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/v12/cli/components"
-	"go.mondoo.com/cnquery/v12/cli/config"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/piped"
+	"go.mondoo.com/mql/v13/cli/components"
+	"go.mondoo.com/mql/v13/cli/config"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/piped"
 	"go.mondoo.com/ranger-rpc/status"
 )
 
@@ -194,7 +194,7 @@ func setDefaultConnector(provider *plugin.Provider, connector *plugin.Connector,
 	cmd.Command.Run = func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			log.Error().Msg("provider " + args[0] + " does not exist")
-			cmd.Help()
+			_ = cmd.Help()
 			os.Exit(1)
 		}
 
@@ -325,10 +325,10 @@ func attachFlag(flagset *pflag.FlagSet, flag plugin.Flag) {
 	}
 
 	if flag.Option&plugin.FlagOption_Hidden != 0 {
-		flagset.MarkHidden(flag.Long)
+		_ = flagset.MarkHidden(flag.Long)
 	}
 	if flag.Option&plugin.FlagOption_Deprecated != 0 {
-		flagset.MarkDeprecated(flag.Long, "has been deprecated")
+		_ = flagset.MarkDeprecated(flag.Long, "has been deprecated")
 	}
 }
 
@@ -432,7 +432,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 				flagName = flag.Long
 			}
 
-			viper.BindPFlag(flagName, cmd.Flags().Lookup(flag.Long))
+			_ = viper.BindPFlag(flagName, cmd.Flags().Lookup(flag.Long))
 		}
 	}
 
@@ -451,7 +451,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			if err != nil {
 				log.Fatal().Err(err).Msg("failed to get password")
 			}
-			cc.Flags().Set("password", pass)
+			_ = cc.Flags().Set("password", pass)
 		}
 
 		askFlags := cc.Annotations["ask-flags"]
@@ -541,7 +541,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			providers.Coordinator.Shutdown()
 			log.Fatal().Msg(err.Error())
 		}
-		runtime.SetRecording(recording)
+		_ = runtime.SetRecording(recording)
 
 		cliRes, err := runtime.Provider.Instance.Plugin.ParseCLI(&plugin.ParseCLIReq{
 			Connector: connector.Name,
@@ -557,7 +557,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			} else {
 				log.Error().Err(err).Msg("failed to parse cli arguments")
 			}
-			cmd.Help()
+			_ = cmd.Help()
 			return
 		}
 
@@ -584,7 +584,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 					log.Fatal().Msg("could not load data from piped input")
 				}
 				// generate a new temporary file and write the content to it
-				tmpFile, err := os.CreateTemp("", "cnquery-stdin-")
+				tmpFile, err := os.CreateTemp("", "mql-stdin-")
 				if err != nil {
 					log.Fatal().Err(err).Msg("could not create temporary file for stdin")
 				}

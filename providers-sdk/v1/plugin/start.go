@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
-	"go.mondoo.com/cnquery/v12/logger"
-	inventory "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/logger"
+	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
 type Provider struct {
@@ -65,7 +65,7 @@ func Start(args []string, impl ProviderPlugin) {
 
 	// disable the plugin's logs
 	pluginLogger := hclog.New(&hclog.LoggerOptions{
-		Name: "cnquery-plugin",
+		Name: "mql-plugin",
 		// Level: hclog.LevelFromString("DEBUG"),
 		Level:  hclog.Info,
 		Output: io.Discard,

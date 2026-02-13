@@ -5,7 +5,7 @@ package execruntime
 
 const MONDOO_CI = "mondoo-ci"
 
-var mondooCIEnv = &RuntimeEnv{
+var mondooCIEnv = &RuntimeEnv{ //nolint:unused
 	Id:        MONDOO_CI,
 	Name:      "Mondoo CI",
 	Namespace: "ci.mondoo.com",

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/timex"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/timex"
 )
 
 type Resource interface {
@@ -35,7 +35,7 @@ func (m *MockResource) MqlID() string {
 }
 
 // resourceFunctions are all the shared handlers for resource calls
-var resourceFunctionsV2 map[string]chunkHandlerV2
+var resourceFunctionsV2 map[string]chunkHandlerV2 //nolint:unused
 
 func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
 	// where(resource.list, function)
@@ -54,7 +54,7 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 	arg1 := chunk.Function.Args[1]
 	blockRef, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'where' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
@@ -179,7 +179,7 @@ func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'map' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'map' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)

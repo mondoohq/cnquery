@@ -52,7 +52,7 @@ jobs:
         run: |
           protoc --version
           make prep
-          make cnquery/generate
+          make mql/generate
           SKIP_COMPILE=yes make providers/build
           git diff --exit-code *.go
           git diff --exit-code providers/**/*.lr.json

@@ -11,10 +11,10 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/aksauth"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/azauth"
-	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/aksauth"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/azauth"
+	"go.mondoo.com/mql/v13/providers/k8s/connection/shared"
 	"k8s.io/client-go/rest"
 )
 

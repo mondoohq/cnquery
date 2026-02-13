@@ -4,14 +4,14 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/terraform/provider"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/terraform/provider"
 )
 
 var Config = plugin.Provider{
 	Name:    "terraform",
-	ID:      "go.mondoo.com/cnquery/v9/providers/terraform",
+	ID:      "go.mondoo.com/mql/providers/terraform",
 	Version: "11.1.80",
 	ConnectionTypes: []string{
 		provider.StateConnectionType,

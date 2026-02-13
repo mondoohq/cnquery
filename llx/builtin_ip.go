@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/types"
 )
 
 type RawIP struct {
@@ -52,7 +52,7 @@ func ParseIP(s string) RawIP {
 		}
 	}
 
-	var explicitMask int = -1
+	var explicitMask = -1
 	if suffix != "" {
 		mask64, _ := strconv.ParseInt(suffix, 10, 0)
 		explicitMask = int(mask64)
@@ -219,7 +219,7 @@ func (i RawIP) Subnet() string {
 	}
 
 	mask := net.IPMask(b)
-	subnet := i.IP.Mask(mask)
+	subnet := i.Mask(mask)
 	res := subnet.String()
 
 	for hasMore := true; hasMore; {
@@ -242,7 +242,7 @@ func (i RawIP) prefix() net.IP {
 		return []byte{}
 	}
 	mask := net.IPMask(b)
-	return i.IP.Mask(mask)
+	return i.Mask(mask)
 }
 
 func (i RawIP) Prefix() string {
@@ -272,7 +272,7 @@ func (i RawIP) Suffix() string {
 		return ""
 	}
 	mask := flipMask(net.IPMask(b))
-	suffix := i.IP.Mask(mask)
+	suffix := i.Mask(mask)
 	return suffix.String()
 }
 
@@ -425,7 +425,7 @@ func ipUnspecified(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if !ok {
 		return nil, 0, errors.New("incorrect internal data for IP type")
 	}
-	return BoolData(v.IP.IsUnspecified()), 0, nil
+	return BoolData(v.IsUnspecified()), 0, nil
 }
 
 func ipIsPublic(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
