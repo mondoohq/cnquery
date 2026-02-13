@@ -67,6 +67,7 @@ func (a *mqlAwsSecurityhub) getHubs(conn *connection.AwsConnection) []*jobpool.J
 				map[string]*llx.RawData{
 					"arn":          llx.StringDataPtr(secHub.HubArn),
 					"subscribedAt": llx.StringDataPtr(secHub.SubscribedAt),
+					"region":       llx.StringData(region),
 				})
 			if err != nil {
 				return nil, err

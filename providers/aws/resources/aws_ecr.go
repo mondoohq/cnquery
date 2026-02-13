@@ -148,6 +148,36 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 	return tasks
 }
 
+func (a *mqlAwsEcrRepository) scanningFrequency() (string, error) {
+	if a.Public.Data {
+		return "", nil
+	}
+
+	name := a.Name.Data
+	region := a.Region.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ecr(region)
+	ctx := context.Background()
+
+	resp, err := svc.BatchGetRepositoryScanningConfiguration(ctx, &ecr.BatchGetRepositoryScanningConfigurationInput{
+		RepositoryNames: []string{name},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	if len(resp.ScanningConfigurations) > 0 {
+		// The API returns exactly one ScanningConfiguration per repository in the request.
+		return string(resp.ScanningConfigurations[0].ScanFrequency), nil
+	}
+
+	return "", nil
+}
+
 func (a *mqlAwsEcrRepository) images() ([]any, error) {
 	name := a.Name.Data
 	region := a.Region.Data

@@ -1760,6 +1760,7 @@ resources:
       public: {}
       region: {}
       registryId: {}
+      scanningFrequency: {}
       uri: {}
     is_private: true
     min_mondoo_version: 7.15.0
@@ -2853,6 +2854,7 @@ resources:
       createdAt:
         min_mondoo_version: 9.0.0
       id: {}
+      inlinePolicies: {}
       name: {}
       usernames: {}
     is_private: true
@@ -3126,6 +3128,20 @@ resources:
     - query: |
         aws.kms.keys.where( metadata['KeyState'] == "Enabled" ).all( keyRotationEnabled == true )
       title: Ensure rotation for customer created CMKs is enabled
+  aws.kms.grant:
+    fields:
+      createdAt: {}
+      grantId: {}
+      granteePrincipal: {}
+      issuingAccount: {}
+      keyArn: {}
+      operations: {}
+      retiringPrincipal: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
   aws.kms.key:
     docs:
       desc: |
@@ -3142,6 +3158,7 @@ resources:
         min_mondoo_version: 9.0.0
       enabled:
         min_mondoo_version: 9.0.0
+      grants: {}
       id: {}
       keyRotationEnabled: {}
       keyState:
@@ -3201,9 +3218,27 @@ resources:
         min_mondoo_version: 9.0.0
       tracingMode:
         min_mondoo_version: 9.0.0
+      urlConfig: {}
       vpcConfig: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.lambda.function.urlConfig:
+    fields:
+      authType: {}
+      corsAllowCredentials: {}
+      corsAllowHeaders: {}
+      corsAllowMethods: {}
+      corsAllowOrigins: {}
+      corsExposeHeaders: {}
+      corsMaxAge: {}
+      createdAt: {}
+      functionUrl: {}
+      lastModifiedAt: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
@@ -3912,6 +3947,7 @@ resources:
       location: {}
       logging: {}
       name: {}
+      objectLockEnabled: {}
       owner: {}
       policy: {}
       public: {}
@@ -4137,6 +4173,7 @@ resources:
   aws.securityhub.hub:
     fields:
       arn: {}
+      region: {}
       subscribedAt: {}
     is_private: true
     min_mondoo_version: 5.15.0

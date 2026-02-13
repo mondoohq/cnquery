@@ -71,6 +71,7 @@ const (
 	ResourceAwsFsxBackup                                                        string = "aws.fsx.backup"
 	ResourceAwsKms                                                              string = "aws.kms"
 	ResourceAwsKmsKey                                                           string = "aws.kms.key"
+	ResourceAwsKmsGrant                                                         string = "aws.kms.grant"
 	ResourceAwsIam                                                              string = "aws.iam"
 	ResourceAwsIamUsercredentialreportentry                                     string = "aws.iam.usercredentialreportentry"
 	ResourceAwsIamUser                                                          string = "aws.iam.user"
@@ -213,6 +214,7 @@ const (
 	ResourceAwsApigatewayStage                                                  string = "aws.apigateway.stage"
 	ResourceAwsLambda                                                           string = "aws.lambda"
 	ResourceAwsLambdaFunction                                                   string = "aws.lambda.function"
+	ResourceAwsLambdaFunctionUrlConfig                                          string = "aws.lambda.function.urlConfig"
 	ResourceAwsSsm                                                              string = "aws.ssm"
 	ResourceAwsSsmParameter                                                     string = "aws.ssm.parameter"
 	ResourceAwsSsmInstance                                                      string = "aws.ssm.instance"
@@ -486,6 +488,10 @@ func init() {
 		"aws.kms.key": {
 			Init:   initAwsKmsKey,
 			Create: createAwsKmsKey,
+		},
+		"aws.kms.grant": {
+			// to override args, implement: initAwsKmsGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKmsGrant,
 		},
 		"aws.iam": {
 			// to override args, implement: initAwsIam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1054,6 +1060,10 @@ func init() {
 		"aws.lambda.function": {
 			Init:   initAwsLambdaFunction,
 			Create: createAwsLambdaFunction,
+		},
+		"aws.lambda.function.urlConfig": {
+			// to override args, implement: initAwsLambdaFunctionUrlConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLambdaFunctionUrlConfig,
 		},
 		"aws.ssm": {
 			// to override args, implement: initAwsSsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2318,6 +2328,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetDescription()).ToDataRes(types.String)
 	},
+	"aws.kms.key.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetGrants()).ToDataRes(types.Array(types.Resource("aws.kms.grant")))
+	},
+	"aws.kms.grant.grantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsGrant).GetGrantId()).ToDataRes(types.String)
+	},
+	"aws.kms.grant.keyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsGrant).GetKeyArn()).ToDataRes(types.String)
+	},
+	"aws.kms.grant.granteePrincipal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsGrant).GetGranteePrincipal()).ToDataRes(types.String)
+	},
+	"aws.kms.grant.retiringPrincipal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsGrant).GetRetiringPrincipal()).ToDataRes(types.String)
+	},
+	"aws.kms.grant.issuingAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsGrant).GetIssuingAccount()).ToDataRes(types.String)
+	},
+	"aws.kms.grant.operations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsGrant).GetOperations()).ToDataRes(types.Array(types.String))
+	},
+	"aws.kms.grant.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsGrant).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.iam.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
 	},
@@ -2584,6 +2618,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.group.usernames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetUsernames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.group.inlinePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamGroup).GetInlinePolicies()).ToDataRes(types.Array(types.String))
 	},
 	"aws.iam.virtualmfadevice.serialNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamVirtualmfadevice).GetSerialNumber()).ToDataRes(types.String)
@@ -3418,6 +3455,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.securityhub.hub.subscribedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubHub).GetSubscribedAt()).ToDataRes(types.String)
+	},
+	"aws.securityhub.hub.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubHub).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.secretsmanager.secrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanager).GetSecrets()).ToDataRes(types.Array(types.Resource("aws.secretsmanager.secret")))
@@ -4306,6 +4346,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.publicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetPublicAccessBlock()).ToDataRes(types.Dict)
+	},
+	"aws.s3.bucket.objectLockEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetObjectLockEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.s3.bucket.exists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetExists()).ToDataRes(types.Bool)
@@ -5582,6 +5625,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecr.repository.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.ecr.repository.scanningFrequency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetScanningFrequency()).ToDataRes(types.String)
+	},
 	"aws.ecr.image.digest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrImage).GetDigest()).ToDataRes(types.String)
 	},
@@ -5776,6 +5822,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lambda.function.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.lambda.function.urlConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetUrlConfig()).ToDataRes(types.Resource("aws.lambda.function.urlConfig"))
+	},
+	"aws.lambda.function.urlConfig.functionUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetFunctionUrl()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.urlConfig.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetAuthType()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.urlConfig.corsAllowOrigins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetCorsAllowOrigins()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.function.urlConfig.corsAllowMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetCorsAllowMethods()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.function.urlConfig.corsAllowHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetCorsAllowHeaders()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.function.urlConfig.corsAllowCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetCorsAllowCredentials()).ToDataRes(types.Bool)
+	},
+	"aws.lambda.function.urlConfig.corsExposeHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetCorsExposeHeaders()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.function.urlConfig.corsMaxAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetCorsMaxAge()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.urlConfig.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.lambda.function.urlConfig.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetLastModifiedAt()).ToDataRes(types.Time)
 	},
 	"aws.ssm.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsm).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ssm.instance")))
@@ -8730,6 +8809,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.kms.key.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.kms.grant.grantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).GrantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.grant.keyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).KeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.grant.granteePrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).GranteePrincipal, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.grant.retiringPrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).RetiringPrincipal, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.grant.issuingAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).IssuingAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.grant.operations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).Operations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.grant.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.iam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIam).__id, ok = v.Value.(string)
 		return
@@ -9120,6 +9235,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.group.usernames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamGroup).Usernames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.group.inlinePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamGroup).InlinePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.virtualmfadevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10380,6 +10499,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.securityhub.hub.subscribedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecurityhubHub).SubscribedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.hub.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubHub).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11748,6 +11871,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.s3.bucket.publicAccessBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).PublicAccessBlock, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.objectLockEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).ObjectLockEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13622,6 +13749,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcrRepository).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.ecr.repository.scanningFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).ScanningFrequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ecr.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrImage).__id, ok = v.Value.(string)
 		return
@@ -13908,6 +14039,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).UrlConfig, ok = plugin.RawToTValue[*mqlAwsLambdaFunctionUrlConfig](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lambda.function.urlConfig.functionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).FunctionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig.corsAllowOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).CorsAllowOrigins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig.corsAllowMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).CorsAllowMethods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig.corsAllowHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).CorsAllowHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig.corsAllowCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).CorsAllowCredentials, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig.corsExposeHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).CorsExposeHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig.corsMaxAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).CorsMaxAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfig.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionUrlConfig).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20285,6 +20464,7 @@ type mqlAwsKmsKey struct {
 	DeletedAt          plugin.TValue[*time.Time]
 	Enabled            plugin.TValue[bool]
 	Description        plugin.TValue[string]
+	Grants             plugin.TValue[[]any]
 }
 
 // createAwsKmsKey creates a new instance of this resource
@@ -20388,6 +20568,101 @@ func (c *mqlAwsKmsKey) GetDescription() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
 		return c.description()
 	})
+}
+
+func (c *mqlAwsKmsKey) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms.key", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
+}
+
+// mqlAwsKmsGrant for the aws.kms.grant resource
+type mqlAwsKmsGrant struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKmsGrantInternal it will be used here
+	GrantId           plugin.TValue[string]
+	KeyArn            plugin.TValue[string]
+	GranteePrincipal  plugin.TValue[string]
+	RetiringPrincipal plugin.TValue[string]
+	IssuingAccount    plugin.TValue[string]
+	Operations        plugin.TValue[[]any]
+	CreatedAt         plugin.TValue[*time.Time]
+}
+
+// createAwsKmsGrant creates a new instance of this resource
+func createAwsKmsGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKmsGrant{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kms.grant", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKmsGrant) MqlName() string {
+	return "aws.kms.grant"
+}
+
+func (c *mqlAwsKmsGrant) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKmsGrant) GetGrantId() *plugin.TValue[string] {
+	return &c.GrantId
+}
+
+func (c *mqlAwsKmsGrant) GetKeyArn() *plugin.TValue[string] {
+	return &c.KeyArn
+}
+
+func (c *mqlAwsKmsGrant) GetGranteePrincipal() *plugin.TValue[string] {
+	return &c.GranteePrincipal
+}
+
+func (c *mqlAwsKmsGrant) GetRetiringPrincipal() *plugin.TValue[string] {
+	return &c.RetiringPrincipal
+}
+
+func (c *mqlAwsKmsGrant) GetIssuingAccount() *plugin.TValue[string] {
+	return &c.IssuingAccount
+}
+
+func (c *mqlAwsKmsGrant) GetOperations() *plugin.TValue[[]any] {
+	return &c.Operations
+}
+
+func (c *mqlAwsKmsGrant) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsIam for the aws.iam resource
@@ -21457,11 +21732,12 @@ type mqlAwsIamGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsIamGroupInternal it will be used here
-	Arn       plugin.TValue[string]
-	Id        plugin.TValue[string]
-	Name      plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	Usernames plugin.TValue[[]any]
+	Arn            plugin.TValue[string]
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	Usernames      plugin.TValue[[]any]
+	InlinePolicies plugin.TValue[[]any]
 }
 
 // createAwsIamGroup creates a new instance of this resource
@@ -21519,6 +21795,12 @@ func (c *mqlAwsIamGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsIamGroup) GetUsernames() *plugin.TValue[[]any] {
 	return &c.Usernames
+}
+
+func (c *mqlAwsIamGroup) GetInlinePolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InlinePolicies, func() ([]any, error) {
+		return c.inlinePolicies()
+	})
 }
 
 // mqlAwsIamVirtualmfadevice for the aws.iam.virtualmfadevice resource
@@ -24944,6 +25226,7 @@ type mqlAwsSecurityhubHub struct {
 	// optional: if you define mqlAwsSecurityhubHubInternal it will be used here
 	Arn          plugin.TValue[string]
 	SubscribedAt plugin.TValue[string]
+	Region       plugin.TValue[string]
 }
 
 // createAwsSecurityhubHub creates a new instance of this resource
@@ -24989,6 +25272,10 @@ func (c *mqlAwsSecurityhubHub) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsSecurityhubHub) GetSubscribedAt() *plugin.TValue[string] {
 	return &c.SubscribedAt
+}
+
+func (c *mqlAwsSecurityhubHub) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsSecretsmanager for the aws.secretsmanager resource
@@ -28911,6 +29198,7 @@ type mqlAwsS3Bucket struct {
 	Replication          plugin.TValue[any]
 	Encryption           plugin.TValue[any]
 	PublicAccessBlock    plugin.TValue[any]
+	ObjectLockEnabled    plugin.TValue[bool]
 	Exists               plugin.TValue[bool]
 	CreatedTime          plugin.TValue[*time.Time]
 	CreatedAt            plugin.TValue[*time.Time]
@@ -29088,6 +29376,12 @@ func (c *mqlAwsS3Bucket) GetEncryption() *plugin.TValue[any] {
 func (c *mqlAwsS3Bucket) GetPublicAccessBlock() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.PublicAccessBlock, func() (any, error) {
 		return c.publicAccessBlock()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetObjectLockEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ObjectLockEnabled, func() (bool, error) {
+		return c.objectLockEnabled()
 	})
 }
 
@@ -33585,6 +33879,7 @@ type mqlAwsEcrRepository struct {
 	ImageTagMutability plugin.TValue[string]
 	EncryptionType     plugin.TValue[string]
 	CreatedAt          plugin.TValue[*time.Time]
+	ScanningFrequency  plugin.TValue[string]
 }
 
 // createAwsEcrRepository creates a new instance of this resource
@@ -33678,6 +33973,12 @@ func (c *mqlAwsEcrRepository) GetEncryptionType() *plugin.TValue[string] {
 
 func (c *mqlAwsEcrRepository) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsEcrRepository) GetScanningFrequency() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ScanningFrequency, func() (string, error) {
+		return c.scanningFrequency()
+	})
 }
 
 // mqlAwsEcrImage for the aws.ecr.image resource
@@ -34232,6 +34533,7 @@ type mqlAwsLambdaFunction struct {
 	CodeSha256           plugin.TValue[string]
 	Description          plugin.TValue[string]
 	LastModifiedAt       plugin.TValue[*time.Time]
+	UrlConfig            plugin.TValue[*mqlAwsLambdaFunctionUrlConfig]
 }
 
 // createAwsLambdaFunction creates a new instance of this resource
@@ -34364,6 +34666,116 @@ func (c *mqlAwsLambdaFunction) GetDescription() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsLambdaFunction) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsLambdaFunction) GetUrlConfig() *plugin.TValue[*mqlAwsLambdaFunctionUrlConfig] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunctionUrlConfig](&c.UrlConfig, func() (*mqlAwsLambdaFunctionUrlConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "urlConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunctionUrlConfig), nil
+			}
+		}
+
+		return c.urlConfig()
+	})
+}
+
+// mqlAwsLambdaFunctionUrlConfig for the aws.lambda.function.urlConfig resource
+type mqlAwsLambdaFunctionUrlConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLambdaFunctionUrlConfigInternal it will be used here
+	FunctionUrl          plugin.TValue[string]
+	AuthType             plugin.TValue[string]
+	CorsAllowOrigins     plugin.TValue[[]any]
+	CorsAllowMethods     plugin.TValue[[]any]
+	CorsAllowHeaders     plugin.TValue[[]any]
+	CorsAllowCredentials plugin.TValue[bool]
+	CorsExposeHeaders    plugin.TValue[[]any]
+	CorsMaxAge           plugin.TValue[int64]
+	CreatedAt            plugin.TValue[*time.Time]
+	LastModifiedAt       plugin.TValue[*time.Time]
+}
+
+// createAwsLambdaFunctionUrlConfig creates a new instance of this resource
+func createAwsLambdaFunctionUrlConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLambdaFunctionUrlConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lambda.function.urlConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) MqlName() string {
+	return "aws.lambda.function.urlConfig"
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) GetFunctionUrl() *plugin.TValue[string] {
+	return &c.FunctionUrl
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) GetAuthType() *plugin.TValue[string] {
+	return &c.AuthType
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) GetCorsAllowOrigins() *plugin.TValue[[]any] {
+	return &c.CorsAllowOrigins
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) GetCorsAllowMethods() *plugin.TValue[[]any] {
+	return &c.CorsAllowMethods
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) GetCorsAllowHeaders() *plugin.TValue[[]any] {
+	return &c.CorsAllowHeaders
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) GetCorsAllowCredentials() *plugin.TValue[bool] {
+	return &c.CorsAllowCredentials
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) GetCorsExposeHeaders() *plugin.TValue[[]any] {
+	return &c.CorsExposeHeaders
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) GetCorsMaxAge() *plugin.TValue[int64] {
+	return &c.CorsMaxAge
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsLambdaFunctionUrlConfig) GetLastModifiedAt() *plugin.TValue[*time.Time] {
 	return &c.LastModifiedAt
 }
 

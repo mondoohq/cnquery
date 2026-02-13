@@ -1359,6 +1359,33 @@ func (a *mqlAwsIamGroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsIamGroup) inlinePolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	groupname := a.Name.Data
+
+	res := []any{}
+	params := &iam.ListGroupPoliciesInput{
+		GroupName: &groupname,
+	}
+	paginator := iam.NewListGroupPoliciesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		groupPolicies, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range groupPolicies.PolicyNames {
+			res = append(res, groupPolicies.PolicyNames[i])
+		}
+	}
+
+	return res, nil
+}
+
 func (a *mqlAwsIamUser) groups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 

@@ -879,6 +879,26 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   enabled() bool
   // Description of the key
   description() string
+  // Grants for the key
+  grants() []aws.kms.grant
+}
+
+// AWS KMS key grant
+private aws.kms.grant @defaults("grantId granteePrincipal") {
+  // Unique identifier for the grant
+  grantId string
+  // ARN of the KMS key
+  keyArn string
+  // Principal that receives the grant's permissions
+  granteePrincipal string
+  // Principal that can retire the grant
+  retiringPrincipal string
+  // AWS account under which the grant was issued
+  issuingAccount string
+  // List of operations permitted by the grant
+  operations []string
+  // When the grant was created
+  createdAt time
 }
 
 
@@ -1103,6 +1123,8 @@ private aws.iam.group @defaults("arn name") {
   createdAt time
   // List of usernames that belong to the group
   usernames []string
+  // List of inline policy names attached to the group
+  inlinePolicies() []string
 }
 
 // AWS IAM virtual MFA device
@@ -1802,11 +1824,13 @@ aws.securityhub {
 }
 
 // AWS Security Hub hub
-private aws.securityhub.hub @defaults("arn") {
+private aws.securityhub.hub @defaults("arn region") {
   // ARN for the Security Hub
   arn string
   // Date and time when the hub was enabled
   subscribedAt string
+  // Region where the Security Hub is enabled
+  region string
 }
 
 // AWS Secrets Manager
@@ -2587,6 +2611,8 @@ private aws.s3.bucket @defaults("name location public") {
   encryption() dict
   // Public access block configuration for the bucket
   publicAccessBlock() dict
+  // Whether Object Lock is enabled on the bucket (prevents deletion/overwrite for ransomware protection)
+  objectLockEnabled() bool
   // Whether the bucket still exists (stale reference)
   exists bool
   // Deprecated (use `createdAt` instead)
@@ -3604,6 +3630,8 @@ private aws.ecr.repository @defaults("uri region") {
   encryptionType string
   // When the repository was created
   createdAt time
+  // Scanning frequency for the repository: SCAN_ON_PUSH, CONTINUOUS_SCAN, or MANUAL
+  scanningFrequency() string
 }
 
 // AWS Elastic Container Registry image
@@ -3761,6 +3789,32 @@ private aws.lambda.function @defaults("arn") {
   // Human-readable description of the function
   description string
   // When the function was last updated
+  lastModifiedAt time
+  // Function URL configuration (null if no URL is configured)
+  urlConfig() aws.lambda.function.urlConfig
+}
+
+// AWS Lambda function URL configuration
+private aws.lambda.function.urlConfig @defaults("functionUrl authType") {
+  // Function URL endpoint
+  functionUrl string
+  // Authentication type for the function URL: AWS_IAM or NONE
+  authType string
+  // Allowed origins for CORS requests
+  corsAllowOrigins []string
+  // Allowed HTTP methods for CORS requests
+  corsAllowMethods []string
+  // Allowed headers for CORS requests
+  corsAllowHeaders []string
+  // Whether credentials are included in CORS requests
+  corsAllowCredentials bool
+  // Response headers to expose in CORS requests
+  corsExposeHeaders []string
+  // Maximum time in seconds that browsers can cache CORS results
+  corsMaxAge int
+  // When the function URL was created
+  createdAt time
+  // When the function URL was last modified
   lastModifiedAt time
 }
 

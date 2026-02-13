@@ -264,6 +264,65 @@ func (a *mqlAwsLambdaFunction) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsLambdaFunction) urlConfig() (*mqlAwsLambdaFunctionUrlConfig, error) {
+	funcName := a.Name.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Lambda(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetFunctionUrlConfig(ctx, &lambda.GetFunctionUrlConfigInput{FunctionName: &funcName})
+	var respErr *http.ResponseError
+	if err != nil && errors.As(err, &respErr) {
+		if respErr.HTTPStatusCode() == 404 {
+			a.UrlConfig.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+	} else if err != nil {
+		return nil, err
+	}
+
+	var corsAllowOrigins, corsAllowMethods, corsAllowHeaders, corsExposeHeaders []any
+	var corsAllowCredentials bool
+	var corsMaxAge int64
+	if resp.Cors != nil {
+		corsAllowOrigins = toInterfaceArr(resp.Cors.AllowOrigins)
+		corsAllowMethods = toInterfaceArr(resp.Cors.AllowMethods)
+		corsAllowHeaders = toInterfaceArr(resp.Cors.AllowHeaders)
+		corsExposeHeaders = toInterfaceArr(resp.Cors.ExposeHeaders)
+		if resp.Cors.AllowCredentials != nil {
+			corsAllowCredentials = *resp.Cors.AllowCredentials
+		}
+		if resp.Cors.MaxAge != nil {
+			corsMaxAge = int64(*resp.Cors.MaxAge)
+		}
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "aws.lambda.function.urlConfig",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringData(a.Arn.Data + "/urlConfig"),
+			"functionUrl":          llx.StringDataPtr(resp.FunctionUrl),
+			"authType":             llx.StringData(string(resp.AuthType)),
+			"corsAllowOrigins":     llx.ArrayData(corsAllowOrigins, types.String),
+			"corsAllowMethods":     llx.ArrayData(corsAllowMethods, types.String),
+			"corsAllowHeaders":     llx.ArrayData(corsAllowHeaders, types.String),
+			"corsAllowCredentials": llx.BoolData(corsAllowCredentials),
+			"corsExposeHeaders":    llx.ArrayData(corsExposeHeaders, types.String),
+			"corsMaxAge":           llx.IntData(corsMaxAge),
+			"createdAt":            llx.TimeDataPtr(parseAwsTimestampPtr(resp.CreationTime)),
+			"lastModifiedAt":       llx.TimeDataPtr(parseAwsTimestampPtr(resp.LastModifiedTime)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsLambdaFunctionUrlConfig), nil
+}
+
+func (a *mqlAwsLambdaFunctionUrlConfig) id() (string, error) {
+	return a.FunctionUrl.Data, nil
+}
+
 type mqlAwsLambdaFunctionInternal struct {
 	cacheRoleArn *string
 }
