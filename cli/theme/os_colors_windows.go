@@ -22,10 +22,6 @@ var OperatingSystemTheme = &Theme{
 		res := w.String()
 		return res[0 : len(res)-1]
 	},
-	Landing: termenv.String("mql™\n" + logo + "\n").Foreground(colors.DefaultColorTheme.Primary).String(),
-	Welcome: "mql™\n" + logo + " interactive shell\n",
-	// NOTE: this is important to be short for windows, otherwise the auto-complete will make strange be jumps
-	// ENSURE YOU TEST A CHANGE BEFORE COMMIT ON WINDOWS
-	Prefix:        "> ",
+	Landing:       termenv.String(Logo).Foreground(colors.DefaultColorTheme.Primary).String(),
 	PolicyPrinter: printer.DefaultPrinter,
 }
