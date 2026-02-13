@@ -62,6 +62,7 @@ ekus
 elbv
 endpointslice
 EPP
+ERPCLOUD
 exo
 failback
 fargate
@@ -81,6 +82,7 @@ gotestsum
 gpu
 groupname
 gvnic
+HCMCLOUD
 headerorder
 Hns
 horizontalpodautoscaler
@@ -139,6 +141,7 @@ nodepool
 nokeys
 notebookinstancedetails
 nproc
+nsg
 nsrecord
 nullgroup
 nullstring
@@ -221,6 +224,7 @@ VGeneration
 virtualmachine
 vlans
 vnet
+vpus
 vrf
 vtpm
 vulnerabilityassessmentsettings

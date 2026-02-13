@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -23,8 +24,18 @@ func (o *mqlOciLogging) id() (string, error) {
 func (o *mqlOciLogging) logGroups() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	if err != nil {
+		return nil, err
+	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+
 	res := []any{}
-	poolOfJobs := jobpool.CreatePool(o.getLogGroups(conn), 5)
+	poolOfJobs := jobpool.CreatePool(o.getLogGroups(conn, list.Data), 5)
 	poolOfJobs.Run()
 
 	if poolOfJobs.HasErrors() {
@@ -63,18 +74,18 @@ func (o *mqlOciLogging) getLogGroupsForRegion(ctx context.Context, client *loggi
 	return entries, nil
 }
 
-func (o *mqlOciLogging) getLogGroups(conn *connection.OciConnection) []*jobpool.Job {
+func (o *mqlOciLogging) getLogGroups(conn *connection.OciConnection, regions []any) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.GetRegions(ctx)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci logging with region %s", *region.RegionKey)
+			log.Debug().Msgf("calling oci logging with region %s", regionResource.Id.Data)
 
-			svc, err := conn.LoggingClient(*region.RegionKey)
+			svc, err := conn.LoggingClient(regionResource.Id.Data)
 			if err != nil {
 				return nil, err
 			}
@@ -105,7 +116,7 @@ func (o *mqlOciLogging) getLogGroups(conn *connection.OciConnection) []*jobpool.
 					return nil, err
 				}
 				// Store the region internally so logs() knows which region to query
-				mqlInstance.(*mqlOciLoggingLogGroup).region = *region.RegionKey
+				mqlInstance.(*mqlOciLoggingLogGroup).region = regionResource.Id.Data
 				res = append(res, mqlInstance)
 			}
 
@@ -144,16 +155,6 @@ func (o *mqlOciLoggingLogGroup) logs() ([]any, error) {
 	for i := range logs {
 		l := logs[i]
 
-		isEnabled := false
-		if l.IsEnabled != nil {
-			isEnabled = *l.IsEnabled
-		}
-
-		var retentionDuration int64
-		if l.RetentionDuration != nil {
-			retentionDuration = int64(*l.RetentionDuration)
-		}
-
 		config, err := convertLogConfiguration(l.Configuration)
 		if err != nil {
 			return nil, err
@@ -164,9 +165,9 @@ func (o *mqlOciLoggingLogGroup) logs() ([]any, error) {
 			"name":              llx.StringDataPtr(l.DisplayName),
 			"logType":           llx.StringData(string(l.LogType)),
 			"logGroupId":        llx.StringDataPtr(l.LogGroupId),
-			"isEnabled":         llx.BoolData(isEnabled),
+			"isEnabled":         llx.BoolDataPtr(l.IsEnabled),
 			"state":             llx.StringData(string(l.LifecycleState)),
-			"retentionDuration": llx.IntData(retentionDuration),
+			"retentionDuration": llx.IntDataPtr(l.RetentionDuration),
 			"configuration":     llx.DictData(config),
 		})
 		if err != nil {

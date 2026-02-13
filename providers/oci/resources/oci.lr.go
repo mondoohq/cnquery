@@ -993,7 +993,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlOciEventsRule).GetCreated()).ToDataRes(types.Time)
 	},
 	"oci.cloudGuard.status": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciCloudGuard).GetStatus()).ToDataRes(types.String)
+		return (r.(*mqlOciCloudGuard).GetStatus()).ToDataRes(types.Bool)
 	},
 	"oci.cloudGuard.reportingRegion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuard).GetReportingRegion()).ToDataRes(types.String)
@@ -2171,7 +2171,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"oci.cloudGuard.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCloudGuard).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlOciCloudGuard).Status, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.cloudGuard.reportingRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5242,7 +5242,7 @@ type mqlOciCloudGuard struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciCloudGuardInternal
-	Status              plugin.TValue[string]
+	Status              plugin.TValue[bool]
 	ReportingRegion     plugin.TValue[string]
 	SelfManageResources plugin.TValue[bool]
 	Targets             plugin.TValue[[]any]
@@ -5286,8 +5286,8 @@ func (c *mqlOciCloudGuard) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlOciCloudGuard) GetStatus() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+func (c *mqlOciCloudGuard) GetStatus() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Status, func() (bool, error) {
 		return c.status()
 	})
 }

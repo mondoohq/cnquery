@@ -76,7 +76,7 @@ func (o *mqlOciNetwork) getVcns(conn *connection.OciConnection) []*jobpool.Job {
 	}
 	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", region)
+			log.Debug().Msgf("calling oci with region %s", *region.RegionKey)
 
 			svc, err := conn.NetworkClient(*region.RegionKey)
 			if err != nil {
@@ -234,7 +234,7 @@ func (o *mqlOciNetwork) getSecurityLists(conn *connection.OciConnection) []*jobp
 	}
 	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", region)
+			log.Debug().Msgf("calling oci with region %s", *region.RegionKey)
 
 			svc, err := conn.NetworkClient(*region.RegionKey)
 			if err != nil {
@@ -384,7 +384,7 @@ func (o *mqlOciNetwork) getNetworkSecurityGroups(conn *connection.OciConnection)
 	}
 	for _, region := range regions {
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", region)
+			log.Debug().Msgf("calling oci with region %s", *region.RegionKey)
 
 			svc, err := conn.NetworkClient(*region.RegionKey)
 			if err != nil {
