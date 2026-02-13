@@ -171,6 +171,7 @@ func (a *mqlAwsEcrRepository) scanningFrequency() (string, error) {
 	}
 
 	if len(resp.ScanningConfigurations) > 0 {
+		// The API returns exactly one ScanningConfiguration per repository in the request.
 		return string(resp.ScanningConfigurations[0].ScanFrequency), nil
 	}
 
