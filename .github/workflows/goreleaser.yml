@@ -34,7 +34,7 @@ on:
       make-latest:
         description: "Mark GitHub release as 'latest'"
         required: false
-        default: false
+        default: true
         type: boolean
 
 env:
@@ -182,7 +182,7 @@ jobs:
             release
             ${{ inputs.goreleaser-snapshot == true && '--snapshot' || '' }}
             --config .github/.goreleaser-unstable.yml
-            --skip=docker,docker_manifests
+            --skip=docker
             --clean
             --timeout 120m
         env:
