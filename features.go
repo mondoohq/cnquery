@@ -79,7 +79,7 @@ const (
 
 	// Auto-update the execution engine
 	// start:  v13.x
-	// status: new
+	// status: default
 	AutoUpdateEngine Feature = 14
 
 	// Placeholder to indicate how many feature flags exist. This number
@@ -110,11 +110,11 @@ var DefaultFeatures = Features{
 	byte(SerialNumberAsID),
 	byte(ForceShellCompletion),
 	byte(ResourceContext),
+	byte(AutoUpdateEngine),
 }
 
 // AvailableFeatures are a set of flags that can be activated
 var AvailableFeatures = Features{
 	byte(MQLAssetContext),
 	byte(UploadResultsV2),
-	byte(AutoUpdateEngine),
 }
