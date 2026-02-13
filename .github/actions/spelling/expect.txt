@@ -172,6 +172,7 @@ tpu
 udid
 Uocm
 usb
+valkey
 VAULTNAME
 vdcs
 virtualmachine

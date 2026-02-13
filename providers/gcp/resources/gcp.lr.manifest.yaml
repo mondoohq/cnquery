@@ -2138,6 +2138,8 @@ resources:
       authorizationMode: {}
       automatedBackupConfig: {}
       backupCollection: {}
+      backups: {}
+      clusterEndpoints: {}
       createTime: {}
       crossClusterReplicationConfig: {}
       deletionProtectionEnabled: {}
@@ -2161,6 +2163,57 @@ resources:
       transitEncryptionMode: {}
       uid: {}
       zoneDistributionConfig: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.cluster.backup:
+    fields:
+      backupFiles: {}
+      backupType: {}
+      cluster: {}
+      clusterUid: {}
+      createTime: {}
+      encryptionInfo: {}
+      engineVersion: {}
+      expireTime: {}
+      name: {}
+      nodeType: {}
+      projectId: {}
+      replicaCount: {}
+      shardCount: {}
+      state: {}
+      totalSizeBytes: {}
+      uid: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.cluster.clusterEndpoint:
+    fields:
+      clusterName: {}
+      connections: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - gcp
+  gcp.project.redisService.cluster.connectionDetail:
+    fields:
+      address: {}
+      clusterName: {}
+      connectionOrigin: {}
+      connectionProjectId: {}
+      connectionType: {}
+      forwardingRule: {}
+      network: {}
+      projectId: {}
+      pscConnectionId: {}
+      pscConnectionStatus: {}
+      serviceAttachment: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

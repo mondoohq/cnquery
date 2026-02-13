@@ -218,6 +218,10 @@ private gcp.project.redisService.cluster @defaults("name") {
   discoveryEndpoints []gcp.project.redisService.cluster.discoveryEndpoint
   // The PSC connections
   pscConnections []gcp.project.redisService.cluster.pscConnection
+  // Backups for this cluster
+  backups() []gcp.project.redisService.cluster.backup
+  // The cluster endpoints
+  clusterEndpoints []gcp.project.redisService.cluster.clusterEndpoint
 }
 
 // Google Cloud (GCP) Redis Cluster PSC configuration
@@ -266,6 +270,78 @@ private gcp.project.redisService.cluster.pscConnection @defaults("pscConnectionI
   pscConnectionStatus string
   // The type of the PSC connection
   connectionType string
+}
+
+// Google Cloud (GCP) Redis Cluster backup
+private gcp.project.redisService.cluster.backup @defaults("name state") {
+  // Project ID
+  projectId string
+  // Full resource name of the backup
+  name string
+  // System-assigned unique identifier
+  uid string
+  // The time the backup was created
+  createTime time
+  // The time the backup expires
+  expireTime time
+  // Full resource path of the cluster
+  cluster string
+  // The cluster UID
+  clusterUid string
+  // Total size of the backup in bytes
+  totalSizeBytes int
+  // Redis engine version (e.g. redis-7.2, valkey-7.5)
+  engineVersion string
+  // The node type of the cluster at backup time
+  nodeType string
+  // The number of replicas at backup time
+  replicaCount int
+  // The number of shards at backup time
+  shardCount int
+  // The type of backup (ON_DEMAND or AUTOMATED)
+  backupType string
+  // The current state of the backup
+  state string
+  // Encryption information of the backup
+  encryptionInfo dict
+  // The list of backup files
+  backupFiles []dict
+}
+
+// Google Cloud (GCP) Redis Cluster endpoint
+private gcp.project.redisService.cluster.clusterEndpoint {
+  // Project ID
+  projectId string
+  // Cluster name
+  clusterName string
+  // The PSC connections for this endpoint
+  connections []gcp.project.redisService.cluster.connectionDetail
+}
+
+// Google Cloud (GCP) Redis Cluster endpoint connection detail
+private gcp.project.redisService.cluster.connectionDetail @defaults("pscConnectionId address") {
+  // Project ID
+  projectId string
+  // Cluster name
+  clusterName string
+  // The PSC connection ID
+  pscConnectionId string
+  // IP address of the PSC connection
+  address string
+  // The consumer forwarding rule for the PSC connection
+  forwardingRule string
+  // The consumer project ID the PSC connection was created in
+  connectionProjectId string
+  // The consumer network the PSC connection was created in
+  network string
+  // The service attachment which is the target of the PSC connection
+  serviceAttachment string
+  // The status of the PSC connection
+  pscConnectionStatus string
+  // The type of the PSC connection
+  connectionType string
+  // The origin of the connection (AUTO or USER)
+  connectionOrigin string
 }
 
 // Google Cloud (GCP) folder

@@ -422,3 +422,68 @@ func TestClusterConvertCrossClusterReplicationConfig(t *testing.T) {
 		require.Len(t, secondaries, 1)
 	})
 }
+
+func TestClusterConvertBackupFiles(t *testing.T) {
+	t.Run("nil input", func(t *testing.T) {
+		result, err := clusterConvertBackupFiles(nil)
+		require.NoError(t, err)
+		assert.Empty(t, result)
+	})
+
+	t.Run("empty input", func(t *testing.T) {
+		result, err := clusterConvertBackupFiles([]*clusterpb.BackupFile{})
+		require.NoError(t, err)
+		assert.Empty(t, result)
+	})
+
+	t.Run("skips nil entries", func(t *testing.T) {
+		result, err := clusterConvertBackupFiles([]*clusterpb.BackupFile{
+			nil,
+			{FileName: "shard-0.rdb", SizeBytes: 1024},
+		})
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+	})
+
+	t.Run("converts backup files", func(t *testing.T) {
+		ts := timestamppb.New(time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC))
+		files := []*clusterpb.BackupFile{
+			{
+				FileName:   "shard-0.rdb",
+				SizeBytes:  1048576,
+				CreateTime: ts,
+			},
+			{
+				FileName:  "shard-1.rdb",
+				SizeBytes: 2097152,
+			},
+		}
+		result, err := clusterConvertBackupFiles(files)
+		require.NoError(t, err)
+		require.Len(t, result, 2)
+
+		f0 := result[0].(map[string]any)
+		assert.Equal(t, "shard-0.rdb", f0["fileName"])
+		assert.Equal(t, int64(1048576), f0["sizeBytes"])
+		assert.Equal(t, "2026-01-15T10:00:00Z", f0["createTime"])
+
+		f1 := result[1].(map[string]any)
+		assert.Equal(t, "shard-1.rdb", f1["fileName"])
+		assert.Equal(t, int64(2097152), f1["sizeBytes"])
+		_, hasCreateTime := f1["createTime"]
+		assert.False(t, hasCreateTime)
+	})
+}
+
+func TestClusterConvertConnectionDetails(t *testing.T) {
+	t.Run("nil details are skipped", func(t *testing.T) {
+		details := []*clusterpb.ConnectionDetail{nil}
+		result := clusterConvertConnectionDetails(nil, "proj", "cluster", details)
+		assert.Empty(t, result)
+	})
+
+	t.Run("empty details", func(t *testing.T) {
+		result := clusterConvertConnectionDetails(nil, "proj", "cluster", nil)
+		assert.Empty(t, result)
+	})
+}

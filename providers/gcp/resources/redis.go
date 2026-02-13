@@ -562,6 +562,10 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 				clusterConvertPscConnections(g.MqlRuntime, projectId, cluster.Name, cluster.PscConnections),
 				types.Resource("gcp.project.redisService.cluster.pscConnection"),
 			),
+			"clusterEndpoints": llx.ArrayData(
+				clusterConvertClusterEndpoints(g.MqlRuntime, projectId, cluster.Name, cluster.ClusterEndpoints),
+				types.Resource("gcp.project.redisService.cluster.clusterEndpoint"),
+			),
 		})
 		if err != nil {
 			return nil, err
@@ -589,6 +593,24 @@ func (c *mqlGcpProjectRedisServiceClusterDiscoveryEndpoint) id() (string, error)
 func (c *mqlGcpProjectRedisServiceClusterPscConnection) id() (string, error) {
 	return fmt.Sprintf(
 		"gcp.project.redisService.cluster.pscConnection/%s/%s/%s", c.ProjectId.Data, c.ClusterName.Data, c.PscConnectionId.Data,
+	), nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) id() (string, error) {
+	return fmt.Sprintf(
+		"gcp.project.redisService.cluster.backup/%s/%s", c.ProjectId.Data, c.Name.Data,
+	), nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterClusterEndpoint) id() (string, error) {
+	// __id is set explicitly during resource creation since ClusterEndpoint
+	// has no natural unique key
+	return c.__id, nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) id() (string, error) {
+	return fmt.Sprintf(
+		"gcp.project.redisService.cluster.connectionDetail/%s/%s/%s", c.ProjectId.Data, c.ClusterName.Data, c.PscConnectionId.Data,
 	), nil
 }
 
@@ -872,4 +894,186 @@ func clusterConvertCrossClusterReplicationConfig(ccrc *clusterpb.CrossClusterRep
 		cfg.UpdateTime = &s
 	}
 	return convert.JsonToDict(cfg)
+}
+
+// ===== Cluster backups =====
+
+func (g *mqlGcpProjectRedisServiceCluster) backups() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+	backupCollection := g.BackupCollection.Data
+	if backupCollection == "" {
+		return []any{}, nil
+	}
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(rediscluster.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	clusterSvc, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer clusterSvc.Close()
+
+	it := clusterSvc.ListBackups(ctx, &clusterpb.ListBackupsRequest{
+		Parent: backupCollection,
+	})
+	res := []any{}
+	for {
+		backup, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		encryptionInfo, err := clusterConvertEncryptionInfo(backup.EncryptionInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		backupFiles, err := clusterConvertBackupFiles(backup.BackupFiles)
+		if err != nil {
+			return nil, err
+		}
+
+		var expireTime *time.Time
+		if backup.ExpireTime != nil {
+			t := backup.ExpireTime.AsTime()
+			expireTime = &t
+		}
+		var createTime *time.Time
+		if backup.CreateTime != nil {
+			t := backup.CreateTime.AsTime()
+			createTime = &t
+		}
+
+		mqlBackup, err := CreateResource(g.MqlRuntime, "gcp.project.redisService.cluster.backup", map[string]*llx.RawData{
+			"projectId":      llx.StringData(projectId),
+			"name":           llx.StringData(backup.Name),
+			"uid":            llx.StringData(backup.Uid),
+			"createTime":     llx.TimeDataPtr(createTime),
+			"expireTime":     llx.TimeDataPtr(expireTime),
+			"cluster":        llx.StringData(backup.Cluster),
+			"clusterUid":     llx.StringData(backup.ClusterUid),
+			"totalSizeBytes": llx.IntData(backup.TotalSizeBytes),
+			"engineVersion":  llx.StringData(backup.EngineVersion),
+			"nodeType":       llx.StringData(backup.NodeType.String()),
+			"replicaCount":   llx.IntData(int64(backup.ReplicaCount)),
+			"shardCount":     llx.IntData(int64(backup.ShardCount)),
+			"backupType":     llx.StringData(backup.BackupType.String()),
+			"state":          llx.StringData(backup.State.String()),
+			"encryptionInfo": llx.DictData(encryptionInfo),
+			"backupFiles":    llx.ArrayData(backupFiles, types.Dict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBackup)
+	}
+
+	return res, nil
+}
+
+func clusterConvertBackupFiles(files []*clusterpb.BackupFile) ([]any, error) {
+	res := []any{}
+	for _, f := range files {
+		if f == nil {
+			continue
+		}
+		file := map[string]any{
+			"fileName":  f.FileName,
+			"sizeBytes": f.SizeBytes,
+		}
+		if f.CreateTime != nil {
+			file["createTime"] = f.CreateTime.AsTime().Format(time.RFC3339)
+		}
+		res = append(res, file)
+	}
+	return res, nil
+}
+
+// ===== Cluster endpoint converters =====
+
+func clusterConvertClusterEndpoints(runtime *plugin.Runtime, projectId, clusterName string, endpoints []*clusterpb.ClusterEndpoint) (list []any) {
+	for i, ep := range endpoints {
+		if ep == nil {
+			continue
+		}
+		connections := clusterConvertConnectionDetails(runtime, projectId, clusterName, ep.Connections)
+		id := fmt.Sprintf("gcp.project.redisService.cluster.clusterEndpoint/%s/%s/%d", projectId, clusterName, i)
+		r, err := CreateResource(runtime, "gcp.project.redisService.cluster.clusterEndpoint", map[string]*llx.RawData{
+			"__id":        llx.StringData(id),
+			"projectId":   llx.StringData(projectId),
+			"clusterName": llx.StringData(clusterName),
+			"connections": llx.ArrayData(
+				connections,
+				types.Resource("gcp.project.redisService.cluster.connectionDetail"),
+			),
+		})
+		if err != nil {
+			continue
+		}
+		list = append(list, r)
+	}
+	return
+}
+
+func clusterConvertConnectionDetails(runtime *plugin.Runtime, projectId, clusterName string, details []*clusterpb.ConnectionDetail) (list []any) {
+	for _, d := range details {
+		if d == nil {
+			continue
+		}
+
+		var pscConnectionId, address, forwardingRule, connectionProjectId string
+		var network, serviceAttachment, pscConnectionStatus, connectionType string
+		var connectionOrigin string
+
+		if auto := d.GetPscAutoConnection(); auto != nil {
+			connectionOrigin = "AUTO"
+			pscConnectionId = auto.PscConnectionId
+			address = auto.Address
+			forwardingRule = auto.ForwardingRule
+			connectionProjectId = auto.ProjectId
+			network = auto.Network
+			serviceAttachment = auto.ServiceAttachment
+			pscConnectionStatus = auto.PscConnectionStatus.String()
+			connectionType = auto.ConnectionType.String()
+		} else if psc := d.GetPscConnection(); psc != nil {
+			connectionOrigin = "USER"
+			pscConnectionId = psc.PscConnectionId
+			address = psc.Address
+			forwardingRule = psc.ForwardingRule
+			connectionProjectId = psc.ProjectId
+			network = psc.Network
+			serviceAttachment = psc.ServiceAttachment
+			pscConnectionStatus = psc.PscConnectionStatus.String()
+			connectionType = psc.ConnectionType.String()
+		}
+
+		r, err := CreateResource(runtime, "gcp.project.redisService.cluster.connectionDetail", map[string]*llx.RawData{
+			"projectId":           llx.StringData(projectId),
+			"clusterName":         llx.StringData(clusterName),
+			"pscConnectionId":     llx.StringData(pscConnectionId),
+			"address":             llx.StringData(address),
+			"forwardingRule":      llx.StringData(forwardingRule),
+			"connectionProjectId": llx.StringData(connectionProjectId),
+			"network":             llx.StringData(network),
+			"serviceAttachment":   llx.StringData(serviceAttachment),
+			"pscConnectionStatus": llx.StringData(pscConnectionStatus),
+			"connectionType":      llx.StringData(connectionType),
+			"connectionOrigin":    llx.StringData(connectionOrigin),
+		})
+		if err != nil {
+			continue
+		}
+		list = append(list, r)
+	}
+	return
 }
