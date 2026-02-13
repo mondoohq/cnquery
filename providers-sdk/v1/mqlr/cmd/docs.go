@@ -76,6 +76,10 @@ var docsJsonCmd = &cobra.Command{
 }
 
 func runDocsYamlCmd(lrFile string, headerFile string, version string, docsFilePath string) {
+	if version == defaultVersionField {
+		version = detectProviderVersion(lrFile)
+	}
+
 	raw, err := os.ReadFile(lrFile)
 	if err != nil {
 		log.Error().Msg(err.Error())
