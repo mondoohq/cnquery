@@ -282,7 +282,6 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/tliron/commonlog v0.2.21
 	github.com/tliron/glsp v0.2.2
-	go.mondoo.com/cnquery/v12 v12.22.0
 	go.uber.org/goleak v1.3.0
 )
 
@@ -304,8 +303,10 @@ require (
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
+	github.com/gopherjs/gopherjs v1.20.1 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/lyft/protoc-gen-star v0.6.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -318,6 +319,7 @@ require (
 	github.com/olekukonko/ll v0.1.4 // indirect
 	github.com/petermattis/goid v0.0.0-20260113132338-7c7de50cc741 // indirect
 	github.com/sasha-s/go-deadlock v0.3.6 // indirect
+	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/sourcegraph/jsonrpc2 v0.2.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/tliron/go-kutil v0.4.0 // indirect
