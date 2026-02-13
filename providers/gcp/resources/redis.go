@@ -118,10 +118,10 @@ func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer redisSvc.Close()
 
-	projectID := conn.ResourceID()
 	it := redisSvc.ListInstances(ctx, &redispb.ListInstancesRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/-", projectID),
+		Parent: fmt.Sprintf("projects/%s/locations/-", projectId),
 	})
 	res := []any{}
 	for {
@@ -184,7 +184,7 @@ func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
 				convert.SliceAnyToInterface(instance.AvailableMaintenanceVersions), types.String,
 			),
 			"nodes": llx.ArrayData(
-				redisInstanceNodesToArrayInterface(g.MqlRuntime, projectID, instance.Nodes),
+				redisInstanceNodesToArrayInterface(g.MqlRuntime, projectId, instance.Nodes),
 				types.Resource("gcp.project.redisService.instance.nodeInfo"),
 			),
 			"serverCaCerts": llx.ArrayData(
@@ -453,10 +453,10 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer clusterSvc.Close()
 
-	projectID := conn.ResourceID()
 	it := clusterSvc.ListClusters(ctx, &clusterpb.ListClustersRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/-", projectID),
+		Parent: fmt.Sprintf("projects/%s/locations/-", projectId),
 	})
 	res := []any{}
 	for {
