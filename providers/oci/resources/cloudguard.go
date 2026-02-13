@@ -70,12 +70,12 @@ func (o *mqlOciCloudGuard) getConfig() (*cloudguard.Configuration, error) {
 	return o.config, nil
 }
 
-func (o *mqlOciCloudGuard) status() (string, error) {
+func (o *mqlOciCloudGuard) status() (bool, error) {
 	cfg, err := o.getConfig()
 	if err != nil {
-		return "", err
+		return false, err
 	}
-	return string(cfg.Status), nil
+	return cfg.Status == cloudguard.CloudGuardStatusEnabled, nil
 }
 
 func (o *mqlOciCloudGuard) reportingRegion() (string, error) {
@@ -143,7 +143,7 @@ func (o *mqlOciCloudGuard) targets() ([]any, error) {
 			"targetResourceId":   llx.StringDataPtr(target.TargetResourceId),
 			"targetResourceType": llx.StringData(string(target.TargetResourceType)),
 			"state":              llx.StringData(string(target.LifecycleState)),
-			"recipeCount":        llx.IntData(intValue(target.RecipeCount)),
+			"recipeCount":        llx.IntDataPtr(target.RecipeCount),
 			"created":            llx.TimeDataPtr(created),
 		})
 		if err != nil {

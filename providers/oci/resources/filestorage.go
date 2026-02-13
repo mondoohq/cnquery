@@ -130,7 +130,7 @@ func (o *mqlOciFileStorage) getFileSystems(conn *connection.OciConnection, regio
 						"availabilityDomain": llx.StringDataPtr(fs.AvailabilityDomain),
 						"state":              llx.StringData(string(fs.LifecycleState)),
 						"kmsKeyId":           llx.StringDataPtr(fs.KmsKeyId),
-						"meteredBytes":       llx.IntData(int64Value(fs.MeteredBytes)),
+						"meteredBytes":       llx.IntDataPtr(fs.MeteredBytes),
 						"created":            llx.TimeDataPtr(created),
 					})
 					if err != nil {

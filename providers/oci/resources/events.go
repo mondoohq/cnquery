@@ -109,7 +109,7 @@ func (o *mqlOciEvents) getEventRules(conn *connection.OciConnection, regions []a
 					"description":   llx.StringDataPtr(rule.Description),
 					"compartmentID": llx.StringDataPtr(rule.CompartmentId),
 					"condition":     llx.StringDataPtr(rule.Condition),
-					"isEnabled":     llx.BoolData(boolValue(rule.IsEnabled)),
+					"isEnabled":     llx.BoolDataPtr(rule.IsEnabled),
 					"state":         llx.StringData(string(rule.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
 				})

@@ -278,7 +278,7 @@ private oci.compute.blockVolume @defaults("name") {
   sizeInGBs int
   // Volume performance units per GB
   vpusPerGB int
-  // Block volume lifecycle state (e.g., AVAILABLE, TERMINATED)
+  // Block volume lifecycle state (e.g., PROVISIONING, RESTORING, AVAILABLE, TERMINATING, TERMINATED, FAULTY)
   state string
   // Whether the cloned volume's data has finished copying from the source
   isHydrated bool
@@ -304,7 +304,7 @@ private oci.compute.bootVolume @defaults("name") {
   sizeInGBs int
   // Image OCID used to create the boot volume
   imageId string
-  // Boot volume lifecycle state (e.g., AVAILABLE, TERMINATED)
+  // Boot volume lifecycle state (e.g., PROVISIONING, RESTORING, AVAILABLE, TERMINATING, TERMINATED, FAULTY)
   state string
   // KMS key OCID for volume encryption
   kmsKeyId string
@@ -388,7 +388,7 @@ private oci.network.networkSecurityGroup @defaults("name") {
   compartmentID string
   // VCN OCID the NSG belongs to
   vcnId string
-  // NSG lifecycle state (e.g., AVAILABLE, PROVISIONING, TERMINATED)
+  // NSG lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
   state string
   // NSG creation time
   created time
@@ -418,7 +418,7 @@ private oci.logging.logGroup @defaults("name") {
   description string
   // Compartment OCID
   compartmentID string
-  // Lifecycle state (e.g., ACTIVE, CREATING)
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, INACTIVE, DELETING, FAILED)
   state string
   // Logs in the group
   logs() []oci.logging.log
@@ -438,7 +438,7 @@ private oci.logging.log @defaults("name") {
   logGroupId string
   // Whether the log is enabled
   isEnabled bool
-  // Lifecycle state (e.g., ACTIVE, CREATING)
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, INACTIVE, DELETING, FAILED)
   state string
   // Retention duration in days
   retentionDuration int
@@ -462,7 +462,7 @@ private oci.kms.vault @defaults("name") {
   compartmentID string
   // Vault type (DEFAULT, VIRTUAL_PRIVATE, EXTERNAL)
   vaultType string
-  // Lifecycle state (e.g., ACTIVE, PENDING_DELETION)
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, PENDING_DELETION, SCHEDULING_DELETION, CANCELLING_DELETION, UPDATING, BACKUP_IN_PROGRESS, RESTORING)
   state string
   // Vault management endpoint
   managementEndpoint string
@@ -486,7 +486,7 @@ private oci.kms.key @defaults("name") {
   algorithm string
   // Protection mode (HSM, SOFTWARE, EXTERNAL)
   protectionMode string
-  // Lifecycle state (e.g., ENABLED, PENDING_DELETION)
+  // Lifecycle state (e.g., CREATING, ENABLING, ENABLED, DISABLING, DISABLED, DELETING, DELETED, PENDING_DELETION, SCHEDULING_DELETION, CANCELLING_DELETION, UPDATING, BACKUP_IN_PROGRESS, RESTORING)
   state string
   // Creation time
   created time
@@ -560,7 +560,7 @@ private oci.fileStorage.fileSystem @defaults("name") {
   compartmentID string
   // Availability domain where the file system is located
   availabilityDomain string
-  // File system lifecycle state (e.g., ACTIVE, DELETING)
+  // File system lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
   state string
   // KMS key OCID for file system encryption
   kmsKeyId string
@@ -590,7 +590,7 @@ private oci.events.rule @defaults("name") {
   condition string
   // Whether the rule is enabled
   isEnabled bool
-  // Rule lifecycle state (e.g., ACTIVE, INACTIVE)
+  // Rule lifecycle state (e.g., CREATING, ACTIVE, INACTIVE, UPDATING, DELETING, DELETED, FAILED)
   state string
   // Actions to perform when the rule matches an event
   actions() []dict
@@ -600,8 +600,8 @@ private oci.events.rule @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Cloud Guard threat detection and security monitoring
 oci.cloudGuard {
-  // Cloud Guard status (ENABLED or DISABLED)
-  status() string
+  // Whether Cloud Guard is enabled
+  status() bool
   // Region where Cloud Guard reports findings
   reportingRegion() string
   // Whether Cloud Guard resources are self-managed
@@ -622,9 +622,9 @@ private oci.cloudGuard.target @defaults("name") {
   compartmentID string
   // OCID of the resource being monitored
   targetResourceId string
-  // Type of resource being monitored (COMPARTMENT, FACLOUD, etc.)
+  // Type of resource being monitored (e.g., COMPARTMENT, ERPCLOUD, HCMCLOUD, SECURITY_ZONE)
   targetResourceType string
-  // Target lifecycle state (e.g., ACTIVE, DELETED)
+  // Target lifecycle state (e.g., CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED)
   state string
   // Number of detector recipes attached to the target
   recipeCount int
@@ -642,9 +642,9 @@ private oci.cloudGuard.detectorRecipe @defaults("name") {
   description string
   // Owner of the detector recipe (CUSTOMER or ORACLE)
   owner string
-  // Type of detector (IAAS_ACTIVITY_DETECTOR, IAAS_CONFIGURATION_DETECTOR, etc.)
+  // Type of detector (e.g., IAAS_ACTIVITY_DETECTOR, IAAS_CONFIGURATION_DETECTOR, IAAS_THREAT_DETECTOR, IAAS_LOG_INSIGHT_DETECTOR, IAAS_INSTANCE_SECURITY_DETECTOR, IAAS_CONTAINER_SECURITY_DETECTOR)
   detectorType string
-  // Detector recipe lifecycle state (e.g., ACTIVE, DELETED)
+  // Detector recipe lifecycle state (e.g., CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED)
   state string
   // Detector recipe creation time
   created time
@@ -666,7 +666,7 @@ private oci.ons.topic @defaults("name") {
   description string
   // Compartment OCID containing the topic
   compartmentID string
-  // Topic lifecycle state (e.g., ACTIVE, DELETING)
+  // Topic lifecycle state (e.g., ACTIVE, DELETING, CREATING)
   state string
   // Topic creation time
   created time
@@ -684,7 +684,7 @@ private oci.ons.subscription @defaults("id") {
   protocol string
   // Delivery endpoint
   endpoint string
-  // Subscription lifecycle state (e.g., ACTIVE, PENDING)
+  // Subscription lifecycle state (e.g., PENDING, ACTIVE, DELETED)
   state string
   // Subscription creation time
   created time
