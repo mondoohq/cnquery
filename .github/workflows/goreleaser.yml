@@ -182,7 +182,7 @@ jobs:
             release
             ${{ inputs.goreleaser-snapshot == true && '--snapshot' || '' }}
             --config .github/.goreleaser-unstable.yml
-            --skip=docker
+            --skip=docker,docker_manifests
             --clean
             --timeout 120m
         env:
