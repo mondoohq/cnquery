@@ -3,15 +3,15 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/cloudflare/connection"
-	"go.mondoo.com/cnquery/v12/providers/cloudflare/provider"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
+	"go.mondoo.com/mql/v13/providers/cloudflare/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "cloudflare",
-	ID:              "go.mondoo.com/cnquery/v12/providers/cloudflare",
-	Version:         "11.1.3",
+	ID:              "go.mondoo.com/mql/providers/cloudflare",
+	Version:         "11.0.89",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{

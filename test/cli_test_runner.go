@@ -40,7 +40,7 @@ func (c *cliTestRunner) Run() error {
 	c.cmd.Stderr = &c.stderr
 
 	if err := c.cmd.Start(); err != nil {
-		return fmt.Errorf("Error starting command: %s\n", err)
+		return fmt.Errorf("error starting command: %s", err)
 	}
 
 	// Wait for the command to finish
@@ -49,7 +49,7 @@ func (c *cliTestRunner) Run() error {
 			// The program has exited with an exit code != 0, but for testing purposes we don't want to fail the test
 			return nil
 		}
-		return fmt.Errorf("Command finished with error: %v\n", err)
+		return fmt.Errorf("command finished with error: %v", err)
 	}
 
 	return nil

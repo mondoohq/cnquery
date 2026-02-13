@@ -4,15 +4,15 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/oci/provider"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/oci/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "oci",
-	ID:              "go.mondoo.com/cnquery/v9/providers/oci",
-	Version:         "11.1.3",
+	ID:              "go.mondoo.com/mql/providers/oci",
+	Version:         "11.0.132",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{

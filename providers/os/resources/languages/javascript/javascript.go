@@ -8,8 +8,8 @@ import (
 
 	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/cpe"
-	"go.mondoo.com/cnquery/v12/sbom"
+	"go.mondoo.com/mql/v13/providers/os/resources/cpe"
+	"go.mondoo.com/mql/v13/sbom"
 )
 
 // NewPackageUrl creates a npm package url for a given package name and version

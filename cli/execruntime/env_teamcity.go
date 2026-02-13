@@ -6,7 +6,7 @@ package execruntime
 const TEAMCITY = "teamcity"
 
 // see https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html#Predefined+Server+Build+Parameters
-var teamcityEnv = &RuntimeEnv{
+var teamcityEnv = &RuntimeEnv{ //nolint:unused
 	Id:        TEAMCITY,
 	Name:      "TeamCity",
 	Prefix:    "TEAMCITY",

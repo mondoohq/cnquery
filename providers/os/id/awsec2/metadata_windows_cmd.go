@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
+	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 )
 
 const (

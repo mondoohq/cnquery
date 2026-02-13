@@ -9,14 +9,14 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/multierr"
 )
 
 var arrayBlockType = types.Array(types.Block)
 
 // arrayFunctions are all the handlers for builtin array methods
-var arrayFunctions map[string]chunkHandlerV2
+var arrayFunctions map[string]chunkHandlerV2 //nolint:unused
 
 func arrayGetFirstIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
@@ -248,7 +248,7 @@ func _arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, in
 
 	fref, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'where' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
@@ -414,7 +414,7 @@ func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'map' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'map' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
@@ -588,7 +588,7 @@ func detectDupes(array any, typ types.Type) ([]any, []any, error) {
 	ct := typ.Child()
 	equalFunc, ok := types.Equal[ct]
 	if !ok {
-		return nil, nil, errors.New("cannot extract duplicates from array, must be a basic type. Try using a field argument.")
+		return nil, nil, errors.New("cannot extract duplicates from array, must be a basic type, try using a field argument")
 	}
 
 	existing := []any{}
@@ -654,7 +654,7 @@ func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 
 	fref, ok := arg1.RefV2()
 	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'field duplicates' call")
+		return nil, 0, errors.New("failed to retrieve function reference of 'field duplicates' call")
 	}
 
 	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
@@ -732,7 +732,7 @@ func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 							added = true
 						}
 					}
-					if added == false {
+					if !added {
 						duplicateIndices = append(duplicateIndices, j)
 					}
 					break
@@ -1031,10 +1031,7 @@ func compileLogicalArrayOp(underlying types.Type, op string) func(types.Type, ty
 
 func cmpArrays(left *RawData, right *RawData, f func(any, any) bool) bool {
 	if left.Value == nil {
-		if right.Value == nil {
-			return true
-		}
-		return false
+		return right.Value == nil
 	}
 	if right == nil || right.Value == nil {
 		return false

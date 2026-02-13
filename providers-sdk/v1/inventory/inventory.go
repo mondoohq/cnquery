@@ -15,8 +15,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault/config"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault/config"
 	"sigs.k8s.io/yaml"
 )
 
@@ -268,9 +268,7 @@ func (p *Inventory) AddAssets(assetList ...*Asset) {
 	if p.Spec == nil {
 		p.Spec = &InventorySpec{}
 	}
-	for i := range assetList {
-		p.Spec.Assets = append(p.Spec.Assets, assetList[i])
-	}
+	p.Spec.Assets = append(p.Spec.Assets, assetList...)
 }
 
 func (p *Inventory) ApplyLabels(labels map[string]string) {
@@ -339,7 +337,7 @@ func (p *Platform) PrettyTitle() string {
 	prettyTitle := p.Title
 
 	// extend the title only for OS and k8s objects
-	if !(p.IsFamily("k8s-workload") || p.IsFamily("os")) {
+	if !p.IsFamily("k8s-workload") && !p.IsFamily("os") {
 		return prettyTitle
 	}
 
@@ -470,7 +468,7 @@ func (c *Config) ToUrl() string {
 
 	host := c.Host
 	if strings.HasPrefix(host, "sha256:") {
-		host = strings.Replace(host, "sha256:", "", -1)
+		host = strings.ReplaceAll(host, "sha256:", "")
 	}
 
 	path := c.Path

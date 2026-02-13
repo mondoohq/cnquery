@@ -4,13 +4,11 @@
 package resources
 
 import (
-	"errors"
 	"io"
 	"sync"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
 type mqlCommandInternal struct {
@@ -67,32 +65,4 @@ func (c *mqlCommand) stderr(cmd string) (string, error) {
 func (c *mqlCommand) exitcode(cmd string) (int64, error) {
 	// note: we ignore the return value because everything is set in execute
 	return 0, c.execute(cmd)
-}
-
-func runCommand(runtime *plugin.Runtime, cmd string) (string, error) {
-	o, err := CreateResource(runtime, "command", map[string]*llx.RawData{
-		"command": llx.StringData(cmd),
-	})
-	if err != nil {
-		return "", err
-	}
-
-	command := o.(*mqlCommand)
-	exit := command.GetExitcode()
-	if exit.Error != nil {
-		return "", exit.Error
-	}
-	if exit.Data != 0 {
-		err := command.GetStderr()
-		if err.Error != nil {
-			return "", err.Error
-		}
-		return "", errors.New(err.Data)
-	}
-
-	out := command.GetStdout()
-	if out.Error != nil {
-		return "", out.Error
-	}
-	return out.Data, nil
 }

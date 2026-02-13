@@ -1,4 +1,4 @@
-name: Update cnquery and provider dependencies
+name: Update mql and provider dependencies
 
 on:
   schedule:
@@ -51,7 +51,7 @@ jobs:
         id: branch
         run: |
           BRANCH_NAME="version/deps_update_$(date +%Y%m%d_%H%M)"
-          COMMIT_MSG="🧹 Update deps for cnquery and providers $(date +%Y%m%d)"
+          COMMIT_MSG="🧹 Update deps for mql and providers $(date +%Y%m%d)"
           echo "COMMIT_TITLE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
           echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
 

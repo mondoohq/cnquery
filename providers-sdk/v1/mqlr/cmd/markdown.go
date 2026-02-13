@@ -19,8 +19,8 @@ import (
 	"github.com/olekukonko/tablewriter/tw"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/mqlr/lrcore"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"sigs.k8s.io/yaml"
 )
 
@@ -185,7 +185,7 @@ func (l *lrSchemaRenderer) renderToc(packName string, description string, resour
 	table := tablewriter.NewTable(builder,
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
 			Borders: tw.Border{Left: tw.On, Top: tw.Off, Right: tw.On, Bottom: tw.Off},
-			Symbols: tw.NewSymbolCustom("cnquery").
+			Symbols: tw.NewSymbolCustom("mql").
 				WithCenter("|").
 				WithMidLeft("|").
 				WithMidRight("|"),
@@ -247,11 +247,11 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	if docs != nil && docs.Platform != nil && (len(docs.Platform.Name) > 0 || len(docs.Platform.Family) > 0) {
 		builder.WriteString("**Supported platform**\n\n")
 		for r := range docs.Platform.Name {
-			builder.WriteString(fmt.Sprintf("- %s", docs.Platform.Name[r]))
+			fmt.Fprintf(builder, "- %s", docs.Platform.Name[r])
 			builder.WriteString("\n")
 		}
 		for r := range docs.Platform.Family {
-			builder.WriteString(fmt.Sprintf("- %s", docs.Platform.Name[r]))
+			fmt.Fprintf(builder, "- %s", docs.Platform.Name[r])
 			builder.WriteString("\n")
 		}
 		builder.WriteString("\n")
@@ -321,7 +321,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 		table := tablewriter.NewTable(builder,
 			tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
 				Borders: tw.Border{Left: tw.On, Top: tw.Off, Right: tw.On, Bottom: tw.Off},
-				Symbols: tw.NewSymbolCustom("cnquery").
+				Symbols: tw.NewSymbolCustom("mql").
 					WithCenter("|").
 					WithMidLeft("|").
 					WithMidRight("|"),
@@ -369,7 +369,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	if docs != nil && len(docs.Resources) > 0 {
 		builder.WriteString("**Resources**\n\n")
 		for r := range docs.Resources {
-			builder.WriteString(fmt.Sprintf("- [%s](%s)", docs.Resources[r].Title, docs.Resources[r].Url))
+			fmt.Fprintf(builder, "- [%s](%s)", docs.Resources[r].Title, docs.Resources[r].Url)
 			builder.WriteString("\n")
 		}
 		builder.WriteString("\n")
@@ -378,7 +378,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	if docs != nil && len(docs.Refs) > 0 {
 		builder.WriteString("**References**\n\n")
 		for r := range docs.Refs {
-			builder.WriteString(fmt.Sprintf("- [%s](%s)", docs.Refs[r].Title, docs.Refs[r].Url))
+			fmt.Fprintf(builder, "- [%s](%s)", docs.Refs[r].Title, docs.Refs[r].Url)
 			builder.WriteString("\n")
 		}
 		builder.WriteString("\n")

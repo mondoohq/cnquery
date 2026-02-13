@@ -4,29 +4,29 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/network/connection"
-	"go.mondoo.com/cnquery/v12/providers/network/provider"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/network/connection"
+	"go.mondoo.com/mql/v13/providers/network/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "network",
-	ID:              "go.mondoo.com/cnquery/v9/providers/network",
-	Version:         "11.0.114",
+	ID:              "go.mondoo.com/mql/providers/network",
+	Version:         "11.0.110",
 	ConnectionTypes: []string{provider.HostConnectionType},
 	CrossProviderTypes: []string{
-		"go.mondoo.com/cnquery/providers/os",
-		"go.mondoo.com/cnquery/providers/k8s",
-		"go.mondoo.com/cnquery/providers/aws",
-		"go.mondoo.com/cnquery/providers/networkdiscovery",
+		"go.mondoo.com/mql/providers/os",
+		"go.mondoo.com/mql/providers/k8s",
+		"go.mondoo.com/mql/providers/aws",
+		"go.mondoo.com/mql/providers/networkdiscovery",
 		// FIXME: DEPRECATED, remove in v12.0 vv
 		// Until v10 providers had a version indication in their ID. With v10
 		// this is no longer the case. Once we get far enough away from legacy
 		// version support, we can safely remove this.
-		"go.mondoo.com/cnquery/v9/providers/os",
-		"go.mondoo.com/cnquery/v9/providers/k8s",
-		"go.mondoo.com/cnquery/v9/providers/aws",
+		"go.mondoo.com/mql/providers/os",
+		"go.mondoo.com/mql/providers/k8s",
+		"go.mondoo.com/mql/providers/aws",
 		// ^^
 	},
 	Connectors: []plugin.Connector{

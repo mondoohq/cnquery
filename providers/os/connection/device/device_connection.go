@@ -11,18 +11,18 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/device/linux"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/device/windows"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/snapshot"
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/device/linux"
+	"go.mondoo.com/mql/v13/providers/os/connection/device/windows"
+	"go.mondoo.com/mql/v13/providers/os/connection/snapshot"
+	"go.mondoo.com/mql/v13/utils/stringx"
 
-	"go.mondoo.com/cnquery/v12/providers/os/connection/fs"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/detector"
-	"go.mondoo.com/cnquery/v12/providers/os/id"
-	"go.mondoo.com/cnquery/v12/providers/os/id/ids"
+	"go.mondoo.com/mql/v13/providers/os/connection/fs"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/detector"
+	"go.mondoo.com/mql/v13/providers/os/id"
+	"go.mondoo.com/mql/v13/providers/os/id/ids"
 )
 
 const (

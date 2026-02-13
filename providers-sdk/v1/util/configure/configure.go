@@ -19,9 +19,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v12/logger"
-	cproviders "go.mondoo.com/cnquery/v12/providers"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/logger"
+	cproviders "go.mondoo.com/mql/v13/providers"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"golang.org/x/mod/modfile"
 	"sigs.k8s.io/yaml"
 )
@@ -46,7 +46,7 @@ func main() {
 
 var rootCmd = &cobra.Command{
 	Use:   "configure [-f config] [-o file]",
-	Short: "configure providers for cnquery",
+	Short: "configure providers for mql",
 	Run: func(cmd *cobra.Command, args []string) {
 		confPath, err := cmd.Flags().GetString("file")
 		if err != nil {
@@ -154,7 +154,7 @@ func genBuiltinGo(conf ProvidersConf) ([]byte, error) {
 
 	for _, provider := range conf.Builtin {
 		// imports cannot contain dashes
-		trimProvider := strings.Replace(provider.Name, "-", "", -1)
+		trimProvider := strings.ReplaceAll(provider.Name, "-", "")
 		imports += fmt.Sprintf("\t%sconf \"%s/config\"\n", trimProvider, provider.GoPackage)
 		imports += fmt.Sprintf("\t%s \"%s/provider\"\n", trimProvider, provider.GoPackage)
 
@@ -191,8 +191,8 @@ package providers
 
 import (
 	_ "embed"
-	// osconf "go.mondoo.com/cnquery/v12/providers/os/config"
-	// os "go.mondoo.com/cnquery/v12/providers/os/provider"
+	// osconf "go.mondoo.com/mql/v13/providers/os/config"
+	// os "go.mondoo.com/mql/v13/providers/os/provider"
 %s)
 
 // //go:embed os/resources/os.resources.json
@@ -291,8 +291,8 @@ func buildDependencies(deps map[string]*resources.ProviderInfo) {
 }
 
 var (
-	reBuiltinReplace = regexp.MustCompile(`replace go.mondoo.com/cnquery/v12/providers/.* => ./providers/.*`)
-	reBuiltinDep     = regexp.MustCompile(`go.mondoo.com/cnquery/v12/providers/.*`)
+	reBuiltinReplace = regexp.MustCompile(`replace go.mondoo.com/mql/v13/providers/.* => ./providers/.*`)
+	reBuiltinDep     = regexp.MustCompile(`go.mondoo.com/mql/v13/providers/.*`)
 )
 
 func rewireDependencies(providers []Builtin) {
@@ -337,8 +337,8 @@ func rewireDependencies(providers []Builtin) {
 		}
 		// if the provider has any specific pinned replacements, we also add those to allow compiling
 		for _, r := range goMod.Replace {
-			// special case: we don't want to pull in provider's 'replace go.mondoo.com/cnquery/v12 => ../..' in.
-			if r.Old.Path == "go.mondoo.com/cnquery/v12" {
+			// special case: we don't want to pull in provider's 'replace go.mondoo.com/mql/v13 => ../..' in.
+			if r.Old.Path == "go.mondoo.com/mql/v13" {
 				continue
 			}
 			// TODO: maybe we also use the modfile module to update the go.mod we're modifying
@@ -347,7 +347,7 @@ func rewireDependencies(providers []Builtin) {
 	}
 	if deps != "" {
 		raws = strings.Replace(raws, "require (", "require ("+deps, 1)
-		raws = strings.Replace(raws, "module go.mondoo.com/cnquery/v12", "module go.mondoo.com/cnquery/v12\n"+replace, 1)
+		raws = strings.Replace(raws, "module go.mondoo.com/mql/v13", "module go.mondoo.com/mql/v13\n"+replace, 1)
 	}
 
 	err = os.WriteFile("go.mod", []byte(raws), 0o644)

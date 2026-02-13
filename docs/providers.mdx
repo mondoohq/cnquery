@@ -253,10 +253,10 @@ Provider plugins are located by default in either the system or user location. T
   Due to these specifications, providers can be created in any language or stack, as long as they offer a callable binary (that is executable on the target system) and communicates via the GRPC interface.
 
 - **Provider metadata**
-  This file contains information about the provider like its name, UID, version, connections, and connectors. It is also used to build the CLI interface. The structure is defined in the [Provider struct](https://github.com/mondoohq/cnquery/blob/main/providers-sdk/v1/plugin/start.go).
+  This file contains information about the provider like its name, UID, version, connections, and connectors. It is also used to build the CLI interface. The structure is defined in the [Provider struct](https://github.com/mondoohq/mql/blob/main/providers-sdk/v1/plugin/start.go).
 
 - **Resources and fields schema**
-  The schema contains all resources and fields that are offered by this provider. This includes version constraints for compatibility, field types, and basic documentation. It is defined in the [Schema message](https://github.com/mondoohq/cnquery/blob/main/providers-sdk/v1/resources/resources.proto) in the resources proto. Provider schemas can be auto-generated (see scaffolding below).
+  The schema contains all resources and fields that are offered by this provider. This includes version constraints for compatibility, field types, and basic documentation. It is defined in the [Schema message](https://github.com/mondoohq/mql/blob/main/providers-sdk/v1/resources/resources.proto) in the resources proto. Provider schemas can be auto-generated (see scaffolding below).
 
 Providers are distributed as `tar.xz` files which contain the above structure. They can be installed using these compressed archives via:
 
@@ -288,7 +288,7 @@ The current provider scaffolding is geared towards golang. Contributions to exte
 
 If you prefer not to have separate provider binaries that are spawned, it is possible to build any MQL runtime with Go-based providers directly into the binary. This means that no additional files are installed, or update, nor processes spawned.
 
-To manually configure builtin providers, you can modify the list of [`builtinProviders`](https://github.com/mondoohq/cnquery/blob/main/providers/builtin.go). Once added, you will see it in the list of builtin providers for any binary you build, for example:
+To manually configure builtin providers, you can modify the list of [`builtinProviders`](https://github.com/mondoohq/mql/blob/main/providers/builtin.go). Once added, you will see it in the list of builtin providers for any binary you build, for example:
 
 ```bash
 > cnquery providers

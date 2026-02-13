@@ -6,7 +6,7 @@ package generator
 import (
 	"testing"
 
-	"go.mondoo.com/cnquery/v12/sbom"
+	"go.mondoo.com/mql/v13/sbom"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

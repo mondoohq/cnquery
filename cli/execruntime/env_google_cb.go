@@ -26,7 +26,7 @@ const GOOGLE_CLOUD_BUILD = "google-cb"
 //   - 'TAG_NAME=$TAG_NAME'
 //   - 'REVISION_ID=$REVISION_ID'
 
-var googleCloudBuildEnv = &RuntimeEnv{
+var googleCloudBuildEnv = &RuntimeEnv{ //nolint:unused
 	Id:        GOOGLE_CLOUD_BUILD,
 	Name:      "Google Cloud Build",
 	Namespace: "build.cloud.google.com",

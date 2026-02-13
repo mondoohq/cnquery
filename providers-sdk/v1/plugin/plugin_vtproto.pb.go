@@ -7,9 +7,9 @@ package plugin
 import (
 	fmt "fmt"
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
-	llx "go.mondoo.com/cnquery/v12/llx"
-	inventory "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	upstream "go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
+	llx "go.mondoo.com/mql/v13/llx"
+	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	upstream "go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 	proto "google.golang.org/protobuf/proto"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"

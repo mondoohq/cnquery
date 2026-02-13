@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v82/github"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/logger"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/github/connection"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"github.com/google/go-github/v81/github"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/github/connection"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/stringx"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -79,8 +79,6 @@ func initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(githubUser.UpdatedAt))
 	args["suspendedAt"] = llx.TimeDataPtr(githubTimestamp(githubUser.SuspendedAt))
 	args["company"] = llx.StringData(githubUser.GetCompany())
-	args["hireable"] = llx.BoolData(githubUser.GetHireable())
-	args["siteAdmin"] = llx.BoolData(githubUser.GetSiteAdmin())
 	return args, nil, nil
 }
 

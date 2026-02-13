@@ -1,8 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/v12/providers/tailscale"
-option go_package = "go.mondoo.com/cnquery/v12/providers/tailscale/resources"
+option provider = "go.mondoo.com/mql/providers/tailscale"
+option go_package = "go.mondoo.com/mql/v13/providers/tailscale/resources"
 
 // Tailscale organization
 tailscale {

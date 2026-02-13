@@ -21,12 +21,12 @@ import (
 func fakeConfig() aws.Config {
 	conf := aws.Config{}
 	conf.Region = "mock-region"
-	localResolverFn := func(service, region string) (aws.Endpoint, error) {
-		return aws.Endpoint{
+	localResolverFn := func(service, region string) (aws.Endpoint, error) { //nolint:staticcheck // test uses deprecated AWS endpoint API
+		return aws.Endpoint{ //nolint:staticcheck // test uses deprecated AWS endpoint API
 			URL: "https://endpoint",
 		}, nil
 	}
-	conf.EndpointResolver = aws.EndpointResolverFunc(localResolverFn)
+	conf.EndpointResolver = aws.EndpointResolverFunc(localResolverFn) //nolint:staticcheck // test uses deprecated AWS endpoint API
 	conf.Credentials = credentials.StaticCredentialsProvider{
 		Value: aws.Credentials{
 			AccessKeyID: "AKID", SecretAccessKey: "SECRET", SessionToken: "SESSION",

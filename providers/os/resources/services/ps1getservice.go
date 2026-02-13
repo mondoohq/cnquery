@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 )
 
 // WindowsService calls powershell Get-Service
@@ -83,10 +83,7 @@ func (s WindowsService) IsRunning() bool {
 // 3: Manual
 // 4: Disabled
 func (s WindowsService) Enabled() bool {
-	if s.StartType <= 3 {
-		return true
-	}
-	return false
+	return s.StartType <= 3
 }
 
 func (s WindowsService) Service() *Service {

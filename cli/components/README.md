@@ -1,6 +1,6 @@
 # `components` package
 
-This Go package has interactive helpers used by `cnquery` and `cnspec`.
+This Go package has interactive helpers used by `mql` and `cnspec`.
 
 We use a powerful little TUI framework called [bubbletea](https://github.com/charmbracelet/bubbletea).
 

@@ -20,12 +20,12 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v12/providers/aws/connection"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // imdsSupport returns a human-readable IMDS support value. The AWS API only
@@ -1612,7 +1612,7 @@ func (a *mqlAwsEc2Instance) disableApiTermination() (bool, error) {
 	return false, nil
 }
 
-// # go.mondoo.com/cnquery/v12/providers/aws/resources
+// # go.mondoo.com/mql/v13/providers/aws/resources
 // resources/aws.lr.go:15420:12: c.iamRole undefined (type *mqlAwsIamInstanceProfile has no field or method iamRole, but does have field IamRole)
 // make[1]: *** [providers/build/aws] Error 1
 

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // handleGlobal takes a global function and returns a handler if found.
@@ -55,12 +55,12 @@ func init() {
 
 func globalCreateResource(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
 	if l := len(f.Args); l%2 != 1 || l == 0 {
-		return nil, 0, errors.New("Called `createResource` with invalid number of arguments")
+		return nil, 0, errors.New("called `createResource` with invalid number of arguments")
 	}
 
 	binding, ok := f.Args[0].RefV2()
 	if !ok {
-		return nil, 0, errors.New("Called `createResource` with invalid arguments: expected ref")
+		return nil, 0, errors.New("called `createResource` with invalid arguments: expected ref")
 	}
 
 	t := types.Type(f.Type)
@@ -110,7 +110,7 @@ func switchCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, 
 	// - default is translated to `true` in its condition; everything else is a function
 
 	if len(f.Args) < 2 {
-		return nil, 0, errors.New("Called switch with no arguments, expected at least one case statement")
+		return nil, 0, errors.New("called switch with no arguments, expected at least one case statement")
 	}
 
 	var bind *RawData
@@ -456,7 +456,7 @@ func expectV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, erro
 	}
 	res, dref, err := e.resolveValue(f.Args[0], ref)
 	if res != nil && res.Type != types.Bool {
-		return nil, 0, errors.New("Called expect body with wrong type, it should be a boolean (type mismatch)")
+		return nil, 0, errors.New("called expect body with wrong type, it should be a boolean (type mismatch)")
 	}
 	return res, dref, err
 }
@@ -468,7 +468,7 @@ func blockV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error
 	panic("NOT YET BLOCK CALL")
 	// res, dref, err := c.resolveValue(f.Args[0], ref)
 	// if res != nil && res.Type[0] != types.Bool {
-	// 	return nil, 0, errors.New("Called expect body with wrong type, it should be a boolean (type mismatch)")
+	// 	return nil, 0, errors.New("called expect body with wrong type, it should be a boolean (type mismatch)")
 	// }
 	// return res, dref, err
 }

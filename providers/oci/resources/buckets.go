@@ -11,10 +11,9 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v12/providers/oci/connection"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/mql/v13/providers/oci/connection"
 )
 
 func (e *mqlOciObjectStorage) id() (string, error) {
@@ -169,33 +168,6 @@ func (o *mqlOciObjectStorageBucket) id() (string, error) {
 	return "oci.objectStorage.bucket/" + o.Namespace.Data + "/" + o.Name.Data, nil
 }
 
-func initOciObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// Check if id is already populated
-	if id, ok := args["id"]; ok && id.Value != nil {
-		if idStr, ok := id.Value.(string); ok && idStr != "" {
-			return args, nil, nil
-		}
-	}
-
-	obj, err := CreateResource(runtime, "oci.objectStorage.bucket", args)
-	if err != nil {
-		return nil, nil, err
-	}
-	bucket := obj.(*mqlOciObjectStorageBucket)
-
-	// Fetch bucket details to populate the id field
-	bucketDetails, err := bucket.getBucketDetails()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if bucketDetails.Id != nil {
-		args["id"] = llx.StringData(*bucketDetails.Id)
-	}
-
-	return args, bucket, nil
-}
-
 func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, error) {
 	if o.bucket != nil {
 		return o.bucket, nil
@@ -282,83 +254,4 @@ func (o *mqlOciObjectStorageBucket) replicationEnabled() (bool, error) {
 		return false, err
 	}
 	return *bucketInfo.ReplicationEnabled, nil
-}
-
-func (o *mqlOciObjectStorageBucket) isReadOnly() (bool, error) {
-	bucketInfo, err := o.getBucketDetails()
-	if err != nil {
-		return false, err
-	}
-	if bucketInfo.IsReadOnly == nil {
-		return false, nil
-	}
-	return *bucketInfo.IsReadOnly, nil
-}
-
-func (o *mqlOciObjectStorageBucket) etag() (string, error) {
-	bucketInfo, err := o.getBucketDetails()
-	if err != nil {
-		return "", err
-	}
-	if bucketInfo.Etag == nil {
-		return "", nil
-	}
-	return *bucketInfo.Etag, nil
-}
-
-func (o *mqlOciObjectStorageBucket) kmsKeyId() (string, error) {
-	bucketInfo, err := o.getBucketDetails()
-	if err != nil {
-		return "", err
-	}
-	if bucketInfo.KmsKeyId == nil {
-		return "", nil
-	}
-	return *bucketInfo.KmsKeyId, nil
-}
-
-func (o *mqlOciObjectStorageBucket) approximateCount() (int64, error) {
-	bucketInfo, err := o.getBucketDetails()
-	if err != nil {
-		return 0, err
-	}
-	if bucketInfo.ApproximateCount == nil {
-		return 0, nil
-	}
-	return *bucketInfo.ApproximateCount, nil
-}
-
-func (o *mqlOciObjectStorageBucket) approximateSize() (int64, error) {
-	bucketInfo, err := o.getBucketDetails()
-	if err != nil {
-		return 0, err
-	}
-	if bucketInfo.ApproximateSize == nil {
-		return 0, nil
-	}
-	return *bucketInfo.ApproximateSize, nil
-}
-
-func (o *mqlOciObjectStorageBucket) freeformTags() (map[string]interface{}, error) {
-	bucketInfo, err := o.getBucketDetails()
-	if err != nil {
-		return nil, err
-	}
-	tags := make(map[string]interface{})
-	for k, v := range bucketInfo.FreeformTags {
-		tags[k] = v
-	}
-	return tags, nil
-}
-
-func (o *mqlOciObjectStorageBucket) definedTags() (map[string]interface{}, error) {
-	bucketInfo, err := o.getBucketDetails()
-	if err != nil {
-		return nil, err
-	}
-	tags := make(map[string]interface{})
-	for k, v := range bucketInfo.DefinedTags {
-		tags[k] = v
-	}
-	return tags, nil
 }

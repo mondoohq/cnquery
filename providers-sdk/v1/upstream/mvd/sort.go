@@ -43,7 +43,7 @@ func (s ByPkgSeverity) Less(i, j int) bool {
 func FilterByAffected(pkgs []*Package) []*Package {
 	filtered := []*Package{}
 	for i := range pkgs {
-		if pkgs[i].Affected == true {
+		if pkgs[i].Affected {
 			filtered = append(filtered, pkgs[i])
 		}
 	}

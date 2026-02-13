@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"go.mondoo.com/cnquery/v12/providers/os/resources/languages"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/languages/javascript"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript"
 )
 
 var (

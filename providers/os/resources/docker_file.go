@@ -14,13 +14,13 @@ import (
 	"github.com/moby/buildkit/frontend/dockerfile/linter"
 	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/docker"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/local"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/ssh"
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/docker"
+	"go.mondoo.com/mql/v13/providers/os/connection/local"
+	"go.mondoo.com/mql/v13/providers/os/connection/ssh"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/multierr"
 )
 
 func initDockerFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -227,7 +227,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			userRaw = v
 
 		case *instructions.RunCommand:
-			script := strings.Join(v.ShellDependantCmdLine.CmdLine, "\n")
+			script := strings.Join(v.CmdLine, "\n")
 			runResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
 				"__id":   llx.StringData(p.locationID(v.Location())),
 				"script": llx.StringData(script),
@@ -244,14 +244,14 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			cmdRaw = v
 
 		case *instructions.CopyCommand:
-			src := make([]any, len(v.SourcesAndDest.SourcePaths))
-			for i := range v.SourcesAndDest.SourcePaths {
-				src[i] = v.SourcesAndDest.SourcePaths[i]
+			src := make([]any, len(v.SourcePaths))
+			for i := range v.SourcePaths {
+				src[i] = v.SourcePaths[i]
 			}
 			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileCopy, map[string]*llx.RawData{
 				"__id": llx.StringData(p.locationID(v.Location())),
 				"src":  llx.ArrayData(src, types.String),
-				"dst":  llx.StringData(v.SourcesAndDest.DestPath),
+				"dst":  llx.StringData(v.DestPath),
 			})
 			if err != nil {
 				return nil, err
@@ -259,14 +259,14 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			copy = append(copy, resource)
 
 		case *instructions.AddCommand:
-			src := make([]any, len(v.SourcesAndDest.SourcePaths))
-			for i := range v.SourcesAndDest.SourcePaths {
-				src[i] = v.SourcesAndDest.SourcePaths[i]
+			src := make([]any, len(v.SourcePaths))
+			for i := range v.SourcePaths {
+				src[i] = v.SourcePaths[i]
 			}
 			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileAdd, map[string]*llx.RawData{
 				"__id":  llx.StringData(p.locationID(v.Location())),
 				"src":   llx.ArrayData(src, types.String),
-				"dst":   llx.StringData(v.SourcesAndDest.DestPath),
+				"dst":   llx.StringData(v.DestPath),
 				"chown": llx.StringData(v.Chown),
 				"chmod": llx.StringData(v.Chmod),
 			})
@@ -324,7 +324,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 	}
 
 	if entrypointRaw != nil {
-		script := strings.Join(entrypointRaw.ShellDependantCmdLine.CmdLine, "\n")
+		script := strings.Join(entrypointRaw.CmdLine, "\n")
 		runResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
 			"__id":   llx.StringData(p.locationID(entrypointRaw.Location())),
 			"script": llx.StringData(script),
@@ -338,7 +338,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 	}
 
 	if cmdRaw != nil {
-		script := strings.Join(cmdRaw.ShellDependantCmdLine.CmdLine, "\n")
+		script := strings.Join(cmdRaw.CmdLine, "\n")
 		cmdResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
 			"__id":   llx.StringData(p.locationID(cmdRaw.Location())),
 			"script": llx.StringData(script),

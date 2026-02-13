@@ -4,14 +4,15 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 var Config = plugin.Provider{
 	Name:       "core",
-	ID:         "go.mondoo.com/cnquery/v9/providers/core",
-	Version:    "11.0.115",
+	ID:         "go.mondoo.com/mql/providers/core",
+	Version:    mql.GetVersion(),
 	Connectors: []plugin.Connector{},
 	AssetUrlTrees: []*inventory.AssetUrlBranch{
 		{

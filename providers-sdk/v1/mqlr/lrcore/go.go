@@ -13,8 +13,10 @@ import (
 	"strings"
 	"text/template"
 
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/multierr"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/multierr"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // Go produced go code for the LR file
@@ -121,9 +123,9 @@ import (
 	"errors"%s
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/types"%s
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/types"%s
 )
 `
 
@@ -190,7 +192,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		if res != nil {
 			mqlId := res.MqlID()
 			if mqlId == "" {
-			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+			  log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/mql/issues", name)
 			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
@@ -210,7 +212,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 
 	mqlId := res.MqlID()
 	if mqlId == "" {
-		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/mql/issues", name)
 	}
 	id := name + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
@@ -237,7 +239,7 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 
 	mqlId := res.MqlID()
 	if mqlId == "" {
-		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/cnquery/issues", name)
+		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/mql/issues", name)
 	}
 	id := name + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
@@ -552,12 +554,12 @@ func (b *goBuilder) importName(symbol string) (string, bool) {
 	return "", false
 }
 
-func indent(s string, depth int) string {
+func indent(s string, depth int) string { //nolint:unused
 	space := ""
 	for i := 0; i < depth; i++ {
 		space += "\t"
 	}
-	return space + strings.Replace(s, "\n", "\n"+space, -1)
+	return space + strings.ReplaceAll(s, "\n", "\n"+space)
 }
 
 func (r *Resource) constTypeName(b *goBuilder) string {
@@ -568,7 +570,7 @@ func (r *Resource) structName(b *goBuilder) string {
 	return "mql" + r.interfaceName(b)
 }
 
-var reMethodName = regexp.MustCompile("\\.[a-z]")
+var reMethodName = regexp.MustCompile(`\.[a-z]`)
 
 func capitalizeDot(in []byte) []byte {
 	return bytes.ToUpper([]byte{in[1]})
@@ -577,6 +579,8 @@ func capitalizeDot(in []byte) []byte {
 func (r *Resource) interfaceName(b *goBuilder) string {
 	return resource2goname(r.ID, b)
 }
+
+var caser = cases.Title(language.English, cases.NoLower)
 
 func resource2goname(s string, b *goBuilder) string {
 	pack := strings.SplitN(s, ".", 2)
@@ -587,14 +591,14 @@ func resource2goname(s string, b *goBuilder) string {
 			if _, ok := resources[pack[1]]; !ok {
 				b.errors.Add(errors.New("cannot find resource " + pack[1] + " in imported resource pack " + pack[0]))
 			}
-			name = pack[0] + "." + strings.Title(string(
+			name = pack[0] + "." + caser.String(string(
 				reMethodName.ReplaceAllFunc([]byte(pack[1]), capitalizeDot),
 			))
 			b.packsInUse[pack[0]] = struct{}{}
 		}
 	}
 	if name == "" {
-		name = strings.Title(string(
+		name = caser.String(string(
 			reMethodName.ReplaceAllFunc([]byte(s), capitalizeDot),
 		))
 	}
@@ -602,7 +606,7 @@ func resource2goname(s string, b *goBuilder) string {
 	return name
 }
 
-func (b *ResourceDef) staticFields() []*BasicField {
+func (b *ResourceDef) staticFields() []*BasicField { //nolint:unused
 	res := []*BasicField{}
 	for _, f := range b.Fields {
 		if f.BasicField != nil {
@@ -615,7 +619,7 @@ func (b *ResourceDef) staticFields() []*BasicField {
 }
 
 func (f *BasicField) goName() string {
-	return strings.Title(f.ID)
+	return caser.String(f.ID)
 }
 
 func (f *BasicField) isStatic() bool {
@@ -623,7 +627,7 @@ func (f *BasicField) isStatic() bool {
 }
 
 func (f *BasicField) methodname() string {
-	return strings.Title(f.ID)
+	return caser.String(f.ID)
 }
 
 // Retrieve the raw mondoo equivalent type, which can be looked up

@@ -9,10 +9,8 @@ import (
 
 	"github.com/99designs/keyring"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 )
-
-var notImplemented = errors.New("not implemented")
 
 func New(serviceName string) *Vault {
 	return &Vault{

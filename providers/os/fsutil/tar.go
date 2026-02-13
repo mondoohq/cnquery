@@ -23,7 +23,7 @@ func Tar(fs afero.Fs, f afero.File) (io.ReadCloser, error) {
 
 	// determine all files that we need to transfer
 	fileList := map[string]os.FileInfo{}
-	if stat.IsDir() == true {
+	if stat.IsDir() {
 
 		err = afutil.Walk(f.Name(), func(path string, f os.FileInfo, err error) error {
 			fileList[path] = f

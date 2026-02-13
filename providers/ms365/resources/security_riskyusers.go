@@ -7,9 +7,9 @@ import (
 	"context"
 	"github.com/microsoftgraph/msgraph-sdk-go/identityprotection"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/ms365/connection"
 )
 
 // riskyUsers returns a list of risky users

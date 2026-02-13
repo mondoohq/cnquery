@@ -11,7 +11,7 @@ import (
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/muesli/ansi"
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v12/cli/theme/colors"
+	"go.mondoo.com/mql/v13/cli/theme/colors"
 )
 
 var color func(string) termenv.Color = colors.Profile.Color
@@ -57,7 +57,7 @@ func newRenderer() (*renderer, error) {
 	}
 
 	if err := m.setRamp("#5A56E0", "#EE6FF8", true); err != nil {
-		return nil, errors.New("default color setup failed, please report this issue!")
+		return nil, errors.New("default color setup failed, please report this issue")
 	}
 
 	return m, nil

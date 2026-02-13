@@ -82,7 +82,7 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 		rawValue := entry.Value()
 
 		valuesT := strings.Split(rawValue, ",")
-		sort.Sort(sort.StringSlice(valuesT))
+		sort.Strings(valuesT)
 
 		values := make([]any, len(valuesT))
 		for i := range valuesT {

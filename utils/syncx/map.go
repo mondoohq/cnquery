@@ -10,7 +10,7 @@ type Map[T any] struct {
 }
 
 func (r *Map[T]) Get(key string) (T, bool) {
-	res, ok := r.Map.Load(key)
+	res, ok := r.Load(key)
 	if !ok {
 		var zero T
 		return zero, ok
@@ -19,5 +19,5 @@ func (r *Map[T]) Get(key string) (T, bool) {
 }
 
 func (r *Map[T]) Set(key string, value T) {
-	r.Map.Store(key, value)
+	r.Store(key, value)
 }

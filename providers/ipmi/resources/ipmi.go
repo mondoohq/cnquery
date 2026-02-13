@@ -4,8 +4,8 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v12/providers/ipmi/connection"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/ipmi/connection"
 )
 
 func (r *mqlIpmi) id() (string, error) {

@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package cnquery
+package mql
 
 import (
 	"github.com/stretchr/testify/assert"

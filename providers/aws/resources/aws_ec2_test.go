@@ -10,7 +10,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
 
 func TestShouldExcludeInstance(t *testing.T) {

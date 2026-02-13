@@ -104,7 +104,7 @@ func (s *ProviderType) UnmarshalJSON(data []byte) error {
 		*s = ProviderType(code)
 	} else {
 		var name string
-		err = json.Unmarshal(data, &name)
+		_ = json.Unmarshal(data, &name)
 		code, ok := ProviderType_idvalue[strings.TrimSpace(name)]
 		if !ok {
 			return errors.New("unknown backend value: " + string(data))

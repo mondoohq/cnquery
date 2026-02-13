@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v12/cli/printer"
-	"go.mondoo.com/cnquery/v12/cli/theme/colors"
+	"go.mondoo.com/mql/v13/cli/printer"
+	"go.mondoo.com/mql/v13/cli/theme/colors"
 )
 
 // OperatingSystemTheme for windows shell
@@ -22,8 +22,8 @@ var OperatingSystemTheme = &Theme{
 		res := w.String()
 		return res[0 : len(res)-1]
 	},
-	Landing: termenv.String("cnquery™\n" + logo + "\n").Foreground(colors.DefaultColorTheme.Primary).String(),
-	Welcome: "cnquery™\n" + logo + " interactive shell\n",
+	Landing: termenv.String("mql™\n" + logo + "\n").Foreground(colors.DefaultColorTheme.Primary).String(),
+	Welcome: "mql™\n" + logo + " interactive shell\n",
 	// NOTE: this is important to be short for windows, otherwise the auto-complete will make strange be jumps
 	// ENSURE YOU TEST A CHANGE BEFORE COMMIT ON WINDOWS
 	Prefix:        "> ",

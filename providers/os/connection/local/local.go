@@ -13,10 +13,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/ssh/cat"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
 )
 
 type LocalConnection struct {
@@ -120,7 +120,7 @@ type CommandRunner struct {
 }
 
 func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, error) {
-	c.Command.Stats.Start = time.Now()
+	c.Stats.Start = time.Now()
 
 	var cmd string
 	cmdArgs := []string{}
@@ -143,14 +143,14 @@ func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, er
 	var stderrBuffer bytes.Buffer
 
 	// create buffered stream
-	c.Command.Stdout = &stdoutBuffer
-	c.Command.Stderr = &stderrBuffer
+	c.Stdout = &stdoutBuffer
+	c.Stderr = &stderrBuffer
 
-	c.cmdExecutor.Stdout = c.Command.Stdout
-	c.cmdExecutor.Stderr = c.Command.Stderr
+	c.cmdExecutor.Stdout = c.Stdout
+	c.cmdExecutor.Stderr = c.Stderr
 
 	err := c.cmdExecutor.Run()
-	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
+	c.Stats.Duration = time.Since(c.Stats.Start)
 
 	// command completed successfully, great :-)
 	if err == nil {
@@ -160,7 +160,7 @@ func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, er
 	// if the program failed, we do not return err but its exit code
 	if exiterr, ok := err.(*exec.ExitError); ok {
 		if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-			c.Command.ExitStatus = status.ExitStatus()
+			c.ExitStatus = status.ExitStatus()
 		}
 		return &c.Command, nil
 	}

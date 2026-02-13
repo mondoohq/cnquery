@@ -994,13 +994,13 @@ var File_upstream_proto protoreflect.FileDescriptor
 
 const file_upstream_proto_rawDesc = "" +
 	"\n" +
-	"\x0eupstream.proto\x12\x1amondoo.cnquery.upstream.v1\"\xf5\x01\n" +
+	"\x0eupstream.proto\x12\x16mondoo.mql.upstream.v1\"\xf1\x01\n" +
 	"\x0eUpstreamConfig\x12\x1b\n" +
 	"\tasset_mrn\x18\x01 \x01(\tR\bassetMrn\x12\x1b\n" +
 	"\tspace_mrn\x18\x02 \x01(\tR\bspaceMrn\x12!\n" +
 	"\fapi_endpoint\x18\x03 \x01(\tR\vapiEndpoint\x12\x1c\n" +
-	"\tincognito\x18\x04 \x01(\bR\tincognito\x12K\n" +
-	"\x05creds\x18\x05 \x01(\v25.mondoo.cnquery.upstream.v1.ServiceAccountCredentialsR\x05creds\x12\x1b\n" +
+	"\tincognito\x18\x04 \x01(\bR\tincognito\x12G\n" +
+	"\x05creds\x18\x05 \x01(\v21.mondoo.mql.upstream.v1.ServiceAccountCredentialsR\x05creds\x12\x1b\n" +
 	"\tapi_proxy\x18\x06 \x01(\tR\bapiProxy\"\xcf\x01\n" +
 	"\x19ServiceAccountCredentials\x12\x10\n" +
 	"\x03mrn\x18\x01 \x01(\tR\x03mrn\x12\x1d\n" +
@@ -1013,12 +1013,12 @@ const file_upstream_proto_rawDesc = "" +
 	"\tscope_mrn\x18\x06 \x01(\tR\bscopeMrn\"\x06\n" +
 	"\x04Ping\"\x06\n" +
 	"\x04Pong\"\x16\n" +
-	"\x14AgentCheckinResponse\"\x8a\x01\n" +
+	"\x14AgentCheckinResponse\"\x86\x01\n" +
 	"\x18AgentRegistrationRequest\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12D\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12@\n" +
 	"\n" +
-	"agent_info\x18\x03 \x01(\v2%.mondoo.cnquery.upstream.v1.AgentInfoR\tagentInfo\"\xb7\x03\n" +
+	"agent_info\x18\x03 \x01(\v2!.mondoo.mql.upstream.v1.AgentInfoR\tagentInfo\"\xb3\x03\n" +
 	"\tAgentInfo\x12\x10\n" +
 	"\x03mrn\x18\x01 \x01(\tR\x03mrn\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\tR\aversion\x12\x14\n" +
@@ -1028,26 +1028,26 @@ const file_upstream_proto_rawDesc = "" +
 	"\rplatform_arch\x18\x06 \x01(\tR\fplatformArch\x12\x1f\n" +
 	"\vplatform_ip\x18\a \x01(\tR\n" +
 	"platformIp\x12+\n" +
-	"\x11platform_hostname\x18\b \x01(\tR\x10platformHostname\x12I\n" +
-	"\x06labels\x18\x12 \x03(\v21.mondoo.cnquery.upstream.v1.AgentInfo.LabelsEntryR\x06labels\x12\x1f\n" +
+	"\x11platform_hostname\x18\b \x01(\tR\x10platformHostname\x12E\n" +
+	"\x06labels\x18\x12 \x03(\v2-.mondoo.mql.upstream.v1.AgentInfo.LabelsEntryR\x06labels\x12\x1f\n" +
 	"\vplatform_id\x18\x14 \x01(\tR\n" +
 	"platformId\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x93\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x8f\x01\n" +
 	"\x1dAgentRegistrationConfirmation\x12\x1b\n" +
-	"\tagent_mrn\x18\x01 \x01(\tR\bagentMrn\x12U\n" +
+	"\tagent_mrn\x18\x01 \x01(\tR\bagentMrn\x12Q\n" +
 	"\n" +
-	"credential\x18\x02 \x01(\v25.mondoo.cnquery.upstream.v1.ServiceAccountCredentialsR\n" +
+	"credential\x18\x02 \x01(\v21.mondoo.mql.upstream.v1.ServiceAccountCredentialsR\n" +
 	"credential\"\x17\n" +
 	"\x03Mrn\x12\x10\n" +
 	"\x03mrn\x18\x01 \x01(\tR\x03mrn\" \n" +
 	"\fConfirmation\x12\x10\n" +
-	"\x03mrn\x18\x01 \x01(\tR\x03mrn\"\x9d\x01\n" +
-	"\x15ExchangeSSHKeyRequest\x12:\n" +
-	"\x06claims\x18\x01 \x01(\v2\".mondoo.cnquery.upstream.v1.ClaimsR\x06claims\x12H\n" +
+	"\x03mrn\x18\x01 \x01(\tR\x03mrn\"\x95\x01\n" +
+	"\x15ExchangeSSHKeyRequest\x126\n" +
+	"\x06claims\x18\x01 \x01(\v2\x1e.mondoo.mql.upstream.v1.ClaimsR\x06claims\x12D\n" +
 	"\n" +
-	"signatures\x18\x02 \x03(\v2(.mondoo.cnquery.upstream.v1.SshSignatureR\n" +
+	"signatures\x18\x02 \x03(\v2$.mondoo.mql.upstream.v1.SshSignatureR\n" +
 	"signatures\"\xaf\x01\n" +
 	"\x16ExchangeSSHKeyResponse\x12\x10\n" +
 	"\x03mrn\x18\x01 \x01(\tR\x03mrn\x12\x1d\n" +
@@ -1072,15 +1072,15 @@ const file_upstream_proto_rawDesc = "" +
 	"\baudience\x18\x02 \x01(\tR\baudience\x12\x1b\n" +
 	"\tjwt_token\x18\x03 \x01(\tR\bjwtToken\"L\n" +
 	"\x1dExchangeExternalTokenResponse\x12+\n" +
-	"\x11base64_credential\x18\x01 \x01(\tR\x10base64Credential2\xa7\x03\n" +
-	"\fAgentManager\x12\x80\x01\n" +
-	"\rRegisterAgent\x124.mondoo.cnquery.upstream.v1.AgentRegistrationRequest\x1a9.mondoo.cnquery.upstream.v1.AgentRegistrationConfirmation\x12\\\n" +
-	"\x0fUnRegisterAgent\x12\x1f.mondoo.cnquery.upstream.v1.Mrn\x1a(.mondoo.cnquery.upstream.v1.Confirmation\x12N\n" +
-	"\bPingPong\x12 .mondoo.cnquery.upstream.v1.Ping\x1a .mondoo.cnquery.upstream.v1.Pong\x12f\n" +
-	"\vHealthCheck\x12%.mondoo.cnquery.upstream.v1.AgentInfo\x1a0.mondoo.cnquery.upstream.v1.AgentCheckinResponse2\x9d\x02\n" +
-	"\x12SecureTokenService\x12v\n" +
-	"\vExchangeSSH\x121.mondoo.cnquery.upstream.v1.ExchangeSSHKeyRequest\x1a2.mondoo.cnquery.upstream.v1.ExchangeSSHKeyResponse\"\x00\x12\x8e\x01\n" +
-	"\x15ExchangeExternalToken\x128.mondoo.cnquery.upstream.v1.ExchangeExternalTokenRequest\x1a9.mondoo.cnquery.upstream.v1.ExchangeExternalTokenResponse\"\x00B5Z3go.mondoo.com/cnquery/v12/providers-sdk/v1/upstreamb\x06proto3"
+	"\x11base64_credential\x18\x01 \x01(\tR\x10base64Credential2\x86\x03\n" +
+	"\fAgentManager\x12x\n" +
+	"\rRegisterAgent\x120.mondoo.mql.upstream.v1.AgentRegistrationRequest\x1a5.mondoo.mql.upstream.v1.AgentRegistrationConfirmation\x12T\n" +
+	"\x0fUnRegisterAgent\x12\x1b.mondoo.mql.upstream.v1.Mrn\x1a$.mondoo.mql.upstream.v1.Confirmation\x12F\n" +
+	"\bPingPong\x12\x1c.mondoo.mql.upstream.v1.Ping\x1a\x1c.mondoo.mql.upstream.v1.Pong\x12^\n" +
+	"\vHealthCheck\x12!.mondoo.mql.upstream.v1.AgentInfo\x1a,.mondoo.mql.upstream.v1.AgentCheckinResponse2\x8d\x02\n" +
+	"\x12SecureTokenService\x12n\n" +
+	"\vExchangeSSH\x12-.mondoo.mql.upstream.v1.ExchangeSSHKeyRequest\x1a..mondoo.mql.upstream.v1.ExchangeSSHKeyResponse\"\x00\x12\x86\x01\n" +
+	"\x15ExchangeExternalToken\x124.mondoo.mql.upstream.v1.ExchangeExternalTokenRequest\x1a5.mondoo.mql.upstream.v1.ExchangeExternalTokenResponse\"\x00B1Z/go.mondoo.com/mql/v13/providers-sdk/v1/upstreamb\x06proto3"
 
 var (
 	file_upstream_proto_rawDescOnce sync.Once
@@ -1096,43 +1096,43 @@ func file_upstream_proto_rawDescGZIP() []byte {
 
 var file_upstream_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_upstream_proto_goTypes = []any{
-	(*UpstreamConfig)(nil),                // 0: mondoo.cnquery.upstream.v1.UpstreamConfig
-	(*ServiceAccountCredentials)(nil),     // 1: mondoo.cnquery.upstream.v1.ServiceAccountCredentials
-	(*Ping)(nil),                          // 2: mondoo.cnquery.upstream.v1.Ping
-	(*Pong)(nil),                          // 3: mondoo.cnquery.upstream.v1.Pong
-	(*AgentCheckinResponse)(nil),          // 4: mondoo.cnquery.upstream.v1.AgentCheckinResponse
-	(*AgentRegistrationRequest)(nil),      // 5: mondoo.cnquery.upstream.v1.AgentRegistrationRequest
-	(*AgentInfo)(nil),                     // 6: mondoo.cnquery.upstream.v1.AgentInfo
-	(*AgentRegistrationConfirmation)(nil), // 7: mondoo.cnquery.upstream.v1.AgentRegistrationConfirmation
-	(*Mrn)(nil),                           // 8: mondoo.cnquery.upstream.v1.Mrn
-	(*Confirmation)(nil),                  // 9: mondoo.cnquery.upstream.v1.Confirmation
-	(*ExchangeSSHKeyRequest)(nil),         // 10: mondoo.cnquery.upstream.v1.ExchangeSSHKeyRequest
-	(*ExchangeSSHKeyResponse)(nil),        // 11: mondoo.cnquery.upstream.v1.ExchangeSSHKeyResponse
-	(*Claims)(nil),                        // 12: mondoo.cnquery.upstream.v1.Claims
-	(*SshSignature)(nil),                  // 13: mondoo.cnquery.upstream.v1.SshSignature
-	(*ExchangeExternalTokenRequest)(nil),  // 14: mondoo.cnquery.upstream.v1.ExchangeExternalTokenRequest
-	(*ExchangeExternalTokenResponse)(nil), // 15: mondoo.cnquery.upstream.v1.ExchangeExternalTokenResponse
-	nil,                                   // 16: mondoo.cnquery.upstream.v1.AgentInfo.LabelsEntry
+	(*UpstreamConfig)(nil),                // 0: mondoo.mql.upstream.v1.UpstreamConfig
+	(*ServiceAccountCredentials)(nil),     // 1: mondoo.mql.upstream.v1.ServiceAccountCredentials
+	(*Ping)(nil),                          // 2: mondoo.mql.upstream.v1.Ping
+	(*Pong)(nil),                          // 3: mondoo.mql.upstream.v1.Pong
+	(*AgentCheckinResponse)(nil),          // 4: mondoo.mql.upstream.v1.AgentCheckinResponse
+	(*AgentRegistrationRequest)(nil),      // 5: mondoo.mql.upstream.v1.AgentRegistrationRequest
+	(*AgentInfo)(nil),                     // 6: mondoo.mql.upstream.v1.AgentInfo
+	(*AgentRegistrationConfirmation)(nil), // 7: mondoo.mql.upstream.v1.AgentRegistrationConfirmation
+	(*Mrn)(nil),                           // 8: mondoo.mql.upstream.v1.Mrn
+	(*Confirmation)(nil),                  // 9: mondoo.mql.upstream.v1.Confirmation
+	(*ExchangeSSHKeyRequest)(nil),         // 10: mondoo.mql.upstream.v1.ExchangeSSHKeyRequest
+	(*ExchangeSSHKeyResponse)(nil),        // 11: mondoo.mql.upstream.v1.ExchangeSSHKeyResponse
+	(*Claims)(nil),                        // 12: mondoo.mql.upstream.v1.Claims
+	(*SshSignature)(nil),                  // 13: mondoo.mql.upstream.v1.SshSignature
+	(*ExchangeExternalTokenRequest)(nil),  // 14: mondoo.mql.upstream.v1.ExchangeExternalTokenRequest
+	(*ExchangeExternalTokenResponse)(nil), // 15: mondoo.mql.upstream.v1.ExchangeExternalTokenResponse
+	nil,                                   // 16: mondoo.mql.upstream.v1.AgentInfo.LabelsEntry
 }
 var file_upstream_proto_depIdxs = []int32{
-	1,  // 0: mondoo.cnquery.upstream.v1.UpstreamConfig.creds:type_name -> mondoo.cnquery.upstream.v1.ServiceAccountCredentials
-	6,  // 1: mondoo.cnquery.upstream.v1.AgentRegistrationRequest.agent_info:type_name -> mondoo.cnquery.upstream.v1.AgentInfo
-	16, // 2: mondoo.cnquery.upstream.v1.AgentInfo.labels:type_name -> mondoo.cnquery.upstream.v1.AgentInfo.LabelsEntry
-	1,  // 3: mondoo.cnquery.upstream.v1.AgentRegistrationConfirmation.credential:type_name -> mondoo.cnquery.upstream.v1.ServiceAccountCredentials
-	12, // 4: mondoo.cnquery.upstream.v1.ExchangeSSHKeyRequest.claims:type_name -> mondoo.cnquery.upstream.v1.Claims
-	13, // 5: mondoo.cnquery.upstream.v1.ExchangeSSHKeyRequest.signatures:type_name -> mondoo.cnquery.upstream.v1.SshSignature
-	5,  // 6: mondoo.cnquery.upstream.v1.AgentManager.RegisterAgent:input_type -> mondoo.cnquery.upstream.v1.AgentRegistrationRequest
-	8,  // 7: mondoo.cnquery.upstream.v1.AgentManager.UnRegisterAgent:input_type -> mondoo.cnquery.upstream.v1.Mrn
-	2,  // 8: mondoo.cnquery.upstream.v1.AgentManager.PingPong:input_type -> mondoo.cnquery.upstream.v1.Ping
-	6,  // 9: mondoo.cnquery.upstream.v1.AgentManager.HealthCheck:input_type -> mondoo.cnquery.upstream.v1.AgentInfo
-	10, // 10: mondoo.cnquery.upstream.v1.SecureTokenService.ExchangeSSH:input_type -> mondoo.cnquery.upstream.v1.ExchangeSSHKeyRequest
-	14, // 11: mondoo.cnquery.upstream.v1.SecureTokenService.ExchangeExternalToken:input_type -> mondoo.cnquery.upstream.v1.ExchangeExternalTokenRequest
-	7,  // 12: mondoo.cnquery.upstream.v1.AgentManager.RegisterAgent:output_type -> mondoo.cnquery.upstream.v1.AgentRegistrationConfirmation
-	9,  // 13: mondoo.cnquery.upstream.v1.AgentManager.UnRegisterAgent:output_type -> mondoo.cnquery.upstream.v1.Confirmation
-	3,  // 14: mondoo.cnquery.upstream.v1.AgentManager.PingPong:output_type -> mondoo.cnquery.upstream.v1.Pong
-	4,  // 15: mondoo.cnquery.upstream.v1.AgentManager.HealthCheck:output_type -> mondoo.cnquery.upstream.v1.AgentCheckinResponse
-	11, // 16: mondoo.cnquery.upstream.v1.SecureTokenService.ExchangeSSH:output_type -> mondoo.cnquery.upstream.v1.ExchangeSSHKeyResponse
-	15, // 17: mondoo.cnquery.upstream.v1.SecureTokenService.ExchangeExternalToken:output_type -> mondoo.cnquery.upstream.v1.ExchangeExternalTokenResponse
+	1,  // 0: mondoo.mql.upstream.v1.UpstreamConfig.creds:type_name -> mondoo.mql.upstream.v1.ServiceAccountCredentials
+	6,  // 1: mondoo.mql.upstream.v1.AgentRegistrationRequest.agent_info:type_name -> mondoo.mql.upstream.v1.AgentInfo
+	16, // 2: mondoo.mql.upstream.v1.AgentInfo.labels:type_name -> mondoo.mql.upstream.v1.AgentInfo.LabelsEntry
+	1,  // 3: mondoo.mql.upstream.v1.AgentRegistrationConfirmation.credential:type_name -> mondoo.mql.upstream.v1.ServiceAccountCredentials
+	12, // 4: mondoo.mql.upstream.v1.ExchangeSSHKeyRequest.claims:type_name -> mondoo.mql.upstream.v1.Claims
+	13, // 5: mondoo.mql.upstream.v1.ExchangeSSHKeyRequest.signatures:type_name -> mondoo.mql.upstream.v1.SshSignature
+	5,  // 6: mondoo.mql.upstream.v1.AgentManager.RegisterAgent:input_type -> mondoo.mql.upstream.v1.AgentRegistrationRequest
+	8,  // 7: mondoo.mql.upstream.v1.AgentManager.UnRegisterAgent:input_type -> mondoo.mql.upstream.v1.Mrn
+	2,  // 8: mondoo.mql.upstream.v1.AgentManager.PingPong:input_type -> mondoo.mql.upstream.v1.Ping
+	6,  // 9: mondoo.mql.upstream.v1.AgentManager.HealthCheck:input_type -> mondoo.mql.upstream.v1.AgentInfo
+	10, // 10: mondoo.mql.upstream.v1.SecureTokenService.ExchangeSSH:input_type -> mondoo.mql.upstream.v1.ExchangeSSHKeyRequest
+	14, // 11: mondoo.mql.upstream.v1.SecureTokenService.ExchangeExternalToken:input_type -> mondoo.mql.upstream.v1.ExchangeExternalTokenRequest
+	7,  // 12: mondoo.mql.upstream.v1.AgentManager.RegisterAgent:output_type -> mondoo.mql.upstream.v1.AgentRegistrationConfirmation
+	9,  // 13: mondoo.mql.upstream.v1.AgentManager.UnRegisterAgent:output_type -> mondoo.mql.upstream.v1.Confirmation
+	3,  // 14: mondoo.mql.upstream.v1.AgentManager.PingPong:output_type -> mondoo.mql.upstream.v1.Pong
+	4,  // 15: mondoo.mql.upstream.v1.AgentManager.HealthCheck:output_type -> mondoo.mql.upstream.v1.AgentCheckinResponse
+	11, // 16: mondoo.mql.upstream.v1.SecureTokenService.ExchangeSSH:output_type -> mondoo.mql.upstream.v1.ExchangeSSHKeyResponse
+	15, // 17: mondoo.mql.upstream.v1.SecureTokenService.ExchangeExternalToken:output_type -> mondoo.mql.upstream.v1.ExchangeExternalTokenResponse
 	12, // [12:18] is the sub-list for method output_type
 	6,  // [6:12] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name

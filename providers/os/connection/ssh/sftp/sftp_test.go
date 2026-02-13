@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/pkg/sftp"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -226,8 +227,8 @@ func MakeSSHKeyPair(bits int, pubKeyPath, privateKeyPath string) error {
 }
 
 func TestSftpCreate(t *testing.T) {
-	os.Mkdir("./testdata", 0o777)
-	MakeSSHKeyPair(1024, "./testdata/id_rsa.pub", "./testdata/id_rsa")
+	require.NoError(t, os.Mkdir("./testdata", 0o777))
+	require.NoError(t, MakeSSHKeyPair(1024, "./testdata/id_rsa.pub", "./testdata/id_rsa"))
 
 	go RunSftpServer()
 	time.Sleep(5 * time.Second)
@@ -236,16 +237,16 @@ func TestSftpCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer ctx.Disconnect()
+	defer func() { _ = ctx.Disconnect() }()
 
 	fs := Fs{
 		client: ctx.sftpc,
 	}
 
-	fs.MkdirAll("testdata/dir1/dir2/dir3", os.FileMode(0o777))
-	fs.Mkdir("testdata/foo", os.FileMode(0o000))
-	fs.Chmod("testdata/foo", os.FileMode(0o700))
-	fs.Mkdir("testdata/bar", os.FileMode(0o777))
+	_ = fs.MkdirAll("testdata/dir1/dir2/dir3", os.FileMode(0o777))
+	_ = fs.Mkdir("testdata/foo", os.FileMode(0o000))
+	_ = fs.Chmod("testdata/foo", os.FileMode(0o700))
+	_ = fs.Mkdir("testdata/bar", os.FileMode(0o777))
 
 	file, err := fs.Create("testdata/file1")
 	if err != nil {
@@ -253,8 +254,8 @@ func TestSftpCreate(t *testing.T) {
 	}
 	defer file.Close()
 
-	file.Write([]byte("hello "))
-	file.WriteString("world!\n")
+	_, _ = file.Write([]byte("hello "))
+	_, _ = file.WriteString("world!\n")
 
 	f1, err := fs.Open("testdata/file1")
 	if err != nil {

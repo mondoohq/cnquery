@@ -6,7 +6,7 @@ package updates
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
 type OperatingSystemUpdate struct {

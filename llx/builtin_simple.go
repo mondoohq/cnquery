@@ -12,7 +12,7 @@ import (
 	"time"
 	"unicode"
 
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // run an operation that returns true/false on a bind data vs a chunk call.
@@ -282,7 +282,7 @@ func opTimeCmpTime(left any, right any) bool {
 		return false
 	}
 
-	if (*l == NeverPastTime || *l == NeverFutureTime) && (*r == NeverPastTime || *r == NeverFutureTime) {
+	if (l.Equal(NeverPastTime) || l.Equal(NeverFutureTime)) && (r.Equal(NeverPastTime) || r.Equal(NeverFutureTime)) {
 		return true
 	}
 
@@ -538,10 +538,6 @@ func opStringCmpNil(left any, right any) bool {
 	return left == nil
 }
 
-func opNilCmpString(left any, right any) bool {
-	return right == nil
-}
-
 func stringCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return boolOpV2(e, bind, chunk, ref, opStringCmpNil)
 }
@@ -550,25 +546,17 @@ func stringNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	return boolNotOpV2(e, bind, chunk, ref, opStringCmpNil)
 }
 
-func nilCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolOpV2(e, bind, chunk, ref, opNilCmpString)
-}
-
-func nilNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolNotOpV2(e, bind, chunk, ref, opNilCmpString)
-}
-
 // string ==/!= bool
 
 func opStringCmpBool(left any, right any) bool {
-	if right.(bool) == true {
+	if right.(bool) {
 		return left.(string) == "true"
 	}
 	return left.(string) == "false"
 }
 
 func opBoolCmpString(left any, right any) bool {
-	if left.(bool) == true {
+	if left.(bool) {
 		return right.(string) == "true"
 	}
 	return right.(string) == "false"
@@ -688,10 +676,6 @@ func opBoolCmpNil(left any, right any) bool {
 	return left == nil
 }
 
-func opNilCmpBool(left any, right any) bool {
-	return right == nil
-}
-
 func boolCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return boolOpV2(e, bind, chunk, ref, opBoolCmpNil)
 }
@@ -700,22 +684,10 @@ func boolNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return boolNotOpV2(e, bind, chunk, ref, opBoolCmpNil)
 }
 
-func nilCmpBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolOpV2(e, bind, chunk, ref, opNilCmpBool)
-}
-
-func nilNotBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolNotOpV2(e, bind, chunk, ref, opNilCmpBool)
-}
-
 // int ==/!= nil
 
 func opIntCmpNil(left any, right any) bool {
 	return left == nil
-}
-
-func opNilCmpInt(left any, right any) bool {
-	return right == nil
 }
 
 func intCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -726,22 +698,10 @@ func intNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 	return boolNotOpV2(e, bind, chunk, ref, opIntCmpNil)
 }
 
-func nilCmpIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolOpV2(e, bind, chunk, ref, opNilCmpInt)
-}
-
-func nilNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolNotOpV2(e, bind, chunk, ref, opNilCmpInt)
-}
-
 // float ==/!= nil
 
 func opFloatCmpNil(left any, right any) bool {
 	return left == nil
-}
-
-func opNilCmpFloat(left any, right any) bool {
-	return right == nil
 }
 
 func floatCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -752,22 +712,10 @@ func floatNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return boolNotOpV2(e, bind, chunk, ref, opFloatCmpNil)
 }
 
-func nilCmpFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolOpV2(e, bind, chunk, ref, opNilCmpFloat)
-}
-
-func nilNotFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolNotOpV2(e, bind, chunk, ref, opNilCmpFloat)
-}
-
 // time ==/!= nil
 
 func opTimeCmpNil(left *RawData, right *RawData) bool {
 	return left.Value == nil || left.Value.(*time.Time) == nil
-}
-
-func opNilCmpTime(left *RawData, right *RawData) bool {
-	return right.Value == nil || right.Value.(*time.Time) == nil
 }
 
 func timeCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -776,14 +724,6 @@ func timeCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 func timeNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return rawboolNotOpV2(e, bind, chunk, ref, opTimeCmpNil)
-}
-
-func nilCmpTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return rawboolOpV2(e, bind, chunk, ref, opNilCmpTime)
-}
-
-func nilNotTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return rawboolNotOpV2(e, bind, chunk, ref, opNilCmpTime)
 }
 
 // string </>/<=/>= string
@@ -936,16 +876,16 @@ func timeMinusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 			return &RawData{Type: types.Time}
 		}
 
-		if *r == NeverPastTime {
+		if r.Equal(NeverPastTime) {
 			return NeverFuturePrimitive.RawData()
 		}
-		if *r == NeverFutureTime {
+		if r.Equal(NeverFutureTime) {
 			return NeverPastPrimitive.RawData()
 		}
-		if *l == NeverPastTime {
+		if l.Equal(NeverPastTime) {
 			return NeverPastPrimitive.RawData()
 		}
-		if *l == NeverFutureTime {
+		if l.Equal(NeverFutureTime) {
 			return NeverFuturePrimitive.RawData()
 		}
 
@@ -963,16 +903,16 @@ func timePlusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 			return &RawData{Type: types.Time}
 		}
 
-		if *r == NeverPastTime {
+		if r.Equal(NeverPastTime) {
 			return NeverFuturePrimitive.RawData()
 		}
-		if *r == NeverFutureTime {
+		if r.Equal(NeverFutureTime) {
 			return NeverPastPrimitive.RawData()
 		}
-		if *l == NeverPastTime {
+		if l.Equal(NeverPastTime) {
 			return NeverPastPrimitive.RawData()
 		}
-		if *l == NeverFutureTime {
+		if l.Equal(NeverFutureTime) {
 			return NeverFuturePrimitive.RawData()
 		}
 
@@ -1006,10 +946,10 @@ func opTimeTimesInt(left any, right any) *RawData {
 		return &RawData{Type: types.Time}
 	}
 
-	if *l == NeverPastTime {
+	if l.Equal(NeverPastTime) {
 		return NeverPastPrimitive.RawData()
 	}
-	if *l == NeverFutureTime {
+	if l.Equal(NeverFutureTime) {
 		return NeverFuturePrimitive.RawData()
 	}
 
@@ -1024,10 +964,10 @@ func opTimeTimesFloat(left any, right any) *RawData {
 		return &RawData{Type: types.Time}
 	}
 
-	if *l == NeverPastTime {
+	if l.Equal(NeverPastTime) {
 		return NeverPastPrimitive.RawData()
 	}
-	if *l == NeverFutureTime {
+	if l.Equal(NeverFutureTime) {
 		return NeverFuturePrimitive.RawData()
 	}
 
@@ -1302,10 +1242,6 @@ func truthyArray(val any) bool {
 	return true
 }
 
-func truthyMap(val any) bool {
-	return true
-}
-
 func boolAndBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return boolAndOpV2(e, bind, chunk, ref, truthyBool, truthyBool)
 }
@@ -1440,16 +1376,8 @@ func opBoolAndMap(left any, right any) bool {
 	return left.(bool) && (len(right.([]any)) != 0)
 }
 
-func opMapAndBool(left any, right any) bool {
-	return right.(bool) && (len(left.([]any)) != 0)
-}
-
 func opBoolOrMap(left any, right any) bool {
 	return left.(bool) || (len(right.([]any)) != 0)
-}
-
-func opMapOrBool(left any, right any) bool {
-	return right.(bool) || (len(left.([]any)) != 0)
 }
 
 func boolAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -1458,14 +1386,6 @@ func boolAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 
 func boolOrMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return boolOpV2(e, bind, chunk, ref, opBoolOrMap)
-}
-
-func mapAndBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolOpV2(e, bind, chunk, ref, opMapAndBool)
-}
-
-func mapOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolOpV2(e, bind, chunk, ref, opMapOrBool)
 }
 
 // int &&/|| T
@@ -2149,23 +2069,11 @@ func opTimeAndArray(left any, right any) bool {
 	return len(right.([]any)) != 0
 }
 
-func opArrayAndTime(left any, right any) bool {
-	return len(left.([]any)) != 0
-}
-
 func timeAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return boolOpV2(e, bind, chunk, ref, opTimeAndArray)
 }
 
 func timeOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return BoolTrue, 0, nil
-}
-
-func arrayAndTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return boolOpV2(e, bind, chunk, ref, opArrayAndTime)
-}
-
-func arrayOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 

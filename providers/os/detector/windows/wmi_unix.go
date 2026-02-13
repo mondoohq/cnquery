@@ -6,7 +6,7 @@
 
 package windows
 
-import "go.mondoo.com/cnquery/v12/providers/os/connection/shared"
+import "go.mondoo.com/mql/v13/providers/os/connection/shared"
 
 func GetWmiInformation(conn shared.Connection) (*WmicOSInformation, error) {
 	return powershellGetWmiInformation(conn)

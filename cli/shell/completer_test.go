@@ -6,11 +6,11 @@ package shell
 import (
 	"testing"
 
-	"go.mondoo.com/cnquery/v12/llx"
+	"go.mondoo.com/mql/v13/llx"
 )
 
 func TestByProviderSortFn(t *testing.T) {
-	connectedProviders := []string{"go.mondoo.com/cnquery/v9/providers/aws"}
+	connectedProviders := []string{"go.mondoo.com/mql/v9/providers/aws"}
 	sortFn := byProviderSortFn(connectedProviders)
 
 	tests := []struct {
@@ -19,18 +19,18 @@ func TestByProviderSortFn(t *testing.T) {
 		expected int
 	}{
 		{
-			docA:     &llx.Documentation{Provider: "go.mondoo.com/cnquery/v9/providers/aws", Field: "a"},
+			docA:     &llx.Documentation{Provider: "go.mondoo.com/mql/v9/providers/aws", Field: "a"},
 			docB:     &llx.Documentation{Provider: "gcp", Field: "b"},
 			expected: -1,
 		},
 		{
-			docA:     &llx.Documentation{Provider: "go.mondoo.com/cnquery/v9/providers/azure", Field: "a"},
-			docB:     &llx.Documentation{Provider: "go.mondoo.com/cnquery/v9/providers/aws", Field: "a"},
+			docA:     &llx.Documentation{Provider: "go.mondoo.com/mql/v9/providers/azure", Field: "a"},
+			docB:     &llx.Documentation{Provider: "go.mondoo.com/mql/v9/providers/aws", Field: "a"},
 			expected: 1,
 		},
 		{
-			docA:     &llx.Documentation{Provider: "go.mondoo.com/cnquery/v9/providers/gcp", Field: "b"},
-			docB:     &llx.Documentation{Provider: "go.mondoo.com/cnquery/v9/providers/gcp", Field: "a"},
+			docA:     &llx.Documentation{Provider: "go.mondoo.com/mql/v9/providers/gcp", Field: "b"},
+			docB:     &llx.Documentation{Provider: "go.mondoo.com/mql/v9/providers/gcp", Field: "a"},
 			expected: 0,
 		},
 	}

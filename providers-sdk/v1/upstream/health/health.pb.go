@@ -231,7 +231,7 @@ const file_health_proto_rawDesc = "" +
 	"\vNOT_SERVING\x10\x02\x12\x13\n" +
 	"\x0fSERVICE_UNKNOWN\x10\x032n\n" +
 	"\x06Health\x12d\n" +
-	"\x05Check\x12,.mondoo.cnquery.health.v1.HealthCheckRequest\x1a-.mondoo.cnquery.health.v1.HealthCheckResponseB<Z:go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/healthb\x06proto3"
+	"\x05Check\x12,.mondoo.cnquery.health.v1.HealthCheckRequest\x1a-.mondoo.cnquery.health.v1.HealthCheckResponseB8Z6go.mondoo.com/mql/v13/providers-sdk/v1/upstream/healthb\x06proto3"
 
 var (
 	file_health_proto_rawDescOnce sync.Once

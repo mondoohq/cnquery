@@ -59,16 +59,12 @@ func (m inputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		aborted := false
 		switch msg.Type {
-		case tea.KeyCtrlC:
-			aborted = true
-			fallthrough
-		case tea.KeyEsc:
-			aborted = true
-			fallthrough
+		case tea.KeyCtrlC, tea.KeyEsc:
+			m.onComplete(m.textInput.Value(), true)
+			return m, tea.Quit
 		case tea.KeyEnter:
-			m.onComplete(m.textInput.Value(), aborted)
+			m.onComplete(m.textInput.Value(), false)
 			return m, tea.Quit
 		}
 
@@ -94,7 +90,7 @@ func askInput(prompt string, password bool) (string, error) {
 	}
 
 	// ask user for input
-	var res string = ""
+	var res string
 	inputModel := NewInputModel(prompt, func(userInput string, aborted bool) {
 		res = userInput
 		if aborted {

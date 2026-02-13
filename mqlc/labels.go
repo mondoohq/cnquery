@@ -8,9 +8,10 @@ import (
 	"regexp"
 	"strconv"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/types"
+	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )
@@ -132,7 +133,7 @@ func stripCtlAndExtFromUnicode(str string) string {
 		return r < 32 || r >= 127
 	}
 	// The isOk filter is such that there is no need to chain to norm.NFC
-	t := transform.Chain(norm.NFKD, transform.RemoveFunc(isOk))
+	t := transform.Chain(norm.NFKD, runes.Remove(runes.Predicate(isOk)))
 	str, _, _ = transform.String(t, str)
 	return str
 }

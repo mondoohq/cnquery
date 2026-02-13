@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect"
 	"github.com/cockroachdb/errors"
 	"github.com/sethvargo/go-password/password"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/ssh/keypair"
+	"go.mondoo.com/mql/v13/providers/os/connection/ssh/keypair"
 )
 
 type generator struct {

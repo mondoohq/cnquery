@@ -1,5 +1,5 @@
-option provider = "go.mondoo.com/cnquery/providers/ipinfo"
-option go_package = "go.mondoo.com/cnquery/v12/providers/ipinfo/resources"
+option provider = "go.mondoo.com/mql/providers/ipinfo"
+option go_package = "go.mondoo.com/mql/v13/providers/ipinfo/resources"
 
 // IP information from ipinfo.io service
 ipinfo @defaults("returned_ip hostname city") {

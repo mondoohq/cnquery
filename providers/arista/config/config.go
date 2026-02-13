@@ -4,15 +4,15 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/arista/provider"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/arista/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "arista",
-	ID:              "go.mondoo.com/cnquery/v9/providers/arista",
-	Version:         "11.1.3",
+	ID:              "go.mondoo.com/mql/providers/arista",
+	Version:         "11.0.132",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
@@ -22,10 +22,8 @@ var Config = plugin.Provider{
 			Long: `Use the arista provider to query resources on an Arista EOS network device, including system information, interfaces, and configuration.
 
 Examples:
-  cnquery shell arista <user@host> --pasword <password>
+  cnquery shell arista <user@host>
   cnspec scan arista <user@host> --ask-pass
-
-Note: The arista provider uses requires access to the Arista API over HTTPS. You may be able to SSH to a device, but not access the API. To view the status of the API run 'show management api http-commands' on the device.
 `,
 			Discovery: []string{},
 			MinArgs:   1,

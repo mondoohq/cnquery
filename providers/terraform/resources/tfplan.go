@@ -6,11 +6,11 @@ package resources
 import (
 	"encoding/json"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v12/providers/terraform/connection"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/terraform/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (t *mqlTerraformPlan) id() (string, error) {
@@ -29,7 +29,7 @@ func initTerraformPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	// TODO: This only creates compatibility with v8. Please revisit this section
-	// after https://github.com/mondoohq/cnquery/issues/1943 is clarified.
+	// after https://github.com/mondoohq/mql/issues/1943 is clarified.
 	if plan == nil {
 		return map[string]*llx.RawData{
 			"formatVersion":    llx.StringData(""),
@@ -179,7 +179,7 @@ func (t *mqlTerraformPlanConfiguration) providerConfig() ([]any, error) {
 	}
 
 	// TODO: This only creates compatibility with v8. Please revisit this section
-	// after https://github.com/mondoohq/cnquery/issues/1943 is clarified.
+	// after https://github.com/mondoohq/mql/issues/1943 is clarified.
 	if plan == nil {
 		return []any{}, nil
 	}
@@ -211,7 +211,7 @@ func (t *mqlTerraformPlanConfiguration) resources() ([]any, error) {
 	}
 
 	// TODO: This only creates compatibility with v8. Please revisit this section
-	// after https://github.com/mondoohq/cnquery/issues/1943 is clarified.
+	// after https://github.com/mondoohq/mql/issues/1943 is clarified.
 	if plan == nil {
 		return []any{}, nil
 	}

@@ -13,7 +13,6 @@ import (
 
 // Flagset is derived from Go's internal flagset, licensed MIT
 type FlagSet struct {
-	name   string
 	parsed bool
 	actual map[string]string
 	args   []string // arguments after flags

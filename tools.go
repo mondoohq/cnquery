@@ -4,7 +4,7 @@
 //go:build tools
 // +build tools
 
-package cnquery
+package mql
 
 import (
 	_ "go.uber.org/mock/mockgen"

@@ -16,12 +16,12 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/mql"
-	"go.mondoo.com/cnquery/v12/mqlc"
-	"go.mondoo.com/cnquery/v12/mqlc/parser"
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/exec"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/v13/mqlc/parser"
+	"go.mondoo.com/mql/v13/utils/stringx"
 )
 
 // ErrNotTTY is returned when the shell is run without a terminal
@@ -47,7 +47,7 @@ type shellModel struct {
 	// Runtime and configuration
 	runtime  llx.Runtime
 	theme    *ShellTheme
-	features cnquery.Features
+	features mql.Features
 	keyMap   KeyMap
 
 	// Input handling
@@ -94,7 +94,7 @@ type shellModel struct {
 // newShellModel creates a new shell model
 // connectedProviderIDs can be provided to filter autocomplete suggestions to only
 // show resources from connected providers. If nil, all resources are shown.
-func newShellModel(runtime llx.Runtime, theme *ShellTheme, features cnquery.Features, initialCmd string, connectedProviderIDs []string) *shellModel {
+func newShellModel(runtime llx.Runtime, theme *ShellTheme, features mql.Features, initialCmd string, connectedProviderIDs []string) *shellModel {
 	// Create textarea for input
 	ta := textarea.New()
 	ta.Placeholder = ""
@@ -572,7 +572,7 @@ func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
 				return queryResultMsg{code: code, err: err}
 			}
 
-			results, err := mql.ExecuteCode(m.runtime, code, nil, m.features)
+			results, err := exec.ExecuteCode(m.runtime, code, nil, m.features)
 			return queryResultMsg{code: code, results: results, err: err}
 		},
 	)
@@ -890,7 +890,7 @@ func (m *shellModel) showAssetInfo() tea.Cmd {
 			return printOutputMsg{output: m.theme.ErrorText("Failed to get asset info: " + err.Error())}
 		}
 
-		results, err := mql.ExecuteCode(m.runtime, code, nil, m.features)
+		results, err := exec.ExecuteCode(m.runtime, code, nil, m.features)
 		if err != nil {
 			return printOutputMsg{output: m.theme.ErrorText("Failed to get asset info: " + err.Error())}
 		}

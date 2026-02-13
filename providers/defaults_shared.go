@@ -10,8 +10,8 @@ import (
 )
 
 var DefaultOsIDs = []string{
-	"go.mondoo.com/cnquery/providers/os",
-	// FIXME: DEPRECATED, remove in v12.0 vv
+	"go.mondoo.com/mql/providers/os",
+	// FIXME: DEPRECATED, remove in v14.0 vv
 	// We specify providers without versions now. Also remove the providers
 	// GetFirstID function, since it only exists for this use-case
 	"go.mondoo.com/cnquery/v9/providers/os",

@@ -45,7 +45,7 @@ var cipherSuites = map[string]uint16{
 	"TLS_AES_256_GCM_SHA384": tls.TLS_AES_256_GCM_SHA384,
 }
 
-var userTempl string
+var userTempl string //nolint:unused
 
 var TimeoutSeconds = 3
 
@@ -54,10 +54,9 @@ func cipherSuite(suite string) ([]uint16, error) {
 		return nil, nil
 	}
 
-	var cs []uint16
-	cs = []uint16{cipherSuites[suite]}
+	cs := []uint16{cipherSuites[suite]}
 	if cs[0] == 0 {
-		return nil, fmt.Errorf("%s is unsupported cipher suite or tls1.3 cipher suite.", suite)
+		return nil, fmt.Errorf("%s is unsupported cipher suite or tls1.3 cipher suite", suite)
 	}
 	return cs, nil
 }

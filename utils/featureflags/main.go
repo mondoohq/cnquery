@@ -112,7 +112,7 @@ func main() {
 	src := flag.Arg(0)
 
 	res := load(src)
-	packageName := "cnquery"
+	packageName := "mql"
 
 	reIndex(src, &res)
 

@@ -10,9 +10,9 @@
 package plugin
 
 import (
-	llx "go.mondoo.com/cnquery/v12/llx"
-	inventory "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	upstream "go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
+	llx "go.mondoo.com/mql/v13/llx"
+	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	upstream "go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -837,24 +837,24 @@ var File_plugin_proto protoreflect.FileDescriptor
 
 const file_plugin_proto_rawDesc = "" +
 	"\n" +
-	"\fplugin.proto\x12\x14cnquery.providers.v1\x1a\rllx/llx.proto\x1a*providers-sdk/v1/inventory/inventory.proto\x1a(providers-sdk/v1/upstream/upstream.proto\"\xd5\x01\n" +
+	"\fplugin.proto\x12\x14cnquery.providers.v1\x1a\rllx/llx.proto\x1a*providers-sdk/v1/inventory/inventory.proto\x1a(providers-sdk/v1/upstream/upstream.proto\"\xd1\x01\n" +
 	"\vParseCLIReq\x12\x1c\n" +
 	"\tconnector\x18\x01 \x01(\tR\tconnector\x12\x12\n" +
 	"\x04args\x18\x02 \x03(\tR\x04args\x12B\n" +
-	"\x05flags\x18\x03 \x03(\v2,.cnquery.providers.v1.ParseCLIReq.FlagsEntryR\x05flags\x1aP\n" +
+	"\x05flags\x18\x03 \x03(\v2,.cnquery.providers.v1.ParseCLIReq.FlagsEntryR\x05flags\x1aL\n" +
 	"\n" +
 	"FlagsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
-	"\x05value\x18\x02 \x01(\v2\x16.cnquery.llx.PrimitiveR\x05value:\x028\x01\"@\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12(\n" +
+	"\x05value\x18\x02 \x01(\v2\x12.mql.llx.PrimitiveR\x05value:\x028\x01\"@\n" +
 	"\vParseCLIRes\x121\n" +
-	"\x05asset\x18\x01 \x01(\v2\x1b.cnquery.providers.v1.AssetR\x05asset\"\xf1\x01\n" +
+	"\x05asset\x18\x01 \x01(\v2\x1b.cnquery.providers.v1.AssetR\x05asset\"\xed\x01\n" +
 	"\n" +
 	"ConnectReq\x12\x1a\n" +
 	"\bfeatures\x18\x02 \x01(\fR\bfeatures\x121\n" +
 	"\x05asset\x18\x03 \x01(\v2\x1b.cnquery.providers.v1.AssetR\x05asset\x12#\n" +
 	"\rhas_recording\x18\x14 \x01(\bR\fhasRecording\x12'\n" +
-	"\x0fcallback_server\x18\x15 \x01(\rR\x0ecallbackServer\x12F\n" +
-	"\bupstream\x18\x16 \x01(\v2*.mondoo.cnquery.upstream.v1.UpstreamConfigR\bupstream\"\xa2\x01\n" +
+	"\x0fcallback_server\x18\x15 \x01(\rR\x0ecallbackServer\x12B\n" +
+	"\bupstream\x18\x16 \x01(\v2&.mondoo.mql.upstream.v1.UpstreamConfigR\bupstream\"\xa2\x01\n" +
 	"\n" +
 	"ConnectRes\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12\x12\n" +
@@ -862,7 +862,7 @@ const file_plugin_proto_rawDesc = "" +
 	"\x05asset\x18\x03 \x01(\v2\x1b.cnquery.providers.v1.AssetR\x05asset\x12=\n" +
 	"\tinventory\x18\x04 \x01(\v2\x1f.cnquery.providers.v1.InventoryR\tinventory\"\r\n" +
 	"\vShutdownReq\"\r\n" +
-	"\vShutdownRes\"\x8a\x02\n" +
+	"\vShutdownRes\"\x86\x02\n" +
 	"\aDataReq\x12\x1e\n" +
 	"\n" +
 	"connection\x18\x01 \x01(\rR\n" +
@@ -871,12 +871,12 @@ const file_plugin_proto_rawDesc = "" +
 	"\vresource_id\x18\x04 \x01(\tR\n" +
 	"resourceId\x12\x14\n" +
 	"\x05field\x18\x05 \x01(\tR\x05field\x12;\n" +
-	"\x04args\x18\x06 \x03(\v2'.cnquery.providers.v1.DataReq.ArgsEntryR\x04args\x1aO\n" +
+	"\x04args\x18\x06 \x03(\v2'.cnquery.providers.v1.DataReq.ArgsEntryR\x04args\x1aK\n" +
 	"\tArgsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
-	"\x05value\x18\x02 \x01(\v2\x16.cnquery.llx.PrimitiveR\x05value:\x028\x01\"[\n" +
-	"\aDataRes\x12*\n" +
-	"\x04data\x18\x01 \x01(\v2\x16.cnquery.llx.PrimitiveR\x04data\x12\x14\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12(\n" +
+	"\x05value\x18\x02 \x01(\v2\x12.mql.llx.PrimitiveR\x05value:\x028\x01\"W\n" +
+	"\aDataRes\x12&\n" +
+	"\x04data\x18\x01 \x01(\v2\x12.mql.llx.PrimitiveR\x04data\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\x12\x0e\n" +
 	"\x02id\x18\x03 \x01(\tR\x02id\"\f\n" +
 	"\n" +
@@ -885,14 +885,14 @@ const file_plugin_proto_rawDesc = "" +
 	"\n" +
 	"connection\x18\x01 \x01(\rR\n" +
 	"connection\x12@\n" +
-	"\tresources\x18\x02 \x03(\v2\".cnquery.providers.v1.ResourceDataR\tresources\"\xca\x01\n" +
+	"\tresources\x18\x02 \x03(\v2\".cnquery.providers.v1.ResourceDataR\tresources\"\xc6\x01\n" +
 	"\fResourceData\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x0e\n" +
 	"\x02id\x18\x04 \x01(\tR\x02id\x12F\n" +
-	"\x06fields\x18\x05 \x03(\v2..cnquery.providers.v1.ResourceData.FieldsEntryR\x06fields\x1aN\n" +
+	"\x06fields\x18\x05 \x03(\v2..cnquery.providers.v1.ResourceData.FieldsEntryR\x06fields\x1aJ\n" +
 	"\vFieldsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12)\n" +
-	"\x05value\x18\x02 \x01(\v2\x13.cnquery.llx.ResultR\x05value:\x028\x01\"\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12%\n" +
+	"\x05value\x18\x02 \x01(\v2\x0f.mql.llx.ResultR\x05value:\x028\x01\"\n" +
 	"\n" +
 	"\bStoreRes\"*\n" +
 	"\fHeartbeatReq\x12\x1a\n" +
@@ -916,7 +916,7 @@ const file_plugin_proto_rawDesc = "" +
 	"\x10ProviderCallback\x12J\n" +
 	"\aCollect\x12\x1d.cnquery.providers.v1.DataRes\x1a .cnquery.providers.v1.CollectRes\x12Q\n" +
 	"\fGetRecording\x12\x1d.cnquery.providers.v1.DataReq\x1a\".cnquery.providers.v1.ResourceData\x12G\n" +
-	"\aGetData\x12\x1d.cnquery.providers.v1.DataReq\x1a\x1d.cnquery.providers.v1.DataResB3Z1go.mondoo.com/cnquery/v12/providers-sdk/v1/pluginb\x06proto3"
+	"\aGetData\x12\x1d.cnquery.providers.v1.DataReq\x1a\x1d.cnquery.providers.v1.DataResB/Z-go.mondoo.com/mql/v13/providers-sdk/v1/pluginb\x06proto3"
 
 var (
 	file_plugin_proto_rawDescOnce sync.Once
@@ -952,25 +952,25 @@ var file_plugin_proto_goTypes = []any{
 	nil,                             // 17: cnquery.providers.v1.DataReq.ArgsEntry
 	nil,                             // 18: cnquery.providers.v1.ResourceData.FieldsEntry
 	(*inventory.Asset)(nil),         // 19: cnquery.providers.v1.Asset
-	(*upstream.UpstreamConfig)(nil), // 20: mondoo.cnquery.upstream.v1.UpstreamConfig
+	(*upstream.UpstreamConfig)(nil), // 20: mondoo.mql.upstream.v1.UpstreamConfig
 	(*inventory.Inventory)(nil),     // 21: cnquery.providers.v1.Inventory
-	(*llx.Primitive)(nil),           // 22: cnquery.llx.Primitive
-	(*llx.Result)(nil),              // 23: cnquery.llx.Result
+	(*llx.Primitive)(nil),           // 22: mql.llx.Primitive
+	(*llx.Result)(nil),              // 23: mql.llx.Result
 }
 var file_plugin_proto_depIdxs = []int32{
 	16, // 0: cnquery.providers.v1.ParseCLIReq.flags:type_name -> cnquery.providers.v1.ParseCLIReq.FlagsEntry
 	19, // 1: cnquery.providers.v1.ParseCLIRes.asset:type_name -> cnquery.providers.v1.Asset
 	19, // 2: cnquery.providers.v1.ConnectReq.asset:type_name -> cnquery.providers.v1.Asset
-	20, // 3: cnquery.providers.v1.ConnectReq.upstream:type_name -> mondoo.cnquery.upstream.v1.UpstreamConfig
+	20, // 3: cnquery.providers.v1.ConnectReq.upstream:type_name -> mondoo.mql.upstream.v1.UpstreamConfig
 	19, // 4: cnquery.providers.v1.ConnectRes.asset:type_name -> cnquery.providers.v1.Asset
 	21, // 5: cnquery.providers.v1.ConnectRes.inventory:type_name -> cnquery.providers.v1.Inventory
 	17, // 6: cnquery.providers.v1.DataReq.args:type_name -> cnquery.providers.v1.DataReq.ArgsEntry
-	22, // 7: cnquery.providers.v1.DataRes.data:type_name -> cnquery.llx.Primitive
+	22, // 7: cnquery.providers.v1.DataRes.data:type_name -> mql.llx.Primitive
 	10, // 8: cnquery.providers.v1.StoreReq.resources:type_name -> cnquery.providers.v1.ResourceData
 	18, // 9: cnquery.providers.v1.ResourceData.fields:type_name -> cnquery.providers.v1.ResourceData.FieldsEntry
-	22, // 10: cnquery.providers.v1.ParseCLIReq.FlagsEntry.value:type_name -> cnquery.llx.Primitive
-	22, // 11: cnquery.providers.v1.DataReq.ArgsEntry.value:type_name -> cnquery.llx.Primitive
-	23, // 12: cnquery.providers.v1.ResourceData.FieldsEntry.value:type_name -> cnquery.llx.Result
+	22, // 10: cnquery.providers.v1.ParseCLIReq.FlagsEntry.value:type_name -> mql.llx.Primitive
+	22, // 11: cnquery.providers.v1.DataReq.ArgsEntry.value:type_name -> mql.llx.Primitive
+	23, // 12: cnquery.providers.v1.ResourceData.FieldsEntry.value:type_name -> mql.llx.Result
 	12, // 13: cnquery.providers.v1.ProviderPlugin.Heartbeat:input_type -> cnquery.providers.v1.HeartbeatReq
 	0,  // 14: cnquery.providers.v1.ProviderPlugin.ParseCLI:input_type -> cnquery.providers.v1.ParseCLIReq
 	2,  // 15: cnquery.providers.v1.ProviderPlugin.Connect:input_type -> cnquery.providers.v1.ConnectReq

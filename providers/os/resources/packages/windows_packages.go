@@ -18,13 +18,13 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/detector/windows"
-	"go.mondoo.com/cnquery/v12/providers/os/registry"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/cpe"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/purl"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/detector/windows"
+	"go.mondoo.com/mql/v13/providers/os/registry"
+	"go.mondoo.com/mql/v13/providers/os/resources/cpe"
+	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
+	"go.mondoo.com/mql/v13/providers/os/resources/purl"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )
@@ -46,7 +46,7 @@ const (
 
 // https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ff357803(v=vs.85)
 var (
-	wsusClassificationGUID = map[string]WSUSClassification{
+	wsusClassificationGUID = map[string]WSUSClassification{ //nolint:unused
 		"5c9376ab-8ce6-464a-b136-22113dd69801": Application,
 		"434de588-ed14-48f5-8eed-a15e09a991f6": Connectors,
 		"e6cf1350-c01b-414d-a61f-263d14d133b4": CriticalUpdates,

@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/cli/reporter"
-	"go.mondoo.com/cnquery/v12/mrn"
-	"go.mondoo.com/cnquery/v12/sbom"
-	"go.mondoo.com/cnquery/v12/utils/sortx"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/cli/reporter"
+	"go.mondoo.com/mql/v13/mrn"
+	"go.mondoo.com/mql/v13/sbom"
+	"go.mondoo.com/mql/v13/utils/sortx"
 )
 
 var LABEL_KERNEL_RUNNING = "mondoo.com/os/kernel-running"
@@ -27,8 +27,8 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 
 	generator := &sbom.Generator{
 		Vendor:  "Mondoo, Inc.",
-		Name:    "cnquery",
-		Version: cnquery.Version,
+		Name:    "mql",
+		Version: mql.Version,
 		Url:     "https://mondoo.com",
 	}
 	now := time.Now().UTC().Format(time.RFC3339)

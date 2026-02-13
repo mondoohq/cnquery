@@ -7,12 +7,12 @@ import (
 	"errors"
 	"io"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/packages"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/windows"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/packages"
+	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
+	"go.mondoo.com/mql/v13/providers/os/resources/windows"
 )
 
 func (s *mqlWindows) computerInfo() (map[string]any, error) {
@@ -42,7 +42,7 @@ func (s *mqlWindows) computerInfo() (map[string]any, error) {
 	}
 
 	// If we have no error but OsProductType is nil, we need to run a custom command to get the info
-	// For reference, see https://github.com/mondoohq/cnquery/pull/4520
+	// For reference, see https://github.com/mondoohq/mql/pull/4520
 	if parsedInfo["OsProductType"] == nil {
 		executedCmd, err := conn.RunCommand(powershell.Encode(windows.PSGetComputerInfoCustom))
 		if err != nil {

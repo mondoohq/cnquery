@@ -7,8 +7,8 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers/atlassian/connection/confluence"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers/atlassian/connection/confluence"
 )
 
 func (a *mqlAtlassianConfluence) id() (string, error) {

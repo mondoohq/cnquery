@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/v12/types"
-	"go.mondoo.com/cnquery/v12/utils/sortx"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/v13/utils/sortx"
 )
 
 func intKeys(m map[int]any) []int {
@@ -375,7 +375,7 @@ func rawDataJSON(typ types.Type, data any, codeID string, bundle *CodeBundle, bu
 			return nil
 		}
 
-		if *time == NeverPastTime || *time == NeverFutureTime {
+		if time.Equal(NeverPastTime) || time.Equal(NeverFutureTime) {
 			r := "\"" + "Never" + "\""
 
 			buf.WriteString(r)

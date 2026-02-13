@@ -3,7 +3,7 @@
 
 package connection
 
-import "go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+import "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 
 func (a *AwsConnection) PlatformInfo() *inventory.Platform {
 	return GetPlatformForObject(a.PlatformOverride, a.accountId)

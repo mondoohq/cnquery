@@ -9,13 +9,13 @@ import (
 	"github.com/cockroachdb/errors"
 	mapstructure "github.com/go-viper/mapstructure/v2"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/mql"
-	"go.mondoo.com/cnquery/v12/mqlc"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/exec"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/types"
 )
 
 type CredentialQueryResponse struct {
@@ -26,7 +26,7 @@ type CredentialQueryResponse struct {
 }
 
 func NewCredentialQueryRunner(credentialQuery string, runtime llx.Runtime) (*CredentialQueryRunner, error) {
-	mqlExecutor := mql.New(runtime, cnquery.DefaultFeatures)
+	mqlExecutor := exec.New(runtime, mql.DefaultFeatures)
 
 	// just empty props to ensure we can compile
 	props := mqlc.SimpleProps{
@@ -37,7 +37,7 @@ func NewCredentialQueryRunner(credentialQuery string, runtime llx.Runtime) (*Cre
 	}
 
 	// test query to see if it compiles well
-	_, err := mql.Exec(credentialQuery, runtime, nil, props)
+	_, err := exec.Exec(credentialQuery, runtime, nil, props)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not compile the secret metadata function")
 	}
@@ -48,7 +48,7 @@ func NewCredentialQueryRunner(credentialQuery string, runtime llx.Runtime) (*Cre
 }
 
 type CredentialQueryRunner struct {
-	mqlExecutor         *mql.Executor
+	mqlExecutor         *exec.Executor
 	secretMetadataQuery string
 }
 

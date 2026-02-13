@@ -93,7 +93,7 @@ const file_cvss_proto_rawDesc = "" +
 	"\x04Cvss\x12\x16\n" +
 	"\x06vector\x18\x01 \x01(\tR\x06vector\x12\x16\n" +
 	"\x06source\x18\x02 \x01(\tR\x06source\x12\x14\n" +
-	"\x05score\x18\x03 \x01(\x02R\x05scoreB>Z<go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream/mvd/cvssb\x06proto3"
+	"\x05score\x18\x03 \x01(\x02R\x05scoreB:Z8go.mondoo.com/mql/v13/providers-sdk/v1/upstream/mvd/cvssb\x06proto3"
 
 var (
 	file_cvss_proto_rawDescOnce sync.Once

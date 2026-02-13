@@ -128,12 +128,6 @@ func TestFindFilesMatcher(t *testing.T) {
 		}
 		fs := afero.IOFS{Fs: afero.NewMemMapFs()}
 		for _, tc := range testCases {
-			excludeTypes := []string{}
-			for _, b := range possibleTypes {
-				if b != tc.matches {
-					excludeTypes = append(excludeTypes, string(b))
-				}
-			}
 			t.Run(fmt.Sprintf("%s matcher", string(tc.matches)), func(t *testing.T) {
 				exactMatcher := createFindFilesMatcher(fs, "", "", nil, nil, nil)
 				assert.True(t, exactMatcher.Match("/foo", tc.typ), "matcher failed to match")

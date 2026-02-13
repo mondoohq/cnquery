@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 type ConnectionType string
@@ -220,9 +220,6 @@ func (mode FileModeDetails) Sticky() bool {
 
 func (mode FileModeDetails) UnixMode() uint32 {
 	m := mode.FileMode & 0o777
-
-	if mode.IsDir() {
-	}
 
 	if (mode.FileMode & fs.ModeSetuid) != 0 {
 		m |= 0o4000

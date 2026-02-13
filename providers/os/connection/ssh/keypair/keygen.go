@@ -71,7 +71,7 @@ func NewRSAKeys(bits int, passphrase []byte) (*SSH, error) {
 
 	// optional: encrypt private key with passphrase
 	if len(passphrase) > 0 {
-		block, err = x509.EncryptPEMBlock(rand.Reader, block.Type, block.Bytes, passphrase, x509.PEMCipherAES256)
+		block, err = x509.EncryptPEMBlock(rand.Reader, block.Type, block.Bytes, passphrase, x509.PEMCipherAES256) //nolint:staticcheck // legacy PEM encryption required for compatibility
 		if err != nil {
 			return nil, err
 		}

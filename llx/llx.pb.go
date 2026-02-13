@@ -213,7 +213,7 @@ func (x *Function) GetBinding() uint64 {
 
 type Chunk struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Call          Chunk_Call             `protobuf:"varint,1,opt,name=call,proto3,enum=cnquery.llx.Chunk_Call" json:"call,omitempty"`
+	Call          Chunk_Call             `protobuf:"varint,1,opt,name=call,proto3,enum=mql.llx.Chunk_Call" json:"call,omitempty"`
 	Id            string                 `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
 	Primitive     *Primitive             `protobuf:"bytes,3,opt,name=primitive,proto3" json:"primitive,omitempty"`
 	Function      *Function              `protobuf:"bytes,4,opt,name=function,proto3" json:"function,omitempty"`
@@ -1312,24 +1312,24 @@ var File_llx_proto protoreflect.FileDescriptor
 
 const file_llx_proto_rawDesc = "" +
 	"\n" +
-	"\tllx.proto\x12\vcnquery.llx\"\xe6\x01\n" +
+	"\tllx.proto\x12\amql.llx\"\xda\x01\n" +
 	"\tPrimitive\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\fR\x05value\x12,\n" +
-	"\x05array\x18\x03 \x03(\v2\x16.cnquery.llx.PrimitiveR\x05array\x121\n" +
-	"\x03map\x18\x04 \x03(\v2\x1f.cnquery.llx.Primitive.MapEntryR\x03map\x1aN\n" +
+	"\x05value\x18\x02 \x01(\fR\x05value\x12(\n" +
+	"\x05array\x18\x03 \x03(\v2\x12.mql.llx.PrimitiveR\x05array\x12-\n" +
+	"\x03map\x18\x04 \x03(\v2\x1b.mql.llx.Primitive.MapEntryR\x03map\x1aJ\n" +
 	"\bMapEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
-	"\x05value\x18\x02 \x01(\v2\x16.cnquery.llx.PrimitiveR\x05value:\x028\x01\"d\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12(\n" +
+	"\x05value\x18\x02 \x01(\v2\x12.mql.llx.PrimitiveR\x05value:\x028\x01\"`\n" +
 	"\bFunction\x12\x12\n" +
-	"\x04type\x18\x01 \x01(\tR\x04type\x12*\n" +
-	"\x04args\x18\x03 \x03(\v2\x16.cnquery.llx.PrimitiveR\x04args\x12\x18\n" +
-	"\abinding\x18\x04 \x01(\x04R\abinding\"\xe0\x01\n" +
-	"\x05Chunk\x12+\n" +
-	"\x04call\x18\x01 \x01(\x0e2\x17.cnquery.llx.Chunk.CallR\x04call\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\tR\x02id\x124\n" +
-	"\tprimitive\x18\x03 \x01(\v2\x16.cnquery.llx.PrimitiveR\tprimitive\x121\n" +
-	"\bfunction\x18\x04 \x01(\v2\x15.cnquery.llx.FunctionR\bfunction\"1\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12&\n" +
+	"\x04args\x18\x03 \x03(\v2\x12.mql.llx.PrimitiveR\x04args\x12\x18\n" +
+	"\abinding\x18\x04 \x01(\x04R\abinding\"\xd4\x01\n" +
+	"\x05Chunk\x12'\n" +
+	"\x04call\x18\x01 \x01(\x0e2\x13.mql.llx.Chunk.CallR\x04call\x12\x0e\n" +
+	"\x02id\x18\x02 \x01(\tR\x02id\x120\n" +
+	"\tprimitive\x18\x03 \x01(\v2\x12.mql.llx.PrimitiveR\tprimitive\x12-\n" +
+	"\bfunction\x18\x04 \x01(\v2\x11.mql.llx.FunctionR\bfunction\"1\n" +
 	"\x04Call\x12\r\n" +
 	"\tPRIMITIVE\x10\x00\x12\f\n" +
 	"\bFUNCTION\x10\x01\x12\f\n" +
@@ -1338,31 +1338,31 @@ const file_llx_proto_rawDesc = "" +
 	"\btemplate\x18\x01 \x01(\tR\btemplate\x12\x12\n" +
 	"\x04refs\x18\x02 \x03(\x04R\x04refs\x12\x1c\n" +
 	"\tchecksums\x18\x03 \x03(\tR\tchecksums\x12!\n" +
-	"\fdecode_block\x18\x15 \x01(\bR\vdecodeBlock\"\x9a\x04\n" +
+	"\fdecode_block\x18\x15 \x01(\bR\vdecodeBlock\"\x86\x04\n" +
 	"\x06CodeV1\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
-	"\x04code\x18\x02 \x03(\v2\x12.cnquery.llx.ChunkR\x04code\x12\x1e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\"\n" +
+	"\x04code\x18\x02 \x03(\v2\x0e.mql.llx.ChunkR\x04code\x12\x1e\n" +
 	"\n" +
 	"parameters\x18\x03 \x01(\x05R\n" +
 	"parameters\x12 \n" +
 	"\ventrypoints\x18\x04 \x03(\x05R\ventrypoints\x12\x1e\n" +
 	"\n" +
 	"datapoints\x18\x05 \x03(\x05R\n" +
-	"datapoints\x12@\n" +
-	"\tchecksums\x18\x06 \x03(\v2\".cnquery.llx.CodeV1.ChecksumsEntryR\tchecksums\x121\n" +
-	"\tfunctions\x18\a \x03(\v2\x13.cnquery.llx.CodeV1R\tfunctions\x12 \n" +
-	"\vsingleValue\x18\b \x01(\bR\vsingleValue\x12C\n" +
+	"datapoints\x12<\n" +
+	"\tchecksums\x18\x06 \x03(\v2\x1e.mql.llx.CodeV1.ChecksumsEntryR\tchecksums\x12-\n" +
+	"\tfunctions\x18\a \x03(\v2\x0f.mql.llx.CodeV1R\tfunctions\x12 \n" +
+	"\vsingleValue\x18\b \x01(\bR\vsingleValue\x12?\n" +
 	"\n" +
-	"assertions\x18\x14 \x03(\v2#.cnquery.llx.CodeV1.AssertionsEntryR\n" +
+	"assertions\x18\x14 \x03(\v2\x1f.mql.llx.CodeV1.AssertionsEntryR\n" +
 	"assertions\x1a<\n" +
 	"\x0eChecksumsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a\\\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aX\n" +
 	"\x0fAssertionsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x05R\x03key\x123\n" +
-	"\x05value\x18\x02 \x01(\v2\x1d.cnquery.llx.AssertionMessageR\x05value:\x028\x01\"\xb7\x01\n" +
-	"\x05Block\x12*\n" +
-	"\x06chunks\x18\x01 \x03(\v2\x12.cnquery.llx.ChunkR\x06chunks\x12 \n" +
+	"\x03key\x18\x01 \x01(\x05R\x03key\x12/\n" +
+	"\x05value\x18\x02 \x01(\v2\x19.mql.llx.AssertionMessageR\x05value:\x028\x01\"\xb3\x01\n" +
+	"\x05Block\x12&\n" +
+	"\x06chunks\x18\x01 \x03(\v2\x0e.mql.llx.ChunkR\x06chunks\x12 \n" +
 	"\vsingleValue\x18\x02 \x01(\bR\vsingleValue\x12\x1e\n" +
 	"\n" +
 	"parameters\x18\x03 \x01(\x05R\n" +
@@ -1370,22 +1370,22 @@ const file_llx_proto_rawDesc = "" +
 	"\ventrypoints\x18\x04 \x03(\x04R\ventrypoints\x12\x1e\n" +
 	"\n" +
 	"datapoints\x18\x05 \x03(\x04R\n" +
-	"datapoints\"\xe7\x02\n" +
+	"datapoints\"\xd7\x02\n" +
 	"\x06CodeV2\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12*\n" +
-	"\x06blocks\x18\x02 \x03(\v2\x12.cnquery.llx.BlockR\x06blocks\x12@\n" +
-	"\tchecksums\x18\x05 \x03(\v2\".cnquery.llx.CodeV2.ChecksumsEntryR\tchecksums\x12C\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
+	"\x06blocks\x18\x02 \x03(\v2\x0e.mql.llx.BlockR\x06blocks\x12<\n" +
+	"\tchecksums\x18\x05 \x03(\v2\x1e.mql.llx.CodeV2.ChecksumsEntryR\tchecksums\x12?\n" +
 	"\n" +
-	"assertions\x18\x14 \x03(\v2#.cnquery.llx.CodeV2.AssertionsEntryR\n" +
+	"assertions\x18\x14 \x03(\v2\x1f.mql.llx.CodeV2.AssertionsEntryR\n" +
 	"assertions\x1a<\n" +
 	"\x0eChecksumsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x04R\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a\\\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aX\n" +
 	"\x0fAssertionsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x04R\x03key\x123\n" +
-	"\x05value\x18\x02 \x01(\v2\x1d.cnquery.llx.AssertionMessageR\x05value:\x028\x01\"|\n" +
-	"\x06Labels\x127\n" +
-	"\x06labels\x18\x01 \x03(\v2\x1f.cnquery.llx.Labels.LabelsEntryR\x06labels\x1a9\n" +
+	"\x03key\x18\x01 \x01(\x04R\x03key\x12/\n" +
+	"\x05value\x18\x02 \x01(\v2\x19.mql.llx.AssertionMessageR\x05value:\x028\x01\"x\n" +
+	"\x06Labels\x123\n" +
+	"\x06labels\x18\x01 \x03(\v2\x1b.mql.llx.Labels.LabelsEntryR\x06labels\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"k\n" +
@@ -1393,80 +1393,80 @@ const file_llx_proto_rawDesc = "" +
 	"\x05field\x18\x01 \x01(\tR\x05field\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x12\n" +
 	"\x04desc\x18\x03 \x01(\tR\x04desc\x12\x1a\n" +
-	"\bprovider\x18\x04 \x01(\tR\bprovider\"\xa5\x06\n" +
+	"\bprovider\x18\x04 \x01(\tR\bprovider\"\x85\x06\n" +
 	"\n" +
-	"CodeBundle\x12,\n" +
-	"\acode_v2\x18\x06 \x01(\v2\x13.cnquery.llx.CodeV2R\x06codeV2\x12<\n" +
-	"\vsuggestions\x18\x02 \x03(\v2\x1a.cnquery.llx.DocumentationR\vsuggestions\x12\x16\n" +
-	"\x06source\x18\x03 \x01(\tR\x06source\x12+\n" +
-	"\x06labels\x18\x04 \x01(\v2\x13.cnquery.llx.LabelsR\x06labels\x128\n" +
-	"\x05props\x18\x05 \x03(\v2\".cnquery.llx.CodeBundle.PropsEntryR\x05props\x12\x18\n" +
+	"CodeBundle\x12(\n" +
+	"\acode_v2\x18\x06 \x01(\v2\x0f.mql.llx.CodeV2R\x06codeV2\x128\n" +
+	"\vsuggestions\x18\x02 \x03(\v2\x16.mql.llx.DocumentationR\vsuggestions\x12\x16\n" +
+	"\x06source\x18\x03 \x01(\tR\x06source\x12'\n" +
+	"\x06labels\x18\x04 \x01(\v2\x0f.mql.llx.LabelsR\x06labels\x124\n" +
+	"\x05props\x18\x05 \x03(\v2\x1e.mql.llx.CodeBundle.PropsEntryR\x05props\x12\x18\n" +
 	"\aversion\x18\x14 \x01(\tR\aversion\x12,\n" +
-	"\x12min_mondoo_version\x18\x16 \x01(\tR\x10minMondooVersion\x12G\n" +
+	"\x12min_mondoo_version\x18\x16 \x01(\tR\x10minMondooVersion\x12C\n" +
 	"\n" +
-	"assertions\x18\x17 \x03(\v2'.cnquery.llx.CodeBundle.AssertionsEntryR\n" +
-	"assertions\x12H\n" +
-	"\vauto_expand\x18\x18 \x03(\v2'.cnquery.llx.CodeBundle.AutoExpandEntryR\n" +
-	"autoExpand\x125\n" +
-	"\x04vars\x18\x19 \x03(\v2!.cnquery.llx.CodeBundle.VarsEntryR\x04vars\x1a8\n" +
+	"assertions\x18\x17 \x03(\v2#.mql.llx.CodeBundle.AssertionsEntryR\n" +
+	"assertions\x12D\n" +
+	"\vauto_expand\x18\x18 \x03(\v2#.mql.llx.CodeBundle.AutoExpandEntryR\n" +
+	"autoExpand\x121\n" +
+	"\x04vars\x18\x19 \x03(\v2\x1d.mql.llx.CodeBundle.VarsEntryR\x04vars\x1a8\n" +
 	"\n" +
 	"PropsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a\\\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aX\n" +
 	"\x0fAssertionsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x123\n" +
-	"\x05value\x18\x02 \x01(\v2\x1d.cnquery.llx.AssertionMessageR\x05value:\x028\x01\x1a=\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12/\n" +
+	"\x05value\x18\x02 \x01(\v2\x19.mql.llx.AssertionMessageR\x05value:\x028\x01\x1a=\n" +
 	"\x0fAutoExpandEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x04R\x05value:\x028\x01\x1a7\n" +
 	"\tVarsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x04R\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01J\x04\b\x01\x10\x02J\x04\b\x15\x10\x16\"c\n" +
-	"\x06Result\x12*\n" +
-	"\x04data\x18\x01 \x01(\v2\x16.cnquery.llx.PrimitiveR\x04data\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01J\x04\b\x01\x10\x02J\x04\b\x15\x10\x16\"_\n" +
+	"\x06Result\x12&\n" +
+	"\x04data\x18\x01 \x01(\v2\x12.mql.llx.PrimitiveR\x04data\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\x12\x17\n" +
-	"\acode_id\x18\x03 \x01(\tR\x06codeId\"\x87\x02\n" +
+	"\acode_id\x18\x03 \x01(\tR\x06codeId\"\xff\x01\n" +
 	"\x11ResourceRecording\x12\x1a\n" +
 	"\bresource\x18\x01 \x01(\tR\bresource\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\tR\x02id\x12B\n" +
-	"\x06fields\x18\x03 \x03(\v2*.cnquery.llx.ResourceRecording.FieldsEntryR\x06fields\x12\x18\n" +
+	"\x02id\x18\x02 \x01(\tR\x02id\x12>\n" +
+	"\x06fields\x18\x03 \x03(\v2&.mql.llx.ResourceRecording.FieldsEntryR\x06fields\x12\x18\n" +
 	"\acreated\x18\x04 \x01(\x03R\acreated\x12\x18\n" +
-	"\aupdated\x18\x05 \x01(\x03R\aupdated\x1aN\n" +
+	"\aupdated\x18\x05 \x01(\x03R\aupdated\x1aJ\n" +
 	"\vFieldsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12)\n" +
-	"\x05value\x18\x02 \x01(\v2\x13.cnquery.llx.ResultR\x05value:\x028\x01\"\x8a\x01\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12%\n" +
+	"\x05value\x18\x02 \x01(\v2\x0f.mql.llx.ResultR\x05value:\x028\x01\"\x8a\x01\n" +
 	"\x06Rating\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\bendpoint\x18\x02 \x01(\tR\bendpoint\x12\x14\n" +
 	"\x05tests\x18\x03 \x01(\x05R\x05tests\x12\x14\n" +
 	"\x05score\x18\x04 \x01(\x05R\x05score\x12\x14\n" +
 	"\x05trend\x18\x05 \x01(\x05R\x05trend\x12\x12\n" +
-	"\x04date\x18\x06 \x01(\tR\x04date\"\xfb\x02\n" +
+	"\x04date\x18\x06 \x01(\tR\x04date\"\xef\x02\n" +
 	"\x0eAssessmentItem\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1a\n" +
 	"\bchecksum\x18\x02 \x01(\tR\bchecksum\x12\x1e\n" +
 	"\n" +
 	"entrypoint\x18\x03 \x01(\x04R\n" +
 	"entrypoint\x12\x10\n" +
-	"\x03ref\x18\t \x01(\x04R\x03ref\x122\n" +
-	"\bexpected\x18\x04 \x01(\v2\x16.cnquery.llx.PrimitiveR\bexpected\x12.\n" +
-	"\x06actual\x18\x05 \x01(\v2\x16.cnquery.llx.PrimitiveR\x06actual\x12\x1c\n" +
+	"\x03ref\x18\t \x01(\x04R\x03ref\x12.\n" +
+	"\bexpected\x18\x04 \x01(\v2\x12.mql.llx.PrimitiveR\bexpected\x12*\n" +
+	"\x06actual\x18\x05 \x01(\v2\x12.mql.llx.PrimitiveR\x06actual\x12\x1c\n" +
 	"\toperation\x18\x06 \x01(\tR\toperation\x12\x14\n" +
 	"\x05error\x18\a \x01(\tR\x05error\x12!\n" +
 	"\fis_assertion\x18\b \x01(\bR\visAssertion\x12\x1a\n" +
-	"\btemplate\x18\x14 \x01(\tR\btemplate\x12*\n" +
-	"\x04data\x18\x15 \x03(\v2\x16.cnquery.llx.PrimitiveR\x04data\"\x9c\x01\n" +
+	"\btemplate\x18\x14 \x01(\tR\btemplate\x12&\n" +
+	"\x04data\x18\x15 \x03(\v2\x12.mql.llx.PrimitiveR\x04data\"\x98\x01\n" +
 	"\n" +
 	"Assessment\x12\x1a\n" +
 	"\bchecksum\x18\x01 \x01(\tR\bchecksum\x12\x18\n" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12!\n" +
-	"\fis_assertion\x18\x03 \x01(\bR\visAssertion\x125\n" +
-	"\aresults\x18\x04 \x03(\v2\x1b.cnquery.llx.AssessmentItemR\aresults\"b\n" +
+	"\fis_assertion\x18\x03 \x01(\bR\visAssertion\x121\n" +
+	"\aresults\x18\x04 \x03(\v2\x17.mql.llx.AssessmentItemR\aresults\"b\n" +
 	"\x02IP\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\fR\aaddress\x12\x1d\n" +
 	"\n" +
 	"has_prefix\x18\x02 \x01(\bR\thasPrefix\x12#\n" +
-	"\rprefix_length\x18\x03 \x01(\x05R\fprefixLengthB\x1fZ\x1dgo.mondoo.com/cnquery/v12/llxb\x06proto3"
+	"\rprefix_length\x18\x03 \x01(\x05R\fprefixLengthB\x1bZ\x19go.mondoo.com/mql/v13/llxb\x06proto3"
 
 var (
 	file_llx_proto_rawDescOnce sync.Once
@@ -1483,69 +1483,69 @@ func file_llx_proto_rawDescGZIP() []byte {
 var file_llx_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_llx_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_llx_proto_goTypes = []any{
-	(Chunk_Call)(0),           // 0: cnquery.llx.Chunk.Call
-	(*Primitive)(nil),         // 1: cnquery.llx.Primitive
-	(*Function)(nil),          // 2: cnquery.llx.Function
-	(*Chunk)(nil),             // 3: cnquery.llx.Chunk
-	(*AssertionMessage)(nil),  // 4: cnquery.llx.AssertionMessage
-	(*CodeV1)(nil),            // 5: cnquery.llx.CodeV1
-	(*Block)(nil),             // 6: cnquery.llx.Block
-	(*CodeV2)(nil),            // 7: cnquery.llx.CodeV2
-	(*Labels)(nil),            // 8: cnquery.llx.Labels
-	(*Documentation)(nil),     // 9: cnquery.llx.Documentation
-	(*CodeBundle)(nil),        // 10: cnquery.llx.CodeBundle
-	(*Result)(nil),            // 11: cnquery.llx.Result
-	(*ResourceRecording)(nil), // 12: cnquery.llx.ResourceRecording
-	(*Rating)(nil),            // 13: cnquery.llx.Rating
-	(*AssessmentItem)(nil),    // 14: cnquery.llx.AssessmentItem
-	(*Assessment)(nil),        // 15: cnquery.llx.Assessment
-	(*IP)(nil),                // 16: cnquery.llx.IP
-	nil,                       // 17: cnquery.llx.Primitive.MapEntry
-	nil,                       // 18: cnquery.llx.CodeV1.ChecksumsEntry
-	nil,                       // 19: cnquery.llx.CodeV1.AssertionsEntry
-	nil,                       // 20: cnquery.llx.CodeV2.ChecksumsEntry
-	nil,                       // 21: cnquery.llx.CodeV2.AssertionsEntry
-	nil,                       // 22: cnquery.llx.Labels.LabelsEntry
-	nil,                       // 23: cnquery.llx.CodeBundle.PropsEntry
-	nil,                       // 24: cnquery.llx.CodeBundle.AssertionsEntry
-	nil,                       // 25: cnquery.llx.CodeBundle.AutoExpandEntry
-	nil,                       // 26: cnquery.llx.CodeBundle.VarsEntry
-	nil,                       // 27: cnquery.llx.ResourceRecording.FieldsEntry
+	(Chunk_Call)(0),           // 0: mql.llx.Chunk.Call
+	(*Primitive)(nil),         // 1: mql.llx.Primitive
+	(*Function)(nil),          // 2: mql.llx.Function
+	(*Chunk)(nil),             // 3: mql.llx.Chunk
+	(*AssertionMessage)(nil),  // 4: mql.llx.AssertionMessage
+	(*CodeV1)(nil),            // 5: mql.llx.CodeV1
+	(*Block)(nil),             // 6: mql.llx.Block
+	(*CodeV2)(nil),            // 7: mql.llx.CodeV2
+	(*Labels)(nil),            // 8: mql.llx.Labels
+	(*Documentation)(nil),     // 9: mql.llx.Documentation
+	(*CodeBundle)(nil),        // 10: mql.llx.CodeBundle
+	(*Result)(nil),            // 11: mql.llx.Result
+	(*ResourceRecording)(nil), // 12: mql.llx.ResourceRecording
+	(*Rating)(nil),            // 13: mql.llx.Rating
+	(*AssessmentItem)(nil),    // 14: mql.llx.AssessmentItem
+	(*Assessment)(nil),        // 15: mql.llx.Assessment
+	(*IP)(nil),                // 16: mql.llx.IP
+	nil,                       // 17: mql.llx.Primitive.MapEntry
+	nil,                       // 18: mql.llx.CodeV1.ChecksumsEntry
+	nil,                       // 19: mql.llx.CodeV1.AssertionsEntry
+	nil,                       // 20: mql.llx.CodeV2.ChecksumsEntry
+	nil,                       // 21: mql.llx.CodeV2.AssertionsEntry
+	nil,                       // 22: mql.llx.Labels.LabelsEntry
+	nil,                       // 23: mql.llx.CodeBundle.PropsEntry
+	nil,                       // 24: mql.llx.CodeBundle.AssertionsEntry
+	nil,                       // 25: mql.llx.CodeBundle.AutoExpandEntry
+	nil,                       // 26: mql.llx.CodeBundle.VarsEntry
+	nil,                       // 27: mql.llx.ResourceRecording.FieldsEntry
 }
 var file_llx_proto_depIdxs = []int32{
-	1,  // 0: cnquery.llx.Primitive.array:type_name -> cnquery.llx.Primitive
-	17, // 1: cnquery.llx.Primitive.map:type_name -> cnquery.llx.Primitive.MapEntry
-	1,  // 2: cnquery.llx.Function.args:type_name -> cnquery.llx.Primitive
-	0,  // 3: cnquery.llx.Chunk.call:type_name -> cnquery.llx.Chunk.Call
-	1,  // 4: cnquery.llx.Chunk.primitive:type_name -> cnquery.llx.Primitive
-	2,  // 5: cnquery.llx.Chunk.function:type_name -> cnquery.llx.Function
-	3,  // 6: cnquery.llx.CodeV1.code:type_name -> cnquery.llx.Chunk
-	18, // 7: cnquery.llx.CodeV1.checksums:type_name -> cnquery.llx.CodeV1.ChecksumsEntry
-	5,  // 8: cnquery.llx.CodeV1.functions:type_name -> cnquery.llx.CodeV1
-	19, // 9: cnquery.llx.CodeV1.assertions:type_name -> cnquery.llx.CodeV1.AssertionsEntry
-	3,  // 10: cnquery.llx.Block.chunks:type_name -> cnquery.llx.Chunk
-	6,  // 11: cnquery.llx.CodeV2.blocks:type_name -> cnquery.llx.Block
-	20, // 12: cnquery.llx.CodeV2.checksums:type_name -> cnquery.llx.CodeV2.ChecksumsEntry
-	21, // 13: cnquery.llx.CodeV2.assertions:type_name -> cnquery.llx.CodeV2.AssertionsEntry
-	22, // 14: cnquery.llx.Labels.labels:type_name -> cnquery.llx.Labels.LabelsEntry
-	7,  // 15: cnquery.llx.CodeBundle.code_v2:type_name -> cnquery.llx.CodeV2
-	9,  // 16: cnquery.llx.CodeBundle.suggestions:type_name -> cnquery.llx.Documentation
-	8,  // 17: cnquery.llx.CodeBundle.labels:type_name -> cnquery.llx.Labels
-	23, // 18: cnquery.llx.CodeBundle.props:type_name -> cnquery.llx.CodeBundle.PropsEntry
-	24, // 19: cnquery.llx.CodeBundle.assertions:type_name -> cnquery.llx.CodeBundle.AssertionsEntry
-	25, // 20: cnquery.llx.CodeBundle.auto_expand:type_name -> cnquery.llx.CodeBundle.AutoExpandEntry
-	26, // 21: cnquery.llx.CodeBundle.vars:type_name -> cnquery.llx.CodeBundle.VarsEntry
-	1,  // 22: cnquery.llx.Result.data:type_name -> cnquery.llx.Primitive
-	27, // 23: cnquery.llx.ResourceRecording.fields:type_name -> cnquery.llx.ResourceRecording.FieldsEntry
-	1,  // 24: cnquery.llx.AssessmentItem.expected:type_name -> cnquery.llx.Primitive
-	1,  // 25: cnquery.llx.AssessmentItem.actual:type_name -> cnquery.llx.Primitive
-	1,  // 26: cnquery.llx.AssessmentItem.data:type_name -> cnquery.llx.Primitive
-	14, // 27: cnquery.llx.Assessment.results:type_name -> cnquery.llx.AssessmentItem
-	1,  // 28: cnquery.llx.Primitive.MapEntry.value:type_name -> cnquery.llx.Primitive
-	4,  // 29: cnquery.llx.CodeV1.AssertionsEntry.value:type_name -> cnquery.llx.AssertionMessage
-	4,  // 30: cnquery.llx.CodeV2.AssertionsEntry.value:type_name -> cnquery.llx.AssertionMessage
-	4,  // 31: cnquery.llx.CodeBundle.AssertionsEntry.value:type_name -> cnquery.llx.AssertionMessage
-	11, // 32: cnquery.llx.ResourceRecording.FieldsEntry.value:type_name -> cnquery.llx.Result
+	1,  // 0: mql.llx.Primitive.array:type_name -> mql.llx.Primitive
+	17, // 1: mql.llx.Primitive.map:type_name -> mql.llx.Primitive.MapEntry
+	1,  // 2: mql.llx.Function.args:type_name -> mql.llx.Primitive
+	0,  // 3: mql.llx.Chunk.call:type_name -> mql.llx.Chunk.Call
+	1,  // 4: mql.llx.Chunk.primitive:type_name -> mql.llx.Primitive
+	2,  // 5: mql.llx.Chunk.function:type_name -> mql.llx.Function
+	3,  // 6: mql.llx.CodeV1.code:type_name -> mql.llx.Chunk
+	18, // 7: mql.llx.CodeV1.checksums:type_name -> mql.llx.CodeV1.ChecksumsEntry
+	5,  // 8: mql.llx.CodeV1.functions:type_name -> mql.llx.CodeV1
+	19, // 9: mql.llx.CodeV1.assertions:type_name -> mql.llx.CodeV1.AssertionsEntry
+	3,  // 10: mql.llx.Block.chunks:type_name -> mql.llx.Chunk
+	6,  // 11: mql.llx.CodeV2.blocks:type_name -> mql.llx.Block
+	20, // 12: mql.llx.CodeV2.checksums:type_name -> mql.llx.CodeV2.ChecksumsEntry
+	21, // 13: mql.llx.CodeV2.assertions:type_name -> mql.llx.CodeV2.AssertionsEntry
+	22, // 14: mql.llx.Labels.labels:type_name -> mql.llx.Labels.LabelsEntry
+	7,  // 15: mql.llx.CodeBundle.code_v2:type_name -> mql.llx.CodeV2
+	9,  // 16: mql.llx.CodeBundle.suggestions:type_name -> mql.llx.Documentation
+	8,  // 17: mql.llx.CodeBundle.labels:type_name -> mql.llx.Labels
+	23, // 18: mql.llx.CodeBundle.props:type_name -> mql.llx.CodeBundle.PropsEntry
+	24, // 19: mql.llx.CodeBundle.assertions:type_name -> mql.llx.CodeBundle.AssertionsEntry
+	25, // 20: mql.llx.CodeBundle.auto_expand:type_name -> mql.llx.CodeBundle.AutoExpandEntry
+	26, // 21: mql.llx.CodeBundle.vars:type_name -> mql.llx.CodeBundle.VarsEntry
+	1,  // 22: mql.llx.Result.data:type_name -> mql.llx.Primitive
+	27, // 23: mql.llx.ResourceRecording.fields:type_name -> mql.llx.ResourceRecording.FieldsEntry
+	1,  // 24: mql.llx.AssessmentItem.expected:type_name -> mql.llx.Primitive
+	1,  // 25: mql.llx.AssessmentItem.actual:type_name -> mql.llx.Primitive
+	1,  // 26: mql.llx.AssessmentItem.data:type_name -> mql.llx.Primitive
+	14, // 27: mql.llx.Assessment.results:type_name -> mql.llx.AssessmentItem
+	1,  // 28: mql.llx.Primitive.MapEntry.value:type_name -> mql.llx.Primitive
+	4,  // 29: mql.llx.CodeV1.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	4,  // 30: mql.llx.CodeV2.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	4,  // 31: mql.llx.CodeBundle.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	11, // 32: mql.llx.ResourceRecording.FieldsEntry.value:type_name -> mql.llx.Result
 	33, // [33:33] is the sub-list for method output_type
 	33, // [33:33] is the sub-list for method input_type
 	33, // [33:33] is the sub-list for extension type_name

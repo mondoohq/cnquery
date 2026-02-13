@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 	"golang.org/x/oauth2"
 	googleoauth "golang.org/x/oauth2/google"
 	directory "google.golang.org/api/admin/directory/v1"

@@ -4,17 +4,17 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/gcp/connection/gcpinstancesnapshot"
-	"go.mondoo.com/cnquery/v12/providers/gcp/provider"
-	"go.mondoo.com/cnquery/v12/providers/gcp/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/gcp/connection/gcpinstancesnapshot"
+	"go.mondoo.com/mql/v13/providers/gcp/provider"
+	"go.mondoo.com/mql/v13/providers/gcp/resources"
 )
 
 var Config = plugin.Provider{
 	Name:    "gcp",
-	ID:      "go.mondoo.com/cnquery/v9/providers/gcp",
-	Version: "11.2.0",
+	ID:      "go.mondoo.com/mql/providers/gcp",
+	Version: "11.0.145",
 	ConnectionTypes: []string{
 		provider.ConnectionType,
 		string(gcpinstancesnapshot.SnapshotConnectionType),
@@ -55,9 +55,6 @@ Examples with the GCP project configured:
 				resources.DiscoverCloudSQLSQLServer,
 				resources.DiscoverCloudDNSZones,
 				resources.DiscoverCloudKMSKeyrings,
-				resources.DiscoverMemorystoreRedis,
-				resources.DiscoverMemorystoreRedisCluster,
-				resources.DiscoverSecretManager,
 			},
 			Flags: []plugin.Flag{
 				{

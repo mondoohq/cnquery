@@ -13,10 +13,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/cpe"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/purl"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/cpe"
+	"go.mondoo.com/mql/v13/providers/os/resources/purl"
 )
 
 const (
@@ -165,7 +165,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 	}
 
 	// e.g. google distroless images stores their pkg data in /var/lib/dpkg/status.d/
-	if dErr == nil && dStat.IsDir() == true {
+	if dErr == nil && dStat.IsDir() {
 		afutil := afero.Afero{Fs: fs}
 		wErr := afutil.Walk(dpkgStatusDir, func(path string, f os.FileInfo, fErr error) error {
 			if f == nil || f.IsDir() {
@@ -204,7 +204,7 @@ func (dpm *DebPkgManager) Available() (map[string]PackageUpdate, error) {
 	// readlock() { cat /proc/locks | awk '{print $5}' | grep -v ^0 | xargs -I {1} find /proc/{1}/fd -maxdepth 1 -exec readlink {} \; | grep '^/var/lib/dpkg/lock$'; }
 	// while test -n "$(readlock)"; do sleep 1; done
 	// DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run
-	dpm.conn.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get update >/dev/null 2>&1")
+	_, _ = dpm.conn.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get update >/dev/null 2>&1")
 
 	cmd, err := dpm.conn.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run")
 	if err != nil {

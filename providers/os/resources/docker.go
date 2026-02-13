@@ -11,9 +11,9 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v12/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (p *mqlDocker) images() ([]any, error) {
@@ -42,7 +42,7 @@ func (p *mqlDocker) images() ([]any, error) {
 		r, err := CreateResource(p.MqlRuntime, "docker.image", map[string]*llx.RawData{
 			"id":          llx.StringData(dImg.ID),
 			"size":        llx.IntData(dImg.Size),
-			"virtualsize": llx.IntData(dImg.VirtualSize),
+			"virtualsize": llx.IntData(dImg.VirtualSize), //nolint:staticcheck // VirtualSize is deprecated but still needed for backward compatibility
 			"repoDigests": llx.ArrayData(llx.TArr2Raw(dImg.RepoDigests), types.String),
 			"labels":      llx.MapData(labels, types.String),
 			"tags":        llx.ArrayData(tags, types.String),

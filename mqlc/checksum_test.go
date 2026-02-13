@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/mqlc"
+	"go.mondoo.com/mql/v13/mqlc"
 )
 
 func TestIfChecksumming(t *testing.T) {

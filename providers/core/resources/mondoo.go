@@ -6,16 +6,16 @@ package resources
 import (
 	"runtime"
 
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/cli/execruntime"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/cli/execruntime"
 )
 
 func (m *mqlMondoo) version() (string, error) {
-	return cnquery.GetVersion(), nil
+	return mql.GetVersion(), nil
 }
 
 func (m *mqlMondoo) build() (string, error) {
-	return cnquery.GetBuild(), nil
+	return mql.GetBuild(), nil
 }
 
 func (m *mqlMondoo) arch() (string, error) {

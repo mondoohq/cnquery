@@ -6,7 +6,7 @@ package execruntime
 const AWS_RUN_COMMAND = "aws_ssm_runcommand"
 
 // see https://github.com/aws/amazon-ssm-agent/blob/master/agent/executers/executers.go
-var awsruncommandEnv = &RuntimeEnv{
+var awsruncommandEnv = &RuntimeEnv{ //nolint:unused
 	Id:        AWS_RUN_COMMAND,
 	Name:      "AWS SSM Run Command",
 	Namespace: "ssm.aws.amazon.com",

@@ -16,11 +16,11 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	pp "go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/recording"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
-	coreconf "go.mondoo.com/cnquery/v12/providers/core/config"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	pp "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	coreconf "go.mondoo.com/mql/v13/providers/core/config"
 )
 
 //go:generate mockgen -source=./coordinator.go -destination=./mock_coordinator.go -package=providers
@@ -357,7 +357,7 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 
 	c.schema.Add(provider.ID, provider.Schema)
 
-	res, err := SupervisedRunningProivder(provider.Name, provider.ID, plug, client, provider.Schema, connectFunc)
+	res, err := SupervisedRunningProvider(provider.Name, provider.ID, plug, client, provider.Schema, connectFunc)
 	if err != nil {
 		return nil, err
 	}

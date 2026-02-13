@@ -7,11 +7,11 @@ import (
 	"slices"
 	"strings"
 
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/mqlc"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/utils/stringx"
 )
 
 // Suggestion represents a completion suggestion for the shell
@@ -23,12 +23,12 @@ type Suggestion struct {
 // Completer is an auto-complete helper for the shell
 type Completer struct {
 	schema   resources.ResourcesSchema
-	features cnquery.Features
+	features mql.Features
 	sortFn   func(a, b *llx.Documentation) int
 }
 
 // NewCompleter creates a new Mondoo completer object
-func NewCompleter(schema resources.ResourcesSchema, features cnquery.Features, connectedProviders []string) *Completer {
+func NewCompleter(schema resources.ResourcesSchema, features mql.Features, connectedProviders []string) *Completer {
 	sortFn := byProviderSortFn(connectedProviders)
 
 	return &Completer{

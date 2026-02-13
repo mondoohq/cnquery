@@ -4,16 +4,16 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/k8s/provider"
-	"go.mondoo.com/cnquery/v12/providers/k8s/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/k8s/provider"
+	"go.mondoo.com/mql/v13/providers/k8s/resources"
 )
 
 var Config = plugin.Provider{
 	Name:            "k8s",
-	ID:              "go.mondoo.com/cnquery/v9/providers/k8s",
-	Version:         "11.1.131",
+	ID:              "go.mondoo.com/mql/providers/k8s",
+	Version:         "11.1.127",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{

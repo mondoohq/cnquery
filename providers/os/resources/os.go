@@ -11,20 +11,20 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/docker"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/tar"
-	"go.mondoo.com/cnquery/v12/providers/os/id/hostname"
-	"go.mondoo.com/cnquery/v12/providers/os/id/hypervisor"
-	"go.mondoo.com/cnquery/v12/providers/os/id/platformid"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/reboot"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/systemd"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/updates"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/uptime"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/windows"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/docker"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/connection/tar"
+	"go.mondoo.com/mql/v13/providers/os/id/hostname"
+	"go.mondoo.com/mql/v13/providers/os/id/hypervisor"
+	"go.mondoo.com/mql/v13/providers/os/id/platformid"
+	"go.mondoo.com/mql/v13/providers/os/resources/reboot"
+	"go.mondoo.com/mql/v13/providers/os/resources/systemd"
+	"go.mondoo.com/mql/v13/providers/os/resources/updates"
+	"go.mondoo.com/mql/v13/providers/os/resources/uptime"
+	"go.mondoo.com/mql/v13/providers/os/resources/windows"
 )
 
 func (p *mqlOs) rebootpending() (bool, error) {
@@ -592,28 +592,6 @@ func (p *mqlOsBase) name() (string, error) {
 	}
 
 	return "", errors.New("your platform is not supported by operating system resource")
-}
-
-// returns the OS native machine UUID/GUID
-func (s *mqlOsBase) machineid() (string, error) {
-	conn := s.MqlRuntime.Connection.(shared.Connection)
-	platform := conn.Asset().Platform
-
-	uuidProvider, err := platformid.MachineIDProvider(conn, platform)
-	if err != nil {
-		return "", errors.Wrap(err, "cannot determine platform uuid")
-	}
-
-	if uuidProvider == nil {
-		return "", errors.New("cannot determine platform uuid")
-	}
-
-	id, err := uuidProvider.ID()
-	if err != nil {
-		return "", errors.Wrap(err, "cannot determine platform uuid")
-	}
-
-	return id, nil
 }
 
 func (s *mqlOsBase) machine() (*mqlMachine, error) {

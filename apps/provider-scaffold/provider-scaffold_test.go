@@ -9,10 +9,10 @@ import (
 
 func TestGenerator(t *testing.T) {
 	cfg := config{
-		Path:                "../../cnquery/providers/oci",
+		Path:                "../../mql/providers/oci",
 		ProviderID:          "oci",
 		ProviderName:        "Oracle Cloud Infrastructure",
-		GoPackage:           "go.mondoo.com/cnquery/v12/providers/oci",
+		GoPackage:           "go.mondoo.com/mql/v13/providers/oci",
 		CamelcaseProviderID: "Oci",
 	}
 

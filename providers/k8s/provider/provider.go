@@ -8,17 +8,17 @@ import (
 	"errors"
 	"strconv"
 
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v12/providers/k8s/connection/admission"
-	"go.mondoo.com/cnquery/v12/providers/k8s/connection/api"
-	"go.mondoo.com/cnquery/v12/providers/k8s/connection/manifest"
-	"go.mondoo.com/cnquery/v12/providers/k8s/connection/shared"
-	connectionResources "go.mondoo.com/cnquery/v12/providers/k8s/connection/shared/resources"
-	"go.mondoo.com/cnquery/v12/providers/k8s/resources"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/v13/providers/k8s/connection/admission"
+	"go.mondoo.com/mql/v13/providers/k8s/connection/api"
+	"go.mondoo.com/mql/v13/providers/k8s/connection/manifest"
+	"go.mondoo.com/mql/v13/providers/k8s/connection/shared"
+	connectionResources "go.mondoo.com/mql/v13/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/mql/v13/providers/k8s/resources"
 )
 
 const ConnectionType = "k8s"
@@ -206,7 +206,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return runtime.Connection.(shared.Connection), nil
 }
 
-func (s *Service) discover(conn shared.Connection, features cnquery.Features) (*inventory.Inventory, error) {
+func (s *Service) discover(conn shared.Connection, features mql.Features) (*inventory.Inventory, error) {
 	if conn.InventoryConfig().Discover == nil {
 		return nil, nil
 	}

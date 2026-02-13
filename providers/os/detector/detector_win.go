@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/shared"
-	win "go.mondoo.com/cnquery/v12/providers/os/detector/windows"
-	"go.mondoo.com/cnquery/v12/providers/os/registry"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	win "go.mondoo.com/mql/v13/providers/os/detector/windows"
+	"go.mondoo.com/mql/v13/providers/os/registry"
 )
 
 // runtimeWindowsDetector uses powershell to gather information about the windows system

@@ -8,12 +8,12 @@ import "llx/llx.proto";
 import "providers-sdk/v1/inventory/inventory.proto";
 import "providers-sdk/v1/upstream/upstream.proto";
 
-option go_package = "go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin";
+option go_package = "go.mondoo.com/mql/v13/providers-sdk/v1/plugin";
 
 message ParseCLIReq {
   string connector = 1;
   repeated string args = 2;
-  map<string,cnquery.llx.Primitive> flags = 3;
+  map<string,mql.llx.Primitive> flags = 3;
 }
 
 message ParseCLIRes {
@@ -27,7 +27,7 @@ message ConnectReq {
   Asset asset = 3;
   bool has_recording = 20;
   uint32 callback_server = 21;
-  mondoo.cnquery.upstream.v1.UpstreamConfig upstream = 22;
+  mondoo.mql.upstream.v1.UpstreamConfig upstream = 22;
 }
 
 message ConnectRes {
@@ -50,11 +50,11 @@ message DataReq {
   string resource = 3;
   string resource_id = 4;
   string field = 5; 
-  map<string,cnquery.llx.Primitive> args = 6;
+  map<string,mql.llx.Primitive> args = 6;
 }
 
 message DataRes {
-  cnquery.llx.Primitive data = 1;
+  mql.llx.Primitive data = 1;
   string error = 2;
   // The ID uniquely identifies this request and all associated callbacks
   string id = 3;
@@ -72,7 +72,7 @@ message StoreReq {
 message ResourceData {
   string name = 3;
   string id = 4;
-  map<string, cnquery.llx.Result> fields = 5;
+  map<string, mql.llx.Result> fields = 5;
 }
 
 message StoreRes {

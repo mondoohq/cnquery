@@ -13,7 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/mqlr/lrcore"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/mqlr/lrcore"
 	"sigs.k8s.io/yaml"
 )
 

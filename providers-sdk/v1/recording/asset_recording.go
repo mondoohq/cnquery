@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"sort"
 
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
 func NewAssetRecording(asset *inventory.Asset) *Asset {

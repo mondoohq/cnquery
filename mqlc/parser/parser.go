@@ -254,7 +254,7 @@ func (p *parser) rewind(token lexer.Token) {
 }
 
 var (
-	reUnescape  = regexp.MustCompile("\\\\.")
+	reUnescape  = regexp.MustCompile(`\\.`)
 	unescapeMap = map[string]string{
 		"\\n": "\n",
 		"\\t": "\t",
@@ -739,24 +739,26 @@ func (p *parser) parseOperation() (*Operation, error) {
 		}
 	case "=":
 		_ = p.nextToken()
-		if p.token.Value == "=" {
+		switch p.token.Value {
+		case "=":
 			res.Operator = OpEqual
 			_ = p.nextToken()
-		} else if p.token.Value == "~" {
+		case "~":
 			res.Operator = OpCmp
 			_ = p.nextToken()
-		} else {
+		default:
 			res.Operator = OpAssignment
 		}
 	case "!":
 		_ = p.nextToken()
-		if p.token.Value == "=" {
+		switch p.token.Value {
+		case "=":
 			res.Operator = OpNotEqual
 			_ = p.nextToken()
-		} else if p.token.Value == "~" {
+		case "~":
 			res.Operator = OpNotCmp
 			_ = p.nextToken()
-		} else {
+		default:
 			return nil, p.expected("!= or !~", "parseOperation")
 		}
 	case "<":
@@ -837,11 +839,7 @@ func (p *parser) parseExpression() (*Expression, error) {
 	}
 
 	var operation *Operation
-	for {
-		if p.token.Value == "," {
-			break
-		}
-
+	for p.token.Value != "," {
 		operation, err = p.parseOperation()
 		if operation == nil {
 			break

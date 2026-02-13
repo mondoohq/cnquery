@@ -11,14 +11,14 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mattn/go-isatty"
-	"go.mondoo.com/cnquery/v12"
-	"go.mondoo.com/cnquery/v12/cli/theme"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/mql"
-	"go.mondoo.com/cnquery/v12/mqlc"
-	"go.mondoo.com/cnquery/v12/providers"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v12/utils/stringx"
+	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/cli/theme"
+	"go.mondoo.com/mql/v13/exec"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/v13/providers"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/v13/utils/stringx"
 )
 
 // Option configures a ShellProgram
@@ -31,8 +31,8 @@ func WithTheme(theme *ShellTheme) Option {
 	}
 }
 
-// WithFeatures sets the cnquery features
-func WithFeatures(features cnquery.Features) Option {
+// WithFeatures sets mql features
+func WithFeatures(features mql.Features) Option {
 	return func(s *ShellProgram) {
 		s.features = features
 	}
@@ -71,7 +71,7 @@ func WithMaxLines(n int) Option {
 type ShellProgram struct {
 	runtime        llx.Runtime
 	theme          *ShellTheme
-	features       cnquery.Features
+	features       mql.Features
 	upstreamConfig *upstream.UpstreamConfig
 	onCloseHandler func()
 	out            io.Writer
@@ -85,7 +85,7 @@ func NewShell(runtime llx.Runtime, opts ...Option) *ShellProgram {
 	s := &ShellProgram{
 		runtime:    runtime,
 		theme:      DefaultShellTheme,
-		features:   cnquery.DefaultFeatures,
+		features:   mql.DefaultFeatures,
 		out:        os.Stdout,
 		maxLines:   1024,
 		printTheme: theme.DefaultTheme,
@@ -182,7 +182,7 @@ func (s *ShellProgram) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.Raw
 
 // RunOnceBundle executes a pre-compiled code bundle and returns results (non-interactive)
 func (s *ShellProgram) RunOnceBundle(code *llx.CodeBundle) (map[string]*llx.RawResult, error) {
-	return mql.ExecuteCode(s.runtime, code, nil, s.features)
+	return exec.ExecuteCode(s.runtime, code, nil, s.features)
 }
 
 // PrintResults prints the results of a query execution to the output writer

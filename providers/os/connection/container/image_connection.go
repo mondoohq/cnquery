@@ -13,14 +13,14 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/cli/tmp"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/container/auth"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/container/image"
-	"go.mondoo.com/cnquery/v12/providers/os/connection/tar"
-	"go.mondoo.com/cnquery/v12/providers/os/id/containerid"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/discovery/container_registry"
+	"go.mondoo.com/mql/v13/cli/tmp"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/container/auth"
+	"go.mondoo.com/mql/v13/providers/os/connection/container/image"
+	"go.mondoo.com/mql/v13/providers/os/connection/tar"
+	"go.mondoo.com/mql/v13/providers/os/id/containerid"
+	"go.mondoo.com/mql/v13/providers/os/resources/discovery/container_registry"
 )
 
 const (
