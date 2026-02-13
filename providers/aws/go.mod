@@ -26,12 +26,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.5
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.55.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.285.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.288.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.10
-	github.com/aws/aws-sdk-go-v2/service/eks v1.77.1
+	github.com/aws/aws-sdk-go-v2/service/eks v1.80.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.9
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.19
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.6
@@ -47,7 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.43.9
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.57.1
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.2
-	github.com/aws/aws-sdk-go-v2/service/rds v1.114.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.115.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.68.0

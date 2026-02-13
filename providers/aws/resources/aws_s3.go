@@ -682,6 +682,28 @@ func (a *mqlAwsS3Bucket) defaultLock() (string, error) {
 	return string(objectLockConfiguration.ObjectLockConfiguration.ObjectLockEnabled), nil
 }
 
+func (a *mqlAwsS3Bucket) objectLockEnabled() (bool, error) {
+	bucketname := a.Name.Data
+	region := a.Location.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.S3(region)
+	ctx := context.Background()
+
+	objectLockConfiguration, err := svc.GetObjectLockConfiguration(ctx, &s3.GetObjectLockConfigurationInput{
+		Bucket: &bucketname,
+	})
+	if err != nil {
+		if isNotFoundForS3(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return objectLockConfiguration.ObjectLockConfiguration.ObjectLockEnabled == "Enabled", nil
+}
+
 func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {
 	website := a.GetWebsite()
 	if website.Error != nil {

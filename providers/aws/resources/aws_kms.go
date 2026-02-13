@@ -18,6 +18,8 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v12/providers/aws/connection"
+
+	mqlTypes "go.mondoo.com/cnquery/v12/types"
 )
 
 const (
@@ -232,6 +234,50 @@ func (a *mqlAwsKmsKey) description() (string, error) {
 
 func (a *mqlAwsKmsKey) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsKmsKey) grants() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	keyArn := a.Arn.Data
+
+	svc := conn.Kms(a.Region.Data)
+	ctx := context.Background()
+
+	res := []any{}
+	params := &kms.ListGrantsInput{KeyId: &keyArn}
+	paginator := kms.NewListGrantsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		grantsResp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, grant := range grantsResp.Grants {
+			operations := make([]any, len(grant.Operations))
+			for i, op := range grant.Operations {
+				operations[i] = string(op)
+			}
+			mqlGrant, err := CreateResource(a.MqlRuntime, "aws.kms.grant",
+				map[string]*llx.RawData{
+					"__id":              llx.StringData(keyArn + "/grant/" + convert.ToValue(grant.GrantId)),
+					"grantId":           llx.StringDataPtr(grant.GrantId),
+					"keyArn":            llx.StringData(keyArn),
+					"granteePrincipal":  llx.StringDataPtr(grant.GranteePrincipal),
+					"retiringPrincipal": llx.StringDataPtr(grant.RetiringPrincipal),
+					"issuingAccount":    llx.StringDataPtr(grant.IssuingAccount),
+					"operations":        llx.ArrayData(operations, mqlTypes.String),
+					"createdAt":         llx.TimeDataPtr(grant.CreationDate),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlGrant)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsKmsGrant) id() (string, error) {
+	return a.KeyArn.Data + "/grant/" + a.GrantId.Data, nil
 }
 
 func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
