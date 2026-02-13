@@ -1124,7 +1124,7 @@ private aws.iam.group @defaults("arn name") {
   // List of usernames that belong to the group
   usernames []string
   // List of inline policy names attached to the group
-  policies() []string
+  inlinePolicies() []string
 }
 
 // AWS IAM virtual MFA device

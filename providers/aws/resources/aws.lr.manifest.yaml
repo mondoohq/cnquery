@@ -2854,8 +2854,8 @@ resources:
       createdAt:
         min_mondoo_version: 9.0.0
       id: {}
+      inlinePolicies: {}
       name: {}
-      policies: {}
       usernames: {}
     is_private: true
     min_mondoo_version: 5.15.0

@@ -2619,8 +2619,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.group.usernames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetUsernames()).ToDataRes(types.Array(types.String))
 	},
-	"aws.iam.group.policies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamGroup).GetPolicies()).ToDataRes(types.Array(types.String))
+	"aws.iam.group.inlinePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamGroup).GetInlinePolicies()).ToDataRes(types.Array(types.String))
 	},
 	"aws.iam.virtualmfadevice.serialNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamVirtualmfadevice).GetSerialNumber()).ToDataRes(types.String)
@@ -9237,8 +9237,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamGroup).Usernames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.iam.group.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamGroup).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.iam.group.inlinePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamGroup).InlinePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.virtualmfadevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21732,12 +21732,12 @@ type mqlAwsIamGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsIamGroupInternal it will be used here
-	Arn       plugin.TValue[string]
-	Id        plugin.TValue[string]
-	Name      plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	Usernames plugin.TValue[[]any]
-	Policies  plugin.TValue[[]any]
+	Arn            plugin.TValue[string]
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	Usernames      plugin.TValue[[]any]
+	InlinePolicies plugin.TValue[[]any]
 }
 
 // createAwsIamGroup creates a new instance of this resource
@@ -21797,9 +21797,9 @@ func (c *mqlAwsIamGroup) GetUsernames() *plugin.TValue[[]any] {
 	return &c.Usernames
 }
 
-func (c *mqlAwsIamGroup) GetPolicies() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
-		return c.policies()
+func (c *mqlAwsIamGroup) GetInlinePolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InlinePolicies, func() ([]any, error) {
+		return c.inlinePolicies()
 	})
 }
 

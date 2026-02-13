@@ -1359,7 +1359,7 @@ func (a *mqlAwsIamGroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsIamGroup) policies() ([]any, error) {
+func (a *mqlAwsIamGroup) inlinePolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
