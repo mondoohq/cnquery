@@ -16,8 +16,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// extractTarGz extracts a tar.gz archive and returns the name of the mql binary
-func extractTarGz(reader io.Reader, destPath string) (string, error) {
+// extractTarGz extracts a tar.gz archive and returns the name of the target binary.
+// The targetBinary parameter is the base name without extension (e.g., "cnspec", "mql").
+func extractTarGz(reader io.Reader, destPath string, targetBinary string) (string, error) {
 	gzReader, err := gzip.NewReader(reader)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create gzip reader")
@@ -48,10 +49,10 @@ func extractTarGz(reader io.Reader, destPath string) (string, error) {
 			continue
 		}
 
-		// Only extract the mql binary
+		// Only extract files matching the target binary
 		baseName := filepath.Base(name)
-		if !strings.HasPrefix(baseName, "mql") {
-			log.Debug().Str("name", name).Msg("self-update: skipping non-mql file")
+		if !strings.HasPrefix(baseName, targetBinary) {
+			log.Debug().Str("name", name).Msgf("self-update: skipping non-%s file", targetBinary)
 			continue
 		}
 
@@ -72,21 +73,22 @@ func extractTarGz(reader io.Reader, destPath string) (string, error) {
 		f.Close()
 
 		// Track the binary name (without .exe for consistency)
-		if baseName == "mql" || baseName == "mql.exe" {
+		if baseName == targetBinary || baseName == targetBinary+".exe" {
 			binaryName = baseName
 		}
 	}
 
 	if binaryName == "" {
-		return "", errors.New("mql binary not found in archive")
+		return "", errors.Newf("%s binary not found in archive", targetBinary)
 	}
 
 	return binaryName, nil
 }
 
-// extractZip extracts a zip archive and returns the name of the mql binary.
+// extractZip extracts a zip archive and returns the name of the target binary.
+// The targetBinary parameter is the base name without extension (e.g., "cnspec", "mql").
 // Note: zip requires random access, so we need the file path, not just a reader.
-func extractZip(reader io.Reader, destPath string, archivePath string) (string, error) {
+func extractZip(reader io.Reader, destPath string, archivePath string, targetBinary string) (string, error) {
 	// For zip, we need to use the file path because zip requires random access
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
@@ -109,10 +111,10 @@ func extractZip(reader io.Reader, destPath string, archivePath string) (string, 
 			continue
 		}
 
-		// Only extract the mql binary
+		// Only extract files matching the target binary
 		baseName := filepath.Base(name)
-		if !strings.HasPrefix(baseName, "mql") {
-			log.Debug().Str("name", name).Msg("self-update: skipping non-mql file")
+		if !strings.HasPrefix(baseName, targetBinary) {
+			log.Debug().Str("name", name).Msgf("self-update: skipping non-%s file", targetBinary)
 			continue
 		}
 
@@ -142,13 +144,13 @@ func extractZip(reader io.Reader, destPath string, archivePath string) (string, 
 		rc.Close()
 
 		// Track the binary name
-		if baseName == "mql" || baseName == "mql.exe" {
+		if baseName == targetBinary || baseName == targetBinary+".exe" {
 			binaryName = baseName
 		}
 	}
 
 	if binaryName == "" {
-		return "", errors.New("mql binary not found in archive")
+		return "", errors.Newf("%s binary not found in archive", targetBinary)
 	}
 
 	return binaryName, nil

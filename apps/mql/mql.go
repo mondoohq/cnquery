@@ -31,6 +31,8 @@ func main() {
 			Enabled:         true,
 			RefreshInterval: selfupdate.DefaultRefreshInterval,
 			ReleaseURL:      releaseURL,
+			BinaryName:      "mql",
+			CurrentVersion:  mql.GetVersion(),
 		}
 		if updated, err := selfupdate.CheckAndUpdate(cfg); err != nil {
 			// Log warning but don't block - only show in debug mode
