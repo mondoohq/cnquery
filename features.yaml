@@ -82,4 +82,4 @@ Features:
   desc: Auto-update the execution engine
   idx: 14
   start: v13.x
-  status: new
+  status: default
