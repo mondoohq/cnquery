@@ -7,6 +7,46 @@ resources:
       compartments: {}
       regions: {}
     min_mondoo_version: 8.10.0
+  oci.cloudGuard:
+    fields:
+      detectorRecipes: {}
+      reportingRegion: {}
+      selfManageResources: {}
+      status: {}
+      targets: {}
+    min_mondoo_version: latest
+    refs:
+    - title: Cloud Guard
+      url: https://docs.oracle.com/en-us/iaas/cloud-guard/home.htm
+  oci.cloudGuard.detectorRecipe:
+    fields:
+      created: {}
+      description: {}
+      detectorType: {}
+      id: {}
+      name: {}
+      owner: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Detector Recipes
+      url: https://docs.oracle.com/en-us/iaas/cloud-guard/using/detect-recipes.htm
+  oci.cloudGuard.target:
+    fields:
+      compartmentID: {}
+      created: {}
+      id: {}
+      name: {}
+      recipeCount: {}
+      state: {}
+      targetResourceId: {}
+      targetResourceType: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Cloud Guard Targets
+      url: https://docs.oracle.com/en-us/iaas/cloud-guard/using/targets.htm
   oci.compartment:
     fields:
       created: {}
@@ -21,12 +61,48 @@ resources:
       url: https://docs.oracle.com/en/cloud/foundation/cloud_architecture/governance/compartments.html
   oci.compute:
     fields:
+      blockVolumes: {}
+      bootVolumes: {}
       images: {}
       instances: {}
     min_mondoo_version: 8.10.0
     refs:
     - title: Compute
       url: https://docs.oracle.com/en-us/iaas/Content/Compute/home.htm
+  oci.compute.blockVolume:
+    fields:
+      availabilityDomain: {}
+      compartmentID: {}
+      created: {}
+      id: {}
+      isAutoTuneEnabled: {}
+      isHydrated: {}
+      kmsKeyId: {}
+      name: {}
+      sizeInGBs: {}
+      state: {}
+      vpusPerGB: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Block Volumes
+      url: https://docs.oracle.com/en-us/iaas/Content/Block/Concepts/overview.htm
+  oci.compute.bootVolume:
+    fields:
+      availabilityDomain: {}
+      compartmentID: {}
+      created: {}
+      id: {}
+      imageId: {}
+      kmsKeyId: {}
+      name: {}
+      sizeInGBs: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Boot Volumes
+      url: https://docs.oracle.com/en-us/iaas/Content/Block/Concepts/bootvolumes.htm
   oci.compute.image:
     fields:
       compartment:
@@ -73,16 +149,67 @@ resources:
       id: {}
       imageId:
         min_mondoo_version: 11.0.133
+      instanceOptions: {}
+      launchOptions: {}
+      metadata: {}
       name: {}
+      platformConfig: {}
       region: {}
       shape:
         min_mondoo_version: 11.0.133
+      shapeConfig: {}
+      sourceDetails: {}
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
     refs:
     - title: Working with Instances
       url: https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/instances.htm
+  oci.events:
+    fields:
+      rules: {}
+    min_mondoo_version: latest
+    refs:
+    - title: Events
+      url: https://docs.oracle.com/en-us/iaas/Content/Events/Concepts/eventsoverview.htm
+  oci.events.rule:
+    fields:
+      actions: {}
+      compartmentID: {}
+      condition: {}
+      created: {}
+      description: {}
+      id: {}
+      isEnabled: {}
+      name: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Event Rules
+      url: https://docs.oracle.com/en-us/iaas/Content/Events/Task/managingrules.htm
+  oci.fileStorage:
+    fields:
+      fileSystems: {}
+    min_mondoo_version: latest
+    refs:
+    - title: File Storage
+      url: https://docs.oracle.com/en-us/iaas/Content/File/Concepts/filestorageoverview.htm
+  oci.fileStorage.fileSystem:
+    fields:
+      availabilityDomain: {}
+      compartmentID: {}
+      created: {}
+      id: {}
+      kmsKeyId: {}
+      meteredBytes: {}
+      name: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: File Systems
+      url: https://docs.oracle.com/en-us/iaas/Content/File/Concepts/filestorageoverview.htm
   oci.identity:
     fields:
       groups: {}
@@ -179,14 +306,105 @@ resources:
     refs:
     - title: Managing Users
       url: https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managingusers.htm
+  oci.kms:
+    fields:
+      vaults: {}
+    min_mondoo_version: latest
+    refs:
+    - title: Key Management
+      url: https://docs.oracle.com/en-us/iaas/Content/KeyManagement/home.htm
+  oci.kms.key:
+    fields:
+      algorithm: {}
+      compartmentID: {}
+      created: {}
+      id: {}
+      name: {}
+      protectionMode: {}
+      state: {}
+      vaultId: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Managing Keys
+      url: https://docs.oracle.com/en-us/iaas/Content/KeyManagement/Tasks/managingkeys.htm
+  oci.kms.vault:
+    fields:
+      compartmentID: {}
+      created: {}
+      id: {}
+      keys: {}
+      managementEndpoint: {}
+      name: {}
+      state: {}
+      vaultType: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Managing Vaults
+      url: https://docs.oracle.com/en-us/iaas/Content/KeyManagement/Tasks/managingvaults.htm
+  oci.logging:
+    fields:
+      logGroups: {}
+    min_mondoo_version: latest
+    refs:
+    - title: Logging
+      url: https://docs.oracle.com/en-us/iaas/Content/Logging/home.htm
+  oci.logging.log:
+    fields:
+      configuration: {}
+      id: {}
+      isEnabled: {}
+      logGroupId: {}
+      logType: {}
+      name: {}
+      retentionDuration: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Managing Logs
+      url: https://docs.oracle.com/en-us/iaas/Content/Logging/Task/managinglogs.htm
+  oci.logging.logGroup:
+    fields:
+      compartmentID: {}
+      created: {}
+      description: {}
+      id: {}
+      logs: {}
+      name: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Managing Log Groups
+      url: https://docs.oracle.com/en-us/iaas/Content/Logging/Task/managingloggroups.htm
   oci.network:
     fields:
+      networkSecurityGroups: {}
       securityLists: {}
       vcns: {}
     min_mondoo_version: 8.10.0
     refs:
     - title: Core Network Capabilities
       url: https://docs.oracle.com/en/cloud/foundation/cloud_architecture/network/corecapabilities.html
+  oci.network.networkSecurityGroup:
+    fields:
+      compartmentID: {}
+      created: {}
+      definedTags: {}
+      egressSecurityRules: {}
+      freeformTags: {}
+      id: {}
+      ingressSecurityRules: {}
+      name: {}
+      state: {}
+      vcnId: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Network Security Groups
+      url: https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/networksecuritygroups.htm
   oci.network.securityList:
     fields:
       compartmentID: {}
@@ -267,6 +485,8 @@ resources:
       name: {}
       namespace: {}
       objectEventsEnabled: {}
+      objectLifecyclePolicyEtag:
+        min_mondoo_version: 9.0.0
       ocid:
         min_mondoo_version: 9.0.0
       publicAccessType: {}
@@ -279,6 +499,40 @@ resources:
     refs:
     - title: Object Storage Buckets
       url: https://docs.oracle.com/en-us/iaas/Content/Object/Tasks/managingbuckets.htm
+  oci.ons:
+    fields:
+      topics: {}
+    min_mondoo_version: latest
+    refs:
+    - title: Notifications
+      url: https://docs.oracle.com/en-us/iaas/Content/Notification/home.htm
+  oci.ons.subscription:
+    fields:
+      created: {}
+      endpoint: {}
+      id: {}
+      protocol: {}
+      state: {}
+      topicId: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Notification Subscriptions
+      url: https://docs.oracle.com/en-us/iaas/Content/Notification/Tasks/managingtopicsandsubscriptions.htm
+  oci.ons.topic:
+    fields:
+      compartmentID: {}
+      created: {}
+      description: {}
+      id: {}
+      name: {}
+      state: {}
+      subscriptions: {}
+    is_private: true
+    min_mondoo_version: latest
+    refs:
+    - title: Notification Topics
+      url: https://docs.oracle.com/en-us/iaas/Content/Notification/Tasks/managingtopicsandsubscriptions.htm
   oci.region:
     fields:
       id: {}

@@ -32,6 +32,20 @@ func boolValue(s *bool) bool {
 	return *s
 }
 
+func int64Value(i *int64) int64 {
+	if i == nil {
+		return 0
+	}
+	return *i
+}
+
+func intValue(i *int) int64 {
+	if i == nil {
+		return 0
+	}
+	return int64(*i)
+}
+
 func jobErr(err error) []*jobpool.Job {
 	return []*jobpool.Job{{Err: err}}
 }

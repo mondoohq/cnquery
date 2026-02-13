@@ -227,6 +227,11 @@ func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, e
 	response, err := client.GetBucket(context.Background(), objectstorage.GetBucketRequest{
 		NamespaceName: common.String(namespace.Data),
 		BucketName:    common.String(name.Data),
+		Fields: []objectstorage.GetBucketFieldsEnum{
+			objectstorage.GetBucketFieldsApproximatecount,
+			objectstorage.GetBucketFieldsApproximatesize,
+			objectstorage.GetBucketFieldsAutotiering,
+		},
 	})
 	if err != nil {
 		return nil, err
@@ -337,6 +342,17 @@ func (o *mqlOciObjectStorageBucket) approximateSize() (int64, error) {
 		return 0, nil
 	}
 	return *bucketInfo.ApproximateSize, nil
+}
+
+func (o *mqlOciObjectStorageBucket) objectLifecyclePolicyEtag() (string, error) {
+	bucketInfo, err := o.getBucketDetails()
+	if err != nil {
+		return "", err
+	}
+	if bucketInfo.ObjectLifecyclePolicyEtag == nil {
+		return "", nil
+	}
+	return *bucketInfo.ObjectLifecyclePolicyEtag, nil
 }
 
 func (o *mqlOciObjectStorageBucket) freeformTags() (map[string]interface{}, error) {

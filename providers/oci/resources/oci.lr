@@ -190,6 +190,10 @@ oci.compute {
   instances() []oci.compute.instance
   // Compute images
   images() []oci.compute.image
+  // Block volumes
+  blockVolumes() []oci.compute.blockVolume
+  // Boot volumes
+  bootVolumes() []oci.compute.bootVolume
 }
 
 // Oracle Cloud Infrastructure (OCI) Compute instance
@@ -216,6 +220,18 @@ private oci.compute.instance @defaults("name") {
   imageId string
   // Dedicated VM host OCID if running on dedicated infrastructure
   dedicatedVmHostId string
+  // Platform security configuration (Secure Boot, TPM, Measured Boot, memory encryption)
+  platformConfig dict
+  // Launch configuration options (boot volume type, firmware, network type, encryption)
+  launchOptions dict
+  // Instance runtime options (legacy IMDS endpoint configuration)
+  instanceOptions dict
+  // Shape configuration details (OCPUs, memory, GPUs)
+  shapeConfig dict
+  // Boot volume or image source details
+  sourceDetails dict
+  // Instance metadata key-value pairs
+  metadata map[string]string
   // Free-form tags for resource management
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
@@ -248,12 +264,62 @@ private oci.compute.image @defaults("name") {
   definedTags map[string]map[string]string
 }
 
+// Oracle Cloud Infrastructure (OCI) block volume
+private oci.compute.blockVolume @defaults("name") {
+  // Block volume OCID
+  id string
+  // Block volume display name
+  name string
+  // Compartment OCID containing the block volume
+  compartmentID string
+  // Availability domain where the block volume is located
+  availabilityDomain string
+  // Size of the block volume in GBs
+  sizeInGBs int
+  // Volume performance units per GB
+  vpusPerGB int
+  // Block volume lifecycle state (e.g., AVAILABLE, TERMINATED)
+  state string
+  // Whether the cloned volume's data has finished copying from the source
+  isHydrated bool
+  // KMS key OCID for volume encryption
+  kmsKeyId string
+  // Whether auto-tune performance is enabled
+  isAutoTuneEnabled bool
+  // Block volume creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) boot volume
+private oci.compute.bootVolume @defaults("name") {
+  // Boot volume OCID
+  id string
+  // Boot volume display name
+  name string
+  // Compartment OCID containing the boot volume
+  compartmentID string
+  // Availability domain where the boot volume is located
+  availabilityDomain string
+  // Size of the boot volume in GBs
+  sizeInGBs int
+  // Image OCID used to create the boot volume
+  imageId string
+  // Boot volume lifecycle state (e.g., AVAILABLE, TERMINATED)
+  state string
+  // KMS key OCID for volume encryption
+  kmsKeyId string
+  // Boot volume creation time
+  created time
+}
+
 // Oracle Cloud Infrastructure (OCI) Networking service
 oci.network {
   // Virtual Cloud Networks (VCNs)
   vcns() []oci.network.vcn
   // VCN security lists
   securityLists() []oci.network.securityList
+  // Network Security Groups (NSGs)
+  networkSecurityGroups() []oci.network.networkSecurityGroup
 }
 
 // Oracle Cloud Infrastructure (OCI) Virtual Cloud Network (VCN)
@@ -312,6 +378,120 @@ private oci.network.securityList @defaults("name") {
   definedTags map[string]map[string]string
 }
 
+// Oracle Cloud Infrastructure (OCI) Network Security Group (virtual firewall rules for VNICs)
+private oci.network.networkSecurityGroup @defaults("name") {
+  // NSG OCID
+  id string
+  // NSG display name
+  name string
+  // Compartment OCID containing the NSG
+  compartmentID string
+  // VCN OCID the NSG belongs to
+  vcnId string
+  // NSG lifecycle state (e.g., AVAILABLE, PROVISIONING, TERMINATED)
+  state string
+  // NSG creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // Ingress security rules
+  ingressSecurityRules() []dict
+  // Egress security rules
+  egressSecurityRules() []dict
+}
+
+// Oracle Cloud Infrastructure (OCI) Logging service
+oci.logging {
+  // Log groups in the tenancy
+  logGroups() []oci.logging.logGroup
+}
+
+// Oracle Cloud Infrastructure (OCI) log group
+private oci.logging.logGroup @defaults("name") {
+  // Log group OCID
+  id string
+  // Display name
+  name string
+  // Log group description
+  description string
+  // Compartment OCID
+  compartmentID string
+  // Lifecycle state (e.g., ACTIVE, CREATING)
+  state string
+  // Logs in the group
+  logs() []oci.logging.log
+  // Creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) log
+private oci.logging.log @defaults("name") {
+  // Log OCID
+  id string
+  // Display name
+  name string
+  // Log type (SERVICE, CUSTOM)
+  logType string
+  // Parent log group OCID
+  logGroupId string
+  // Whether the log is enabled
+  isEnabled bool
+  // Lifecycle state (e.g., ACTIVE, CREATING)
+  state string
+  // Retention duration in days
+  retentionDuration int
+  // Log configuration (source type, category, resource)
+  configuration dict
+}
+
+// Oracle Cloud Infrastructure (OCI) Key Management service
+oci.kms {
+  // Key vaults in the tenancy
+  vaults() []oci.kms.vault
+}
+
+// Oracle Cloud Infrastructure (OCI) KMS vault
+private oci.kms.vault @defaults("name") {
+  // Vault OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Vault type (DEFAULT, VIRTUAL_PRIVATE, EXTERNAL)
+  vaultType string
+  // Lifecycle state (e.g., ACTIVE, PENDING_DELETION)
+  state string
+  // Vault management endpoint
+  managementEndpoint string
+  // Keys in the vault
+  keys() []oci.kms.key
+  // Creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) KMS key
+private oci.kms.key @defaults("name") {
+  // Key OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Parent vault OCID
+  vaultId string
+  // Key algorithm (AES, RSA, ECDSA)
+  algorithm string
+  // Protection mode (HSM, SOFTWARE, EXTERNAL)
+  protectionMode string
+  // Lifecycle state (e.g., ENABLED, PENDING_DELETION)
+  state string
+  // Creation time
+  created time
+}
+
 // Oracle Cloud Infrastructure (OCI) Object Storage service
 oci.objectStorage {
   // Object Storage namespace (unique per tenancy)
@@ -356,8 +536,156 @@ private oci.objectStorage.bucket {
   approximateCount() int
   // Approximate total size of objects in bytes
   approximateSize() int
+  // Object lifecycle policy ETag
+  objectLifecyclePolicyEtag() string
   // Free-form tags for resource management
   freeformTags() map[string]string
   // Defined tags for governance and cost tracking
   definedTags() map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) File Storage service
+oci.fileStorage {
+  // File systems
+  fileSystems() []oci.fileStorage.fileSystem
+}
+
+// Oracle Cloud Infrastructure (OCI) file system
+private oci.fileStorage.fileSystem @defaults("name") {
+  // File system OCID
+  id string
+  // File system display name
+  name string
+  // Compartment OCID containing the file system
+  compartmentID string
+  // Availability domain where the file system is located
+  availabilityDomain string
+  // File system lifecycle state (e.g., ACTIVE, DELETING)
+  state string
+  // KMS key OCID for file system encryption
+  kmsKeyId string
+  // Number of bytes consumed by the file system including snapshots
+  meteredBytes int
+  // File system creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) Events service
+oci.events {
+  // Event rules
+  rules() []oci.events.rule
+}
+
+// Oracle Cloud Infrastructure (OCI) event rule
+private oci.events.rule @defaults("name") {
+  // Rule OCID
+  id string
+  // Rule display name
+  name string
+  // Rule description
+  description string
+  // Compartment OCID containing the rule
+  compartmentID string
+  // Event matching condition (JSON)
+  condition string
+  // Whether the rule is enabled
+  isEnabled bool
+  // Rule lifecycle state (e.g., ACTIVE, INACTIVE)
+  state string
+  // Actions to perform when the rule matches an event
+  actions() []dict
+  // Rule creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) Cloud Guard threat detection and security monitoring
+oci.cloudGuard {
+  // Cloud Guard status (ENABLED or DISABLED)
+  status() string
+  // Region where Cloud Guard reports findings
+  reportingRegion() string
+  // Whether Cloud Guard resources are self-managed
+  selfManageResources() bool
+  // Cloud Guard targets (monitored compartments/resources)
+  targets() []oci.cloudGuard.target
+  // Cloud Guard detector recipes
+  detectorRecipes() []oci.cloudGuard.detectorRecipe
+}
+
+// Oracle Cloud Infrastructure (OCI) Cloud Guard target
+private oci.cloudGuard.target @defaults("name") {
+  // Target OCID
+  id string
+  // Target display name
+  name string
+  // Compartment OCID containing the target
+  compartmentID string
+  // OCID of the resource being monitored
+  targetResourceId string
+  // Type of resource being monitored (COMPARTMENT, FACLOUD, etc.)
+  targetResourceType string
+  // Target lifecycle state (e.g., ACTIVE, DELETED)
+  state string
+  // Number of detector recipes attached to the target
+  recipeCount int
+  // Target creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) Cloud Guard detector recipe
+private oci.cloudGuard.detectorRecipe @defaults("name") {
+  // Detector recipe OCID
+  id string
+  // Detector recipe display name
+  name string
+  // Detector recipe description
+  description string
+  // Owner of the detector recipe (CUSTOMER or ORACLE)
+  owner string
+  // Type of detector (IAAS_ACTIVITY_DETECTOR, IAAS_CONFIGURATION_DETECTOR, etc.)
+  detectorType string
+  // Detector recipe lifecycle state (e.g., ACTIVE, DELETED)
+  state string
+  // Detector recipe creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) Notifications (ONS) service
+oci.ons {
+  // Notification topics
+  topics() []oci.ons.topic
+}
+
+// Oracle Cloud Infrastructure (OCI) notification topic
+private oci.ons.topic @defaults("name") {
+  // Topic OCID
+  id string
+  // Topic name
+  name string
+  // Topic description
+  description string
+  // Compartment OCID containing the topic
+  compartmentID string
+  // Topic lifecycle state (e.g., ACTIVE, DELETING)
+  state string
+  // Topic creation time
+  created time
+  // Topic subscriptions
+  subscriptions() []oci.ons.subscription
+}
+
+// Oracle Cloud Infrastructure (OCI) notification subscription
+private oci.ons.subscription @defaults("id") {
+  // Subscription OCID
+  id string
+  // Topic OCID the subscription belongs to
+  topicId string
+  // Delivery protocol (EMAIL, HTTPS, SLACK, etc.)
+  protocol string
+  // Delivery endpoint
+  endpoint string
+  // Subscription lifecycle state (e.g., ACTIVE, PENDING)
+  state string
+  // Subscription creation time
+  created time
 }
