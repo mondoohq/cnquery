@@ -27,9 +27,9 @@ on:
         default: false
         type: boolean
       skip-cnspec-bump:
-        description: "Skip triggering cnquery version bump in cnspec"
+        description: "Skip triggering mql version bump in cnspec"
         required: false
-        default: true
+        default: false
         type: boolean
       make-latest:
         description: "Mark GitHub release as 'latest'"
