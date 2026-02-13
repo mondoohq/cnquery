@@ -25,7 +25,7 @@ func setup() {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	if err := cmd.Run(); err != nil {
-		log.Fatalf("building cnquery: %v", err)
+		log.Fatalf("building mql: %v", err)
 	}
 
 	// install local provider

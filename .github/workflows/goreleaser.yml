@@ -26,6 +26,16 @@ on:
         required: false
         default: false
         type: boolean
+      skip-cnspec-bump:
+        description: "Skip triggering cnquery version bump in cnspec"
+        required: false
+        default: false
+        type: boolean
+      make-latest:
+        description: "Mark GitHub release as 'latest'"
+        required: false
+        default: true
+        type: boolean
 
 env:
   REGISTRY: docker.io
@@ -160,6 +170,7 @@ jobs:
           TSIGN_ACCOUNT_NAME: ${{ vars.TSIGN_ACCOUNT_NAME }}
           TSIGN_CERT_PROFILE_NAME: ${{ github.event.inputs.use-test-cert == 'true' && vars.TSIGN_TEST_CERT_PROFILE_NAME || vars.TSIGN_CERT_PROFILE_NAME }}
           TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.TSIGN_ACCESS_TOKEN }}
+          MAKE_LATEST: ${{ inputs.make-latest == false && 'false' || 'true' }}
 
       - name: Run GoReleaser (w/o Docker Release)
         if: ${{ inputs.skip-publish == true }}
@@ -186,6 +197,7 @@ jobs:
           TSIGN_ACCOUNT_NAME: ${{ vars.TSIGN_ACCOUNT_NAME }}
           TSIGN_CERT_PROFILE_NAME: ${{ github.event.inputs.use-test-cert == 'true' && vars.TSIGN_TEST_CERT_PROFILE_NAME || vars.TSIGN_CERT_PROFILE_NAME }}
           TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.TSIGN_ACCESS_TOKEN }}
+          MAKE_LATEST: ${{ inputs.make-latest == false && 'false' || 'true' }}
 
       - name: Check RPMs
         run: |
@@ -212,7 +224,7 @@ jobs:
       # We can now trigger the mql bump in cnspec, which will also trigger the release of cnspec.
       # The docker container is a pre-requisite for cnspec release.
       - name: Trigger mql bump in cnspec
-        if: ${{ inputs.skip-publish != true }}
+        if: ${{ inputs.skip-publish != true && inputs.skip-cnspec-bump != true && inputs.make-latest != false }}
         uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697 # v4.0.1
         with:
           token: ${{ secrets.RELEASR_ACTION_TOKEN }}
