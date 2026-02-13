@@ -2340,7 +2340,7 @@ resources:
   gcp.project.secretmanagerService.secret:
     fields:
       annotations: {}
-      created: {}
+      createTime: {}
       customerManagedEncryption: {}
       etag: {}
       expireTime: {}

@@ -125,9 +125,9 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			}
 		}
 
-		versionAliasesDict := make(map[string]interface{})
+		versionAliasesMap := make(map[string]interface{})
 		for k, v := range s.VersionAliases {
-			versionAliasesDict[k] = v
+			versionAliasesMap[k] = int64(v)
 		}
 
 		var mqlVersionDestroyTtl *time.Time
@@ -142,14 +142,14 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			"projectId":                 llx.StringData(projectId),
 			"resourcePath":              llx.StringData(s.Name),
 			"name":                      llx.StringData(parseResourceName(s.Name)),
-			"created":                   llx.TimeDataPtr(timestampAsTimePtr(s.CreateTime)),
+			"createTime":                llx.TimeDataPtr(timestampAsTimePtr(s.CreateTime)),
 			"labels":                    llx.MapData(convert.MapToInterfaceMap(s.Labels), types.String),
 			"replication":               llx.DictData(replicationDict),
 			"topics":                    llx.ArrayData(topicNames, types.String),
 			"expireTime":                llx.TimeDataPtr(timestampAsTimePtr(s.GetExpireTime())),
 			"etag":                      llx.StringData(s.Etag),
 			"rotation":                  llx.DictData(rotationDict),
-			"versionAliases":            llx.DictData(versionAliasesDict),
+			"versionAliases":            llx.MapData(versionAliasesMap, types.Int),
 			"annotations":               llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
 			"versionDestroyTtl":         llx.TimeDataPtr(mqlVersionDestroyTtl),
 			"customerManagedEncryption": llx.ArrayData(cmeKeys, types.String),

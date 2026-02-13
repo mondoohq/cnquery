@@ -3265,7 +3265,7 @@ private gcp.project.secretmanagerService {
 }
 
 // Google Cloud (GCP) Secret Manager secret
-private gcp.project.secretmanagerService.secret @defaults("name created") {
+private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   // Project ID
   projectId string
   // Full resource path (projects/*/secrets/*)
@@ -3273,7 +3273,7 @@ private gcp.project.secretmanagerService.secret @defaults("name created") {
   // Secret name
   name string
   // Time the secret was created
-  created time
+  createTime time
   // User-assigned labels
   labels map[string]string
   // Replication policy configuration
@@ -3287,7 +3287,7 @@ private gcp.project.secretmanagerService.secret @defaults("name created") {
   // Rotation policy configuration
   rotation dict
   // Version aliases mapping alias names to version numbers
-  versionAliases dict
+  versionAliases map[string]int
   // Custom metadata annotations
   annotations map[string]string
   // Version destroy TTL duration

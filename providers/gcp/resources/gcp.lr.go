@@ -4802,8 +4802,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.secretmanagerService.secret.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetName()).ToDataRes(types.String)
 	},
-	"gcp.project.secretmanagerService.secret.created": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetCreated()).ToDataRes(types.Time)
+	"gcp.project.secretmanagerService.secret.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetCreateTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.secretmanagerService.secret.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetLabels()).ToDataRes(types.Map(types.String, types.String))
@@ -4824,7 +4824,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetRotation()).ToDataRes(types.Dict)
 	},
 	"gcp.project.secretmanagerService.secret.versionAliases": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetVersionAliases()).ToDataRes(types.Dict)
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetVersionAliases()).ToDataRes(types.Map(types.String, types.Int))
 	},
 	"gcp.project.secretmanagerService.secret.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
@@ -10760,8 +10760,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSecretmanagerServiceSecret).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gcp.project.secretmanagerService.secret.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectSecretmanagerServiceSecret).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"gcp.project.secretmanagerService.secret.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.secretmanagerService.secret.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10789,7 +10789,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.secretmanagerService.secret.versionAliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectSecretmanagerServiceSecret).VersionAliases, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).VersionAliases, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.secretmanagerService.secret.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24898,14 +24898,14 @@ type mqlGcpProjectSecretmanagerServiceSecret struct {
 	ProjectId                 plugin.TValue[string]
 	ResourcePath              plugin.TValue[string]
 	Name                      plugin.TValue[string]
-	Created                   plugin.TValue[*time.Time]
+	CreateTime                plugin.TValue[*time.Time]
 	Labels                    plugin.TValue[map[string]any]
 	Replication               plugin.TValue[any]
 	Topics                    plugin.TValue[[]any]
 	ExpireTime                plugin.TValue[*time.Time]
 	Etag                      plugin.TValue[string]
 	Rotation                  plugin.TValue[any]
-	VersionAliases            plugin.TValue[any]
+	VersionAliases            plugin.TValue[map[string]any]
 	Annotations               plugin.TValue[map[string]any]
 	VersionDestroyTtl         plugin.TValue[*time.Time]
 	CustomerManagedEncryption plugin.TValue[[]any]
@@ -24962,8 +24962,8 @@ func (c *mqlGcpProjectSecretmanagerServiceSecret) GetName() *plugin.TValue[strin
 	return &c.Name
 }
 
-func (c *mqlGcpProjectSecretmanagerServiceSecret) GetCreated() *plugin.TValue[*time.Time] {
-	return &c.Created
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
 }
 
 func (c *mqlGcpProjectSecretmanagerServiceSecret) GetLabels() *plugin.TValue[map[string]any] {
@@ -24990,7 +24990,7 @@ func (c *mqlGcpProjectSecretmanagerServiceSecret) GetRotation() *plugin.TValue[a
 	return &c.Rotation
 }
 
-func (c *mqlGcpProjectSecretmanagerServiceSecret) GetVersionAliases() *plugin.TValue[any] {
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetVersionAliases() *plugin.TValue[map[string]any] {
 	return &c.VersionAliases
 }
 
