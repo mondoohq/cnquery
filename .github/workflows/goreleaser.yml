@@ -62,9 +62,12 @@ jobs:
           fetch-depth: 0
 
       - name: Dump all inputs
-        run: echo "${{ toJSON(inputs) }}"
-
-      - name: Skip Publish for Alpha and Beta Tags
+        run: |
+          echo "${{ toJSON(inputs) }}"
+          echo "github.ref: ${{ github.ref }}"
+          echo "github.ref_name: ${{ github.ref_name }}"
+          echo "github.event_name: ${{ github.event_name }}"
+      - name: Skip Publish for non-release tags
         id: skip-publish
         if: contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'pre') || contains(github.ref, 'rc') || inputs.skip-publish == true
         run: |
