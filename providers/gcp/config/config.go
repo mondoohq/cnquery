@@ -55,6 +55,8 @@ Examples with the GCP project configured:
 				resources.DiscoverCloudSQLSQLServer,
 				resources.DiscoverCloudDNSZones,
 				resources.DiscoverCloudKMSKeyrings,
+				resources.DiscoverMemorystoreRedis,
+				resources.DiscoverMemorystoreRedisCluster,
 			},
 			Flags: []plugin.Flag{
 				{

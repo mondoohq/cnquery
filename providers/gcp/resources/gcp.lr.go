@@ -22,6 +22,14 @@ const (
 	ResourceGcpProjectRedisService                                                    string = "gcp.project.redisService"
 	ResourceGcpProjectRedisServiceInstance                                            string = "gcp.project.redisService.instance"
 	ResourceGcpProjectRedisServiceInstanceNodeInfo                                    string = "gcp.project.redisService.instance.nodeInfo"
+	ResourceGcpProjectRedisServiceInstanceServerCaCert                                string = "gcp.project.redisService.instance.serverCaCert"
+	ResourceGcpProjectRedisServiceCluster                                             string = "gcp.project.redisService.cluster"
+	ResourceGcpProjectRedisServiceClusterPscConfig                                    string = "gcp.project.redisService.cluster.pscConfig"
+	ResourceGcpProjectRedisServiceClusterDiscoveryEndpoint                            string = "gcp.project.redisService.cluster.discoveryEndpoint"
+	ResourceGcpProjectRedisServiceClusterPscConnection                                string = "gcp.project.redisService.cluster.pscConnection"
+	ResourceGcpProjectRedisServiceClusterBackup                                       string = "gcp.project.redisService.cluster.backup"
+	ResourceGcpProjectRedisServiceClusterClusterEndpoint                              string = "gcp.project.redisService.cluster.clusterEndpoint"
+	ResourceGcpProjectRedisServiceClusterConnectionDetail                             string = "gcp.project.redisService.cluster.connectionDetail"
 	ResourceGcpFolder                                                                 string = "gcp.folder"
 	ResourceGcpProjects                                                               string = "gcp.projects"
 	ResourceGcpProject                                                                string = "gcp.project"
@@ -168,12 +176,44 @@ func init() {
 			Create: createGcpProjectRedisService,
 		},
 		"gcp.project.redisService.instance": {
-			// to override args, implement: initGcpProjectRedisServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectRedisServiceInstance,
 			Create: createGcpProjectRedisServiceInstance,
 		},
 		"gcp.project.redisService.instance.nodeInfo": {
 			// to override args, implement: initGcpProjectRedisServiceInstanceNodeInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectRedisServiceInstanceNodeInfo,
+		},
+		"gcp.project.redisService.instance.serverCaCert": {
+			// to override args, implement: initGcpProjectRedisServiceInstanceServerCaCert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectRedisServiceInstanceServerCaCert,
+		},
+		"gcp.project.redisService.cluster": {
+			Init:   initGcpProjectRedisServiceCluster,
+			Create: createGcpProjectRedisServiceCluster,
+		},
+		"gcp.project.redisService.cluster.pscConfig": {
+			// to override args, implement: initGcpProjectRedisServiceClusterPscConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectRedisServiceClusterPscConfig,
+		},
+		"gcp.project.redisService.cluster.discoveryEndpoint": {
+			// to override args, implement: initGcpProjectRedisServiceClusterDiscoveryEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectRedisServiceClusterDiscoveryEndpoint,
+		},
+		"gcp.project.redisService.cluster.pscConnection": {
+			// to override args, implement: initGcpProjectRedisServiceClusterPscConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectRedisServiceClusterPscConnection,
+		},
+		"gcp.project.redisService.cluster.backup": {
+			// to override args, implement: initGcpProjectRedisServiceClusterBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectRedisServiceClusterBackup,
+		},
+		"gcp.project.redisService.cluster.clusterEndpoint": {
+			// to override args, implement: initGcpProjectRedisServiceClusterClusterEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectRedisServiceClusterClusterEndpoint,
+		},
+		"gcp.project.redisService.cluster.connectionDetail": {
+			// to override args, implement: initGcpProjectRedisServiceClusterConnectionDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectRedisServiceClusterConnectionDetail,
 		},
 		"gcp.folder": {
 			Init:   initGcpFolder,
@@ -802,6 +842,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.redisService.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisService).GetInstances()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.instance")))
 	},
+	"gcp.project.redisService.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisService).GetClusters()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.cluster")))
+	},
 	"gcp.project.redisService.instance.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceInstance).GetName()).ToDataRes(types.String)
 	},
@@ -883,6 +926,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.redisService.instance.availableMaintenanceVersions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceInstance).GetAvailableMaintenanceVersions()).ToDataRes(types.Array(types.String))
 	},
+	"gcp.project.redisService.instance.tier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetTier()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.transitEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetTransitEncryptionMode()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.readReplicasMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetReadReplicasMode()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.alternativeLocationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetAlternativeLocationId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.suspensionReasons": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetSuspensionReasons()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.redisService.instance.persistenceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetPersistenceConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.instance.maintenancePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetMaintenancePolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.instance.maintenanceSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetMaintenanceSchedule()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.instance.serverCaCerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetServerCaCerts()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.instance.serverCaCert")))
+	},
 	"gcp.project.redisService.instance.nodeInfo.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).GetProjectId()).ToDataRes(types.String)
 	},
@@ -891,6 +961,252 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.redisService.instance.nodeInfo.zone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).GetZone()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.serverCaCert.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.serverCaCert.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.serverCaCert.cert": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).GetCert()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.instance.serverCaCert.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.redisService.instance.serverCaCert.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.redisService.instance.serverCaCert.sha1Fingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).GetSha1Fingerprint()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.redisService.cluster.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.authorizationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetAuthorizationMode()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.transitEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetTransitEncryptionMode()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetNodeType()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.shardCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetShardCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.cluster.replicaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetReplicaCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.cluster.sizeGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetSizeGb()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.cluster.preciseSizeGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetPreciseSizeGb()).ToDataRes(types.Float)
+	},
+	"gcp.project.redisService.cluster.deletionProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetDeletionProtectionEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.redisService.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetKmsKey()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backupCollection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetBackupCollection()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.redisConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetRedisConfigs()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.redisService.cluster.persistenceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetPersistenceConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.cluster.zoneDistributionConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetZoneDistributionConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.cluster.maintenancePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetMaintenancePolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.cluster.maintenanceSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetMaintenanceSchedule()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.cluster.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetEncryptionInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.cluster.automatedBackupConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetAutomatedBackupConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.cluster.crossClusterReplicationConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetCrossClusterReplicationConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.cluster.pscConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetPscConfigs()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.cluster.pscConfig")))
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetDiscoveryEndpoints()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.cluster.discoveryEndpoint")))
+	},
+	"gcp.project.redisService.cluster.pscConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetPscConnections()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.cluster.pscConnection")))
+	},
+	"gcp.project.redisService.cluster.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetBackups()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.cluster.backup")))
+	},
+	"gcp.project.redisService.cluster.clusterEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetClusterEndpoints()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.cluster.clusterEndpoint")))
+	},
+	"gcp.project.redisService.cluster.pscConfig.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConfig).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConfig.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConfig).GetClusterName()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConfig.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConfig).GetNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).GetClusterName()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).GetAddress()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).GetPort()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).GetNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConnection.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConnection).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConnection.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConnection).GetClusterName()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConnection.pscConnectionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConnection).GetPscConnectionId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConnection.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConnection).GetAddress()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConnection.forwardingRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConnection).GetForwardingRule()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConnection.connectionProjectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConnection).GetConnectionProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConnection.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConnection).GetNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConnection.serviceAttachment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConnection).GetServiceAttachment()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConnection.pscConnectionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConnection).GetPscConnectionStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.pscConnection.connectionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterPscConnection).GetConnectionType()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backup.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backup.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backup.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.redisService.cluster.backup.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.redisService.cluster.backup.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetCluster()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backup.clusterUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetClusterUid()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backup.totalSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetTotalSizeBytes()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.cluster.backup.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backup.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetNodeType()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backup.replicaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetReplicaCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.cluster.backup.shardCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetShardCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.redisService.cluster.backup.backupType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetBackupType()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.backup.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetEncryptionInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.redisService.cluster.backup.backupFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterBackup).GetBackupFiles()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.redisService.cluster.clusterEndpoint.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterClusterEndpoint).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.clusterEndpoint.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterClusterEndpoint).GetClusterName()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.clusterEndpoint.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterClusterEndpoint).GetConnections()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.cluster.connectionDetail")))
+	},
+	"gcp.project.redisService.cluster.connectionDetail.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.connectionDetail.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetClusterName()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.connectionDetail.pscConnectionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetPscConnectionId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.connectionDetail.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetAddress()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.connectionDetail.forwardingRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetForwardingRule()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.connectionDetail.connectionProjectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetConnectionProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.connectionDetail.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.connectionDetail.serviceAttachment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetServiceAttachment()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.connectionDetail.pscConnectionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetPscConnectionStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.connectionDetail.connectionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetConnectionType()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.connectionDetail.connectionOrigin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).GetConnectionOrigin()).ToDataRes(types.String)
 	},
 	"gcp.folder.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolder).GetId()).ToDataRes(types.String)
@@ -4529,6 +4845,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectRedisService).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.redisService.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisService).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.redisService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceInstance).__id, ok = v.Value.(string)
 		return
@@ -4641,6 +4961,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectRedisServiceInstance).AvailableMaintenanceVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.redisService.instance.tier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).Tier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.transitEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).TransitEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.readReplicasMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).ReadReplicasMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.alternativeLocationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).AlternativeLocationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.suspensionReasons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).SuspensionReasons, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.persistenceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).PersistenceConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.maintenancePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).MaintenancePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.maintenanceSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).MaintenanceSchedule, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.serverCaCerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).ServerCaCerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.redisService.instance.nodeInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).__id, ok = v.Value.(string)
 		return
@@ -4655,6 +5011,366 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.redisService.instance.nodeInfo.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceInstanceNodeInfo).Zone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.serverCaCert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.redisService.instance.serverCaCert.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.serverCaCert.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.serverCaCert.cert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).Cert, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.serverCaCert.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.serverCaCert.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.serverCaCert.sha1Fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstanceServerCaCert).Sha1Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.redisService.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.authorizationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).AuthorizationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.transitEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).TransitEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.shardCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).ShardCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.replicaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).ReplicaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.sizeGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).SizeGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.preciseSizeGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).PreciseSizeGb, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.deletionProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).DeletionProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).KmsKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backupCollection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).BackupCollection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.redisConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).RedisConfigs, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.persistenceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).PersistenceConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.zoneDistributionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).ZoneDistributionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.maintenancePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).MaintenancePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.maintenanceSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).MaintenanceSchedule, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.encryptionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).EncryptionInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.automatedBackupConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).AutomatedBackupConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.crossClusterReplicationConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).CrossClusterReplicationConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).PscConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).DiscoveryEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).PscConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.clusterEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).ClusterEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConfig.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConfig).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConfig.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConfig).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConfig.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConfig).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.discoveryEndpoint.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterDiscoveryEndpoint).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.pscConnectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).PscConnectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.forwardingRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).ForwardingRule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.connectionProjectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).ConnectionProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.serviceAttachment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).ServiceAttachment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.pscConnectionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).PscConnectionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscConnection.connectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterPscConnection).ConnectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).Cluster, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.clusterUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).ClusterUid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.totalSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).TotalSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.replicaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).ReplicaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.shardCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).ShardCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.backupType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).BackupType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.encryptionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).EncryptionInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.backup.backupFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterBackup).BackupFiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.clusterEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterClusterEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.redisService.cluster.clusterEndpoint.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterClusterEndpoint).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.clusterEndpoint.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterClusterEndpoint).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.clusterEndpoint.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterClusterEndpoint).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.pscConnectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).PscConnectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.forwardingRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).ForwardingRule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.connectionProjectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).ConnectionProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.serviceAttachment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).ServiceAttachment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.pscConnectionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).PscConnectionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.connectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).ConnectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.connectionDetail.connectionOrigin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceClusterConnectionDetail).ConnectionOrigin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.folder.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10165,6 +10881,7 @@ type mqlGcpProjectRedisService struct {
 	// optional: if you define mqlGcpProjectRedisServiceInternal it will be used here
 	ProjectId plugin.TValue[string]
 	Instances plugin.TValue[[]any]
+	Clusters  plugin.TValue[[]any]
 }
 
 // createGcpProjectRedisService creates a new instance of this resource
@@ -10224,6 +10941,22 @@ func (c *mqlGcpProjectRedisService) GetInstances() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGcpProjectRedisService) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.redisService", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
 // mqlGcpProjectRedisServiceInstance for the gcp.project.redisService.instance resource
 type mqlGcpProjectRedisServiceInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -10256,6 +10989,15 @@ type mqlGcpProjectRedisServiceInstance struct {
 	CustomerManagedKey           plugin.TValue[string]
 	MaintenanceVersion           plugin.TValue[string]
 	AvailableMaintenanceVersions plugin.TValue[[]any]
+	Tier                         plugin.TValue[string]
+	TransitEncryptionMode        plugin.TValue[string]
+	ReadReplicasMode             plugin.TValue[string]
+	AlternativeLocationId        plugin.TValue[string]
+	SuspensionReasons            plugin.TValue[[]any]
+	PersistenceConfig            plugin.TValue[any]
+	MaintenancePolicy            plugin.TValue[any]
+	MaintenanceSchedule          plugin.TValue[any]
+	ServerCaCerts                plugin.TValue[[]any]
 }
 
 // createGcpProjectRedisServiceInstance creates a new instance of this resource
@@ -10403,6 +11145,42 @@ func (c *mqlGcpProjectRedisServiceInstance) GetAvailableMaintenanceVersions() *p
 	return &c.AvailableMaintenanceVersions
 }
 
+func (c *mqlGcpProjectRedisServiceInstance) GetTier() *plugin.TValue[string] {
+	return &c.Tier
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetTransitEncryptionMode() *plugin.TValue[string] {
+	return &c.TransitEncryptionMode
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetReadReplicasMode() *plugin.TValue[string] {
+	return &c.ReadReplicasMode
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetAlternativeLocationId() *plugin.TValue[string] {
+	return &c.AlternativeLocationId
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetSuspensionReasons() *plugin.TValue[[]any] {
+	return &c.SuspensionReasons
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetPersistenceConfig() *plugin.TValue[any] {
+	return &c.PersistenceConfig
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetMaintenancePolicy() *plugin.TValue[any] {
+	return &c.MaintenancePolicy
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetMaintenanceSchedule() *plugin.TValue[any] {
+	return &c.MaintenanceSchedule
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetServerCaCerts() *plugin.TValue[[]any] {
+	return &c.ServerCaCerts
+}
+
 // mqlGcpProjectRedisServiceInstanceNodeInfo for the gcp.project.redisService.instance.nodeInfo resource
 type mqlGcpProjectRedisServiceInstanceNodeInfo struct {
 	MqlRuntime *plugin.Runtime
@@ -10460,6 +11238,780 @@ func (c *mqlGcpProjectRedisServiceInstanceNodeInfo) GetId() *plugin.TValue[strin
 
 func (c *mqlGcpProjectRedisServiceInstanceNodeInfo) GetZone() *plugin.TValue[string] {
 	return &c.Zone
+}
+
+// mqlGcpProjectRedisServiceInstanceServerCaCert for the gcp.project.redisService.instance.serverCaCert resource
+type mqlGcpProjectRedisServiceInstanceServerCaCert struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectRedisServiceInstanceServerCaCertInternal it will be used here
+	ProjectId       plugin.TValue[string]
+	SerialNumber    plugin.TValue[string]
+	Cert            plugin.TValue[string]
+	CreateTime      plugin.TValue[*time.Time]
+	ExpireTime      plugin.TValue[*time.Time]
+	Sha1Fingerprint plugin.TValue[string]
+}
+
+// createGcpProjectRedisServiceInstanceServerCaCert creates a new instance of this resource
+func createGcpProjectRedisServiceInstanceServerCaCert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisServiceInstanceServerCaCert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService.instance.serverCaCert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceServerCaCert) MqlName() string {
+	return "gcp.project.redisService.instance.serverCaCert"
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceServerCaCert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceServerCaCert) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceServerCaCert) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceServerCaCert) GetCert() *plugin.TValue[string] {
+	return &c.Cert
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceServerCaCert) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceServerCaCert) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlGcpProjectRedisServiceInstanceServerCaCert) GetSha1Fingerprint() *plugin.TValue[string] {
+	return &c.Sha1Fingerprint
+}
+
+// mqlGcpProjectRedisServiceCluster for the gcp.project.redisService.cluster resource
+type mqlGcpProjectRedisServiceCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectRedisServiceClusterInternal it will be used here
+	Name                          plugin.TValue[string]
+	ProjectId                     plugin.TValue[string]
+	Uid                           plugin.TValue[string]
+	CreateTime                    plugin.TValue[*time.Time]
+	State                         plugin.TValue[string]
+	AuthorizationMode             plugin.TValue[string]
+	TransitEncryptionMode         plugin.TValue[string]
+	NodeType                      plugin.TValue[string]
+	ShardCount                    plugin.TValue[int64]
+	ReplicaCount                  plugin.TValue[int64]
+	SizeGb                        plugin.TValue[int64]
+	PreciseSizeGb                 plugin.TValue[float64]
+	DeletionProtectionEnabled     plugin.TValue[bool]
+	KmsKey                        plugin.TValue[string]
+	BackupCollection              plugin.TValue[string]
+	RedisConfigs                  plugin.TValue[map[string]any]
+	PersistenceConfig             plugin.TValue[any]
+	ZoneDistributionConfig        plugin.TValue[any]
+	MaintenancePolicy             plugin.TValue[any]
+	MaintenanceSchedule           plugin.TValue[any]
+	EncryptionInfo                plugin.TValue[any]
+	AutomatedBackupConfig         plugin.TValue[any]
+	CrossClusterReplicationConfig plugin.TValue[any]
+	PscConfigs                    plugin.TValue[[]any]
+	DiscoveryEndpoints            plugin.TValue[[]any]
+	PscConnections                plugin.TValue[[]any]
+	Backups                       plugin.TValue[[]any]
+	ClusterEndpoints              plugin.TValue[[]any]
+}
+
+// createGcpProjectRedisServiceCluster creates a new instance of this resource
+func createGcpProjectRedisServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisServiceCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) MqlName() string {
+	return "gcp.project.redisService.cluster"
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetAuthorizationMode() *plugin.TValue[string] {
+	return &c.AuthorizationMode
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetTransitEncryptionMode() *plugin.TValue[string] {
+	return &c.TransitEncryptionMode
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetShardCount() *plugin.TValue[int64] {
+	return &c.ShardCount
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetReplicaCount() *plugin.TValue[int64] {
+	return &c.ReplicaCount
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetSizeGb() *plugin.TValue[int64] {
+	return &c.SizeGb
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetPreciseSizeGb() *plugin.TValue[float64] {
+	return &c.PreciseSizeGb
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetDeletionProtectionEnabled() *plugin.TValue[bool] {
+	return &c.DeletionProtectionEnabled
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetKmsKey() *plugin.TValue[string] {
+	return &c.KmsKey
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetBackupCollection() *plugin.TValue[string] {
+	return &c.BackupCollection
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetRedisConfigs() *plugin.TValue[map[string]any] {
+	return &c.RedisConfigs
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetPersistenceConfig() *plugin.TValue[any] {
+	return &c.PersistenceConfig
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetZoneDistributionConfig() *plugin.TValue[any] {
+	return &c.ZoneDistributionConfig
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetMaintenancePolicy() *plugin.TValue[any] {
+	return &c.MaintenancePolicy
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetMaintenanceSchedule() *plugin.TValue[any] {
+	return &c.MaintenanceSchedule
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetEncryptionInfo() *plugin.TValue[any] {
+	return &c.EncryptionInfo
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetAutomatedBackupConfig() *plugin.TValue[any] {
+	return &c.AutomatedBackupConfig
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetCrossClusterReplicationConfig() *plugin.TValue[any] {
+	return &c.CrossClusterReplicationConfig
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetPscConfigs() *plugin.TValue[[]any] {
+	return &c.PscConfigs
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetDiscoveryEndpoints() *plugin.TValue[[]any] {
+	return &c.DiscoveryEndpoints
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetPscConnections() *plugin.TValue[[]any] {
+	return &c.PscConnections
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.redisService.cluster", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetClusterEndpoints() *plugin.TValue[[]any] {
+	return &c.ClusterEndpoints
+}
+
+// mqlGcpProjectRedisServiceClusterPscConfig for the gcp.project.redisService.cluster.pscConfig resource
+type mqlGcpProjectRedisServiceClusterPscConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectRedisServiceClusterPscConfigInternal it will be used here
+	ProjectId   plugin.TValue[string]
+	ClusterName plugin.TValue[string]
+	Network     plugin.TValue[string]
+}
+
+// createGcpProjectRedisServiceClusterPscConfig creates a new instance of this resource
+func createGcpProjectRedisServiceClusterPscConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisServiceClusterPscConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService.cluster.pscConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConfig) MqlName() string {
+	return "gcp.project.redisService.cluster.pscConfig"
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConfig) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConfig) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConfig) GetNetwork() *plugin.TValue[string] {
+	return &c.Network
+}
+
+// mqlGcpProjectRedisServiceClusterDiscoveryEndpoint for the gcp.project.redisService.cluster.discoveryEndpoint resource
+type mqlGcpProjectRedisServiceClusterDiscoveryEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectRedisServiceClusterDiscoveryEndpointInternal it will be used here
+	ProjectId   plugin.TValue[string]
+	ClusterName plugin.TValue[string]
+	Address     plugin.TValue[string]
+	Port        plugin.TValue[int64]
+	Network     plugin.TValue[string]
+}
+
+// createGcpProjectRedisServiceClusterDiscoveryEndpoint creates a new instance of this resource
+func createGcpProjectRedisServiceClusterDiscoveryEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisServiceClusterDiscoveryEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService.cluster.discoveryEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterDiscoveryEndpoint) MqlName() string {
+	return "gcp.project.redisService.cluster.discoveryEndpoint"
+}
+
+func (c *mqlGcpProjectRedisServiceClusterDiscoveryEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisServiceClusterDiscoveryEndpoint) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceClusterDiscoveryEndpoint) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlGcpProjectRedisServiceClusterDiscoveryEndpoint) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlGcpProjectRedisServiceClusterDiscoveryEndpoint) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlGcpProjectRedisServiceClusterDiscoveryEndpoint) GetNetwork() *plugin.TValue[string] {
+	return &c.Network
+}
+
+// mqlGcpProjectRedisServiceClusterPscConnection for the gcp.project.redisService.cluster.pscConnection resource
+type mqlGcpProjectRedisServiceClusterPscConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectRedisServiceClusterPscConnectionInternal it will be used here
+	ProjectId           plugin.TValue[string]
+	ClusterName         plugin.TValue[string]
+	PscConnectionId     plugin.TValue[string]
+	Address             plugin.TValue[string]
+	ForwardingRule      plugin.TValue[string]
+	ConnectionProjectId plugin.TValue[string]
+	Network             plugin.TValue[string]
+	ServiceAttachment   plugin.TValue[string]
+	PscConnectionStatus plugin.TValue[string]
+	ConnectionType      plugin.TValue[string]
+}
+
+// createGcpProjectRedisServiceClusterPscConnection creates a new instance of this resource
+func createGcpProjectRedisServiceClusterPscConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisServiceClusterPscConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService.cluster.pscConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) MqlName() string {
+	return "gcp.project.redisService.cluster.pscConnection"
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) GetPscConnectionId() *plugin.TValue[string] {
+	return &c.PscConnectionId
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) GetForwardingRule() *plugin.TValue[string] {
+	return &c.ForwardingRule
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) GetConnectionProjectId() *plugin.TValue[string] {
+	return &c.ConnectionProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) GetNetwork() *plugin.TValue[string] {
+	return &c.Network
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) GetServiceAttachment() *plugin.TValue[string] {
+	return &c.ServiceAttachment
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) GetPscConnectionStatus() *plugin.TValue[string] {
+	return &c.PscConnectionStatus
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) GetConnectionType() *plugin.TValue[string] {
+	return &c.ConnectionType
+}
+
+// mqlGcpProjectRedisServiceClusterBackup for the gcp.project.redisService.cluster.backup resource
+type mqlGcpProjectRedisServiceClusterBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectRedisServiceClusterBackupInternal it will be used here
+	ProjectId      plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Uid            plugin.TValue[string]
+	CreateTime     plugin.TValue[*time.Time]
+	ExpireTime     plugin.TValue[*time.Time]
+	Cluster        plugin.TValue[string]
+	ClusterUid     plugin.TValue[string]
+	TotalSizeBytes plugin.TValue[int64]
+	EngineVersion  plugin.TValue[string]
+	NodeType       plugin.TValue[string]
+	ReplicaCount   plugin.TValue[int64]
+	ShardCount     plugin.TValue[int64]
+	BackupType     plugin.TValue[string]
+	State          plugin.TValue[string]
+	EncryptionInfo plugin.TValue[any]
+	BackupFiles    plugin.TValue[[]any]
+}
+
+// createGcpProjectRedisServiceClusterBackup creates a new instance of this resource
+func createGcpProjectRedisServiceClusterBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisServiceClusterBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService.cluster.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) MqlName() string {
+	return "gcp.project.redisService.cluster.backup"
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetCluster() *plugin.TValue[string] {
+	return &c.Cluster
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetClusterUid() *plugin.TValue[string] {
+	return &c.ClusterUid
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetTotalSizeBytes() *plugin.TValue[int64] {
+	return &c.TotalSizeBytes
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetReplicaCount() *plugin.TValue[int64] {
+	return &c.ReplicaCount
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetShardCount() *plugin.TValue[int64] {
+	return &c.ShardCount
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetBackupType() *plugin.TValue[string] {
+	return &c.BackupType
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetEncryptionInfo() *plugin.TValue[any] {
+	return &c.EncryptionInfo
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackup) GetBackupFiles() *plugin.TValue[[]any] {
+	return &c.BackupFiles
+}
+
+// mqlGcpProjectRedisServiceClusterClusterEndpoint for the gcp.project.redisService.cluster.clusterEndpoint resource
+type mqlGcpProjectRedisServiceClusterClusterEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectRedisServiceClusterClusterEndpointInternal it will be used here
+	ProjectId   plugin.TValue[string]
+	ClusterName plugin.TValue[string]
+	Connections plugin.TValue[[]any]
+}
+
+// createGcpProjectRedisServiceClusterClusterEndpoint creates a new instance of this resource
+func createGcpProjectRedisServiceClusterClusterEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisServiceClusterClusterEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService.cluster.clusterEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterClusterEndpoint) MqlName() string {
+	return "gcp.project.redisService.cluster.clusterEndpoint"
+}
+
+func (c *mqlGcpProjectRedisServiceClusterClusterEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisServiceClusterClusterEndpoint) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceClusterClusterEndpoint) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlGcpProjectRedisServiceClusterClusterEndpoint) GetConnections() *plugin.TValue[[]any] {
+	return &c.Connections
+}
+
+// mqlGcpProjectRedisServiceClusterConnectionDetail for the gcp.project.redisService.cluster.connectionDetail resource
+type mqlGcpProjectRedisServiceClusterConnectionDetail struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectRedisServiceClusterConnectionDetailInternal it will be used here
+	ProjectId           plugin.TValue[string]
+	ClusterName         plugin.TValue[string]
+	PscConnectionId     plugin.TValue[string]
+	Address             plugin.TValue[string]
+	ForwardingRule      plugin.TValue[string]
+	ConnectionProjectId plugin.TValue[string]
+	Network             plugin.TValue[string]
+	ServiceAttachment   plugin.TValue[string]
+	PscConnectionStatus plugin.TValue[string]
+	ConnectionType      plugin.TValue[string]
+	ConnectionOrigin    plugin.TValue[string]
+}
+
+// createGcpProjectRedisServiceClusterConnectionDetail creates a new instance of this resource
+func createGcpProjectRedisServiceClusterConnectionDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectRedisServiceClusterConnectionDetail{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.redisService.cluster.connectionDetail", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) MqlName() string {
+	return "gcp.project.redisService.cluster.connectionDetail"
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetPscConnectionId() *plugin.TValue[string] {
+	return &c.PscConnectionId
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetForwardingRule() *plugin.TValue[string] {
+	return &c.ForwardingRule
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetConnectionProjectId() *plugin.TValue[string] {
+	return &c.ConnectionProjectId
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetNetwork() *plugin.TValue[string] {
+	return &c.Network
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetServiceAttachment() *plugin.TValue[string] {
+	return &c.ServiceAttachment
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetPscConnectionStatus() *plugin.TValue[string] {
+	return &c.PscConnectionStatus
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetConnectionType() *plugin.TValue[string] {
+	return &c.ConnectionType
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetConnectionOrigin() *plugin.TValue[string] {
+	return &c.ConnectionOrigin
 }
 
 // mqlGcpFolder for the gcp.folder resource

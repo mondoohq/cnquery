@@ -122,6 +122,10 @@ func GetTitleForPlatformName(name string) string {
 		return "GCP Cloud DNS Zone"
 	case "gcp-kms-keyring":
 		return "GCP Cloud KMS Keyring"
+	case "gcp-memorystore-redis":
+		return "GCP Memorystore for Redis"
+	case "gcp-memorystore-rediscluster":
+		return "GCP Memorystore for Redis Cluster"
 	}
 	return "Google Cloud Platform"
 }
@@ -180,6 +184,15 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "cloud-kms", region, "keyring"}
 		default:
 			return []string{"gcp", project, "cloud-kms", region, "other"}
+		}
+	case "memorystore":
+		switch objectType {
+		case "redis":
+			return []string{"gcp", project, "memorystore", region, "redis"}
+		case "rediscluster":
+			return []string{"gcp", project, "memorystore", region, "rediscluster"}
+		default:
+			return []string{"gcp", project, "memorystore", region, "other"}
 		}
 	default:
 		return []string{"gcp", project, "other"}

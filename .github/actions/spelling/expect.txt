@@ -130,6 +130,7 @@ Pids
 portgroup
 posix
 postgre
+psc
 pushconfig
 querypack
 ratebasedstatement
@@ -172,6 +173,7 @@ tpu
 udid
 Uocm
 usb
+valkey
 VAULTNAME
 vdcs
 virtualmachine
