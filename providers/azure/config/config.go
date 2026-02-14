@@ -46,7 +46,6 @@ Examples run in the Azure CLI:
 				resources.DiscoveryPostgresFlexibleServers,
 				resources.DiscoveryMySqlServers,
 				resources.DiscoveryMySqlFlexibleServers,
-				resources.DiscoveryMariaDbServers,
 				resources.DiscoveryStorageAccounts,
 				resources.DiscoveryStorageContainers,
 				resources.DiscoveryKeyVaults,
@@ -122,7 +121,6 @@ Examples run in the Azure CLI:
 								"compute":    nil,
 								"mysql":      nil,
 								"postgresql": nil,
-								"mariadb":    nil,
 								"sql":        nil,
 								"storage": {
 									Key: "object",
