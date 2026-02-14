@@ -146,6 +146,7 @@ sbom
 scim
 scm
 SECRETID
+secretmanager
 SECRETVALUE
 serviceprincipals
 Sflags
