@@ -3,7 +3,7 @@ mqlr
 dist
 alpine-container.tar
 centos-container.tar
-./cnquery
+./mql
 test/commands/mql
 file1
 id_rsa
