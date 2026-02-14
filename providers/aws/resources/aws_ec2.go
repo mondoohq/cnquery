@@ -280,6 +280,51 @@ func (a *mqlAwsEc2NetworkaclEntry) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func initAwsEc2Networkacl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if args["arn"] == nil && args["id"] == nil {
+		return nil, nil, errors.New("arn or id required to fetch aws network acl")
+	}
+
+	// load all network acls
+	obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	awsEc2 := obj.(*mqlAwsEc2)
+
+	rawResources := awsEc2.GetNetworkAcls()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	var match func(acl *mqlAwsEc2Networkacl) bool
+
+	if args["arn"] != nil {
+		arnVal := args["arn"].Value.(string)
+		match = func(acl *mqlAwsEc2Networkacl) bool {
+			return acl.Arn.Data == arnVal
+		}
+	} else if args["id"] != nil {
+		idVal := args["id"].Value.(string)
+		match = func(acl *mqlAwsEc2Networkacl) bool {
+			return acl.Id.Data == idVal
+		}
+	}
+
+	for _, rawResource := range rawResources.Data {
+		acl := rawResource.(*mqlAwsEc2Networkacl)
+		if match(acl) {
+			return args, acl, nil
+		}
+	}
+
+	return nil, nil, errors.New("network acl not found")
+}
+
 func (a *mqlAwsEc2NetworkaclEntryPortrange) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -2086,7 +2131,9 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 						map[string]*llx.RawData{
 							"arn":         llx.StringData(fmt.Sprintf(internetGwArnPattern, region, convert.ToValue(gateway.OwnerId), convert.ToValue(gateway.InternetGatewayId))),
 							"id":          llx.StringData(convert.ToValue(gateway.InternetGatewayId)),
+							"region":      llx.StringData(region),
 							"attachments": llx.ArrayData(jsonAttachments, types.Any),
+							"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(gateway.Tags)), types.String),
 						})
 					if err != nil {
 						return nil, err

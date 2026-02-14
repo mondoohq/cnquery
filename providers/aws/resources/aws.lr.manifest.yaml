@@ -1464,6 +1464,10 @@ resources:
       arn: {}
       attachments: {}
       id: {}
+      region:
+        min_mondoo_version: 9.0.0
+      tags:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -4335,15 +4339,21 @@ resources:
         min_mondoo_version: 9.0.0
       internetGatewayBlockMode:
         min_mondoo_version: 9.0.0
+      internetGateways:
+        min_mondoo_version: 9.0.0
       isDefault: {}
       name:
         min_mondoo_version: 9.0.0
       natGateways:
         min_mondoo_version: 9.0.0
+      networkAcls:
+        min_mondoo_version: 9.0.0
       peeringConnections:
         min_mondoo_version: 9.0.0
       region: {}
       routeTables:
+        min_mondoo_version: 9.0.0
+      securityGroups:
         min_mondoo_version: 9.0.0
       serviceEndpoints:
         min_mondoo_version: 9.0.0
@@ -4351,7 +4361,8 @@ resources:
       subnets:
         min_mondoo_version: 9.0.0
       tags: {}
-    is_private: true
+      vpnGateways:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -4454,9 +4465,13 @@ resources:
       - aws
   aws.vpc.routetable:
     fields:
+      arn:
+        min_mondoo_version: 9.0.0
       associations:
         min_mondoo_version: 9.0.0
       id: {}
+      region:
+        min_mondoo_version: 9.0.0
       routes: {}
       tags:
         min_mondoo_version: 9.0.0
@@ -4509,8 +4524,27 @@ resources:
       id: {}
       internetGatewayBlockMode: {}
       mapPublicIpOnLaunch: {}
+      name: {}
+      region: {}
+      routeTable: {}
+      state: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.vpc.vpnGateway:
+    fields:
+      amazonSideAsn: {}
+      arn: {}
+      attachments: {}
+      availabilityZone: {}
+      id: {}
       region: {}
       state: {}
+      tags: {}
+      type: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:
