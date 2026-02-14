@@ -388,14 +388,30 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				isPublic := false
+				var publicIpAddressId string
+				var privateIpAddress string
+				if ipConfig.Properties != nil {
+					if ipConfig.Properties.PublicIPAddress != nil && ipConfig.Properties.PublicIPAddress.ID != nil {
+						isPublic = true
+						publicIpAddressId = *ipConfig.Properties.PublicIPAddress.ID
+					}
+					if ipConfig.Properties.PrivateIPAddress != nil {
+						privateIpAddress = *ipConfig.Properties.PrivateIPAddress
+					}
+				}
+
 				mqlIpConfig, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.frontendIpConfig",
 					map[string]*llx.RawData{
-						"id":         llx.StringDataPtr(ipConfig.ID),
-						"type":       llx.StringDataPtr(ipConfig.Type),
-						"name":       llx.StringDataPtr(ipConfig.Name),
-						"etag":       llx.StringDataPtr(ipConfig.Etag),
-						"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(ipConfig.Zones), types.String),
-						"properties": llx.DictData(props),
+						"id":                llx.StringDataPtr(ipConfig.ID),
+						"type":              llx.StringDataPtr(ipConfig.Type),
+						"name":              llx.StringDataPtr(ipConfig.Name),
+						"etag":              llx.StringDataPtr(ipConfig.Etag),
+						"zones":             llx.ArrayData(convert.SliceStrPtrToInterface(ipConfig.Zones), types.String),
+						"properties":        llx.DictData(props),
+						"isPublic":          llx.BoolData(isPublic),
+						"publicIpAddressId": llx.StringData(publicIpAddressId),
+						"privateIpAddress":  llx.StringData(privateIpAddress),
 					})
 				if err != nil {
 					return nil, err
@@ -1972,14 +1988,40 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 		return nil, err
 	}
 
+	var addressPrefix *llx.RawData
+	var privateEndpointNetworkPolicies, privateLinkServiceNetworkPolicies *llx.RawData
+	var defaultOutboundAccess *llx.RawData
+	if subnet.Properties != nil {
+		addressPrefix = llx.StringDataPtr(subnet.Properties.AddressPrefix)
+		if subnet.Properties.PrivateEndpointNetworkPolicies != nil {
+			privateEndpointNetworkPolicies = llx.StringData(string(*subnet.Properties.PrivateEndpointNetworkPolicies))
+		} else {
+			privateEndpointNetworkPolicies = llx.StringData("")
+		}
+		if subnet.Properties.PrivateLinkServiceNetworkPolicies != nil {
+			privateLinkServiceNetworkPolicies = llx.StringData(string(*subnet.Properties.PrivateLinkServiceNetworkPolicies))
+		} else {
+			privateLinkServiceNetworkPolicies = llx.StringData("")
+		}
+		defaultOutboundAccess = llx.BoolDataPtr(subnet.Properties.DefaultOutboundAccess)
+	} else {
+		addressPrefix = llx.StringData("")
+		privateEndpointNetworkPolicies = llx.StringData("")
+		privateLinkServiceNetworkPolicies = llx.StringData("")
+		defaultOutboundAccess = llx.BoolData(false)
+	}
+
 	mqlAzure, err := CreateResource(runtime, "azure.subscription.networkService.subnet",
 		map[string]*llx.RawData{
-			"id":            llx.StringDataPtr(subnet.ID),
-			"name":          llx.StringDataPtr(subnet.Name),
-			"type":          llx.StringDataPtr(subnet.Type),
-			"etag":          llx.StringDataPtr(subnet.Etag),
-			"addressPrefix": llx.StringDataPtr(subnet.Properties.AddressPrefix),
-			"properties":    llx.DictData(props),
+			"id":                                llx.StringDataPtr(subnet.ID),
+			"name":                              llx.StringDataPtr(subnet.Name),
+			"type":                              llx.StringDataPtr(subnet.Type),
+			"etag":                              llx.StringDataPtr(subnet.Etag),
+			"addressPrefix":                     addressPrefix,
+			"properties":                        llx.DictData(props),
+			"privateEndpointNetworkPolicies":    privateEndpointNetworkPolicies,
+			"privateLinkServiceNetworkPolicies": privateLinkServiceNetworkPolicies,
+			"defaultOutboundAccess":             defaultOutboundAccess,
 		})
 	if err != nil {
 		return nil, err
@@ -1992,15 +2034,30 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 	if err != nil {
 		return nil, err
 	}
+
+	var enableIPForwarding, enableAcceleratedNetworking, primary *llx.RawData
+	if iface.Properties != nil {
+		enableIPForwarding = llx.BoolDataPtr(iface.Properties.EnableIPForwarding)
+		enableAcceleratedNetworking = llx.BoolDataPtr(iface.Properties.EnableAcceleratedNetworking)
+		primary = llx.BoolDataPtr(iface.Properties.Primary)
+	} else {
+		enableIPForwarding = llx.BoolData(false)
+		enableAcceleratedNetworking = llx.BoolData(false)
+		primary = llx.BoolData(false)
+	}
+
 	res, err := CreateResource(runtime, "azure.subscription.networkService.interface",
 		map[string]*llx.RawData{
-			"id":         llx.StringDataPtr(iface.ID),
-			"name":       llx.StringDataPtr(iface.Name),
-			"location":   llx.StringDataPtr(iface.Location),
-			"tags":       llx.MapData(convert.PtrMapStrToInterface(iface.Tags), types.String),
-			"type":       llx.StringDataPtr(iface.Type),
-			"etag":       llx.StringDataPtr(iface.Etag),
-			"properties": llx.DictData(properties),
+			"id":                          llx.StringDataPtr(iface.ID),
+			"name":                        llx.StringDataPtr(iface.Name),
+			"location":                    llx.StringDataPtr(iface.Location),
+			"tags":                        llx.MapData(convert.PtrMapStrToInterface(iface.Tags), types.String),
+			"type":                        llx.StringDataPtr(iface.Type),
+			"etag":                        llx.StringDataPtr(iface.Etag),
+			"properties":                  llx.DictData(properties),
+			"enableIPForwarding":          enableIPForwarding,
+			"enableAcceleratedNetworking": enableAcceleratedNetworking,
+			"primary":                     primary,
 		})
 	if err != nil {
 		return nil, err
@@ -2116,14 +2173,51 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 		}
 	}
 
+	var direction, protocol, access, sourcePortRange, sourceAddressPrefix, destinationAddressPrefix, description *llx.RawData
+	var priority *llx.RawData
+	if secRule.Properties != nil {
+		direction = llx.StringDataPtr((*string)(secRule.Properties.Direction))
+		if secRule.Properties.Protocol != nil {
+			protocol = llx.StringData(string(*secRule.Properties.Protocol))
+		} else {
+			protocol = llx.StringData("")
+		}
+		if secRule.Properties.Access != nil {
+			access = llx.StringData(string(*secRule.Properties.Access))
+		} else {
+			access = llx.StringData("")
+		}
+		priority = llx.IntDataDefault(secRule.Properties.Priority, 0)
+		sourcePortRange = llx.StringDataPtr(secRule.Properties.SourcePortRange)
+		sourceAddressPrefix = llx.StringDataPtr(secRule.Properties.SourceAddressPrefix)
+		destinationAddressPrefix = llx.StringDataPtr(secRule.Properties.DestinationAddressPrefix)
+		description = llx.StringDataPtr(secRule.Properties.Description)
+	} else {
+		direction = llx.StringData("")
+		protocol = llx.StringData("")
+		access = llx.StringData("")
+		priority = llx.IntData(0)
+		sourcePortRange = llx.StringData("")
+		sourceAddressPrefix = llx.StringData("")
+		destinationAddressPrefix = llx.StringData("")
+		description = llx.StringData("")
+	}
+
 	res, err := CreateResource(runtime, "azure.subscription.networkService.securityrule",
 		map[string]*llx.RawData{
-			"id":                   llx.StringDataPtr(secRule.ID),
-			"name":                 llx.StringDataPtr(secRule.Name),
-			"etag":                 llx.StringDataPtr(secRule.Etag),
-			"direction":            llx.StringDataPtr((*string)(secRule.Properties.Direction)),
-			"properties":           llx.DictData(properties),
-			"destinationPortRange": llx.ArrayData(destinationPortRange, types.String),
+			"id":                       llx.StringDataPtr(secRule.ID),
+			"name":                     llx.StringDataPtr(secRule.Name),
+			"etag":                     llx.StringDataPtr(secRule.Etag),
+			"direction":                direction,
+			"properties":               llx.DictData(properties),
+			"destinationPortRange":     llx.ArrayData(destinationPortRange, types.String),
+			"protocol":                 protocol,
+			"access":                   access,
+			"priority":                 priority,
+			"sourcePortRange":          sourcePortRange,
+			"sourceAddressPrefix":      sourceAddressPrefix,
+			"destinationAddressPrefix": destinationAddressPrefix,
+			"description":              description,
 		})
 	if err != nil {
 		return nil, err

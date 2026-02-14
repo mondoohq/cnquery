@@ -87,14 +87,47 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]any, error) {
 				return nil, err
 			}
 
+			var minimalTlsVersion string
+			var publicNetworkAccess string
+			var restrictOutboundNetworkAccess string
+			var version string
+			var state string
+			var fullyQualifiedDomainName string
+			if dbServer.Properties != nil {
+				if dbServer.Properties.MinimalTLSVersion != nil {
+					minimalTlsVersion = *dbServer.Properties.MinimalTLSVersion
+				}
+				if dbServer.Properties.PublicNetworkAccess != nil {
+					publicNetworkAccess = string(*dbServer.Properties.PublicNetworkAccess)
+				}
+				if dbServer.Properties.RestrictOutboundNetworkAccess != nil {
+					restrictOutboundNetworkAccess = string(*dbServer.Properties.RestrictOutboundNetworkAccess)
+				}
+				if dbServer.Properties.Version != nil {
+					version = *dbServer.Properties.Version
+				}
+				if dbServer.Properties.State != nil {
+					state = *dbServer.Properties.State
+				}
+				if dbServer.Properties.FullyQualifiedDomainName != nil {
+					fullyQualifiedDomainName = *dbServer.Properties.FullyQualifiedDomainName
+				}
+			}
+
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(dbServer.ID),
-					"name":       llx.StringDataPtr(dbServer.Name),
-					"location":   llx.StringDataPtr(dbServer.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":       llx.StringDataPtr(dbServer.Type),
-					"properties": llx.DictData(properties),
+					"id":                            llx.StringDataPtr(dbServer.ID),
+					"name":                          llx.StringDataPtr(dbServer.Name),
+					"location":                      llx.StringDataPtr(dbServer.Location),
+					"tags":                          llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
+					"type":                          llx.StringDataPtr(dbServer.Type),
+					"properties":                    llx.DictData(properties),
+					"minimalTlsVersion":             llx.StringData(minimalTlsVersion),
+					"publicNetworkAccess":           llx.StringData(publicNetworkAccess),
+					"restrictOutboundNetworkAccess": llx.StringData(restrictOutboundNetworkAccess),
+					"version":                       llx.StringData(version),
+					"state":                         llx.StringData(state),
+					"fullyQualifiedDomainName":      llx.StringData(fullyQualifiedDomainName),
 				})
 			if err != nil {
 				return nil, err

@@ -74,14 +74,42 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]any, error) {
 				return nil, err
 			}
 
+			var sslEnforcement string
+			var minimalTlsVersion string
+			var publicNetworkAccess string
+			var infrastructureEncryption string
+			var version string
+			if dbServer.Properties != nil {
+				if dbServer.Properties.SSLEnforcement != nil {
+					sslEnforcement = string(*dbServer.Properties.SSLEnforcement)
+				}
+				if dbServer.Properties.MinimalTLSVersion != nil {
+					minimalTlsVersion = string(*dbServer.Properties.MinimalTLSVersion)
+				}
+				if dbServer.Properties.PublicNetworkAccess != nil {
+					publicNetworkAccess = string(*dbServer.Properties.PublicNetworkAccess)
+				}
+				if dbServer.Properties.InfrastructureEncryption != nil {
+					infrastructureEncryption = string(*dbServer.Properties.InfrastructureEncryption)
+				}
+				if dbServer.Properties.Version != nil {
+					version = string(*dbServer.Properties.Version)
+				}
+			}
+
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.server",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(dbServer.ID),
-					"name":       llx.StringDataPtr(dbServer.Name),
-					"location":   llx.StringDataPtr(dbServer.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":       llx.StringDataPtr(dbServer.Type),
-					"properties": llx.DictData(properties),
+					"id":                       llx.StringDataPtr(dbServer.ID),
+					"name":                     llx.StringDataPtr(dbServer.Name),
+					"location":                 llx.StringDataPtr(dbServer.Location),
+					"tags":                     llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
+					"type":                     llx.StringDataPtr(dbServer.Type),
+					"properties":               llx.DictData(properties),
+					"sslEnforcement":           llx.StringData(sslEnforcement),
+					"minimalTlsVersion":        llx.StringData(minimalTlsVersion),
+					"publicNetworkAccess":      llx.StringData(publicNetworkAccess),
+					"infrastructureEncryption": llx.StringData(infrastructureEncryption),
+					"version":                  llx.StringData(version),
 				})
 			if err != nil {
 				return nil, err
@@ -117,6 +145,11 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 				return nil, err
 			}
 
+			var version string
+			if dbServer.Properties != nil && dbServer.Properties.Version != nil {
+				version = string(*dbServer.Properties.Version)
+			}
+
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(dbServer.ID),
@@ -125,6 +158,7 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
 					"type":       llx.StringDataPtr(dbServer.Type),
 					"properties": llx.DictData(properties),
+					"version":    llx.StringData(version),
 				})
 			if err != nil {
 				return nil, err

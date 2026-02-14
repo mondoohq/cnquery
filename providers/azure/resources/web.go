@@ -402,17 +402,28 @@ func (a *mqlAzureSubscriptionWebService) apps() ([]any, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsite,
-				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(entry.ID),
-					"name":       llx.StringDataPtr(entry.Name),
-					"location":   llx.StringDataPtr(entry.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"type":       llx.StringDataPtr(entry.Type),
-					"kind":       llx.StringDataPtr(entry.Kind),
-					"properties": llx.DictData(properties),
-					"identity":   llx.DictData(identity),
-				})
+			args := map[string]*llx.RawData{
+				"id":         llx.StringDataPtr(entry.ID),
+				"name":       llx.StringDataPtr(entry.Name),
+				"location":   llx.StringDataPtr(entry.Location),
+				"tags":       llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+				"type":       llx.StringDataPtr(entry.Type),
+				"kind":       llx.StringDataPtr(entry.Kind),
+				"properties": llx.DictData(properties),
+				"identity":   llx.DictData(identity),
+			}
+
+			if entry.Properties != nil {
+				args["httpsOnly"] = llx.BoolDataPtr(entry.Properties.HTTPSOnly)
+				args["clientCertEnabled"] = llx.BoolDataPtr(entry.Properties.ClientCertEnabled)
+				if entry.Properties.ClientCertMode != nil {
+					args["clientCertMode"] = llx.StringData(string(*entry.Properties.ClientCertMode))
+				}
+				args["enabled"] = llx.BoolDataPtr(entry.Properties.Enabled)
+				args["state"] = llx.StringDataPtr(entry.Properties.State)
+			}
+
+			mqlAzure, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsite, args)
 			if err != nil {
 				return nil, err
 			}
@@ -569,14 +580,27 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscr
 		return nil, err
 	}
 
-	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteconfig,
-		map[string]*llx.RawData{
-			"id":         llx.StringDataPtr(entry.ID),
-			"name":       llx.StringDataPtr(entry.Name),
-			"kind":       llx.StringDataPtr(entry.Kind),
-			"type":       llx.StringDataPtr(entry.Type),
-			"properties": llx.DictData(properties),
-		})
+	args := map[string]*llx.RawData{
+		"id":         llx.StringDataPtr(entry.ID),
+		"name":       llx.StringDataPtr(entry.Name),
+		"kind":       llx.StringDataPtr(entry.Kind),
+		"type":       llx.StringDataPtr(entry.Type),
+		"properties": llx.DictData(properties),
+	}
+
+	if entry.Properties != nil {
+		if entry.Properties.MinTLSVersion != nil {
+			args["minTlsVersion"] = llx.StringData(string(*entry.Properties.MinTLSVersion))
+		}
+		if entry.Properties.FtpsState != nil {
+			args["ftpsState"] = llx.StringData(string(*entry.Properties.FtpsState))
+		}
+		args["remoteDebuggingEnabled"] = llx.BoolDataPtr(entry.Properties.RemoteDebuggingEnabled)
+		args["http20Enabled"] = llx.BoolDataPtr(entry.Properties.Http20Enabled)
+		args["alwaysOn"] = llx.BoolDataPtr(entry.Properties.AlwaysOn)
+	}
+
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteconfig, args)
 	if err != nil {
 		return nil, err
 	}
@@ -886,14 +910,27 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) configuration() (*mqlAzureSubscr
 		properties = props
 	}
 
-	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteconfig,
-		map[string]*llx.RawData{
-			"id":         llx.StringDataPtr(configuration.ID),
-			"name":       llx.StringDataPtr(configuration.Name),
-			"kind":       llx.StringDataPtr(configuration.Kind),
-			"type":       llx.StringDataPtr(configuration.Type),
-			"properties": llx.DictData(properties),
-		})
+	args := map[string]*llx.RawData{
+		"id":         llx.StringDataPtr(configuration.ID),
+		"name":       llx.StringDataPtr(configuration.Name),
+		"kind":       llx.StringDataPtr(configuration.Kind),
+		"type":       llx.StringDataPtr(configuration.Type),
+		"properties": llx.DictData(properties),
+	}
+
+	if configuration.Properties != nil {
+		if configuration.Properties.MinTLSVersion != nil {
+			args["minTlsVersion"] = llx.StringData(string(*configuration.Properties.MinTLSVersion))
+		}
+		if configuration.Properties.FtpsState != nil {
+			args["ftpsState"] = llx.StringData(string(*configuration.Properties.FtpsState))
+		}
+		args["remoteDebuggingEnabled"] = llx.BoolDataPtr(configuration.Properties.RemoteDebuggingEnabled)
+		args["http20Enabled"] = llx.BoolDataPtr(configuration.Properties.Http20Enabled)
+		args["alwaysOn"] = llx.BoolDataPtr(configuration.Properties.AlwaysOn)
+	}
+
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteconfig, args)
 	if err != nil {
 		return nil, err
 	}

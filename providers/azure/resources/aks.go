@@ -109,29 +109,52 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				createdAt = entry.SystemData.CreatedAt
 			}
 
+			var enablePrivateCluster *bool
+			var enablePrivateClusterPublicFQDN *bool
+			var disableRunCommand *bool
+			var privateDnsZone *string
+			apiServerAuthorizedIPRanges := []any{}
+			if entry.Properties.APIServerAccessProfile != nil {
+				asp := entry.Properties.APIServerAccessProfile
+				enablePrivateCluster = asp.EnablePrivateCluster
+				enablePrivateClusterPublicFQDN = asp.EnablePrivateClusterPublicFQDN
+				disableRunCommand = asp.DisableRunCommand
+				privateDnsZone = asp.PrivateDNSZone
+				for _, r := range asp.AuthorizedIPRanges {
+					if r != nil {
+						apiServerAuthorizedIPRanges = append(apiServerAuthorizedIPRanges, *r)
+					}
+				}
+			}
+
 			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
-					"id":                        llx.StringDataPtr(entry.ID),
-					"name":                      llx.StringDataPtr(entry.Name),
-					"location":                  llx.StringDataPtr(entry.Location),
-					"kubernetesVersion":         llx.StringDataPtr(entry.Properties.KubernetesVersion),
-					"provisioningState":         llx.StringDataPtr(entry.Properties.ProvisioningState),
-					"createdAt":                 llx.TimeDataPtr(createdAt),
-					"nodeResourceGroup":         llx.StringDataPtr(entry.Properties.NodeResourceGroup),
-					"powerState":                llx.StringDataPtr((*string)(entry.Properties.PowerState.Code)),
-					"tags":                      llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"rbacEnabled":               llx.BoolDataPtr(entry.Properties.EnableRBAC),
-					"dnsPrefix":                 llx.StringDataPtr(entry.Properties.DNSPrefix),
-					"fqdn":                      llx.StringDataPtr(entry.Properties.Fqdn),
-					"agentPoolProfiles":         llx.DictData(agentPoolProfiles),
-					"addonProfiles":             llx.DictData(addonProfiles),
-					"httpProxyConfig":           llx.DictData(httpProxyConfig),
-					"networkProfile":            llx.DictData(networkProfile),
-					"podIdentityProfile":        llx.DictData(podIdentityProfile),
-					"securityProfile":           llx.DictData(securityProfile),
-					"storageProfile":            llx.DictData(storageProfile),
-					"workloadAutoScalerProfile": llx.DictData(workloadAutoScalerProfile),
-					"apiServerAccessProfile":    llx.DictData(apiServerAccessProfile),
+					"id":                             llx.StringDataPtr(entry.ID),
+					"name":                           llx.StringDataPtr(entry.Name),
+					"location":                       llx.StringDataPtr(entry.Location),
+					"kubernetesVersion":              llx.StringDataPtr(entry.Properties.KubernetesVersion),
+					"provisioningState":              llx.StringDataPtr(entry.Properties.ProvisioningState),
+					"createdAt":                      llx.TimeDataPtr(createdAt),
+					"nodeResourceGroup":              llx.StringDataPtr(entry.Properties.NodeResourceGroup),
+					"powerState":                     llx.StringDataPtr((*string)(entry.Properties.PowerState.Code)),
+					"tags":                           llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+					"rbacEnabled":                    llx.BoolDataPtr(entry.Properties.EnableRBAC),
+					"dnsPrefix":                      llx.StringDataPtr(entry.Properties.DNSPrefix),
+					"fqdn":                           llx.StringDataPtr(entry.Properties.Fqdn),
+					"agentPoolProfiles":              llx.DictData(agentPoolProfiles),
+					"addonProfiles":                  llx.DictData(addonProfiles),
+					"httpProxyConfig":                llx.DictData(httpProxyConfig),
+					"networkProfile":                 llx.DictData(networkProfile),
+					"podIdentityProfile":             llx.DictData(podIdentityProfile),
+					"securityProfile":                llx.DictData(securityProfile),
+					"storageProfile":                 llx.DictData(storageProfile),
+					"workloadAutoScalerProfile":      llx.DictData(workloadAutoScalerProfile),
+					"apiServerAccessProfile":         llx.DictData(apiServerAccessProfile),
+					"enablePrivateCluster":           llx.BoolDataPtr(enablePrivateCluster),
+					"enablePrivateClusterPublicFQDN": llx.BoolDataPtr(enablePrivateClusterPublicFQDN),
+					"disableRunCommand":              llx.BoolDataPtr(disableRunCommand),
+					"apiServerAuthorizedIPRanges":    llx.ArrayData(apiServerAuthorizedIPRanges, types.String),
+					"privateDnsZone":                 llx.StringDataPtr(privateDnsZone),
 				})
 			if err != nil {
 				return nil, err

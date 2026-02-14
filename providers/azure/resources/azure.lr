@@ -198,6 +198,10 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   sku dict
   // Disk resource properties
   properties dict
+  // Disk network access policy (AllowAll, AllowPrivate, DenyAll)
+  networkAccessPolicy string
+  // Whether public network access is enabled for the disk
+  publicNetworkAccess string
 }
 
 // Azure Batch
@@ -636,6 +640,12 @@ azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   addressPrefix string
   // Subnet properties
   properties dict
+  // Whether network policies are applied to private endpoints in the subnet
+  privateEndpointNetworkPolicies string
+  // Whether network policies are applied to private link services in the subnet
+  privateLinkServiceNetworkPolicies string
+  // Whether default outbound access is enabled for VMs in the subnet
+  defaultOutboundAccess bool
   // The NAT gateway this subnet is associated with, if any
   natGateway() azure.subscription.networkService.natGateway
   // List of IP configurations for the subnet
@@ -780,6 +790,12 @@ private azure.subscription.networkService.frontendIpConfig @defaults("id name") 
   properties dict
   // Frontend IP Configuration zones
   zones []string
+  // Whether this frontend IP configuration uses a public IP address
+  isPublic bool
+  // Resource ID of the associated public IP address (empty if private)
+  publicIpAddressId string
+  // Private IP address (empty if public)
+  privateIpAddress string
 }
 
 // Azure Load Balancer rule
@@ -826,6 +842,12 @@ azure.subscription.networkService.interface @defaults("name location properties.
   etag string
   // Network interface properties
   properties dict
+  // Whether IP forwarding is enabled on the network interface
+  enableIPForwarding bool
+  // Whether accelerated networking is enabled on the network interface
+  enableAcceleratedNetworking bool
+  // Whether this is a primary network interface on a VM
+  primary bool
   // Network interface compute vm
   vm() azure.subscription.computeService.vm
 }
@@ -902,6 +924,20 @@ private azure.subscription.networkService.securityrule @defaults("id name") {
   destinationPortRange []dict
   // Security rule direction (outbound or inbound)
   direction string
+  // Security rule protocol (Tcp, Udp, Icmp, Esp, Ah, or *)
+  protocol string
+  // Security rule access (Allow or Deny)
+  access string
+  // Security rule priority (100-4096, lower is higher priority)
+  priority int
+  // Security rule source port range
+  sourcePortRange string
+  // Security rule source address prefix (CIDR or *)
+  sourceAddressPrefix string
+  // Security rule destination address prefix (CIDR or *)
+  destinationAddressPrefix string
+  // Security rule description
+  description string
 }
 
 // Azure Network Watcher
@@ -1044,6 +1080,32 @@ private azure.subscription.storageService.account @defaults("id name location") 
   sku dict
   // Storage account kind
   kind string
+  // Minimum TLS version enforced on the storage account
+  minimumTlsVersion string
+  // Whether blob containers in the account can be configured for public access
+  allowBlobPublicAccess bool
+  // Whether only HTTPS traffic is allowed to storage service
+  enableHttpsTrafficOnly bool
+  // Whether public network access is allowed for the storage account
+  publicNetworkAccess string
+  // Whether shared key access is allowed for the storage account
+  allowSharedKeyAccess bool
+  // Whether cross-tenant replication is allowed
+  allowCrossTenantReplication bool
+  // Whether local user accounts are enabled for SFTP/SSH
+  isLocalUserEnabled bool
+  // Whether SFTP is enabled on the storage account
+  isSftpEnabled bool
+  // Whether hierarchical namespace (Data Lake Storage) is enabled
+  isHnsEnabled bool
+  // Default action for network rule set (Allow or Deny)
+  networkRuleDefaultAction string
+  // Services that bypass the network rules (e.g. AzureServices, Logging, Metrics)
+  networkRuleBypass string
+  // IP address or CIDR ranges allowed by network rules
+  networkRuleIpRanges []string
+  // Virtual network subnet resource IDs allowed by network rules
+  networkRuleVirtualNetworkSubnetIds []string
   // Storage account containers
   containers() []azure.subscription.storageService.account.container
   // Storage account queue properties
@@ -1238,6 +1300,16 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   properties dict
   // App site identity
   identity dict
+  // Whether the app requires HTTPS only
+  httpsOnly bool
+  // Whether client certificate authentication is enabled
+  clientCertEnabled bool
+  // Client certificate mode (Required, Optional, OptionalInteractiveUser)
+  clientCertMode string
+  // Whether the app is enabled
+  enabled bool
+  // Current state of the app
+  state string
   // Deployment slots for the web app site
   slots() []azure.subscription.webService.appslot
   // App site configuration
@@ -1374,6 +1446,16 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
   type string
   // Appsite config properties
   properties dict
+  // Minimum TLS version for the site (1.0, 1.1, 1.2)
+  minTlsVersion string
+  // FTP state for the site (AllAllowed, FtpsOnly, Disabled)
+  ftpsState string
+  // Whether remote debugging is enabled
+  remoteDebuggingEnabled bool
+  // Whether HTTP 2.0 is enabled
+  http20Enabled bool
+  // Whether the app should always be loaded
+  alwaysOn bool
 }
 
 // Azure App Service Hosting Environment
@@ -1460,6 +1542,18 @@ private azure.subscription.sqlService.server @defaults("name location properties
   type string
   // SQL Database server properties
   properties dict
+  // SQL Database server minimum TLS version
+  minimalTlsVersion string
+  // Whether public network access is enabled for the SQL server
+  publicNetworkAccess string
+  // Whether outbound network access is restricted
+  restrictOutboundNetworkAccess string
+  // SQL server version
+  version string
+  // SQL server state
+  state string
+  // SQL server fully qualified domain name
+  fullyQualifiedDomainName string
   // SQL Database server databases
   databases() []azure.subscription.sqlService.database
   // SQL Database server firewall rules
@@ -1625,6 +1719,8 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   type string
   // PostgreSQL server properties
   properties dict
+  // PostgreSQL flexible server engine version
+  version string
   // PostgreSQL server configuration
   configuration() []azure.subscription.sqlService.configuration
   // PostgreSQL server databases
@@ -1647,6 +1743,16 @@ private azure.subscription.postgreSqlService.server @defaults("id name location"
   type string
   // PostgreSQL server properties
   properties dict
+  // Whether SSL enforcement is enabled
+  sslEnforcement string
+  // Minimum TLS version enforced on the server
+  minimalTlsVersion string
+  // Whether public network access is enabled for the server
+  publicNetworkAccess string
+  // Whether infrastructure encryption is enabled (double encryption)
+  infrastructureEncryption string
+  // PostgreSQL server engine version
+  version string
   // PostgreSQL server configuration
   configuration() []azure.subscription.sqlService.configuration
   // PostgreSQL server databases
@@ -1743,6 +1849,16 @@ private azure.subscription.mySqlService.server @defaults("id name location") {
   type string
   // MySQL server properties
   properties dict
+  // Whether SSL enforcement is enabled
+  sslEnforcement string
+  // Minimum TLS version enforced on the server
+  minimalTlsVersion string
+  // Whether public network access is enabled for the server
+  publicNetworkAccess string
+  // Whether infrastructure encryption is enabled (double encryption)
+  infrastructureEncryption string
+  // MySQL server engine version
+  version string
   // MySQL server configuration
   configuration() []azure.subscription.sqlService.configuration
   // MySQL server databases
@@ -1779,6 +1895,8 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   type string
   // MySQL flexible server properties
   properties dict
+  // MySQL flexible server engine version
+  version string
   // MySQL flexible server configuration
   configuration() []azure.subscription.sqlService.configuration
   // MySQL flexible server databases
@@ -1855,6 +1973,20 @@ private azure.subscription.cosmosDbService.account @defaults("name kind location
   type string
   // Cosmos DB account kind
   kind string
+  // Whether public network access is enabled for the Cosmos DB account
+  publicNetworkAccess string
+  // Whether local authentication is disabled (requires Entra ID)
+  disableLocalAuth bool
+  // Whether virtual network filtering is enabled
+  isVirtualNetworkFilterEnabled bool
+  // Whether key-based metadata write access is disabled
+  disableKeyBasedMetadataWriteAccess bool
+  // Whether automatic failover is enabled
+  enableAutomaticFailover bool
+  // Whether multi-region write is enabled
+  enableMultipleWriteLocations bool
+  // IP address or CIDR ranges allowed by IP firewall rules
+  ipRangeFilter []string
 }
 
 // Azure Key Vault
@@ -1883,6 +2015,20 @@ private azure.subscription.keyVaultService.vault @defaults("vaultName type vault
   properties() dict
   // Whether RBAC access to the vault is enabled
   rbacAuthorizationEnabled() bool
+  // Whether soft delete is enabled for the vault
+  enableSoftDelete() bool
+  // Whether purge protection is enabled for the vault
+  enablePurgeProtection() bool
+  // Number of days that deleted vaults and vault objects are retained
+  softDeleteRetentionInDays() int
+  // Whether the vault is accessible from public networks
+  publicNetworkAccess() string
+  // Whether the vault can be used for Azure Resource Manager deployment
+  enabledForDeployment() bool
+  // Whether the vault can be used for Azure Disk Encryption
+  enabledForDiskEncryption() bool
+  // Whether the vault can be used for Azure Resource Manager template deployment
+  enabledForTemplateDeployment() bool
   // Vault keys
   keys() []azure.subscription.keyVaultService.key
   // Vault certificates
@@ -2365,6 +2511,16 @@ private azure.subscription.aksService.cluster @defaults("name location kubernete
   agentPoolProfiles []dict
   // The API server access profile
   apiServerAccessProfile dict
+  // Whether the AKS cluster API server is a private cluster
+  enablePrivateCluster bool
+  // Whether the private cluster has a public FQDN
+  enablePrivateClusterPublicFQDN bool
+  // Whether run command is disabled on the AKS cluster
+  disableRunCommand bool
+  // CIDR ranges authorized to access the AKS API server
+  apiServerAuthorizedIPRanges []string
+  // Private DNS zone mode for the AKS cluster
+  privateDnsZone string
 }
 
 // Azure Advisor
@@ -2517,6 +2673,8 @@ private azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   replicasPerMaster int
   // Number of replicas per primary
   replicasPerPrimary int
+  // Minimum TLS version required by the Redis cache
+  minimumTlsVersion string
   // SKU information for the Redis cache
   sku dict
   // Tags of redis cache

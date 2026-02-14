@@ -52,6 +52,7 @@ fargate
 filesz
 firefox
 frontmatter
+ftps
 fumadocs
 gcfs
 gcs
@@ -63,6 +64,7 @@ gpu
 groupname
 gvnic
 headerorder
+Hns
 hostkeys
 hotlink
 hvm

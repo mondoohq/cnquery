@@ -88,16 +88,59 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 				return nil, err
 			}
 
+			var publicNetworkAccess string
+			var disableLocalAuth bool
+			var isVirtualNetworkFilterEnabled bool
+			var disableKeyBasedMetadataWriteAccess bool
+			var enableAutomaticFailover bool
+			var enableMultipleWriteLocations bool
+			if account.Properties != nil {
+				if account.Properties.PublicNetworkAccess != nil {
+					publicNetworkAccess = string(*account.Properties.PublicNetworkAccess)
+				}
+				if account.Properties.DisableLocalAuth != nil {
+					disableLocalAuth = *account.Properties.DisableLocalAuth
+				}
+				if account.Properties.IsVirtualNetworkFilterEnabled != nil {
+					isVirtualNetworkFilterEnabled = *account.Properties.IsVirtualNetworkFilterEnabled
+				}
+				if account.Properties.DisableKeyBasedMetadataWriteAccess != nil {
+					disableKeyBasedMetadataWriteAccess = *account.Properties.DisableKeyBasedMetadataWriteAccess
+				}
+				if account.Properties.EnableAutomaticFailover != nil {
+					enableAutomaticFailover = *account.Properties.EnableAutomaticFailover
+				}
+				if account.Properties.EnableMultipleWriteLocations != nil {
+					enableMultipleWriteLocations = *account.Properties.EnableMultipleWriteLocations
+				}
+			}
+
+			ipRangeFilter := []any{}
+			if account.Properties != nil && account.Properties.IPRules != nil {
+				for _, rule := range account.Properties.IPRules {
+					if rule != nil && rule.IPAddressOrRange != nil {
+						ipRangeFilter = append(ipRangeFilter, *rule.IPAddressOrRange)
+					}
+				}
+			}
+
 			mqlCosmosDbAccount, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
 				map[string]*llx.RawData{
-					"__id":       llx.StringDataPtr(account.ID),
-					"id":         llx.StringDataPtr(account.ID),
-					"name":       llx.StringDataPtr(account.Name),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-					"location":   llx.StringDataPtr(account.Location),
-					"kind":       llx.StringDataPtr((*string)(account.Kind)),
-					"type":       llx.StringDataPtr(account.Type),
-					"properties": llx.DictData(properties),
+					"__id":                               llx.StringDataPtr(account.ID),
+					"id":                                 llx.StringDataPtr(account.ID),
+					"name":                               llx.StringDataPtr(account.Name),
+					"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
+					"location":                           llx.StringDataPtr(account.Location),
+					"kind":                               llx.StringDataPtr((*string)(account.Kind)),
+					"type":                               llx.StringDataPtr(account.Type),
+					"properties":                         llx.DictData(properties),
+					"publicNetworkAccess":                llx.StringData(publicNetworkAccess),
+					"disableLocalAuth":                   llx.BoolData(disableLocalAuth),
+					"isVirtualNetworkFilterEnabled":      llx.BoolData(isVirtualNetworkFilterEnabled),
+					"disableKeyBasedMetadataWriteAccess": llx.BoolData(disableKeyBasedMetadataWriteAccess),
+					"enableAutomaticFailover":            llx.BoolData(enableAutomaticFailover),
+					"enableMultipleWriteLocations":       llx.BoolData(enableMultipleWriteLocations),
+					"ipRangeFilter":                      llx.ArrayData(ipRangeFilter, types.String),
 				})
 			if err != nil {
 				return nil, err

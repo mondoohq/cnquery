@@ -172,6 +172,97 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) rbacAuthorizationEnabled() (b
 	return rbacProp.(bool), nil
 }
 
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) enableSoftDelete() (bool, error) {
+	props := a.GetProperties()
+	if props.Error != nil {
+		return false, props.Error
+	}
+	propsDict := props.Data.(map[string]any)
+	val := propsDict["enableSoftDelete"]
+	if val == nil {
+		return true, nil
+	}
+	return val.(bool), nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) enablePurgeProtection() (bool, error) {
+	props := a.GetProperties()
+	if props.Error != nil {
+		return false, props.Error
+	}
+	propsDict := props.Data.(map[string]any)
+	val := propsDict["enablePurgeProtection"]
+	if val == nil {
+		return false, nil
+	}
+	return val.(bool), nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) softDeleteRetentionInDays() (int64, error) {
+	props := a.GetProperties()
+	if props.Error != nil {
+		return 0, props.Error
+	}
+	propsDict := props.Data.(map[string]any)
+	val := propsDict["softDeleteRetentionInDays"]
+	if val == nil {
+		return 90, nil
+	}
+	return int64(val.(float64)), nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) publicNetworkAccess() (string, error) {
+	props := a.GetProperties()
+	if props.Error != nil {
+		return "", props.Error
+	}
+	propsDict := props.Data.(map[string]any)
+	val := propsDict["publicNetworkAccess"]
+	if val == nil {
+		return "", nil
+	}
+	return val.(string), nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) enabledForDeployment() (bool, error) {
+	props := a.GetProperties()
+	if props.Error != nil {
+		return false, props.Error
+	}
+	propsDict := props.Data.(map[string]any)
+	val := propsDict["enabledForDeployment"]
+	if val == nil {
+		return false, nil
+	}
+	return val.(bool), nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) enabledForDiskEncryption() (bool, error) {
+	props := a.GetProperties()
+	if props.Error != nil {
+		return false, props.Error
+	}
+	propsDict := props.Data.(map[string]any)
+	val := propsDict["enabledForDiskEncryption"]
+	if val == nil {
+		return false, nil
+	}
+	return val.(bool), nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) enabledForTemplateDeployment() (bool, error) {
+	props := a.GetProperties()
+	if props.Error != nil {
+		return false, props.Error
+	}
+	propsDict := props.Data.(map[string]any)
+	val := propsDict["enabledForTemplateDeployment"]
+	if val == nil {
+		return false, nil
+	}
+	return val.(bool), nil
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
