@@ -117,9 +117,6 @@ const (
 	ResourceAzureSubscriptionMySqlServiceServer                                                  string = "azure.subscription.mySqlService.server"
 	ResourceAzureSubscriptionMySqlServiceDatabase                                                string = "azure.subscription.mySqlService.database"
 	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                          string = "azure.subscription.mySqlService.flexibleServer"
-	ResourceAzureSubscriptionMariaDbService                                                      string = "azure.subscription.mariaDbService"
-	ResourceAzureSubscriptionMariaDbServiceServer                                                string = "azure.subscription.mariaDbService.server"
-	ResourceAzureSubscriptionMariaDbServiceDatabase                                              string = "azure.subscription.mariaDbService.database"
 	ResourceAzureSubscriptionCosmosDbService                                                     string = "azure.subscription.cosmosDbService"
 	ResourceAzureSubscriptionCosmosDbServiceAccount                                              string = "azure.subscription.cosmosDbService.account"
 	ResourceAzureSubscriptionKeyVaultService                                                     string = "azure.subscription.keyVaultService"
@@ -575,18 +572,6 @@ func init() {
 			Init:   initAzureSubscriptionMySqlServiceFlexibleServer,
 			Create: createAzureSubscriptionMySqlServiceFlexibleServer,
 		},
-		"azure.subscription.mariaDbService": {
-			// to override args, implement: initAzureSubscriptionMariaDbService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAzureSubscriptionMariaDbService,
-		},
-		"azure.subscription.mariaDbService.server": {
-			// to override args, implement: initAzureSubscriptionMariaDbServiceServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAzureSubscriptionMariaDbServiceServer,
-		},
-		"azure.subscription.mariaDbService.database": {
-			// to override args, implement: initAzureSubscriptionMariaDbServiceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAzureSubscriptionMariaDbServiceDatabase,
-		},
 		"azure.subscription.cosmosDbService": {
 			Init:   initAzureSubscriptionCosmosDbService,
 			Create: createAzureSubscriptionCosmosDbService,
@@ -922,9 +907,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.postgreSql": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetPostgreSql()).ToDataRes(types.Resource("azure.subscription.postgreSqlService"))
-	},
-	"azure.subscription.mariaDb": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscription).GetMariaDb()).ToDataRes(types.Resource("azure.subscription.mariaDbService"))
 	},
 	"azure.subscription.cosmosDb": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetCosmosDb()).ToDataRes(types.Resource("azure.subscription.cosmosDbService"))
@@ -3491,54 +3473,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.mySqlService.flexibleServer.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.firewallrule")))
 	},
-	"azure.subscription.mariaDbService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbService).GetSubscriptionId()).ToDataRes(types.String)
-	},
-	"azure.subscription.mariaDbService.servers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbService).GetServers()).ToDataRes(types.Array(types.Resource("azure.subscription.mariaDbService.server")))
-	},
-	"azure.subscription.mariaDbService.server.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceServer).GetId()).ToDataRes(types.String)
-	},
-	"azure.subscription.mariaDbService.server.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceServer).GetName()).ToDataRes(types.String)
-	},
-	"azure.subscription.mariaDbService.server.location": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceServer).GetLocation()).ToDataRes(types.String)
-	},
-	"azure.subscription.mariaDbService.server.tags": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceServer).GetTags()).ToDataRes(types.Map(types.String, types.String))
-	},
-	"azure.subscription.mariaDbService.server.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceServer).GetType()).ToDataRes(types.String)
-	},
-	"azure.subscription.mariaDbService.server.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceServer).GetProperties()).ToDataRes(types.Dict)
-	},
-	"azure.subscription.mariaDbService.server.configuration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceServer).GetConfiguration()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.configuration")))
-	},
-	"azure.subscription.mariaDbService.server.databases": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceServer).GetDatabases()).ToDataRes(types.Array(types.Resource("azure.subscription.mariaDbService.database")))
-	},
-	"azure.subscription.mariaDbService.server.firewallRules": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceServer).GetFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.firewallrule")))
-	},
-	"azure.subscription.mariaDbService.database.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceDatabase).GetId()).ToDataRes(types.String)
-	},
-	"azure.subscription.mariaDbService.database.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceDatabase).GetName()).ToDataRes(types.String)
-	},
-	"azure.subscription.mariaDbService.database.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceDatabase).GetType()).ToDataRes(types.String)
-	},
-	"azure.subscription.mariaDbService.database.charset": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceDatabase).GetCharset()).ToDataRes(types.String)
-	},
-	"azure.subscription.mariaDbService.database.collation": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMariaDbServiceDatabase).GetCollation()).ToDataRes(types.String)
-	},
 	"azure.subscription.cosmosDbService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -4678,10 +4612,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.postgreSql": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).PostgreSql, ok = plugin.RawToTValue[*mqlAzureSubscriptionPostgreSqlService](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscription).MariaDb, ok = plugin.RawToTValue[*mqlAzureSubscriptionMariaDbService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8496,82 +8426,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.mariaDbService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbService).__id, ok = v.Value.(string)
-		return
-	},
-	"azure.subscription.mariaDbService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbService).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceServer).__id, ok = v.Value.(string)
-		return
-	},
-	"azure.subscription.mariaDbService.server.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceServer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.server.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.server.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceServer).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.server.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceServer).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.server.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.server.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceServer).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.server.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceServer).Configuration, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.server.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceServer).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.server.firewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceServer).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceDatabase).__id, ok = v.Value.(string)
-		return
-	},
-	"azure.subscription.mariaDbService.database.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceDatabase).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.database.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.database.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceDatabase).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.database.charset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceDatabase).Charset, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.mariaDbService.database.collation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMariaDbServiceDatabase).Collation, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"azure.subscription.cosmosDbService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbService).__id, ok = v.Value.(string)
 		return
@@ -10244,7 +10098,6 @@ type mqlAzureSubscription struct {
 	Sql                   plugin.TValue[*mqlAzureSubscriptionSqlService]
 	MySql                 plugin.TValue[*mqlAzureSubscriptionMySqlService]
 	PostgreSql            plugin.TValue[*mqlAzureSubscriptionPostgreSqlService]
-	MariaDb               plugin.TValue[*mqlAzureSubscriptionMariaDbService]
 	CosmosDb              plugin.TValue[*mqlAzureSubscriptionCosmosDbService]
 	KeyVault              plugin.TValue[*mqlAzureSubscriptionKeyVaultService]
 	Iam                   plugin.TValue[*mqlAzureSubscriptionAuthorizationService]
@@ -10503,22 +10356,6 @@ func (c *mqlAzureSubscription) GetPostgreSql() *plugin.TValue[*mqlAzureSubscript
 		}
 
 		return c.postgreSql()
-	})
-}
-
-func (c *mqlAzureSubscription) GetMariaDb() *plugin.TValue[*mqlAzureSubscriptionMariaDbService] {
-	return plugin.GetOrCompute[*mqlAzureSubscriptionMariaDbService](&c.MariaDb, func() (*mqlAzureSubscriptionMariaDbService, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "mariaDb")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAzureSubscriptionMariaDbService), nil
-			}
-		}
-
-		return c.mariaDb()
 	})
 }
 
@@ -20316,266 +20153,6 @@ func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetFirewallRules() *plu
 
 		return c.firewallRules()
 	})
-}
-
-// mqlAzureSubscriptionMariaDbService for the azure.subscription.mariaDbService resource
-type mqlAzureSubscriptionMariaDbService struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlAzureSubscriptionMariaDbServiceInternal it will be used here
-	SubscriptionId plugin.TValue[string]
-	Servers        plugin.TValue[[]any]
-}
-
-// createAzureSubscriptionMariaDbService creates a new instance of this resource
-func createAzureSubscriptionMariaDbService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAzureSubscriptionMariaDbService{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("azure.subscription.mariaDbService", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAzureSubscriptionMariaDbService) MqlName() string {
-	return "azure.subscription.mariaDbService"
-}
-
-func (c *mqlAzureSubscriptionMariaDbService) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAzureSubscriptionMariaDbService) GetSubscriptionId() *plugin.TValue[string] {
-	return &c.SubscriptionId
-}
-
-func (c *mqlAzureSubscriptionMariaDbService) GetServers() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Servers, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.mariaDbService", c.__id, "servers")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.servers()
-	})
-}
-
-// mqlAzureSubscriptionMariaDbServiceServer for the azure.subscription.mariaDbService.server resource
-type mqlAzureSubscriptionMariaDbServiceServer struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlAzureSubscriptionMariaDbServiceServerInternal it will be used here
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	Location      plugin.TValue[string]
-	Tags          plugin.TValue[map[string]any]
-	Type          plugin.TValue[string]
-	Properties    plugin.TValue[any]
-	Configuration plugin.TValue[[]any]
-	Databases     plugin.TValue[[]any]
-	FirewallRules plugin.TValue[[]any]
-}
-
-// createAzureSubscriptionMariaDbServiceServer creates a new instance of this resource
-func createAzureSubscriptionMariaDbServiceServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAzureSubscriptionMariaDbServiceServer{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("azure.subscription.mariaDbService.server", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) MqlName() string {
-	return "azure.subscription.mariaDbService.server"
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) GetLocation() *plugin.TValue[string] {
-	return &c.Location
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) GetType() *plugin.TValue[string] {
-	return &c.Type
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) GetProperties() *plugin.TValue[any] {
-	return &c.Properties
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) GetConfiguration() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Configuration, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.mariaDbService.server", c.__id, "configuration")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.configuration()
-	})
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) GetDatabases() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.mariaDbService.server", c.__id, "databases")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.databases()
-	})
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceServer) GetFirewallRules() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.FirewallRules, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.mariaDbService.server", c.__id, "firewallRules")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.firewallRules()
-	})
-}
-
-// mqlAzureSubscriptionMariaDbServiceDatabase for the azure.subscription.mariaDbService.database resource
-type mqlAzureSubscriptionMariaDbServiceDatabase struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlAzureSubscriptionMariaDbServiceDatabaseInternal it will be used here
-	Id        plugin.TValue[string]
-	Name      plugin.TValue[string]
-	Type      plugin.TValue[string]
-	Charset   plugin.TValue[string]
-	Collation plugin.TValue[string]
-}
-
-// createAzureSubscriptionMariaDbServiceDatabase creates a new instance of this resource
-func createAzureSubscriptionMariaDbServiceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAzureSubscriptionMariaDbServiceDatabase{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("azure.subscription.mariaDbService.database", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceDatabase) MqlName() string {
-	return "azure.subscription.mariaDbService.database"
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceDatabase) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceDatabase) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceDatabase) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceDatabase) GetType() *plugin.TValue[string] {
-	return &c.Type
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceDatabase) GetCharset() *plugin.TValue[string] {
-	return &c.Charset
-}
-
-func (c *mqlAzureSubscriptionMariaDbServiceDatabase) GetCollation() *plugin.TValue[string] {
-	return &c.Collation
 }
 
 // mqlAzureSubscriptionCosmosDbService for the azure.subscription.cosmosDbService resource
