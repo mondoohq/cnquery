@@ -4,7 +4,7 @@ dist
 alpine-container.tar
 centos-container.tar
 ./cnquery
-test/commands/cnquery
+test/commands/mql
 file1
 id_rsa
 id_rsa.pub
