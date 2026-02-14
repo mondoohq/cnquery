@@ -5,6 +5,12 @@ on:
     branches:
       - "main"
   workflow_dispatch:
+    inputs:
+      upload-artifacts:
+        description: "Upload artifacts to workflow"
+        required: false
+        default: false
+        type: boolean
 
 env:
   REGISTRY: docker.io
@@ -65,3 +71,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Upload artifacts
+        if: ${{ inputs.upload-artifacts == true }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: mql-edge-linux
+          path: dist/mql*
+          retention-days: 7
