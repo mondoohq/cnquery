@@ -27,7 +27,7 @@ on:
         default: false
         type: boolean
       skip-cnspec-bump:
-        description: "Skip triggering cnquery version bump in cnspec"
+        description: "Skip triggering mql version bump in cnspec"
         required: false
         default: true
         type: boolean
@@ -66,7 +66,7 @@ jobs:
 
       - name: Skip Publish for Alpha and Beta Tags
         id: skip-publish
-        if: contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') || inputs.skip-publish == true
+        if: contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'pre') || contains(github.ref, 'rc') || inputs.skip-publish == true
         run: |
           echo "Skipping publish for alpha and beta tags"
           echo "skip-publish=true" >> $GITHUB_OUTPUT
