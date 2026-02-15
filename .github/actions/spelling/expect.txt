@@ -99,6 +99,7 @@ mfs
 mgroup
 minfree
 mkey
+mlag
 mpim
 naflags
 natgateway

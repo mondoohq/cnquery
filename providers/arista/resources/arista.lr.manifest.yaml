@@ -4,10 +4,16 @@
 resources:
   arista.eos:
     fields:
+      acls:
+        min_mondoo_version: 9.0.0
+      bgp:
+        min_mondoo_version: 9.0.0
       fqdn: {}
       hostname: {}
       interfaces: {}
       ipInterfaces: {}
+      mlag:
+        min_mondoo_version: 9.0.0
       ntp: {}
       roles: {}
       routes:
@@ -36,11 +42,77 @@ resources:
       title: Display all connected EOS interfaces
     - query: arista.eos.hostname
       title: EOS Hostname
+  arista.eos.acl:
+    fields:
+      entries: {}
+      name: {}
+      type: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.acl.entry:
+    fields:
+      aclName: {}
+      action: {}
+      log: {}
+      sequenceNumber: {}
+      srcAddress: {}
+      srcPrefixLen: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.bgp:
+    fields:
+      asNumber: {}
+      enabled: {}
+      routerId: {}
+      vrfs: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.bgp.peer:
+    fields:
+      description: {}
+      inboundRouteMap: {}
+      outboundRouteMap: {}
+      peerAddress: {}
+      prefixesAccepted: {}
+      prefixesReceived: {}
+      remoteAs: {}
+      state: {}
+      uptime: {}
+      vrfName: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.bgp.vrf:
+    fields:
+      asNumber: {}
+      name: {}
+      peers: {}
+      routerId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - arista-eos
   arista.eos.interface:
     fields:
+      autoNegotiate:
+        min_mondoo_version: 9.0.0
       bandwidth: {}
       burnedInAddress: {}
       description: {}
+      duplex:
+        min_mondoo_version: 9.0.0
+      enabled:
+        min_mondoo_version: 9.0.0
       forwardingModel: {}
       hardware: {}
       interfaceAddress: {}
@@ -70,6 +142,27 @@ resources:
     platform:
       name:
       - arista-eos
+  arista.eos.mlag:
+    fields:
+      domainId: {}
+      interfaces: {}
+      localInterface: {}
+      peerAddress: {}
+      peerLink: {}
+      shutdown: {}
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.mlag.interface:
+    fields:
+      mlagId: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - arista-eos
   arista.eos.ntpSetting:
     fields:
       status: {}
@@ -89,6 +182,7 @@ resources:
       - arista-eos
   arista.eos.route:
     fields:
+      active: {}
       destination: {}
       hardwareProgrammed: {}
       kernelProgrammed: {}
@@ -199,6 +293,8 @@ resources:
   arista.eos.user:
     fields:
       format: {}
+      locked:
+        min_mondoo_version: 9.0.0
       name: {}
       nopassword: {}
       privilege: {}
@@ -211,7 +307,9 @@ resources:
       - arista-eos
   arista.eos.vlan:
     fields:
+      dynamic: {}
       id: {}
+      interfaces: {}
       name: {}
       state: {}
       trunkGroups: {}
