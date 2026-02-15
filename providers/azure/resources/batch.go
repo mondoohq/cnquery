@@ -38,6 +38,46 @@ func (a *mqlAzureSubscriptionBatchServiceAccount) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func initAzureSubscriptionBatchServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure batch account")
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	res, err := NewResource(runtime, "azure.subscription.batchService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	batchSvc := res.(*mqlAzureSubscriptionBatchService)
+	accountList := batchSvc.GetAccounts()
+	if accountList.Error != nil {
+		return nil, nil, accountList.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range accountList.Data {
+		account := entry.(*mqlAzureSubscriptionBatchServiceAccount)
+		if account.Id.Data == id {
+			return args, account, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure batch account does not exist")
+}
+
 func (a *mqlAzureSubscriptionBatchService) accounts() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	if !ok {

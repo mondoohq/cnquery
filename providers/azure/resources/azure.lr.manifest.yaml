@@ -253,7 +253,6 @@ resources:
       storageProfile: {}
       tags: {}
       workloadAutoScalerProfile: {}
-    is_private: true
     min_mondoo_version: 7.17.0
     platform:
       name:
@@ -488,24 +487,69 @@ resources:
   azure.subscription.cacheService.redisInstance:
     fields:
       enableNonSslPort: {}
+      firewallRules: {}
       hostName: {}
       id: {}
+      identity: {}
       location: {}
       minimumTlsVersion: {}
       name: {}
+      patchSchedules: {}
       port: {}
+      privateEndpointConnections: {}
       properties: {}
       provisioningState: {}
       publicNetworkAccess: {}
+      redisConfiguration: {}
       redisVersion: {}
       replicasPerMaster: {}
       replicasPerPrimary: {}
+      shardCount: {}
       sku: {}
       sslPort: {}
+      staticIp: {}
+      subnetId: {}
       tags: {}
       type: {}
-    is_private: true
+      zones: {}
     min_mondoo_version: 11.4.28
+    platform:
+      name:
+      - azure
+  azure.subscription.cacheService.redisInstance.firewallRule:
+    fields:
+      endIpAddress: {}
+      id: {}
+      name: {}
+      startIpAddress: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.cacheService.redisInstance.patchSchedule:
+    fields:
+      entries: {}
+      id: {}
+      location: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.cacheService.redisInstance.privateEndpointConnection:
+    fields:
+      description: {}
+      id: {}
+      name: {}
+      privateEndpointId: {}
+      provisioningState: {}
+      status: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
     platform:
       name:
       - azure
@@ -816,7 +860,6 @@ resources:
         min_mondoo_version: 9.0.0
       tags: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -3386,8 +3429,12 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/?product=web
   azure.subscription.webService:
     fields:
+      appServicePlans:
+        min_mondoo_version: 9.0.0
       apps: {}
       availableRuntimes: {}
+      certificates:
+        min_mondoo_version: 9.0.0
       environments:
         min_mondoo_version: 9.0.0
       hostingEnvironments:
@@ -3417,6 +3464,31 @@ resources:
     platform:
       name:
       - azure
+  azure.subscription.webService.appServicePlan:
+    fields:
+      elasticScaleEnabled: {}
+      geoRegion: {}
+      id: {}
+      kind: {}
+      location: {}
+      maximumNumberOfWorkers: {}
+      name: {}
+      numberOfSites: {}
+      perSiteScaling: {}
+      properties: {}
+      reserved: {}
+      sku: {}
+      status: {}
+      tags: {}
+      zoneRedundant: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+    refs:
+    - title: Azure App Service Plan documentation
+      url: https://learn.microsoft.com/en-us/azure/app-service/overview-hosting-plans
   azure.subscription.webService.appsite:
     fields:
       applicationSettings: {}
@@ -3435,6 +3507,8 @@ resources:
         min_mondoo_version: 11.4.28
       functions:
         min_mondoo_version: 11.4.28
+      hostNameBindings:
+        min_mondoo_version: 9.0.0
       httpsOnly:
         min_mondoo_version: 9.0.0
       id: {}
@@ -3455,7 +3529,8 @@ resources:
         min_mondoo_version: 9.0.0
       tags: {}
       type: {}
-    is_private: true
+      virtualNetworkConnections:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: latest
     platform:
       name:
@@ -3474,6 +3549,37 @@ resources:
     platform:
       name:
       - azure
+  azure.subscription.webService.appsite.hostNameBinding:
+    fields:
+      hostNameType: {}
+      id: {}
+      name: {}
+      sslState: {}
+      thumbprint: {}
+      virtualIP: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+    refs:
+    - title: Azure App Service Custom Domain documentation
+      url: https://learn.microsoft.com/en-us/azure/app-service/app-service-web-tutorial-custom-domain
+  azure.subscription.webService.appsite.virtualNetworkConnection:
+    fields:
+      id: {}
+      isSwift: {}
+      name: {}
+      resyncRequired: {}
+      vnetResourceId: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+    refs:
+    - title: Azure App Service VNet Integration documentation
+      url: https://learn.microsoft.com/en-us/azure/app-service/overview-vnet-integration
   azure.subscription.webService.appsiteauthsettings:
     fields:
       id: {}
@@ -3540,6 +3646,28 @@ resources:
     platform:
       name:
       - azure
+  azure.subscription.webService.certificate:
+    fields:
+      expirationDate: {}
+      hostNames: {}
+      id: {}
+      issueDate: {}
+      issuer: {}
+      location: {}
+      name: {}
+      properties: {}
+      subjectName: {}
+      tags: {}
+      thumbprint: {}
+      valid: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - azure
+    refs:
+    - title: Azure App Service Certificates documentation
+      url: https://learn.microsoft.com/en-us/azure/app-service/configure-ssl-certificate
   azure.subscription.webService.environment:
     fields:
       clusterSettings: {}
