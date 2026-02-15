@@ -99,7 +99,8 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		"identity":   llx.DictData(identity),
 	}
 
-	if site.Properties != nil {
+	// Only set these fields for appsite, not appslot (which doesn't have them)
+	if resourceType == ResourceAzureSubscriptionWebServiceAppsite && site.Properties != nil {
 		args["httpsOnly"] = llx.BoolDataPtr(site.Properties.HTTPSOnly)
 		args["clientCertEnabled"] = llx.BoolDataPtr(site.Properties.ClientCertEnabled)
 		if site.Properties.ClientCertMode != nil {
