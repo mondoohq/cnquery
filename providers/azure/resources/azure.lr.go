@@ -93,6 +93,10 @@ const (
 	ResourceAzureSubscriptionWebServiceAppsiteconfig                                             string = "azure.subscription.webService.appsiteconfig"
 	ResourceAzureSubscriptionWebServiceHostingEnvironment                                        string = "azure.subscription.webService.hostingEnvironment"
 	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                          string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
+	ResourceAzureSubscriptionWebServiceAppServicePlan                                            string = "azure.subscription.webService.appServicePlan"
+	ResourceAzureSubscriptionWebServiceCertificate                                               string = "azure.subscription.webService.certificate"
+	ResourceAzureSubscriptionWebServiceAppsiteHostNameBinding                                    string = "azure.subscription.webService.appsite.hostNameBinding"
+	ResourceAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection                           string = "azure.subscription.webService.appsite.virtualNetworkConnection"
 	ResourceAzureSubscriptionSqlService                                                          string = "azure.subscription.sqlService"
 	ResourceAzureSubscriptionSqlServiceServer                                                    string = "azure.subscription.sqlService.server"
 	ResourceAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings                     string = "azure.subscription.sqlService.server.vulnerabilityassessmentsettings"
@@ -162,6 +166,9 @@ const (
 	ResourceAzureSubscriptionIotService                                                          string = "azure.subscription.iotService"
 	ResourceAzureSubscriptionCacheService                                                        string = "azure.subscription.cacheService"
 	ResourceAzureSubscriptionCacheServiceRedisInstance                                           string = "azure.subscription.cacheService.redisInstance"
+	ResourceAzureSubscriptionCacheServiceRedisInstanceFirewallRule                               string = "azure.subscription.cacheService.redisInstance.firewallRule"
+	ResourceAzureSubscriptionCacheServiceRedisInstancePatchSchedule                              string = "azure.subscription.cacheService.redisInstance.patchSchedule"
+	ResourceAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection                  string = "azure.subscription.cacheService.redisInstance.privateEndpointConnection"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -205,7 +212,7 @@ func init() {
 			Create: createAzureSubscriptionBatchService,
 		},
 		"azure.subscription.batchService.account": {
-			// to override args, implement: initAzureSubscriptionBatchServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionBatchServiceAccount,
 			Create: createAzureSubscriptionBatchServiceAccount,
 		},
 		"azure.subscription.batchService.account.pool": {
@@ -437,7 +444,7 @@ func init() {
 			Create: createAzureSubscriptionWebServiceAppRuntimeStack,
 		},
 		"azure.subscription.webService.appsite": {
-			// to override args, implement: initAzureSubscriptionWebServiceAppsite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionWebServiceAppsite,
 			Create: createAzureSubscriptionWebServiceAppsite,
 		},
 		"azure.subscription.privateEndpointConnection": {
@@ -471,6 +478,22 @@ func init() {
 		"azure.subscription.webService.hostingEnvironment.virtualNetwork": {
 			// to override args, implement: initAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork,
+		},
+		"azure.subscription.webService.appServicePlan": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppServicePlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppServicePlan,
+		},
+		"azure.subscription.webService.certificate": {
+			// to override args, implement: initAzureSubscriptionWebServiceCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceCertificate,
+		},
+		"azure.subscription.webService.appsite.hostNameBinding": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppsiteHostNameBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppsiteHostNameBinding,
+		},
+		"azure.subscription.webService.appsite.virtualNetworkConnection": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection,
 		},
 		"azure.subscription.sqlService": {
 			Init:   initAzureSubscriptionSqlService,
@@ -569,7 +592,7 @@ func init() {
 			Create: createAzureSubscriptionCosmosDbService,
 		},
 		"azure.subscription.cosmosDbService.account": {
-			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionCosmosDbServiceAccount,
 			Create: createAzureSubscriptionCosmosDbServiceAccount,
 		},
 		"azure.subscription.keyVaultService": {
@@ -693,11 +716,11 @@ func init() {
 			Create: createAzureSubscriptionManagedIdentity,
 		},
 		"azure.subscription.aksService": {
-			// to override args, implement: initAzureSubscriptionAksService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionAksService,
 			Create: createAzureSubscriptionAksService,
 		},
 		"azure.subscription.aksService.cluster": {
-			// to override args, implement: initAzureSubscriptionAksServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionAksServiceCluster,
 			Create: createAzureSubscriptionAksServiceCluster,
 		},
 		"azure.subscription.aksService.cluster.aadProfile": {
@@ -745,8 +768,20 @@ func init() {
 			Create: createAzureSubscriptionCacheService,
 		},
 		"azure.subscription.cacheService.redisInstance": {
-			// to override args, implement: initAzureSubscriptionCacheServiceRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionCacheServiceRedisInstance,
 			Create: createAzureSubscriptionCacheServiceRedisInstance,
+		},
+		"azure.subscription.cacheService.redisInstance.firewallRule": {
+			// to override args, implement: initAzureSubscriptionCacheServiceRedisInstanceFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCacheServiceRedisInstanceFirewallRule,
+		},
+		"azure.subscription.cacheService.redisInstance.patchSchedule": {
+			// to override args, implement: initAzureSubscriptionCacheServiceRedisInstancePatchSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCacheServiceRedisInstancePatchSchedule,
+		},
+		"azure.subscription.cacheService.redisInstance.privateEndpointConnection": {
+			// to override args, implement: initAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection,
 		},
 	}
 }
@@ -2457,6 +2492,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.hostingEnvironments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebService).GetHostingEnvironments()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.hostingEnvironment")))
 	},
+	"azure.subscription.webService.appServicePlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebService).GetAppServicePlans()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appServicePlan")))
+	},
+	"azure.subscription.webService.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebService).GetCertificates()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.certificate")))
+	},
 	"azure.subscription.webService.appRuntimeStack.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetName()).ToDataRes(types.String)
 	},
@@ -2561,6 +2602,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.appsite.endToEndEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetEndToEndEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsite.hostNameBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetHostNameBindings()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appsite.hostNameBinding")))
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetVirtualNetworkConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appsite.virtualNetworkConnection")))
 	},
 	"azure.subscription.privateEndpointConnection.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetId()).ToDataRes(types.String)
@@ -2792,6 +2839,120 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.hostingEnvironment.virtualNetwork.subnet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).GetSubnet()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appServicePlan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appServicePlan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appServicePlan.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appServicePlan.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appServicePlan.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.webService.appServicePlan.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.appServicePlan.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetSku()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.appServicePlan.zoneRedundant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetZoneRedundant()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appServicePlan.numberOfSites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetNumberOfSites()).ToDataRes(types.Int)
+	},
+	"azure.subscription.webService.appServicePlan.maximumNumberOfWorkers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetMaximumNumberOfWorkers()).ToDataRes(types.Int)
+	},
+	"azure.subscription.webService.appServicePlan.geoRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetGeoRegion()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appServicePlan.reserved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetReserved()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appServicePlan.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appServicePlan.perSiteScaling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetPerSiteScaling()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appServicePlan.elasticScaleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetElasticScaleEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.certificate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.certificate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.certificate.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.certificate.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.webService.certificate.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.certificate.thumbprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetThumbprint()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.certificate.subjectName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetSubjectName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.certificate.issuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetIssuer()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.certificate.issueDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetIssueDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.webService.certificate.expirationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetExpirationDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.webService.certificate.hostNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetHostNames()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.webService.certificate.valid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetValid()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.hostNameType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).GetHostNameType()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.sslState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).GetSslState()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.thumbprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).GetThumbprint()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.virtualIP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).GetVirtualIP()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.vnetResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).GetVnetResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.isSwift": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).GetIsSwift()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.resyncRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).GetResyncRequired()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.sqlService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlService).GetSubscriptionId()).ToDataRes(types.String)
@@ -4342,7 +4503,82 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetSku()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.cacheService.redisInstance.tags": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetTags()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cacheService.redisInstance.redisConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetRedisConfiguration()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cacheService.redisInstance.shardCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetShardCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cacheService.redisInstance.staticIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetStaticIp()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.subnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetSubnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cacheService.redisInstance.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.cacheService.redisInstance.privateEndpointConnection")))
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.cacheService.redisInstance.firewallRule")))
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetPatchSchedules()).ToDataRes(types.Array(types.Resource("azure.subscription.cacheService.redisInstance.patchSchedule")))
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.startIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).GetStartIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.endIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).GetEndIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedule.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedule.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule).GetEntries()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.privateEndpointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetPrivateEndpointId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetProvisioningState()).ToDataRes(types.String)
 	},
 }
 
@@ -6792,6 +7028,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebService).HostingEnvironments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.webService.appServicePlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebService).AppServicePlans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebService).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.webService.appRuntimeStack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).__id, ok = v.Value.(string)
 		return
@@ -6938,6 +7182,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appsite.endToEndEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).EndToEndEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.hostNameBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).HostNameBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).VirtualNetworkConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.privateEndpointConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7278,6 +7530,174 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.hostingEnvironment.virtualNetwork.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork).Subnet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.zoneRedundant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).ZoneRedundant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.numberOfSites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).NumberOfSites, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.maximumNumberOfWorkers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).MaximumNumberOfWorkers, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.geoRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GeoRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.reserved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).Reserved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.perSiteScaling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).PerSiteScaling, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appServicePlan.elasticScaleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).ElasticScaleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.webService.certificate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.thumbprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).Thumbprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.subjectName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).SubjectName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.issuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).Issuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.issueDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).IssueDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.expirationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).ExpirationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.hostNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).HostNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.certificate.valid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceCertificate).Valid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.hostNameType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).HostNameType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.sslState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).SslState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.thumbprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).Thumbprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.hostNameBinding.virtualIP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).VirtualIP, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.vnetResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).VnetResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.isSwift": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).IsSwift, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.virtualNetworkConnection.resyncRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).ResyncRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sqlService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9621,7 +10041,119 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.cacheService.redisInstance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).Tags, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.redisConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).RedisConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.shardCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).ShardCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.staticIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).StaticIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).PatchSchedules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.startIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).StartIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.firewallRule.endIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).EndIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedule.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.patchSchedule.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.privateEndpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).PrivateEndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -16003,6 +16535,8 @@ type mqlAzureSubscriptionWebService struct {
 	Apps                plugin.TValue[[]any]
 	AvailableRuntimes   plugin.TValue[[]any]
 	HostingEnvironments plugin.TValue[[]any]
+	AppServicePlans     plugin.TValue[[]any]
+	Certificates        plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionWebService creates a new instance of this resource
@@ -16091,6 +16625,38 @@ func (c *mqlAzureSubscriptionWebService) GetHostingEnvironments() *plugin.TValue
 		}
 
 		return c.hostingEnvironments()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebService) GetAppServicePlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AppServicePlans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService", c.__id, "appServicePlans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.appServicePlans()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebService) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
 	})
 }
 
@@ -16209,6 +16775,8 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	Scm                        plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
 	PrivateEndpointConnections plugin.TValue[[]any]
 	EndToEndEncryptionEnabled  plugin.TValue[bool]
+	HostNameBindings           plugin.TValue[[]any]
+	VirtualNetworkConnections  plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionWebServiceAppsite creates a new instance of this resource
@@ -16454,6 +17022,38 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetPrivateEndpointConnections() 
 
 func (c *mqlAzureSubscriptionWebServiceAppsite) GetEndToEndEncryptionEnabled() *plugin.TValue[bool] {
 	return &c.EndToEndEncryptionEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetHostNameBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostNameBindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "hostNameBindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hostNameBindings()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetVirtualNetworkConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualNetworkConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "virtualNetworkConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualNetworkConnections()
+	})
 }
 
 // mqlAzureSubscriptionPrivateEndpointConnection for the azure.subscription.privateEndpointConnection resource
@@ -17263,6 +17863,372 @@ func (c *mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork) GetType
 
 func (c *mqlAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork) GetSubnet() *plugin.TValue[string] {
 	return &c.Subnet
+}
+
+// mqlAzureSubscriptionWebServiceAppServicePlan for the azure.subscription.webService.appServicePlan resource
+type mqlAzureSubscriptionWebServiceAppServicePlan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppServicePlanInternal it will be used here
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Location               plugin.TValue[string]
+	Kind                   plugin.TValue[string]
+	Tags                   plugin.TValue[map[string]any]
+	Properties             plugin.TValue[any]
+	Sku                    plugin.TValue[any]
+	ZoneRedundant          plugin.TValue[bool]
+	NumberOfSites          plugin.TValue[int64]
+	MaximumNumberOfWorkers plugin.TValue[int64]
+	GeoRegion              plugin.TValue[string]
+	Reserved               plugin.TValue[bool]
+	Status                 plugin.TValue[string]
+	PerSiteScaling         plugin.TValue[bool]
+	ElasticScaleEnabled    plugin.TValue[bool]
+}
+
+// createAzureSubscriptionWebServiceAppServicePlan creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppServicePlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppServicePlan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appServicePlan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) MqlName() string {
+	return "azure.subscription.webService.appServicePlan"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetSku() *plugin.TValue[any] {
+	return &c.Sku
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetZoneRedundant() *plugin.TValue[bool] {
+	return &c.ZoneRedundant
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetNumberOfSites() *plugin.TValue[int64] {
+	return &c.NumberOfSites
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetMaximumNumberOfWorkers() *plugin.TValue[int64] {
+	return &c.MaximumNumberOfWorkers
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetGeoRegion() *plugin.TValue[string] {
+	return &c.GeoRegion
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetReserved() *plugin.TValue[bool] {
+	return &c.Reserved
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetPerSiteScaling() *plugin.TValue[bool] {
+	return &c.PerSiteScaling
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetElasticScaleEnabled() *plugin.TValue[bool] {
+	return &c.ElasticScaleEnabled
+}
+
+// mqlAzureSubscriptionWebServiceCertificate for the azure.subscription.webService.certificate resource
+type mqlAzureSubscriptionWebServiceCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionWebServiceCertificateInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Location       plugin.TValue[string]
+	Tags           plugin.TValue[map[string]any]
+	Properties     plugin.TValue[any]
+	Thumbprint     plugin.TValue[string]
+	SubjectName    plugin.TValue[string]
+	Issuer         plugin.TValue[string]
+	IssueDate      plugin.TValue[*time.Time]
+	ExpirationDate plugin.TValue[*time.Time]
+	HostNames      plugin.TValue[[]any]
+	Valid          plugin.TValue[bool]
+}
+
+// createAzureSubscriptionWebServiceCertificate creates a new instance of this resource
+func createAzureSubscriptionWebServiceCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.certificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) MqlName() string {
+	return "azure.subscription.webService.certificate"
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetThumbprint() *plugin.TValue[string] {
+	return &c.Thumbprint
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetSubjectName() *plugin.TValue[string] {
+	return &c.SubjectName
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetIssuer() *plugin.TValue[string] {
+	return &c.Issuer
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetIssueDate() *plugin.TValue[*time.Time] {
+	return &c.IssueDate
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetExpirationDate() *plugin.TValue[*time.Time] {
+	return &c.ExpirationDate
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetHostNames() *plugin.TValue[[]any] {
+	return &c.HostNames
+}
+
+func (c *mqlAzureSubscriptionWebServiceCertificate) GetValid() *plugin.TValue[bool] {
+	return &c.Valid
+}
+
+// mqlAzureSubscriptionWebServiceAppsiteHostNameBinding for the azure.subscription.webService.appsite.hostNameBinding resource
+type mqlAzureSubscriptionWebServiceAppsiteHostNameBinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppsiteHostNameBindingInternal it will be used here
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	HostNameType plugin.TValue[string]
+	SslState     plugin.TValue[string]
+	Thumbprint   plugin.TValue[string]
+	VirtualIP    plugin.TValue[string]
+}
+
+// createAzureSubscriptionWebServiceAppsiteHostNameBinding creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppsiteHostNameBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppsiteHostNameBinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appsite.hostNameBinding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteHostNameBinding) MqlName() string {
+	return "azure.subscription.webService.appsite.hostNameBinding"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteHostNameBinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteHostNameBinding) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteHostNameBinding) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteHostNameBinding) GetHostNameType() *plugin.TValue[string] {
+	return &c.HostNameType
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteHostNameBinding) GetSslState() *plugin.TValue[string] {
+	return &c.SslState
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteHostNameBinding) GetThumbprint() *plugin.TValue[string] {
+	return &c.Thumbprint
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteHostNameBinding) GetVirtualIP() *plugin.TValue[string] {
+	return &c.VirtualIP
+}
+
+// mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection for the azure.subscription.webService.appsite.virtualNetworkConnection resource
+type mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnectionInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	VnetResourceId plugin.TValue[string]
+	IsSwift        plugin.TValue[bool]
+	ResyncRequired plugin.TValue[bool]
+}
+
+// createAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appsite.virtualNetworkConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection) MqlName() string {
+	return "azure.subscription.webService.appsite.virtualNetworkConnection"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection) GetVnetResourceId() *plugin.TValue[string] {
+	return &c.VnetResourceId
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection) GetIsSwift() *plugin.TValue[bool] {
+	return &c.IsSwift
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection) GetResyncRequired() *plugin.TValue[bool] {
+	return &c.ResyncRequired
 }
 
 // mqlAzureSubscriptionSqlService for the azure.subscription.sqlService resource
@@ -23583,7 +24549,12 @@ func createAzureSubscriptionCacheService(runtime *plugin.Runtime, args map[strin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.cacheService", res.__id)
@@ -23629,23 +24600,32 @@ type mqlAzureSubscriptionCacheServiceRedisInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionCacheServiceRedisInstanceInternal it will be used here
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Location            plugin.TValue[string]
-	Type                plugin.TValue[string]
-	Properties          plugin.TValue[any]
-	EnableNonSslPort    plugin.TValue[bool]
-	HostName            plugin.TValue[string]
-	PublicNetworkAccess plugin.TValue[string]
-	Port                plugin.TValue[int64]
-	SslPort             plugin.TValue[int64]
-	ProvisioningState   plugin.TValue[string]
-	RedisVersion        plugin.TValue[string]
-	ReplicasPerMaster   plugin.TValue[int64]
-	ReplicasPerPrimary  plugin.TValue[int64]
-	MinimumTlsVersion   plugin.TValue[string]
-	Sku                 plugin.TValue[any]
-	Tags                plugin.TValue[any]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	Properties                 plugin.TValue[any]
+	EnableNonSslPort           plugin.TValue[bool]
+	HostName                   plugin.TValue[string]
+	PublicNetworkAccess        plugin.TValue[string]
+	Port                       plugin.TValue[int64]
+	SslPort                    plugin.TValue[int64]
+	ProvisioningState          plugin.TValue[string]
+	RedisVersion               plugin.TValue[string]
+	ReplicasPerMaster          plugin.TValue[int64]
+	ReplicasPerPrimary         plugin.TValue[int64]
+	MinimumTlsVersion          plugin.TValue[string]
+	Sku                        plugin.TValue[any]
+	Tags                       plugin.TValue[map[string]any]
+	RedisConfiguration         plugin.TValue[any]
+	ShardCount                 plugin.TValue[int64]
+	StaticIp                   plugin.TValue[string]
+	SubnetId                   plugin.TValue[string]
+	Zones                      plugin.TValue[[]any]
+	Identity                   plugin.TValue[any]
+	PrivateEndpointConnections plugin.TValue[[]any]
+	FirewallRules              plugin.TValue[[]any]
+	PatchSchedules             plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCacheServiceRedisInstance creates a new instance of this resource
@@ -23659,7 +24639,12 @@ func createAzureSubscriptionCacheServiceRedisInstance(runtime *plugin.Runtime, a
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.cacheService.redisInstance", res.__id)
@@ -23744,6 +24729,278 @@ func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetSku() *plugin.TValue[
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetTags() *plugin.TValue[any] {
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetRedisConfiguration() *plugin.TValue[any] {
+	return &c.RedisConfiguration
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetShardCount() *plugin.TValue[int64] {
+	return &c.ShardCount
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetStaticIp() *plugin.TValue[string] {
+	return &c.StaticIp
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetSubnetId() *plugin.TValue[string] {
+	return &c.SubnetId
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetZones() *plugin.TValue[[]any] {
+	return &c.Zones
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return &c.PrivateEndpointConnections
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetFirewallRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cacheService.redisInstance", c.__id, "firewallRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetPatchSchedules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PatchSchedules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cacheService.redisInstance", c.__id, "patchSchedules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.patchSchedules()
+	})
+}
+
+// mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule for the azure.subscription.cacheService.redisInstance.firewallRule resource
+type mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRuleInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Type           plugin.TValue[string]
+	StartIpAddress plugin.TValue[string]
+	EndIpAddress   plugin.TValue[string]
+}
+
+// createAzureSubscriptionCacheServiceRedisInstanceFirewallRule creates a new instance of this resource
+func createAzureSubscriptionCacheServiceRedisInstanceFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cacheService.redisInstance.firewallRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) MqlName() string {
+	return "azure.subscription.cacheService.redisInstance.firewallRule"
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) GetStartIpAddress() *plugin.TValue[string] {
+	return &c.StartIpAddress
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) GetEndIpAddress() *plugin.TValue[string] {
+	return &c.EndIpAddress
+}
+
+// mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule for the azure.subscription.cacheService.redisInstance.patchSchedule resource
+type mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCacheServiceRedisInstancePatchScheduleInternal it will be used here
+	Id       plugin.TValue[string]
+	Name     plugin.TValue[string]
+	Location plugin.TValue[string]
+	Entries  plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCacheServiceRedisInstancePatchSchedule creates a new instance of this resource
+func createAzureSubscriptionCacheServiceRedisInstancePatchSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cacheService.redisInstance.patchSchedule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule) MqlName() string {
+	return "azure.subscription.cacheService.redisInstance.patchSchedule"
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule) GetEntries() *plugin.TValue[[]any] {
+	return &c.Entries
+}
+
+// mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection for the azure.subscription.cacheService.redisInstance.privateEndpointConnection resource
+type mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnectionInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	PrivateEndpointId plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Description       plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection creates a new instance of this resource
+func createAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cacheService.redisInstance.privateEndpointConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) MqlName() string {
+	return "azure.subscription.cacheService.redisInstance.privateEndpointConnection"
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetPrivateEndpointId() *plugin.TValue[string] {
+	return &c.PrivateEndpointId
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
 }

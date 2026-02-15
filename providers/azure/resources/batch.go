@@ -38,6 +38,46 @@ func (a *mqlAzureSubscriptionBatchServiceAccount) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func initAzureSubscriptionBatchServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure batch account")
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	res, err := NewResource(runtime, "azure.subscription.batchService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	batchSvc := res.(*mqlAzureSubscriptionBatchService)
+	accountList := batchSvc.GetAccounts()
+	if accountList.Error != nil {
+		return nil, nil, accountList.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range accountList.Data {
+		account := entry.(*mqlAzureSubscriptionBatchServiceAccount)
+		if account.Id.Data == id {
+			return args, account, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure batch account does not exist")
+}
+
 func (a *mqlAzureSubscriptionBatchService) accounts() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	if !ok {
@@ -76,7 +116,7 @@ func (a *mqlAzureSubscriptionBatchService) accounts() ([]any, error) {
 	return res, nil
 }
 
-func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mqlAzureSubscriptionBatchServiceAccount, error) {
+func createBatchAccountRawData(account *armbatch.Account) (map[string]*llx.RawData, error) {
 	identityData := llx.NilData
 	if account.Identity != nil {
 		identity, err := convert.JsonToDict(account.Identity)
@@ -218,7 +258,7 @@ func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mql
 		}
 	}
 
-	res, err := CreateResource(runtime, ResourceAzureSubscriptionBatchServiceAccount, map[string]*llx.RawData{
+	return map[string]*llx.RawData{
 		"id":                                    llx.StringDataPtr(account.ID),
 		"name":                                  llx.StringDataPtr(account.Name),
 		"location":                              llx.StringDataPtr(account.Location),
@@ -243,7 +283,16 @@ func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mql
 		"keyVaultReference":                     keyVaultReference,
 		"networkProfile":                        networkProfile,
 		"privateEndpointConnections":            privateEndpointConnections,
-	})
+	}, nil
+}
+
+func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mqlAzureSubscriptionBatchServiceAccount, error) {
+	rawData, err := createBatchAccountRawData(account)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, ResourceAzureSubscriptionBatchServiceAccount, rawData)
 	if err != nil {
 		return nil, err
 	}
@@ -309,7 +358,7 @@ func (a *mqlAzureSubscriptionBatchServiceAccount) diagnosticSettings() ([]any, e
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
 }
 
-func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubscriptionBatchServiceAccountPool, error) {
+func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error) {
 	identityData := llx.NilData
 	if pool.Identity != nil {
 		if dict, err := convert.JsonToDict(pool.Identity); err != nil {
@@ -359,20 +408,27 @@ func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubs
 		}
 	}
 
-	etagData := llx.StringDataPtr(pool.Etag)
-
-	resource, err := CreateResource(runtime, ResourceAzureSubscriptionBatchServiceAccountPool, map[string]*llx.RawData{
+	return map[string]*llx.RawData{
 		"id":                          llx.StringDataPtr(pool.ID),
 		"name":                        llx.StringDataPtr(pool.Name),
 		"type":                        llx.StringDataPtr(pool.Type),
-		"etag":                        etagData,
+		"etag":                        llx.StringDataPtr(pool.Etag),
 		"identity":                    identityData,
 		"properties":                  propertiesData,
 		"deploymentConfiguration":     deploymentConfigurationData,
 		"virtualMachineConfiguration": virtualMachineConfigurationData,
 		"vmSize":                      vmSizeData,
 		"provisioningState":           provisioningStateData,
-	})
+	}, nil
+}
+
+func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubscriptionBatchServiceAccountPool, error) {
+	rawData, err := createBatchPoolRawData(pool)
+	if err != nil {
+		return nil, err
+	}
+
+	resource, err := CreateResource(runtime, ResourceAzureSubscriptionBatchServiceAccountPool, rawData)
 	if err != nil {
 		return nil, err
 	}

@@ -174,3 +174,21 @@ func TestParseResourceID(t *testing.T) {
 		assert.EqualValues(t, test.expected, parsed)
 	}
 }
+
+func TestComponentCaseInsensitive(t *testing.T) {
+	// Azure ARM resource IDs are case-insensitive.
+	// Microsoft.Cache returns "Redis" (capital R) in the ID path, but callers
+	// may use lowercase "redis". Component must handle both.
+	id, err := ParseResourceID("/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Cache/Redis/my-cache")
+	assert.NoError(t, err)
+
+	// Lookup with lowercase should match uppercase key
+	val, err := id.Component("redis")
+	assert.NoError(t, err)
+	assert.Equal(t, "my-cache", val)
+
+	// Lookup with exact casing should also work
+	val, err = id.Component("Redis")
+	assert.NoError(t, err)
+	assert.Equal(t, "my-cache", val)
+}

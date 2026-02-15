@@ -21,7 +21,7 @@ func (a *mqlAzureSubscriptionAksService) id() (string, error) {
 	return "azure.subscription.aks/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionAks(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionAksService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -33,6 +33,46 @@ func initAzureSubscriptionAks(runtime *plugin.Runtime, args map[string]*llx.RawD
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
 	return args, nil, nil
+}
+
+func initAzureSubscriptionAksServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure aks cluster")
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	res, err := NewResource(runtime, "azure.subscription.aksService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	aksSvc := res.(*mqlAzureSubscriptionAksService)
+	clusterList := aksSvc.GetClusters()
+	if clusterList.Error != nil {
+		return nil, nil, clusterList.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range clusterList.Data {
+		cluster := entry.(*mqlAzureSubscriptionAksServiceCluster)
+		if cluster.Id.Data == id {
+			return args, cluster, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure aks cluster does not exist")
 }
 
 func (a *mqlAzureSubscriptionAksServiceCluster) id() (string, error) {

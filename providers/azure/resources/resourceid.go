@@ -82,11 +82,14 @@ func ParseResourceID(id string) (*ResourceID, error) {
 	return resID, nil
 }
 
-// Component returns a component from parsed resource id
+// Component returns a component from parsed resource id.
+// The lookup is case-insensitive because Azure ARM resource IDs are case-insensitive.
 func (id *ResourceID) Component(name string) (string, error) {
-	val, ok := id.Path[name]
-	if !ok {
-		return "", fmt.Errorf("ID was missing the `%s` element", name)
+	name = strings.ToLower(name)
+	for k, v := range id.Path {
+		if strings.ToLower(k) == name {
+			return v, nil
+		}
 	}
-	return val, nil
+	return "", fmt.Errorf("ID was missing the `%s` element", name)
 }

@@ -1352,6 +1352,10 @@ private azure.subscription.webService {
   availableRuntimes() []azure.subscription.webService.appRuntimeStack
   // List of hosting environments
   hostingEnvironments() []azure.subscription.webService.hostingEnvironment
+  // List of App Service plans
+  appServicePlans() []azure.subscription.webService.appServicePlan
+  // List of certificates
+  certificates() []azure.subscription.webService.certificate
 }
 
 // Azure Web App runtime stack
@@ -1377,7 +1381,7 @@ private azure.subscription.webService.appRuntimeStack @defaults("preferredOs run
 }
 
 // Azure Web app site
-private azure.subscription.webService.appsite @defaults("id name location") {
+azure.subscription.webService.appsite @defaults("id name location") {
   // App site ID
   id string
   // App site name
@@ -1430,6 +1434,10 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Whether end-to-end encryption is enabled between FrontEnd and Worker
   endToEndEncryptionEnabled bool
+  // Hostname bindings for the web app site
+  hostNameBindings() []azure.subscription.webService.appsite.hostNameBinding
+  // Virtual network connections for the web app site
+  virtualNetworkConnections() []azure.subscription.webService.appsite.virtualNetworkConnection
 }
 
 // Azure private endpoint connection
@@ -1616,6 +1624,98 @@ private azure.subscription.webService.hostingEnvironment.virtualNetwork @default
   type string
   // Subnet within the Virtual Network
   subnet string
+}
+
+// Azure App Service Plan
+private azure.subscription.webService.appServicePlan @defaults("id name location") {
+  // App Service plan ID
+  id string
+  // App Service plan name
+  name string
+  // App Service plan location
+  location string
+  // App Service plan kind (e.g., "linux", "app")
+  kind string
+  // App Service plan tags
+  tags map[string]string
+  // App Service plan properties
+  properties dict
+  // SKU description (name, tier, size, family, capacity)
+  sku dict
+  // Whether the plan is zone-redundant
+  zoneRedundant bool
+  // Number of web apps assigned to this plan
+  numberOfSites int
+  // Maximum number of workers
+  maximumNumberOfWorkers int
+  // Geographic region of the plan
+  geoRegion string
+  // Whether the plan is for Linux apps
+  reserved bool
+  // Current status of the plan. Possible values: "Ready", "Pending", "Creating"
+  status string
+  // Whether per-site scaling is enabled
+  perSiteScaling bool
+  // Whether elastic scale is enabled
+  elasticScaleEnabled bool
+}
+
+// Azure App Service Certificate
+private azure.subscription.webService.certificate @defaults("id name") {
+  // Certificate ID
+  id string
+  // Certificate name
+  name string
+  // Certificate location
+  location string
+  // Certificate tags
+  tags map[string]string
+  // Certificate properties
+  properties dict
+  // Certificate thumbprint
+  thumbprint string
+  // Certificate subject name
+  subjectName string
+  // Certificate issuer
+  issuer string
+  // Certificate issue date
+  issueDate time
+  // Certificate expiration date
+  expirationDate time
+  // Hostnames the certificate applies to
+  hostNames []string
+  // Whether the certificate is valid
+  valid bool
+}
+
+// Azure App Service Hostname Binding
+private azure.subscription.webService.appsite.hostNameBinding @defaults("id name") {
+  // Hostname binding ID
+  id string
+  // Hostname binding name
+  name string
+  // Hostname type. Possible values: "Verified", "Managed"
+  hostNameType string
+  // SSL state. Possible values: "Disabled", "SniEnabled", "IpBasedEnabled"
+  sslState string
+  // SSL certificate thumbprint
+  thumbprint string
+  // Virtual IP address assigned to the hostname
+  virtualIP string
+}
+
+// Azure App Service Virtual Network Connection
+private azure.subscription.webService.appsite.virtualNetworkConnection @defaults("id name") {
+  // VNet connection ID
+  id string
+  // VNet connection name
+  name string
+  // Resource ID of the connected VNet
+  vnetResourceId string
+  // Whether this is a Swift connection
+  isSwift bool
+  // Whether a resync is required
+  resyncRequired bool
 }
 
 // Azure SQL
@@ -2108,7 +2208,7 @@ private azure.subscription.cosmosDbService {
 }
 
 // Azure Cosmos DB account
-private azure.subscription.cosmosDbService.account @defaults("name kind location") {
+azure.subscription.cosmosDbService.account @defaults("name kind location") {
   // Cosmos DB account ID
   id string
   // Cosmos DB account name
@@ -2658,7 +2758,7 @@ private azure.subscription.aksService {
 }
 
 // Azure Kubernetes Service cluster
-private azure.subscription.aksService.cluster @defaults("name location kubernetesVersion") {
+azure.subscription.aksService.cluster @defaults("name location kubernetesVersion") {
   // ID of the AKS cluster
   id string
   // Name of the AKS cluster
@@ -2876,7 +2976,7 @@ private azure.subscription.cacheService @defaults("subscriptionId") {
 }
 
 // Azure Cache for Redis instance
-private azure.subscription.cacheService.redisInstance @defaults("id hostName") {
+azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   // ID of the Redis cache
   id string
   // Name of the Redis cache
@@ -2910,5 +3010,67 @@ private azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   // SKU information for the Redis cache
   sku dict
   // Tags of redis cache
-  tags dict
+  tags map[string]string
+  // Redis configuration settings (maxmemory-policy, persistence, auth, etc.)
+  redisConfiguration dict
+  // Number of shards (Premium Cluster Cache only)
+  shardCount int
+  // Static IP address (when deployed in a VNet)
+  staticIp string
+  // Subnet ID for VNet-injected caches
+  subnetId string
+  // Availability zones for the cache
+  zones []string
+  // Managed identity information
+  identity dict
+  // Private endpoint connections for the Redis cache
+  privateEndpointConnections []azure.subscription.cacheService.redisInstance.privateEndpointConnection
+  // Firewall rules for the Redis cache
+  firewallRules() []azure.subscription.cacheService.redisInstance.firewallRule
+  // Patch schedules for the Redis cache
+  patchSchedules() []azure.subscription.cacheService.redisInstance.patchSchedule
+}
+
+// Azure Cache for Redis firewall rule
+private azure.subscription.cacheService.redisInstance.firewallRule @defaults("id name") {
+  // Firewall rule ID
+  id string
+  // Firewall rule name
+  name string
+  // Firewall rule type
+  type string
+  // Lowest IP address in the range
+  startIpAddress string
+  // Highest IP address in the range
+  endIpAddress string
+}
+
+// Azure Cache for Redis patch schedule
+private azure.subscription.cacheService.redisInstance.patchSchedule @defaults("name entries") {
+  // Patch schedule ID
+  id string
+  // Patch schedule name
+  name string
+  // Patch schedule location
+  location string
+  // List of schedule entries (dayOfWeek, startHourUtc, maintenanceWindow)
+  entries []dict
+}
+
+// Azure Cache for Redis private endpoint connection
+private azure.subscription.cacheService.redisInstance.privateEndpointConnection @defaults("id name") {
+  // Private endpoint connection ID
+  id string
+  // Private endpoint connection name
+  name string
+  // Private endpoint connection type
+  type string
+  // Private endpoint resource ID
+  privateEndpointId string
+  // Connection status (Approved, Pending, Rejected)
+  status string
+  // Reason for approval/rejection of the connection
+  description string
+  // Provisioning state. Possible values: "Succeeded", "Creating", "Deleting", "Failed", "Updating"
+  provisioningState string
 }
