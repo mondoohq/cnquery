@@ -88,17 +88,28 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		}
 	}
 
-	return CreateResource(runtime, resourceType,
-		map[string]*llx.RawData{
-			"id":         llx.StringDataPtr(site.ID),
-			"name":       llx.StringDataPtr(site.Name),
-			"location":   llx.StringDataPtr(site.Location),
-			"tags":       llx.MapData(convert.PtrMapStrToInterface(site.Tags), types.String),
-			"type":       llx.StringDataPtr(site.Type),
-			"kind":       llx.StringDataPtr(site.Kind),
-			"properties": llx.DictData(properties),
-			"identity":   llx.DictData(identity),
-		})
+	args := map[string]*llx.RawData{
+		"id":         llx.StringDataPtr(site.ID),
+		"name":       llx.StringDataPtr(site.Name),
+		"location":   llx.StringDataPtr(site.Location),
+		"tags":       llx.MapData(convert.PtrMapStrToInterface(site.Tags), types.String),
+		"type":       llx.StringDataPtr(site.Type),
+		"kind":       llx.StringDataPtr(site.Kind),
+		"properties": llx.DictData(properties),
+		"identity":   llx.DictData(identity),
+	}
+
+	if site.Properties != nil {
+		args["httpsOnly"] = llx.BoolDataPtr(site.Properties.HTTPSOnly)
+		args["clientCertEnabled"] = llx.BoolDataPtr(site.Properties.ClientCertEnabled)
+		if site.Properties.ClientCertMode != nil {
+			args["clientCertMode"] = llx.StringData(string(*site.Properties.ClientCertMode))
+		}
+		args["enabled"] = llx.BoolDataPtr(site.Properties.Enabled)
+		args["state"] = llx.StringDataPtr(site.Properties.State)
+	}
+
+	return CreateResource(runtime, resourceType, args)
 }
 
 type runtimeStackDescriptor struct {

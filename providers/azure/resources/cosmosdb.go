@@ -177,14 +177,21 @@ func fetchDbAccountsByType(ctx context.Context, runtime *plugin.Runtime, conn *c
 
 			mqlResource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
 				map[string]*llx.RawData{
-					"__id":       llx.StringDataPtr(account.ID),
-					"id":         llx.StringDataPtr(account.ID),
-					"name":       llx.StringDataPtr(account.Name),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-					"location":   llx.StringDataPtr(account.Location),
-					"kind":       llx.StringDataPtr(account.Kind),
-					"type":       llx.StringDataPtr(account.Type),
-					"properties": llx.DictData(properties),
+					"__id":                               llx.StringDataPtr(account.ID),
+					"id":                                 llx.StringDataPtr(account.ID),
+					"name":                               llx.StringDataPtr(account.Name),
+					"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
+					"location":                           llx.StringDataPtr(account.Location),
+					"kind":                               llx.StringDataPtr(account.Kind),
+					"type":                               llx.StringDataPtr(account.Type),
+					"properties":                         llx.DictData(properties),
+					"publicNetworkAccess":                llx.StringData(""),
+					"disableLocalAuth":                   llx.BoolData(false),
+					"isVirtualNetworkFilterEnabled":      llx.BoolData(false),
+					"disableKeyBasedMetadataWriteAccess": llx.BoolData(false),
+					"enableAutomaticFailover":            llx.BoolData(false),
+					"enableMultipleWriteLocations":       llx.BoolData(false),
+					"ipRangeFilter":                      llx.ArrayData([]any{}, types.String),
 				})
 			if err != nil {
 				return nil, err
@@ -219,14 +226,21 @@ func fetchCosmosForPostgres(ctx context.Context, runtime *plugin.Runtime, conn *
 
 			mqlResource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
 				map[string]*llx.RawData{
-					"__id":       llx.StringDataPtr(account.ID),
-					"id":         llx.StringDataPtr(account.ID),
-					"name":       llx.StringDataPtr(account.Name),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-					"location":   llx.StringDataPtr(account.Location),
-					"kind":       llx.StringDataPtr(nil),
-					"type":       llx.StringDataPtr(account.Type),
-					"properties": llx.DictData(properties),
+					"__id":                               llx.StringDataPtr(account.ID),
+					"id":                                 llx.StringDataPtr(account.ID),
+					"name":                               llx.StringDataPtr(account.Name),
+					"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
+					"location":                           llx.StringDataPtr(account.Location),
+					"kind":                               llx.StringDataPtr(nil),
+					"type":                               llx.StringDataPtr(account.Type),
+					"properties":                         llx.DictData(properties),
+					"publicNetworkAccess":                llx.StringData(""),
+					"disableLocalAuth":                   llx.BoolData(false),
+					"isVirtualNetworkFilterEnabled":      llx.BoolData(false),
+					"disableKeyBasedMetadataWriteAccess": llx.BoolData(false),
+					"enableAutomaticFailover":            llx.BoolData(false),
+					"enableMultipleWriteLocations":       llx.BoolData(false),
+					"ipRangeFilter":                      llx.ArrayData([]any{}, types.String),
 				})
 			if err != nil {
 				return nil, err
