@@ -692,6 +692,7 @@ resources:
   microsoft.security:
     fields:
       exchange: {}
+      informationProtection: {}
       latestSecureScores: {}
       riskyUsers: {}
       secureScores: {}
@@ -711,6 +712,31 @@ resources:
       identity: {}
       ipAllowList: {}
       ipBlockList: {}
+    min_mondoo_version: 9.0.0
+  microsoft.security.informationProtection:
+    fields:
+      sensitivityLabels: {}
+    min_mondoo_version: 9.0.0
+  microsoft.security.informationProtection.sensitivityLabel:
+    fields:
+      assignedPolicies: {}
+      color: {}
+      contentFormats: {}
+      description: {}
+      displayName: {}
+      hasProtection: {}
+      id: {}
+      isActive: {}
+      isAppliable: {}
+      isDefault: {}
+      isEnabled: {}
+      isEndpointProtectionEnabled: {}
+      name: {}
+      parent: {}
+      priority: {}
+      sensitivity: {}
+      sublabels: {}
+      toolTip: {}
     min_mondoo_version: 9.0.0
   microsoft.security.riskyUser:
     fields:
