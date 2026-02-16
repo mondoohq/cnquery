@@ -5,7 +5,7 @@ resources:
   snowflake:
     fields:
       currentRole: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.account:
     fields:
       accountId: {}
@@ -21,7 +21,7 @@ resources:
       url: {}
       users: {}
       warehouses: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.database:
     fields:
       comment: {}
@@ -36,7 +36,7 @@ resources:
       resourceGroup: {}
       retentionTime: {}
       transient: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.networkPolicy:
     fields:
       allowedIpList: {}
@@ -50,7 +50,7 @@ resources:
       entriesInBlockedIpList: {}
       entriesInBlockedNetworkRules: {}
       name: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.parameter:
     fields:
       defaultValue: {}
@@ -58,7 +58,7 @@ resources:
       key: {}
       level: {}
       value: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.passwordPolicy:
     fields:
       comment: {}
@@ -79,7 +79,7 @@ resources:
       passwordMinSpecialChars: {}
       passwordMinUpperCaseChars: {}
       schemaName: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.procedure:
     fields:
       arguments: {}
@@ -95,7 +95,7 @@ resources:
       name: {}
       schemaName: {}
       validForClustering: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.role:
     fields:
       assignedToUsers: {}
@@ -107,7 +107,7 @@ resources:
       isInherited: {}
       name: {}
       owner: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.securityIntegration:
     fields:
       category: {}
@@ -116,7 +116,7 @@ resources:
       enabled: {}
       name: {}
       type: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.stage:
     fields:
       cloud: {}
@@ -134,7 +134,7 @@ resources:
       storeIntegration: {}
       type: {}
       url: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.user:
     fields:
       comment: {}
@@ -158,7 +158,7 @@ resources:
       mustChangePassword: {}
       name: {}
       parameters: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.view:
     fields:
       changeTracking: {}
@@ -173,7 +173,7 @@ resources:
       reserved: {}
       schemaName: {}
       text: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119
   snowflake.warehouse:
     fields:
       autoResume: {}
@@ -203,4 +203,4 @@ resources:
       state: {}
       type: {}
       updatedAt: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.119

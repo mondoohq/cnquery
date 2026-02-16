@@ -1331,7 +1331,7 @@ func TestResource_Default(t *testing.T) {
 	require.NotEmpty(t, res)
 	vals := res[0].Data.Value.(map[string]any)
 	require.NotNil(t, vals)
-	require.Equal(t, llx.StringData("unstable"), vals["J4anmJ+mXJX380Qslh563U7Bs5d6fiD2ghVxV9knAU0iy/P+IVNZsDhBbCmbpJch3Tm0NliAMiaY47lmw887Jw=="])
+	require.Equal(t, llx.StringData("v13.0.0-rolling"), vals["J4anmJ+mXJX380Qslh563U7Bs5d6fiD2ghVxV9knAU0iy/P+IVNZsDhBbCmbpJch3Tm0NliAMiaY47lmw887Jw=="])
 }
 
 func TestBrokenQueryExecution(t *testing.T) {

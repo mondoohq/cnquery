@@ -6,7 +6,7 @@ resources:
     fields:
       apiResources: {}
       apps:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.128
       clusterrolebindings:
         min_mondoo_version: 5.31.0
       clusterroles:
@@ -44,7 +44,7 @@ resources:
       statefulsets:
         min_mondoo_version: 6.7.0
       validatingWebhookConfigurations:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.128
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -83,7 +83,7 @@ resources:
       uid: {}
       webhooks: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.128
     platform:
       name:
       - kubernetes
@@ -131,7 +131,7 @@ resources:
       partOf: {}
       version: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.128
     platform:
       name:
       - kubernetes
@@ -194,7 +194,7 @@ resources:
       ready: {}
       restartCount: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.128
     platform:
       name:
       - kubernetes
@@ -521,17 +521,17 @@ resources:
       annotations:
         min_mondoo_version: 5.29.2
       created:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.128
       id:
         min_mondoo_version: 6.10.0
       kind: {}
       kubeletPort:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.128
       labels:
         min_mondoo_version: 5.29.2
       name: {}
       nodeInfo:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.128
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
@@ -548,7 +548,7 @@ resources:
       annotations: {}
       apiVersion: {}
       containerStatuses:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.128
       containers: {}
       created: {}
       ephemeralContainers:

@@ -38,7 +38,7 @@ resources:
     fields:
       headCommit: {}
       headCommitSha:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       isDefault:
         min_mondoo_version: 6.8.0
       isProtected:
@@ -75,11 +75,11 @@ resources:
     fields:
       author: {}
       authoredDate:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       commit:
         min_mondoo_version: 6.11.0
       committedDate:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       committer: {}
       owner:
         min_mondoo_version: 6.11.0
@@ -96,9 +96,9 @@ resources:
     fields:
       content: {}
       downloadUrl:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       exists:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       files: {}
       isBinary: {}
       name:
@@ -156,7 +156,7 @@ resources:
       updatedAt: {}
       url: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.4.120
   github.license:
     fields:
       key: {}
@@ -164,7 +164,7 @@ resources:
       spdxId: {}
       url: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.4.120
   github.mergeRequest:
     fields:
       assignees: {}
@@ -192,7 +192,7 @@ resources:
       createdAt:
         min_mondoo_version: 6.11.0
       customProperties:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       defaultRepositoryPermission:
         min_mondoo_version: 6.11.0
       description: {}
@@ -204,9 +204,9 @@ resources:
       following:
         min_mondoo_version: 7.14.0
       hasOrganizationProjects:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       hasRepositoryProjects:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       id: {}
       installations:
         min_mondoo_version: 5.31.0
@@ -231,7 +231,7 @@ resources:
       membersCanCreateRepositories:
         min_mondoo_version: 6.11.0
       membersCanForkPrivateRepos:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       name: {}
       nodeId:
         min_mondoo_version: 6.11.0
@@ -252,7 +252,7 @@ resources:
       totalPrivateRepos:
         min_mondoo_version: 6.11.0
       totalPublicRepos:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       twitterUsername:
         min_mondoo_version: 6.11.0
       twoFactorRequirementEnabled:
@@ -273,7 +273,7 @@ resources:
       valueType: {}
       valuesEditableBy: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.4.120
   github.package:
     fields:
       createdAt: {}
@@ -293,7 +293,7 @@ resources:
       list: {}
       private: {}
       public: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.4.120
   github.release:
     fields:
       name: {}
@@ -305,9 +305,9 @@ resources:
   github.repository:
     fields:
       adminCollaborators:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       allMergeRequests:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       allowAutoMerge:
         min_mondoo_version: 6.4.0
       allowForking:
@@ -326,11 +326,11 @@ resources:
       closedIssues:
         min_mondoo_version: 7.14.0
       closedMergeRequests:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       codeOfConduct:
         min_mondoo_version: 9.0.0
       codeOfConductFile:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       collaborators:
         min_mondoo_version: 6.11.0
       commits:
@@ -339,9 +339,9 @@ resources:
         min_mondoo_version: 6.4.0
       createdAt: {}
       customProperties:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       defaultBranch:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       defaultBranchName:
         min_mondoo_version: 6.4.0
       description: {}
@@ -354,7 +354,7 @@ resources:
         min_mondoo_version: 7.14.0
       fullName: {}
       hasDiscussions:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       hasDownloads:
         min_mondoo_version: 7.14.0
       hasIssues:
@@ -370,7 +370,7 @@ resources:
       isFork:
         min_mondoo_version: 7.14.0
       isTemplate:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       language:
         min_mondoo_version: 7.14.0
       license:
@@ -396,7 +396,7 @@ resources:
       security:
         min_mondoo_version: 9.0.0
       securityFile:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       sshUrl:
         min_mondoo_version: 7.14.0
       stargazers:
@@ -406,7 +406,7 @@ resources:
       support:
         min_mondoo_version: 9.0.0
       supportFile:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.4.120
       topics:
         min_mondoo_version: 7.14.0
       updatedAt: {}
@@ -431,7 +431,7 @@ resources:
       repoName: {}
       sha: {}
       type: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.4.120
   github.review:
     fields:
       authorAssociation: {}

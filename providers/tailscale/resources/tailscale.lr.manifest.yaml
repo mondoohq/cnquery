@@ -9,7 +9,7 @@ resources:
       nameservers: {}
       tailnet: {}
       users: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.74
   tailscale.device:
     fields:
       addresses: {}
@@ -36,7 +36,7 @@ resources:
       tailnetLockKey: {}
       updateAvailable: {}
       user: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.74
   tailscale.user:
     fields:
       ProfilePicUrl: {}
@@ -51,4 +51,4 @@ resources:
       status: {}
       tailnetId: {}
       type: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.74

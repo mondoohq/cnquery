@@ -74,7 +74,7 @@ resources:
   terraform.module:
     fields:
       block:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.81
       dir: {}
       key: {}
       source: {}
@@ -90,14 +90,14 @@ resources:
   terraform.plan:
     fields:
       applyable:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.81
       errored:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.81
       formatVersion: {}
       resourceChanges: {}
       terraformVersion: {}
       variables:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.81
     min_mondoo_version: latest
     platform:
       name:
@@ -144,14 +144,14 @@ resources:
     fields:
       name: {}
       value: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.81
     platform:
       name:
       - terraform-plan
   terraform.resources:
     fields:
       list: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.81
     platform:
       name:
       - terraform-hcl

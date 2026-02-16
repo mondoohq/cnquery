@@ -5,98 +5,98 @@ resources:
   gitlab.group:
     fields:
       allowedEmailDomainsList:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       createdAt:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       description: {}
       emailsDisabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       id: {}
       mentionsDisabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       name: {}
       path: {}
       preventForkingOutsideGroup:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       projects: {}
       requireTwoFactorAuthentication: {}
       visibility: {}
       webURL:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
     min_mondoo_version: 5.15.0
   gitlab.project:
     fields:
       allowMergeOnSkippedPipeline:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       approvalRules:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       approvalSettings:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       archived:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       autoDevopsEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       autocloseReferencedIssues:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       containerRegistryEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       createdAt:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       defaultBranch:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       description: {}
       emailsDisabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       emptyRepo:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       fullName:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       groupRunnersEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       id: {}
       issuesEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       jobsEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       lfsEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       mergeMethod:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       mergeRequestsEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       mirror:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       name: {}
       onlyAllowMergeIfAllDiscussionsAreResolved:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       onlyAllowMergeIfPipelineSucceeds:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       packagesEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       path: {}
       projectFiles:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       projectMembers:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       protectedBranches:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       removeSourceBranchAfterMerge:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       requirementsEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       serviceDeskEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       sharedRunnersEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       snippetsEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       visibility: {}
       webURL:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       webhooks:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
       wikiEnabled:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.1.129
     min_mondoo_version: 5.15.0
   gitlab.project.approvalRule:
     fields:
@@ -104,7 +104,7 @@ resources:
       id: {}
       name: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.129
   gitlab.project.approvalSetting:
     fields:
       approvalsBeforeMerge: {}
@@ -115,7 +115,7 @@ resources:
       resetApprovalsOnPush: {}
       selectiveCodeOwnerRemovals: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.129
   gitlab.project.file:
     fields:
       content: {}
@@ -123,7 +123,7 @@ resources:
       path: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.129
   gitlab.project.member:
     fields:
       id: {}
@@ -131,7 +131,7 @@ resources:
       role: {}
       state: {}
       username: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.129
   gitlab.project.protectedBranch:
     fields:
       allowForcePush: {}
@@ -139,10 +139,10 @@ resources:
       defaultBranch: {}
       name: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.129
   gitlab.project.webhook:
     fields:
       sslVerification: {}
       url: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.129

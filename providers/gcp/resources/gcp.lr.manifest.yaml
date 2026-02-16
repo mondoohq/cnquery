@@ -112,7 +112,7 @@ resources:
       pubsub: {}
       recommendations: {}
       redis:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.146
       services: {}
       sql: {}
       state: {}
@@ -1492,7 +1492,7 @@ resources:
   gcp.project.gkeService.cluster.nodepool:
     fields:
       autoscaling:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.146
       config: {}
       id: {}
       initialNodeCount: {}
@@ -1520,7 +1520,7 @@ resources:
       totalMaxNodeCount: {}
       totalMinNodeCount: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2128,7 +2128,7 @@ resources:
       instances: {}
       projectId: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2163,7 +2163,7 @@ resources:
       state: {}
       statusMessage: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2173,7 +2173,7 @@ resources:
       projectId: {}
       zone: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2387,13 +2387,13 @@ resources:
     fields:
       created: {}
       encryption:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.146
       iamConfiguration: {}
       iamPolicy: {}
       id: {}
       labels: {}
       lifecycle:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.146
       location: {}
       locationType: {}
       name: {}
@@ -2415,7 +2415,7 @@ resources:
       action: {}
       condition: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2424,7 +2424,7 @@ resources:
       storageClass: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2443,7 +2443,7 @@ resources:
       noncurrentTimeBefore: {}
       numNewerVersions: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp

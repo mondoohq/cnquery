@@ -534,7 +534,7 @@ func TestDict_Methods_Map(t *testing.T) {
 	x.TestSimpleErrors(t, []testutils.SimpleTest{
 		{
 			Code:        p + "params['does not exist'].values",
-			Expectation: "Failed to get values of `null`",
+			Expectation: "failed to get values of `null`",
 		},
 		{
 			Code:        p + "params['yo'] > 3",
