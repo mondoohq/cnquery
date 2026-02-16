@@ -166,6 +166,48 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) id() (string, error) {
 	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
+func initGcpProjectSecretmanagerServiceSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// If we already have all the fields populated (e.g., from CreateResource in secrets()), just return.
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	// Resolve from asset identifier when accessed as a discovered asset
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.secretmanagerService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := obj.(*mqlGcpProjectSecretmanagerService)
+	secrets := svc.GetSecrets()
+	if secrets.Error != nil {
+		return nil, nil, secrets.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	for _, s := range secrets.Data {
+		secret := s.(*mqlGcpProjectSecretmanagerServiceSecret)
+		if secret.Name.Data == nameVal {
+			return args, secret, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("secret %q not found", nameVal)
+}
+
 func (g *mqlGcpProjectSecretmanagerServiceSecret) versions() ([]any, error) {
 	if g.ResourcePath.Error != nil {
 		return nil, g.ResourcePath.Error
