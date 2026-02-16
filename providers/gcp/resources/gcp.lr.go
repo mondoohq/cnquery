@@ -731,7 +731,7 @@ func init() {
 			Create: createGcpProjectSecretmanagerService,
 		},
 		"gcp.project.secretmanagerService.secret": {
-			// to override args, implement: initGcpProjectSecretmanagerServiceSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectSecretmanagerServiceSecret,
 			Create: createGcpProjectSecretmanagerServiceSecret,
 		},
 		"gcp.project.secretmanagerService.secret.version": {

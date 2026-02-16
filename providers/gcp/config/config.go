@@ -57,6 +57,7 @@ Examples with the GCP project configured:
 				resources.DiscoverCloudKMSKeyrings,
 				resources.DiscoverMemorystoreRedis,
 				resources.DiscoverMemorystoreRedisCluster,
+				resources.DiscoverSecretManager,
 			},
 			Flags: []plugin.Flag{
 				{
