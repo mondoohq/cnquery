@@ -162,9 +162,9 @@ resources:
     fields:
       clusters: {}
       distributedPortGroups:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.132
       distributedSwitches:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.132
       hosts: {}
       inventoryPath: {}
       moid: {}
@@ -193,7 +193,7 @@ resources:
       snmp: {}
       standardSwitch: {}
       tags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.132
       timezone: {}
       vmknics: {}
     is_private: true
@@ -242,7 +242,7 @@ resources:
       name: {}
       properties: {}
       tags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.132
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -277,7 +277,7 @@ resources:
   vsphere.vswitch.dvs:
     fields:
       moid:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.132
       name: {}
       properties: {}
       uplinks: {}
@@ -293,7 +293,7 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.132
     platform:
       name:
       - vmware-esxi

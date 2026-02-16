@@ -36,7 +36,7 @@ resources:
     fields:
       list: {}
       pem: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.111
   dns:
     fields:
       dkim: {}
@@ -84,7 +84,7 @@ resources:
       tldIcannManaged: {}
     min_mondoo_version: 5.15.0
   http:
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.111
   http.get:
     fields:
       body: {}
@@ -93,7 +93,7 @@ resources:
       statusCode: {}
       url: {}
       version: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.111
   http.header:
     fields:
       contentType: {}
@@ -107,7 +107,7 @@ resources:
       xXssProtection: {}
     is_private: true
     maturity: experimental
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.111
     refs:
     - title: HTTP Headers
       url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers
@@ -117,7 +117,7 @@ resources:
       type: {}
     is_private: true
     maturity: experimental
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.111
     refs:
     - title: X-Content-Type-Options
       url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
@@ -128,7 +128,7 @@ resources:
       value: {}
     is_private: true
     maturity: experimental
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.111
     refs:
     - title: Set-Cookie
       url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
@@ -139,7 +139,7 @@ resources:
       preload: {}
     is_private: true
     maturity: experimental
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.111
     refs:
     - title: Strict-Transport-Security
       url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
@@ -152,7 +152,7 @@ resources:
       report: {}
     is_private: true
     maturity: experimental
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.111
     refs:
     - title: X-XSS-Protection
       url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
@@ -265,4 +265,4 @@ resources:
       scheme: {}
       string: {}
       user: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.111

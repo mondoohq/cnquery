@@ -96,7 +96,7 @@ resources:
       admin: {}
       drive: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.1.111
   googleworkspace.report.usage:
     fields:
       account: {}

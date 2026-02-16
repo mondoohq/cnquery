@@ -3,7 +3,7 @@
 
 resources:
   shodan:
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.122
   shodan.apiPlan:
     fields:
       monitoredIps: {}
@@ -12,14 +12,14 @@ resources:
       telnet: {}
       unlocked: {}
       unlockedLeft: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.122
   shodan.domain:
     fields:
       name: {}
       nsrecords: {}
       subdomains: {}
       tags: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.122
   shodan.host:
     fields:
       asn: {}
@@ -33,7 +33,7 @@ resources:
       ports: {}
       tags: {}
       vulnerabilities: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.122
   shodan.nsrecord:
     fields:
       domain: {}
@@ -42,11 +42,11 @@ resources:
       type: {}
       value: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.122
   shodan.profile:
     fields:
       createdAt: {}
       credits: {}
       displayName: {}
       member: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.122
