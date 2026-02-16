@@ -47,6 +47,7 @@ const (
 	DiscoveryGkeClusters            = "gke-clusters"
 	DiscoveryComputeInstances       = "instances"
 	DiscoveryStorageBuckets         = "storage-buckets"
+	DiscoverSecretManager           = "secretmanager-secrets"
 )
 
 var All = []string{
@@ -78,6 +79,7 @@ var Auto = []string{
 	DiscoverMemorystoreRedis,
 	DiscoverMemorystoreRedisCluster,
 	DiscoveryComputeInstances,
+	DiscoverSecretManager,
 }
 
 var AllAPIResources = []string{
@@ -96,6 +98,7 @@ var AllAPIResources = []string{
 	DiscoverMemorystoreRedis,
 	DiscoverMemorystoreRedisCluster,
 	DiscoveryComputeInstances,
+	DiscoverSecretManager,
 }
 
 // List of all CloudSQL types, this will be used during discovery
@@ -810,6 +813,35 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				},
 				Labels:      mapStrInterfaceToMapStrStr(dataset.GetLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverSecretManager) {
+		secretmanagerService := gcpProject.GetSecretmanager()
+		if secretmanagerService.Error != nil {
+			return nil, secretmanagerService.Error
+		}
+		secrets := secretmanagerService.Data.GetSecrets()
+		if secrets.Error != nil {
+			return nil, secrets.Error
+		}
+		for i := range secrets.Data {
+			secret := secrets.Data[i].(*mqlGcpProjectSecretmanagerServiceSecret)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("secretmanager", gcpProject.Id.Data, "global", "secret", secret.Name.Data),
+				},
+				Name: secret.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-secretmanager-secret",
+					Title:                 connection.GetTitleForPlatformName("gcp-secretmanager-secret"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("secretmanager", gcpProject.Id.Data, "global", "secret", secret.Name.Data),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(secret.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 			})
 		}
 	}

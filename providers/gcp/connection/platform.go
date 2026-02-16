@@ -126,6 +126,8 @@ func GetTitleForPlatformName(name string) string {
 		return "GCP Memorystore for Redis"
 	case "gcp-memorystore-rediscluster":
 		return "GCP Memorystore for Redis Cluster"
+	case "gcp-secretmanager-secret":
+		return "GCP Secret Manager Secret"
 	}
 	return "Google Cloud Platform"
 }
@@ -193,6 +195,13 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "memorystore", region, "rediscluster"}
 		default:
 			return []string{"gcp", project, "memorystore", region, "other"}
+		}
+	case "secretmanager":
+		switch objectType {
+		case "secret":
+			return []string{"gcp", project, "secretmanager", region, "secret"}
+		default:
+			return []string{"gcp", project, "secretmanager", region, "other"}
 		}
 	default:
 		return []string{"gcp", project, "other"}
