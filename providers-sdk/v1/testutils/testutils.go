@@ -199,6 +199,13 @@ func Local() llx.Runtime {
 	networkSchema := MustLoadSchema(SchemaProvider{Provider: "network"})
 	mockSchema := MustLoadSchema(SchemaProvider{Provider: "mockprovider"})
 
+	// Merge os+core before storing in the global extensibleSchema.
+	// osSchema.Add(coreSchema) mutates osSchema.Resources in place.
+	// If we store osSchema first and mutate it later, another goroutine's
+	// unsafeRefresh may iterate osSchema.Resources concurrently, causing
+	// a fatal "concurrent map iteration and map write" error.
+	mergedOsSchema := osSchema.Add(coreSchema)
+
 	schema := providers.Coordinator.Schema().(providers.ExtensibleSchema)
 	schema.Add(providers.BuiltinCoreID, coreSchema)
 	schema.Add(osconf.Config.Name, osSchema)
@@ -216,7 +223,7 @@ func Local() llx.Runtime {
 		Name:   osconf.Config.Name,
 		ID:     osconf.Config.ID,
 		Plugin: osprovider.Init(),
-		Schema: osSchema.Add(coreSchema),
+		Schema: mergedOsSchema,
 	}
 	runtime.Provider = &providers.ConnectedProvider{Instance: provider}
 	runtime.AddConnectedProvider(runtime.Provider)
