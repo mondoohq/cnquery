@@ -403,7 +403,9 @@ func (c *coordinator) Shutdown() {
 func (c *coordinator) DeactivateProviderDiscovery() {
 	// Setting this to the max int means this value will always be larger than
 	// any real timestamp for the last installation time of a provider.
+	c.schema.sync.Lock()
 	c.schema.lastRefreshed = math.MaxInt64
+	c.schema.sync.Unlock()
 }
 
 func (c *coordinator) Schema() resources.ResourcesSchema {
