@@ -71,6 +71,10 @@ func callIdent(ident string) *Call {
 	return &Call{Ident: &ident}
 }
 
+func callConditionalIdent(ident string) *Call {
+	return &Call{Ident: &ident, IsConditional: true}
+}
+
 type parserTest struct {
 	code string
 	res  *Expression
@@ -156,6 +160,10 @@ func TestParser_ParseValues(t *testing.T) {
 		{"name.last", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
 			Calls: []*Call{callIdent("last")},
+		}}},
+		{"name?.last", &Expression{Operand: &Operand{
+			Value: vIdent("name"),
+			Calls: []*Call{callConditionalIdent("last")},
 		}}},
 		{"name[1]", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
