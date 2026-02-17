@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"unicode"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -333,6 +334,13 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// return m, tea.Println(fmt.Sprintf("Key: [%s] Paste: %v Runes: %d", msg.String(), msg.Paste, len(msg.Runes)))
 
 	switch msg.String() {
+	case "ctrl+left":
+		m.wordLeft()
+		return m, nil
+	case "ctrl+right":
+		m.wordRight()
+		return m, nil
+
 	case "ctrl+d":
 		m.quitting = true
 		return m, tea.Quit
@@ -590,6 +598,43 @@ func (m *shellModel) addToHistory(cmd string) {
 	}
 	m.history = append(m.history, cmd)
 	m.historyIdx = len(m.history)
+}
+
+func isWordRune(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_'
+}
+
+// wordLeft moves the cursor to the beginning of the previous word,
+// skipping over any non-word characters (punctuation, whitespace).
+func (m *shellModel) wordLeft() {
+	runes := []rune(m.input.Value())
+	pos := m.input.LineInfo().CharOffset
+	// Skip non-word characters
+	for pos > 0 && !isWordRune(runes[pos-1]) {
+		pos--
+	}
+	// Skip word characters
+	for pos > 0 && isWordRune(runes[pos-1]) {
+		pos--
+	}
+	m.input.SetCursor(pos)
+}
+
+// wordRight moves the cursor to the beginning of the next word,
+// skipping over any non-word characters (punctuation, whitespace).
+func (m *shellModel) wordRight() {
+	runes := []rune(m.input.Value())
+	n := len(runes)
+	pos := m.input.LineInfo().CharOffset
+	// Skip word characters
+	for pos < n && isWordRune(runes[pos]) {
+		pos++
+	}
+	// Skip non-word characters
+	for pos < n && !isWordRune(runes[pos]) {
+		pos++
+	}
+	m.input.SetCursor(pos)
 }
 
 // calculateInputHeight returns the height needed for the textarea based on content
