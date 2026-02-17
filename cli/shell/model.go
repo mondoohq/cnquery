@@ -429,6 +429,38 @@ func (m *shellModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.updateInputHeight()
 		return m, nil
 
+	case "up":
+		if len(m.history) == 0 {
+			return m, nil
+		}
+		m.historyIdx--
+		if m.historyIdx >= 0 && m.historyIdx <= len(m.history)-1 {
+			m.input.SetValue(m.history[m.historyIdx])
+		} else if m.historyIdx >= len(m.history) {
+			m.historyIdx = len(m.history) - 1
+			m.input.SetValue(m.history[m.historyIdx])
+		} else {
+			m.historyIdx = -1
+			m.input.SetValue("")
+		}
+		return m, nil
+
+	case "down":
+		if len(m.history) == 0 {
+			return m, nil
+		}
+		m.historyIdx++
+		if m.historyIdx >= 0 && m.historyIdx <= len(m.history)-1 {
+			m.input.SetValue(m.history[m.historyIdx])
+		} else if m.historyIdx >= len(m.history) {
+			m.historyIdx = len(m.history)
+			m.input.SetValue("")
+		} else {
+			m.historyIdx = 0
+			m.input.SetValue(m.history[m.historyIdx])
+		}
+		return m, nil
+
 	case "enter":
 		return m.handleSubmit()
 	}
