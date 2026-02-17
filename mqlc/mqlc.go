@@ -536,7 +536,7 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 		}
 	}
 
-	var lastType = types.Unset
+	lastType := types.Unset
 	for i := 0; i < len(expressions); i += 2 {
 		err := c.compileSwitchCase(expressions[i], bind, chunk)
 		if err != nil {
@@ -1201,9 +1201,14 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 	// Support easy accessors for dicts and maps, e.g:
 	// json.params { A.B.C } => json.params { _["A"]["B"]["C"] }
 	if callBinding != nil && callBinding.typ == types.Dict {
+		funcID := "[]"
+		if call != nil && call.IsConditional {
+			funcID = "[]?"
+		}
+
 		c.addChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
-			Id:   "[]",
+			Id:   funcID,
 			Function: &llx.Function{
 				Type:    string(callBinding.typ),
 				Binding: callBinding.ref,
@@ -1446,6 +1451,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			var found bool
 			var resType types.Type
 			id := *call.Ident
+			isConditionalCall := call.IsConditional
 
 			if id == "." {
 				// We get this from the parser if the user called the dot-accessor
@@ -1476,9 +1482,13 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 
 				// Support easy accessors for dicts and maps, e.g:
 				// json.params.A.B.C => json.params["A"]["B"]["C"]
+				funcID := "[]"
+				if isConditionalCall {
+					funcID = "[]?"
+				}
 				c.addChunk(&llx.Chunk{
 					Call: llx.Chunk_FUNCTION,
-					Id:   "[]",
+					Id:   funcID,
 					Function: &llx.Function{
 						Type:    string(typ.Child()),
 						Binding: ref,

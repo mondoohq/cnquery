@@ -36,7 +36,7 @@ const LexerRegex = `(\s+)` +
 	`|(?P<String>'[^']*'|"[^"]*")` +
 	`|(?P<Comment>(//|#)[^\n]*(\n|\z))` +
 	`|(?P<Regex>/([^\\/]+|\\.)+/[msi]*)` +
-	`|(?P<Op>[-+*/%,:.=<>!|&~;])` +
+	`|(?P<Op>[-+*/%,:.=<>!|&~;?])` +
 	`|(?P<Call>[(){}\[\]])`
 
 func init() {
@@ -130,10 +130,11 @@ type Value struct {
 
 // Call to a value
 type Call struct {
-	Comments string      `json:",omitempty"`
-	Ident    *string     `json:",omitempty"`
-	Function []*Arg      `json:",omitempty"`
-	Accessor *Expression `json:",omitempty"`
+	Comments      string      `json:",omitempty"`
+	Ident         *string     `json:",omitempty"`
+	Function      []*Arg      `json:",omitempty"`
+	Accessor      *Expression `json:",omitempty"`
+	IsConditional bool        `json:",omitempty"`
 }
 
 // Arg is a call argument
@@ -524,15 +525,25 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 	}
 	_ = p.nextToken()
 
+	isConditional := false
 	for {
+		// on every iteration, we reset conditional unless it is in a valid chain
+		if p.token.Value != "?" && p.token.Value != "." {
+			isConditional = false
+		}
+
 		switch p.token.Value {
+		case "?":
+			_ = p.nextToken()
+			isConditional = true
+
 		case ".":
 			_ = p.nextToken()
 
 			// everything else must be an identifier
 			if p.token.Type != Ident {
 				v := "."
-				res.Calls = append(res.Calls, &Call{Ident: &v})
+				res.Calls = append(res.Calls, &Call{Ident: &v, IsConditional: isConditional})
 
 				if p.token.EOF() {
 					p.indent++
@@ -544,8 +555,9 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 
 			v := p.token.Value
 			res.Calls = append(res.Calls, &Call{
-				Ident:    &v,
-				Comments: p.flushComments(),
+				Ident:         &v,
+				IsConditional: isConditional,
+				Comments:      p.flushComments(),
 			})
 			_ = p.nextToken()
 
@@ -717,6 +729,8 @@ func (p *parser) parseOperation() (*Operation, error) {
 
 	res := Operation{}
 	switch p.token.Value {
+	case "?":
+		_ = p.nextToken()
 	case ";":
 		return nil, nil
 	case ":":

@@ -538,7 +538,8 @@ func init() {
 			string("/" + types.Float):                {f: dictDividedFloatV2, Label: "/"},
 			string("*" + types.Time):                 {f: dictTimesTimeV2, Label: "*"},
 			// fields
-			"[]":                              {f: dictGetIndexV2},
+			"[]":                              {f: dictGetIndex},
+			"[]?":                             {f: dictGetConditionalIndex},
 			"first":                           {f: dictGetFirstIndexV2},
 			"last":                            {f: dictGetLastIndexV2},
 			"{}":                              {f: dictBlockCallV2},
@@ -722,7 +723,8 @@ func init() {
 			"notEmpty": {f: arrayNotEmptyV2},
 		},
 		types.MapLike: {
-			"[]":                       {f: mapGetIndexV2},
+			"[]":                       {f: mapGetIndex},
+			"[]?":                      {f: mapGetConditionalIndex},
 			"length":                   {f: mapLengthV2},
 			"where":                    {f: mapWhereV2},
 			"$whereNot":                {f: mapWhereNotV2},
