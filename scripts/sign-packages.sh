@@ -4,40 +4,116 @@
 
 set -e
 
-# Sign RPMs using the existing GPG setup
-if ls dist/*.rpm 1> /dev/null 2>&1; then
-  echo "Signing RPM packages with Docker..."
-  
-  # Get the signing key ID from the GPG key
-  KEY_ID=$(gpg --import --import-options show-only --with-colons "$GPG_KEY_PATH" 2>/dev/null | grep '^pub:' | cut -d: -f5 | tail -8c)
-  
-  docker run --rm \
-    -v $(pwd):/workspace \
-    -v "$GPG_KEY_PATH":/tmp/signing-key \
-    -e RPM_PASSPHRASE="$NFPM_DEFAULT_RPM_PASSPHRASE" \
-    -e KEY_ID="$KEY_ID" \
-    rockylinux:9 \
-    sh -c "
-      dnf install -y rpm-sign pinentry
-      
-      # Configure GPG for non-interactive use
-      mkdir -p ~/.gnupg
-      chmod 700 ~/.gnupg
-      echo 'use-agent' >> ~/.gnupg/gpg.conf
-      echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
-      echo 'allow-loopback-pinentry' >> ~/.gnupg/gpg-agent.conf
-      
-      # Import the key
-      gpg --batch --yes --pinentry-mode loopback --passphrase \"\$RPM_PASSPHRASE\" --import /tmp/signing-key
-      
-      # Configure RPM macros
-      echo \"%_signature gpg\" >> ~/.rpmmacros
-      echo \"%_gpg_name \$KEY_ID\" >> ~/.rpmmacros
-      echo \"%_gpg_sign_cmd_extra_args --batch --no-tty --pinentry-mode loopback --passphrase \\\"\$RPM_PASSPHRASE\\\"\" >> ~/.rpmmacros
-      
-      # Sign the RPMs
-      find /workspace/dist -name '*.rpm' -exec rpmsign --addsign {} \;
-    "
+# Sign RPM using the existing GPG setup
+# File path is passed as first argument from GoReleaser
+PACKAGE_FILE="$1"
+
+if [ -z "$PACKAGE_FILE" ] || [ ! -f "$PACKAGE_FILE" ]; then
+  echo "Error: Package file not provided or doesn't exist: $PACKAGE_FILE"
+  exit 1
 fi
+
+# Handle different package types
+if [[ "$PACKAGE_FILE" == *.deb ]]; then
+  echo "Signing DEB package: $PACKAGE_FILE"
+
+  # Import the signing key to host GPG
+  gpg --batch --yes --pinentry-mode loopback --passphrase "$NFPM_DEFAULT_RPM_PASSPHRASE" --import "$GPG_KEY_PATH"
+
+  # Create detached signature for DEB using host GPG
+  if gpg --batch --no-tty --pinentry-mode loopback --passphrase "$NFPM_DEFAULT_RPM_PASSPHRASE" --detach-sign --armor "$PACKAGE_FILE"; then
+    if [ -f "$PACKAGE_FILE.asc" ]; then
+      mv "$PACKAGE_FILE.asc" "$PACKAGE_FILE.sig"
+      echo "  ✓ Detached signature created: $PACKAGE_FILE.sig"
+
+      # Verify signature file exists and is not empty
+      if [ -s "$PACKAGE_FILE.sig" ]; then
+        echo "  ✓ Signature file verified: $PACKAGE_FILE.sig ($(stat -c%s "$PACKAGE_FILE.sig" 2>/dev/null || stat -f%z "$PACKAGE_FILE.sig") bytes)"
+      else
+        echo "  ✗ Signature file missing or empty: $PACKAGE_FILE.sig"
+        exit 1
+      fi
+    else
+      echo "  ✗ GPG succeeded but .asc file not found"
+      exit 1
+    fi
+  else
+    echo "  ✗ Failed to create detached signature for $PACKAGE_FILE"
+    exit 1
+  fi
+
+  echo "DEB signing completed."
+  exit 0
+fi
+
+if [[ "$PACKAGE_FILE" != *.rpm ]]; then
+  echo "Skipping unsupported package type: $PACKAGE_FILE"
+  exit 0
+fi
+
+RPM_FILE="$PACKAGE_FILE"
+
+echo "Signing RPM package: $RPM_FILE"
+
+# Get the signing key ID from the GPG key
+KEY_ID=$(gpg --import --import-options show-only --with-colons "$GPG_KEY_PATH" 2>/dev/null | grep '^pub:' | cut -d: -f5 | tail -8c)
+
+docker run --rm \
+  -v $(pwd):/workspace \
+  -v "$GPG_KEY_PATH":/tmp/signing-key \
+  -e RPM_PASSPHRASE="$NFPM_DEFAULT_RPM_PASSPHRASE" \
+  -e KEY_ID="$KEY_ID" \
+  -e RPM_FILE="$RPM_FILE" \
+  rockylinux:9 \
+  sh -c "
+    dnf install -y rpm-sign pinentry
+
+    # Configure GPG for non-interactive use
+    mkdir -p ~/.gnupg
+    chmod 700 ~/.gnupg
+    echo 'use-agent' >> ~/.gnupg/gpg.conf
+    echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
+    echo 'allow-loopback-pinentry' >> ~/.gnupg/gpg-agent.conf
+
+    # Import the key
+    gpg --batch --yes --pinentry-mode loopback --passphrase \"\$RPM_PASSPHRASE\" --import /tmp/signing-key
+
+    # Configure RPM macros
+    echo \"%_signature gpg\" >> ~/.rpmmacros
+    echo \"%_gpg_name \$KEY_ID\" >> ~/.rpmmacros
+    echo \"%_gpg_sign_cmd_extra_args --batch --no-tty --pinentry-mode loopback --passphrase \\\"\$RPM_PASSPHRASE\\\"\" >> ~/.rpmmacros
+
+    echo \"Processing: \$RPM_FILE\"
+
+    # 1. Embedded signing (for package managers)
+    if rpmsign --addsign \"\$RPM_FILE\"; then
+      echo \"  ✓ Embedded signature added to \$RPM_FILE\"
+    else
+      echo \"  ✗ Failed to add embedded signature to \$RPM_FILE\"
+      exit 1
+    fi
+
+    # 2. Detached signature (for GoReleaser)
+    if gpg --batch --no-tty --pinentry-mode loopback --passphrase \"\$RPM_PASSPHRASE\" --detach-sign --armor \"\$RPM_FILE\"; then
+      if [ -f \"\$RPM_FILE.asc\" ]; then
+        mv \"\$RPM_FILE.asc\" \"\$RPM_FILE.sig\"
+        echo \"  ✓ Detached signature created: \$RPM_FILE.sig\"
+      else
+        echo \"  ✗ GPG succeeded but .asc file not found\"
+        exit 1
+      fi
+    else
+      echo \"  ✗ Failed to create detached signature for \$RPM_FILE\"
+      exit 1
+    fi
+
+    # 3. Verify signature file exists and is not empty
+    if [ -s \"\$RPM_FILE.sig\" ]; then
+      echo \"  ✓ Signature file verified: \$RPM_FILE.sig (\$(stat -c%s \"\$RPM_FILE.sig\" 2>/dev/null || stat -f%z \"\$RPM_FILE.sig\") bytes)\"
+    else
+      echo \"  ✗ Signature file missing or empty: \$RPM_FILE.sig\"
+      exit 1
+    fi
+  "
 
 echo "RPM signing completed. Checksums will be regenerated by goreleaser."
