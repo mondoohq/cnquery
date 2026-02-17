@@ -56,7 +56,18 @@ RPM_FILE="$PACKAGE_FILE"
 echo "Signing RPM package: $RPM_FILE"
 
 # Get the signing key ID from the GPG key
-KEY_ID=$(gpg --import --import-options show-only --with-colons "$GPG_KEY_PATH" 2>/dev/null | grep '^pub:' | cut -d: -f5 | tail -8c)
+echo "Extracting key ID from: $GPG_KEY_PATH"
+# Use full key ID (most reliable for RPM signing)
+KEY_ID=$(gpg --import --import-options show-only --with-colons "$GPG_KEY_PATH" 2>/dev/null | grep '^pub:' | cut -d: -f5)
+
+if [ -z "$KEY_ID" ]; then
+  echo "Error: Could not extract key ID from GPG key"
+  echo "Debug: GPG key info:"
+  gpg --import --import-options show-only --with-colons "$GPG_KEY_PATH" 2>&1 || true
+  exit 1
+fi
+
+echo "Using key ID: $KEY_ID"
 
 docker run --rm \
   -v $(pwd):/workspace \
