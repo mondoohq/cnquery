@@ -129,20 +129,19 @@ jobs:
 
       # Run GoReleaser
       # This will build the binaries, create the docker images, and publish the release to Git
-      # we used to be pinned to v2.5.1 because of a bug in v2.6.0 that causes the release to fail
+      # we are currently pinned to v2.5.1 because of a bug in v2.6.0 that causes the release to fail
       # specifically with the signing of the RPM packages
       # if you upgrade then when validating the signatures 'rpm -qpi dist/*.rpm' it will error with
       # Header RSA signature: BAD (package tag 268: invalid OpenPGP signature)
-      # We were never able to get to the bottom of this issue, in the we have stopped goreleaser from signing the RPM packages,
-      # and instead we sign them in a separate step after go releaser is done. This is not ideal but rpm-sign is defacto standard for signing RPM packages
-      # and it works, so we are sticking with this approach for now.
+      # This is because a goreleaser dep was changed to https://github.com/goreleaser/nfpm/releases/tag/v2.41.2
+      # created a discussion on the issue here https://github.com/orgs/goreleaser/discussions/5943
 
       - name: Run GoReleaser (w/ Docker Release)
         if: ${{ inputs.skip-publish != true }}
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           distribution: goreleaser
-          version: v2.13.3
+          version: v2.5.1
           args: >
             release
             --config .goreleaser.yml
@@ -167,7 +166,7 @@ jobs:
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           distribution: goreleaser
-          version: v2.13.3
+          version: v2.5.1
           args: >
             release
             ${{ inputs.goreleaser-snapshot == true && '--snapshot' || '' }}
@@ -205,15 +204,8 @@ jobs:
         if: ${{ inputs.upload-artifacts == true }}
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: cnquery-release-artifacts
-          path: |
-            dist/*.tar.gz
-            dist/*.zip
-            dist/*.rpm
-            dist/*.deb
-            dist/*.sig
-            dist/*_SHA256SUMS
-            dist/metadata.json
+          name: windows-artifacts
+          path: dist/*.zip
           retention-days: 7
 
       # At this point we know the docker container is published.
