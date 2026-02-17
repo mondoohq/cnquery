@@ -21,11 +21,12 @@ func _() {
 	_ = x[ResourceContext-11]
 	_ = x[FailIfNoEntryPoints-12]
 	_ = x[UploadResultsV2-13]
+	_ = x[BiosUUIDAsID-14]
 }
 
-const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedAssetsSerialNumberAsIDForceShellCompletionResourceContextFailIfNoEntryPointsUploadResultsV2"
+const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedAssetsSerialNumberAsIDForceShellCompletionResourceContextFailIfNoEntryPointsUploadResultsV2BiosUUIDAsID"
 
-var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 65, 81, 99, 116, 132, 152, 167, 186, 201}
+var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 65, 81, 99, 116, 132, 152, 167, 186, 201, 213}
 
 func (i Feature) String() string {
 	idx := int(i) - 1
