@@ -17,14 +17,16 @@ import (
 // mapFunctions are all the handlers for builtin array methods
 var mapFunctions map[string]chunkHandlerV2 //nolint:unused
 
-func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	if bind.Value == nil {
-		return &RawData{Type: bind.Type.Child()}, 0, nil
-	}
+func mapGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return _mapGetIndex(e, bind, chunk, ref, false)
+}
 
+func mapGetConditionalIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return _mapGetIndex(e, bind, chunk, ref, true)
+}
+
+func _mapGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, isConditional bool) (*RawData, uint64, error) {
 	args := chunk.Function.Args
-
-	var key string
 	// TODO: all this needs to go into the compile phase
 	if len(args) < 1 {
 		return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
@@ -32,6 +34,18 @@ func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	if len(args) > 1 {
 		return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
 	}
+	// ^^ TODO
+
+	if bind.Value == nil {
+		if isConditional {
+			return &RawData{Type: bind.Type.Child()}, 0, nil
+		} else {
+			field := args[0].LabelV2(e.ctx.code)
+			return nil, 0, errors.New("cannot access map field " + field + ", map is null")
+		}
+	}
+
+	var key string
 	t := types.Type(args[0].Type)
 	switch t {
 	case types.Ref:
@@ -50,7 +64,6 @@ func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	default:
 		return nil, 0, errors.New("Called [] with wrong type " + t.Label())
 	}
-	// ^^ TODO
 
 	childType := bind.Type.Child()
 
@@ -358,22 +371,35 @@ func mapValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 	return ArrayData(res, typ), 0, nil
 }
 
-func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func dictGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return _dictGetIndex(e, bind, chunk, ref, false)
+}
+
+func dictGetConditionalIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return _dictGetIndex(e, bind, chunk, ref, true)
+}
+
+func _dictGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, isConditional bool) (*RawData, uint64, error) {
+	args := chunk.Function.Args
+	// TODO: all this needs to go into the compile phase
+	if len(args) < 1 {
+		return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+	}
+	if len(args) > 1 {
+		return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+	}
+
 	if bind.Value == nil {
-		return &RawData{Type: bind.Type}, 0, nil
+		if isConditional {
+			return &RawData{Type: bind.Type}, 0, nil
+		} else {
+			field := args[0].LabelV2(e.ctx.code)
+			return nil, 0, errors.New("cannot access field " + field + ", parent element is null")
+		}
 	}
 
 	switch x := bind.Value.(type) {
 	case []any:
-		args := chunk.Function.Args
-
-		// TODO: all this needs to go into the compile phase
-		if len(args) < 1 {
-			return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
-		}
-		if len(args) > 1 {
-			return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
-		}
 		t := types.Type(args[0].Type)
 		if t != types.Int {
 			return nil, 0, errors.New("Called [] with wrong type " + t.Label())
@@ -395,15 +421,6 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 		}, 0, nil
 
 	case map[string]any:
-		args := chunk.Function.Args
-
-		// TODO: all this needs to go into the compile phase
-		if len(args) < 1 {
-			return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
-		}
-		if len(args) > 1 {
-			return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
-		}
 		t := types.Type(args[0].Type)
 		if t != types.String {
 			return nil, 0, errors.New("Called [] with wrong type " + t.Label())
@@ -414,6 +431,7 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 			Value: x[string(args[0].Value)],
 			Type:  bind.Type,
 		}, 0, nil
+
 	default:
 		return nil, 0, errors.New("dict value does not support accessor `[]`")
 	}
