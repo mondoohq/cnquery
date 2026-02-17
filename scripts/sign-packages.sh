@@ -57,8 +57,8 @@ echo "Signing RPM package: $RPM_FILE"
 
 # Get the signing key ID from the GPG key
 echo "Extracting key ID from: $GPG_KEY_PATH"
-# Use full key ID (most reliable for RPM signing)
-KEY_ID=$(gpg --import --import-options show-only --with-colons "$GPG_KEY_PATH" 2>/dev/null | grep '^pub:' | cut -d: -f5)
+# Look for either sec: (secret key) or pub: (public key) and get the key ID
+KEY_ID=$(gpg --import --import-options show-only --with-colons "$GPG_KEY_PATH" 2>/dev/null | grep -E '^(sec|pub):' | cut -d: -f5 | head -1)
 
 if [ -z "$KEY_ID" ]; then
   echo "Error: Could not extract key ID from GPG key"
