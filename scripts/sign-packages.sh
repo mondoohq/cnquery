@@ -69,12 +69,15 @@ fi
 
 echo "Using key ID: $KEY_ID"
 
+# Convert host path to container path
+CONTAINER_RPM_FILE="/workspace/$RPM_FILE"
+
 docker run --rm \
   -v $(pwd):/workspace \
   -v "$GPG_KEY_PATH":/tmp/signing-key \
   -e RPM_PASSPHRASE="$NFPM_DEFAULT_RPM_PASSPHRASE" \
   -e KEY_ID="$KEY_ID" \
-  -e RPM_FILE="$RPM_FILE" \
+  -e RPM_FILE="$CONTAINER_RPM_FILE" \
   rockylinux:9 \
   sh -c "
     dnf install -y rpm-sign pinentry
