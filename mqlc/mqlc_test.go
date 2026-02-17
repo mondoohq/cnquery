@@ -2147,7 +2147,7 @@ func TestSuggestions(t *testing.T) {
 		{
 			// list resource with empty field call
 			"users.",
-			[]string{"all", "any", "contains", "first", "last", "length", "list", "map", "none", "one", "sample", "where"},
+			[]string{"all", "any", "contains", "first", "having", "last", "length", "list", "map", "none", "one", "sample", "where"},
 			errors.New("incomplete query, missing identifier after '.' at <source>:1:7"),
 			nil,
 		},

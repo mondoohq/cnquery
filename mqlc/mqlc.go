@@ -158,6 +158,10 @@ type compiler struct {
 
 	// helps chaining of builtin calls like `if (..) else if (..) else ..`
 	prevID string
+
+	// overrideTailDataRef is set by `having` so that subsequent chained calls
+	// bind to the where-filtered list instead of the $any boolean chunk.
+	overrideTailDataRef uint64
 }
 
 func (c *compiler) isInMyBlock(ref uint64) bool {
@@ -178,6 +182,18 @@ func (c *compiler) addArgumentPlaceholder(typ types.Type, checksum string) {
 
 func (c *compiler) tailRef() uint64 {
 	return c.block.TailRef(c.blockRef)
+}
+
+// tailDataRef returns overrideTailDataRef if set (consuming it),
+// otherwise falls back to tailRef. Used after builtin calls like
+// `having` where the data continuation point differs from the tail.
+func (c *compiler) tailDataRef() uint64 {
+	if c.overrideTailDataRef != 0 {
+		ref := c.overrideTailDataRef
+		c.overrideTailDataRef = 0
+		return ref
+	}
+	return c.tailRef()
 }
 
 // Creates a new block and its accompanying compiler.
@@ -1503,7 +1519,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			if call != nil && len(calls) > 0 {
 				calls = calls[1:]
 			}
-			ref = c.tailRef()
+			ref = c.tailDataRef()
 			res = llx.RefPrimitiveV2(ref)
 
 			continue

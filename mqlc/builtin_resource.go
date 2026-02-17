@@ -206,7 +206,7 @@ func compileResourceSample(c *compiler, typ types.Type, ref uint64, id string, c
 		return types.Nil, errors.New("too many arguments when calling '" + id + "', only 1 is supported")
 	}
 
-	resourceRef := c.tailRef()
+	resourceRef := ref
 
 	listType, err := compileResourceDefault(c, typ, ref, "list", nil)
 	if err != nil {
@@ -265,6 +265,8 @@ func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call
 		bindingName = arg.Name
 	}
 
+	resourceRef := ref
+
 	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)), ref, bindingName)
 	if err != nil {
 		return types.Nil, err
@@ -278,8 +280,6 @@ func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call
 	if err != nil {
 		return types.Nil, multierr.Wrap(err, "called '"+id+"' with a bad function block, types don't match")
 	}
-
-	resourceRef := c.tailRef()
 
 	listType, err := compileResourceDefault(c, typ, ref, "list", nil)
 	if err != nil {
@@ -487,6 +487,45 @@ func compileResourceNone(c *compiler, typ types.Type, ref uint64, id string, cal
 	return types.Bool, nil
 }
 
+func compileResourceHaving(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	// resource.where
+	_, err := compileResourceWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	whereRef := c.tailRef()
+
+	listType, err := compileResourceDefault(c, typ, whereRef, "list", nil)
+	if err != nil {
+		return listType, err
+	}
+	listRef := c.tailRef()
+
+	if err := compileListAssertionMsg(c, listType, whereRef-1, whereRef-1, listRef); err != nil {
+		return types.Nil, err
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "$any",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: listRef,
+		},
+	})
+	anyRef := c.tailRef()
+
+	checksum := c.Result.CodeV2.Checksums[anyRef]
+	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".having()"
+
+	c.block.Entrypoints = append(c.block.Entrypoints, anyRef)
+	c.block.Datapoints = append(c.block.Datapoints, whereRef)
+
+	c.overrideTailDataRef = whereRef
+
+	return typ, nil
+}
+
 func compileResourceChildAccess(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call != nil && len(call.Function) > 0 {
 		return types.Nil, errors.New("function " + id + " does not take arguments")
@@ -527,7 +566,7 @@ func compileResourceLength(c *compiler, typ types.Type, ref uint64, id string, c
 		return types.Nil, multierr.Wrap(err, "failed to compile "+id)
 	}
 
-	resourceRef := c.tailRef()
+	resourceRef := ref
 
 	t, err := compileResourceDefault(c, typ, ref, "list", nil)
 	if err != nil {
