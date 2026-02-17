@@ -4,6 +4,8 @@
 package providers
 
 import (
+	"sync"
+
 	"github.com/cockroachdb/errors"
 )
 
@@ -17,9 +19,14 @@ var DefaultOsIDs = []string{
 	// ^^
 }
 
-var defaultRuntime *Runtime
+var (
+	defaultRuntime      *Runtime
+	defaultRuntimeMutex sync.Mutex
+)
 
 func DefaultRuntime() *Runtime {
+	defaultRuntimeMutex.Lock()
+	defer defaultRuntimeMutex.Unlock()
 	if defaultRuntime == nil {
 		defaultRuntime = Coordinator.NewRuntime()
 	}
@@ -30,6 +37,8 @@ func SetDefaultRuntime(rt *Runtime) error {
 	if rt == nil {
 		return errors.New("attempted to set default runtime to null")
 	}
+	defaultRuntimeMutex.Lock()
 	defaultRuntime = rt
+	defaultRuntimeMutex.Unlock()
 	return nil
 }
