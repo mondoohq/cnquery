@@ -85,6 +85,7 @@ signs:
     artifacts: package
     # The script will filter further to only sign RPM files.
     cmd: ./scripts/sign-packages.sh
+    args: ["${artifact}"]
 
 archives:
   - id: releases
