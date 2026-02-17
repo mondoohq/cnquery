@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:       "core",
 	ID:         "go.mondoo.com/cnquery/v9/providers/core",
-	Version:    "11.0.114",
+	Version:    "11.0.115",
 	Connectors: []plugin.Connector{},
 	AssetUrlTrees: []*inventory.AssetUrlBranch{
 		{
