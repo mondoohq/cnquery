@@ -437,6 +437,38 @@ func compileDictNone(c *compiler, typ types.Type, ref uint64, id string, call *p
 	return types.Bool, nil
 }
 
+func compileDictHaving(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	_, err := compileDictQuery(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	whereRef := c.tailRef()
+
+	if err := compileListAssertionMsg(c, typ, ref, ref, whereRef); err != nil {
+		return types.Nil, err
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "$any",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: whereRef,
+		},
+	})
+	anyRef := c.tailRef()
+
+	checksum := c.Result.CodeV2.Checksums[anyRef]
+	c.Result.Labels.Labels[checksum] = "[].having()"
+
+	c.block.Entrypoints = append(c.block.Entrypoints, anyRef)
+	c.block.Datapoints = append(c.block.Datapoints, whereRef)
+
+	c.overrideTailDataRef = whereRef
+
+	return typ, nil
+}
+
 func compileDictFlat(c *compiler, _ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call != nil && len(call.Function) > 0 {
 		return types.Nil, errors.New("no arguments supported for '" + id + "'")
@@ -657,4 +689,36 @@ func compileMapNone(c *compiler, typ types.Type, ref uint64, id string, call *pa
 	c.Result.Labels.Labels[checksum] = "[].none()"
 
 	return types.Bool, nil
+}
+
+func compileMapHaving(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	_, err := compileMapWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	whereRef := c.tailRef()
+
+	if err := compileListAssertionMsg(c, typ, ref, ref, whereRef); err != nil {
+		return types.Nil, err
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "$any",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: whereRef,
+		},
+	})
+	anyRef := c.tailRef()
+
+	checksum := c.Result.CodeV2.Checksums[anyRef]
+	c.Result.Labels.Labels[checksum] = "{}.having()"
+
+	c.block.Entrypoints = append(c.block.Entrypoints, anyRef)
+	c.block.Datapoints = append(c.block.Datapoints, whereRef)
+
+	c.overrideTailDataRef = whereRef
+
+	return typ, nil
 }

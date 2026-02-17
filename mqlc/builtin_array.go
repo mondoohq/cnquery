@@ -447,6 +447,38 @@ func compileArrayNone(c *compiler, typ types.Type, ref uint64, id string, call *
 	return types.Bool, nil
 }
 
+func compileArrayHaving(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	_, err := compileArrayWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	whereRef := c.tailRef()
+
+	if err := compileListAssertionMsg(c, typ, ref, ref, whereRef); err != nil {
+		return types.Nil, err
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "$any",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: whereRef,
+		},
+	})
+	anyRef := c.tailRef()
+
+	checksum := c.Result.CodeV2.Checksums[anyRef]
+	c.Result.Labels.Labels[checksum] = "[].having()"
+
+	c.block.Entrypoints = append(c.block.Entrypoints, anyRef)
+	c.block.Datapoints = append(c.block.Datapoints, whereRef)
+
+	c.overrideTailDataRef = whereRef
+
+	return typ, nil
+}
+
 func compileArrayMap(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call == nil {
 		return types.Nil, errors.New("missing filter argument for calling '" + id + "'")
