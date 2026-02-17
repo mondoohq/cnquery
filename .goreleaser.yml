@@ -32,6 +32,7 @@ builds:
     ldflags:
       - "-extldflags=-static"
       - -s -w -X go.mondoo.com/cnquery/v12.Version={{.Version}} -X go.mondoo.com/cnquery/v12.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v12.Date={{.Date}}
+
   - id: macos
     main: ./apps/cnquery/cnquery.go
     binary: cnquery
@@ -49,6 +50,7 @@ builds:
         - cmd: /tmp/quill sign-and-notarize "{{ .Path }}" -vv || true
           env:
             - QUILL_LOG_FILE=/tmp/quill-{{ .Target }}.log
+
   - id: windows
     main: ./apps/cnquery/cnquery.go
     binary: cnquery
@@ -65,6 +67,7 @@ builds:
     hooks:
       post:
         - cmd: jsign --storetype TRUSTEDSIGNING --keystore {{ .Env.TSIGN_AZURE_ENDPOINT }} --storepass {{ .Env.TSIGN_ACCESS_TOKEN }} --alias {{ .Env.TSIGN_ACCOUNT_NAME }}/{{ .Env.TSIGN_CERT_PROFILE_NAME }} '{{ .Path }}'
+
 nfpms:
   -
     maintainer: Mondoo <hello@mondoo.com>
@@ -75,23 +78,32 @@ nfpms:
     formats:
       - deb
       - rpm
-    rpm:
-      signature:
-        key_file: '{{ .Env.GPG_KEY_PATH }}'
+
+signs:
+  - id: sign-rpms
+    # 'package' tells GoReleaser to target .rpm and .deb files
+    artifacts: package
+    # The script will filter further to only sign RPM files.
+    cmd: ./scripts/sign-packages.sh
+
 archives:
   - id: releases
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [ 'zip' ]
     files:
       - none*
+
 checksum:
   name_template: '{{ .ProjectName }}_v{{ .Version }}_SHA256SUMS'
   algorithm: sha256
+
 snapshot:
   version_template: "{{ .Tag }}-snapshot"
+
 changelog:
   use: github-native
+
 dockers: # https://goreleaser.com/customization/docker/
     # UBI containers
   - use: buildx
@@ -274,6 +286,7 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--target=rootless"
+
 docker_manifests:  # https://goreleaser.com/customization/docker_manifest/
     # UBI containers
   - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}-ubi
@@ -342,5 +355,6 @@ docker_manifests:  # https://goreleaser.com/customization/docker_manifest/
       - mondoo/{{ .ProjectName }}:latest-arm64v8-rootless
       - mondoo/{{ .ProjectName }}:latest-armv6-rootless
       - mondoo/{{ .ProjectName }}:latest-armv7-rootless
+
 release:
   replace_existing_artifacts: true
