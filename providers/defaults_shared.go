@@ -15,7 +15,7 @@ var DefaultOsIDs = []string{
 	// We specify providers without versions now. Also remove the providers
 	// GetFirstID function, since it only exists for this use-case
 	"go.mondoo.com/cnquery/v9/providers/os",
-	"go.mondoo.com/cnquery/v12/providers/os",
+	"go.mondoo.com/mql/v13/providers/os",
 	// ^^
 }
 

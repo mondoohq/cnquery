@@ -8,7 +8,7 @@ import (
 
 	opensearch_types "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 )
 
 func TestParseAuditLogEnabled(t *testing.T) {

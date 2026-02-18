@@ -11,15 +11,15 @@ resources:
       ntp: {}
       roles: {}
       routes:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       snmp: {}
       switchports:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       systemConfig: {}
       users: {}
       version: {}
       vlans:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -98,7 +98,7 @@ resources:
       routeAction: {}
       routeType: {}
       vrf: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.133
     platform:
       name:
       - arista-eos
@@ -186,7 +186,7 @@ resources:
       trunkAllowedVlans: {}
       trunkGroups: {}
       trunkNativeVlan: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.133
     platform:
       name:
       - arista-eos
@@ -215,7 +215,7 @@ resources:
       name: {}
       state: {}
       trunkGroups: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.133
     platform:
       name:
       - arista-eos

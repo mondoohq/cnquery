@@ -1091,15 +1091,17 @@ type TypeMeta struct {
 	// Kind is a string value representing the REST resource this object
 	// represents. Servers may infer this from the endpoint the client submits
 	// requests to. Cannot be updated. In CamelCase.
-	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture
-	// /api-conventions.md#types-kinds
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/
+	// devel/sig-architecture/api-conventions.md#types-kinds
 	// +optional
 	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
 	// APIVersion defines the versioned schema of this representation of an
 	// object. Servers should convert recognized schemas to the latest internal
 	// value, and may reject unrecognized values.
-	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture
-	// /api-conventions.md#resources
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/
+	// devel/sig-architecture/api-conventions.md#resources
 	// +optional
 	// protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
 	ApiVersion    string `protobuf:"bytes,2,opt,name=apiVersion,proto3" json:"apiVersion,omitempty"`
@@ -1341,8 +1343,9 @@ type OwnerReference struct {
 	// protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
 	ApiVersion string `protobuf:"bytes,5,opt,name=apiVersion,proto3" json:"apiVersion,omitempty"`
 	// Kind of the referent.
-	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture
-	// /api-conventions.md#types-kinds
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/
+	// devel/sig-architecture/api-conventions.md#types-kinds
 	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
 	// Name of the referent.
 	// More info: http://kubernetes.io/docs/user-guide/identifiers#names
@@ -1416,8 +1419,9 @@ func (x *OwnerReference) GetUid() string {
 type Inventory struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Standard object's metadata.
-	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture
-	// /api-conventions.md#metadata
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/
+	// devel/sig-architecture/api-conventions.md#metadata
 	Metadata *ObjectMeta `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Inventory.
 	Spec *InventorySpec `protobuf:"bytes,2,opt,name=spec,proto3" json:"spec,omitempty"`

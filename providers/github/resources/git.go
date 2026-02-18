@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"github.com/google/go-github/v81/github"
+	"github.com/google/go-github/v82/github"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )

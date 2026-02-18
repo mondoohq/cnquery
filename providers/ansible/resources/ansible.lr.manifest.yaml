@@ -19,7 +19,7 @@ resources:
       becomeMethod: {}
       becomeUser: {}
       gatherFacts:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.120
       handlers: {}
       hosts: {}
       ignoreUnreachable: {}

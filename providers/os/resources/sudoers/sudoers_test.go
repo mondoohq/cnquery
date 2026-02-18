@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v12/providers/os/resources/sudoers"
+	"go.mondoo.com/mql/v13/providers/os/resources/sudoers"
 )
 
 func TestParseLine_BasicUserSpec(t *testing.T) {

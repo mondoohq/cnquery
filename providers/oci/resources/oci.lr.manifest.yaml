@@ -30,23 +30,23 @@ resources:
   oci.compute.image:
     fields:
       compartment:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       compartmentId:
         min_mondoo_version: 9.0.0
       created: {}
       definedTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       freeformTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       id: {}
       name: {}
       operatingSystem:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       operatingSystemVersion:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       region: {}
       sizeInMBs:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
@@ -56,27 +56,27 @@ resources:
   oci.compute.instance:
     fields:
       availabilityDomain:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       compartment:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       compartmentId:
         min_mondoo_version: 9.0.0
       created: {}
       dedicatedVmHostId:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       definedTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       faultDomain:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       freeformTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       id: {}
       imageId:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       name: {}
       region: {}
       shape:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
@@ -120,10 +120,10 @@ resources:
       compartmentID: {}
       created: {}
       definedTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       description: {}
       freeformTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       id: {}
       name: {}
       state: {}
@@ -137,16 +137,16 @@ resources:
       compartmentID: {}
       created: {}
       definedTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       description: {}
       freeformTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       id: {}
       name: {}
       state: {}
       statements: {}
       versionDate:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
     is_private: true
     min_mondoo_version: 8.10.0
     refs:
@@ -161,12 +161,12 @@ resources:
       created: {}
       customerSecretKeys: {}
       definedTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       description: {}
       email: {}
       emailVerified: {}
       freeformTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       groups: {}
       id: {}
       lastLogin: {}
@@ -192,16 +192,16 @@ resources:
       compartmentID: {}
       created: {}
       definedTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       egressSecurityRules: {}
       freeformTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       id: {}
       ingressSecurityRules: {}
       name: {}
       state: {}
       vcnId:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
     is_private: true
     min_mondoo_version: 8.10.0
     refs:
@@ -214,22 +214,22 @@ resources:
       compartmentID: {}
       created: {}
       defaultDhcpOptionsId:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       defaultRouteTableId:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       defaultSecurityListId:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       definedTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       dnsLabel:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       freeformTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       id: {}
       name: {}
       state: {}
       vcnDomainName:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
     is_private: true
     min_mondoo_version: 8.10.0
     refs:
@@ -246,24 +246,24 @@ resources:
   oci.objectStorage.bucket:
     fields:
       approximateCount:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       approximateSize:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       autoTiering: {}
       compartmentID: {}
       created: {}
       definedTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       etag:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       freeformTags:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       id:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       isReadOnly:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       kmsKeyId:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.133
       name: {}
       namespace: {}
       objectEventsEnabled: {}

@@ -6,7 +6,7 @@ resources:
     fields:
       accounts: {}
       zones: {}
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.account:
     fields:
       createdOn: {}
@@ -17,12 +17,12 @@ resources:
       type: {}
       videos: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.account.settings:
     fields:
       enforceTwoFactor: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.corsHeaders:
     fields:
       allowAllHeaders: {}
@@ -34,12 +34,12 @@ resources:
       allowedOrigins: {}
       maxAge: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.dns:
     fields:
       records: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.dns.record:
     fields:
       comment: {}
@@ -55,13 +55,13 @@ resources:
       ttl: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.one:
     fields:
       apps: {}
       identityProviders: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.one.app:
     fields:
       allowedIdentityProviders: {}
@@ -86,29 +86,29 @@ resources:
       type: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.one.idp:
     fields:
       id: {}
       name: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.r2:
     fields:
       buckets: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.r2.bucket:
     fields:
       createdOn: {}
       location: {}
       name: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.streams:
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.streams.liveInput:
     fields:
       deleteRecordingAfterDays: {}
@@ -116,7 +116,7 @@ resources:
       name: {}
       uid: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.streams.video:
     fields:
       creator: {}
@@ -138,13 +138,13 @@ resources:
       uploaded: {}
       width: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.workers:
     fields:
       pages: {}
       workers: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.workers.page:
     fields:
       aliases: {}
@@ -158,7 +158,7 @@ resources:
       shortId: {}
       url: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.workers.worker:
     fields:
       createdOn: {}
@@ -172,7 +172,7 @@ resources:
       placementMode: {}
       size: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.zone:
     fields:
       account: {}
@@ -197,7 +197,7 @@ resources:
       videos: {}
       workers: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.zone.account:
     fields:
       email: {}
@@ -205,7 +205,7 @@ resources:
       name: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.zone.certificatePack:
     fields:
       certificateAuthority: {}
@@ -216,7 +216,7 @@ resources:
       validationMethod: {}
       validityDays: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.zone.customCertificate:
     fields:
       bundleMethod: {}
@@ -233,7 +233,7 @@ resources:
       uploadedAt: {}
       uploadedOn: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.zone.owner:
     fields:
       email: {}
@@ -241,7 +241,7 @@ resources:
       name: {}
       ownerType: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.zone.plan:
     fields:
       currency: {}
@@ -251,7 +251,7 @@ resources:
       name: {}
       price: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90
   cloudflare.zone.settings:
     fields:
       alwaysUseHttps: {}
@@ -267,4 +267,4 @@ resources:
       tls13: {}
       waf: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.90

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v81/github"
+	"github.com/google/go-github/v82/github"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/logger"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -79,6 +79,8 @@ func initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(githubUser.UpdatedAt))
 	args["suspendedAt"] = llx.TimeDataPtr(githubTimestamp(githubUser.SuspendedAt))
 	args["company"] = llx.StringData(githubUser.GetCompany())
+	args["hireable"] = llx.BoolData(githubUser.GetHireable())
+	args["siteAdmin"] = llx.BoolData(githubUser.GetSiteAdmin())
 	return args, nil, nil
 }
 

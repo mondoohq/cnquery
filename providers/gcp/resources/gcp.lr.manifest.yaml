@@ -112,7 +112,7 @@ resources:
       pubsub: {}
       recommendations: {}
       redis:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.146
       secretmanager: {}
       services: {}
       sql: {}
@@ -1493,7 +1493,7 @@ resources:
   gcp.project.gkeService.cluster.nodepool:
     fields:
       autoscaling:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.146
       config: {}
       id: {}
       initialNodeCount: {}
@@ -1521,7 +1521,7 @@ resources:
       totalMaxNodeCount: {}
       totalMinNodeCount: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2130,7 +2130,7 @@ resources:
       instances: {}
       projectId: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2165,7 +2165,7 @@ resources:
       uid: {}
       zoneDistributionConfig: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2188,7 +2188,7 @@ resources:
       totalSizeBytes: {}
       uid: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2198,7 +2198,7 @@ resources:
       connections: {}
       projectId: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2216,7 +2216,7 @@ resources:
       pscConnectionStatus: {}
       serviceAttachment: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2228,7 +2228,7 @@ resources:
       port: {}
       projectId: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2238,7 +2238,7 @@ resources:
       network: {}
       projectId: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2255,7 +2255,7 @@ resources:
       pscConnectionStatus: {}
       serviceAttachment: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2298,7 +2298,7 @@ resources:
       tier: {}
       transitEncryptionMode: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2308,7 +2308,7 @@ resources:
       projectId: {}
       zone: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2321,7 +2321,7 @@ resources:
       serialNumber: {}
       sha1Fingerprint: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2592,13 +2592,13 @@ resources:
     fields:
       created: {}
       encryption:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.146
       iamConfiguration: {}
       iamPolicy: {}
       id: {}
       labels: {}
       lifecycle:
-        min_mondoo_version: 9.0.0
+        min_mondoo_version: 11.0.146
       location: {}
       locationType: {}
       name: {}
@@ -2620,7 +2620,7 @@ resources:
       action: {}
       condition: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2629,7 +2629,7 @@ resources:
       storageClass: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp
@@ -2648,7 +2648,7 @@ resources:
       noncurrentTimeBefore: {}
       numNewerVersions: {}
     is_private: true
-    min_mondoo_version: 9.0.0
+    min_mondoo_version: 11.0.146
     platform:
       name:
       - gcp

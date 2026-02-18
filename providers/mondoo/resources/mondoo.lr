@@ -4,7 +4,7 @@
 import "../../core/resources/core.lr"
 import "../../network/resources/network.lr"
 
-option provider = "go.mondoo.com/mql/providers/mondoo"
+option provider = "go.mondoo.com/mql/v13/providers/mondoo"
 option go_package = "go.mondoo.com/mql/v13/providers/mondoo/resources"
 
 // Mondoo Client
