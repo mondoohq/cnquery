@@ -1,6 +1,12 @@
 name: Trigger provider release
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "providers/**"
+      - "!providers/core/**"
   release:
     types: [published]
   workflow_dispatch:
@@ -75,3 +81,24 @@ jobs:
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
+
+      - name: Send Slack notification
+        if: ${{ steps.cpr.outputs.pull-request-number }}
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "C07QZDJFF89",
+              "text": "✨ Provider release PR created",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":rocket: *Provider release PR created*: <${{ steps.cpr.outputs.pull-request-url }}|${{ steps.branch.outputs.COMMIT_TITLE }}>\nThis PR is ready for review."
+                  }
+                }
+              ]
+            }
