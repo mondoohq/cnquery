@@ -19,7 +19,7 @@ type ShaReference struct {
 }
 
 func NewShaReference(ref string) ShaReference {
-	return ShaReference{SHA: strings.Replace(ref, "sha256:", "", -1)}
+	return ShaReference{SHA: strings.ReplaceAll(ref, "sha256:", "")}
 }
 
 func (r ShaReference) Name() string {
