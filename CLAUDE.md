@@ -401,6 +401,11 @@ for {
 - Date fields use expanded format: "date:{property}:start", "date:{property}:end", "date:{property}:is_datetime"
 - Place fields split into multiple properties: name, address, latitude, longitude, google_place_id
 - Use JavaScript number types for numeric fields, not strings
+- Prefer typed resource references over raw ID strings. Instead of a `vpcId string` field, define a `vpc aws.vpc` field that returns the actual resource. This enables MQL traversal (e.g., `aws.ec2.instance.vpc.cidrBlock`) instead of requiring users to manually look up IDs.
+- In `.lr.manifest.yaml`, new fields only need `min_mondoo_version` if the resource itself has an older `min_mondoo_version`. If the resource already requires a recent enough version, fields inherit it implicitly.
+- **Match SDK types faithfully:** If an SDK field is `*bool`, use `bool` in `.lr` and `llx.BoolDataPtr()` in Go — don't cast it to `string`. If an SDK enum has only two states (Enabled/Disabled), prefer `bool`. Use `*type` intermediate variables with `llx.*DataPtr` helpers to preserve nil semantics.
+- **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
+- **Verify enum values in `.lr` comments:** When listing possible values in field comments, check the SDK/API docs for completeness — don't assume the set is closed.
 
 ### Provider Modules & Dependencies
 - Each provider in `providers/` has its own `go.mod` for isolation
