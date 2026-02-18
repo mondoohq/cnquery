@@ -4,6 +4,7 @@
 package resources_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -601,6 +602,190 @@ func TestDict_Methods_OtherJson(t *testing.T) {
 		},
 		{
 			Code:        "parse.json('/dummy.null.json').params",
+			Expectation: nil,
+		},
+	})
+}
+
+func TestDict_KeyNotFound(t *testing.T) {
+	p := "parse.json('/dummy.json')."
+	keyNotFoundErr := func(key, suggestion string) string {
+		return fmt.Sprintf("key '%s' not found, did you mean '%s'? (keys are case-sensitive)", key, suggestion)
+	}
+
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        p + "params.nonExistentKey",
+			Expectation: nil,
+		},
+		{
+			Code:        p + "params['nonExistentKey']",
+			Expectation: nil,
+		},
+		{
+			Code:  p + "params.Hello",
+			Error: keyNotFoundErr("Hello", "hello"),
+		},
+		{
+			Code:  p + "params['HELLO']",
+			Error: keyNotFoundErr("HELLO", "hello"),
+		},
+		{
+			Code:  p + "params.dict.EE",
+			Error: keyNotFoundErr("EE", "ee"),
+		},
+		{
+			Code:        p + "params.hello",
+			Expectation: "hello",
+		},
+		{
+			Code:        p + "params.dict.ee",
+			Expectation: float64(3),
+		},
+	})
+}
+
+func TestDict_KeyNotFound_ChainedFunctions(t *testing.T) {
+	p := "parse.json('/dummy.json')."
+	keyNotFoundErr := func(key, suggestion string) string {
+		return fmt.Sprintf("key '%s' not found, did you mean '%s'? (keys are case-sensitive)", key, suggestion)
+	}
+
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:  p + "params.Hello.length",
+			Error: keyNotFoundErr("Hello", "hello"),
+		},
+		{
+			Code:  p + "params.Hello == 'hello'",
+			Error: keyNotFoundErr("Hello", "hello"),
+		},
+		{
+			Code:  p + "params.Hello != empty",
+			Error: keyNotFoundErr("Hello", "hello"),
+		},
+		{
+			Code:  p + "params.dict.EE == 3",
+			Error: keyNotFoundErr("EE", "ee"),
+		},
+		{
+			Code:        p + "params.nonExistentKey.length",
+			Expectation: nil,
+		},
+		{
+			Code:        p + "params.nonExistentKey == empty",
+			Expectation: nil,
+		},
+		{
+			Code:        p + "params.f.map(_['ff'])",
+			Expectation: []any{float64(3)},
+		},
+	})
+}
+
+func TestDict_KeyNotFound_BlockOperations(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	keyNotFoundErr := func(key, suggestion string) string {
+		return fmt.Sprintf("key '%s' not found, did you mean '%s'?", key, suggestion)
+	}
+
+	tests := []struct {
+		name       string
+		code       string
+		key        string
+		suggestion string
+	}{
+		{"where", "parse.json('/dummy.json').params.f.where(_['FF'] == 3)", "FF", "ff"},
+		{"all", "parse.json('/dummy.json').params.f.all(_['FF'] == 3)", "FF", "ff"},
+		{"any", "parse.json('/dummy.json').params.f.any(_['FF'] == 3)", "FF", "ff"},
+		{"one", "parse.json('/dummy.json').params.f.one(_['FF'] == 3)", "FF", "ff"},
+		{"none", "parse.json('/dummy.json').params.f.none(_['FF'] == 3)", "FF", "ff"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res := x.TestQuery(t, tc.code)
+			require.NotEmpty(t, res)
+			lastResult := res[len(res)-1]
+			require.NotNil(t, lastResult)
+			require.Error(t, lastResult.Data.Error)
+			assert.Contains(t, lastResult.Data.Error.Error(), keyNotFoundErr(tc.key, tc.suggestion))
+		})
+	}
+}
+
+func TestDict_KeyNotFound_FuzzyMatching(t *testing.T) {
+	// Tests fuzzy matching suggestions for typos (not just case differences).
+	// The threshold is 40% of key length (min 2 edits), so:
+	// - "hello" (5 chars): allows up to 2 edits
+	// - "string-array" (12 chars): allows up to 4 edits
+	// - "zzzlast" (7 chars): allows up to 2 edits
+	p := "parse.json('/dummy.json')."
+	keyNotFoundErr := func(key, suggestion string) string {
+		return fmt.Sprintf("key '%s' not found, did you mean '%s'?", key, suggestion)
+	}
+
+	x := testutils.InitTester(testutils.LinuxMock())
+
+	// Test cases where fuzzy matching SHOULD suggest a key
+	testsWithSuggestion := []struct {
+		name       string
+		code       string
+		key        string
+		suggestion string
+	}{
+		// 1 edit distance - should always suggest
+		{"1 char typo in hello", p + "params.hallo", "hallo", "hello"},
+		{"1 char missing in hello", p + "params.hell", "hell", "hello"},
+		{"1 char added to hello", p + "params.helloo", "helloo", "hello"},
+
+		// 2 edit distance - still within threshold for 5+ char keys
+		{"2 char typo in hello", p + "params.hillo", "hillo", "hello"},
+		{"swap chars in hello", p + "params.hlelo", "hlelo", "hello"},
+
+		// longer keys allow more edits (string-array = 12 chars, allows 4 edits)
+		{"typo in string-array", p + "params['string-aray']", "string-aray", "string-array"},
+		{"2 typos in string-array", p + "params['strng-aray']", "strng-aray", "string-array"},
+		{"3 typos in string-array", p + "params['strng-arry']", "strng-arry", "string-array"},
+
+		// nested dict fuzzy matching
+		{"typo in nested key", p + "params.dict.ea", "ea", "ee"},
+	}
+
+	for _, tc := range testsWithSuggestion {
+		t.Run(tc.name, func(t *testing.T) {
+			res := x.TestQuery(t, tc.code)
+			require.NotEmpty(t, res)
+			lastResult := res[len(res)-1]
+			require.NotNil(t, lastResult)
+			require.Error(t, lastResult.Data.Error)
+			assert.Contains(t, lastResult.Data.Error.Error(), keyNotFoundErr(tc.key, tc.suggestion))
+		})
+	}
+
+	// Test cases where fuzzy matching should NOT suggest (too different)
+	// These should return nil (backward compatible)
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			// completely different key - no suggestion, returns nil
+			Code:        p + "params.xyz",
+			Expectation: nil,
+		},
+		{
+			// too many edits for short key (ee = 2 chars, "ab" is 2 edits away)
+			Code:        p + "params.dict.ab",
+			Expectation: nil,
+		},
+		{
+			// way too different from any key
+			Code:        p + "params.completelyWrong",
+			Expectation: nil,
+		},
+		{
+			// empty-ish keys don't match
+			Code:        p + "params.x",
 			Expectation: nil,
 		},
 	})
