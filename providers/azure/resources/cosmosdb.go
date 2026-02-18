@@ -88,31 +88,19 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 				return nil, err
 			}
 
-			var publicNetworkAccess string
-			var disableLocalAuth bool
-			var isVirtualNetworkFilterEnabled bool
-			var disableKeyBasedMetadataWriteAccess bool
-			var enableAutomaticFailover bool
-			var enableMultipleWriteLocations bool
+			var publicNetworkAccess *string
+			var disableLocalAuth *bool
+			var isVirtualNetworkFilterEnabled *bool
+			var disableKeyBasedMetadataWriteAccess *bool
+			var enableAutomaticFailover *bool
+			var enableMultipleWriteLocations *bool
 			if account.Properties != nil {
-				if account.Properties.PublicNetworkAccess != nil {
-					publicNetworkAccess = string(*account.Properties.PublicNetworkAccess)
-				}
-				if account.Properties.DisableLocalAuth != nil {
-					disableLocalAuth = *account.Properties.DisableLocalAuth
-				}
-				if account.Properties.IsVirtualNetworkFilterEnabled != nil {
-					isVirtualNetworkFilterEnabled = *account.Properties.IsVirtualNetworkFilterEnabled
-				}
-				if account.Properties.DisableKeyBasedMetadataWriteAccess != nil {
-					disableKeyBasedMetadataWriteAccess = *account.Properties.DisableKeyBasedMetadataWriteAccess
-				}
-				if account.Properties.EnableAutomaticFailover != nil {
-					enableAutomaticFailover = *account.Properties.EnableAutomaticFailover
-				}
-				if account.Properties.EnableMultipleWriteLocations != nil {
-					enableMultipleWriteLocations = *account.Properties.EnableMultipleWriteLocations
-				}
+				publicNetworkAccess = (*string)(account.Properties.PublicNetworkAccess)
+				disableLocalAuth = account.Properties.DisableLocalAuth
+				isVirtualNetworkFilterEnabled = account.Properties.IsVirtualNetworkFilterEnabled
+				disableKeyBasedMetadataWriteAccess = account.Properties.DisableKeyBasedMetadataWriteAccess
+				enableAutomaticFailover = account.Properties.EnableAutomaticFailover
+				enableMultipleWriteLocations = account.Properties.EnableMultipleWriteLocations
 			}
 
 			ipRangeFilter := []any{}
@@ -134,12 +122,12 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 					"kind":                               llx.StringDataPtr((*string)(account.Kind)),
 					"type":                               llx.StringDataPtr(account.Type),
 					"properties":                         llx.DictData(properties),
-					"publicNetworkAccess":                llx.StringData(publicNetworkAccess),
-					"disableLocalAuth":                   llx.BoolData(disableLocalAuth),
-					"isVirtualNetworkFilterEnabled":      llx.BoolData(isVirtualNetworkFilterEnabled),
-					"disableKeyBasedMetadataWriteAccess": llx.BoolData(disableKeyBasedMetadataWriteAccess),
-					"enableAutomaticFailover":            llx.BoolData(enableAutomaticFailover),
-					"enableMultipleWriteLocations":       llx.BoolData(enableMultipleWriteLocations),
+					"publicNetworkAccess":                llx.StringDataPtr(publicNetworkAccess),
+					"disableLocalAuth":                   llx.BoolDataPtr(disableLocalAuth),
+					"isVirtualNetworkFilterEnabled":      llx.BoolDataPtr(isVirtualNetworkFilterEnabled),
+					"disableKeyBasedMetadataWriteAccess": llx.BoolDataPtr(disableKeyBasedMetadataWriteAccess),
+					"enableAutomaticFailover":            llx.BoolDataPtr(enableAutomaticFailover),
+					"enableMultipleWriteLocations":       llx.BoolDataPtr(enableMultipleWriteLocations),
 					"ipRangeFilter":                      llx.ArrayData(ipRangeFilter, types.String),
 				})
 			if err != nil {

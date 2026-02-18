@@ -1446,7 +1446,7 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
   type string
   // Appsite config properties
   properties dict
-  // Minimum TLS version for the site (1.0, 1.1, 1.2)
+  // Minimum TLS version for the site (1.0, 1.1, 1.2, 1.3)
   minTlsVersion string
   // FTP state for the site (AllAllowed, FtpsOnly, Disabled)
   ftpsState string
@@ -1744,13 +1744,13 @@ private azure.subscription.postgreSqlService.server @defaults("id name location"
   // PostgreSQL server properties
   properties dict
   // Whether SSL enforcement is enabled
-  sslEnforcement string
+  sslEnforcement bool
   // Minimum TLS version enforced on the server
   minimalTlsVersion string
   // Whether public network access is enabled for the server
   publicNetworkAccess string
   // Whether infrastructure encryption is enabled (double encryption)
-  infrastructureEncryption string
+  infrastructureEncryption bool
   // PostgreSQL server engine version
   version string
   // PostgreSQL server configuration
@@ -1850,13 +1850,13 @@ private azure.subscription.mySqlService.server @defaults("id name location") {
   // MySQL server properties
   properties dict
   // Whether SSL enforcement is enabled
-  sslEnforcement string
+  sslEnforcement bool
   // Minimum TLS version enforced on the server
   minimalTlsVersion string
   // Whether public network access is enabled for the server
   publicNetworkAccess string
   // Whether infrastructure encryption is enabled (double encryption)
-  infrastructureEncryption string
+  infrastructureEncryption bool
   // MySQL server engine version
   version string
   // MySQL server configuration

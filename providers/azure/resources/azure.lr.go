@@ -2901,7 +2901,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetProperties()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.postgreSqlService.server.sslEnforcement": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetSslEnforcement()).ToDataRes(types.String)
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetSslEnforcement()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.postgreSqlService.server.minimalTlsVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetMinimalTlsVersion()).ToDataRes(types.String)
@@ -2910,7 +2910,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetPublicNetworkAccess()).ToDataRes(types.String)
 	},
 	"azure.subscription.postgreSqlService.server.infrastructureEncryption": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetInfrastructureEncryption()).ToDataRes(types.String)
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetInfrastructureEncryption()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.postgreSqlService.server.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetVersion()).ToDataRes(types.String)
@@ -3024,7 +3024,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionMySqlServiceServer).GetProperties()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.mySqlService.server.sslEnforcement": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMySqlServiceServer).GetSslEnforcement()).ToDataRes(types.String)
+		return (r.(*mqlAzureSubscriptionMySqlServiceServer).GetSslEnforcement()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.mySqlService.server.minimalTlsVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceServer).GetMinimalTlsVersion()).ToDataRes(types.String)
@@ -3033,7 +3033,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionMySqlServiceServer).GetPublicNetworkAccess()).ToDataRes(types.String)
 	},
 	"azure.subscription.mySqlService.server.infrastructureEncryption": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMySqlServiceServer).GetInfrastructureEncryption()).ToDataRes(types.String)
+		return (r.(*mqlAzureSubscriptionMySqlServiceServer).GetInfrastructureEncryption()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.mySqlService.server.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceServer).GetVersion()).ToDataRes(types.String)
@@ -7180,7 +7180,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.postgreSqlService.server.sslEnforcement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionPostgreSqlServiceServer).SslEnforcement, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionPostgreSqlServiceServer).SslEnforcement, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.postgreSqlService.server.minimalTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7192,7 +7192,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.postgreSqlService.server.infrastructureEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionPostgreSqlServiceServer).InfrastructureEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionPostgreSqlServiceServer).InfrastructureEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.postgreSqlService.server.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7368,7 +7368,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.mySqlService.server.sslEnforcement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMySqlServiceServer).SslEnforcement, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionMySqlServiceServer).SslEnforcement, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.mySqlService.server.minimalTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7380,7 +7380,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.mySqlService.server.infrastructureEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMySqlServiceServer).InfrastructureEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionMySqlServiceServer).InfrastructureEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.mySqlService.server.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17095,10 +17095,10 @@ type mqlAzureSubscriptionPostgreSqlServiceServer struct {
 	Tags                     plugin.TValue[map[string]any]
 	Type                     plugin.TValue[string]
 	Properties               plugin.TValue[any]
-	SslEnforcement           plugin.TValue[string]
+	SslEnforcement           plugin.TValue[bool]
 	MinimalTlsVersion        plugin.TValue[string]
 	PublicNetworkAccess      plugin.TValue[string]
-	InfrastructureEncryption plugin.TValue[string]
+	InfrastructureEncryption plugin.TValue[bool]
 	Version                  plugin.TValue[string]
 	Configuration            plugin.TValue[[]any]
 	Databases                plugin.TValue[[]any]
@@ -17166,7 +17166,7 @@ func (c *mqlAzureSubscriptionPostgreSqlServiceServer) GetProperties() *plugin.TV
 	return &c.Properties
 }
 
-func (c *mqlAzureSubscriptionPostgreSqlServiceServer) GetSslEnforcement() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionPostgreSqlServiceServer) GetSslEnforcement() *plugin.TValue[bool] {
 	return &c.SslEnforcement
 }
 
@@ -17178,7 +17178,7 @@ func (c *mqlAzureSubscriptionPostgreSqlServiceServer) GetPublicNetworkAccess() *
 	return &c.PublicNetworkAccess
 }
 
-func (c *mqlAzureSubscriptionPostgreSqlServiceServer) GetInfrastructureEncryption() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionPostgreSqlServiceServer) GetInfrastructureEncryption() *plugin.TValue[bool] {
 	return &c.InfrastructureEncryption
 }
 
@@ -17619,10 +17619,10 @@ type mqlAzureSubscriptionMySqlServiceServer struct {
 	Tags                     plugin.TValue[map[string]any]
 	Type                     plugin.TValue[string]
 	Properties               plugin.TValue[any]
-	SslEnforcement           plugin.TValue[string]
+	SslEnforcement           plugin.TValue[bool]
 	MinimalTlsVersion        plugin.TValue[string]
 	PublicNetworkAccess      plugin.TValue[string]
-	InfrastructureEncryption plugin.TValue[string]
+	InfrastructureEncryption plugin.TValue[bool]
 	Version                  plugin.TValue[string]
 	Configuration            plugin.TValue[[]any]
 	Databases                plugin.TValue[[]any]
@@ -17690,7 +17690,7 @@ func (c *mqlAzureSubscriptionMySqlServiceServer) GetProperties() *plugin.TValue[
 	return &c.Properties
 }
 
-func (c *mqlAzureSubscriptionMySqlServiceServer) GetSslEnforcement() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionMySqlServiceServer) GetSslEnforcement() *plugin.TValue[bool] {
 	return &c.SslEnforcement
 }
 
@@ -17702,7 +17702,7 @@ func (c *mqlAzureSubscriptionMySqlServiceServer) GetPublicNetworkAccess() *plugi
 	return &c.PublicNetworkAccess
 }
 
-func (c *mqlAzureSubscriptionMySqlServiceServer) GetInfrastructureEncryption() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionMySqlServiceServer) GetInfrastructureEncryption() *plugin.TValue[bool] {
 	return &c.InfrastructureEncryption
 }
 

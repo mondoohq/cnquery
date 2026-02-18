@@ -554,8 +554,8 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mqlAzureSubscriptionStorageServiceAccount, error) {
 	var properties map[string]any
 	var err error
-	var minimumTlsVersion string
-	var publicNetworkAccess string
+	var minimumTlsVersion *string
+	var publicNetworkAccess *string
 	var allowBlobPublicAccess *bool
 	var enableHttpsTrafficOnly *bool
 	var allowSharedKeyAccess *bool
@@ -568,12 +568,8 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		if err != nil {
 			return nil, err
 		}
-		if account.Properties.MinimumTLSVersion != nil {
-			minimumTlsVersion = string(*account.Properties.MinimumTLSVersion)
-		}
-		if account.Properties.PublicNetworkAccess != nil {
-			publicNetworkAccess = string(*account.Properties.PublicNetworkAccess)
-		}
+		minimumTlsVersion = (*string)(account.Properties.MinimumTLSVersion)
+		publicNetworkAccess = (*string)(account.Properties.PublicNetworkAccess)
 		allowBlobPublicAccess = account.Properties.AllowBlobPublicAccess
 		enableHttpsTrafficOnly = account.Properties.EnableHTTPSTrafficOnly
 		allowSharedKeyAccess = account.Properties.AllowSharedKeyAccess
@@ -632,10 +628,10 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 			"identity":                           llx.DictData(identity),
 			"sku":                                llx.DictData(sku),
 			"kind":                               llx.StringData(kind),
-			"minimumTlsVersion":                  llx.StringData(minimumTlsVersion),
+			"minimumTlsVersion":                  llx.StringDataPtr(minimumTlsVersion),
 			"allowBlobPublicAccess":              llx.BoolDataPtr(allowBlobPublicAccess),
 			"enableHttpsTrafficOnly":             llx.BoolDataPtr(enableHttpsTrafficOnly),
-			"publicNetworkAccess":                llx.StringData(publicNetworkAccess),
+			"publicNetworkAccess":                llx.StringDataPtr(publicNetworkAccess),
 			"allowSharedKeyAccess":               llx.BoolDataPtr(allowSharedKeyAccess),
 			"allowCrossTenantReplication":        llx.BoolDataPtr(allowCrossTenantReplication),
 			"isLocalUserEnabled":                 llx.BoolDataPtr(isLocalUserEnabled),

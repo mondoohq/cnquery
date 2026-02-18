@@ -74,27 +74,23 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]any, error) {
 				return nil, err
 			}
 
-			var sslEnforcement string
-			var minimalTlsVersion string
-			var publicNetworkAccess string
-			var infrastructureEncryption string
-			var version string
+			var sslEnforcement *bool
+			var minimalTlsVersion *string
+			var publicNetworkAccess *string
+			var infrastructureEncryption *bool
+			var version *string
 			if dbServer.Properties != nil {
 				if dbServer.Properties.SSLEnforcement != nil {
-					sslEnforcement = string(*dbServer.Properties.SSLEnforcement)
+					v := *dbServer.Properties.SSLEnforcement == mysql.SSLEnforcementEnumEnabled
+					sslEnforcement = &v
 				}
-				if dbServer.Properties.MinimalTLSVersion != nil {
-					minimalTlsVersion = string(*dbServer.Properties.MinimalTLSVersion)
-				}
-				if dbServer.Properties.PublicNetworkAccess != nil {
-					publicNetworkAccess = string(*dbServer.Properties.PublicNetworkAccess)
-				}
+				minimalTlsVersion = (*string)(dbServer.Properties.MinimalTLSVersion)
+				publicNetworkAccess = (*string)(dbServer.Properties.PublicNetworkAccess)
 				if dbServer.Properties.InfrastructureEncryption != nil {
-					infrastructureEncryption = string(*dbServer.Properties.InfrastructureEncryption)
+					v := *dbServer.Properties.InfrastructureEncryption == mysql.InfrastructureEncryptionEnabled
+					infrastructureEncryption = &v
 				}
-				if dbServer.Properties.Version != nil {
-					version = string(*dbServer.Properties.Version)
-				}
+				version = (*string)(dbServer.Properties.Version)
 			}
 
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.server",
@@ -105,11 +101,11 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]any, error) {
 					"tags":                     llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
 					"type":                     llx.StringDataPtr(dbServer.Type),
 					"properties":               llx.DictData(properties),
-					"sslEnforcement":           llx.StringData(sslEnforcement),
-					"minimalTlsVersion":        llx.StringData(minimalTlsVersion),
-					"publicNetworkAccess":      llx.StringData(publicNetworkAccess),
-					"infrastructureEncryption": llx.StringData(infrastructureEncryption),
-					"version":                  llx.StringData(version),
+					"sslEnforcement":           llx.BoolDataPtr(sslEnforcement),
+					"minimalTlsVersion":        llx.StringDataPtr(minimalTlsVersion),
+					"publicNetworkAccess":      llx.StringDataPtr(publicNetworkAccess),
+					"infrastructureEncryption": llx.BoolDataPtr(infrastructureEncryption),
+					"version":                  llx.StringDataPtr(version),
 				})
 			if err != nil {
 				return nil, err
