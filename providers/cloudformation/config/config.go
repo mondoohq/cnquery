@@ -11,7 +11,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "cloudformation",
-	ID:              "go.mondoo.com/mql/providers/cloudformation",
+	ID:              "go.mondoo.com/cnquery/v12/providers/cloudformation",
 	Version:         "11.0.124",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{

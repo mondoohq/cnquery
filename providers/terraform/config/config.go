@@ -11,7 +11,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:    "terraform",
-	ID:      "go.mondoo.com/mql/providers/terraform",
+	ID:      "go.mondoo.com/cnquery/v9/providers/terraform",
 	Version: "11.1.80",
 	ConnectionTypes: []string{
 		provider.StateConnectionType,

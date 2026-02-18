@@ -12,7 +12,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "nmap",
-	ID:              "go.mondoo.com/mql/providers/nmap",
+	ID:              "go.mondoo.com/cnquery/v12/providers/nmap",
 	Version:         "11.0.87",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{

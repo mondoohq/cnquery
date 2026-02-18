@@ -11,7 +11,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:       "core",
-	ID:         "go.mondoo.com/mql/providers/core",
+	ID:         "go.mondoo.com/cnquery/v9/providers/core",
 	Version:    mql.GetVersion(),
 	Connectors: []plugin.Connector{},
 	AssetUrlTrees: []*inventory.AssetUrlBranch{

@@ -12,7 +12,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:    "os",
-	ID:      "go.mondoo.com/mql/providers/os",
+	ID:      "go.mondoo.com/cnquery/v9/providers/os",
 	Version: "11.4.85",
 	ConnectionTypes: []string{
 		shared.Type_Local.String(),
