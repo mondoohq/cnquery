@@ -436,6 +436,8 @@ resources:
       filter: {}
       identityAndSignIn: {}
       list: {}
+      mobileDeviceManagementPolicies: {}
+      mobilityManagementPolicies: {}
       roleEligibilityScheduleInstances: {}
     min_mondoo_version: 9.0.0
   microsoft.identityAndAccess.accessReviewDefinition:
@@ -488,6 +490,42 @@ resources:
       displayName: {}
       id: {}
       isEnabled: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.mobileDeviceManagementPolicy:
+    fields:
+      appliesTo: {}
+      complianceUrl: {}
+      description: {}
+      discoveryUrl: {}
+      displayName: {}
+      id: {}
+      includedGroups: {}
+      termsOfUseUrl: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup:
+    fields:
+      displayName: {}
+      id: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.mobilityManagementPolicy:
+    fields:
+      appliesTo: {}
+      complianceUrl: {}
+      description: {}
+      discoveryUrl: {}
+      displayName: {}
+      id: {}
+      includedGroups: {}
+      termsOfUseUrl: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+  microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup:
+    fields:
+      displayName: {}
+      id: {}
     is_private: true
     min_mondoo_version: 9.0.0
   microsoft.identityAndAccess.policy:

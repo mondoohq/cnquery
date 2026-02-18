@@ -16,6 +16,9 @@ import (
 	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v12/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v12/types"
+
+	// Beta SDK imports for mobile device management policies
+	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 )
 
 const (
@@ -479,4 +482,158 @@ func newMqlAccessReviewDefinition(runtime *plugin.Runtime, d models.AccessReview
 	}
 
 	return resource.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinition), nil
+}
+
+// Implementation for mobileDeviceManagementPolicies
+// Required Microsoft Graph permissions (application or delegated):
+//   - Policy.Read.All, or
+//   - Policy.ReadWrite.MobilityManagement
+func (a *mqlMicrosoftIdentityAndAccess) mobileDeviceManagementPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	betaGraphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	policies, err := betaGraphClient.Policies().MobileDeviceManagementPolicies().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	if policies == nil {
+		return nil, nil
+	}
+
+	var policyResources []any
+	for _, policy := range policies.GetValue() {
+		if policy.GetId() != nil {
+			policyResource, err := newMqlMobileDeviceManagementPolicy(a.MqlRuntime, policy)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create MQL resource for MDM policy ID %s: %w", *policy.GetId(), err)
+			}
+			policyResources = append(policyResources, policyResource)
+		}
+	}
+
+	return policyResources, nil
+}
+
+func newMqlMobileDeviceManagementPolicy(runtime *plugin.Runtime, policy betamodels.MobilityManagementPolicyable) (*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy, error) {
+	var includedGroups []any
+	if policy.GetIncludedGroups() != nil {
+		for _, group := range policy.GetIncludedGroups() {
+			groupResource, err := CreateResource(runtime, "microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup",
+				map[string]*llx.RawData{
+					"__id":        llx.StringDataPtr(group.GetId()),
+					"id":          llx.StringDataPtr(group.GetId()),
+					"displayName": llx.StringDataPtr(group.GetDisplayName()),
+				})
+			if err != nil {
+				return nil, err
+			}
+			includedGroups = append(includedGroups, groupResource)
+		}
+	}
+
+	// Handle appliesTo which is a PolicyScope enum, not a string
+	var appliesToStr *string
+	if policy.GetAppliesTo() != nil {
+		appliesToVal := policy.GetAppliesTo().String()
+		appliesToStr = &appliesToVal
+	}
+
+	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.mobileDeviceManagementPolicy",
+		map[string]*llx.RawData{
+			"__id":           llx.StringDataPtr(policy.GetId()),
+			"id":             llx.StringDataPtr(policy.GetId()),
+			"displayName":    llx.StringDataPtr(policy.GetDisplayName()),
+			"description":    llx.StringDataPtr(policy.GetDescription()),
+			"appliesTo":      llx.StringDataPtr(appliesToStr),
+			"complianceUrl":  llx.StringDataPtr(policy.GetComplianceUrl()),
+			"discoveryUrl":   llx.StringDataPtr(policy.GetDiscoveryUrl()),
+			"termsOfUseUrl":  llx.StringDataPtr(policy.GetTermsOfUseUrl()),
+			"includedGroups": llx.ArrayData(includedGroups, "microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup"),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftIdentityAndAccessMobileDeviceManagementPolicy), nil
+}
+
+// Implementation for mobilityManagementPolicies
+// Required Microsoft Graph permissions: Policy.Read.All or Policy.ReadWrite.MobilityManagement.
+func (a *mqlMicrosoftIdentityAndAccess) mobilityManagementPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	betaGraphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	policies, err := betaGraphClient.Policies().MobileAppManagementPolicies().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	if policies == nil {
+		return nil, nil
+	}
+
+	var policyResources []any
+	for _, policy := range policies.GetValue() {
+		if policy.GetId() != nil {
+			policyResource, err := newMqlMobilityManagementPolicy(a.MqlRuntime, policy)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create MQL resource for mobility policy ID %s: %w", *policy.GetId(), err)
+			}
+			policyResources = append(policyResources, policyResource)
+		}
+	}
+
+	return policyResources, nil
+}
+
+func newMqlMobilityManagementPolicy(runtime *plugin.Runtime, policy betamodels.MobilityManagementPolicyable) (*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy, error) {
+	var includedGroups []any
+	if policy.GetIncludedGroups() != nil {
+		for _, group := range policy.GetIncludedGroups() {
+			groupResource, err := CreateResource(runtime, "microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup",
+				map[string]*llx.RawData{
+					"__id":        llx.StringDataPtr(group.GetId()),
+					"id":          llx.StringDataPtr(group.GetId()),
+					"displayName": llx.StringDataPtr(group.GetDisplayName()),
+				})
+			if err != nil {
+				return nil, err
+			}
+			includedGroups = append(includedGroups, groupResource)
+		}
+	}
+
+	// Handle appliesTo which is a PolicyScope enum, not a string
+	var appliesToStr *string
+	if policy.GetAppliesTo() != nil {
+		appliesToVal := policy.GetAppliesTo().String()
+		appliesToStr = &appliesToVal
+	}
+
+	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.mobilityManagementPolicy",
+		map[string]*llx.RawData{
+			"__id":           llx.StringDataPtr(policy.GetId()),
+			"id":             llx.StringDataPtr(policy.GetId()),
+			"displayName":    llx.StringDataPtr(policy.GetDisplayName()),
+			"description":    llx.StringDataPtr(policy.GetDescription()),
+			"appliesTo":      llx.StringDataPtr(appliesToStr),
+			"complianceUrl":  llx.StringDataPtr(policy.GetComplianceUrl()),
+			"discoveryUrl":   llx.StringDataPtr(policy.GetDiscoveryUrl()),
+			"termsOfUseUrl":  llx.StringDataPtr(policy.GetTermsOfUseUrl()),
+			"includedGroups": llx.ArrayData(includedGroups, "microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup"),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.(*mqlMicrosoftIdentityAndAccessMobilityManagementPolicy), nil
 }
