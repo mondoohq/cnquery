@@ -308,15 +308,23 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 
 	conf.Options[tar.OPTION_FILE] = filename
 
+	imageRef := ii.ID
+	// if containerd store is enabled, the image reference needs to be the image name
+	// instead of the image id, otherwise we will not be able to pull the image from the registry
+	if kind := getImageStoreKind(); kind == "overlayfs" {
+		imageRef = conf.Host
+	}
+
 	tarConn, err := tar.NewConnection(
 		id,
 		conf,
 		asset,
 		tar.WithFetchFn(func() (string, error) {
-			img, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
+			img, err := image.LoadImageFromDockerEngine(imageRef, disableInmemoryCache)
 			if err != nil {
 				return filename, err
 			}
+
 			err = tar.StreamToTmpFile(mutate.Extract(img), tmpFile)
 			if err != nil {
 				_ = os.Remove(filename)
@@ -335,6 +343,22 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 	tarConn.Metadata.Name = ii.Name
 	tarConn.Metadata.Labels = ii.Labels
 	return tarConn, nil
+}
+
+func getImageStoreKind() string {
+	client, err := GetDockerClient()
+	if err != nil {
+		log.Warn().Err(err).Msg("docker> cannot create docker client")
+		return "unknown"
+	}
+
+	info, err := client.Info(context.Background())
+	if err != nil {
+		log.Warn().Err(err).Msg("docker> cannot get docker info")
+		return "unknown"
+	}
+
+	return info.Driver
 }
 
 // FindDockerObjectConnectionType tries to find out what kind of connection we are dealing with, this can be either a

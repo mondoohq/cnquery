@@ -18,6 +18,10 @@ type ShaReference struct {
 	SHA string
 }
 
+func NewShaReference(ref string) ShaReference {
+	return ShaReference{SHA: strings.ReplaceAll(ref, "sha256:", "")}
+}
+
 func (r ShaReference) Name() string {
 	return r.SHA
 }
@@ -38,12 +42,24 @@ func (r ShaReference) Scope(scope string) string {
 	return ""
 }
 
-func LoadImageFromDockerEngine(sha string, disableBuffer bool) (v1.Image, error) {
+func ParseImageReference(ref string) (name.Reference, error) {
+	if strings.HasPrefix(ref, "sha256:") {
+		return NewShaReference(ref), nil
+	}
+
+	return name.ParseReference(ref)
+}
+
+func LoadImageFromDockerEngine(imageRef string, disableBuffer bool) (v1.Image, error) {
 	opts := []daemon.Option{}
 	if disableBuffer {
 		opts = append(opts, daemon.WithUnbufferedOpener())
 	}
-	img, err := daemon.Image(&ShaReference{SHA: strings.Replace(sha, "sha256:", "", -1)}, opts...)
+	ref, err := ParseImageReference(imageRef)
+	if err != nil {
+		return nil, err
+	}
+	img, err := daemon.Image(ref, opts...)
 	if err != nil {
 		return nil, err
 	}
