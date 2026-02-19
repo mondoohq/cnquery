@@ -84,12 +84,102 @@ func (g *mqlGcpProjectCloudRunServiceService) id() (string, error) {
 	return fmt.Sprintf("gcp.project.cloudRunService.service/%s", id), nil
 }
 
+func initGcpProjectCloudRunServiceService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["region"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.cloudRunService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := obj.(*mqlGcpProjectCloudRunService)
+	services := svc.GetServices()
+	if services.Error != nil {
+		return nil, nil, services.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	regionVal := ""
+	if args["region"] != nil {
+		regionVal = args["region"].Value.(string)
+	}
+	for _, s := range services.Data {
+		service := s.(*mqlGcpProjectCloudRunServiceService)
+		if service.Name.Data == nameVal && (regionVal == "" || service.Region.Data == regionVal) {
+			return args, service, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("cloud run service %q not found", nameVal)
+}
+
 func (g *mqlGcpProjectCloudRunServiceJob) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
 	}
 	id := g.Id.Data
 	return fmt.Sprintf("gcp.project.cloudRunService.job/%s", id), nil
+}
+
+func initGcpProjectCloudRunServiceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["region"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.cloudRunService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := obj.(*mqlGcpProjectCloudRunService)
+	jobs := svc.GetJobs()
+	if jobs.Error != nil {
+		return nil, nil, jobs.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	regionVal := ""
+	if args["region"] != nil {
+		regionVal = args["region"].Value.(string)
+	}
+	for _, j := range jobs.Data {
+		job := j.(*mqlGcpProjectCloudRunServiceJob)
+		if job.Name.Data == nameVal && (regionVal == "" || job.Region.Data == regionVal) {
+			return args, job, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("cloud run job %q not found", nameVal)
 }
 
 func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) id() (string, error) {
