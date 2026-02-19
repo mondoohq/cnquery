@@ -4524,7 +4524,7 @@ func (c *mqlOciKms) GetVaults() *plugin.TValue[[]any] {
 type mqlOciKmsVault struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciKmsVaultInternal it will be used here
+	mqlOciKmsVaultInternal
 	Id                 plugin.TValue[string]
 	Name               plugin.TValue[string]
 	CompartmentID      plugin.TValue[string]
