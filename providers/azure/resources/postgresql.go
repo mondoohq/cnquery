@@ -78,14 +78,38 @@ func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]any, error) {
 				return nil, err
 			}
 
+			var sslEnforcement *bool
+			var minimalTlsVersion *string
+			var publicNetworkAccess *string
+			var infrastructureEncryption *bool
+			var version *string
+			if dbServer.Properties != nil {
+				if dbServer.Properties.SSLEnforcement != nil {
+					v := *dbServer.Properties.SSLEnforcement == postgresql.SSLEnforcementEnumEnabled
+					sslEnforcement = &v
+				}
+				minimalTlsVersion = (*string)(dbServer.Properties.MinimalTLSVersion)
+				publicNetworkAccess = (*string)(dbServer.Properties.PublicNetworkAccess)
+				if dbServer.Properties.InfrastructureEncryption != nil {
+					v := *dbServer.Properties.InfrastructureEncryption == postgresql.InfrastructureEncryptionEnabled
+					infrastructureEncryption = &v
+				}
+				version = (*string)(dbServer.Properties.Version)
+			}
+
 			mqlAzurePostgresServer, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.server",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(dbServer.ID),
-					"name":       llx.StringDataPtr(dbServer.Name),
-					"location":   llx.StringDataPtr(dbServer.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":       llx.StringDataPtr(dbServer.Type),
-					"properties": llx.DictData(properties),
+					"id":                       llx.StringDataPtr(dbServer.ID),
+					"name":                     llx.StringDataPtr(dbServer.Name),
+					"location":                 llx.StringDataPtr(dbServer.Location),
+					"tags":                     llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
+					"type":                     llx.StringDataPtr(dbServer.Type),
+					"properties":               llx.DictData(properties),
+					"sslEnforcement":           llx.BoolDataPtr(sslEnforcement),
+					"minimalTlsVersion":        llx.StringDataPtr(minimalTlsVersion),
+					"publicNetworkAccess":      llx.StringDataPtr(publicNetworkAccess),
+					"infrastructureEncryption": llx.BoolDataPtr(infrastructureEncryption),
+					"version":                  llx.StringDataPtr(version),
 				})
 			if err != nil {
 				return nil, err
@@ -134,6 +158,11 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 				return nil, err
 			}
 
+			var version string
+			if dbServer.Properties != nil && dbServer.Properties.Version != nil {
+				version = string(*dbServer.Properties.Version)
+			}
+
 			mqlAzurePostgresServer, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.flexibleServer",
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(dbServer.ID),
@@ -142,6 +171,7 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
 					"type":       llx.StringDataPtr(dbServer.Type),
 					"properties": llx.DictData(properties),
+					"version":    llx.StringData(version),
 				})
 			if err != nil {
 				return nil, err

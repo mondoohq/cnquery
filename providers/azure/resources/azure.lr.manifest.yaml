@@ -225,8 +225,16 @@ resources:
       agentPoolProfiles: {}
       apiServerAccessProfile:
         min_mondoo_version: 11.4.28
+      apiServerAuthorizedIPRanges:
+        min_mondoo_version: 9.0.0
       createdAt: {}
+      disableRunCommand:
+        min_mondoo_version: 9.0.0
       dnsPrefix: {}
+      enablePrivateCluster:
+        min_mondoo_version: 9.0.0
+      enablePrivateClusterPublicFQDN:
+        min_mondoo_version: 9.0.0
       fqdn: {}
       httpProxyConfig: {}
       id: {}
@@ -237,6 +245,8 @@ resources:
       nodeResourceGroup: {}
       podIdentityProfile: {}
       powerState: {}
+      privateDnsZone:
+        min_mondoo_version: 9.0.0
       provisioningState: {}
       rbacEnabled: {}
       securityProfile: {}
@@ -481,6 +491,7 @@ resources:
       hostName: {}
       id: {}
       location: {}
+      minimumTlsVersion: {}
       name: {}
       port: {}
       properties: {}
@@ -705,7 +716,11 @@ resources:
       managedBy: {}
       managedByExtended: {}
       name: {}
+      networkAccessPolicy:
+        min_mondoo_version: 9.0.0
       properties: {}
+      publicNetworkAccess:
+        min_mondoo_version: 9.0.0
       sku: {}
       tags: {}
       type: {}
@@ -780,11 +795,25 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/cosmos-db/
   azure.subscription.cosmosDbService.account:
     fields:
+      disableKeyBasedMetadataWriteAccess:
+        min_mondoo_version: 9.0.0
+      disableLocalAuth:
+        min_mondoo_version: 9.0.0
+      enableAutomaticFailover:
+        min_mondoo_version: 9.0.0
+      enableMultipleWriteLocations:
+        min_mondoo_version: 9.0.0
       id: {}
+      ipRangeFilter:
+        min_mondoo_version: 9.0.0
+      isVirtualNetworkFilterEnabled:
+        min_mondoo_version: 9.0.0
       kind: {}
       location: {}
       name: {}
       properties: {}
+      publicNetworkAccess:
+        min_mondoo_version: 9.0.0
       tags: {}
       type: {}
     is_private: true
@@ -1090,14 +1119,28 @@ resources:
         min_mondoo_version: 11.4.28
       certificates: {}
       diagnosticSettings: {}
+      enablePurgeProtection:
+        min_mondoo_version: 9.0.0
+      enableSoftDelete:
+        min_mondoo_version: 9.0.0
+      enabledForDeployment:
+        min_mondoo_version: 9.0.0
+      enabledForDiskEncryption:
+        min_mondoo_version: 9.0.0
+      enabledForTemplateDeployment:
+        min_mondoo_version: 9.0.0
       id: {}
       keys: {}
       location: {}
       privateEndpointConnections:
         min_mondoo_version: 11.4.28
       properties: {}
+      publicNetworkAccess:
+        min_mondoo_version: 9.0.0
       rbacAuthorizationEnabled: {}
       secrets: {}
+      softDeleteRetentionInDays:
+        min_mondoo_version: 9.0.0
       tags: {}
       type: {}
       vaultName: {}
@@ -1521,6 +1564,8 @@ resources:
       properties: {}
       tags: {}
       type: {}
+      version:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -1535,11 +1580,21 @@ resources:
       databases: {}
       firewallRules: {}
       id: {}
+      infrastructureEncryption:
+        min_mondoo_version: 9.0.0
       location: {}
+      minimalTlsVersion:
+        min_mondoo_version: 9.0.0
       name: {}
       properties: {}
+      publicNetworkAccess:
+        min_mondoo_version: 9.0.0
+      sslEnforcement:
+        min_mondoo_version: 9.0.0
       tags: {}
       type: {}
+      version:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -1939,8 +1994,11 @@ resources:
     fields:
       etag: {}
       id: {}
+      isPublic: {}
       name: {}
+      privateIpAddress: {}
       properties: {}
+      publicIpAddressId: {}
       type: {}
       zones: {}
     is_private: true
@@ -1983,10 +2041,16 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.interface:
     fields:
+      enableAcceleratedNetworking:
+        min_mondoo_version: 9.0.0
+      enableIPForwarding:
+        min_mondoo_version: 9.0.0
       etag: {}
       id: {}
       location: {}
       name: {}
+      primary:
+        min_mondoo_version: 9.0.0
       properties: {}
       tags: {}
       type: {}
@@ -2124,12 +2188,26 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.securityrule:
     fields:
+      access:
+        min_mondoo_version: 9.0.0
+      description:
+        min_mondoo_version: 9.0.0
+      destinationAddressPrefix:
+        min_mondoo_version: 9.0.0
       destinationPortRange: {}
       direction: {}
       etag: {}
       id: {}
       name: {}
+      priority:
+        min_mondoo_version: 9.0.0
       properties: {}
+      protocol:
+        min_mondoo_version: 9.0.0
+      sourceAddressPrefix:
+        min_mondoo_version: 9.0.0
+      sourcePortRange:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2141,12 +2219,15 @@ resources:
   azure.subscription.networkService.subnet:
     fields:
       addressPrefix: {}
+      defaultOutboundAccess: {}
       etag: {}
       id: {}
       ipConfigurations:
         min_mondoo_version: latest
       name: {}
       natGateway: {}
+      privateEndpointNetworkPolicies: {}
+      privateLinkServiceNetworkPolicies: {}
       properties: {}
       type: {}
     min_mondoo_version: 11.4.28
@@ -2425,6 +2506,8 @@ resources:
       properties: {}
       tags: {}
       type: {}
+      version:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2436,11 +2519,21 @@ resources:
       databases: {}
       firewallRules: {}
       id: {}
+      infrastructureEncryption:
+        min_mondoo_version: 9.0.0
       location: {}
+      minimalTlsVersion:
+        min_mondoo_version: 9.0.0
       name: {}
       properties: {}
+      publicNetworkAccess:
+        min_mondoo_version: 9.0.0
+      sslEnforcement:
+        min_mondoo_version: 9.0.0
       tags: {}
       type: {}
+      version:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2796,14 +2889,26 @@ resources:
       databases: {}
       encryptionProtector: {}
       firewallRules: {}
+      fullyQualifiedDomainName:
+        min_mondoo_version: 9.0.0
       id: {}
       location: {}
+      minimalTlsVersion:
+        min_mondoo_version: 9.0.0
       name: {}
       properties: {}
+      publicNetworkAccess:
+        min_mondoo_version: 9.0.0
+      restrictOutboundNetworkAccess:
+        min_mondoo_version: 9.0.0
       securityAlertPolicy: {}
+      state:
+        min_mondoo_version: 9.0.0
       tags: {}
       threatDetectionPolicy: {}
       type: {}
+      version:
+        min_mondoo_version: 9.0.0
       virtualNetworkRules: {}
       vulnerabilityAssessmentSettings: {}
     is_private: true
@@ -2995,17 +3100,43 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storageService.account:
     fields:
+      allowBlobPublicAccess:
+        min_mondoo_version: 9.0.0
+      allowCrossTenantReplication:
+        min_mondoo_version: 9.0.0
+      allowSharedKeyAccess:
+        min_mondoo_version: 9.0.0
       blobProperties: {}
       containers: {}
       dataProtection: {}
+      enableHttpsTrafficOnly:
+        min_mondoo_version: 9.0.0
       fileProperties:
         min_mondoo_version: 11.4.28
       id: {}
       identity: {}
+      isHnsEnabled:
+        min_mondoo_version: 9.0.0
+      isLocalUserEnabled:
+        min_mondoo_version: 9.0.0
+      isSftpEnabled:
+        min_mondoo_version: 9.0.0
       kind: {}
       location: {}
+      minimumTlsVersion:
+        min_mondoo_version: 9.0.0
       name: {}
+      networkRuleBypass:
+        min_mondoo_version: 9.0.0
+      networkRuleDefaultAction:
+        min_mondoo_version: 9.0.0
+      networkRuleIpRanges:
+        min_mondoo_version: 9.0.0
+      networkRuleVirtualNetworkSubnetIds:
+        min_mondoo_version: 9.0.0
       properties: {}
+      publicNetworkAccess:
+        min_mondoo_version: 9.0.0
       queueProperties: {}
       sku: {}
       tableProperties: {}
@@ -3290,14 +3421,22 @@ resources:
     fields:
       applicationSettings: {}
       authenticationSettings: {}
+      clientCertEnabled:
+        min_mondoo_version: 9.0.0
+      clientCertMode:
+        min_mondoo_version: 9.0.0
       configuration: {}
       connectionSettings: {}
       diagnosticSettings:
         min_mondoo_version: 11.4.28
+      enabled:
+        min_mondoo_version: 9.0.0
       ftp:
         min_mondoo_version: 11.4.28
       functions:
         min_mondoo_version: 11.4.28
+      httpsOnly:
+        min_mondoo_version: 9.0.0
       id: {}
       identity: {}
       kind: {}
@@ -3312,6 +3451,8 @@ resources:
       slots:
         min_mondoo_version: 11.4.28
       stack: {}
+      state:
+        min_mondoo_version: 9.0.0
       tags: {}
       type: {}
     is_private: true
@@ -3350,10 +3491,20 @@ resources:
       url: https://learn.microsoft.com/en-us/azure/?product=web
   azure.subscription.webService.appsiteconfig:
     fields:
+      alwaysOn:
+        min_mondoo_version: 9.0.0
+      ftpsState:
+        min_mondoo_version: 9.0.0
+      http20Enabled:
+        min_mondoo_version: 9.0.0
       id: {}
       kind: {}
+      minTlsVersion:
+        min_mondoo_version: 9.0.0
       name: {}
       properties: {}
+      remoteDebuggingEnabled:
+        min_mondoo_version: 9.0.0
       type: {}
     is_private: true
     min_mondoo_version: latest

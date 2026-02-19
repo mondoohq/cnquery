@@ -554,10 +554,52 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mqlAzureSubscriptionStorageServiceAccount, error) {
 	var properties map[string]any
 	var err error
+	var minimumTlsVersion *string
+	var publicNetworkAccess *string
+	var allowBlobPublicAccess *bool
+	var enableHttpsTrafficOnly *bool
+	var allowSharedKeyAccess *bool
+	var allowCrossTenantReplication *bool
+	var isLocalUserEnabled *bool
+	var isSftpEnabled *bool
+	var isHnsEnabled *bool
 	if account.Properties != nil {
 		properties, err = convert.JsonToDict(AzureStorageAccountProperties(*account.Properties))
 		if err != nil {
 			return nil, err
+		}
+		minimumTlsVersion = (*string)(account.Properties.MinimumTLSVersion)
+		publicNetworkAccess = (*string)(account.Properties.PublicNetworkAccess)
+		allowBlobPublicAccess = account.Properties.AllowBlobPublicAccess
+		enableHttpsTrafficOnly = account.Properties.EnableHTTPSTrafficOnly
+		allowSharedKeyAccess = account.Properties.AllowSharedKeyAccess
+		allowCrossTenantReplication = account.Properties.AllowCrossTenantReplication
+		isLocalUserEnabled = account.Properties.IsLocalUserEnabled
+		isSftpEnabled = account.Properties.IsSftpEnabled
+		isHnsEnabled = account.Properties.IsHnsEnabled
+	}
+
+	var networkRuleDefaultAction string
+	var networkRuleBypass string
+	networkRuleIpRanges := []any{}
+	networkRuleVirtualNetworkSubnetIds := []any{}
+	if account.Properties != nil && account.Properties.NetworkRuleSet != nil {
+		nrs := account.Properties.NetworkRuleSet
+		if nrs.DefaultAction != nil {
+			networkRuleDefaultAction = string(*nrs.DefaultAction)
+		}
+		if nrs.Bypass != nil {
+			networkRuleBypass = string(*nrs.Bypass)
+		}
+		for _, rule := range nrs.IPRules {
+			if rule != nil && rule.IPAddressOrRange != nil {
+				networkRuleIpRanges = append(networkRuleIpRanges, *rule.IPAddressOrRange)
+			}
+		}
+		for _, rule := range nrs.VirtualNetworkRules {
+			if rule != nil && rule.VirtualNetworkResourceID != nil {
+				networkRuleVirtualNetworkSubnetIds = append(networkRuleVirtualNetworkSubnetIds, *rule.VirtualNetworkResourceID)
+			}
 		}
 	}
 
@@ -577,15 +619,28 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 	}
 	res, err := CreateResource(runtime, "azure.subscription.storageService.account",
 		map[string]*llx.RawData{
-			"id":         llx.StringDataPtr(account.ID),
-			"name":       llx.StringDataPtr(account.Name),
-			"location":   llx.StringDataPtr(account.Location),
-			"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-			"type":       llx.StringDataPtr(account.Type),
-			"properties": llx.DictData(properties),
-			"identity":   llx.DictData(identity),
-			"sku":        llx.DictData(sku),
-			"kind":       llx.StringData(kind),
+			"id":                                 llx.StringDataPtr(account.ID),
+			"name":                               llx.StringDataPtr(account.Name),
+			"location":                           llx.StringDataPtr(account.Location),
+			"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
+			"type":                               llx.StringDataPtr(account.Type),
+			"properties":                         llx.DictData(properties),
+			"identity":                           llx.DictData(identity),
+			"sku":                                llx.DictData(sku),
+			"kind":                               llx.StringData(kind),
+			"minimumTlsVersion":                  llx.StringDataPtr(minimumTlsVersion),
+			"allowBlobPublicAccess":              llx.BoolDataPtr(allowBlobPublicAccess),
+			"enableHttpsTrafficOnly":             llx.BoolDataPtr(enableHttpsTrafficOnly),
+			"publicNetworkAccess":                llx.StringDataPtr(publicNetworkAccess),
+			"allowSharedKeyAccess":               llx.BoolDataPtr(allowSharedKeyAccess),
+			"allowCrossTenantReplication":        llx.BoolDataPtr(allowCrossTenantReplication),
+			"isLocalUserEnabled":                 llx.BoolDataPtr(isLocalUserEnabled),
+			"isSftpEnabled":                      llx.BoolDataPtr(isSftpEnabled),
+			"isHnsEnabled":                       llx.BoolDataPtr(isHnsEnabled),
+			"networkRuleDefaultAction":           llx.StringData(networkRuleDefaultAction),
+			"networkRuleBypass":                  llx.StringData(networkRuleBypass),
+			"networkRuleIpRanges":                llx.ArrayData(networkRuleIpRanges, types.String),
+			"networkRuleVirtualNetworkSubnetIds": llx.ArrayData(networkRuleVirtualNetworkSubnetIds, types.String),
 		})
 	if err != nil {
 		return nil, err

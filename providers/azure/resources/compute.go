@@ -255,19 +255,29 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.computeService.disk",
-		map[string]*llx.RawData{
-			"id":                llx.StringDataPtr(disk.ID),
-			"name":              llx.StringDataPtr(disk.Name),
-			"location":          llx.StringDataPtr(disk.Location),
-			"tags":              llx.MapData(convert.PtrMapStrToInterface(disk.Tags), types.String),
-			"type":              llx.StringDataPtr(disk.Type),
-			"managedBy":         llx.StringDataPtr(disk.ManagedBy),
-			"managedByExtended": llx.ArrayData(managedByExtended, types.String),
-			"zones":             llx.ArrayData(zones, types.String),
-			"sku":               llx.DictData(sku),
-			"properties":        llx.DictData(properties),
-		})
+	args := map[string]*llx.RawData{
+		"id":                llx.StringDataPtr(disk.ID),
+		"name":              llx.StringDataPtr(disk.Name),
+		"location":          llx.StringDataPtr(disk.Location),
+		"tags":              llx.MapData(convert.PtrMapStrToInterface(disk.Tags), types.String),
+		"type":              llx.StringDataPtr(disk.Type),
+		"managedBy":         llx.StringDataPtr(disk.ManagedBy),
+		"managedByExtended": llx.ArrayData(managedByExtended, types.String),
+		"zones":             llx.ArrayData(zones, types.String),
+		"sku":               llx.DictData(sku),
+		"properties":        llx.DictData(properties),
+	}
+
+	if disk.Properties != nil {
+		if disk.Properties.NetworkAccessPolicy != nil {
+			args["networkAccessPolicy"] = llx.StringData(string(*disk.Properties.NetworkAccessPolicy))
+		}
+		if disk.Properties.PublicNetworkAccess != nil {
+			args["publicNetworkAccess"] = llx.StringData(string(*disk.Properties.PublicNetworkAccess))
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.computeService.disk", args)
 	if err != nil {
 		return nil, err
 	}

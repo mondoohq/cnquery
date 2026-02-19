@@ -87,14 +87,35 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]any, error) {
 				return nil, err
 			}
 
+			var minimalTlsVersion *string
+			var publicNetworkAccess *string
+			var restrictOutboundNetworkAccess *string
+			var version *string
+			var state *string
+			var fullyQualifiedDomainName *string
+			if dbServer.Properties != nil {
+				minimalTlsVersion = dbServer.Properties.MinimalTLSVersion
+				publicNetworkAccess = (*string)(dbServer.Properties.PublicNetworkAccess)
+				restrictOutboundNetworkAccess = (*string)(dbServer.Properties.RestrictOutboundNetworkAccess)
+				version = dbServer.Properties.Version
+				state = dbServer.Properties.State
+				fullyQualifiedDomainName = dbServer.Properties.FullyQualifiedDomainName
+			}
+
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(dbServer.ID),
-					"name":       llx.StringDataPtr(dbServer.Name),
-					"location":   llx.StringDataPtr(dbServer.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":       llx.StringDataPtr(dbServer.Type),
-					"properties": llx.DictData(properties),
+					"id":                            llx.StringDataPtr(dbServer.ID),
+					"name":                          llx.StringDataPtr(dbServer.Name),
+					"location":                      llx.StringDataPtr(dbServer.Location),
+					"tags":                          llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
+					"type":                          llx.StringDataPtr(dbServer.Type),
+					"properties":                    llx.DictData(properties),
+					"minimalTlsVersion":             llx.StringDataPtr(minimalTlsVersion),
+					"publicNetworkAccess":           llx.StringDataPtr(publicNetworkAccess),
+					"restrictOutboundNetworkAccess": llx.StringDataPtr(restrictOutboundNetworkAccess),
+					"version":                       llx.StringDataPtr(version),
+					"state":                         llx.StringDataPtr(state),
+					"fullyQualifiedDomainName":      llx.StringDataPtr(fullyQualifiedDomainName),
 				})
 			if err != nil {
 				return nil, err

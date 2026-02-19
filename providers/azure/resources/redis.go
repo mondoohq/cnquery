@@ -97,6 +97,12 @@ func createRedisInstanceRawData(cache *armredis.ResourceInfo) (map[string]*llx.R
 		val := string(*cache.Properties.ProvisioningState)
 		provisioningState = &val
 	}
+	// minimumTlsVersion is an enum with possible values: 1.0, 1.1, 1.2
+	var minimumTlsVersion *string
+	if cache.Properties.MinimumTLSVersion != nil {
+		val := string(*cache.Properties.MinimumTLSVersion)
+		minimumTlsVersion = &val
+	}
 
 	return map[string]*llx.RawData{
 		"id":                  llx.StringDataPtr(cache.ID),
@@ -113,6 +119,7 @@ func createRedisInstanceRawData(cache *armredis.ResourceInfo) (map[string]*llx.R
 		"redisVersion":        llx.StringDataPtr(cache.Properties.RedisVersion),
 		"replicasPerMaster":   llx.IntDataPtr(cache.Properties.ReplicasPerMaster),
 		"replicasPerPrimary":  llx.IntDataPtr(cache.Properties.ReplicasPerPrimary),
+		"minimumTlsVersion":   llx.StringDataPtr(minimumTlsVersion),
 		"sku":                 llx.DictData(sku),
 		"tags":                llx.MapData(convert.PtrMapStrToInterface(cache.Tags), types.String),
 	}, nil
