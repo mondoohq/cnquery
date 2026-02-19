@@ -16,7 +16,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	postgresql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
-	flexible "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
+	flexible "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 )
 
 func (a *mqlAzureSubscriptionPostgreSqlService) id() (string, error) {
@@ -137,7 +137,7 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 	if err != nil {
 		return nil, err
 	}
-	pager := dbClient.NewListPager(&flexible.ServersClientListOptions{})
+	pager := dbClient.NewListBySubscriptionPager(&flexible.ServersClientListBySubscriptionOptions{})
 	res := []any{}
 
 	for pager.More() {

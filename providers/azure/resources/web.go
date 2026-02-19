@@ -24,7 +24,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 
-	web "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice"
+	web "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v5"
 )
 
 var majorVersionRegex = regexp.MustCompile(`^(\d+)`)
@@ -461,7 +461,7 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 	res := []any{}
 	mapIDs := map[string]struct{}{}
 	pager := client.NewGetWebAppStacksPager(&web.ProviderClientGetWebAppStacksOptions{
-		StackOsType: convert.ToPtr(web.Enum19All),
+		StackOsType: convert.ToPtr(web.ProviderStackOsTypeAll),
 	})
 	for pager.More() {
 		page, err := pager.NextPage(ctx)

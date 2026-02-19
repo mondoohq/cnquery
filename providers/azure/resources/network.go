@@ -17,7 +17,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"go.mondoo.com/mql/v13/utils/stringx"
 
-	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 )
 
 func (a *mqlAzureSubscriptionNetworkService) id() (string, error) {
