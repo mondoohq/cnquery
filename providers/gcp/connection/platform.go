@@ -128,6 +128,26 @@ func GetTitleForPlatformName(name string) string {
 		return "GCP Memorystore for Redis Cluster"
 	case "gcp-secretmanager-secret":
 		return "GCP Secret Manager Secret"
+	case "gcp-compute-instance":
+		return "GCP Compute Instance"
+	case "gcp-pubsub-topic":
+		return "GCP Pub/Sub Topic"
+	case "gcp-pubsub-subscription":
+		return "GCP Pub/Sub Subscription"
+	case "gcp-pubsub-snapshot":
+		return "GCP Pub/Sub Snapshot"
+	case "gcp-cloudrun-service":
+		return "GCP Cloud Run Service"
+	case "gcp-cloudrun-job":
+		return "GCP Cloud Run Job"
+	case "gcp-cloud-function":
+		return "GCP Cloud Function"
+	case "gcp-dataproc-cluster":
+		return "GCP Dataproc Cluster"
+	case "gcp-logging-bucket":
+		return "GCP Logging Bucket"
+	case "gcp-apikey":
+		return "GCP API Key"
 	}
 	return "Google Cloud Platform"
 }
@@ -147,7 +167,7 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 		switch objectType {
 		case "instance":
 			return []string{"gcp", project, "compute", region, "instance", "resource"}
-		case "image", "network", "subnetwork":
+		case "image", "network", "subnetwork", "firewall":
 			return []string{"gcp", project, "compute", region, objectType}
 		default:
 			return []string{"gcp", project, "compute", region, "other"}
@@ -202,6 +222,48 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "secretmanager", region, "secret"}
 		default:
 			return []string{"gcp", project, "secretmanager", region, "other"}
+		}
+	case "pubsub":
+		switch objectType {
+		case "topic", "subscription", "snapshot":
+			return []string{"gcp", project, "pubsub", region, objectType}
+		default:
+			return []string{"gcp", project, "pubsub", region, "other"}
+		}
+	case "cloudrun":
+		switch objectType {
+		case "service", "job":
+			return []string{"gcp", project, "cloudrun", region, objectType}
+		default:
+			return []string{"gcp", project, "cloudrun", region, "other"}
+		}
+	case "cloud-functions":
+		switch objectType {
+		case "function":
+			return []string{"gcp", project, "cloud-functions", region, "function"}
+		default:
+			return []string{"gcp", project, "cloud-functions", region, "other"}
+		}
+	case "dataproc":
+		switch objectType {
+		case "cluster":
+			return []string{"gcp", project, "dataproc", region, "cluster"}
+		default:
+			return []string{"gcp", project, "dataproc", region, "other"}
+		}
+	case "logging":
+		switch objectType {
+		case "bucket":
+			return []string{"gcp", project, "logging", region, "bucket"}
+		default:
+			return []string{"gcp", project, "logging", region, "other"}
+		}
+	case "apikeys":
+		switch objectType {
+		case "key":
+			return []string{"gcp", project, "apikeys", region, "key"}
+		default:
+			return []string{"gcp", project, "apikeys", region, "other"}
 		}
 	default:
 		return []string{"gcp", project, "other"}
