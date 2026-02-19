@@ -284,12 +284,10 @@ docker_manifests:  # https://goreleaser.com/customization/docker_manifest/
     image_templates:
       - mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-amd64
       - mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-arm64
-  - name_template: mondoo/{{ .ProjectName }}:latest
+  - name_template: mondoo/{{ .ProjectName }}:latest-ubi
     image_templates:
-      - mondoo/{{ .ProjectName }}:latest-amd64
-      - mondoo/{{ .ProjectName }}:latest-arm64v8
-      - mondoo/{{ .ProjectName }}:latest-armv6
-      - mondoo/{{ .ProjectName }}:latest-armv7
+      - mondoo/{{ .ProjectName }}:latest-ubi-amd64
+      - mondoo/{{ .ProjectName }}:latest-ubi-arm64
     # Standard containers
   - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}
     image_templates:
