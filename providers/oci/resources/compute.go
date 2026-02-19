@@ -293,11 +293,6 @@ func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions 
 					definedTags[k] = v
 				}
 
-				var sizeInMBs int64
-				if image.SizeInMBs != nil {
-					sizeInMBs = *image.SizeInMBs
-				}
-
 				// Create compartment resource reference
 				compartment, err := CreateResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
 					"id": llx.StringDataPtr(image.CompartmentId),
@@ -315,7 +310,7 @@ func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions 
 					"compartment":            llx.ResourceData(compartment, "oci.compartment"),
 					"operatingSystem":        llx.StringDataPtr(image.OperatingSystem),
 					"operatingSystemVersion": llx.StringDataPtr(image.OperatingSystemVersion),
-					"sizeInMBs":              llx.IntData(sizeInMBs),
+					"sizeInMBs":              llx.IntDataPtr(image.SizeInMBs),
 					"freeformTags":           llx.MapData(freeformTags, types.String),
 					"definedTags":            llx.MapData(definedTags, types.Any),
 				})

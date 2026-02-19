@@ -11,9 +11,9 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/keymanagement"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v12/llx"
-	"go.mondoo.com/cnquery/v12/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v12/providers/oci/connection"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/mql/v13/providers/oci/connection"
 )
 
 func (o *mqlOciKms) id() (string, error) {
@@ -114,6 +114,7 @@ func (o *mqlOciKms) getVaults(conn *connection.OciConnection, regions []any) []*
 				if err != nil {
 					return nil, err
 				}
+				mqlInstance.(*mqlOciKmsVault).region = regionResource.Id.Data
 				res = append(res, mqlInstance)
 			}
 
@@ -122,6 +123,10 @@ func (o *mqlOciKms) getVaults(conn *connection.OciConnection, regions []any) []*
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+type mqlOciKmsVaultInternal struct {
+	region string
 }
 
 func (o *mqlOciKmsVault) id() (string, error) {

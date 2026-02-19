@@ -5,10 +5,8 @@ package resources
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestStringValue(t *testing.T) {
@@ -67,23 +65,5 @@ func TestIntValue(t *testing.T) {
 	t.Run("non-nil returns value as int64", func(t *testing.T) {
 		i := 42
 		assert.Equal(t, int64(42), intValue(&i))
-	})
-}
-
-func TestParseTime(t *testing.T) {
-	t.Run("valid RFC3339 timestamp", func(t *testing.T) {
-		result := parseTime("2019-06-12T21:14:13.190Z")
-		require.NotNil(t, result)
-		assert.Equal(t, 2019, result.Year())
-		assert.Equal(t, time.June, result.Month())
-		assert.Equal(t, 12, result.Day())
-	})
-
-	t.Run("invalid timestamp returns nil", func(t *testing.T) {
-		assert.Nil(t, parseTime("not-a-timestamp"))
-	})
-
-	t.Run("empty string returns nil", func(t *testing.T) {
-		assert.Nil(t, parseTime(""))
 	})
 }

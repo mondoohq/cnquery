@@ -206,7 +206,7 @@ private oci.compute.instance @defaults("name") {
   region oci.region
   // Instance creation time
   created time
-  // Instance lifecycle state (MOVING, PROVISIONING, RUNNING, STARTING, STOPPING, STOPPED, CREATING_IMAGE, TERMINATING, TERMINATED)
+  // Instance lifecycle state (e.g., MOVING, PROVISIONING, RUNNING, STARTING, STOPPING, STOPPED, CREATING_IMAGE, TERMINATING, TERMINATED)
   state string
   // Compute shape determining CPU and memory (e.g., VM.Standard2.1)
   shape string
@@ -248,7 +248,7 @@ private oci.compute.image @defaults("name") {
   region oci.region
   // Image creation time
   created time
-  // Image lifecycle state (PROVISIONING, IMPORTING, AVAILABLE, EXPORTING, DISABLED, DELETED)
+  // Image lifecycle state (e.g., PROVISIONING, IMPORTING, AVAILABLE, EXPORTING, DISABLED, DELETED)
   state string
   // Compartment containing the image
   compartment oci.compartment
@@ -332,7 +332,7 @@ private oci.network.vcn @defaults("name") {
   name string
   // VCN creation time
   created time
-  // VCN lifecycle state (PROVISIONING, AVAILABLE, UPDATING, TERMINATING, TERMINATED)
+  // VCN lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED, UPDATING)
   state string
   // Deprecated: Use cidrBlocks instead
   cidrBlock string
@@ -364,7 +364,7 @@ private oci.network.securityList @defaults("name") {
   name string
   // Security list creation time
   created time
-  // Security list lifecycle state (PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  // Security list lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
   state string
   // Egress security rules for outbound traffic
   egressSecurityRules []dict
