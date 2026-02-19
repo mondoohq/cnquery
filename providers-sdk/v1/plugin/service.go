@@ -70,6 +70,7 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 		return nil, err
 	}
 
+	isChild := false
 	if runtime.Connection != nil {
 		if parentId := runtime.Connection.ParentID(); parentId > 0 {
 			parentRuntime, err := s.GetRuntime(parentId)
@@ -77,8 +78,14 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
 			}
 			runtime.Resources = parentRuntime.Resources
-
+			isChild = true
 		}
+	}
+
+	// Upgrade to SQLite-backed cache only for root connections (not children
+	// that share the parent's cache), avoiding throwaway temp DB files.
+	if !isChild {
+		InitSqliteResources(runtime)
 	}
 
 	// store the new runtime
@@ -106,6 +113,7 @@ func (s *Service) deprecatedAddRuntime(createRuntime func(connId uint32) (*Runti
 		return nil, err
 	}
 
+	isChild := false
 	if runtime.Connection != nil {
 		if parentId := runtime.Connection.ParentID(); parentId > 0 {
 			parentRuntime, err := s.doGetRuntime(parentId)
@@ -113,8 +121,11 @@ func (s *Service) deprecatedAddRuntime(createRuntime func(connId uint32) (*Runti
 				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
 			}
 			runtime.Resources = parentRuntime.Resources
-
+			isChild = true
 		}
+	}
+	if !isChild {
+		InitSqliteResources(runtime)
 	}
 	s.runtimes[s.lastConnectionID] = runtime
 	return runtime, nil
@@ -158,6 +169,21 @@ func (s *Service) doDisconnect(id uint32) {
 			closer.Close()
 		}
 		delete(s.runtimes, id)
+
+		// Close the resource cache if it implements io.Closer (e.g. SqliteResources),
+		// but only if no other runtime shares the same Resources instance.
+		if closer, ok := runtime.Resources.(interface{ Close() error }); ok {
+			shared := false
+			for _, other := range s.runtimes {
+				if other.Resources == runtime.Resources {
+					shared = true
+					break
+				}
+			}
+			if !shared {
+				closer.Close()
+			}
+		}
 	}
 }
 
@@ -224,7 +250,8 @@ func (s *Service) StoreData(req *StoreReq) (*StoreRes, error) {
 			continue
 		}
 
-		resource, ok := runtime.Resources.Get(info.Name + "\x00" + info.Id)
+		cacheKey := info.Name + "\x00" + info.Id
+		resource, ok := runtime.Resources.Get(cacheKey)
 		if !ok {
 			resource, err = runtime.CreateResource(runtime, info.Name, args)
 			if err != nil {
@@ -232,7 +259,10 @@ func (s *Service) StoreData(req *StoreReq) (*StoreRes, error) {
 				continue
 			}
 
-			runtime.Resources.Set(info.Name+"\x00"+info.Id, resource)
+			runtime.Resources.Set(cacheKey, resource)
+			if rwa, ok := runtime.Resources.(ResourcesWithArgs); ok {
+				rwa.SetWithArgs(cacheKey, resource, args)
+			}
 		}
 
 		for k, v := range args {
