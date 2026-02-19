@@ -58,6 +58,15 @@ Examples with the GCP project configured:
 				resources.DiscoverMemorystoreRedis,
 				resources.DiscoverMemorystoreRedisCluster,
 				resources.DiscoverSecretManager,
+				resources.DiscoverPubSubTopics,
+				resources.DiscoverPubSubSubscriptions,
+				resources.DiscoverPubSubSnapshots,
+				resources.DiscoverCloudRunServices,
+				resources.DiscoverCloudRunJobs,
+				resources.DiscoverCloudFunctions,
+				resources.DiscoverDataprocClusters,
+				resources.DiscoverLoggingBuckets,
+				resources.DiscoverApiKeys,
 			},
 			Flags: []plugin.Flag{
 				{
