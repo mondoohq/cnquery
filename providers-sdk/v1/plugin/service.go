@@ -231,7 +231,34 @@ func (s *Service) GetData(req *DataReq) (*DataRes, error) {
 		}
 	}
 
-	return runtime.GetData(resource, req.Field, args), nil
+	cacheKey := req.Resource + "\x00" + req.ResourceId
+
+	// Check field cache before expensive computation.
+	if fc, ok := runtime.Resources.(ResourcesWithFieldCache); ok {
+		if cached := fc.GetField(cacheKey, req.Field); cached != nil {
+			return cached, nil
+		}
+	}
+
+	res := runtime.GetData(resource, req.Field, args)
+
+	// Re-insert the resource into the cache after field computation.
+	// Field methods (e.g. packages.list) may create many child resources via
+	// CreateResource, which can evict the parent resource from the LRU.
+	// Without this, the next GetData call would reconstruct a fresh instance
+	// from SQLite, losing all computed TValue fields and re-triggering
+	// expensive operations like system_profiler or API calls.
+	runtime.Resources.Set(cacheKey, resource)
+
+	// Cache the field result for future reconstruction.
+	// Skip empty DataRes (nil Data + empty Error) — that means NotReady.
+	if res.Data != nil || res.Error != "" {
+		if fc, ok := runtime.Resources.(ResourcesWithFieldCache); ok {
+			fc.SetField(cacheKey, req.Field, res)
+		}
+	}
+
+	return res, nil
 }
 
 func (s *Service) StoreData(req *StoreReq) (*StoreRes, error) {

@@ -56,6 +56,19 @@ func NewSqliteResources(capacity int, runtime *Runtime) (*SqliteResources, error
 		return nil, err
 	}
 
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS field_cache (
+		cache_key TEXT NOT NULL,
+		field     TEXT NOT NULL,
+		data      BLOB,
+		error     TEXT,
+		PRIMARY KEY (cache_key, field)
+	)`)
+	if err != nil {
+		db.Close()
+		os.Remove(dbPath)
+		return nil, err
+	}
+
 	log.Warn().Str("path", dbPath).Int("capacity", capacity).Msg("sqlite resource cache created")
 
 	sr := &SqliteResources{
@@ -252,6 +265,76 @@ func (s *SqliteResources) onLRUEvict(key string, resource Resource) {
 	_, err = s.db.Exec(`UPDATE resources SET internal_data = ? WHERE cache_key = ?`, internalData, key)
 	if err != nil {
 		log.Warn().Err(err).Str("key", key).Msg("sqlite resource cache: failed to persist internal data on eviction")
+	}
+}
+
+// GetField retrieves a cached field result from the field_cache table.
+// Returns nil on cache miss, error, or if the database is closed.
+func (s *SqliteResources) GetField(cacheKey string, field string) *DataRes {
+	s.mu.RLock()
+	db := s.db
+	s.mu.RUnlock()
+
+	if db == nil {
+		return nil
+	}
+
+	var data []byte
+	var errStr sql.NullString
+	err := db.QueryRow(
+		`SELECT data, error FROM field_cache WHERE cache_key = ? AND field = ?`,
+		cacheKey, field,
+	).Scan(&data, &errStr)
+	if err != nil {
+		return nil
+	}
+
+	res := &DataRes{}
+	if errStr.Valid {
+		res.Error = errStr.String
+	}
+	if len(data) > 0 {
+		p := &llx.Primitive{}
+		if err := p.UnmarshalVT(data); err != nil {
+			return nil
+		}
+		res.Data = p
+	}
+	return res
+}
+
+// SetField caches a computed field result in the field_cache table.
+// It is a no-op if the database is closed.
+func (s *SqliteResources) SetField(cacheKey string, field string, res *DataRes) {
+	s.mu.RLock()
+	db := s.db
+	s.mu.RUnlock()
+
+	if db == nil {
+		return
+	}
+
+	var data []byte
+	if res.Data != nil {
+		var err error
+		data, err = res.Data.MarshalVT()
+		if err != nil {
+			log.Warn().Err(err).Str("key", cacheKey).Str("field", field).Msg("sqlite field cache: failed to marshal data")
+			return
+		}
+	}
+
+	var errStr *string
+	if res.Error != "" {
+		errStr = &res.Error
+	}
+
+	_, err := db.Exec(
+		`INSERT OR REPLACE INTO field_cache (cache_key, field, data, error) VALUES (?, ?, ?, ?)`,
+		cacheKey, field, data, errStr,
+	)
+	if err != nil {
+		log.Warn().Err(err).Str("key", cacheKey).Str("field", field).Msg("sqlite field cache: failed to persist field")
 	}
 }
 

@@ -347,6 +347,73 @@ func TestSqliteResources_SetWithoutArgs_NoReconstruction(t *testing.T) {
 	assert.False(t, ok, "resource stored with Set (no args) should not be reconstructable")
 }
 
+func TestSqliteResources_FieldCache_BasicRoundTrip(t *testing.T) {
+	runtime := newTestRuntime()
+	sr, err := NewSqliteResources(10, runtime)
+	require.NoError(t, err)
+	defer sr.Close()
+
+	cacheKey := "test.resource\x00abc123"
+
+	// SetField with data
+	sr.SetField(cacheKey, "name", &DataRes{
+		Data: llx.StringPrimitive("hello"),
+	})
+
+	// GetField should return the same DataRes
+	got := sr.GetField(cacheKey, "name")
+	require.NotNil(t, got)
+	assert.Equal(t, "hello", string(got.Data.Value))
+	assert.Empty(t, got.Error)
+
+	// SetField with error
+	sr.SetField(cacheKey, "broken", &DataRes{
+		Error: "something went wrong",
+	})
+
+	got = sr.GetField(cacheKey, "broken")
+	require.NotNil(t, got)
+	assert.Nil(t, got.Data)
+	assert.Equal(t, "something went wrong", got.Error)
+}
+
+func TestSqliteResources_FieldCache_Miss(t *testing.T) {
+	runtime := newTestRuntime()
+	sr, err := NewSqliteResources(10, runtime)
+	require.NoError(t, err)
+	defer sr.Close()
+
+	// GetField on non-existent key returns nil
+	got := sr.GetField("nonexistent\x00key", "field")
+	assert.Nil(t, got)
+}
+
+func TestSqliteResources_FieldCache_AfterClose(t *testing.T) {
+	runtime := newTestRuntime()
+	sr, err := NewSqliteResources(10, runtime)
+	require.NoError(t, err)
+
+	sr.Close()
+
+	// SetField after Close should be a no-op (no panic)
+	sr.SetField("test\x00id", "field", &DataRes{
+		Data: llx.StringPrimitive("value"),
+	})
+
+	// GetField after Close should return nil (no panic)
+	got := sr.GetField("test\x00id", "field")
+	assert.Nil(t, got)
+}
+
+func TestSqliteResources_ImplementsResourcesWithFieldCache(t *testing.T) {
+	runtime := newTestRuntime()
+	sr, err := NewSqliteResources(10, runtime)
+	require.NoError(t, err)
+	defer sr.Close()
+
+	var _ ResourcesWithFieldCache = sr
+}
+
 func TestMarshalUnmarshalArgs(t *testing.T) {
 	args := map[string]*llx.RawData{
 		"__id":  llx.StringData("test-id"),

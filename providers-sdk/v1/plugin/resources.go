@@ -17,6 +17,15 @@ type ResourcesWithArgs interface {
 	SetWithArgs(key string, value Resource, args map[string]*llx.RawData)
 }
 
+// ResourcesWithFieldCache is an optional extension that allows caching
+// computed field results (DataRes) in SQLite. This prevents expensive
+// recomputation (e.g. system_profiler, API calls) when a resource is
+// reconstructed from disk after LRU eviction.
+type ResourcesWithFieldCache interface {
+	GetField(cacheKey string, field string) *DataRes
+	SetField(cacheKey string, field string, res *DataRes)
+}
+
 // SerializableInternal is an optional interface that resources can implement
 // to persist their internal state (e.g. k8s API objects) to the SQLite cache.
 // Without this, internal state set imperatively after resource creation
