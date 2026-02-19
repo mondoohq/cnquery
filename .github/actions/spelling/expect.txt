@@ -99,7 +99,7 @@ mfs
 mgroup
 minfree
 mkey
-mpim
+Mpim
 naflags
 natgateway
 networkinterface
