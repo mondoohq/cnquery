@@ -278,8 +278,8 @@ func extractHclCodeSnippet(file *hcl.File, fileRange hcl.Range) string {
 	// build the snippet
 	sb := strings.Builder{}
 	for lineNo := start; lineNo <= end; lineNo++ {
-		sb.WriteString(fmt.Sprintf("% 6d | ", lineNo))
-		sb.WriteString(fmt.Sprintf("%s", lines[lineNo]))
+		fmt.Fprintf(&sb, "% 6d | ", lineNo)
+		sb.WriteString(lines[lineNo])
 		sb.WriteString("\n")
 	}
 

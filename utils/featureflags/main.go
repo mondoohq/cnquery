@@ -139,7 +139,7 @@ func main() {
 	out.WriteString(")\n\n")
 
 	// Feature string to ID mappings
-	out.WriteString(fmt.Sprintf("var %ssValue = map[string]%s{\n", featureType, featureType))
+	fmt.Fprintf(&out, "var %ssValue = map[string]%s{\n", featureType, featureType)
 	for i := range res.Features {
 		cur := res.Features[i]
 		out.WriteString("\t\"" + cur.Id + "\": " + cur.Id + ",\n")
@@ -147,9 +147,9 @@ func main() {
 	out.WriteString("}\n\n")
 
 	// Default features
-	out.WriteString(fmt.Sprintf(`// DefaultFeatures are a set of default flags that are active
+	fmt.Fprintf(&out, `// DefaultFeatures are a set of default flags that are active
 var DefaultFeatures = %ss{
-`, featureType))
+`, featureType)
 	for i := range res.Features {
 		cur := res.Features[i]
 		if cur.Status == "default" {
@@ -159,9 +159,9 @@ var DefaultFeatures = %ss{
 	out.WriteString("}\n\n")
 
 	// Available features
-	out.WriteString(fmt.Sprintf(`// AvailableFeatures are a set of flags that can be activated
+	fmt.Fprintf(&out, `// AvailableFeatures are a set of flags that can be activated
 var AvailableFeatures = %ss{
-`, featureType))
+`, featureType)
 	for i := range res.Features {
 		cur := res.Features[i]
 		if cur.Status == "new" {

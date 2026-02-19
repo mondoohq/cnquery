@@ -632,14 +632,14 @@ func parseDefaults(paths []string) string {
 		var connectors strings.Builder
 		for j := range conf.Connectors {
 			conn := conf.Connectors[j]
-			connectors.WriteString(fmt.Sprintf(`
+			fmt.Fprintf(&connectors, `
 				{
 					Name:  %#v,
 					Short: %#v,
-				},`, conn.Name, conn.Short))
+				},`, conn.Name, conn.Short)
 		}
 
-		res.WriteString(fmt.Sprintf(`
+		fmt.Fprintf(&res, `
 	"%s": {
 		Provider: &plugin.Provider{
 			Name: "%s",
@@ -647,7 +647,7 @@ func parseDefaults(paths []string) string {
 			Connectors: []plugin.Connector{%s
 			},
 		},
-	},`, conf.Name, conf.Name, conf.ConnectionTypes, connectors.String()))
+	},`, conf.Name, conf.Name, conf.ConnectionTypes, connectors.String())
 	}
 
 	return res.String()

@@ -1317,16 +1317,16 @@ func (h *LRHandler) createResourceHover(resource *lrcore.Resource, ast *lrcore.L
 	}
 
 	var content strings.Builder
-	content.WriteString(fmt.Sprintf("**Resource**: `%s`\n\n", resource.ID))
+	fmt.Fprintf(&content, "**Resource**: `%s`\n\n", resource.ID)
 
 	// Include resource title and description from comments
 	// Use a safe approach that doesn't crash if schema generation fails
 	if resourceInfo, ok := h.getResourceInfo(resource.ID, ast); ok {
 		if resourceInfo.Title != "" {
-			content.WriteString(fmt.Sprintf("**%s**\n\n", resourceInfo.Title))
+			fmt.Fprintf(&content, "**%s**\n\n", resourceInfo.Title)
 		}
 		if resourceInfo.Desc != "" {
-			content.WriteString(fmt.Sprintf("%s\n\n", resourceInfo.Desc))
+			fmt.Fprintf(&content, "%s\n\n", resourceInfo.Desc)
 		}
 	}
 
@@ -1342,7 +1342,7 @@ func (h *LRHandler) createResourceHover(resource *lrcore.Resource, ast *lrcore.L
 		for _, field := range resource.Body.Fields {
 			if field.BasicField != nil && field.BasicField.ID != "" {
 				typeStr := getTypeString(field.BasicField.Type)
-				content.WriteString(fmt.Sprintf("- `%s`: %s\n", field.BasicField.ID, typeStr))
+				fmt.Fprintf(&content, "- `%s`: %s\n", field.BasicField.ID, typeStr)
 			}
 		}
 	}
@@ -1377,38 +1377,38 @@ func (h *LRHandler) createFieldHover(field *lrcore.BasicField, resource *lrcore.
 	isMethod := field.Args != nil
 
 	if isMethod {
-		content.WriteString(fmt.Sprintf("**Method**: `%s`\n\n", field.ID))
+		fmt.Fprintf(&content, "**Method**: `%s`\n\n", field.ID)
 
 		// Show method signature with arguments
 		if len(field.Args.List) > 0 {
 			content.WriteString("**Arguments**:\n")
 			for i, arg := range field.Args.List {
-				content.WriteString(fmt.Sprintf("- `%s`: %s\n", fmt.Sprintf("arg%d", i+1), arg.Type))
+				fmt.Fprintf(&content, "- `arg%d`: %s\n", i+1, arg.Type)
 			}
 			content.WriteString("\n")
 		} else {
 			content.WriteString("**Arguments**: None\n\n")
 		}
 	} else {
-		content.WriteString(fmt.Sprintf("**Field**: `%s`\n\n", field.ID))
+		fmt.Fprintf(&content, "**Field**: `%s`\n\n", field.ID)
 	}
 
 	// Include field title and description from comments
 	if resourceInfo, ok := h.getResourceInfo(resource.ID, ast); ok {
 		if fieldInfo, ok := resourceInfo.Fields[field.ID]; ok {
 			if fieldInfo.Title != "" {
-				content.WriteString(fmt.Sprintf("**%s**\n\n", fieldInfo.Title))
+				fmt.Fprintf(&content, "**%s**\n\n", fieldInfo.Title)
 			}
 			if fieldInfo.Desc != "" {
-				content.WriteString(fmt.Sprintf("%s\n\n", fieldInfo.Desc))
+				fmt.Fprintf(&content, "%s\n\n", fieldInfo.Desc)
 			}
 		}
 	}
 
 	typeStr := getTypeString(field.Type)
-	content.WriteString(fmt.Sprintf("**Type**: %s\n\n", typeStr))
+	fmt.Fprintf(&content, "**Type**: %s\n\n", typeStr)
 
-	content.WriteString(fmt.Sprintf("**Resource**: `%s`\n\n", resource.ID))
+	fmt.Fprintf(&content, "**Resource**: `%s`\n\n", resource.ID)
 
 	// Add specific details based on type
 	if isMethod {

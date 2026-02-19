@@ -232,7 +232,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 
 	var packageList bytes.Buffer
 	for _, pkg := range pkgList {
-		packageList.WriteString(fmt.Sprintf("%s %d:%s-%s %s__%s__%s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary))
+		fmt.Fprintf(&packageList, "%s %d:%s-%s %s__%s__%s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary)
 	}
 
 	pf := &inventory.Platform{
@@ -322,7 +322,7 @@ func TestSuSEParser(t *testing.T) {
 
 	var packageList bytes.Buffer
 	for _, pkg := range pkgList {
-		packageList.WriteString(fmt.Sprintf("%s %d:%s-%s %s__%s__%s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary))
+		fmt.Fprintf(&packageList, "%s %d:%s-%s %s__%s__%s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary)
 	}
 
 	pf := &inventory.Platform{

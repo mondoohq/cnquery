@@ -69,18 +69,18 @@ func TimeToDurationString(t time.Time) string {
 
 	var res strings.Builder
 	if days > 0 {
-		res.WriteString(fmt.Sprintf("%d days ", days))
+		fmt.Fprintf(&res, "%d days ", days)
 	}
 	if hours%24 != 0 {
-		res.WriteString(fmt.Sprintf("%d hours ", hours%24))
+		fmt.Fprintf(&res, "%d hours ", hours%24)
 	}
 	if minutes%60 != 0 {
-		res.WriteString(fmt.Sprintf("%d minutes ", minutes%60))
+		fmt.Fprintf(&res, "%d minutes ", minutes%60)
 	}
 	// if we haven't printed any of the other pieces (days/hours/minutes) then print this
 	// if we have, then check if this is non-zero
 	if minutes == 0 || seconds%60 != 0 {
-		res.WriteString(fmt.Sprintf("%d seconds", seconds%60))
+		fmt.Fprintf(&res, "%d seconds", seconds%60)
 	}
 
 	return strings.TrimSpace(res.String())

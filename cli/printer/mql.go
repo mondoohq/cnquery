@@ -281,12 +281,12 @@ func (print *Printer) array(typ types.Type, data []any, checksum string, indent 
 		}
 	} else {
 		for i := range data {
-			res.WriteString(fmt.Sprintf(
+			fmt.Fprintf(&res,
 				indent+"  %d: %s%s\n",
 				i,
 				listType,
 				print.data(typ.Child(), data[i], checksum, indent+"  ", cache),
-			))
+			)
 		}
 	}
 
@@ -466,7 +466,7 @@ func (print *Printer) stringMap(typ types.Type, data map[string]any, indent stri
 	for _, k := range keys {
 		v := data[k]
 		val := print.data(typ.Child(), v, k, indent+"  ", cache)
-		res.WriteString(fmt.Sprintf(indent+"  %s: %s\n", k, val))
+		fmt.Fprintf(&res, indent+"  %s: %s\n", k, val)
 	}
 
 	res.WriteString(indent + "}")
@@ -506,11 +506,11 @@ func (print *Printer) dict(typ types.Type, raw any, indent string, cache *printC
 		res.WriteString("[\n")
 
 		for i := range data {
-			res.WriteString(fmt.Sprintf(
+			fmt.Fprintf(&res,
 				indent+"  %d: %s\n",
 				i,
 				print.dict(typ, data[i], indent+"  ", cache),
-			))
+			)
 		}
 
 		res.WriteString(indent + "]")
@@ -527,7 +527,7 @@ func (print *Printer) dict(typ types.Type, raw any, indent string, cache *printC
 		keys := sortx.Keys(data)
 		for _, k := range keys {
 			s := print.dict(typ, data[k], indent+"  ", cache)
-			res.WriteString(fmt.Sprintf(indent+"  %s: %s\n", k, s))
+			fmt.Fprintf(&res, indent+"  %s: %s\n", k, s)
 		}
 
 		res.WriteString(indent + "}")
@@ -544,7 +544,7 @@ func (print *Printer) intMap(typ types.Type, data map[int]any, indent string, ca
 
 	for i := range data {
 		value := data[i]
-		res.WriteString(fmt.Sprintf(indent+"  %d: "+print.Secondary("%#v")+"\n", i, value))
+		fmt.Fprintf(&res, indent+"  %d: "+print.Secondary("%#v")+"\n", i, value)
 	}
 
 	res.WriteString(indent + "}")
@@ -931,7 +931,7 @@ func (print *Printer) CodeV2(code *llx.CodeV2, bundle *llx.CodeBundle, indent st
 		res.WriteString(indent)
 		res.WriteString("entrypoints: [")
 		for idx, ep := range block.Entrypoints {
-			res.WriteString(fmt.Sprintf("<%d,%d>", ep>>32, ep&0xFFFFFFFF))
+			fmt.Fprintf(&res, "<%d,%d>", ep>>32, ep&0xFFFFFFFF)
 			if idx != len(block.Entrypoints)-1 {
 				res.WriteString(" ")
 			}
@@ -939,7 +939,7 @@ func (print *Printer) CodeV2(code *llx.CodeV2, bundle *llx.CodeBundle, indent st
 		if len(block.Datapoints) != 0 {
 			res.WriteString("] datapoints: [")
 			for idx, ep := range block.Datapoints {
-				res.WriteString(fmt.Sprintf("<%d,%d>", ep>>32, ep&0xFFFFFFFF))
+				fmt.Fprintf(&res, "<%d,%d>", ep>>32, ep&0xFFFFFFFF)
 				if idx != len(block.Datapoints)-1 {
 					res.WriteString(" ")
 				}

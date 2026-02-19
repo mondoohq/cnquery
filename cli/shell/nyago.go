@@ -100,7 +100,7 @@ func renderNyanya(state *nyanyaState, width, height int) string {
 				colorCode = "234" // default bg
 			}
 			// Use ANSI 256-color background
-			lineBuilder.WriteString(fmt.Sprintf("\033[48;5;%sm  \033[0m", colorCode))
+			fmt.Fprintf(&lineBuilder, "\033[48;5;%sm  \033[0m", colorCode)
 		}
 		frameLines = append(frameLines, lineBuilder.String())
 	}

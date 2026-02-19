@@ -71,9 +71,9 @@ func goGen(configs []*plugin.Provider) ([]byte, error) {
 		var conns strings.Builder
 		for j := range conf.Connectors {
 			conn := conf.Connectors[j]
-			conns.WriteString(fmt.Sprintf(connectorTemplate, conn.Name, conn.Use, conn.Short))
+			fmt.Fprintf(&conns, connectorTemplate, conn.Name, conn.Use, conn.Short)
 		}
-		body.WriteString(fmt.Sprintf(providerTemplate, conf.Name, conf.Name, conf.ID, conf.ConnectionTypes, conns.String()))
+		fmt.Fprintf(&body, providerTemplate, conf.Name, conf.Name, conf.ID, conf.ConnectionTypes, conns.String())
 	}
 
 	res := fmt.Sprintf(template, body.String())

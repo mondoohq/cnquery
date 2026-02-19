@@ -137,10 +137,10 @@ func (a *packageJsonPeople) String() string {
 	b := strings.Builder{}
 	b.WriteString(a.Name)
 	if a.Email != "" {
-		b.WriteString(fmt.Sprintf(" <%s>", a.Email))
+		fmt.Fprintf(&b, " <%s>", a.Email)
 	}
 	if a.URL != "" {
-		b.WriteString(fmt.Sprintf(" (%s)", a.URL))
+		fmt.Fprintf(&b, " (%s)", a.URL)
 	}
 	return b.String()
 }
