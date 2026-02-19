@@ -232,9 +232,11 @@ func TestLabels(t *testing.T) {
 				Labels: map[string]string{
 					"7NxXEUBD5O9yqcbS1gghsap3uMTanBAaQoU1061BWC4zNG74Nv4CoNIkjnhac27hKYIpxS8HcY3DgYKG5ct9Eg==": "permissions.string",
 					"7ssUZ+7ZcZ1C3VPTkHgoxXfjTCKWxzWqNgcg8KjukJ6gak4KRkuH8hnP4iCIo7WWuQBmAPuMDYmMAJP18YTPzQ==": "sshd.config.files.$whereNot",
-					"GzU/yqozWGmdReWSbj7ODsTEK5Q5Cu05tCIEmOglifgxIQCpV1of3+GWuIlVq8RJln4G+b/0kwArCveLnFxLpg==": "group",
+					"GtNpr16YRhlm6mLxwtpY85pTl5djJb0RM/JxMb2l9CgapVzIC/BJERmQcrTGlrMUoSL4JYCZOCJqMfEYJzuxtA==": "gid",
 					"WTVWqxulB/XLD1JGBWA2L43HNW0C6gvbfMIOeuNQaFqi9a2ZiDPTFnbeBjNxMuO7yst9EGdqXe//A6pm8AUOJA==": "[].all()",
+					"XP1c/yncrad6armVwSmXAvI84OcAOGlB0VCmfbGyCico7MDMHd5sT7KrqThFoSCi76HMHZGnLn4/x3mgMBX7+A==": "group",
 					"XddLd7COaspfK2jXGunm3oHHoGf5l3agDFh8ewJ1cQhjGfPwnqCVgfXogs+8W2njxooZJedd7OlnPjRsINh6+Q==": "size",
+					"eQRVXk5/IPfM5fJWXxVHZYzVV+81SPB9VRPVPEJXahD2hZt316Nd7r7z8bSRuPzbpv93FHOg3fWj2rdcSU6YIw==": "name",
 					"kmVAbCeEhV5epklylEdunyU4Z5umMaS4h5/BihX+CjFYP8URYoYFAO/Bk7iIa8RxI39azqAycyZvC0DrvZo1kA==": "!= empty",
 					"zQWLwGop7m8bxXFdpi8cD2GJ4LBZWUt1NMlFlRPHNGkU1DFEE5DQHyvEK/wa5MuMFkMnMwHLJg59zq9M8bcl9Q==": "path",
 				},
