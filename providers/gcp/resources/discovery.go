@@ -48,6 +48,15 @@ const (
 	DiscoveryComputeInstances       = "instances"
 	DiscoveryStorageBuckets         = "storage-buckets"
 	DiscoverSecretManager           = "secretmanager-secrets"
+	DiscoverPubSubTopics            = "pubsub-topics"
+	DiscoverPubSubSubscriptions     = "pubsub-subscriptions"
+	DiscoverPubSubSnapshots         = "pubsub-snapshots"
+	DiscoverCloudRunServices        = "cloudrun-services"
+	DiscoverCloudRunJobs            = "cloudrun-jobs"
+	DiscoverCloudFunctions          = "cloud-functions"
+	DiscoverDataprocClusters        = "dataproc-clusters"
+	DiscoverLoggingBuckets          = "logging-buckets"
+	DiscoverApiKeys                 = "apikeys"
 )
 
 var All = []string{
@@ -80,6 +89,15 @@ var Auto = []string{
 	DiscoverMemorystoreRedisCluster,
 	DiscoveryComputeInstances,
 	DiscoverSecretManager,
+	DiscoverPubSubTopics,
+	DiscoverPubSubSubscriptions,
+	DiscoverPubSubSnapshots,
+	DiscoverCloudRunServices,
+	DiscoverCloudRunJobs,
+	DiscoverCloudFunctions,
+	DiscoverDataprocClusters,
+	DiscoverLoggingBuckets,
+	DiscoverApiKeys,
 }
 
 var AllAPIResources = []string{
@@ -99,6 +117,15 @@ var AllAPIResources = []string{
 	DiscoverMemorystoreRedisCluster,
 	DiscoveryComputeInstances,
 	DiscoverSecretManager,
+	DiscoverPubSubTopics,
+	DiscoverPubSubSubscriptions,
+	DiscoverPubSubSnapshots,
+	DiscoverCloudRunServices,
+	DiscoverCloudRunJobs,
+	DiscoverCloudFunctions,
+	DiscoverDataprocClusters,
+	DiscoverLoggingBuckets,
+	DiscoverApiKeys,
 }
 
 // List of all CloudSQL types, this will be used during discovery
@@ -841,6 +868,266 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("secretmanager", gcpProject.Id.Data, "global", "secret", secret.Name.Data),
 				},
 				Labels:      mapStrInterfaceToMapStrStr(secret.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverPubSubTopics) {
+		pubsubService := gcpProject.GetPubsub()
+		if pubsubService.Error != nil {
+			return nil, pubsubService.Error
+		}
+		topics := pubsubService.Data.GetTopics()
+		if topics.Error != nil {
+			return nil, topics.Error
+		}
+		for i := range topics.Data {
+			topic := topics.Data[i].(*mqlGcpProjectPubsubServiceTopic)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("pubsub", gcpProject.Id.Data, "global", "topic", topic.Name.Data),
+				},
+				Name: topic.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-pubsub-topic",
+					Title:                 connection.GetTitleForPlatformName("gcp-pubsub-topic"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("pubsub", gcpProject.Id.Data, "global", "topic", topic.Name.Data),
+				},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverPubSubSubscriptions) {
+		pubsubService := gcpProject.GetPubsub()
+		if pubsubService.Error != nil {
+			return nil, pubsubService.Error
+		}
+		subscriptions := pubsubService.Data.GetSubscriptions()
+		if subscriptions.Error != nil {
+			return nil, subscriptions.Error
+		}
+		for i := range subscriptions.Data {
+			sub := subscriptions.Data[i].(*mqlGcpProjectPubsubServiceSubscription)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("pubsub", gcpProject.Id.Data, "global", "subscription", sub.Name.Data),
+				},
+				Name: sub.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-pubsub-subscription",
+					Title:                 connection.GetTitleForPlatformName("gcp-pubsub-subscription"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("pubsub", gcpProject.Id.Data, "global", "subscription", sub.Name.Data),
+				},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverPubSubSnapshots) {
+		pubsubService := gcpProject.GetPubsub()
+		if pubsubService.Error != nil {
+			return nil, pubsubService.Error
+		}
+		snapshots := pubsubService.Data.GetSnapshots()
+		if snapshots.Error != nil {
+			return nil, snapshots.Error
+		}
+		for i := range snapshots.Data {
+			snap := snapshots.Data[i].(*mqlGcpProjectPubsubServiceSnapshot)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("pubsub", gcpProject.Id.Data, "global", "snapshot", snap.Name.Data),
+				},
+				Name: snap.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-pubsub-snapshot",
+					Title:                 connection.GetTitleForPlatformName("gcp-pubsub-snapshot"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("pubsub", gcpProject.Id.Data, "global", "snapshot", snap.Name.Data),
+				},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverCloudRunServices) {
+		cloudRunService := gcpProject.GetCloudRun()
+		if cloudRunService.Error != nil {
+			return nil, cloudRunService.Error
+		}
+		services := cloudRunService.Data.GetServices()
+		if services.Error != nil {
+			return nil, services.Error
+		}
+		for i := range services.Data {
+			svc := services.Data[i].(*mqlGcpProjectCloudRunServiceService)
+			region := svc.Region.Data
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("cloudrun", gcpProject.Id.Data, region, "service", svc.Name.Data),
+				},
+				Name: svc.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-cloudrun-service",
+					Title:                 connection.GetTitleForPlatformName("gcp-cloudrun-service"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloudrun", gcpProject.Id.Data, region, "service", svc.Name.Data),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(svc.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverCloudRunJobs) {
+		cloudRunService := gcpProject.GetCloudRun()
+		if cloudRunService.Error != nil {
+			return nil, cloudRunService.Error
+		}
+		jobs := cloudRunService.Data.GetJobs()
+		if jobs.Error != nil {
+			return nil, jobs.Error
+		}
+		for i := range jobs.Data {
+			job := jobs.Data[i].(*mqlGcpProjectCloudRunServiceJob)
+			region := job.Region.Data
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("cloudrun", gcpProject.Id.Data, region, "job", job.Name.Data),
+				},
+				Name: job.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-cloudrun-job",
+					Title:                 connection.GetTitleForPlatformName("gcp-cloudrun-job"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloudrun", gcpProject.Id.Data, region, "job", job.Name.Data),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(job.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverCloudFunctions) {
+		funcs := gcpProject.GetCloudFunctions()
+		if funcs.Error != nil {
+			return nil, funcs.Error
+		}
+		for i := range funcs.Data {
+			fn := funcs.Data[i].(*mqlGcpProjectCloudFunction)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("cloudfunctions", gcpProject.Id.Data, "global", "function", fn.Name.Data),
+				},
+				Name: fn.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-cloud-function",
+					Title:                 connection.GetTitleForPlatformName("gcp-cloud-function"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-functions", gcpProject.Id.Data, "global", "function", fn.Name.Data),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(fn.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverDataprocClusters) {
+		dataprocService := gcpProject.GetDataproc()
+		if dataprocService.Error != nil {
+			return nil, dataprocService.Error
+		}
+		clusters := dataprocService.Data.GetClusters()
+		if clusters.Error != nil {
+			return nil, clusters.Error
+		}
+		for i := range clusters.Data {
+			cluster := clusters.Data[i].(*mqlGcpProjectDataprocServiceCluster)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("dataproc", gcpProject.Id.Data, "global", "cluster", cluster.Name.Data),
+				},
+				Name: cluster.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-dataproc-cluster",
+					Title:                 connection.GetTitleForPlatformName("gcp-dataproc-cluster"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("dataproc", gcpProject.Id.Data, "global", "cluster", cluster.Name.Data),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(cluster.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverLoggingBuckets) {
+		loggingService := gcpProject.GetLogging()
+		if loggingService.Error != nil {
+			return nil, loggingService.Error
+		}
+		buckets := loggingService.Data.GetBuckets()
+		if buckets.Error != nil {
+			return nil, buckets.Error
+		}
+		for i := range buckets.Data {
+			bucket := buckets.Data[i].(*mqlGcpProjectLoggingserviceBucket)
+			bucketName := parseResourceName(bucket.Name.Data)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("logging", gcpProject.Id.Data, "global", "bucket", bucketName),
+				},
+				Name: bucketName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-logging-bucket",
+					Title:                 connection.GetTitleForPlatformName("gcp-logging-bucket"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("logging", gcpProject.Id.Data, "global", "bucket", bucketName),
+				},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverApiKeys) {
+		keys := gcpProject.GetApiKeys()
+		if keys.Error != nil {
+			return nil, keys.Error
+		}
+		for i := range keys.Data {
+			key := keys.Data[i].(*mqlGcpProjectApiKey)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("apikeys", gcpProject.Id.Data, "global", "key", key.Id.Data),
+				},
+				Name: key.Name.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-apikey",
+					Title:                 connection.GetTitleForPlatformName("gcp-apikey"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("apikeys", gcpProject.Id.Data, "global", "key", key.Id.Data),
+				},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 			})
 		}
