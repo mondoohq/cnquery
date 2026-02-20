@@ -573,6 +573,154 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() 
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) accessPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	vaultName, err := resourceID.Component("vaults")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{ClientOptions: conn.ClientOptions()})
+	if err != nil {
+		return nil, err
+	}
+
+	vault, err := client.Get(ctx, resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	if vault.Properties == nil || vault.Properties.AccessPolicies == nil {
+		return res, nil
+	}
+
+	for _, entry := range vault.Properties.AccessPolicies {
+		if entry == nil {
+			continue
+		}
+
+		objectId := convert.ToValue(entry.ObjectID)
+		tenantId := convert.ToValue(entry.TenantID)
+		applicationId := convert.ToValue(entry.ApplicationID)
+
+		var keyPerms, secretPerms, certPerms, storagePerms []any
+		if entry.Permissions != nil {
+			for _, p := range entry.Permissions.Keys {
+				if p != nil {
+					keyPerms = append(keyPerms, string(*p))
+				}
+			}
+			for _, p := range entry.Permissions.Secrets {
+				if p != nil {
+					secretPerms = append(secretPerms, string(*p))
+				}
+			}
+			for _, p := range entry.Permissions.Certificates {
+				if p != nil {
+					certPerms = append(certPerms, string(*p))
+				}
+			}
+			for _, p := range entry.Permissions.Storage {
+				if p != nil {
+					storagePerms = append(storagePerms, string(*p))
+				}
+			}
+		}
+
+		mqlRes, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.vault.accessPolicy",
+			map[string]*llx.RawData{
+				"id":                     llx.StringData(id + "/accessPolicies/" + objectId),
+				"objectId":               llx.StringData(objectId),
+				"tenantId":               llx.StringData(tenantId),
+				"applicationId":          llx.StringData(applicationId),
+				"keyPermissions":         llx.ArrayData(keyPerms, types.String),
+				"secretPermissions":      llx.ArrayData(secretPerms, types.String),
+				"certificatePermissions": llx.ArrayData(certPerms, types.String),
+				"storagePermissions":     llx.ArrayData(storagePerms, types.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRes)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) networkAcls() (*mqlAzureSubscriptionKeyVaultServiceVaultNetworkAcls, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	vaultName, err := resourceID.Component("vaults")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{ClientOptions: conn.ClientOptions()})
+	if err != nil {
+		return nil, err
+	}
+
+	vault, err := client.Get(ctx, resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var bypass, defaultAction string
+	var ipRules, vnetSubnetIds []any
+
+	if vault.Properties != nil && vault.Properties.NetworkACLs != nil {
+		acls := vault.Properties.NetworkACLs
+		if acls.Bypass != nil {
+			bypass = string(*acls.Bypass)
+		}
+		if acls.DefaultAction != nil {
+			defaultAction = string(*acls.DefaultAction)
+		}
+		for _, rule := range acls.IPRules {
+			if rule != nil && rule.Value != nil {
+				ipRules = append(ipRules, *rule.Value)
+			}
+		}
+		for _, rule := range acls.VirtualNetworkRules {
+			if rule != nil && rule.ID != nil {
+				vnetSubnetIds = append(vnetSubnetIds, *rule.ID)
+			}
+		}
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.vault.networkAcls",
+		map[string]*llx.RawData{
+			"id":                      llx.StringData(id + "/networkAcls"),
+			"bypass":                  llx.StringData(bypass),
+			"defaultAction":           llx.StringData(defaultAction),
+			"ipRules":                 llx.ArrayData(ipRules, types.String),
+			"virtualNetworkSubnetIds": llx.ArrayData(vnetSubnetIds, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.(*mqlAzureSubscriptionKeyVaultServiceVaultNetworkAcls), nil
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceKey) keyName() (string, error) {
 	id := a.Kid.Data
 	kvid, err := parseKeyVaultId(id)

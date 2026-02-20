@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"go.mondoo.com/mql/v13/llx"
@@ -701,6 +702,164 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) auditingPolicy() (any, error) {
 	}
 
 	return convert.JsonToDict(policy.DatabaseBlobAuditingPolicy.Properties)
+}
+
+func (a *mqlAzureSubscriptionSqlServiceDatabase) advancedThreatProtection() (*mqlAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotection, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	database, err := resourceID.Component("databases")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := sql.NewDatabaseAdvancedThreatProtectionSettingsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database, sql.AdvancedThreatProtectionNameDefault, &sql.DatabaseAdvancedThreatProtectionSettingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var state string
+	var creationTime *time.Time
+	if policy.Properties != nil {
+		if policy.Properties.State != nil {
+			state = string(*policy.Properties.State)
+		}
+		creationTime = policy.Properties.CreationTime
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.database.advancedthreatprotection",
+		map[string]*llx.RawData{
+			"id":           llx.StringDataPtr(policy.ID),
+			"state":        llx.StringData(state),
+			"creationTime": llx.TimeDataPtr(creationTime),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotection), nil
+}
+
+func (a *mqlAzureSubscriptionSqlServiceDatabase) backupShortTermRetentionPolicy() (*mqlAzureSubscriptionSqlServiceDatabaseBackupshorttermretentionpolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	database, err := resourceID.Component("databases")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := sql.NewBackupShortTermRetentionPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database, sql.ShortTermRetentionPolicyNameDefault, &sql.BackupShortTermRetentionPoliciesClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var retentionDays, diffBackupInterval int64
+	if policy.Properties != nil {
+		if policy.Properties.RetentionDays != nil {
+			retentionDays = int64(*policy.Properties.RetentionDays)
+		}
+		if policy.Properties.DiffBackupIntervalInHours != nil {
+			diffBackupInterval = int64(*policy.Properties.DiffBackupIntervalInHours)
+		}
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.database.backupshorttermretentionpolicy",
+		map[string]*llx.RawData{
+			"id":                        llx.StringDataPtr(policy.ID),
+			"retentionDays":             llx.IntData(retentionDays),
+			"diffBackupIntervalInHours": llx.IntData(diffBackupInterval),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionSqlServiceDatabaseBackupshorttermretentionpolicy), nil
+}
+
+func (a *mqlAzureSubscriptionSqlServiceDatabase) longTermRetentionPolicy() (*mqlAzureSubscriptionSqlServiceDatabaseLongtermretentionpolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	database, err := resourceID.Component("databases")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := sql.NewLongTermRetentionPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database, sql.LongTermRetentionPolicyNameDefault, &sql.LongTermRetentionPoliciesClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var weekOfYear int64
+	if policy.Properties != nil && policy.Properties.WeekOfYear != nil {
+		weekOfYear = int64(*policy.Properties.WeekOfYear)
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.database.longtermretentionpolicy",
+		map[string]*llx.RawData{
+			"id":               llx.StringDataPtr(policy.ID),
+			"weeklyRetention":  llx.StringDataPtr(policy.Properties.WeeklyRetention),
+			"monthlyRetention": llx.StringDataPtr(policy.Properties.MonthlyRetention),
+			"yearlyRetention":  llx.StringDataPtr(policy.Properties.YearlyRetention),
+			"weekOfYear":       llx.IntData(weekOfYear),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionSqlServiceDatabaseLongtermretentionpolicy), nil
 }
 
 func (a *mqlAzureSubscriptionSqlServiceDatabase) usage() ([]any, error) {

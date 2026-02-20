@@ -1166,6 +1166,216 @@ func (a *mqlAzureSubscriptionNetworkService) applicationFirewallPolicies() ([]an
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkService) privateEndpoints() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewPrivateEndpointsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListBySubscriptionPager(&network.PrivateEndpointsClientListBySubscriptionOptions{})
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, pe := range page.Value {
+			if pe == nil {
+				continue
+			}
+
+			var provisioningState, subnetId, customNicName string
+			var plsConns, manualPlsConns []any
+
+			if pe.Properties != nil {
+				if pe.Properties.ProvisioningState != nil {
+					provisioningState = string(*pe.Properties.ProvisioningState)
+				}
+				if pe.Properties.Subnet != nil {
+					subnetId = convert.ToValue(pe.Properties.Subnet.ID)
+				}
+				customNicName = convert.ToValue(pe.Properties.CustomNetworkInterfaceName)
+
+				for _, c := range pe.Properties.PrivateLinkServiceConnections {
+					mqlConn, err := privateLinkServiceConnectionToMql(a.MqlRuntime, c)
+					if err != nil {
+						return nil, err
+					}
+					plsConns = append(plsConns, mqlConn)
+				}
+				for _, c := range pe.Properties.ManualPrivateLinkServiceConnections {
+					mqlConn, err := privateLinkServiceConnectionToMql(a.MqlRuntime, c)
+					if err != nil {
+						return nil, err
+					}
+					manualPlsConns = append(manualPlsConns, mqlConn)
+				}
+			}
+
+			mqlPe, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.privateEndpoint",
+				map[string]*llx.RawData{
+					"id":                                  llx.StringDataPtr(pe.ID),
+					"name":                                llx.StringDataPtr(pe.Name),
+					"location":                            llx.StringDataPtr(pe.Location),
+					"tags":                                llx.MapData(convert.PtrMapStrToInterface(pe.Tags), types.String),
+					"type":                                llx.StringDataPtr(pe.Type),
+					"provisioningState":                   llx.StringData(provisioningState),
+					"subnetId":                            llx.StringData(subnetId),
+					"customNetworkInterfaceName":          llx.StringData(customNicName),
+					"privateLinkServiceConnections":       llx.ArrayData(plsConns, types.ResourceLike),
+					"manualPrivateLinkServiceConnections": llx.ArrayData(manualPlsConns, types.ResourceLike),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlPe)
+		}
+	}
+	return res, nil
+}
+
+func privateLinkServiceConnectionToMql(runtime *plugin.Runtime, c *network.PrivateLinkServiceConnection) (*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection, error) {
+	if c == nil {
+		return nil, errors.New("private link service connection is nil")
+	}
+
+	var plsId, connectionStatus, requestMessage string
+	var groupIds []any
+
+	if c.Properties != nil {
+		plsId = convert.ToValue(c.Properties.PrivateLinkServiceID)
+		requestMessage = convert.ToValue(c.Properties.RequestMessage)
+		if c.Properties.PrivateLinkServiceConnectionState != nil {
+			connectionStatus = convert.ToValue(c.Properties.PrivateLinkServiceConnectionState.Status)
+		}
+		for _, gid := range c.Properties.GroupIDs {
+			if gid != nil {
+				groupIds = append(groupIds, *gid)
+			}
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.networkService.privateEndpoint.serviceconnection",
+		map[string]*llx.RawData{
+			"id":                   llx.StringDataPtr(c.ID),
+			"name":                 llx.StringDataPtr(c.Name),
+			"privateLinkServiceId": llx.StringData(plsId),
+			"groupIds":             llx.ArrayData(groupIds, types.String),
+			"connectionStatus":     llx.StringData(connectionStatus),
+			"requestMessage":       llx.StringData(requestMessage),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkService) routeTables() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewRouteTablesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListAllPager(&network.RouteTablesClientListAllOptions{})
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, rt := range page.Value {
+			if rt == nil {
+				continue
+			}
+
+			var disableBgp bool
+			var provisioningState string
+			var routes []any
+
+			if rt.Properties != nil {
+				disableBgp = convert.ToValue(rt.Properties.DisableBgpRoutePropagation)
+				if rt.Properties.ProvisioningState != nil {
+					provisioningState = string(*rt.Properties.ProvisioningState)
+				}
+				for _, route := range rt.Properties.Routes {
+					if route == nil {
+						continue
+					}
+					mqlRoute, err := azureRouteToMql(a.MqlRuntime, route)
+					if err != nil {
+						return nil, err
+					}
+					routes = append(routes, mqlRoute)
+				}
+			}
+
+			mqlRt, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.routeTable",
+				map[string]*llx.RawData{
+					"id":                         llx.StringDataPtr(rt.ID),
+					"name":                       llx.StringDataPtr(rt.Name),
+					"location":                   llx.StringDataPtr(rt.Location),
+					"tags":                       llx.MapData(convert.PtrMapStrToInterface(rt.Tags), types.String),
+					"type":                       llx.StringDataPtr(rt.Type),
+					"etag":                       llx.StringDataPtr(rt.Etag),
+					"disableBgpRoutePropagation": llx.BoolData(disableBgp),
+					"provisioningState":          llx.StringData(provisioningState),
+					"routes":                     llx.ArrayData(routes, types.ResourceLike),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRt)
+		}
+	}
+	return res, nil
+}
+
+func azureRouteToMql(runtime *plugin.Runtime, route *network.Route) (*mqlAzureSubscriptionNetworkServiceRoute, error) {
+	var addressPrefix, nextHopType, nextHopIpAddress, provisioningState string
+	var hasBgpOverride bool
+
+	if route.Properties != nil {
+		addressPrefix = convert.ToValue(route.Properties.AddressPrefix)
+		nextHopIpAddress = convert.ToValue(route.Properties.NextHopIPAddress)
+		hasBgpOverride = convert.ToValue(route.Properties.HasBgpOverride)
+		if route.Properties.NextHopType != nil {
+			nextHopType = string(*route.Properties.NextHopType)
+		}
+		if route.Properties.ProvisioningState != nil {
+			provisioningState = string(*route.Properties.ProvisioningState)
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.networkService.route",
+		map[string]*llx.RawData{
+			"id":                llx.StringDataPtr(route.ID),
+			"name":              llx.StringDataPtr(route.Name),
+			"addressPrefix":     llx.StringData(addressPrefix),
+			"nextHopType":       llx.StringData(nextHopType),
+			"nextHopIpAddress":  llx.StringData(nextHopIpAddress),
+			"hasBgpOverride":    llx.BoolData(hasBgpOverride),
+			"provisioningState": llx.StringData(provisioningState),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceRoute), nil
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) policy() (*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy, error) {
 	props := a.Properties
 	if props.Error != nil {

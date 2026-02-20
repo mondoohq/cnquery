@@ -39,6 +39,14 @@ func (a *mqlAzureSubscriptionAksServiceCluster) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionAksServiceClusterAadProfile) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -127,6 +135,66 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				}
 			}
 
+			var defenderEnabled, imageCleanerEnabled, workloadIdentityEnabled, azureKeyVaultKmsEnabled *bool
+			var imageCleanerIntervalHours *int32
+			var azureKeyVaultKmsNetworkAccess *string
+			if entry.Properties.SecurityProfile != nil {
+				sp := entry.Properties.SecurityProfile
+				if sp.Defender != nil && sp.Defender.SecurityMonitoring != nil {
+					defenderEnabled = sp.Defender.SecurityMonitoring.Enabled
+				}
+				if sp.ImageCleaner != nil {
+					imageCleanerEnabled = sp.ImageCleaner.Enabled
+					imageCleanerIntervalHours = sp.ImageCleaner.IntervalHours
+				}
+				if sp.WorkloadIdentity != nil {
+					workloadIdentityEnabled = sp.WorkloadIdentity.Enabled
+				}
+				if sp.AzureKeyVaultKms != nil {
+					azureKeyVaultKmsEnabled = sp.AzureKeyVaultKms.Enabled
+					azureKeyVaultKmsNetworkAccess = (*string)(sp.AzureKeyVaultKms.KeyVaultNetworkAccess)
+				}
+			}
+
+			// Create AAD Profile sub-resource
+			var aadProfileData *llx.RawData = llx.NilData
+			if entry.Properties.AADProfile != nil {
+				aadP := entry.Properties.AADProfile
+				adminGroupObjectIDs := []any{}
+				for _, gid := range aadP.AdminGroupObjectIDs {
+					if gid != nil {
+						adminGroupObjectIDs = append(adminGroupObjectIDs, *gid)
+					}
+				}
+				aadRes, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.aadProfile",
+					map[string]*llx.RawData{
+						"id":                  llx.StringData(*entry.ID + "/aadProfile"),
+						"managed":             llx.BoolDataPtr(aadP.Managed),
+						"enableAzureRBAC":     llx.BoolDataPtr(aadP.EnableAzureRBAC),
+						"adminGroupObjectIDs": llx.ArrayData(adminGroupObjectIDs, types.String),
+					})
+				if err != nil {
+					return nil, err
+				}
+				aadProfileData = llx.ResourceData(aadRes, "azure.subscription.aksService.cluster.aadProfile")
+			}
+
+			// Create Auto-Upgrade Profile sub-resource
+			var autoUpgradeProfileData *llx.RawData = llx.NilData
+			if entry.Properties.AutoUpgradeProfile != nil {
+				aup := entry.Properties.AutoUpgradeProfile
+				autoUpgradeRes, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.autoUpgradeProfile",
+					map[string]*llx.RawData{
+						"id":                   llx.StringData(*entry.ID + "/autoUpgradeProfile"),
+						"upgradeChannel":       llx.StringDataPtr((*string)(aup.UpgradeChannel)),
+						"nodeOSUpgradeChannel": llx.StringDataPtr((*string)(aup.NodeOSUpgradeChannel)),
+					})
+				if err != nil {
+					return nil, err
+				}
+				autoUpgradeProfileData = llx.ResourceData(autoUpgradeRes, "azure.subscription.aksService.cluster.autoUpgradeProfile")
+			}
+
 			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
 					"id":                             llx.StringDataPtr(entry.ID),
@@ -155,6 +223,16 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"disableRunCommand":              llx.BoolDataPtr(disableRunCommand),
 					"apiServerAuthorizedIPRanges":    llx.ArrayData(apiServerAuthorizedIPRanges, types.String),
 					"privateDnsZone":                 llx.StringDataPtr(privateDnsZone),
+					"defenderEnabled":                llx.BoolDataPtr(defenderEnabled),
+					"imageCleanerEnabled":            llx.BoolDataPtr(imageCleanerEnabled),
+					"imageCleanerIntervalHours":      llx.IntDataDefault(imageCleanerIntervalHours, 0),
+					"workloadIdentityEnabled":        llx.BoolDataPtr(workloadIdentityEnabled),
+					"azureKeyVaultKmsEnabled":        llx.BoolDataPtr(azureKeyVaultKmsEnabled),
+					"azureKeyVaultKmsNetworkAccess":  llx.StringDataPtr(azureKeyVaultKmsNetworkAccess),
+					"disableLocalAccounts":           llx.BoolDataPtr(entry.Properties.DisableLocalAccounts),
+					"publicNetworkAccess":            llx.StringDataPtr((*string)(entry.Properties.PublicNetworkAccess)),
+					"aadProfile":                     aadProfileData,
+					"autoUpgradeProfile":             autoUpgradeProfileData,
 				})
 			if err != nil {
 				return nil, err
