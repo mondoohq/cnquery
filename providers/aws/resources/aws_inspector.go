@@ -193,7 +193,7 @@ func (a *mqlAwsInspectorCoverage) lambda() (*mqlAwsLambdaFunction, error) {
 	if a.cacheCoverage != nil && a.cacheCoverage.ResourceMetadata != nil && a.cacheCoverage.ResourceMetadata.LambdaFunction != nil {
 		l, err := NewResource(a.MqlRuntime, "aws.lambda.function",
 			map[string]*llx.RawData{
-				"name":   llx.StringData(*a.cacheCoverage.ResourceMetadata.LambdaFunction.FunctionName),
+				"name":   llx.StringDataPtr(a.cacheCoverage.ResourceMetadata.LambdaFunction.FunctionName),
 				"region": llx.StringData(a.Region.Data),
 			})
 		if err == nil {

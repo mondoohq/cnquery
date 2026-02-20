@@ -407,7 +407,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			"replicationType":             llx.StringData(s.ReplicationType),
 			"settingsVersion":             llx.IntData(s.SettingsVersion),
 			"sqlServerAuditConfig":        llx.DictData(mqlSqlServerAuditCfg),
-			"storageAutoResize":           llx.BoolData(*s.StorageAutoResize),
+			"storageAutoResize":           llx.BoolDataPtr(s.StorageAutoResize),
 			"storageAutoResizeLimit":      llx.IntData(s.StorageAutoResizeLimit),
 			"tier":                        llx.StringData(s.Tier),
 			"timeZone":                    llx.StringData(s.TimeZone),

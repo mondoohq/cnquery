@@ -388,10 +388,10 @@ func (a *mqlAwsDynamodb) getLimits(conn *connection.AwsConnection) []*jobpool.Jo
 				map[string]*llx.RawData{
 					"arn":             llx.StringData(fmt.Sprintf(limitsArn, region, conn.AccountId())),
 					"region":          llx.StringData(region),
-					"accountMaxRead":  llx.IntData(*limitsResp.AccountMaxReadCapacityUnits),
-					"accountMaxWrite": llx.IntData(*limitsResp.AccountMaxWriteCapacityUnits),
-					"tableMaxRead":    llx.IntData(*limitsResp.TableMaxReadCapacityUnits),
-					"tableMaxWrite":   llx.IntData(*limitsResp.TableMaxWriteCapacityUnits),
+					"accountMaxRead":  llx.IntDataPtr(limitsResp.AccountMaxReadCapacityUnits),
+					"accountMaxWrite": llx.IntDataPtr(limitsResp.AccountMaxWriteCapacityUnits),
+					"tableMaxRead":    llx.IntDataPtr(limitsResp.TableMaxReadCapacityUnits),
+					"tableMaxWrite":   llx.IntDataPtr(limitsResp.TableMaxWriteCapacityUnits),
 				})
 			if err != nil {
 				return nil, err
