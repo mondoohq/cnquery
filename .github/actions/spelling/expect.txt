@@ -93,6 +93,7 @@ lsp
 manageddevice
 managedrulegroupstatement
 managedzone
+maxmemory
 mcp
 mcr
 meid
@@ -176,11 +177,13 @@ tpu
 udid
 Uocm
 usb
+Utc
 valkey
 VAULTNAME
 vdcs
 virtualmachine
 vlans
+vnet
 vrf
 Vtpm
 vulnerabilityassessmentsettings
