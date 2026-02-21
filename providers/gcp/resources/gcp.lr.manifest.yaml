@@ -86,8 +86,12 @@ resources:
   gcp.project:
     fields:
       accessApprovalSettings: {}
+      alloydb:
+        min_mondoo_version: 11.0.146
       apiKeys: {}
       bigquery: {}
+      bigtable:
+        min_mondoo_version: 11.0.146
       binaryAuthorization: {}
       cloudFunctions: {}
       cloudRun: {}
@@ -97,6 +101,8 @@ resources:
       dataproc: {}
       dns: {}
       essentialContacts: {}
+      firestore:
+        min_mondoo_version: 11.0.146
       gke: {}
       iam: {}
       iamPolicy: {}
@@ -115,6 +121,8 @@ resources:
         min_mondoo_version: 11.0.146
       secretmanager: {}
       services: {}
+      spanner:
+        min_mondoo_version: 11.0.146
       sql: {}
       state: {}
       storage: {}
@@ -125,6 +133,107 @@ resources:
     refs:
     - title: Creating and managing projects
       url: https://cloud.google.com/resource-manager/docs/creating-managing-projects
+  gcp.project.alloydbService:
+    fields:
+      clusters: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.alloydbService.backup:
+    fields:
+      clusterName: {}
+      createdAt: {}
+      databaseVersion: {}
+      description: {}
+      displayName: {}
+      encryptionConfig: {}
+      encryptionInfo: {}
+      etag: {}
+      expiryQuantity: {}
+      expiryTime: {}
+      labels: {}
+      name: {}
+      projectId: {}
+      reconciling: {}
+      sizeBytes: {}
+      state: {}
+      type: {}
+      uid: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.alloydbService.cluster:
+    fields:
+      annotations: {}
+      automatedBackupPolicy: {}
+      backups: {}
+      clusterType: {}
+      continuousBackupConfig: {}
+      continuousBackupInfo: {}
+      createdAt: {}
+      databaseVersion: {}
+      deleteProtectionEnabled: {}
+      displayName: {}
+      encryptionConfig: {}
+      encryptionInfo: {}
+      etag: {}
+      instances: {}
+      labels: {}
+      location: {}
+      maintenanceSchedule: {}
+      maintenanceUpdatePolicy: {}
+      name: {}
+      networkConfig: {}
+      primaryConfig: {}
+      projectId: {}
+      reconciling: {}
+      secondaryConfig: {}
+      sslConfig: {}
+      state: {}
+      uid: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.alloydbService.instance:
+    fields:
+      availabilityType: {}
+      clientConnectionConfig: {}
+      clusterName: {}
+      createdAt: {}
+      databaseFlags: {}
+      displayName: {}
+      etag: {}
+      gceZone: {}
+      instanceType: {}
+      ipAddress: {}
+      labels: {}
+      machineConfig: {}
+      name: {}
+      nodes: {}
+      projectId: {}
+      pscInstanceConfig: {}
+      publicIpAddress: {}
+      queryInsightsConfig: {}
+      readPoolConfig: {}
+      reconciling: {}
+      state: {}
+      uid: {}
+      updatedAt: {}
+      writableNode: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
   gcp.project.apiKey:
     fields:
       annotations: {}
@@ -290,6 +399,95 @@ resources:
     refs:
     - title: Introduction to tables
       url: https://cloud.google.com/bigquery/docs/tables-intro
+  gcp.project.bigtableService:
+    fields:
+      instances: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.bigtableService.appProfile:
+    fields:
+      description: {}
+      etag: {}
+      instanceName: {}
+      name: {}
+      projectId: {}
+      routingPolicy: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.bigtableService.backup:
+    fields:
+      clusterName: {}
+      encryptionInfo: {}
+      endTime: {}
+      expireTime: {}
+      name: {}
+      projectId: {}
+      sizeBytes: {}
+      sourceTable: {}
+      startTime: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.bigtableService.cluster:
+    fields:
+      autoscalingConfig: {}
+      defaultStorageType: {}
+      encryptionConfig: {}
+      instanceName: {}
+      location: {}
+      name: {}
+      nodeScalingFactor: {}
+      projectId: {}
+      serveNodes: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.bigtableService.instance:
+    fields:
+      appProfiles: {}
+      backups: {}
+      clusters: {}
+      createdAt: {}
+      displayName: {}
+      instanceType: {}
+      labels: {}
+      name: {}
+      projectId: {}
+      state: {}
+      tables: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.bigtableService.table:
+    fields:
+      automatedBackupPolicy: {}
+      changeStreamConfig: {}
+      columnFamilies: {}
+      deletionProtection: {}
+      granularity: {}
+      instanceName: {}
+      name: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
   gcp.project.binaryAuthorizationControl:
     fields:
       policy: {}
@@ -1361,6 +1559,37 @@ resources:
     refs:
     - title: DNS records overview
       url: https://cloud.google.com/dns/docs/records-overview
+  gcp.project.firestoreService:
+    fields:
+      databases: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.firestoreService.database:
+    fields:
+      appEngineIntegrationMode: {}
+      cmekConfig: {}
+      concurrencyMode: {}
+      createdAt: {}
+      deleteProtectionState: {}
+      earliestVersionTime: {}
+      etag: {}
+      locationId: {}
+      name: {}
+      pointInTimeRecoveryEnablement: {}
+      projectId: {}
+      type: {}
+      uid: {}
+      updatedAt: {}
+      versionRetentionPeriod: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
   gcp.project.gkeService:
     fields:
       clusters: {}
@@ -2382,6 +2611,77 @@ resources:
     refs:
     - title: Secret Manager documentation
       url: https://cloud.google.com/secret-manager/docs
+  gcp.project.spannerService:
+    fields:
+      instances: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.spannerService.instance:
+    fields:
+      autoscalingConfig: {}
+      backups: {}
+      config: {}
+      createdAt: {}
+      databases: {}
+      defaultBackupScheduleType: {}
+      displayName: {}
+      edition: {}
+      instanceType: {}
+      labels: {}
+      name: {}
+      nodeCount: {}
+      processingUnits: {}
+      projectId: {}
+      state: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.spannerService.instance.backup:
+    fields:
+      createdAt: {}
+      database: {}
+      databaseDialect: {}
+      encryptionInfo: {}
+      expireTime: {}
+      instanceName: {}
+      maxExpireTime: {}
+      name: {}
+      projectId: {}
+      sizeBytes: {}
+      state: {}
+      versionTime: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
+  gcp.project.spannerService.instance.database:
+    fields:
+      createdAt: {}
+      databaseDialect: {}
+      defaultLeader: {}
+      earliestVersionTime: {}
+      enableDropProtection: {}
+      encryptionConfig: {}
+      encryptionInfo: {}
+      instanceName: {}
+      name: {}
+      projectId: {}
+      reconciling: {}
+      state: {}
+      versionRetentionPeriod: {}
+    is_private: true
+    min_mondoo_version: 11.0.146
+    platform:
+      name:
+      - gcp
   gcp.project.sqlService:
     fields:
       instances: {}
