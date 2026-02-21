@@ -1031,7 +1031,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			fn := funcs.Data[i].(*mqlGcpProjectCloudFunction)
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{
-					connection.NewResourcePlatformID("cloudfunctions", gcpProject.Id.Data, "global", "function", fn.Name.Data),
+					connection.NewResourcePlatformID("cloud-functions", gcpProject.Id.Data, "global", "function", fn.Name.Data),
 				},
 				Name: fn.Name.Data,
 				Platform: &inventory.Platform{
