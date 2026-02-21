@@ -57,6 +57,7 @@ const (
 	DiscoverDataprocClusters        = "dataproc-clusters"
 	DiscoverLoggingBuckets          = "logging-buckets"
 	DiscoverApiKeys                 = "apikeys"
+	DiscoverIamServiceAccounts      = "iam-service-accounts"
 )
 
 var All = []string{
@@ -98,6 +99,7 @@ var Auto = []string{
 	DiscoverDataprocClusters,
 	DiscoverLoggingBuckets,
 	DiscoverApiKeys,
+	DiscoverIamServiceAccounts,
 }
 
 var AllAPIResources = []string{
@@ -126,6 +128,7 @@ var AllAPIResources = []string{
 	DiscoverDataprocClusters,
 	DiscoverLoggingBuckets,
 	DiscoverApiKeys,
+	DiscoverIamServiceAccounts,
 }
 
 // List of all CloudSQL types, this will be used during discovery
@@ -1127,6 +1130,35 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Kind:                  "gcp-object",
 					Family:                []string{"google"},
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("apikeys", gcpProject.Id.Data, "global", "key", key.Id.Data),
+				},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverIamServiceAccounts) {
+		iamSvc := gcpProject.GetIam()
+		if iamSvc.Error != nil {
+			return nil, iamSvc.Error
+		}
+		sas := iamSvc.Data.GetServiceAccounts()
+		if sas.Error != nil {
+			return nil, sas.Error
+		}
+		for i := range sas.Data {
+			sa := sas.Data[i].(*mqlGcpProjectIamServiceServiceAccount)
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("iam", gcpProject.Id.Data, "global", "service-account", sa.UniqueId.Data),
+				},
+				Name: sa.Email.Data,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-iam-service-account",
+					Title:                 connection.GetTitleForPlatformName("gcp-iam-service-account"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("iam", gcpProject.Id.Data, "global", "service-account", sa.UniqueId.Data),
 				},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 			})
