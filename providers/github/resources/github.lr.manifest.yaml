@@ -11,6 +11,7 @@ resources:
       signatureVerification: {}
     is_private: true
     min_mondoo_version: 6.11.0
+    min_provider_version: 9.0.0
   git.commitAuthor:
     fields:
       date: {}
@@ -19,6 +20,7 @@ resources:
       sha: {}
     is_private: true
     min_mondoo_version: 6.11.0
+    min_provider_version: 9.0.0
   git.gpgSignature:
     fields:
       payload: {}
@@ -28,12 +30,14 @@ resources:
       verified: {}
     is_private: true
     min_mondoo_version: 6.11.0
+    min_provider_version: 9.0.0
   github:
     fields:
       repositories: {}
       user: {}
     is_private: true
     min_mondoo_version: 6.4.0
+    min_provider_version: 10.2.5
   github.auditLogEntry:
     fields:
       action: {}
@@ -57,12 +61,14 @@ resources:
       user: {}
       userId: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.123
   github.branch:
     fields:
       headCommit: {}
       headCommitSha:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.7
       isDefault:
         min_mondoo_version: 6.8.0
       isProtected:
@@ -73,6 +79,7 @@ resources:
       repoName: {}
     is_private: true
     min_mondoo_version: 6.4.0
+    min_provider_version: 9.0.0
   github.branchprotection:
     fields:
       allowDeletions: {}
@@ -88,6 +95,7 @@ resources:
       restrictions: {}
     is_private: true
     min_mondoo_version: 6.4.0
+    min_provider_version: 9.0.0
   github.codeScanningAlert:
     fields:
       closedAt: {}
@@ -107,7 +115,8 @@ resources:
       updatedAt: {}
       url: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.121
   github.collaborator:
     fields:
       id: {}
@@ -115,15 +124,18 @@ resources:
       user: {}
     is_private: true
     min_mondoo_version: 6.11.0
+    min_provider_version: 9.0.0
   github.commit:
     fields:
       author: {}
       authoredDate:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.8
       commit:
         min_mondoo_version: 6.11.0
       committedDate:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.8
       committer: {}
       owner:
         min_mondoo_version: 6.11.0
@@ -136,6 +148,7 @@ resources:
       url: {}
     is_private: true
     min_mondoo_version: 6.4.0
+    min_provider_version: 9.0.0
   github.dependabotAlert:
     fields:
       autoDismissedAt: {}
@@ -154,7 +167,8 @@ resources:
       updatedAt: {}
       url: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.120
   github.deployment:
     fields:
       createdAt: {}
@@ -172,7 +186,8 @@ resources:
       task: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.123
   github.deploymentStatus:
     fields:
       createdAt: {}
@@ -186,7 +201,8 @@ resources:
       targetUrl: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.123
   github.environment:
     fields:
       canAdminsBypass: {}
@@ -201,7 +217,8 @@ resources:
       url: {}
       waitTimer: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.123
   github.environmentProtectionRule:
     fields:
       id: {}
@@ -210,14 +227,17 @@ resources:
       type: {}
       waitTimer: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.123
   github.file:
     fields:
       content: {}
       downloadUrl:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.1
       exists:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.14
       files: {}
       isBinary: {}
       name:
@@ -230,6 +250,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: 6.4.0
+    min_provider_version: 9.0.0
   github.gist:
     fields:
       createdAt: {}
@@ -241,6 +262,7 @@ resources:
       updatedAt: {}
     is_private: true
     min_mondoo_version: 7.14.0
+    min_provider_version: 9.0.0
   github.gistfile:
     fields:
       content: {}
@@ -252,6 +274,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: 7.14.0
+    min_provider_version: 9.0.0
   github.installation:
     fields:
       appId: {}
@@ -261,6 +284,7 @@ resources:
       updatedAt: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
   github.issue:
     fields:
       assignees: {}
@@ -278,7 +302,8 @@ resources:
       updatedAt: {}
       url: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.0
   github.license:
     fields:
       key: {}
@@ -286,7 +311,8 @@ resources:
       spdxId: {}
       url: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.0
   github.mergeRequest:
     fields:
       assignees: {}
@@ -295,9 +321,11 @@ resources:
       id: {}
       labels: {}
       mergedAt:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.122
       milestone:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.122
       number: {}
       owner: {}
       repoName: {}
@@ -306,6 +334,7 @@ resources:
       title: {}
     is_private: true
     min_mondoo_version: 6.4.0
+    min_provider_version: 9.0.0
   github.milestone:
     fields:
       closedAt: {}
@@ -323,13 +352,16 @@ resources:
       updatedAt: {}
       url: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.122
   github.organization:
     fields:
       advancedSecurityEnabledForNewRepos:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       auditLog:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.123
       avatarUrl:
         min_mondoo_version: 7.14.0
       billingEmail:
@@ -340,13 +372,16 @@ resources:
       createdAt:
         min_mondoo_version: 6.11.0
       customProperties:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.47
       defaultRepositoryPermission:
         min_mondoo_version: 6.11.0
       dependabotAlertsEnabledForNewRepos:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       dependabotSecurityUpdatesEnabledForNewRepos:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       description: {}
       diskUsage:
         min_mondoo_version: 6.11.0
@@ -356,9 +391,11 @@ resources:
       following:
         min_mondoo_version: 7.14.0
       hasOrganizationProjects:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.3
       hasRepositoryProjects:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.3
       id: {}
       installations:
         min_mondoo_version: 5.31.0
@@ -369,7 +406,8 @@ resources:
       members:
         min_mondoo_version: 5.31.0
       membersCanChangeRepoVisibility:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       membersCanCreateInternalRepositories:
         min_mondoo_version: 6.11.0
       membersCanCreatePages:
@@ -385,11 +423,14 @@ resources:
       membersCanCreateRepositories:
         min_mondoo_version: 6.11.0
       membersCanDeleteIssues:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       membersCanDeleteRepositories:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       membersCanForkPrivateRepos:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.3
       name: {}
       nodeId:
         min_mondoo_version: 6.11.0
@@ -404,23 +445,29 @@ resources:
       privateGists:
         min_mondoo_version: 6.11.0
       readersCanCreateDiscussions:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       repositories:
         min_mondoo_version: 5.31.0
       runners:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.123
       secretScanningEnabledForNewRepos:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       secretScanningPushProtectionEnabledForNewRepos:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       secretScanningValidityChecksEnabled:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       teams:
         min_mondoo_version: 6.11.0
       totalPrivateRepos:
         min_mondoo_version: 6.11.0
       totalPublicRepos:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.30
       twitterUsername:
         min_mondoo_version: 6.11.0
       twoFactorRequirementEnabled:
@@ -430,6 +477,7 @@ resources:
       webhooks:
         min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   github.organization.customProperty:
     fields:
       allowedValues: {}
@@ -441,7 +489,8 @@ resources:
       valueType: {}
       valuesEditableBy: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.47
   github.package:
     fields:
       createdAt: {}
@@ -455,33 +504,41 @@ resources:
       visibility: {}
     is_private: true
     min_mondoo_version: 6.11.0
+    min_provider_version: 9.0.0
   github.packages:
     fields:
       internal: {}
       list: {}
       private: {}
       public: {}
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.7
   github.release:
     fields:
       author:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       createdAt:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       name: {}
       preRelease: {}
       publishedAt:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       tagName: {}
       url: {}
     is_private: true
     min_mondoo_version: 6.4.0
+    min_provider_version: 9.0.0
   github.repository:
     fields:
       adminCollaborators:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.14
       allMergeRequests:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.12
       allowAutoMerge:
         min_mondoo_version: 6.4.0
       allowForking:
@@ -502,13 +559,16 @@ resources:
       closedIssues:
         min_mondoo_version: 7.14.0
       closedMergeRequests:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.12
       codeOfConduct:
         min_mondoo_version: 9.0.0
       codeOfConductFile:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.14
       codeScanningAlerts:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.121
       collaborators:
         min_mondoo_version: 6.11.0
       commits:
@@ -517,21 +577,26 @@ resources:
         min_mondoo_version: 6.4.0
       createdAt: {}
       customProperties:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.47
       defaultBranch:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.5
       defaultBranchName:
         min_mondoo_version: 6.4.0
       deleteBranchOnMerge:
         min_mondoo_version: 9.0.0
       dependabotAlerts:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       deployments:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.123
       description: {}
       disabled: {}
       environments:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.123
       files:
         min_mondoo_version: 6.4.0
       forks:
@@ -540,7 +605,8 @@ resources:
         min_mondoo_version: 7.14.0
       fullName: {}
       hasDiscussions:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.3
       hasDownloads:
         min_mondoo_version: 7.14.0
       hasIssues:
@@ -556,13 +622,15 @@ resources:
       isFork:
         min_mondoo_version: 7.14.0
       isTemplate:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.3
       language:
         min_mondoo_version: 7.14.0
       license:
         min_mondoo_version: 7.14.0
       milestones:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.122
       name: {}
       openIssues:
         min_mondoo_version: 7.14.0
@@ -582,15 +650,18 @@ resources:
       releases:
         min_mondoo_version: 6.4.0
       runners:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.123
       secretScanningAlerts:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.121
       security:
         min_mondoo_version: 9.0.0
       securityAndAnalysis:
         min_mondoo_version: 9.0.0
       securityFile:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.14
       sshUrl:
         min_mondoo_version: 7.14.0
       stargazers:
@@ -600,7 +671,8 @@ resources:
       support:
         min_mondoo_version: 9.0.0
       supportFile:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.14
       topics:
         min_mondoo_version: 7.14.0
       updatedAt: {}
@@ -612,6 +684,7 @@ resources:
       workflows:
         min_mondoo_version: 6.11.0
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
   github.repository.file:
     fields:
       content: {}
@@ -624,7 +697,8 @@ resources:
       repoName: {}
       sha: {}
       type: {}
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.120
   github.review:
     fields:
       authorAssociation: {}
@@ -633,6 +707,7 @@ resources:
       user: {}
     is_private: true
     min_mondoo_version: 6.4.0
+    min_provider_version: 9.0.0
   github.runner:
     fields:
       busy: {}
@@ -642,14 +717,16 @@ resources:
       os: {}
       status: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.123
   github.runnerLabel:
     fields:
       id: {}
       name: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.123
   github.secretScanningAlert:
     fields:
       createdAt: {}
@@ -672,7 +749,8 @@ resources:
       url: {}
       validity: {}
     is_private: true
-    min_mondoo_version: 11.4.120
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.121
   github.team:
     fields:
       defaultPermission: {}
@@ -686,6 +764,7 @@ resources:
       slug: {}
     is_private: true
     min_mondoo_version: 6.11.0
+    min_provider_version: 9.0.0
   github.user:
     fields:
       avatarUrl:
@@ -704,7 +783,8 @@ resources:
       gists:
         min_mondoo_version: 7.14.0
       hireable:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       id: {}
       location:
         min_mondoo_version: 7.14.0
@@ -713,13 +793,15 @@ resources:
       repositories:
         min_mondoo_version: 7.14.0
       siteAdmin:
-        min_mondoo_version: 11.4.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.120
       suspendedAt: {}
       twitterUsername:
         min_mondoo_version: 7.14.0
       updatedAt: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
   github.webhook:
     fields:
       active: {}
@@ -730,6 +812,7 @@ resources:
       url: {}
     is_private: true
     min_mondoo_version: 6.11.0
+    min_provider_version: 9.0.0
   github.workflow:
     fields:
       configuration: {}
@@ -742,3 +825,4 @@ resources:
       updatedAt: {}
     is_private: true
     min_mondoo_version: 6.11.0
+    min_provider_version: 9.0.0

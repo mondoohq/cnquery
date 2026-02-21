@@ -5,7 +5,8 @@ resources:
   nmap:
     fields:
       version: {}
-    min_mondoo_version: 11.0.88
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.0
   nmap.host:
     fields:
       addresses: {}
@@ -18,13 +19,15 @@ resources:
       ports: {}
       state: {}
       trace: {}
-    min_mondoo_version: 11.0.88
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.0
   nmap.network:
     fields:
       hosts: {}
       target: {}
       warnings: {}
-    min_mondoo_version: 11.0.88
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.0
   nmap.port:
     fields:
       method: {}
@@ -35,7 +38,8 @@ resources:
       state: {}
       version: {}
     is_private: true
-    min_mondoo_version: 11.0.88
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.0
   nmap.versionInformation:
     fields:
       compiledWith: {}
@@ -44,4 +48,5 @@ resources:
       platform: {}
       version: {}
     is_private: true
-    min_mondoo_version: 11.0.88
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.0
