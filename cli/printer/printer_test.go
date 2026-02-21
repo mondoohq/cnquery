@@ -133,14 +133,14 @@ func TestPrinter(t *testing.T) {
 		},
 		{
 			"mondoo { version }",
-			"-> block 1\n   entrypoints: [<1,2>]\n   1: mondoo \n   2: {} bind: <1,1> type:block (=> <2,0>)\n-> block 2\n   entrypoints: [<2,2>]\n   1: mondoo id = context\n   2: version bind: <2,1> type:string\n",
+			"-> block 1\n   entrypoints: [<1,2>]\n   1: mondoo \n   2: {} bind: <1,1> type:block (=> <2,0>)\n-> block 2\n   entrypoints: [<2,2>]\n   1: context\n   2: version bind: <2,1> type:string\n",
 			[]string{
 				"mondoo: {\n  version: \"v13.0.0-rolling\"\n}",
 			},
 		},
 		{
 			"mondoo { _.version }",
-			"-> block 1\n   entrypoints: [<1,2>]\n   1: mondoo \n   2: {} bind: <1,1> type:block (=> <2,0>)\n-> block 2\n   entrypoints: [<2,2>]\n   1: mondoo id = context\n   2: version bind: <2,1> type:string\n",
+			"-> block 1\n   entrypoints: [<1,2>]\n   1: mondoo \n   2: {} bind: <1,1> type:block (=> <2,0>)\n-> block 2\n   entrypoints: [<2,2>]\n   1: context\n   2: version bind: <2,1> type:string\n",
 			[]string{
 				"mondoo: {\n  version: \"v13.0.0-rolling\"\n}",
 			},
@@ -161,7 +161,7 @@ func TestPrinter(t *testing.T) {
 			"mondoo",
 			"", // ignore
 			[]string{
-				"mondoo: mondoo version=\"v13.0.0-rolling\"",
+				"mondoo: version=\"v13.0.0-rolling\"",
 			},
 		},
 		{
@@ -169,10 +169,10 @@ func TestPrinter(t *testing.T) {
 			"", // ignore
 			[]string{
 				"users.list: [\n" +
-					"  0: user name=\"root\" uid=0 gid=0\n" +
-					"  1: user name=\"bin\" uid=1 gid=1\n" +
-					"  2: user name=\"chris\" uid=1000 gid=1000\n" +
-					"  3: user name=\"christopher\" uid=1001 gid=1000\n" +
+					"  0: name=\"root\" uid=0 gid=0\n" +
+					"  1: name=\"bin\" uid=1 gid=1\n" +
+					"  2: name=\"chris\" uid=1000 gid=1000\n" +
+					"  3: name=\"christopher\" uid=1001 gid=1000\n" +
 					"]",
 			},
 		},
@@ -294,7 +294,7 @@ func TestPrinter_Assessment(t *testing.T) {
 				"if: {",
 				"  [failed] Expected 4 users but got 1",
 				"  users.where.list: [",
-				"    0: user name=\"root\" uid=0 gid=0",
+				"    0: name=\"root\" uid=0 gid=0",
 				"  ]",
 				"}",
 			}, "\n"),
@@ -574,7 +574,7 @@ func TestPrinter_Buggy(t *testing.T) {
 			"mondoo",
 			"", // ignore
 			[]string{
-				"mondoo: mondoo version=\"v13.0.0-rolling\"",
+				"mondoo: version=\"v13.0.0-rolling\"",
 			},
 		},
 	})

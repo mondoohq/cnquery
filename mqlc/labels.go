@@ -7,6 +7,7 @@ import (
 	"errors"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
@@ -102,7 +103,19 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema resources.ResourcesSche
 	case "{}", "${}":
 		label = parentLabel
 	case "createResource":
-		label = parentLabel + "." + string(chunk.Type())
+		typeName := string(chunk.Type())
+		if parentLabel != "" {
+			// Only use the last segment of the resource type to avoid
+			// duplicating the parent path in the label (e.g. prevent
+			// "gcp.project.pubsub.gcp.project.pubsubService.topic").
+			if idx := strings.LastIndex(typeName, "."); idx >= 0 {
+				label = parentLabel + typeName[idx:]
+			} else {
+				label = parentLabel + "." + typeName
+			}
+		} else {
+			label = typeName
+		}
 	case "if":
 		label = "if"
 	default:
