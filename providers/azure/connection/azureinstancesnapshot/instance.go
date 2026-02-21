@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 )

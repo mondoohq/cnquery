@@ -18,7 +18,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	table "github.com/Azure/azure-sdk-for-go/sdk/data/aztables"
-	storage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	storage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 )
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224

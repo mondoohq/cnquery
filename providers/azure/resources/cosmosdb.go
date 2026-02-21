@@ -15,9 +15,9 @@ import (
 	"go.mondoo.com/mql/v13/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	cosmosdb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
+	cosmosdb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmosforpostgresql/armcosmosforpostgresql"
-	armresources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	armresources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3"
 )
 
 func (a *mqlAzureSubscriptionCosmosDbService) id() (string, error) {
