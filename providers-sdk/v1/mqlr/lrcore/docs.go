@@ -22,14 +22,16 @@ type LrDocsEntry struct {
 	// default maturity is public if nothing is provided
 	Maturity string `json:"maturity,omitempty"`
 	// this is just an indicator, we may want to replace this with native MQL resource platform information
-	Platform         *LrDocsPlatform         `json:"platform,omitempty"`
-	Docs             *LrDocsDocumentation    `json:"docs,omitempty"`
-	Resources        []LrDocsRefs            `json:"resources,omitempty"`
-	Fields           map[string]*LrDocsField `json:"fields,omitempty"`
-	Refs             []LrDocsRefs            `json:"refs,omitempty"`
-	Snippets         []LrDocsSnippet         `json:"snippets,omitempty"`
-	IsPrivate        bool                    `json:"is_private,omitempty"`
-	MinMondooVersion string                  `json:"min_mondoo_version,omitempty"`
+	Platform           *LrDocsPlatform         `json:"platform,omitempty"`
+	Docs               *LrDocsDocumentation    `json:"docs,omitempty"`
+	Resources          []LrDocsRefs            `json:"resources,omitempty"`
+	Fields             map[string]*LrDocsField `json:"fields,omitempty"`
+	Refs               []LrDocsRefs            `json:"refs,omitempty"`
+	Snippets           []LrDocsSnippet         `json:"snippets,omitempty"`
+	IsPrivate          bool                    `json:"is_private,omitempty"`
+	MinProviderVersion string                  `json:"min_provider_version,omitempty"`
+	// Deprecated: use MinProviderVersion instead. Remove in v14.
+	MinMondooVersion string `json:"min_mondoo_version,omitempty"`
 }
 
 type LrDocsPlatform struct {
@@ -64,6 +66,8 @@ type LrDocsRefs struct {
 }
 
 type LrDocsField struct {
+	MinProviderVersion string `json:"min_provider_version,omitempty"`
+	// Deprecated: use MinProviderVersion instead. Remove in v14.
 	MinMondooVersion string `json:"min_mondoo_version,omitempty"`
 }
 
@@ -86,7 +90,8 @@ func InjectMetadata(schema *resources.Schema, docs *LrDocs) {
 			continue
 		}
 
-		info.MinMondooVersion = rdoc.MinMondooVersion
+		info.MinProviderVersion = rdoc.MinProviderVersion
+		info.MinMondooVersion = rdoc.MinMondooVersion //nolint:staticcheck // deprecated, remove in v14
 
 		for field, fdoc := range rdoc.Fields {
 			finfo, ok := info.Fields[field]
@@ -94,6 +99,7 @@ func InjectMetadata(schema *resources.Schema, docs *LrDocs) {
 				continue
 			}
 
+			finfo.MinProviderVersion = fdoc.MinProviderVersion
 			finfo.MinMondooVersion = fdoc.MinMondooVersion
 		}
 	}
@@ -152,13 +158,20 @@ func mergeFields(entry *LrDocsEntry, fields []*BasicField, currentVersion, defau
 	for _, f := range fields {
 		if docFields[f.ID] == nil {
 			fDoc := &LrDocsField{
-				MinMondooVersion: currentVersion,
+				MinProviderVersion: currentVersion,
+				MinMondooVersion:   defaultVersion,
 			}
 			entry.Fields[f.ID] = fDoc
-		} else if entry.Fields[f.ID].MinMondooVersion == defaultVersion && currentVersion != defaultVersion {
-			entry.Fields[f.ID].MinMondooVersion = currentVersion
+		} else {
+			// Only set min_provider_version if not already set
+			if entry.Fields[f.ID].MinProviderVersion == "" {
+				entry.Fields[f.ID].MinProviderVersion = currentVersion
+			}
 		}
-		// Scrub field version if same as resource
+		// Scrub field versions if same as resource (avoid redundancy)
+		if entry.Fields[f.ID].MinProviderVersion == entry.MinProviderVersion {
+			entry.Fields[f.ID].MinProviderVersion = ""
+		}
 		if entry.Fields[f.ID].MinMondooVersion == entry.MinMondooVersion {
 			entry.Fields[f.ID].MinMondooVersion = ""
 		}
@@ -170,11 +183,13 @@ func ensureDefaults(id string, entry *LrDocsEntry, currentVersion, defaultVersio
 		if entry == nil {
 			entry = &LrDocsEntry{}
 		}
+		// min_provider_version: set to detected provider version only if not already set
+		if entry.MinProviderVersion == "" {
+			entry.MinProviderVersion = currentVersion
+		}
+		// min_mondoo_version: deprecated, default to 9.0.0
 		if entry.MinMondooVersion == "" {
-			entry.MinMondooVersion = currentVersion
-		} else if entry.MinMondooVersion == defaultVersion && currentVersion != defaultVersion {
-			// Update to specified version if previously set to default
-			entry.MinMondooVersion = currentVersion
+			entry.MinMondooVersion = defaultVersion
 		}
 		if strings.HasPrefix(id, k) {
 			entry.Platform = &LrDocsPlatform{

@@ -21,12 +21,14 @@ resources:
       title: {}
       version: {}
     min_mondoo_version: 6.13.0
+    min_provider_version: 9.0.0
   asset.eol:
     fields:
       date: {}
       docsUrl: {}
       productUrl: {}
     min_mondoo_version: latest
+    min_provider_version: 9.0.0
   cpe:
     fields:
       edition: {}
@@ -42,6 +44,7 @@ resources:
       vendor: {}
       version: {}
     min_mondoo_version: latest
+    min_provider_version: 9.0.0
   mondoo:
     fields:
       arch:
@@ -51,14 +54,17 @@ resources:
       jobEnvironment: {}
       version: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   parse:
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   product:
     fields:
       name: {}
       releaseCycle: {}
       version: {}
     min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.0
   product.releaseCycleInformation:
     fields:
       cycle: {}
@@ -72,6 +78,7 @@ resources:
       name: {}
     is_private: true
     min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.0
   regex:
     fields:
       creditCard: {}
@@ -84,6 +91,7 @@ resources:
       url: {}
       uuid: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   time:
     fields:
       day: {}
@@ -94,6 +102,7 @@ resources:
       today: {}
       tomorrow: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   uuid:
     fields:
       urn: {}
@@ -101,8 +110,10 @@ resources:
       variant: {}
       version: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   vulnerability.exchange:
     fields:
       id: {}
       source: {}
     min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.0

@@ -14,6 +14,7 @@ resources:
       variables: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-hcl
@@ -40,6 +41,7 @@ resources:
     is_private: true
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-hcl
@@ -53,6 +55,7 @@ resources:
     is_private: true
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-hcl
@@ -67,6 +70,7 @@ resources:
       path: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-hcl
@@ -80,6 +84,7 @@ resources:
       version: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-hcl
@@ -98,6 +103,7 @@ resources:
       variables:
         min_mondoo_version: 11.1.81
     min_mondoo_version: latest
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-plan
@@ -106,6 +112,7 @@ resources:
       providerConfig: {}
       resources: {}
     min_mondoo_version: 8.10.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-plan
@@ -120,6 +127,7 @@ resources:
       beforeSensitive: {}
       replacePaths: {}
     min_mondoo_version: latest
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-plan
@@ -136,6 +144,7 @@ resources:
       providerName: {}
       type: {}
     min_mondoo_version: latest
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-plan
@@ -144,6 +153,7 @@ resources:
       name: {}
       value: {}
     min_mondoo_version: 11.1.81
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-plan
@@ -151,6 +161,7 @@ resources:
     fields:
       list: {}
     min_mondoo_version: 11.1.81
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-hcl
@@ -161,6 +172,7 @@ resources:
       block: {}
       requiredProviders: {}
     min_mondoo_version: 5.31.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-hcl
@@ -174,6 +186,7 @@ resources:
       rootModule: {}
       terraformVersion: {}
     min_mondoo_version: 6.11.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-state
@@ -183,6 +196,7 @@ resources:
       childModules: {}
       resources: {}
     min_mondoo_version: 6.11.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-state
@@ -193,6 +207,7 @@ resources:
       type: {}
       value: {}
     min_mondoo_version: 6.11.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-state
@@ -209,6 +224,7 @@ resources:
       type: {}
       values: {}
     min_mondoo_version: 6.11.0
+    min_provider_version: 11.1.81
     platform:
       name:
       - terraform-state

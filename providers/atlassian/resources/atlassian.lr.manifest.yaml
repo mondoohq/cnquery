@@ -7,6 +7,7 @@ resources:
       desc: |
         The `atlassian` resource can be used to assess the configuration of Atlassian accounts.
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
     refs:
     - title: What is an Atlassian account?
       url: https://support.atlassian.com/atlassian-account/docs/what-is-an-atlassian-account/
@@ -14,6 +15,7 @@ resources:
     fields:
       organizations: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization:
     fields:
       domains: {}
@@ -26,16 +28,19 @@ resources:
       type: {}
       users: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization.domain:
     fields:
       id: {}
       name: {}
       type: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization.event:
     fields:
       id: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization.managedUser:
     fields:
       email: {}
@@ -46,6 +51,7 @@ resources:
       status: {}
       type: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization.managedUsers:
     fields:
       email: {}
@@ -54,6 +60,7 @@ resources:
       name: {}
       type: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization.policy:
     fields:
       id: {}
@@ -62,19 +69,23 @@ resources:
       status: {}
       type: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization.scim:
     fields:
       groups: {}
       users: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization.scim.group:
     fields:
       id: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization.scim.user:
     fields:
       id: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization.user:
     fields:
       accessBillable: {}
@@ -87,6 +98,7 @@ resources:
       status: {}
       type: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.organization.user.lastActive:
     fields:
       id: {}
@@ -94,6 +106,7 @@ resources:
       lastActive: {}
       url: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.user:
     fields:
       accessBillable: {}
@@ -106,12 +119,15 @@ resources:
       status: {}
       type: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.admin.user.products:
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.confluence:
     fields:
       users: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.confluence.user:
     fields:
       id: {}
@@ -119,6 +135,7 @@ resources:
       picture: {}
       type: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira:
     fields:
       groups: {}
@@ -129,20 +146,24 @@ resources:
       serverinfo: {}
       users: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.applicationRole:
     fields:
       id: {}
       name: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.group:
     fields:
       id: {}
       name: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.groups:
     fields:
       id: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.issue:
     fields:
       createdAt: {}
@@ -154,6 +175,7 @@ resources:
       status: {}
       typeName: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.project:
     fields:
       archived: {}
@@ -167,10 +189,12 @@ resources:
       url: {}
       uuid: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.project.property:
     fields:
       id: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.serverInfo:
     fields:
       baseUrl: {}
@@ -178,6 +202,7 @@ resources:
       deploymentType: {}
       serverTitle: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.user:
     fields:
       applicationRoles: {}
@@ -188,49 +213,59 @@ resources:
       roles: {}
       type: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.user.group:
     fields:
       id: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.user.groups:
     fields:
       id: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.jira.user.role:
     fields:
       id: {}
       name: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.scim:
     fields:
       groups: {}
       organizations: {}
       users: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.scim.group:
     fields:
       id: {}
       name: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.scim.organization:
     fields:
       id: {}
       scim: {}
       type: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.scim.organization.scim:
     fields:
       groups: {}
       users: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.scim.organization.scim.group:
     fields:
       id: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.scim.organization.scim.user:
     fields:
       id: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136
   atlassian.scim.user:
     fields:
       displayName: {}
@@ -239,3 +274,4 @@ resources:
       organization: {}
       title: {}
     min_mondoo_version: 11.0.136
+    min_provider_version: 11.0.136

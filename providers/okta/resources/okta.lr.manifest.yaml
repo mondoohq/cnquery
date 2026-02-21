@@ -15,6 +15,7 @@ resources:
       trustedOrigins: {}
       users: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.application:
     fields:
       created: {}
@@ -32,6 +33,7 @@ resources:
       visibility: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.customRole:
     fields:
       description: {}
@@ -40,6 +42,7 @@ resources:
       permissions: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.domain:
     fields:
       dnsRecords: {}
@@ -49,6 +52,7 @@ resources:
       validationStatus: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.group:
     fields:
       created: {}
@@ -63,6 +67,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.groupRule:
     fields:
       id: {}
@@ -71,6 +76,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.network:
     fields:
       asns: {}
@@ -88,6 +94,7 @@ resources:
       usage: {}
     is_private: true
     min_mondoo_version: 8.4.0
+    min_provider_version: 11.0.133
   okta.organization:
     fields:
       address1: {}
@@ -117,6 +124,7 @@ resources:
         min_mondoo_version: 8.4.0
       website: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.policies:
     fields:
       accessPolicy: {}
@@ -127,6 +135,7 @@ resources:
       profileEnrollment: {}
       signOn: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.policy:
     fields:
       conditions: {}
@@ -143,6 +152,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.policyRule:
     fields:
       actions: {}
@@ -157,6 +167,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.role:
     fields:
       assignmentType: {}
@@ -168,6 +179,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.threatsConfiguration:
     fields:
       action: {}
@@ -177,6 +189,7 @@ resources:
       lastUpdated: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.trustedOrigin:
     fields:
       created: {}
@@ -190,6 +203,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   okta.user:
     fields:
       activated: {}
@@ -208,3 +222,4 @@ resources:
       typeId: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133

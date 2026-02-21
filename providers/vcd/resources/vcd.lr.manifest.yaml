@@ -10,6 +10,7 @@ resources:
       providerVDCs: {}
       serverInstances: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.externalNetwork:
     fields:
       configuration: {}
@@ -19,12 +20,14 @@ resources:
       urn: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.networkPool:
     fields:
       isBusy: {}
       name: {}
       networkPoolType: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.organization:
     fields:
       description: {}
@@ -40,6 +43,7 @@ resources:
       vdcs: {}
       vms: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.organization.ldapSettings:
     fields:
       customUsersOu: {}
@@ -49,6 +53,7 @@ resources:
       realm: {}
       username: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.right:
     fields:
       bundleKey: {}
@@ -59,12 +64,14 @@ resources:
       rightType: {}
       serviceNamespace: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.role:
     fields:
       description: {}
       id: {}
       name: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.serverInstance:
     fields:
       isBusy: {}
@@ -78,6 +85,7 @@ resources:
       vcVersion: {}
       vsmIP: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.vdc:
     fields:
       allocationModel: {}
@@ -91,6 +99,7 @@ resources:
       usedNetworkCount: {}
       vmQuota: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.vdcGroup:
     fields:
       description: {}
@@ -101,6 +110,7 @@ resources:
       type: {}
       universalNetworkingEnabled: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.vdcProvider:
     fields:
       cpuAllocationMhz: {}
@@ -126,6 +136,7 @@ resources:
       storageUsedMB: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133
   vcd.vm:
     fields:
       catalogName: {}
@@ -158,3 +169,4 @@ resources:
       vmToolsStatus: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 11.0.133

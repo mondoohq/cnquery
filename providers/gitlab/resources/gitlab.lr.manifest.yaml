@@ -40,6 +40,7 @@ resources:
       webURL:
         min_mondoo_version: 11.1.129
     min_mondoo_version: 5.15.0
+    min_provider_version: 11.1.129
   gitlab.group.label:
     fields:
       closedIssuesCount: {}
@@ -56,6 +57,7 @@ resources:
       textColor: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.member:
     fields:
       id: {}
@@ -63,6 +65,7 @@ resources:
       user: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project:
     fields:
       allowMergeOnSkippedPipeline:
@@ -159,6 +162,7 @@ resources:
       wikiEnabled:
         min_mondoo_version: 11.1.129
     min_mondoo_version: 5.15.0
+    min_provider_version: 11.1.129
   gitlab.project.approvalRule:
     fields:
       approvalsRequired: {}
@@ -166,6 +170,7 @@ resources:
       name: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.approvalSetting:
     fields:
       approvalsBeforeMerge: {}
@@ -177,6 +182,7 @@ resources:
       selectiveCodeOwnerRemovals: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.file:
     fields:
       content: {}
@@ -185,6 +191,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.issue:
     fields:
       author: {}
@@ -203,6 +210,7 @@ resources:
       webURL: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.label:
     fields:
       closedIssuesCount: {}
@@ -219,6 +227,7 @@ resources:
       textColor: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.mergeRequest:
     fields:
       author: {}
@@ -238,6 +247,7 @@ resources:
       webURL: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.milestone:
     fields:
       createdAt: {}
@@ -253,6 +263,7 @@ resources:
       updatedAt: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.pipeline:
     fields:
       createdAt: {}
@@ -268,6 +279,7 @@ resources:
       webURL: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.protectedBranch:
     fields:
       allowForcePush: {}
@@ -276,6 +288,7 @@ resources:
       name: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.release:
     fields:
       author: {}
@@ -286,6 +299,7 @@ resources:
       tagName: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.runner:
     fields:
       description: {}
@@ -298,6 +312,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.variable:
     fields:
       description: {}
@@ -310,12 +325,14 @@ resources:
       variableType: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.project.webhook:
     fields:
       sslVerification: {}
       url: {}
     is_private: true
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129
   gitlab.user:
     fields:
       avatarURL: {}
@@ -333,3 +350,4 @@ resources:
       username: {}
       webURL: {}
     min_mondoo_version: 11.1.129
+    min_provider_version: 11.1.129

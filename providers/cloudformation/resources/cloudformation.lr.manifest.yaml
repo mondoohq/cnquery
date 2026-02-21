@@ -7,6 +7,7 @@ resources:
       name: {}
       properties: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.125
   cloudformation.resource:
     fields:
       attributes: {}
@@ -16,6 +17,7 @@ resources:
       properties: {}
       type: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.125
   cloudformation.template:
     fields:
       conditions: {}
@@ -30,3 +32,4 @@ resources:
       types: {}
       version: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.125

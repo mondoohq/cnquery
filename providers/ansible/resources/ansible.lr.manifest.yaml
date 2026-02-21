@@ -6,11 +6,13 @@ resources:
     fields:
       plays: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.120
   ansible.handler:
     fields:
       action: {}
       name: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.120
   ansible.play:
     fields:
       anyErrorsFatal: {}
@@ -31,6 +33,7 @@ resources:
       tasks: {}
       vars: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.120
   ansible.task:
     fields:
       action: {}
@@ -48,3 +51,4 @@ resources:
       vars: {}
       when: {}
     min_mondoo_version: latest
+    min_provider_version: 11.0.120

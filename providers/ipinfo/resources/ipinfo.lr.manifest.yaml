@@ -18,3 +18,4 @@ resources:
       returned_ip: {}
       timezone: {}
     min_mondoo_version: 12.10.15
+    min_provider_version: 12.10.15

@@ -9,6 +9,7 @@ resources:
       tailnet: {}
       users: {}
     min_mondoo_version: 11.0.74
+    min_provider_version: 11.0.74
   tailscale.device:
     fields:
       addresses: {}
@@ -32,6 +33,7 @@ resources:
       updateAvailable: {}
       user: {}
     min_mondoo_version: 11.0.74
+    min_provider_version: 11.0.74
   tailscale.user:
     fields:
       createdAt: {}
@@ -46,3 +48,4 @@ resources:
       tailnetId: {}
       type: {}
     min_mondoo_version: 11.0.74
+    min_provider_version: 11.0.74
