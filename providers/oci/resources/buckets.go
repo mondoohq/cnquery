@@ -143,10 +143,11 @@ func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespa
 				}
 
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.objectStorage.bucket", map[string]*llx.RawData{
-					"namespace": llx.StringDataPtr(bucket.Namespace),
-					"name":      llx.StringDataPtr(bucket.Name),
-					"region":    llx.ResourceData(regionResource, "oci.region"),
-					"created":   llx.TimeDataPtr(created),
+					"namespace":     llx.StringDataPtr(bucket.Namespace),
+					"name":          llx.StringDataPtr(bucket.Name),
+					"compartmentID": llx.StringDataPtr(bucket.CompartmentId),
+					"region":        llx.ResourceData(regionResource, "oci.region"),
+					"created":       llx.TimeDataPtr(created),
 				})
 				if err != nil {
 					return nil, err
@@ -227,6 +228,11 @@ func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, e
 	response, err := client.GetBucket(context.Background(), objectstorage.GetBucketRequest{
 		NamespaceName: common.String(namespace.Data),
 		BucketName:    common.String(name.Data),
+		Fields: []objectstorage.GetBucketFieldsEnum{
+			objectstorage.GetBucketFieldsApproximatecount,
+			objectstorage.GetBucketFieldsApproximatesize,
+			objectstorage.GetBucketFieldsAutotiering,
+		},
 	})
 	if err != nil {
 		return nil, err
@@ -273,6 +279,9 @@ func (o *mqlOciObjectStorageBucket) objectEventsEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if bucketInfo.ObjectEventsEnabled == nil {
+		return false, nil
+	}
 	return *bucketInfo.ObjectEventsEnabled, nil
 }
 
@@ -280,6 +289,9 @@ func (o *mqlOciObjectStorageBucket) replicationEnabled() (bool, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {
 		return false, err
+	}
+	if bucketInfo.ReplicationEnabled == nil {
+		return false, nil
 	}
 	return *bucketInfo.ReplicationEnabled, nil
 }
@@ -337,6 +349,17 @@ func (o *mqlOciObjectStorageBucket) approximateSize() (int64, error) {
 		return 0, nil
 	}
 	return *bucketInfo.ApproximateSize, nil
+}
+
+func (o *mqlOciObjectStorageBucket) objectLifecyclePolicyEtag() (string, error) {
+	bucketInfo, err := o.getBucketDetails()
+	if err != nil {
+		return "", err
+	}
+	if bucketInfo.ObjectLifecyclePolicyEtag == nil {
+		return "", nil
+	}
+	return *bucketInfo.ObjectLifecyclePolicyEtag, nil
 }
 
 func (o *mqlOciObjectStorageBucket) freeformTags() (map[string]interface{}, error) {

@@ -17,25 +17,44 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceOci                          string = "oci"
-	ResourceOciTenancy                   string = "oci.tenancy"
-	ResourceOciRegion                    string = "oci.region"
-	ResourceOciCompartment               string = "oci.compartment"
-	ResourceOciIdentity                  string = "oci.identity"
-	ResourceOciIdentityUser              string = "oci.identity.user"
-	ResourceOciIdentityApiKey            string = "oci.identity.apiKey"
-	ResourceOciIdentityCustomerSecretKey string = "oci.identity.customerSecretKey"
-	ResourceOciIdentityAuthToken         string = "oci.identity.authToken"
-	ResourceOciIdentityGroup             string = "oci.identity.group"
-	ResourceOciIdentityPolicy            string = "oci.identity.policy"
-	ResourceOciCompute                   string = "oci.compute"
-	ResourceOciComputeInstance           string = "oci.compute.instance"
-	ResourceOciComputeImage              string = "oci.compute.image"
-	ResourceOciNetwork                   string = "oci.network"
-	ResourceOciNetworkVcn                string = "oci.network.vcn"
-	ResourceOciNetworkSecurityList       string = "oci.network.securityList"
-	ResourceOciObjectStorage             string = "oci.objectStorage"
-	ResourceOciObjectStorageBucket       string = "oci.objectStorage.bucket"
+	ResourceOci                            string = "oci"
+	ResourceOciTenancy                     string = "oci.tenancy"
+	ResourceOciRegion                      string = "oci.region"
+	ResourceOciCompartment                 string = "oci.compartment"
+	ResourceOciIdentity                    string = "oci.identity"
+	ResourceOciIdentityUser                string = "oci.identity.user"
+	ResourceOciIdentityApiKey              string = "oci.identity.apiKey"
+	ResourceOciIdentityCustomerSecretKey   string = "oci.identity.customerSecretKey"
+	ResourceOciIdentityAuthToken           string = "oci.identity.authToken"
+	ResourceOciIdentityGroup               string = "oci.identity.group"
+	ResourceOciIdentityPolicy              string = "oci.identity.policy"
+	ResourceOciCompute                     string = "oci.compute"
+	ResourceOciComputeInstance             string = "oci.compute.instance"
+	ResourceOciComputeImage                string = "oci.compute.image"
+	ResourceOciComputeBlockVolume          string = "oci.compute.blockVolume"
+	ResourceOciComputeBootVolume           string = "oci.compute.bootVolume"
+	ResourceOciNetwork                     string = "oci.network"
+	ResourceOciNetworkVcn                  string = "oci.network.vcn"
+	ResourceOciNetworkSecurityList         string = "oci.network.securityList"
+	ResourceOciNetworkNetworkSecurityGroup string = "oci.network.networkSecurityGroup"
+	ResourceOciLogging                     string = "oci.logging"
+	ResourceOciLoggingLogGroup             string = "oci.logging.logGroup"
+	ResourceOciLoggingLog                  string = "oci.logging.log"
+	ResourceOciKms                         string = "oci.kms"
+	ResourceOciKmsVault                    string = "oci.kms.vault"
+	ResourceOciKmsKey                      string = "oci.kms.key"
+	ResourceOciObjectStorage               string = "oci.objectStorage"
+	ResourceOciObjectStorageBucket         string = "oci.objectStorage.bucket"
+	ResourceOciFileStorage                 string = "oci.fileStorage"
+	ResourceOciFileStorageFileSystem       string = "oci.fileStorage.fileSystem"
+	ResourceOciEvents                      string = "oci.events"
+	ResourceOciEventsRule                  string = "oci.events.rule"
+	ResourceOciCloudGuard                  string = "oci.cloudGuard"
+	ResourceOciCloudGuardTarget            string = "oci.cloudGuard.target"
+	ResourceOciCloudGuardDetectorRecipe    string = "oci.cloudGuard.detectorRecipe"
+	ResourceOciOns                         string = "oci.ons"
+	ResourceOciOnsTopic                    string = "oci.ons.topic"
+	ResourceOciOnsSubscription             string = "oci.ons.subscription"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -98,6 +117,14 @@ func init() {
 			// to override args, implement: initOciComputeImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciComputeImage,
 		},
+		"oci.compute.blockVolume": {
+			// to override args, implement: initOciComputeBlockVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciComputeBlockVolume,
+		},
+		"oci.compute.bootVolume": {
+			// to override args, implement: initOciComputeBootVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciComputeBootVolume,
+		},
 		"oci.network": {
 			// to override args, implement: initOciNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciNetwork,
@@ -110,6 +137,34 @@ func init() {
 			// to override args, implement: initOciNetworkSecurityList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciNetworkSecurityList,
 		},
+		"oci.network.networkSecurityGroup": {
+			// to override args, implement: initOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkNetworkSecurityGroup,
+		},
+		"oci.logging": {
+			// to override args, implement: initOciLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciLogging,
+		},
+		"oci.logging.logGroup": {
+			// to override args, implement: initOciLoggingLogGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciLoggingLogGroup,
+		},
+		"oci.logging.log": {
+			// to override args, implement: initOciLoggingLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciLoggingLog,
+		},
+		"oci.kms": {
+			// to override args, implement: initOciKms(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciKms,
+		},
+		"oci.kms.vault": {
+			// to override args, implement: initOciKmsVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciKmsVault,
+		},
+		"oci.kms.key": {
+			// to override args, implement: initOciKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciKmsKey,
+		},
 		"oci.objectStorage": {
 			// to override args, implement: initOciObjectStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciObjectStorage,
@@ -117,6 +172,46 @@ func init() {
 		"oci.objectStorage.bucket": {
 			Init:   initOciObjectStorageBucket,
 			Create: createOciObjectStorageBucket,
+		},
+		"oci.fileStorage": {
+			// to override args, implement: initOciFileStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFileStorage,
+		},
+		"oci.fileStorage.fileSystem": {
+			// to override args, implement: initOciFileStorageFileSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciFileStorageFileSystem,
+		},
+		"oci.events": {
+			// to override args, implement: initOciEvents(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciEvents,
+		},
+		"oci.events.rule": {
+			// to override args, implement: initOciEventsRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciEventsRule,
+		},
+		"oci.cloudGuard": {
+			// to override args, implement: initOciCloudGuard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciCloudGuard,
+		},
+		"oci.cloudGuard.target": {
+			// to override args, implement: initOciCloudGuardTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciCloudGuardTarget,
+		},
+		"oci.cloudGuard.detectorRecipe": {
+			// to override args, implement: initOciCloudGuardDetectorRecipe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciCloudGuardDetectorRecipe,
+		},
+		"oci.ons": {
+			// to override args, implement: initOciOns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOns,
+		},
+		"oci.ons.topic": {
+			// to override args, implement: initOciOnsTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOnsTopic,
+		},
+		"oci.ons.subscription": {
+			// to override args, implement: initOciOnsSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciOnsSubscription,
 		},
 	}
 }
@@ -408,6 +503,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.images": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCompute).GetImages()).ToDataRes(types.Array(types.Resource("oci.compute.image")))
 	},
+	"oci.compute.blockVolumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCompute).GetBlockVolumes()).ToDataRes(types.Array(types.Resource("oci.compute.blockVolume")))
+	},
+	"oci.compute.bootVolumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCompute).GetBootVolumes()).ToDataRes(types.Array(types.Resource("oci.compute.bootVolume")))
+	},
 	"oci.compute.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetId()).ToDataRes(types.String)
 	},
@@ -440,6 +541,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.compute.instance.dedicatedVmHostId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetDedicatedVmHostId()).ToDataRes(types.String)
+	},
+	"oci.compute.instance.platformConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetPlatformConfig()).ToDataRes(types.Dict)
+	},
+	"oci.compute.instance.launchOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetLaunchOptions()).ToDataRes(types.Dict)
+	},
+	"oci.compute.instance.instanceOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetInstanceOptions()).ToDataRes(types.Dict)
+	},
+	"oci.compute.instance.shapeConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetShapeConfig()).ToDataRes(types.Dict)
+	},
+	"oci.compute.instance.sourceDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetSourceDetails()).ToDataRes(types.Dict)
+	},
+	"oci.compute.instance.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"oci.compute.instance.freeformTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
@@ -480,11 +599,74 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.image.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeImage).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
+	"oci.compute.blockVolume.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetId()).ToDataRes(types.String)
+	},
+	"oci.compute.blockVolume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetName()).ToDataRes(types.String)
+	},
+	"oci.compute.blockVolume.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.compute.blockVolume.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetAvailabilityDomain()).ToDataRes(types.String)
+	},
+	"oci.compute.blockVolume.sizeInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetSizeInGBs()).ToDataRes(types.Int)
+	},
+	"oci.compute.blockVolume.vpusPerGB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetVpusPerGB()).ToDataRes(types.Int)
+	},
+	"oci.compute.blockVolume.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetState()).ToDataRes(types.String)
+	},
+	"oci.compute.blockVolume.isHydrated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetIsHydrated()).ToDataRes(types.Bool)
+	},
+	"oci.compute.blockVolume.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"oci.compute.blockVolume.isAutoTuneEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetIsAutoTuneEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.blockVolume.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBlockVolume).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.compute.bootVolume.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBootVolume).GetId()).ToDataRes(types.String)
+	},
+	"oci.compute.bootVolume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBootVolume).GetName()).ToDataRes(types.String)
+	},
+	"oci.compute.bootVolume.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBootVolume).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.compute.bootVolume.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBootVolume).GetAvailabilityDomain()).ToDataRes(types.String)
+	},
+	"oci.compute.bootVolume.sizeInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBootVolume).GetSizeInGBs()).ToDataRes(types.Int)
+	},
+	"oci.compute.bootVolume.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBootVolume).GetImageId()).ToDataRes(types.String)
+	},
+	"oci.compute.bootVolume.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBootVolume).GetState()).ToDataRes(types.String)
+	},
+	"oci.compute.bootVolume.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBootVolume).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"oci.compute.bootVolume.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeBootVolume).GetCreated()).ToDataRes(types.Time)
+	},
 	"oci.network.vcns": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetwork).GetVcns()).ToDataRes(types.Array(types.Resource("oci.network.vcn")))
 	},
 	"oci.network.securityLists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetwork).GetSecurityLists()).ToDataRes(types.Array(types.Resource("oci.network.securityList")))
+	},
+	"oci.network.networkSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetwork).GetNetworkSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
 	},
 	"oci.network.vcn.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetId()).ToDataRes(types.String)
@@ -558,6 +740,135 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.securityList.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
+	"oci.network.networkSecurityGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetId()).ToDataRes(types.String)
+	},
+	"oci.network.networkSecurityGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetName()).ToDataRes(types.String)
+	},
+	"oci.network.networkSecurityGroup.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.network.networkSecurityGroup.vcnId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetVcnId()).ToDataRes(types.String)
+	},
+	"oci.network.networkSecurityGroup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetState()).ToDataRes(types.String)
+	},
+	"oci.network.networkSecurityGroup.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.network.networkSecurityGroup.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.network.networkSecurityGroup.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.network.networkSecurityGroup.ingressSecurityRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetIngressSecurityRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.network.networkSecurityGroup.egressSecurityRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetEgressSecurityRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.logging.logGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLogging).GetLogGroups()).ToDataRes(types.Array(types.Resource("oci.logging.logGroup")))
+	},
+	"oci.logging.logGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLogGroup).GetId()).ToDataRes(types.String)
+	},
+	"oci.logging.logGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLogGroup).GetName()).ToDataRes(types.String)
+	},
+	"oci.logging.logGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLogGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.logging.logGroup.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLogGroup).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.logging.logGroup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLogGroup).GetState()).ToDataRes(types.String)
+	},
+	"oci.logging.logGroup.logs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLogGroup).GetLogs()).ToDataRes(types.Array(types.Resource("oci.logging.log")))
+	},
+	"oci.logging.logGroup.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLogGroup).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.logging.log.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLog).GetId()).ToDataRes(types.String)
+	},
+	"oci.logging.log.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLog).GetName()).ToDataRes(types.String)
+	},
+	"oci.logging.log.logType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLog).GetLogType()).ToDataRes(types.String)
+	},
+	"oci.logging.log.logGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLog).GetLogGroupId()).ToDataRes(types.String)
+	},
+	"oci.logging.log.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLog).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.logging.log.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLog).GetState()).ToDataRes(types.String)
+	},
+	"oci.logging.log.retentionDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLog).GetRetentionDuration()).ToDataRes(types.Int)
+	},
+	"oci.logging.log.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoggingLog).GetConfiguration()).ToDataRes(types.Dict)
+	},
+	"oci.kms.vaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKms).GetVaults()).ToDataRes(types.Array(types.Resource("oci.kms.vault")))
+	},
+	"oci.kms.vault.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsVault).GetId()).ToDataRes(types.String)
+	},
+	"oci.kms.vault.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsVault).GetName()).ToDataRes(types.String)
+	},
+	"oci.kms.vault.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsVault).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.kms.vault.vaultType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsVault).GetVaultType()).ToDataRes(types.String)
+	},
+	"oci.kms.vault.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsVault).GetState()).ToDataRes(types.String)
+	},
+	"oci.kms.vault.managementEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsVault).GetManagementEndpoint()).ToDataRes(types.String)
+	},
+	"oci.kms.vault.keys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsVault).GetKeys()).ToDataRes(types.Array(types.Resource("oci.kms.key")))
+	},
+	"oci.kms.vault.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsVault).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.kms.key.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsKey).GetId()).ToDataRes(types.String)
+	},
+	"oci.kms.key.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsKey).GetName()).ToDataRes(types.String)
+	},
+	"oci.kms.key.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsKey).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.kms.key.vaultId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsKey).GetVaultId()).ToDataRes(types.String)
+	},
+	"oci.kms.key.algorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsKey).GetAlgorithm()).ToDataRes(types.String)
+	},
+	"oci.kms.key.protectionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsKey).GetProtectionMode()).ToDataRes(types.String)
+	},
+	"oci.kms.key.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsKey).GetState()).ToDataRes(types.String)
+	},
+	"oci.kms.key.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsKey).GetCreated()).ToDataRes(types.Time)
+	},
 	"oci.objectStorage.namespace": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciObjectStorage).GetNamespace()).ToDataRes(types.String)
 	},
@@ -615,11 +926,173 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.objectStorage.bucket.approximateSize": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciObjectStorageBucket).GetApproximateSize()).ToDataRes(types.Int)
 	},
+	"oci.objectStorage.bucket.objectLifecyclePolicyEtag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciObjectStorageBucket).GetObjectLifecyclePolicyEtag()).ToDataRes(types.String)
+	},
 	"oci.objectStorage.bucket.freeformTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciObjectStorageBucket).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"oci.objectStorage.bucket.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciObjectStorageBucket).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.fileStorage.fileSystems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorage).GetFileSystems()).ToDataRes(types.Array(types.Resource("oci.fileStorage.fileSystem")))
+	},
+	"oci.fileStorage.fileSystem.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetId()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.fileSystem.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetName()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.fileSystem.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.fileSystem.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetAvailabilityDomain()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.fileSystem.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetState()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.fileSystem.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"oci.fileStorage.fileSystem.meteredBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetMeteredBytes()).ToDataRes(types.Int)
+	},
+	"oci.fileStorage.fileSystem.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.events.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEvents).GetRules()).ToDataRes(types.Array(types.Resource("oci.events.rule")))
+	},
+	"oci.events.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetId()).ToDataRes(types.String)
+	},
+	"oci.events.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetName()).ToDataRes(types.String)
+	},
+	"oci.events.rule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.events.rule.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.events.rule.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetCondition()).ToDataRes(types.String)
+	},
+	"oci.events.rule.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.events.rule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetState()).ToDataRes(types.String)
+	},
+	"oci.events.rule.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetActions()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.events.rule.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciEventsRule).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.cloudGuard.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuard).GetStatus()).ToDataRes(types.Bool)
+	},
+	"oci.cloudGuard.reportingRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuard).GetReportingRegion()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.selfManageResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuard).GetSelfManageResources()).ToDataRes(types.Bool)
+	},
+	"oci.cloudGuard.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuard).GetTargets()).ToDataRes(types.Array(types.Resource("oci.cloudGuard.target")))
+	},
+	"oci.cloudGuard.detectorRecipes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuard).GetDetectorRecipes()).ToDataRes(types.Array(types.Resource("oci.cloudGuard.detectorRecipe")))
+	},
+	"oci.cloudGuard.target.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardTarget).GetId()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.target.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardTarget).GetName()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.target.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardTarget).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.target.targetResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardTarget).GetTargetResourceId()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.target.targetResourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardTarget).GetTargetResourceType()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.target.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardTarget).GetState()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.target.recipeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardTarget).GetRecipeCount()).ToDataRes(types.Int)
+	},
+	"oci.cloudGuard.target.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardTarget).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.cloudGuard.detectorRecipe.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardDetectorRecipe).GetId()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.detectorRecipe.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardDetectorRecipe).GetName()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.detectorRecipe.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardDetectorRecipe).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.detectorRecipe.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardDetectorRecipe).GetOwner()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.detectorRecipe.detectorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardDetectorRecipe).GetDetectorType()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.detectorRecipe.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardDetectorRecipe).GetState()).ToDataRes(types.String)
+	},
+	"oci.cloudGuard.detectorRecipe.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardDetectorRecipe).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ons.topics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOns).GetTopics()).ToDataRes(types.Array(types.Resource("oci.ons.topic")))
+	},
+	"oci.ons.topic.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsTopic).GetId()).ToDataRes(types.String)
+	},
+	"oci.ons.topic.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsTopic).GetName()).ToDataRes(types.String)
+	},
+	"oci.ons.topic.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsTopic).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ons.topic.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsTopic).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ons.topic.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsTopic).GetState()).ToDataRes(types.String)
+	},
+	"oci.ons.topic.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsTopic).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ons.topic.subscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsTopic).GetSubscriptions()).ToDataRes(types.Array(types.Resource("oci.ons.subscription")))
+	},
+	"oci.ons.subscription.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsSubscription).GetId()).ToDataRes(types.String)
+	},
+	"oci.ons.subscription.topicId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsSubscription).GetTopicId()).ToDataRes(types.String)
+	},
+	"oci.ons.subscription.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsSubscription).GetProtocol()).ToDataRes(types.String)
+	},
+	"oci.ons.subscription.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsSubscription).GetEndpoint()).ToDataRes(types.String)
+	},
+	"oci.ons.subscription.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsSubscription).GetState()).ToDataRes(types.String)
+	},
+	"oci.ons.subscription.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOnsSubscription).GetCreated()).ToDataRes(types.Time)
 	},
 }
 
@@ -961,6 +1434,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciCompute).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.compute.blockVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCompute).BlockVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.compute.bootVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCompute).BootVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.compute.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).__id, ok = v.Value.(string)
 		return
@@ -1007,6 +1488,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.compute.instance.dedicatedVmHostId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).DedicatedVmHostId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.platformConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).PlatformConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.launchOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).LaunchOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.instanceOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).InstanceOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.shapeConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).ShapeConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.sourceDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).SourceDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"oci.compute.instance.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1065,6 +1570,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciComputeImage).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"oci.compute.blockVolume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.compute.blockVolume.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.blockVolume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.blockVolume.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.blockVolume.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).AvailabilityDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.blockVolume.sizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).SizeInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.blockVolume.vpusPerGB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).VpusPerGB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.blockVolume.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.blockVolume.isHydrated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).IsHydrated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.blockVolume.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.blockVolume.isAutoTuneEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).IsAutoTuneEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.blockVolume.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBlockVolume).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.compute.bootVolume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBootVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.compute.bootVolume.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBootVolume).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.bootVolume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBootVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.bootVolume.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBootVolume).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.bootVolume.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBootVolume).AvailabilityDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.bootVolume.sizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBootVolume).SizeInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.bootVolume.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBootVolume).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.bootVolume.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBootVolume).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.bootVolume.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBootVolume).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.bootVolume.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeBootVolume).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"oci.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetwork).__id, ok = v.Value.(string)
 		return
@@ -1075,6 +1668,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.securityLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetwork).SecurityLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetwork).NetworkSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.network.vcn.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1181,6 +1778,206 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkSecurityList).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"oci.network.networkSecurityGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.network.networkSecurityGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.vcnId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).VcnId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.ingressSecurityRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).IngressSecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.egressSecurityRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).EgressSecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.logging.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLogging).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.logging.logGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLogging).LogGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.logging.logGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLogGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.logging.logGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLogGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.logging.logGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLogGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.logging.logGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLogGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.logging.logGroup.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLogGroup).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.logging.logGroup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLogGroup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.logging.logGroup.logs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLogGroup).Logs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.logging.logGroup.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLogGroup).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.logging.log.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLog).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.logging.log.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLog).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.logging.log.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLog).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.logging.log.logType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLog).LogType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.logging.log.logGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLog).LogGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.logging.log.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLog).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.logging.log.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLog).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.logging.log.retentionDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLog).RetentionDuration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.logging.log.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoggingLog).Configuration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.kms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKms).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.kms.vaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKms).Vaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.kms.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsVault).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.kms.vault.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsVault).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.vault.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsVault).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.vault.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsVault).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.vault.vaultType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsVault).VaultType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.vault.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsVault).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.vault.managementEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsVault).ManagementEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.vault.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsVault).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.kms.vault.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsVault).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.kms.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.kms.key.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.key.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.key.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.key.vaultId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).VaultId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.key.algorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).Algorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.key.protectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).ProtectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.key.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.kms.key.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"oci.objectStorage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciObjectStorage).__id, ok = v.Value.(string)
 		return
@@ -1265,12 +2062,268 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciObjectStorageBucket).ApproximateSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"oci.objectStorage.bucket.objectLifecyclePolicyEtag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciObjectStorageBucket).ObjectLifecyclePolicyEtag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"oci.objectStorage.bucket.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciObjectStorageBucket).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"oci.objectStorage.bucket.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciObjectStorageBucket).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorage).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.fileSystems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorage).FileSystems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.fileStorage.fileSystem.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).AvailabilityDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.meteredBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).MeteredBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.fileStorage.fileSystem.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.events.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEvents).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.events.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEvents).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.events.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.events.rule.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciEventsRule).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuard).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.cloudGuard.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuard).Status, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.reportingRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuard).ReportingRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.selfManageResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuard).SelfManageResources, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuard).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.detectorRecipes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuard).DetectorRecipes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.cloudGuard.target.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardTarget).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.target.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardTarget).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.target.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardTarget).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.target.targetResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardTarget).TargetResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.target.targetResourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardTarget).TargetResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.target.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardTarget).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.target.recipeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardTarget).RecipeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.target.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardTarget).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.detectorRecipe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardDetectorRecipe).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.cloudGuard.detectorRecipe.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardDetectorRecipe).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.detectorRecipe.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardDetectorRecipe).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.detectorRecipe.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardDetectorRecipe).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.detectorRecipe.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardDetectorRecipe).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.detectorRecipe.detectorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardDetectorRecipe).DetectorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.detectorRecipe.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardDetectorRecipe).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.cloudGuard.detectorRecipe.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardDetectorRecipe).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ons.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOns).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ons.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOns).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ons.topic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsTopic).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ons.topic.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsTopic).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ons.topic.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsTopic).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ons.topic.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsTopic).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ons.topic.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsTopic).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ons.topic.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsTopic).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ons.topic.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsTopic).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ons.topic.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsTopic).Subscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ons.subscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsSubscription).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ons.subscription.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsSubscription).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ons.subscription.topicId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsSubscription).TopicId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ons.subscription.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsSubscription).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ons.subscription.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsSubscription).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ons.subscription.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsSubscription).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ons.subscription.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOnsSubscription).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 }
@@ -2236,8 +3289,10 @@ type mqlOciCompute struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOciComputeInternal it will be used here
-	Instances plugin.TValue[[]any]
-	Images    plugin.TValue[[]any]
+	Instances    plugin.TValue[[]any]
+	Images       plugin.TValue[[]any]
+	BlockVolumes plugin.TValue[[]any]
+	BootVolumes  plugin.TValue[[]any]
 }
 
 // createOciCompute creates a new instance of this resource
@@ -2309,6 +3364,38 @@ func (c *mqlOciCompute) GetImages() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlOciCompute) GetBlockVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BlockVolumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute", c.__id, "blockVolumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.blockVolumes()
+	})
+}
+
+func (c *mqlOciCompute) GetBootVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BootVolumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute", c.__id, "bootVolumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.bootVolumes()
+	})
+}
+
 // mqlOciComputeInstance for the oci.compute.instance resource
 type mqlOciComputeInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -2325,6 +3412,12 @@ type mqlOciComputeInstance struct {
 	FaultDomain        plugin.TValue[string]
 	ImageId            plugin.TValue[string]
 	DedicatedVmHostId  plugin.TValue[string]
+	PlatformConfig     plugin.TValue[any]
+	LaunchOptions      plugin.TValue[any]
+	InstanceOptions    plugin.TValue[any]
+	ShapeConfig        plugin.TValue[any]
+	SourceDetails      plugin.TValue[any]
+	Metadata           plugin.TValue[map[string]any]
 	FreeformTags       plugin.TValue[map[string]any]
 	DefinedTags        plugin.TValue[map[string]any]
 }
@@ -2408,6 +3501,30 @@ func (c *mqlOciComputeInstance) GetImageId() *plugin.TValue[string] {
 
 func (c *mqlOciComputeInstance) GetDedicatedVmHostId() *plugin.TValue[string] {
 	return &c.DedicatedVmHostId
+}
+
+func (c *mqlOciComputeInstance) GetPlatformConfig() *plugin.TValue[any] {
+	return &c.PlatformConfig
+}
+
+func (c *mqlOciComputeInstance) GetLaunchOptions() *plugin.TValue[any] {
+	return &c.LaunchOptions
+}
+
+func (c *mqlOciComputeInstance) GetInstanceOptions() *plugin.TValue[any] {
+	return &c.InstanceOptions
+}
+
+func (c *mqlOciComputeInstance) GetShapeConfig() *plugin.TValue[any] {
+	return &c.ShapeConfig
+}
+
+func (c *mqlOciComputeInstance) GetSourceDetails() *plugin.TValue[any] {
+	return &c.SourceDetails
+}
+
+func (c *mqlOciComputeInstance) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
 }
 
 func (c *mqlOciComputeInstance) GetFreeformTags() *plugin.TValue[map[string]any] {
@@ -2517,13 +3634,202 @@ func (c *mqlOciComputeImage) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
 }
 
+// mqlOciComputeBlockVolume for the oci.compute.blockVolume resource
+type mqlOciComputeBlockVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciComputeBlockVolumeInternal it will be used here
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	CompartmentID      plugin.TValue[string]
+	AvailabilityDomain plugin.TValue[string]
+	SizeInGBs          plugin.TValue[int64]
+	VpusPerGB          plugin.TValue[int64]
+	State              plugin.TValue[string]
+	IsHydrated         plugin.TValue[bool]
+	KmsKeyId           plugin.TValue[string]
+	IsAutoTuneEnabled  plugin.TValue[bool]
+	Created            plugin.TValue[*time.Time]
+}
+
+// createOciComputeBlockVolume creates a new instance of this resource
+func createOciComputeBlockVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciComputeBlockVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.compute.blockVolume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciComputeBlockVolume) MqlName() string {
+	return "oci.compute.blockVolume"
+}
+
+func (c *mqlOciComputeBlockVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciComputeBlockVolume) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciComputeBlockVolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciComputeBlockVolume) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciComputeBlockVolume) GetAvailabilityDomain() *plugin.TValue[string] {
+	return &c.AvailabilityDomain
+}
+
+func (c *mqlOciComputeBlockVolume) GetSizeInGBs() *plugin.TValue[int64] {
+	return &c.SizeInGBs
+}
+
+func (c *mqlOciComputeBlockVolume) GetVpusPerGB() *plugin.TValue[int64] {
+	return &c.VpusPerGB
+}
+
+func (c *mqlOciComputeBlockVolume) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciComputeBlockVolume) GetIsHydrated() *plugin.TValue[bool] {
+	return &c.IsHydrated
+}
+
+func (c *mqlOciComputeBlockVolume) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlOciComputeBlockVolume) GetIsAutoTuneEnabled() *plugin.TValue[bool] {
+	return &c.IsAutoTuneEnabled
+}
+
+func (c *mqlOciComputeBlockVolume) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciComputeBootVolume for the oci.compute.bootVolume resource
+type mqlOciComputeBootVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciComputeBootVolumeInternal it will be used here
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	CompartmentID      plugin.TValue[string]
+	AvailabilityDomain plugin.TValue[string]
+	SizeInGBs          plugin.TValue[int64]
+	ImageId            plugin.TValue[string]
+	State              plugin.TValue[string]
+	KmsKeyId           plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
+}
+
+// createOciComputeBootVolume creates a new instance of this resource
+func createOciComputeBootVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciComputeBootVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.compute.bootVolume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciComputeBootVolume) MqlName() string {
+	return "oci.compute.bootVolume"
+}
+
+func (c *mqlOciComputeBootVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciComputeBootVolume) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciComputeBootVolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciComputeBootVolume) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciComputeBootVolume) GetAvailabilityDomain() *plugin.TValue[string] {
+	return &c.AvailabilityDomain
+}
+
+func (c *mqlOciComputeBootVolume) GetSizeInGBs() *plugin.TValue[int64] {
+	return &c.SizeInGBs
+}
+
+func (c *mqlOciComputeBootVolume) GetImageId() *plugin.TValue[string] {
+	return &c.ImageId
+}
+
+func (c *mqlOciComputeBootVolume) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciComputeBootVolume) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlOciComputeBootVolume) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
 // mqlOciNetwork for the oci.network resource
 type mqlOciNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOciNetworkInternal it will be used here
-	Vcns          plugin.TValue[[]any]
-	SecurityLists plugin.TValue[[]any]
+	Vcns                  plugin.TValue[[]any]
+	SecurityLists         plugin.TValue[[]any]
+	NetworkSecurityGroups plugin.TValue[[]any]
 }
 
 // createOciNetwork creates a new instance of this resource
@@ -2592,6 +3898,22 @@ func (c *mqlOciNetwork) GetSecurityLists() *plugin.TValue[[]any] {
 		}
 
 		return c.securityLists()
+	})
+}
+
+func (c *mqlOciNetwork) GetNetworkSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network", c.__id, "networkSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkSecurityGroups()
 	})
 }
 
@@ -2803,6 +4125,581 @@ func (c *mqlOciNetworkSecurityList) GetDefinedTags() *plugin.TValue[map[string]a
 	return &c.DefinedTags
 }
 
+// mqlOciNetworkNetworkSecurityGroup for the oci.network.networkSecurityGroup resource
+type mqlOciNetworkNetworkSecurityGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciNetworkNetworkSecurityGroupInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	CompartmentID        plugin.TValue[string]
+	VcnId                plugin.TValue[string]
+	State                plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	FreeformTags         plugin.TValue[map[string]any]
+	DefinedTags          plugin.TValue[map[string]any]
+	IngressSecurityRules plugin.TValue[[]any]
+	EgressSecurityRules  plugin.TValue[[]any]
+}
+
+// createOciNetworkNetworkSecurityGroup creates a new instance of this resource
+func createOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkNetworkSecurityGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.network.networkSecurityGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) MqlName() string {
+	return "oci.network.networkSecurityGroup"
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetVcnId() *plugin.TValue[string] {
+	return &c.VcnId
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetIngressSecurityRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IngressSecurityRules, func() ([]any, error) {
+		return c.ingressSecurityRules()
+	})
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetEgressSecurityRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EgressSecurityRules, func() ([]any, error) {
+		return c.egressSecurityRules()
+	})
+}
+
+// mqlOciLogging for the oci.logging resource
+type mqlOciLogging struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciLoggingInternal it will be used here
+	LogGroups plugin.TValue[[]any]
+}
+
+// createOciLogging creates a new instance of this resource
+func createOciLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciLogging{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.logging", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciLogging) MqlName() string {
+	return "oci.logging"
+}
+
+func (c *mqlOciLogging) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciLogging) GetLogGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LogGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.logging", c.__id, "logGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.logGroups()
+	})
+}
+
+// mqlOciLoggingLogGroup for the oci.logging.logGroup resource
+type mqlOciLoggingLogGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciLoggingLogGroupInternal
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	CompartmentID plugin.TValue[string]
+	State         plugin.TValue[string]
+	Logs          plugin.TValue[[]any]
+	Created       plugin.TValue[*time.Time]
+}
+
+// createOciLoggingLogGroup creates a new instance of this resource
+func createOciLoggingLogGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciLoggingLogGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.logging.logGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciLoggingLogGroup) MqlName() string {
+	return "oci.logging.logGroup"
+}
+
+func (c *mqlOciLoggingLogGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciLoggingLogGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciLoggingLogGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciLoggingLogGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciLoggingLogGroup) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciLoggingLogGroup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciLoggingLogGroup) GetLogs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Logs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.logging.logGroup", c.__id, "logs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.logs()
+	})
+}
+
+func (c *mqlOciLoggingLogGroup) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciLoggingLog for the oci.logging.log resource
+type mqlOciLoggingLog struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciLoggingLogInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	LogType           plugin.TValue[string]
+	LogGroupId        plugin.TValue[string]
+	IsEnabled         plugin.TValue[bool]
+	State             plugin.TValue[string]
+	RetentionDuration plugin.TValue[int64]
+	Configuration     plugin.TValue[any]
+}
+
+// createOciLoggingLog creates a new instance of this resource
+func createOciLoggingLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciLoggingLog{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.logging.log", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciLoggingLog) MqlName() string {
+	return "oci.logging.log"
+}
+
+func (c *mqlOciLoggingLog) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciLoggingLog) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciLoggingLog) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciLoggingLog) GetLogType() *plugin.TValue[string] {
+	return &c.LogType
+}
+
+func (c *mqlOciLoggingLog) GetLogGroupId() *plugin.TValue[string] {
+	return &c.LogGroupId
+}
+
+func (c *mqlOciLoggingLog) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlOciLoggingLog) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciLoggingLog) GetRetentionDuration() *plugin.TValue[int64] {
+	return &c.RetentionDuration
+}
+
+func (c *mqlOciLoggingLog) GetConfiguration() *plugin.TValue[any] {
+	return &c.Configuration
+}
+
+// mqlOciKms for the oci.kms resource
+type mqlOciKms struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciKmsInternal it will be used here
+	Vaults plugin.TValue[[]any]
+}
+
+// createOciKms creates a new instance of this resource
+func createOciKms(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciKms{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.kms", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciKms) MqlName() string {
+	return "oci.kms"
+}
+
+func (c *mqlOciKms) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciKms) GetVaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vaults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.kms", c.__id, "vaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vaults()
+	})
+}
+
+// mqlOciKmsVault for the oci.kms.vault resource
+type mqlOciKmsVault struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciKmsVaultInternal
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	CompartmentID      plugin.TValue[string]
+	VaultType          plugin.TValue[string]
+	State              plugin.TValue[string]
+	ManagementEndpoint plugin.TValue[string]
+	Keys               plugin.TValue[[]any]
+	Created            plugin.TValue[*time.Time]
+}
+
+// createOciKmsVault creates a new instance of this resource
+func createOciKmsVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciKmsVault{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.kms.vault", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciKmsVault) MqlName() string {
+	return "oci.kms.vault"
+}
+
+func (c *mqlOciKmsVault) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciKmsVault) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciKmsVault) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciKmsVault) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciKmsVault) GetVaultType() *plugin.TValue[string] {
+	return &c.VaultType
+}
+
+func (c *mqlOciKmsVault) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciKmsVault) GetManagementEndpoint() *plugin.TValue[string] {
+	return &c.ManagementEndpoint
+}
+
+func (c *mqlOciKmsVault) GetKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Keys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.kms.vault", c.__id, "keys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keys()
+	})
+}
+
+func (c *mqlOciKmsVault) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciKmsKey for the oci.kms.key resource
+type mqlOciKmsKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciKmsKeyInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	CompartmentID  plugin.TValue[string]
+	VaultId        plugin.TValue[string]
+	Algorithm      plugin.TValue[string]
+	ProtectionMode plugin.TValue[string]
+	State          plugin.TValue[string]
+	Created        plugin.TValue[*time.Time]
+}
+
+// createOciKmsKey creates a new instance of this resource
+func createOciKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciKmsKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.kms.key", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciKmsKey) MqlName() string {
+	return "oci.kms.key"
+}
+
+func (c *mqlOciKmsKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciKmsKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciKmsKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciKmsKey) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciKmsKey) GetVaultId() *plugin.TValue[string] {
+	return &c.VaultId
+}
+
+func (c *mqlOciKmsKey) GetAlgorithm() *plugin.TValue[string] {
+	return &c.Algorithm
+}
+
+func (c *mqlOciKmsKey) GetProtectionMode() *plugin.TValue[string] {
+	return &c.ProtectionMode
+}
+
+func (c *mqlOciKmsKey) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciKmsKey) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
 // mqlOciObjectStorage for the oci.objectStorage resource
 type mqlOciObjectStorage struct {
 	MqlRuntime *plugin.Runtime
@@ -2876,25 +4773,26 @@ type mqlOciObjectStorageBucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciObjectStorageBucketInternal
-	Namespace           plugin.TValue[string]
-	Name                plugin.TValue[string]
-	CompartmentID       plugin.TValue[string]
-	Created             plugin.TValue[*time.Time]
-	Region              plugin.TValue[*mqlOciRegion]
-	PublicAccessType    plugin.TValue[string]
-	StorageTier         plugin.TValue[string]
-	AutoTiering         plugin.TValue[string]
-	Versioning          plugin.TValue[string]
-	ObjectEventsEnabled plugin.TValue[bool]
-	ReplicationEnabled  plugin.TValue[bool]
-	Id                  plugin.TValue[string]
-	IsReadOnly          plugin.TValue[bool]
-	Etag                plugin.TValue[string]
-	KmsKeyId            plugin.TValue[string]
-	ApproximateCount    plugin.TValue[int64]
-	ApproximateSize     plugin.TValue[int64]
-	FreeformTags        plugin.TValue[map[string]any]
-	DefinedTags         plugin.TValue[map[string]any]
+	Namespace                 plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	CompartmentID             plugin.TValue[string]
+	Created                   plugin.TValue[*time.Time]
+	Region                    plugin.TValue[*mqlOciRegion]
+	PublicAccessType          plugin.TValue[string]
+	StorageTier               plugin.TValue[string]
+	AutoTiering               plugin.TValue[string]
+	Versioning                plugin.TValue[string]
+	ObjectEventsEnabled       plugin.TValue[bool]
+	ReplicationEnabled        plugin.TValue[bool]
+	Id                        plugin.TValue[string]
+	IsReadOnly                plugin.TValue[bool]
+	Etag                      plugin.TValue[string]
+	KmsKeyId                  plugin.TValue[string]
+	ApproximateCount          plugin.TValue[int64]
+	ApproximateSize           plugin.TValue[int64]
+	ObjectLifecyclePolicyEtag plugin.TValue[string]
+	FreeformTags              plugin.TValue[map[string]any]
+	DefinedTags               plugin.TValue[map[string]any]
 }
 
 // createOciObjectStorageBucket creates a new instance of this resource
@@ -3024,6 +4922,12 @@ func (c *mqlOciObjectStorageBucket) GetApproximateSize() *plugin.TValue[int64] {
 	})
 }
 
+func (c *mqlOciObjectStorageBucket) GetObjectLifecyclePolicyEtag() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ObjectLifecyclePolicyEtag, func() (string, error) {
+		return c.objectLifecyclePolicyEtag()
+	})
+}
+
 func (c *mqlOciObjectStorageBucket) GetFreeformTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.FreeformTags, func() (map[string]any, error) {
 		return c.freeformTags()
@@ -3034,4 +4938,789 @@ func (c *mqlOciObjectStorageBucket) GetDefinedTags() *plugin.TValue[map[string]a
 	return plugin.GetOrCompute[map[string]any](&c.DefinedTags, func() (map[string]any, error) {
 		return c.definedTags()
 	})
+}
+
+// mqlOciFileStorage for the oci.fileStorage resource
+type mqlOciFileStorage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciFileStorageInternal it will be used here
+	FileSystems plugin.TValue[[]any]
+}
+
+// createOciFileStorage creates a new instance of this resource
+func createOciFileStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorage) MqlName() string {
+	return "oci.fileStorage"
+}
+
+func (c *mqlOciFileStorage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorage) GetFileSystems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FileSystems, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage", c.__id, "fileSystems")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fileSystems()
+	})
+}
+
+// mqlOciFileStorageFileSystem for the oci.fileStorage.fileSystem resource
+type mqlOciFileStorageFileSystem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciFileStorageFileSystemInternal it will be used here
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	CompartmentID      plugin.TValue[string]
+	AvailabilityDomain plugin.TValue[string]
+	State              plugin.TValue[string]
+	KmsKeyId           plugin.TValue[string]
+	MeteredBytes       plugin.TValue[int64]
+	Created            plugin.TValue[*time.Time]
+}
+
+// createOciFileStorageFileSystem creates a new instance of this resource
+func createOciFileStorageFileSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciFileStorageFileSystem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.fileStorage.fileSystem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciFileStorageFileSystem) MqlName() string {
+	return "oci.fileStorage.fileSystem"
+}
+
+func (c *mqlOciFileStorageFileSystem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciFileStorageFileSystem) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciFileStorageFileSystem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciFileStorageFileSystem) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciFileStorageFileSystem) GetAvailabilityDomain() *plugin.TValue[string] {
+	return &c.AvailabilityDomain
+}
+
+func (c *mqlOciFileStorageFileSystem) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciFileStorageFileSystem) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlOciFileStorageFileSystem) GetMeteredBytes() *plugin.TValue[int64] {
+	return &c.MeteredBytes
+}
+
+func (c *mqlOciFileStorageFileSystem) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciEvents for the oci.events resource
+type mqlOciEvents struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciEventsInternal it will be used here
+	Rules plugin.TValue[[]any]
+}
+
+// createOciEvents creates a new instance of this resource
+func createOciEvents(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciEvents{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.events", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciEvents) MqlName() string {
+	return "oci.events"
+}
+
+func (c *mqlOciEvents) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciEvents) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.events", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlOciEventsRule for the oci.events.rule resource
+type mqlOciEventsRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciEventsRuleInternal
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	CompartmentID plugin.TValue[string]
+	Condition     plugin.TValue[string]
+	IsEnabled     plugin.TValue[bool]
+	State         plugin.TValue[string]
+	Actions       plugin.TValue[[]any]
+	Created       plugin.TValue[*time.Time]
+}
+
+// createOciEventsRule creates a new instance of this resource
+func createOciEventsRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciEventsRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.events.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciEventsRule) MqlName() string {
+	return "oci.events.rule"
+}
+
+func (c *mqlOciEventsRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciEventsRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciEventsRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciEventsRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciEventsRule) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciEventsRule) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+func (c *mqlOciEventsRule) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlOciEventsRule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciEventsRule) GetActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Actions, func() ([]any, error) {
+		return c.actions()
+	})
+}
+
+func (c *mqlOciEventsRule) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciCloudGuard for the oci.cloudGuard resource
+type mqlOciCloudGuard struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciCloudGuardInternal
+	Status              plugin.TValue[bool]
+	ReportingRegion     plugin.TValue[string]
+	SelfManageResources plugin.TValue[bool]
+	Targets             plugin.TValue[[]any]
+	DetectorRecipes     plugin.TValue[[]any]
+}
+
+// createOciCloudGuard creates a new instance of this resource
+func createOciCloudGuard(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciCloudGuard{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.cloudGuard", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciCloudGuard) MqlName() string {
+	return "oci.cloudGuard"
+}
+
+func (c *mqlOciCloudGuard) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciCloudGuard) GetStatus() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Status, func() (bool, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlOciCloudGuard) GetReportingRegion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReportingRegion, func() (string, error) {
+		return c.reportingRegion()
+	})
+}
+
+func (c *mqlOciCloudGuard) GetSelfManageResources() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SelfManageResources, func() (bool, error) {
+		return c.selfManageResources()
+	})
+}
+
+func (c *mqlOciCloudGuard) GetTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Targets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.cloudGuard", c.__id, "targets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.targets()
+	})
+}
+
+func (c *mqlOciCloudGuard) GetDetectorRecipes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DetectorRecipes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.cloudGuard", c.__id, "detectorRecipes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.detectorRecipes()
+	})
+}
+
+// mqlOciCloudGuardTarget for the oci.cloudGuard.target resource
+type mqlOciCloudGuardTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciCloudGuardTargetInternal it will be used here
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	CompartmentID      plugin.TValue[string]
+	TargetResourceId   plugin.TValue[string]
+	TargetResourceType plugin.TValue[string]
+	State              plugin.TValue[string]
+	RecipeCount        plugin.TValue[int64]
+	Created            plugin.TValue[*time.Time]
+}
+
+// createOciCloudGuardTarget creates a new instance of this resource
+func createOciCloudGuardTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciCloudGuardTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.cloudGuard.target", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciCloudGuardTarget) MqlName() string {
+	return "oci.cloudGuard.target"
+}
+
+func (c *mqlOciCloudGuardTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciCloudGuardTarget) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciCloudGuardTarget) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciCloudGuardTarget) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciCloudGuardTarget) GetTargetResourceId() *plugin.TValue[string] {
+	return &c.TargetResourceId
+}
+
+func (c *mqlOciCloudGuardTarget) GetTargetResourceType() *plugin.TValue[string] {
+	return &c.TargetResourceType
+}
+
+func (c *mqlOciCloudGuardTarget) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciCloudGuardTarget) GetRecipeCount() *plugin.TValue[int64] {
+	return &c.RecipeCount
+}
+
+func (c *mqlOciCloudGuardTarget) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciCloudGuardDetectorRecipe for the oci.cloudGuard.detectorRecipe resource
+type mqlOciCloudGuardDetectorRecipe struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciCloudGuardDetectorRecipeInternal it will be used here
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Owner        plugin.TValue[string]
+	DetectorType plugin.TValue[string]
+	State        plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+}
+
+// createOciCloudGuardDetectorRecipe creates a new instance of this resource
+func createOciCloudGuardDetectorRecipe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciCloudGuardDetectorRecipe{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.cloudGuard.detectorRecipe", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciCloudGuardDetectorRecipe) MqlName() string {
+	return "oci.cloudGuard.detectorRecipe"
+}
+
+func (c *mqlOciCloudGuardDetectorRecipe) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciCloudGuardDetectorRecipe) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciCloudGuardDetectorRecipe) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciCloudGuardDetectorRecipe) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciCloudGuardDetectorRecipe) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlOciCloudGuardDetectorRecipe) GetDetectorType() *plugin.TValue[string] {
+	return &c.DetectorType
+}
+
+func (c *mqlOciCloudGuardDetectorRecipe) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciCloudGuardDetectorRecipe) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciOns for the oci.ons resource
+type mqlOciOns struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciOnsInternal it will be used here
+	Topics plugin.TValue[[]any]
+}
+
+// createOciOns creates a new instance of this resource
+func createOciOns(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOns{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ons", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOns) MqlName() string {
+	return "oci.ons"
+}
+
+func (c *mqlOciOns) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOns) GetTopics() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Topics, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ons", c.__id, "topics")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.topics()
+	})
+}
+
+// mqlOciOnsTopic for the oci.ons.topic resource
+type mqlOciOnsTopic struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciOnsTopicInternal
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	CompartmentID plugin.TValue[string]
+	State         plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	Subscriptions plugin.TValue[[]any]
+}
+
+// createOciOnsTopic creates a new instance of this resource
+func createOciOnsTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOnsTopic{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ons.topic", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOnsTopic) MqlName() string {
+	return "oci.ons.topic"
+}
+
+func (c *mqlOciOnsTopic) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOnsTopic) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciOnsTopic) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciOnsTopic) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciOnsTopic) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciOnsTopic) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciOnsTopic) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciOnsTopic) GetSubscriptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subscriptions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ons.topic", c.__id, "subscriptions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subscriptions()
+	})
+}
+
+// mqlOciOnsSubscription for the oci.ons.subscription resource
+type mqlOciOnsSubscription struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciOnsSubscriptionInternal it will be used here
+	Id       plugin.TValue[string]
+	TopicId  plugin.TValue[string]
+	Protocol plugin.TValue[string]
+	Endpoint plugin.TValue[string]
+	State    plugin.TValue[string]
+	Created  plugin.TValue[*time.Time]
+}
+
+// createOciOnsSubscription creates a new instance of this resource
+func createOciOnsSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciOnsSubscription{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ons.subscription", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciOnsSubscription) MqlName() string {
+	return "oci.ons.subscription"
+}
+
+func (c *mqlOciOnsSubscription) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciOnsSubscription) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciOnsSubscription) GetTopicId() *plugin.TValue[string] {
+	return &c.TopicId
+}
+
+func (c *mqlOciOnsSubscription) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlOciOnsSubscription) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlOciOnsSubscription) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciOnsSubscription) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
