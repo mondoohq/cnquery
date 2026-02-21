@@ -176,17 +176,6 @@ func (a *mqlAzureSubscription) postgreSql() (*mqlAzureSubscriptionPostgreSqlServ
 	return postgreSqlSvc, nil
 }
 
-func (a *mqlAzureSubscription) mariaDb() (*mqlAzureSubscriptionMariaDbService, error) {
-	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionMariaDbService, map[string]*llx.RawData{
-		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
-	})
-	if err != nil {
-		return nil, err
-	}
-	mariadbSvc := svc.(*mqlAzureSubscriptionMariaDbService)
-	return mariadbSvc, nil
-}
-
 func (a *mqlAzureSubscription) cosmosDb() (*mqlAzureSubscriptionCosmosDbService, error) {
 	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionCosmosDbService, map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

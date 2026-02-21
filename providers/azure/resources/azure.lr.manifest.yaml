@@ -31,7 +31,6 @@ resources:
         min_mondoo_version: 11.4.28
       keyVault: {}
       managedByTenants: {}
-      mariaDb: {}
       monitor: {}
       mySql: {}
       name: {}
@@ -1187,95 +1186,6 @@ resources:
     refs:
     - title: What are managed identities for Azure resources?
       url: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
-  azure.subscription.mariaDb:
-    fields:
-      servers: {}
-      subscriptionId: {}
-    min_mondoo_version: latest
-    platform:
-      name:
-      - azure
-    refs:
-    - title: Azure Database for MariaDB documentation
-      url: https://learn.microsoft.com/en-us/azure/mariadb/
-  azure.subscription.mariaDb.database:
-    fields:
-      charset: {}
-      collation: {}
-      id: {}
-      name: {}
-      type: {}
-    min_mondoo_version: latest
-    platform:
-      name:
-      - azure
-    refs:
-    - title: Azure Database for MariaDB documentation
-      url: https://learn.microsoft.com/en-us/azure/mariadb/
-  azure.subscription.mariaDb.server:
-    fields:
-      configuration: {}
-      databases: {}
-      firewallRules: {}
-      id: {}
-      location: {}
-      name: {}
-      properties: {}
-      tags: {}
-      type: {}
-    min_mondoo_version: latest
-    platform:
-      name:
-      - azure
-    refs:
-    - title: Azure Database for MariaDB documentation
-      url: https://learn.microsoft.com/en-us/azure/mariadb/
-  azure.subscription.mariaDbService:
-    fields:
-      servers: {}
-      subscriptionId: {}
-    is_private: true
-    min_mondoo_version: latest
-    platform:
-      name:
-      - azure
-    refs:
-    - title: Azure Database for MariaDB documentation
-      url: https://learn.microsoft.com/en-us/azure/mariadb/
-  azure.subscription.mariaDbService.database:
-    fields:
-      charset: {}
-      collation: {}
-      id: {}
-      name: {}
-      type: {}
-    is_private: true
-    min_mondoo_version: latest
-    platform:
-      name:
-      - azure
-    refs:
-    - title: Azure Database for MariaDB documentation
-      url: https://learn.microsoft.com/en-us/azure/mariadb/
-  azure.subscription.mariaDbService.server:
-    fields:
-      configuration: {}
-      databases: {}
-      firewallRules: {}
-      id: {}
-      location: {}
-      name: {}
-      properties: {}
-      tags: {}
-      type: {}
-    is_private: true
-    min_mondoo_version: latest
-    platform:
-      name:
-      - azure
-    refs:
-    - title: Azure Database for MariaDB documentation
-      url: https://learn.microsoft.com/en-us/azure/mariadb/
   azure.subscription.monitor:
     fields:
       applicationInsights: {}
@@ -1316,7 +1226,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitor.applicationInsight:
     fields:
@@ -1461,7 +1371,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.mySql:
     fields:
