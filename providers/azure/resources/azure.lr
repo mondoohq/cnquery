@@ -174,6 +174,16 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   dataDisks() []azure.subscription.computeService.disk
   // VM public IP addresses
   publicIpAddresses() []azure.subscription.networkService.ipAddress
+  // Whether encryption at host is enabled for all VM disks
+  encryptionAtHost bool
+  // Security type of the VM ("ConfidentialVM" or "TrustedLaunch")
+  securityType string
+  // Whether UEFI Secure Boot is enabled
+  secureBootEnabled bool
+  // Whether virtual Trusted Platform Module (vTPM) is enabled
+  vtpmEnabled bool
+  // Whether ProxyAgent is enabled on the VM
+  proxyAgentEnabled bool
 }
 
 // Azure compute disk resource
@@ -350,6 +360,10 @@ private azure.subscription.networkService {
   applicationGateways() []azure.subscription.networkService.applicationGateway
   // List of application firewall policies
   applicationFirewallPolicies() []azure.subscription.networkService.applicationFirewallPolicy
+  // List of private endpoints
+  privateEndpoints() []azure.subscription.networkService.privateEndpoint
+  // List of route tables
+  routeTables() []azure.subscription.networkService.routeTable
 }
 
 // Azure Virtual Network (VNet) gateway
@@ -1052,6 +1066,86 @@ azure.subscription.networkService.applicationFirewallPolicy @defaults("id name l
   gateways() []azure.subscription.networkService.applicationGateway
 }
 
+// Azure network private endpoint
+private azure.subscription.networkService.privateEndpoint @defaults("id name location") {
+  // Private endpoint ID
+  id string
+  // Private endpoint name
+  name string
+  // Private endpoint location
+  location string
+  // Private endpoint tags
+  tags map[string]string
+  // Private endpoint type
+  type string
+  // Provisioning state of the private endpoint
+  provisioningState string
+  // Subnet ID from which the private IP is allocated
+  subnetId string
+  // Custom name of the network interface attached to the private endpoint
+  customNetworkInterfaceName string
+  // Private link service connections
+  privateLinkServiceConnections []azure.subscription.networkService.privateEndpoint.serviceconnection
+  // Manually approved private link service connections
+  manualPrivateLinkServiceConnections []azure.subscription.networkService.privateEndpoint.serviceconnection
+}
+
+// Azure network private endpoint service connection
+private azure.subscription.networkService.privateEndpoint.serviceconnection @defaults("name privateLinkServiceId") {
+  // Connection ID
+  id string
+  // Connection name
+  name string
+  // Resource ID of the private link service being connected to
+  privateLinkServiceId string
+  // Group IDs obtained from the remote resource
+  groupIds []string
+  // Connection status ("Approved", "Pending", "Rejected", "Disconnected")
+  connectionStatus string
+  // Message passed to the service owner with this connection request
+  requestMessage string
+}
+
+// Azure network route table
+private azure.subscription.networkService.routeTable @defaults("id name location") {
+  // Route table ID
+  id string
+  // Route table name
+  name string
+  // Route table location
+  location string
+  // Route table tags
+  tags map[string]string
+  // Route table type
+  type string
+  // Route table etag
+  etag string
+  // Whether to disable routes learned by BGP on this route table
+  disableBgpRoutePropagation bool
+  // Provisioning state of the route table
+  provisioningState string
+  // Routes contained in the route table
+  routes []azure.subscription.networkService.route
+}
+
+// Azure network route
+private azure.subscription.networkService.route @defaults("name addressPrefix nextHopType") {
+  // Route ID
+  id string
+  // Route name
+  name string
+  // Destination CIDR to which the route applies
+  addressPrefix string
+  // Type of Azure hop ("Internet", "None", "VirtualAppliance", "VirtualNetworkGateway", "VnetLocal")
+  nextHopType string
+  // IP address packets should be forwarded to (only for VirtualAppliance)
+  nextHopIpAddress string
+  // Whether this route overrides overlapping BGP routes
+  hasBgpOverride bool
+  // Provisioning state of the route
+  provisioningState string
+}
+
 // Azure Storage
 private azure.subscription.storageService {
   // Subscription identifier
@@ -1334,6 +1428,8 @@ private azure.subscription.webService.appsite @defaults("id name location") {
   scm() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
   // Private endpoint connections for the web app site
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Whether end-to-end encryption is enabled between FrontEnd and Worker
+  endToEndEncryptionEnabled bool
 }
 
 // Azure private endpoint connection
@@ -1456,6 +1552,8 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
   http20Enabled bool
   // Whether the app should always be loaded
   alwaysOn bool
+  // Minimum strength TLS cipher suite allowed for the application
+  minTlsCipherSuite string
 }
 
 // Azure App Service Hosting Environment
@@ -1673,8 +1771,48 @@ private azure.subscription.sqlService.database @defaults("name edition zoneRedun
   connectionPolicy() dict
   // SQL database auditing policy
   auditingPolicy() dict
+  // SQL database advanced threat protection settings
+  advancedThreatProtection() azure.subscription.sqlService.database.advancedthreatprotection
+  // SQL database backup short-term retention policy
+  backupShortTermRetentionPolicy() azure.subscription.sqlService.database.backupshorttermretentionpolicy
+  // SQL database backup long-term retention policy
+  longTermRetentionPolicy() azure.subscription.sqlService.database.longtermretentionpolicy
   // SQL database usage
   usage() []azure.subscription.sqlService.databaseusage
+}
+
+// Azure SQL Database advanced threat protection settings
+private azure.subscription.sqlService.database.advancedthreatprotection @defaults("state") {
+  // Resource ID
+  id string
+  // Threat protection state ("Enabled", "Disabled", or "New")
+  state string
+  // UTC creation time of the policy
+  creationTime time
+}
+
+// Azure SQL Database backup short-term retention policy
+private azure.subscription.sqlService.database.backupshorttermretentionpolicy @defaults("retentionDays") {
+  // Resource ID
+  id string
+  // Backup retention period in days (Point-in-Time Restore window)
+  retentionDays int
+  // Differential backup interval in hours (12 or 24)
+  diffBackupIntervalInHours int
+}
+
+// Azure SQL Database backup long-term retention policy
+private azure.subscription.sqlService.database.longtermretentionpolicy @defaults("weeklyRetention monthlyRetention") {
+  // Resource ID
+  id string
+  // Weekly retention in ISO 8601 duration format (e.g. "P1W")
+  weeklyRetention string
+  // Monthly retention in ISO 8601 duration format (e.g. "P1M")
+  monthlyRetention string
+  // Yearly retention in ISO 8601 duration format (e.g. "P1Y")
+  yearlyRetention string
+  // Week of year for the yearly backup (1-52)
+  weekOfYear int
 }
 
 // Azure SQL Database service database usage
@@ -1727,6 +1865,18 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   databases() []azure.subscription.postgreSqlService.database
   // PostgreSQL server firewall rules
   firewallRules() []azure.subscription.sqlService.firewallrule
+  // Whether Microsoft Entra (Active Directory) authentication is enabled ("Enabled" or "Disabled")
+  activeDirectoryAuth string
+  // Whether password-based authentication is enabled ("Enabled" or "Disabled")
+  passwordAuth string
+  // Data encryption type ("SystemManaged" or "AzureKeyVault")
+  dataEncryptionType string
+  // Status of the primary encryption key
+  primaryEncryptionKeyStatus string
+  // Status of the geo-backup encryption key
+  geoBackupEncryptionKeyStatus string
+  // Whether public network access is enabled ("Enabled" or "Disabled")
+  publicNetworkAccess string
 }
 
 // Azure Database for PostgreSQL server
@@ -1987,6 +2137,8 @@ private azure.subscription.cosmosDbService.account @defaults("name kind location
   enableMultipleWriteLocations bool
   // IP address or CIDR ranges allowed by IP firewall rules
   ipRangeFilter []string
+  // Minimum allowed TLS version for the Cosmos DB account
+  minimalTlsVersion string
 }
 
 // Azure Key Vault
@@ -2041,6 +2193,44 @@ private azure.subscription.keyVaultService.vault @defaults("vaultName type vault
   autorotation() []azure.subscription.keyVaultService.key.autorotation
   // Private endpoint connections for the vault
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Vault access policies
+  accessPolicies() []azure.subscription.keyVaultService.vault.accessPolicy
+  // Vault network ACL rules
+  networkAcls() azure.subscription.keyVaultService.vault.networkAcls
+}
+
+// Azure Key Vault vault access policy
+private azure.subscription.keyVaultService.vault.accessPolicy @defaults("objectId") {
+  // Access policy ID (vault ID + object ID)
+  id string
+  // Azure Active Directory object ID of the principal
+  objectId string
+  // Azure Active Directory tenant ID
+  tenantId string
+  // Application ID of the client making request on behalf of a principal
+  applicationId string
+  // Permissions to keys
+  keyPermissions []string
+  // Permissions to secrets
+  secretPermissions []string
+  // Permissions to certificates
+  certificatePermissions []string
+  // Permissions to storage accounts
+  storagePermissions []string
+}
+
+// Azure Key Vault vault network ACL rules
+private azure.subscription.keyVaultService.vault.networkAcls @defaults("defaultAction bypass") {
+  // Network ACLs ID (vault ID + /networkAcls)
+  id string
+  // Whether traffic can bypass network rules ("AzureServices" or "None")
+  bypass string
+  // Default action when no rule matches ("Allow" or "Deny")
+  defaultAction string
+  // List of allowed IP address ranges (CIDR notation)
+  ipRules []string
+  // List of virtual network subnet resource IDs
+  virtualNetworkSubnetIds []string
 }
 
 // Azure Key Vault key auto-rotation
@@ -2521,6 +2711,48 @@ private azure.subscription.aksService.cluster @defaults("name location kubernete
   apiServerAuthorizedIPRanges []string
   // Private DNS zone mode for the AKS cluster
   privateDnsZone string
+  // Whether Microsoft Defender security monitoring is enabled
+  defenderEnabled bool
+  // Whether Image Cleaner is enabled on the cluster
+  imageCleanerEnabled bool
+  // Image Cleaner scanning interval in hours
+  imageCleanerIntervalHours int
+  // Whether workload identity federation is enabled
+  workloadIdentityEnabled bool
+  // Whether Azure Key Vault KMS encryption is enabled
+  azureKeyVaultKmsEnabled bool
+  // Network access mode for Azure Key Vault KMS ("Public" or "Private")
+  azureKeyVaultKmsNetworkAccess string
+  // Whether local accounts are disabled (forces AAD-only auth)
+  disableLocalAccounts bool
+  // Whether public network access is enabled for the cluster ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Azure Active Directory configuration for the cluster
+  aadProfile azure.subscription.aksService.cluster.aadProfile
+  // Auto-upgrade configuration for the cluster
+  autoUpgradeProfile azure.subscription.aksService.cluster.autoUpgradeProfile
+}
+
+// Azure Kubernetes Service cluster AAD profile
+private azure.subscription.aksService.cluster.aadProfile @defaults("managed enableAzureRBAC") {
+  // AAD profile ID
+  id string
+  // Whether managed AAD integration is enabled
+  managed bool
+  // Whether Azure RBAC for Kubernetes authorization is enabled
+  enableAzureRBAC bool
+  // AAD group object IDs with cluster admin role
+  adminGroupObjectIDs []string
+}
+
+// Azure Kubernetes Service cluster auto-upgrade profile
+private azure.subscription.aksService.cluster.autoUpgradeProfile @defaults("upgradeChannel nodeOSUpgradeChannel") {
+  // Auto-upgrade profile ID
+  id string
+  // Auto-upgrade channel ("none", "patch", "stable", "rapid", "node-image")
+  upgradeChannel string
+  // Node OS upgrade channel ("None", "NodeImage", "SecurityPatch", "Unmanaged")
+  nodeOSUpgradeChannel string
 }
 
 // Azure Advisor

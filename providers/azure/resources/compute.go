@@ -79,15 +79,35 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 				return nil, err
 			}
 
+			var encryptionAtHost, secureBootEnabled, vtpmEnabled, proxyAgentEnabled *bool
+			var securityType *string
+			if vm.Properties != nil && vm.Properties.SecurityProfile != nil {
+				sp := vm.Properties.SecurityProfile
+				encryptionAtHost = sp.EncryptionAtHost
+				securityType = (*string)(sp.SecurityType)
+				if sp.UefiSettings != nil {
+					secureBootEnabled = sp.UefiSettings.SecureBootEnabled
+					vtpmEnabled = sp.UefiSettings.VTpmEnabled
+				}
+				if sp.ProxyAgentSettings != nil {
+					proxyAgentEnabled = sp.ProxyAgentSettings.Enabled
+				}
+			}
+
 			mqlAzureVm, err := CreateResource(a.MqlRuntime, "azure.subscription.computeService.vm",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(vm.ID),
-					"name":       llx.StringDataPtr(vm.Name),
-					"location":   llx.StringDataPtr(vm.Location),
-					"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(vm.Zones), types.String),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(vm.Tags), types.String),
-					"type":       llx.StringDataPtr(vm.Type),
-					"properties": llx.DictData(properties),
+					"id":                llx.StringDataPtr(vm.ID),
+					"name":              llx.StringDataPtr(vm.Name),
+					"location":          llx.StringDataPtr(vm.Location),
+					"zones":             llx.ArrayData(convert.SliceStrPtrToInterface(vm.Zones), types.String),
+					"tags":              llx.MapData(convert.PtrMapStrToInterface(vm.Tags), types.String),
+					"type":              llx.StringDataPtr(vm.Type),
+					"properties":        llx.DictData(properties),
+					"encryptionAtHost":  llx.BoolDataPtr(encryptionAtHost),
+					"securityType":      llx.StringDataPtr(securityType),
+					"secureBootEnabled": llx.BoolDataPtr(secureBootEnabled),
+					"vtpmEnabled":       llx.BoolDataPtr(vtpmEnabled),
+					"proxyAgentEnabled": llx.BoolDataPtr(proxyAgentEnabled),
 				})
 			if err != nil {
 				return nil, err

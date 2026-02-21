@@ -94,6 +94,7 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 			var disableKeyBasedMetadataWriteAccess *bool
 			var enableAutomaticFailover *bool
 			var enableMultipleWriteLocations *bool
+			var minimalTlsVersion *string
 			if account.Properties != nil {
 				publicNetworkAccess = (*string)(account.Properties.PublicNetworkAccess)
 				disableLocalAuth = account.Properties.DisableLocalAuth
@@ -101,6 +102,7 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 				disableKeyBasedMetadataWriteAccess = account.Properties.DisableKeyBasedMetadataWriteAccess
 				enableAutomaticFailover = account.Properties.EnableAutomaticFailover
 				enableMultipleWriteLocations = account.Properties.EnableMultipleWriteLocations
+				minimalTlsVersion = (*string)(account.Properties.MinimalTLSVersion)
 			}
 
 			ipRangeFilter := []any{}
@@ -129,6 +131,7 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 					"enableAutomaticFailover":            llx.BoolDataPtr(enableAutomaticFailover),
 					"enableMultipleWriteLocations":       llx.BoolDataPtr(enableMultipleWriteLocations),
 					"ipRangeFilter":                      llx.ArrayData(ipRangeFilter, types.String),
+					"minimalTlsVersion":                  llx.StringDataPtr(minimalTlsVersion),
 				})
 			if err != nil {
 				return nil, err

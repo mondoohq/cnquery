@@ -108,6 +108,7 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		}
 		args["enabled"] = llx.BoolDataPtr(site.Properties.Enabled)
 		args["state"] = llx.StringDataPtr(site.Properties.State)
+		args["endToEndEncryptionEnabled"] = llx.BoolDataPtr(site.Properties.EndToEndEncryptionEnabled)
 	}
 
 	return CreateResource(runtime, resourceType, args)
@@ -610,6 +611,9 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscr
 		args["remoteDebuggingEnabled"] = llx.BoolDataPtr(entry.Properties.RemoteDebuggingEnabled)
 		args["http20Enabled"] = llx.BoolDataPtr(entry.Properties.Http20Enabled)
 		args["alwaysOn"] = llx.BoolDataPtr(entry.Properties.AlwaysOn)
+		if entry.Properties.MinTLSCipherSuite != nil {
+			args["minTlsCipherSuite"] = llx.StringData(string(*entry.Properties.MinTLSCipherSuite))
+		}
 	}
 
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteconfig, args)

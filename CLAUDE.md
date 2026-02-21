@@ -189,15 +189,6 @@ go test -v ./providers/core/...
 
 Step 3 is the core of the work here (e.g. doing the ticket's local dev work). The start and end should wrap 3.
 
-### Performance Monitoring with Prometheus and Grafana
-When debugging performance issues, you can monitor memory and CPU usage:
-1. Install Prometheus (macOS: `brew install prometheus`)
-2. Start monitoring stack: `make metrics/start`
-3. Configure Grafana at http://localhost:3000 (one-time setup):
-    - Add Prometheus data source (URL: `http://host.docker.internal:9009`)
-    - Import a Go profiling dashboard (e.g., Grafana dashboard #10826)
-4. Run mql with metrics enabled: `DEBUG=1 mql run local -c "asset"`
-
 ### Remote Debugging
 For providers that need to run on specific VMs (e.g., GCP snapshot scanning):
 1. Install Go and Delve on the remote VM
