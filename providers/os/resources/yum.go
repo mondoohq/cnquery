@@ -62,7 +62,6 @@ func (y *mqlYum) repos() ([]any, error) {
 			"status":   llx.StringData(repo.Status),
 			"baseurl":  llx.ArrayData(llx.TArr2Raw(repo.Baseurl), types.String),
 			"expire":   llx.StringData(repo.Expire),
-			"filename": llx.StringData(repo.Filename),
 			"file":     llx.ResourceData(f, "file"),
 			"revision": llx.StringData(repo.Revision),
 			"pkgs":     llx.StringData(repo.Pkgs),

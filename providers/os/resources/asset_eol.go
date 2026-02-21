@@ -6,10 +6,10 @@ package resources
 import (
 	"context"
 	"errors"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/mvd"
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/mvd"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
@@ -63,26 +63,6 @@ func initAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 	}
 
 	return nil, &res, nil
-}
-
-// ^^
-
-// FIXME: DEPRECATED, update in v10.0 vv
-func initPlatformEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	res, cache, err := initAssetEol(runtime, args)
-	if err != nil || res != nil || cache == nil {
-		return res, nil, err
-	}
-
-	acache := cache.(*mqlAssetEol)
-	cres := mqlPlatformEol{
-		MqlRuntime: acache.MqlRuntime,
-		DocsUrl:    acache.DocsUrl,
-		ProductUrl: acache.ProductUrl,
-		Date:       acache.Date,
-	}
-
-	return nil, &cres, nil
 }
 
 // ^^

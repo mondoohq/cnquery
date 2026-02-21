@@ -20,8 +20,6 @@ const (
 	ResourceAsset                      string = "asset"
 	ResourceAssetEol                   string = "asset.eol"
 	ResourceMondooEol                  string = "mondoo.eol"
-	ResourcePlatformEol                string = "platform.eol"
-	ResourcePlatform                   string = "platform"
 	ResourceVulnmgmt                   string = "vulnmgmt"
 	ResourceVulnCve                    string = "vuln.cve"
 	ResourceVulnAdvisory               string = "vuln.advisory"
@@ -157,7 +155,6 @@ const (
 	ResourceLaunchd                    string = "launchd"
 	ResourceLaunchdJob                 string = "launchd.job"
 	ResourceWindowsHotfix              string = "windows.hotfix"
-	ResourceWindowsFeature             string = "windows.feature"
 	ResourceWindowsServerFeature       string = "windows.serverFeature"
 	ResourceWindowsOptionalFeature     string = "windows.optionalFeature"
 	ResourceWindowsFirewall            string = "windows.firewall"
@@ -202,14 +199,6 @@ func init() {
 		"mondoo.eol": {
 			// to override args, implement: initMondooEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMondooEol,
-		},
-		"platform.eol": {
-			Init:   initPlatformEol,
-			Create: createPlatformEol,
-		},
-		"platform": {
-			// to override args, implement: initPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createPlatform,
 		},
 		"vulnmgmt": {
 			// to override args, implement: initVulnmgmt(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -751,10 +740,6 @@ func init() {
 			Init:   initWindowsHotfix,
 			Create: createWindowsHotfix,
 		},
-		"windows.feature": {
-			Init:   initWindowsFeature,
-			Create: createWindowsFeature,
-		},
 		"windows.serverFeature": {
 			Init:   initWindowsServerFeature,
 			Create: createWindowsServerFeature,
@@ -969,18 +954,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mondoo.eol.date": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooEol).GetDate()).ToDataRes(types.Time)
-	},
-	"platform.eol.docsUrl": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPlatformEol).GetDocsUrl()).ToDataRes(types.String)
-	},
-	"platform.eol.productUrl": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPlatformEol).GetProductUrl()).ToDataRes(types.String)
-	},
-	"platform.eol.date": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPlatformEol).GetDate()).ToDataRes(types.Time)
-	},
-	"platform.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPlatform).GetVulnerabilityReport()).ToDataRes(types.Dict)
 	},
 	"vulnmgmt.cves": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVulnmgmt).GetCves()).ToDataRes(types.Array(types.Resource("vuln.cve")))
@@ -1474,9 +1447,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"parse.certificates.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseCertificates).GetList()).ToDataRes(types.Array(types.Resource("certificate")))
 	},
-	"parse.openpgp.path": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlParseOpenpgp).GetPath()).ToDataRes(types.String)
-	},
 	"parse.openpgp.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseOpenpgp).GetFile()).ToDataRes(types.Resource("file"))
 	},
@@ -1662,9 +1632,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"sshd.config.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
-	},
-	"sshd.config.content": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSshdConfig).GetContent()).ToDataRes(types.String)
 	},
 	"sshd.config.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
@@ -1950,9 +1917,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.image.size": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerImage).GetSize()).ToDataRes(types.Int)
-	},
-	"docker.image.virtualsize": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDockerImage).GetVirtualsize()).ToDataRes(types.Int)
 	},
 	"docker.image.repoDigests": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerImage).GetRepoDigests()).ToDataRes(types.Array(types.String))
@@ -2503,9 +2467,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"yum.repo.expire": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlYumRepo).GetExpire()).ToDataRes(types.String)
 	},
-	"yum.repo.filename": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlYumRepo).GetFilename()).ToDataRes(types.String)
-	},
 	"yum.repo.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlYumRepo).GetFile()).ToDataRes(types.Resource("file"))
 	},
@@ -2872,9 +2833,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.hotfixes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetHotfixes()).ToDataRes(types.Array(types.Resource("windows.hotfix")))
 	},
-	"windows.features": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindows).GetFeatures()).ToDataRes(types.Array(types.Resource("windows.feature")))
-	},
 	"windows.serverFeatures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetServerFeatures()).ToDataRes(types.Array(types.Resource("windows.serverFeature")))
 	},
@@ -3027,24 +2985,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.hotfix.installedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsHotfix).GetInstalledBy()).ToDataRes(types.String)
-	},
-	"windows.feature.path": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsFeature).GetPath()).ToDataRes(types.String)
-	},
-	"windows.feature.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsFeature).GetName()).ToDataRes(types.String)
-	},
-	"windows.feature.displayName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsFeature).GetDisplayName()).ToDataRes(types.String)
-	},
-	"windows.feature.description": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsFeature).GetDescription()).ToDataRes(types.String)
-	},
-	"windows.feature.installed": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsFeature).GetInstalled()).ToDataRes(types.Bool)
-	},
-	"windows.feature.installState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsFeature).GetInstallState()).ToDataRes(types.Int)
 	},
 	"windows.serverFeature.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsServerFeature).GetPath()).ToDataRes(types.String)
@@ -3587,30 +3527,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mondoo.eol.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"platform.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatformEol).__id, ok = v.Value.(string)
-		return
-	},
-	"platform.eol.docsUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatformEol).DocsUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"platform.eol.productUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatformEol).ProductUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"platform.eol.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatformEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"platform.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatform).__id, ok = v.Value.(string)
-		return
-	},
-	"platform.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPlatform).VulnerabilityReport, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vulnmgmt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4405,10 +4321,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlParseOpenpgp).__id, ok = v.Value.(string)
 		return
 	},
-	"parse.openpgp.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlParseOpenpgp).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"parse.openpgp.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseOpenpgp).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -4711,10 +4623,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"sshd.config.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfig).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"sshd.config.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSshdConfig).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"sshd.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5199,10 +5107,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.image.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerImage).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"docker.image.virtualsize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDockerImage).Virtualsize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"docker.image.repoDigests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6093,10 +5997,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlYumRepo).Expire, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"yum.repo.filename": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlYumRepo).Filename, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"yum.repo.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlYumRepo).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -6649,10 +6549,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindows).Hotfixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"windows.features": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindows).Features, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"windows.serverFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindows).ServerFeatures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -6879,34 +6775,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.hotfix.installedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsHotfix).InstalledBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"windows.feature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsFeature).__id, ok = v.Value.(string)
-		return
-	},
-	"windows.feature.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsFeature).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"windows.feature.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsFeature).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"windows.feature.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsFeature).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"windows.feature.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsFeature).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"windows.feature.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsFeature).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"windows.feature.installState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsFeature).InstallState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.serverFeature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7867,106 +7735,6 @@ func (c *mqlMondooEol) GetVersion() *plugin.TValue[string] {
 func (c *mqlMondooEol) GetDate() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.Date, func() (*time.Time, error) {
 		return c.date()
-	})
-}
-
-// mqlPlatformEol for the platform.eol resource
-type mqlPlatformEol struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlPlatformEolInternal it will be used here
-	DocsUrl    plugin.TValue[string]
-	ProductUrl plugin.TValue[string]
-	Date       plugin.TValue[*time.Time]
-}
-
-// createPlatformEol creates a new instance of this resource
-func createPlatformEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlPlatformEol{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("platform.eol", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlPlatformEol) MqlName() string {
-	return "platform.eol"
-}
-
-func (c *mqlPlatformEol) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlPlatformEol) GetDocsUrl() *plugin.TValue[string] {
-	return &c.DocsUrl
-}
-
-func (c *mqlPlatformEol) GetProductUrl() *plugin.TValue[string] {
-	return &c.ProductUrl
-}
-
-func (c *mqlPlatformEol) GetDate() *plugin.TValue[*time.Time] {
-	return &c.Date
-}
-
-// mqlPlatform for the platform resource
-type mqlPlatform struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlPlatformInternal it will be used here
-	VulnerabilityReport plugin.TValue[any]
-}
-
-// createPlatform creates a new instance of this resource
-func createPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlPlatform{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("platform", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlPlatform) MqlName() string {
-	return "platform"
-}
-
-func (c *mqlPlatform) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlPlatform) GetVulnerabilityReport() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.VulnerabilityReport, func() (any, error) {
-		return c.vulnerabilityReport()
 	})
 }
 
@@ -10747,7 +10515,6 @@ type mqlParseOpenpgp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlParseOpenpgpInternal it will be used here
-	Path    plugin.TValue[string]
 	File    plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
 	List    plugin.TValue[[]any]
@@ -10788,10 +10555,6 @@ func (c *mqlParseOpenpgp) MqlName() string {
 
 func (c *mqlParseOpenpgp) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlParseOpenpgp) GetPath() *plugin.TValue[string] {
-	return &c.Path
 }
 
 func (c *mqlParseOpenpgp) GetFile() *plugin.TValue[*mqlFile] {
@@ -11858,7 +11621,6 @@ type mqlSshdConfig struct {
 	mqlSshdConfigInternal
 	File            plugin.TValue[*mqlFile]
 	Files           plugin.TValue[[]any]
-	Content         plugin.TValue[string]
 	Params          plugin.TValue[map[string]any]
 	Blocks          plugin.TValue[[]any]
 	Ciphers         plugin.TValue[[]any]
@@ -11939,17 +11701,6 @@ func (c *mqlSshdConfig) GetFiles() *plugin.TValue[[]any] {
 		}
 
 		return c.files(vargFile.Data)
-	})
-}
-
-func (c *mqlSshdConfig) GetContent() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
-		vargFile := c.GetFile()
-		if vargFile.Error != nil {
-			return "", vargFile.Error
-		}
-
-		return c.content(vargFile.Data)
 	})
 }
 
@@ -13742,7 +13493,6 @@ type mqlDockerImage struct {
 	// optional: if you define mqlDockerImageInternal it will be used here
 	Id          plugin.TValue[string]
 	Size        plugin.TValue[int64]
-	Virtualsize plugin.TValue[int64]
 	RepoDigests plugin.TValue[[]any]
 	Tags        plugin.TValue[[]any]
 	Labels      plugin.TValue[map[string]any]
@@ -13791,10 +13541,6 @@ func (c *mqlDockerImage) GetId() *plugin.TValue[string] {
 
 func (c *mqlDockerImage) GetSize() *plugin.TValue[int64] {
 	return &c.Size
-}
-
-func (c *mqlDockerImage) GetVirtualsize() *plugin.TValue[int64] {
-	return &c.Virtualsize
 }
 
 func (c *mqlDockerImage) GetRepoDigests() *plugin.TValue[[]any] {
@@ -16886,7 +16632,6 @@ type mqlYumRepo struct {
 	Status   plugin.TValue[string]
 	Baseurl  plugin.TValue[[]any]
 	Expire   plugin.TValue[string]
-	Filename plugin.TValue[string]
 	File     plugin.TValue[*mqlFile]
 	Revision plugin.TValue[string]
 	Pkgs     plugin.TValue[string]
@@ -16950,10 +16695,6 @@ func (c *mqlYumRepo) GetBaseurl() *plugin.TValue[[]any] {
 
 func (c *mqlYumRepo) GetExpire() *plugin.TValue[string] {
 	return &c.Expire
-}
-
-func (c *mqlYumRepo) GetFilename() *plugin.TValue[string] {
-	return &c.Filename
 }
 
 func (c *mqlYumRepo) GetFile() *plugin.TValue[*mqlFile] {
@@ -18538,7 +18279,6 @@ type mqlWindows struct {
 	// optional: if you define mqlWindowsInternal it will be used here
 	ComputerInfo     plugin.TValue[any]
 	Hotfixes         plugin.TValue[[]any]
-	Features         plugin.TValue[[]any]
 	ServerFeatures   plugin.TValue[[]any]
 	OptionalFeatures plugin.TValue[[]any]
 }
@@ -18594,22 +18334,6 @@ func (c *mqlWindows) GetHotfixes() *plugin.TValue[[]any] {
 		}
 
 		return c.hotfixes()
-	})
-}
-
-func (c *mqlWindows) GetFeatures() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Features, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "features")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.features()
 	})
 }
 
@@ -19165,80 +18889,6 @@ func (c *mqlWindowsHotfix) GetInstalledOn() *plugin.TValue[*time.Time] {
 
 func (c *mqlWindowsHotfix) GetInstalledBy() *plugin.TValue[string] {
 	return &c.InstalledBy
-}
-
-// mqlWindowsFeature for the windows.feature resource
-type mqlWindowsFeature struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlWindowsFeatureInternal it will be used here
-	Path         plugin.TValue[string]
-	Name         plugin.TValue[string]
-	DisplayName  plugin.TValue[string]
-	Description  plugin.TValue[string]
-	Installed    plugin.TValue[bool]
-	InstallState plugin.TValue[int64]
-}
-
-// createWindowsFeature creates a new instance of this resource
-func createWindowsFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlWindowsFeature{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("windows.feature", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlWindowsFeature) MqlName() string {
-	return "windows.feature"
-}
-
-func (c *mqlWindowsFeature) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlWindowsFeature) GetPath() *plugin.TValue[string] {
-	return &c.Path
-}
-
-func (c *mqlWindowsFeature) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlWindowsFeature) GetDisplayName() *plugin.TValue[string] {
-	return &c.DisplayName
-}
-
-func (c *mqlWindowsFeature) GetDescription() *plugin.TValue[string] {
-	return &c.Description
-}
-
-func (c *mqlWindowsFeature) GetInstalled() *plugin.TValue[bool] {
-	return &c.Installed
-}
-
-func (c *mqlWindowsFeature) GetInstallState() *plugin.TValue[int64] {
-	return &c.InstallState
 }
 
 // mqlWindowsServerFeature for the windows.serverFeature resource

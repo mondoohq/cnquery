@@ -161,37 +161,6 @@ func esxiHostProperties(conn *connection.VsphereConnection) (*object.HostSystem,
 	return h, hostInfo, nil
 }
 
-// GetHost returns the information about the current ESXi host
-// Deprecated: use vsphere.host resource instead
-func (v *mqlEsxi) host() (*mqlVsphereHost, error) {
-	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
-	h, hostInfo, err := esxiHostProperties(conn)
-	if err != nil {
-		return nil, err
-	}
-
-	props, err := resourceclient.HostProperties(hostInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	var name string
-	if hostInfo != nil {
-		name = hostInfo.Name
-	}
-
-	mqlHost, err := CreateResource(v.MqlRuntime, "vsphere.host", map[string]*llx.RawData{
-		"moid":          llx.StringData(h.Reference().Encode()),
-		"name":          llx.StringData(name),
-		"properties":    llx.DictData(props),
-		"inventoryPath": llx.StringData(h.InventoryPath),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return mqlHost.(*mqlVsphereHost), nil
-}
-
 func esxiVmProperties(conn *connection.VsphereConnection) (*object.VirtualMachine, *mo.VirtualMachine, error) {
 	vClient := conn.Client()
 	cl := resourceclient.New(vClient)
@@ -223,17 +192,6 @@ func esxiVmProperties(conn *connection.VsphereConnection) (*object.VirtualMachin
 	}
 
 	return vm, vmInfo, nil
-}
-
-func (v *mqlEsxi) vm() (*mqlVsphereVm, error) {
-	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
-
-	vm, vmInfo, err := esxiVmProperties(conn)
-	if err != nil {
-		return nil, err
-	}
-
-	return newMqlVm(v.MqlRuntime, vm, vmInfo)
 }
 
 func (v *mqlEsxiCommand) id() (string, error) {

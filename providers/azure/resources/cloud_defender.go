@@ -679,18 +679,6 @@ func argsFromContactProperties(props *armsecurity.ContactProperties) map[string]
 		}
 		sourceType := *notificationSource.SourceType
 		sources[string(sourceType)] = sourceDict
-
-		if sourceType == armsecurity.SourceTypeAlert {
-			// back-fill alert notifications for backwards compatibility
-			//
-			// This field has two properties, `minimalSeverity` and `state`, that the new type is only missing state.
-			//
-			// https://github.com/Azure/azure-sdk-for-go/blob/sdk/resourcemanager/security/armsecurity/v0.13.0/sdk/resourcemanager/security/armsecurity/models.go#L2404
-			//
-			state := "On"
-			sourceDict["state"] = state
-			args["alertNotifications"] = llx.DictData(sourceDict)
-		}
 	}
 	args["notificationSources"] = llx.DictData(sources)
 

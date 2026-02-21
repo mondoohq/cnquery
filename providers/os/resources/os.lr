@@ -45,24 +45,7 @@ private mondoo.eol {
   date() time
 }
 
-// Deprecated; will be removed in version 13.0
-// Use asset.eol instead.
-platform.eol @defaults("date") {
-  // Documentation URL
-  docsUrl string
-  // Product URL
-  productUrl string
-  // End-of-life date
-  date time
-}
-
-platform {
-  // Deprecated; will be removed in version 13.0
-  // Use vulnmgmt instead
-  vulnerabilityReport() dict
-}
-
-// Vulnerability Information
+// Asset vulnerability information
 vulnmgmt {
   // List of all CVEs affecting the asset
   cves() []vuln.cve
@@ -521,8 +504,6 @@ parse.certificates {
 parse.openpgp {
   []network.openpgp.entity(content)
   init(path string)
-  // Deprecated; use file.path instead
-  path string
   // OpenPGP file
   file file
   // OpenPGP file content
@@ -709,8 +690,6 @@ sshd.config {
   file() file
   // A list of lexically sorted files making up the SSH server configuration
   files(file) []file
-  // Deprecated: Please use `file.content` or `files{content}` instead. This field will be removed in v12.
-  content(file) string
   // Configuration values of this SSH server
   params(file) map[string]string
   // Blocks with match conditions in this SSH server config
@@ -1015,8 +994,6 @@ docker.image {
   id string
   // Image size in kilobytes
   size int
-  // Virtual image size in kilobytes. Deprecated; use size instead
-  virtualsize int
   // Repo digests
   repoDigests []string
   // Tag key value pairs
@@ -1537,8 +1514,6 @@ yum.repo {
   baseurl []string
   // Indicator when the repository will expire
   expire string
-  // Deprecated; use file.path
-  filename string
   // Repository configuration file path
   file file
   // Repository revision
@@ -1864,9 +1839,6 @@ windows {
   // Hotfixes installed on the computer
   hotfixes() []windows.hotfix
 
-  // Deprecated. Use `windows.serverFeatures` instead
-  features() []windows.feature
-
   // Information about Windows Server roles, role services, and features that are available for installation and installed on a specified server.
   serverFeatures() []windows.serverFeature
 
@@ -1996,24 +1968,6 @@ windows.hotfix {
   installedOn time
   // User that installed the hotfix
   installedBy string
-}
-
-// Deprecated. Use `windows.serverFeature` instead
-// Windows feature resource
-private windows.feature {
-  init(name string)
-  // Feature full path
-  path string
-  // Command IDs of role, role service, or feature
-  name string
-  // Feature name
-  displayName string
-  // Feature description
-  description string
-  // Whether the feature is installed
-  installed bool
-  // Feature installation state
-  installState int
 }
 
 // Windows Server feature resource

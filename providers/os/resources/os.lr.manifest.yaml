@@ -1078,7 +1078,6 @@ resources:
       content: {}
       file: {}
       list: {}
-      path: {}
     min_mondoo_version: latest
   parse.plist:
     fields:
@@ -1105,10 +1104,6 @@ resources:
       path: {}
     is_private: true
     min_mondoo_version: latest
-  platform:
-    fields:
-      vulnerabilityReport: {}
-    min_mondoo_version: latest
   platform.advisories:
     fields:
       cvss: {}
@@ -1120,12 +1115,6 @@ resources:
       cvss: {}
       list: {}
       stats: {}
-    min_mondoo_version: 5.15.0
-  platform.eol:
-    fields:
-      date: {}
-      docsUrl: {}
-      productUrl: {}
     min_mondoo_version: 5.15.0
   port:
     fields:
@@ -1319,7 +1308,6 @@ resources:
       blocks:
         min_mondoo_version: latest
       ciphers: {}
-      content: {}
       file: {}
       files:
         min_mondoo_version: latest
@@ -1508,7 +1496,6 @@ resources:
   windows:
     fields:
       computerInfo: {}
-      features: {}
       hotfixes: {}
       optionalFeatures:
         min_mondoo_version: 11.4.86
@@ -1533,21 +1520,6 @@ resources:
       protectionStatus: {}
       version: {}
     min_mondoo_version: 5.35.0
-  windows.feature:
-    fields:
-      description: {}
-      displayName: {}
-      installState: {}
-      installed: {}
-      name: {}
-      path: {}
-    is_private: true
-    min_mondoo_version: 5.15.0
-    snippets:
-    - query: windows.feature('SNMP-Service').installed
-      title: Check that a specific Windows Server feature is installed
-    - query: windows.feature('Windows-Defender').installed == false
-      title: Check that a specific Windows Server feature is not installed
   windows.firewall:
     fields:
       profiles: {}
@@ -1669,7 +1641,6 @@ resources:
       expire: {}
       file:
         min_mondoo_version: 5.18.0
-      filename: {}
       id: {}
       mirrors: {}
       name: {}
