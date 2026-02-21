@@ -105,6 +105,7 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 
 		mqlBucket, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket", map[string]*llx.RawData{
 			"projectId":        llx.StringData(projectId),
+			"location":         llx.StringData(parseLocationFromPath(bucket.Name)),
 			"cmekSettings":     llx.DictData(mqlCmekSettingsDict),
 			"created":          llx.TimeDataPtr(parseTime(bucket.CreateTime)),
 			"description":      llx.StringData(bucket.Description),
@@ -364,7 +365,7 @@ func (g *mqlGcpProjectLoggingserviceBucket) id() (string, error) {
 }
 
 func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
+	if len(args) > 3 {
 		return args, nil, nil
 	}
 
@@ -374,6 +375,7 @@ func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string
 		}
 		if ids := getAssetIdentifier(runtime); ids != nil {
 			args["name"] = llx.StringData(ids.name)
+			args["location"] = llx.StringData(ids.region)
 			args["projectId"] = llx.StringData(ids.project)
 		} else {
 			return nil, nil, errors.New("no asset identifier found")
@@ -393,9 +395,13 @@ func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string
 	}
 
 	nameVal := args["name"].Value.(string)
+	locationVal := ""
+	if args["location"] != nil {
+		locationVal = args["location"].Value.(string)
+	}
 	for _, b := range buckets.Data {
 		bucket := b.(*mqlGcpProjectLoggingserviceBucket)
-		if parseResourceName(bucket.Name.Data) == nameVal {
+		if parseResourceName(bucket.Name.Data) == nameVal && (locationVal == "" || bucket.Location.Data == locationVal) {
 			return args, bucket, nil
 		}
 	}

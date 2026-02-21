@@ -145,6 +145,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 
 		mqlCloudFuncs, err := CreateResource(g.MqlRuntime, "gcp.project.cloudFunction", map[string]*llx.RawData{
 			"projectId":           llx.StringData(projectId),
+			"region":              llx.StringData(parseLocationFromPath(f.Name)),
 			"name":                llx.StringData(parseResourceName(f.Name)),
 			"description":         llx.StringData(f.Description),
 			"sourceArchiveUrl":    llx.StringData(sourceArchiveUrl),
@@ -199,7 +200,7 @@ func (g *mqlGcpProjectCloudFunction) id() (string, error) {
 }
 
 func initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
+	if len(args) > 3 {
 		return args, nil, nil
 	}
 
@@ -209,6 +210,7 @@ func initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.R
 		}
 		if ids := getAssetIdentifier(runtime); ids != nil {
 			args["name"] = llx.StringData(ids.name)
+			args["region"] = llx.StringData(ids.region)
 			args["projectId"] = llx.StringData(ids.project)
 		} else {
 			return nil, nil, errors.New("no asset identifier found")
@@ -228,9 +230,13 @@ func initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	nameVal := args["name"].Value.(string)
+	regionVal := ""
+	if args["region"] != nil {
+		regionVal = args["region"].Value.(string)
+	}
 	for _, f := range funcs.Data {
 		fn := f.(*mqlGcpProjectCloudFunction)
-		if fn.Name.Data == nameVal {
+		if fn.Name.Data == nameVal && (regionVal == "" || fn.Region.Data == regionVal) {
 			return args, fn, nil
 		}
 	}

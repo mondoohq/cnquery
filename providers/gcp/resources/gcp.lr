@@ -2489,6 +2489,8 @@ private gcp.project.loggingservice {
 private gcp.project.loggingservice.bucket @defaults("name") {
   // Project ID
   projectId string
+  // Location where the bucket is stored
+  location string
   // CMEK settings of the log bucket
   cmekSettings dict
   // Creation timestamp
@@ -2606,6 +2608,8 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
 private gcp.project.cloudFunction @defaults("name") {
   // Project ID
   projectId string
+  // Region where the function is deployed
+  region string
   // Cloud function name
   name string
   // Cloud function description
@@ -2687,6 +2691,8 @@ private gcp.project.dataprocService {
 private gcp.project.dataprocService.cluster @defaults("name") {
   // Project ID
   projectId string
+  // Region where the cluster is deployed
+  region string
   // Cluster name
   name string
   // Cluster UUID

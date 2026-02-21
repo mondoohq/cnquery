@@ -347,6 +347,8 @@ resources:
       name: {}
       network: {}
       projectId: {}
+      region:
+        min_mondoo_version: 11.0.146
       runtime: {}
       secretEnvVars: {}
       secretVolumes: {}
@@ -1109,6 +1111,8 @@ resources:
       metrics: {}
       name: {}
       projectId: {}
+      region:
+        min_mondoo_version: 11.0.146
       status: {}
       statusHistory: {}
       uuid: {}
@@ -1914,6 +1918,8 @@ resources:
       description: {}
       indexConfigs: {}
       lifecycleState: {}
+      location:
+        min_mondoo_version: 11.0.146
       locked: {}
       name: {}
       projectId: {}
