@@ -148,6 +148,8 @@ func GetTitleForPlatformName(name string) string {
 		return "GCP Logging Bucket"
 	case "gcp-apikey":
 		return "GCP API Key"
+	case "gcp-iam-service-account":
+		return "GCP IAM Service Account"
 	}
 	return "Google Cloud Platform"
 }
@@ -264,6 +266,13 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "apikeys", region, "key"}
 		default:
 			return []string{"gcp", project, "apikeys", region, "other"}
+		}
+	case "iam":
+		switch objectType {
+		case "service-account":
+			return []string{"gcp", project, "iam", region, "service-account"}
+		default:
+			return []string{"gcp", project, "iam", region, "other"}
 		}
 	default:
 		return []string{"gcp", project, "other"}
