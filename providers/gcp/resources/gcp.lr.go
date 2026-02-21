@@ -3842,6 +3842,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.loggingservice.bucket.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetProjectId()).ToDataRes(types.String)
 	},
+	"gcp.project.loggingservice.bucket.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucket).GetLocation()).ToDataRes(types.String)
+	},
 	"gcp.project.loggingservice.bucket.cmekSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetCmekSettings()).ToDataRes(types.Dict)
 	},
@@ -3977,6 +3980,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudFunction.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetProjectId()).ToDataRes(types.String)
 	},
+	"gcp.project.cloudFunction.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunction).GetRegion()).ToDataRes(types.String)
+	},
 	"gcp.project.cloudFunction.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetName()).ToDataRes(types.String)
 	},
@@ -4087,6 +4093,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataprocService.cluster.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceCluster).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceCluster).GetRegion()).ToDataRes(types.String)
 	},
 	"gcp.project.dataprocService.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceCluster).GetName()).ToDataRes(types.String)
@@ -9332,6 +9341,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectLoggingserviceBucket).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.loggingservice.bucket.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucket).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.loggingservice.bucket.cmekSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceBucket).CmekSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -9540,6 +9553,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudFunction).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudFunction.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunction).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudFunction.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9694,6 +9711,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataprocService.cluster.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceCluster).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21533,6 +21554,7 @@ type mqlGcpProjectLoggingserviceBucket struct {
 	__id       string
 	// optional: if you define mqlGcpProjectLoggingserviceBucketInternal it will be used here
 	ProjectId        plugin.TValue[string]
+	Location         plugin.TValue[string]
 	CmekSettings     plugin.TValue[any]
 	Created          plugin.TValue[*time.Time]
 	Description      plugin.TValue[string]
@@ -21584,6 +21606,10 @@ func (c *mqlGcpProjectLoggingserviceBucket) MqlID() string {
 
 func (c *mqlGcpProjectLoggingserviceBucket) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectLoggingserviceBucket) GetLocation() *plugin.TValue[string] {
+	return &c.Location
 }
 
 func (c *mqlGcpProjectLoggingserviceBucket) GetCmekSettings() *plugin.TValue[any] {
@@ -22114,6 +22140,7 @@ type mqlGcpProjectCloudFunction struct {
 	__id       string
 	// optional: if you define mqlGcpProjectCloudFunctionInternal it will be used here
 	ProjectId           plugin.TValue[string]
+	Region              plugin.TValue[string]
 	Name                plugin.TValue[string]
 	Description         plugin.TValue[string]
 	SourceArchiveUrl    plugin.TValue[string]
@@ -22187,6 +22214,10 @@ func (c *mqlGcpProjectCloudFunction) MqlID() string {
 
 func (c *mqlGcpProjectCloudFunction) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectCloudFunction) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 func (c *mqlGcpProjectCloudFunction) GetName() *plugin.TValue[string] {
@@ -22401,6 +22432,7 @@ type mqlGcpProjectDataprocServiceCluster struct {
 	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterInternal it will be used here
 	ProjectId            plugin.TValue[string]
+	Region               plugin.TValue[string]
 	Name                 plugin.TValue[string]
 	Uuid                 plugin.TValue[string]
 	Config               plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfig]
@@ -22450,6 +22482,10 @@ func (c *mqlGcpProjectDataprocServiceCluster) MqlID() string {
 
 func (c *mqlGcpProjectDataprocServiceCluster) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDataprocServiceCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 func (c *mqlGcpProjectDataprocServiceCluster) GetName() *plugin.TValue[string] {

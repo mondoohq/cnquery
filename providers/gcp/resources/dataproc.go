@@ -584,6 +584,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 
 					mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster", map[string]*llx.RawData{
 						"projectId":            llx.StringData(projectId),
+						"region":               llx.StringData(regionName),
 						"name":                 llx.StringData(c.ClusterName),
 						"uuid":                 llx.StringData(c.ClusterUuid),
 						"config":               llx.ResourceData(mqlConfig, "gcp.project.dataprocService.cluster.config"),
@@ -641,7 +642,7 @@ func (g *mqlGcpProjectDataprocServiceCluster) id() (string, error) {
 }
 
 func initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
+	if len(args) > 3 {
 		return args, nil, nil
 	}
 
@@ -651,6 +652,7 @@ func initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[stri
 		}
 		if ids := getAssetIdentifier(runtime); ids != nil {
 			args["name"] = llx.StringData(ids.name)
+			args["region"] = llx.StringData(ids.region)
 			args["projectId"] = llx.StringData(ids.project)
 		} else {
 			return nil, nil, errors.New("no asset identifier found")
@@ -671,9 +673,13 @@ func initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[stri
 	}
 
 	nameVal := args["name"].Value.(string)
+	regionVal := ""
+	if args["region"] != nil {
+		regionVal = args["region"].Value.(string)
+	}
 	for _, c := range clusters.Data {
 		cluster := c.(*mqlGcpProjectDataprocServiceCluster)
-		if cluster.Name.Data == nameVal {
+		if cluster.Name.Data == nameVal && (regionVal == "" || cluster.Region.Data == regionVal) {
 			return args, cluster, nil
 		}
 	}
