@@ -19,6 +19,10 @@ alias gcloud.sql.instance = gcp.project.sqlService.instance
 alias gcp.dns = gcp.project.dnsService
 alias gcp.bigquery = gcp.project.bigqueryService
 alias gcp.storage = gcp.project.storageService
+alias gcp.firestore = gcp.project.firestoreService
+alias gcp.spanner = gcp.project.spannerService
+alias gcp.bigtable = gcp.project.bigtableService
+alias gcp.alloydb = gcp.project.alloydbService
 
 // Google Cloud (GCP) organization
 gcp.organization @defaults("name") {
@@ -439,6 +443,14 @@ gcp.project @defaults("name") {
   redis() gcp.project.redisService
   // GCP Secret Manager resources
   secretmanager() gcp.project.secretmanagerService
+  // GCP Firestore resources
+  firestore() gcp.project.firestoreService
+  // GCP Spanner resources
+  spanner() gcp.project.spannerService
+  // GCP Bigtable resources
+  bigtable() gcp.project.bigtableService
+  // GCP AlloyDB resources
+  alloydb() gcp.project.alloydbService
 }
 
 // Google Cloud (GCP) service
@@ -3342,4 +3354,426 @@ private gcp.project.secretmanagerService.secret.version @defaults("name state") 
   scheduledDestroyTime time
   // Customer-managed encryption status
   customerManagedEncryption dict
+}
+
+// Google Cloud (GCP) Firestore resources
+private gcp.project.firestoreService {
+  // Project ID
+  projectId string
+  // List of Firestore databases in the project
+  databases() []gcp.project.firestoreService.database
+}
+
+// Google Cloud (GCP) Firestore database
+private gcp.project.firestoreService.database @defaults("name") {
+  // Project ID
+  projectId string
+  // Resource name of the database
+  name string
+  // UID of the database
+  uid string
+  // Location of the database
+  locationId string
+  // Type of the database (FIRESTORE_NATIVE or DATASTORE_MODE)
+  type string
+  // Concurrency control mode
+  concurrencyMode string
+  // App Engine integration mode
+  appEngineIntegrationMode string
+  // Whether point-in-time recovery is enabled
+  pointInTimeRecoveryEnablement string
+  // Delete protection state
+  deleteProtectionState string
+  // Customer-managed encryption key configuration
+  cmekConfig dict
+  // Version retention period
+  versionRetentionPeriod string
+  // Earliest timestamp to which the database can be restored
+  earliestVersionTime time
+  // ETag for optimistic concurrency control
+  etag string
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Spanner resources
+private gcp.project.spannerService {
+  // Project ID
+  projectId string
+  // List of Spanner instances in the project
+  instances() []gcp.project.spannerService.instance
+}
+
+// Google Cloud (GCP) Spanner instance
+private gcp.project.spannerService.instance @defaults("name") {
+  // Project ID
+  projectId string
+  // Resource name of the instance
+  name string
+  // Display name of the instance
+  displayName string
+  // Instance configuration reference
+  config string
+  // Number of nodes allocated to the instance
+  nodeCount int
+  // Number of processing units allocated to the instance
+  processingUnits int
+  // Current state of the instance
+  state string
+  // Instance type (PROVISIONED or FREE_INSTANCE)
+  instanceType string
+  // Labels for the instance
+  labels map[string]string
+  // Cloud Spanner edition
+  edition string
+  // Autoscaling configuration
+  autoscalingConfig dict
+  // Default backup schedule type
+  defaultBackupScheduleType string
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+  // List of databases in this instance
+  databases() []gcp.project.spannerService.instance.database
+  // List of backups in this instance
+  backups() []gcp.project.spannerService.instance.backup
+}
+
+// Google Cloud (GCP) Spanner database
+private gcp.project.spannerService.instance.database @defaults("name") {
+  // Project ID
+  projectId string
+  // Instance name
+  instanceName string
+  // Resource name of the database
+  name string
+  // Current state of the database
+  state string
+  // SQL dialect of the database (GOOGLE_STANDARD_SQL or POSTGRESQL)
+  databaseDialect string
+  // Version retention period
+  versionRetentionPeriod string
+  // Earliest timestamp to which the database can be restored
+  earliestVersionTime time
+  // Encryption configuration
+  encryptionConfig dict
+  // Encryption information
+  encryptionInfo []dict
+  // Default leader region
+  defaultLeader string
+  // Whether drop protection is enabled
+  enableDropProtection bool
+  // Whether the database is in a reconciling state
+  reconciling bool
+  // Creation time
+  createdAt time
+}
+
+// Google Cloud (GCP) Spanner backup
+private gcp.project.spannerService.instance.backup @defaults("name") {
+  // Project ID
+  projectId string
+  // Instance name
+  instanceName string
+  // Resource name of the backup
+  name string
+  // Source database of the backup
+  database string
+  // Current state of the backup
+  state string
+  // Expiration time
+  expireTime time
+  // Version time of the backup
+  versionTime time
+  // Creation time
+  createdAt time
+  // Size of the backup in bytes
+  sizeBytes int
+  // Encryption information
+  encryptionInfo dict
+  // Database dialect
+  databaseDialect string
+  // Maximum expiration time
+  maxExpireTime time
+}
+
+// Google Cloud (GCP) Bigtable resources
+private gcp.project.bigtableService {
+  // Project ID
+  projectId string
+  // List of Bigtable instances in the project
+  instances() []gcp.project.bigtableService.instance
+}
+
+// Google Cloud (GCP) Bigtable instance
+private gcp.project.bigtableService.instance @defaults("name") {
+  // Project ID
+  projectId string
+  // Resource name of the instance
+  name string
+  // Display name of the instance
+  displayName string
+  // Current state of the instance
+  state string
+  // Instance type (PRODUCTION or DEVELOPMENT)
+  instanceType string
+  // Labels for the instance
+  labels map[string]string
+  // Creation time
+  createdAt time
+  // List of clusters in this instance
+  clusters() []gcp.project.bigtableService.cluster
+  // List of app profiles in this instance
+  appProfiles() []gcp.project.bigtableService.appProfile
+  // List of tables in this instance
+  tables() []gcp.project.bigtableService.table
+  // List of backups across all clusters in this instance
+  backups() []gcp.project.bigtableService.backup
+}
+
+// Google Cloud (GCP) Bigtable cluster
+private gcp.project.bigtableService.cluster @defaults("name") {
+  // Project ID
+  projectId string
+  // Instance name
+  instanceName string
+  // Resource name of the cluster
+  name string
+  // Location of the cluster (zone)
+  location string
+  // Current state of the cluster
+  state string
+  // Number of nodes in the cluster
+  serveNodes int
+  // Default storage type (SSD or HDD)
+  defaultStorageType string
+  // Encryption configuration (CMEK)
+  encryptionConfig dict
+  // Node scaling factor
+  nodeScalingFactor string
+  // Autoscaling configuration
+  autoscalingConfig dict
+}
+
+// Google Cloud (GCP) Bigtable table
+private gcp.project.bigtableService.table @defaults("name") {
+  // Project ID
+  projectId string
+  // Instance name
+  instanceName string
+  // Resource name of the table
+  name string
+  // Column families and their configurations
+  columnFamilies dict
+  // Timestamp granularity
+  granularity string
+  // Whether deletion protection is enabled
+  deletionProtection bool
+  // Automated backup policy
+  automatedBackupPolicy dict
+  // Change stream configuration
+  changeStreamConfig dict
+}
+
+// Google Cloud (GCP) Bigtable app profile
+private gcp.project.bigtableService.appProfile @defaults("name") {
+  // Project ID
+  projectId string
+  // Instance name
+  instanceName string
+  // Resource name of the app profile
+  name string
+  // Description of the app profile
+  description string
+  // Routing policy configuration
+  routingPolicy dict
+  // ETag for optimistic concurrency control
+  etag string
+}
+
+// Google Cloud (GCP) Bigtable backup
+private gcp.project.bigtableService.backup @defaults("name") {
+  // Project ID
+  projectId string
+  // Cluster name
+  clusterName string
+  // Resource name of the backup
+  name string
+  // Source table of the backup
+  sourceTable string
+  // Expiration time
+  expireTime time
+  // Start time
+  startTime time
+  // End time
+  endTime time
+  // Size of the backup in bytes
+  sizeBytes int
+  // Current state of the backup
+  state string
+  // Encryption information
+  encryptionInfo dict
+}
+
+// Google Cloud (GCP) AlloyDB resources
+private gcp.project.alloydbService {
+  // Project ID
+  projectId string
+  // List of AlloyDB clusters in the project
+  clusters() []gcp.project.alloydbService.cluster
+}
+
+// Google Cloud (GCP) AlloyDB cluster
+private gcp.project.alloydbService.cluster @defaults("name") {
+  // Project ID
+  projectId string
+  // Resource name of the cluster
+  name string
+  // Display name of the cluster
+  displayName string
+  // UID of the cluster
+  uid string
+  // Current state of the cluster
+  state string
+  // Cluster type (PRIMARY or SECONDARY)
+  clusterType string
+  // Database version (PostgreSQL engine version)
+  databaseVersion string
+  // Network configuration
+  networkConfig dict
+  // Encryption configuration (CMEK)
+  encryptionConfig dict
+  // Encryption information
+  encryptionInfo dict
+  // Automated backup policy
+  automatedBackupPolicy dict
+  // Continuous backup configuration
+  continuousBackupConfig dict
+  // Continuous backup information
+  continuousBackupInfo dict
+  // SSL configuration
+  sslConfig dict
+  // Labels for the cluster
+  labels map[string]string
+  // Annotations for the cluster
+  annotations map[string]string
+  // Primary cluster configuration
+  primaryConfig dict
+  // Secondary cluster configuration
+  secondaryConfig dict
+  // Maintenance update policy
+  maintenanceUpdatePolicy dict
+  // Maintenance schedule
+  maintenanceSchedule dict
+  // Location of the cluster
+  location string
+  // Whether the cluster is in a reconciling state
+  reconciling bool
+  // ETag for optimistic concurrency control
+  etag string
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+  // List of instances in this cluster
+  instances() []gcp.project.alloydbService.instance
+  // List of backups for this cluster
+  backups() []gcp.project.alloydbService.backup
+}
+
+// Google Cloud (GCP) AlloyDB instance
+private gcp.project.alloydbService.instance @defaults("name") {
+  // Project ID
+  projectId string
+  // Cluster name
+  clusterName string
+  // Resource name of the instance
+  name string
+  // Display name of the instance
+  displayName string
+  // UID of the instance
+  uid string
+  // Current state of the instance
+  state string
+  // Instance type (PRIMARY, READ_POOL, or SECONDARY)
+  instanceType string
+  // Machine configuration
+  machineConfig dict
+  // Availability type (ZONAL or REGIONAL)
+  availabilityType string
+  // GCE zone of the instance
+  gceZone string
+  // IP address of the instance
+  ipAddress string
+  // Public IP address of the instance
+  publicIpAddress string
+  // Database flags
+  databaseFlags map[string]string
+  // Labels for the instance
+  labels map[string]string
+  // Query insights configuration
+  queryInsightsConfig dict
+  // Read pool configuration
+  readPoolConfig dict
+  // Client connection configuration
+  clientConnectionConfig dict
+  // Private Service Connect instance configuration
+  pscInstanceConfig dict
+  // List of available nodes
+  nodes []dict
+  // Writable node information
+  writableNode dict
+  // Whether the instance is in a reconciling state
+  reconciling bool
+  // ETag for optimistic concurrency control
+  etag string
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) AlloyDB backup
+private gcp.project.alloydbService.backup @defaults("name") {
+  // Project ID
+  projectId string
+  // Resource name of the backup
+  name string
+  // Display name of the backup
+  displayName string
+  // UID of the backup
+  uid string
+  // Current state of the backup
+  state string
+  // Backup type
+  type string
+  // Description of the backup
+  description string
+  // Source cluster name
+  clusterName string
+  // Database version
+  databaseVersion string
+  // Encryption configuration
+  encryptionConfig dict
+  // Encryption information
+  encryptionInfo dict
+  // Size of the backup in bytes
+  sizeBytes int
+  // Expiry time
+  expiryTime time
+  // Expiry quantity configuration
+  expiryQuantity dict
+  // Labels for the backup
+  labels map[string]string
+  // ETag for optimistic concurrency control
+  etag string
+  // Whether the backup is in a reconciling state
+  reconciling bool
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
 }
