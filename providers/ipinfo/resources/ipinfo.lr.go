@@ -55,6 +55,9 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 				return x, nil
 			}
 			runtime.Resources.Set(id, res)
+			if rwa, ok := runtime.Resources.(plugin.ResourcesWithArgs); ok {
+				rwa.SetWithArgs(id, res, args)
+			}
 			return res, nil
 		}
 
@@ -76,6 +79,9 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 	}
 
 	runtime.Resources.Set(id, res)
+	if rwa, ok := runtime.Resources.(plugin.ResourcesWithArgs); ok {
+		rwa.SetWithArgs(id, res, args)
+	}
 	return res, nil
 }
 
@@ -103,6 +109,9 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 	}
 
 	runtime.Resources.Set(id, res)
+	if rwa, ok := runtime.Resources.(plugin.ResourcesWithArgs); ok {
+		rwa.SetWithArgs(id, res, args)
+	}
 	return res, nil
 }
 
