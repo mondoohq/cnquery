@@ -4,7 +4,7 @@
 resources:
   azure:
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -17,19 +17,19 @@ resources:
       aks: {}
       authorizationSource: {}
       batch:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
       cache:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
       cloudDefender: {}
       compute: {}
       cosmosDb: {}
       databricks:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
       iam:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
       id: {}
       iot:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
       keyVault: {}
       managedByTenants: {}
       mariaDb: {}
@@ -38,7 +38,7 @@ resources:
       name: {}
       network: {}
       policy:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
       postgreSql: {}
       resourceGroups: {}
       resources: {}
@@ -107,7 +107,7 @@ resources:
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.13
     platform:
       name:
       - azure
@@ -126,7 +126,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.13
     platform:
       name:
       - azure
@@ -139,7 +139,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.13
     platform:
       name:
       - azure
@@ -154,7 +154,7 @@ resources:
       score: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.13
     platform:
       name:
       - azure
@@ -165,7 +165,7 @@ resources:
       scores: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.13
     platform:
       name:
       - azure
@@ -174,7 +174,7 @@ resources:
       clusters: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -204,7 +204,7 @@ resources:
       tags: {}
       workloadAutoScalerProfile: {}
     min_mondoo_version: 7.17.0
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -222,7 +222,7 @@ resources:
       subscriptionId: {}
     is_private: true
     min_mondoo_version: 7.17.0
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -236,17 +236,22 @@ resources:
       addonProfiles: {}
       agentPoolProfiles: {}
       apiServerAccessProfile:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.22
       apiServerAuthorizedIPRanges:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       createdAt: {}
       disableRunCommand:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       dnsPrefix: {}
       enablePrivateCluster:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       enablePrivateClusterPublicFQDN:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       fqdn: {}
       httpProxyConfig: {}
       id: {}
@@ -259,6 +264,7 @@ resources:
       powerState: {}
       privateDnsZone:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       provisioningState: {}
       rbacEnabled: {}
       securityProfile: {}
@@ -267,7 +273,7 @@ resources:
       workloadAutoScalerProfile: {}
     is_private: true
     min_mondoo_version: 7.17.0
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -281,7 +287,7 @@ resources:
       roleDefinitions: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -321,15 +327,18 @@ resources:
   azure.subscription.authorizationService:
     fields:
       managedIdentities:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.1
       roleAssignments:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.1
       roles:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.1
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -350,8 +359,8 @@ resources:
       type: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.1
     platform:
       name:
       - azure
@@ -363,7 +372,7 @@ resources:
       permissions: {}
       scopes: {}
       type:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: latest
     min_provider_version: 11.4.28
@@ -394,8 +403,8 @@ resources:
       accounts: {}
       subscriptionId: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.0
     platform:
       name:
       - azure
@@ -427,8 +436,8 @@ resources:
       publicNetworkAccess: {}
       tags: {}
       type: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.0
     platform:
       name:
       - azure
@@ -444,15 +453,15 @@ resources:
       type: {}
       virtualMachineConfiguration: {}
       vmSize: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.0
     platform:
       name:
       - azure
   azure.subscription.cache:
     fields:
       redisCaches: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -467,7 +476,7 @@ resources:
       properties: {}
       tags: {}
       type: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -482,7 +491,7 @@ resources:
       properties: {}
       tags: {}
       type: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -494,8 +503,8 @@ resources:
       redisCaches: {}
       subscriptionId: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.4
     platform:
       name:
       - azure
@@ -508,7 +517,7 @@ resources:
       name: {}
       properties: {}
       type: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -533,8 +542,8 @@ resources:
       tags: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.4
     platform:
       name:
       - azure
@@ -554,7 +563,7 @@ resources:
       securityContacts: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -569,7 +578,7 @@ resources:
       name: {}
       notificationsByRole: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -579,39 +588,52 @@ resources:
   azure.subscription.cloudDefenderService:
     fields:
       defenderCSPM:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.21
       defenderForApis:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.21
       defenderForAppServices:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       defenderForContainers: {}
       defenderForCosmosDb:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       defenderForKeyVaults:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       defenderForOpenSourceDatabases:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       defenderForResourceManager:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       defenderForServers: {}
       defenderForSqlDatabases:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       defenderForSqlServersOnMachines:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       defenderForStorageAccounts:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       monitoringAgentAutoProvision: {}
       securityContacts: {}
       settingsMCAS:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.31
       settingsSentinel:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.31
       settingsWDATP:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.31
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -626,8 +648,8 @@ resources:
       subPlan: {}
       subscriptionId: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.21
     platform:
       name:
       - azure
@@ -636,8 +658,8 @@ resources:
       isEnabled: {}
       name: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.21
     platform:
       name:
       - azure
@@ -647,8 +669,8 @@ resources:
       pricingTier: {}
       subscriptionId: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.21
     platform:
       name:
       - azure
@@ -659,11 +681,12 @@ resources:
       id: {}
       name: {}
       notificationSources:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.31
       notificationsByRole: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -678,8 +701,8 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.31
     platform:
       name:
       - azure
@@ -689,7 +712,7 @@ resources:
       subscriptionId: {}
       vms: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -709,7 +732,7 @@ resources:
       type: {}
       zones: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -729,7 +752,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -743,7 +766,7 @@ resources:
       vms: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -759,15 +782,17 @@ resources:
       name: {}
       networkAccessPolicy:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       properties: {}
       publicNetworkAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       sku: {}
       tags: {}
       type: {}
       zones: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -790,7 +815,7 @@ resources:
       type: {}
       zones: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -802,7 +827,7 @@ resources:
       accounts: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -819,7 +844,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -832,7 +857,7 @@ resources:
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -843,28 +868,35 @@ resources:
     fields:
       disableKeyBasedMetadataWriteAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       disableLocalAuth:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       enableAutomaticFailover:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       enableMultipleWriteLocations:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       id: {}
       ipRangeFilter:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       isVirtualNetworkFilterEnabled:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       kind: {}
       location: {}
       name: {}
       properties: {}
       publicNetworkAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       tags: {}
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -876,8 +908,8 @@ resources:
       subscriptionId: {}
       workspaces: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.25
     platform:
       name:
       - azure
@@ -890,8 +922,8 @@ resources:
       sku: {}
       tags: {}
       type: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.25
     platform:
       name:
       - azure
@@ -902,7 +934,7 @@ resources:
       name: {}
       properties: {}
       type: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -912,8 +944,8 @@ resources:
       hubs: {}
       subscriptionId: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.0
     platform:
       name:
       - azure
@@ -922,7 +954,7 @@ resources:
       subscriptionId: {}
       vaults: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -944,7 +976,7 @@ resources:
       versions: {}
       x5t: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -966,7 +998,7 @@ resources:
       version: {}
       versions: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -988,7 +1020,7 @@ resources:
       version: {}
       versions: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1009,7 +1041,7 @@ resources:
       vaultName: {}
       vaultUri: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1022,7 +1054,7 @@ resources:
       vaults: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1038,7 +1070,8 @@ resources:
       id: {}
       notBefore: {}
       policy:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.26
       recoveryLevel: {}
       tags: {}
       updated: {}
@@ -1047,7 +1080,7 @@ resources:
       x5t: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1060,8 +1093,8 @@ resources:
       keyProperties: {}
       x509CertificateProperties: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.26
     platform:
       name:
       - azure
@@ -1071,8 +1104,8 @@ resources:
       certificateType: {}
       name: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.26
     platform:
       name:
       - azure
@@ -1084,8 +1117,8 @@ resources:
       keyType: {}
       reuseKey: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.26
     platform:
       name:
       - azure
@@ -1096,8 +1129,8 @@ resources:
       subject: {}
       validityInMonths: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.26
     platform:
       name:
       - azure
@@ -1112,14 +1145,15 @@ resources:
       notBefore: {}
       recoveryLevel: {}
       rotationPolicy:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.23
       tags: {}
       updated: {}
       version: {}
       versions: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1131,8 +1165,8 @@ resources:
       enabled: {}
       kid: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.1
     platform:
       name:
       - azure
@@ -1141,7 +1175,7 @@ resources:
       attributes: {}
       enabled: {}
       lifetimeActions: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -1152,8 +1186,8 @@ resources:
       enabled: {}
       lifetimeActions: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.23
     platform:
       name:
       - azure
@@ -1173,7 +1207,7 @@ resources:
       versions: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1183,38 +1217,47 @@ resources:
   azure.subscription.keyVaultService.vault:
     fields:
       autorotation:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.1
       certificates: {}
       diagnosticSettings: {}
       enablePurgeProtection:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       enableSoftDelete:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       enabledForDeployment:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       enabledForDiskEncryption:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       enabledForTemplateDeployment:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       id: {}
       keys: {}
       location: {}
       privateEndpointConnections:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.24
       properties: {}
       publicNetworkAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       rbacAuthorizationEnabled: {}
       secrets: {}
       softDeleteRetentionInDays:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       tags: {}
       type: {}
       vaultName: {}
       vaultUri: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1230,8 +1273,8 @@ resources:
       roleAssignments: {}
       tenantId: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.1
     platform:
       name:
       - azure
@@ -1263,7 +1306,7 @@ resources:
       servers: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1278,7 +1321,7 @@ resources:
       name: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1297,7 +1340,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1310,7 +1353,7 @@ resources:
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1326,7 +1369,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1346,7 +1389,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1360,7 +1403,7 @@ resources:
       logProfiles: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1372,7 +1415,7 @@ resources:
       alerts: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1391,7 +1434,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1408,7 +1451,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1424,7 +1467,7 @@ resources:
       storageAccountId: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1442,7 +1485,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1458,7 +1501,7 @@ resources:
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1471,7 +1514,7 @@ resources:
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1491,7 +1534,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1509,7 +1552,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1526,7 +1569,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1545,7 +1588,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1558,7 +1601,7 @@ resources:
       servers: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1573,7 +1616,7 @@ resources:
       name: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1592,7 +1635,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1611,7 +1654,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1625,7 +1668,7 @@ resources:
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1641,7 +1684,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1661,9 +1704,10 @@ resources:
       type: {}
       version:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1678,22 +1722,27 @@ resources:
       id: {}
       infrastructureEncryption:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       location: {}
       minimalTlsVersion:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       name: {}
       properties: {}
       publicNetworkAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       sslEnforcement:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       tags: {}
       type: {}
       version:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1709,7 +1758,7 @@ resources:
       subscriptionId: {}
       watchers: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1726,7 +1775,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1744,7 +1793,7 @@ resources:
       type: {}
       vm: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1760,7 +1809,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1780,7 +1829,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1795,7 +1844,7 @@ resources:
       name: {}
       properties: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1814,7 +1863,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1839,7 +1888,7 @@ resources:
       type: {}
       version: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -1851,29 +1900,36 @@ resources:
       applicationFirewallPolicies: {}
       applicationGateways: {}
       applicationSecurityGroups:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
       appplicationFirewallPolicies: {}
       bastionHosts: {}
       firewallPolicies:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
       firewalls:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
       interfaces: {}
       loadBalancers:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
       natGateways:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
       publicIpAddresses: {}
       securityGroups: {}
       subscriptionId: {}
       virtualNetworkGateways:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
       virtualNetworks:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
       watchers: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1889,8 +1945,8 @@ resources:
       properties: {}
       tags: {}
       type: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -1908,7 +1964,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.13
     platform:
       name:
       - azure
@@ -1926,9 +1982,10 @@ resources:
       tags: {}
       type: {}
       wafConfiguration:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.3
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.13
     platform:
       name:
       - azure
@@ -1943,8 +2000,8 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -1962,7 +2019,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -1977,8 +2034,8 @@ resources:
       id: {}
       peerWeight: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -1993,8 +2050,8 @@ resources:
       ipConfigurationId: {}
       tunnelIpAddresses: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2020,8 +2077,8 @@ resources:
       tags: {}
       threatIntelMode: {}
       type: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2032,8 +2089,8 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2050,8 +2107,8 @@ resources:
       publicIpAddress: {}
       subnet: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2065,8 +2122,8 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2080,8 +2137,8 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2101,8 +2158,8 @@ resources:
       provisioningState: {}
       tags: {}
       type: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2121,8 +2178,8 @@ resources:
       type: {}
       zones: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2137,8 +2194,8 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2153,8 +2210,8 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2165,20 +2222,23 @@ resources:
     fields:
       enableAcceleratedNetworking:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       enableIPForwarding:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       etag: {}
       id: {}
       location: {}
       name: {}
       primary:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       properties: {}
       tags: {}
       type: {}
       vm: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -2195,7 +2255,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -2219,8 +2279,8 @@ resources:
       sku: {}
       tags: {}
       type: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2235,8 +2295,8 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2255,8 +2315,8 @@ resources:
       tags: {}
       type: {}
       zones: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2271,8 +2331,8 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2287,8 +2347,8 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2309,7 +2369,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -2320,10 +2380,13 @@ resources:
     fields:
       access:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       description:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       destinationAddressPrefix:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       destinationPortRange: {}
       direction: {}
       etag: {}
@@ -2331,16 +2394,20 @@ resources:
       name: {}
       priority:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       properties: {}
       protocol:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       sourceAddressPrefix:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       sourcePortRange:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -2355,14 +2422,15 @@ resources:
       id: {}
       ipConfigurations:
         min_mondoo_version: latest
+        min_provider_version: 9.0.10
       name: {}
       natGateway: {}
       privateEndpointNetworkPolicies: {}
       privateLinkServiceNetworkPolicies: {}
       properties: {}
       type: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2388,10 +2456,13 @@ resources:
     fields:
       dhcpOptions:
         min_mondoo_version: latest
+        min_provider_version: 9.0.10
       enableDdosProtection:
         min_mondoo_version: latest
+        min_provider_version: 9.0.10
       enableVmProtection:
         min_mondoo_version: latest
+        min_provider_version: 9.0.10
       etag: {}
       id: {}
       location: {}
@@ -2400,8 +2471,8 @@ resources:
       subnets: {}
       tags: {}
       type: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2414,7 +2485,7 @@ resources:
       id: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.10
     platform:
       name:
       - azure
@@ -2446,8 +2517,8 @@ resources:
       vpnClientConfiguration: {}
       vpnGatewayGeneration: {}
       vpnType: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2462,8 +2533,8 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2479,9 +2550,10 @@ resources:
       properties: {}
       publicIpAddress:
         min_mondoo_version: latest
+        min_provider_version: 9.0.10
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.8
     platform:
       name:
       - azure
@@ -2495,8 +2567,8 @@ resources:
       name: {}
       properties: {}
       type: {}
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.3
     platform:
       name:
       - azure
@@ -2513,7 +2585,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -2539,7 +2611,7 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -2551,8 +2623,8 @@ resources:
       assignments: {}
       subscriptionId: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.0
     platform:
       name:
       - azure
@@ -2565,8 +2637,8 @@ resources:
       parameters: {}
       scope: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.0
     platform:
       name:
       - azure
@@ -2575,7 +2647,7 @@ resources:
       servers: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2590,7 +2662,7 @@ resources:
       name: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2609,7 +2681,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2623,7 +2695,7 @@ resources:
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -2636,7 +2708,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -2656,9 +2728,10 @@ resources:
       type: {}
       version:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 11.0.9
     platform:
       name:
       - azure
@@ -2670,22 +2743,27 @@ resources:
       id: {}
       infrastructureEncryption:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       location: {}
       minimalTlsVersion:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       name: {}
       properties: {}
       publicNetworkAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       sslEnforcement:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       tags: {}
       type: {}
       version:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -2700,12 +2778,12 @@ resources:
       privateEndpointId: {}
       privateLinkServiceConnectionState: {}
       properties:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
       provisioningState: {}
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 11.4.4
     platform:
       name:
       - azure
@@ -2717,7 +2795,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 11.4.4
     platform:
       name:
       - azure
@@ -2738,7 +2816,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2756,7 +2834,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2768,7 +2846,7 @@ resources:
       servers: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2787,7 +2865,7 @@ resources:
       type: {}
       value: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2826,7 +2904,7 @@ resources:
       usage: {}
       zoneRedundant: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2843,7 +2921,7 @@ resources:
       resourceName: {}
       unit: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2858,7 +2936,7 @@ resources:
       startIpAddress: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2884,7 +2962,7 @@ resources:
       virtualNetworkRules: {}
       vulnerabilityAssessmentSettings: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2901,7 +2979,7 @@ resources:
       tenantId: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2920,7 +2998,7 @@ resources:
       storageContainerSasKey: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2935,7 +3013,7 @@ resources:
       type: {}
       virtualNetworkSubnetId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -2948,7 +3026,7 @@ resources:
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -2968,7 +3046,7 @@ resources:
       value: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3008,7 +3086,7 @@ resources:
       zoneRedundant: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3026,7 +3104,7 @@ resources:
       unit: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3042,7 +3120,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3059,29 +3137,35 @@ resources:
       firewallRules: {}
       fullyQualifiedDomainName:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       id: {}
       location: {}
       minimalTlsVersion:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       name: {}
       properties: {}
       publicNetworkAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       restrictOutboundNetworkAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       securityAlertPolicy: {}
       state:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       tags: {}
       threatDetectionPolicy: {}
       type: {}
       version:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       virtualNetworkRules: {}
       vulnerabilityAssessmentSettings: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3099,7 +3183,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3119,7 +3203,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3135,7 +3219,7 @@ resources:
       virtualNetworkSubnetId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3147,7 +3231,7 @@ resources:
       accounts: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3171,7 +3255,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3186,7 +3270,7 @@ resources:
       properties: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3201,7 +3285,7 @@ resources:
       containerSoftDeletionEnabled: {}
       storageAccountId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3215,7 +3299,7 @@ resources:
       logging: {}
       minuteMetrics: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3231,7 +3315,7 @@ resources:
       version: {}
       write: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3246,7 +3330,7 @@ resources:
       retentionPolicy: {}
       version: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3259,7 +3343,7 @@ resources:
       id: {}
       retentionDays: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3272,7 +3356,7 @@ resources:
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3283,41 +3367,55 @@ resources:
     fields:
       allowBlobPublicAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       allowCrossTenantReplication:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       allowSharedKeyAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       blobProperties: {}
       containers: {}
       dataProtection: {}
       enableHttpsTrafficOnly:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       fileProperties:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.24
       id: {}
       identity: {}
       isHnsEnabled:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       isLocalUserEnabled:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       isSftpEnabled:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       kind: {}
       location: {}
       minimumTlsVersion:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       name: {}
       networkRuleBypass:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       networkRuleDefaultAction:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       networkRuleIpRanges:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       networkRuleVirtualNetworkSubnetIds:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       properties: {}
       publicNetworkAccess:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       queueProperties: {}
       sku: {}
       tableProperties: {}
@@ -3325,7 +3423,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3341,7 +3439,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3357,7 +3455,7 @@ resources:
       storageAccountId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3369,7 +3467,7 @@ resources:
       protocolSettings: {}
       shareDeleteRetentionPolicy: {}
       storageAccountId: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -3378,7 +3476,7 @@ resources:
     fields:
       id: {}
       smb: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -3390,7 +3488,7 @@ resources:
       id: {}
       kerberosTicketEncryption: {}
       versions: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -3402,8 +3500,8 @@ resources:
       kerberosTicketEncryption: {}
       versions: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.24
     platform:
       name:
       - azure
@@ -3411,8 +3509,8 @@ resources:
     fields:
       smb: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.24
     platform:
       name:
       - azure
@@ -3421,7 +3519,7 @@ resources:
       days: {}
       enabled: {}
       id: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -3431,8 +3529,8 @@ resources:
       days: {}
       enabled: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.24
     platform:
       name:
       - azure
@@ -3441,8 +3539,8 @@ resources:
       protocolSettings: {}
       shareDeleteRetentionPolicy: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.24
     platform:
       name:
       - azure
@@ -3454,8 +3552,8 @@ resources:
       logging: {}
       minuteMetrics: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.23
     platform:
       name:
       - azure
@@ -3467,7 +3565,7 @@ resources:
       minuteMetrics: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3481,7 +3579,7 @@ resources:
       write: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3497,7 +3595,7 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3511,7 +3609,7 @@ resources:
       retentionDays: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3524,7 +3622,7 @@ resources:
       availableRuntimes: {}
       subscriptionId: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3548,7 +3646,7 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3563,7 +3661,7 @@ resources:
       properties: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3578,7 +3676,7 @@ resources:
       properties: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.0
     platform:
       name:
       - azure
@@ -3592,11 +3690,12 @@ resources:
       environments:
         min_mondoo_version: 9.0.0
       hostingEnvironments:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.4
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3615,8 +3714,8 @@ resources:
       preferredOs: {}
       runtimeVersion: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.52
     platform:
       name:
       - azure
@@ -3626,20 +3725,27 @@ resources:
       authenticationSettings: {}
       clientCertEnabled:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       clientCertMode:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       configuration: {}
       connectionSettings: {}
       diagnosticSettings:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.0
       enabled:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       ftp:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.31
       functions:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.3
       httpsOnly:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       id: {}
       identity: {}
       kind: {}
@@ -3647,20 +3753,24 @@ resources:
       metadata: {}
       name: {}
       privateEndpointConnections:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.4
       properties: {}
       scm:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.31
       slots:
-        min_mondoo_version: 11.4.28
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.85
       stack: {}
       state:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       tags: {}
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3674,8 +3784,8 @@ resources:
       name: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.31
     platform:
       name:
       - azure
@@ -3688,7 +3798,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3699,22 +3809,27 @@ resources:
     fields:
       alwaysOn:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       ftpsState:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       http20Enabled:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       id: {}
       kind: {}
       minTlsVersion:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       name: {}
       properties: {}
       remoteDebuggingEnabled:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.28
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.28
+    min_provider_version: 9.0.1
     platform:
       name:
       - azure
@@ -3743,8 +3858,8 @@ resources:
       tags: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.85
     platform:
       name:
       - azure
@@ -3777,7 +3892,7 @@ resources:
       userWhitelistedIpRanges: {}
       virtualNetwork: {}
       zoneRedundant: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -3794,7 +3909,7 @@ resources:
       provisioningDetails: {}
       provisioningState: {}
       type: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -3811,7 +3926,7 @@ resources:
       properties: {}
       remoteDebugEnabled: {}
       windowsOutboundIpAddresses: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -3822,7 +3937,7 @@ resources:
       name: {}
       subnet: {}
       type: {}
-    min_mondoo_version: 11.4.28
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.28
     platform:
       name:
@@ -3835,8 +3950,8 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.3
     platform:
       name:
       - azure
@@ -3866,8 +3981,8 @@ resources:
       virtualNetwork: {}
       zoneRedundant: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.4
     platform:
       name:
       - azure
@@ -3878,8 +3993,8 @@ resources:
       subnet: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.28
-    min_provider_version: 11.4.28
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.4
     platform:
       name:
       - azure

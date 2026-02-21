@@ -6,13 +6,13 @@ resources:
     fields:
       plays: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.120
+    min_provider_version: 10.0.0
   ansible.handler:
     fields:
       action: {}
       name: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.120
+    min_provider_version: 10.0.0
   ansible.play:
     fields:
       anyErrorsFatal: {}
@@ -21,7 +21,8 @@ resources:
       becomeMethod: {}
       becomeUser: {}
       gatherFacts:
-        min_mondoo_version: 11.0.120
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.120
       handlers: {}
       hosts: {}
       ignoreUnreachable: {}
@@ -33,7 +34,7 @@ resources:
       tasks: {}
       vars: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.120
+    min_provider_version: 10.0.0
   ansible.task:
     fields:
       action: {}
@@ -51,4 +52,4 @@ resources:
       vars: {}
       when: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.120
+    min_provider_version: 10.0.0

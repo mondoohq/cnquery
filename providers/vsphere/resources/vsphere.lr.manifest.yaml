@@ -7,14 +7,14 @@ resources:
       cpes: {}
       vulnerabilityReport: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.132
+    min_provider_version: 9.1.1
   audit.cvss:
     fields:
       score: {}
       vector: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.132
+    min_provider_version: 9.1.11
   esxi:
     docs:
       desc: |
@@ -24,7 +24,7 @@ resources:
       vm: {}
     maturity: deprecated
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -43,7 +43,7 @@ resources:
       inventoryPath: {}
       result: {}
     min_mondoo_version: 5.27.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -62,7 +62,7 @@ resources:
       vibAcceptanceLevel: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -74,7 +74,7 @@ resources:
       server: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -89,7 +89,7 @@ resources:
       running: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -102,7 +102,7 @@ resources:
       offset: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -119,7 +119,7 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -130,7 +130,7 @@ resources:
       datacenters: {}
       licenses: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -164,7 +164,7 @@ resources:
       properties: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -173,9 +173,11 @@ resources:
     fields:
       clusters: {}
       distributedPortGroups:
-        min_mondoo_version: 11.0.132
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.39
       distributedSwitches:
-        min_mondoo_version: 11.0.132
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.39
       hosts: {}
       inventoryPath: {}
       moid: {}
@@ -183,7 +185,7 @@ resources:
       vms: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -205,12 +207,13 @@ resources:
       snmp: {}
       standardSwitch: {}
       tags:
-        min_mondoo_version: 11.0.132
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.101
       timezone: {}
       vmknics: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -243,7 +246,7 @@ resources:
       used: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -256,10 +259,11 @@ resources:
       name: {}
       properties: {}
       tags:
-        min_mondoo_version: 11.0.132
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.101
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -273,7 +277,7 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -286,7 +290,7 @@ resources:
       properties: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -294,13 +298,14 @@ resources:
   vsphere.vswitch.dvs:
     fields:
       moid:
-        min_mondoo_version: 11.0.132
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.39
       name: {}
       properties: {}
       uplinks: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -311,8 +316,8 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 11.0.132
-    min_provider_version: 11.0.132
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.39
     platform:
       name:
       - vmware-esxi
@@ -327,7 +332,7 @@ resources:
       uplinks: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.0.132
+    min_provider_version: 9.0.0
     platform:
       name:
       - vmware-esxi
@@ -342,7 +347,7 @@ resources:
       worstScore: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.132
+    min_provider_version: 9.1.11
   vuln.cve:
     fields:
       id: {}
@@ -354,7 +359,7 @@ resources:
       worstScore: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.132
+    min_provider_version: 9.1.11
   vuln.package:
     fields:
       arch: {}
@@ -363,7 +368,7 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.132
+    min_provider_version: 9.1.11
   vulnmgmt:
     fields:
       advisories: {}
@@ -372,4 +377,4 @@ resources:
       packages: {}
       stats: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.132
+    min_provider_version: 9.1.11

@@ -12,7 +12,7 @@ resources:
       roles: {}
       users: {}
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
     refs:
     - title: Google Workspace Knowledge Center
       url: https://knowledge.workspace.google.com/
@@ -24,21 +24,21 @@ resources:
       summaryOverride: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 11.0.17
   googleworkspace.calendar.aclRule:
     fields:
       role: {}
       scope: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 11.0.17
   googleworkspace.calendar.aclRule.scope:
     fields:
       type: {}
       value: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 11.0.17
   googleworkspace.connectedApp:
     fields:
       clientId: {}
@@ -48,7 +48,7 @@ resources:
       users: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
   googleworkspace.domain:
     fields:
       creationTime: {}
@@ -57,7 +57,7 @@ resources:
       verified: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
   googleworkspace.group:
     fields:
       adminCreated: {}
@@ -72,7 +72,7 @@ resources:
       settings: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
   googleworkspace.member:
     fields:
       email: {}
@@ -82,7 +82,7 @@ resources:
       user: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
   googleworkspace.orgUnit:
     fields:
       description: {}
@@ -90,7 +90,7 @@ resources:
       name: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
   googleworkspace.report.activity:
     fields:
       actor: {}
@@ -100,14 +100,14 @@ resources:
       ownerDomain: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
   googleworkspace.report.apps:
     fields:
       admin: {}
       drive: {}
     is_private: true
-    min_mondoo_version: 11.1.111
-    min_provider_version: 11.1.111
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.0
   googleworkspace.report.usage:
     fields:
       account: {}
@@ -122,13 +122,13 @@ resources:
       userEmail: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
   googleworkspace.report.users:
     fields:
       list: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
   googleworkspace.role:
     fields:
       description: {}
@@ -139,7 +139,7 @@ resources:
       privileges: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
   googleworkspace.token:
     fields:
       anonymous: {}
@@ -150,7 +150,7 @@ resources:
       userKey: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0
   googleworkspace.user:
     fields:
       agreedToTerms: {}
@@ -176,4 +176,4 @@ resources:
       usageReport: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.1.111
+    min_provider_version: 9.0.0

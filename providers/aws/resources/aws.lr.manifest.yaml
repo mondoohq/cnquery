@@ -10,7 +10,7 @@ resources:
       regions: {}
       vpcs: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -38,22 +38,28 @@ resources:
     fields:
       aliases: {}
       alternateContacts:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.78
       billingContact:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.78
       contactInformation:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.78
       id: {}
       operationsContact:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.78
       organization:
         min_mondoo_version: 6.11.0
       securityContact:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.78
       tags:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.8
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -70,8 +76,8 @@ resources:
       phoneNumber: {}
       title: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.78
     platform:
       name:
       - aws
@@ -83,7 +89,7 @@ resources:
     fields:
       certificates: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -115,26 +121,32 @@ resources:
       createdAt: {}
       domainName: {}
       importedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       issuedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       issuer:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       keyAlgorithm:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       notAfter: {}
       notBefore: {}
       serial:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       source:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       status: {}
       subject: {}
       tags:
         min_mondoo_version: 5.16.0
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -145,7 +157,7 @@ resources:
     fields:
       restApis: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -186,33 +198,40 @@ resources:
         The `aws.apigateway.restapi` resource provides fields representing an individual REST API configured within the AWS account. For usage, read the `aws.apigateway` resource documentation.
     fields:
       apiKeySource:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       arn: {}
       binaryMediaTypes:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       createdAt:
         min_mondoo_version: 9.0.0
       createdDate: {}
       description: {}
       disableExecuteApiEndpoint:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       id: {}
       minimumCompressionSize:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       name: {}
       policy:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       region: {}
       securityPolicy:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       stages: {}
       tags:
         min_mondoo_version: 5.16.0
       version:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -223,37 +242,47 @@ resources:
     fields:
       arn: {}
       cacheClusterEnabled:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       cacheClusterSize:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       cacheClusterStatus:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       clientCertificateId:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       createdDate:
         min_mondoo_version: 9.0.0
       deploymentId: {}
       description: {}
       documentationVersion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       lastUpdatedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       lastUpdatedDate:
         min_mondoo_version: 9.0.0
       methodSettings: {}
       name: {}
       tags:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       tracingEnabled: {}
       variables:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       webAclArn:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -284,7 +313,7 @@ resources:
       namespace: {}
       scalableTargets: {}
     min_mondoo_version: 6.11.1
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -302,8 +331,8 @@ resources:
       stepScalingConfig: {}
       targetTrackingConfig: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.9.0
     platform:
       name:
       - aws
@@ -321,8 +350,8 @@ resources:
       startAt: {}
       timezone: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.9.0
     platform:
       name:
       - aws
@@ -330,23 +359,27 @@ resources:
     fields:
       arn: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
       maxCapacity: {}
       minCapacity: {}
       namespace: {}
       policies:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       region:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       resourceId:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       scalableDimension: {}
       scheduledActions:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       suspendedState: {}
     is_private: true
     min_mondoo_version: 6.11.1
-    min_provider_version: 11.5.113
+    min_provider_version: 11.5.55
     platform:
       name:
       - aws
@@ -360,7 +393,7 @@ resources:
     fields:
       groups: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -385,53 +418,73 @@ resources:
     fields:
       arn: {}
       availabilityZones:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.2
       capacityRebalance:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.2
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.8
       defaultCooldown:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.8
       defaultInstanceWarmup:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.2
       desiredCapacity:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.2
       desiredCapacityType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       healthCheckGracePeriod:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.8
       healthCheckType: {}
       instances:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.2
       launchConfigurationName:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.8
       loadBalancerNames: {}
       maxInstanceLifetime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.2
       maxSize:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.8
       minSize:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.8
       name: {}
       newInstancesProtectedFromScaleIn:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       placementGroup:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       predictedCapacity:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       region:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.6
       tagSpecifications:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.103
       tags:
         min_mondoo_version: 5.16.0
       targetGroups:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
       warmPoolSize:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.9.0
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -444,8 +497,8 @@ resources:
       resourceType: {}
       value: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.103
     platform:
       name:
       - aws
@@ -456,7 +509,7 @@ resources:
     fields:
       vaults: {}
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -479,17 +532,20 @@ resources:
       encryptionKeyArn: {}
       locked: {}
       lockedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.87
       maxRetentionDays:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.87
       minRetentionDays:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.87
       name: {}
       recoveryPoints: {}
       region: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -498,7 +554,8 @@ resources:
       arn: {}
       completionDate: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.87
       createdBy: {}
       creationDate: {}
       encryptionKeyArn: {}
@@ -508,7 +565,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -517,7 +574,7 @@ resources:
       distributions: {}
       functions: {}
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -530,23 +587,28 @@ resources:
       domainName: {}
       enabled: {}
       geoRestrictionType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       httpVersion: {}
       isIPV6Enabled: {}
       lastModifiedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       minimumProtocolVersion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       origins: {}
       priceClass: {}
       status: {}
       viewerProtocolPolicy:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       webAclId:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -560,7 +622,7 @@ resources:
       originPath: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -569,7 +631,8 @@ resources:
       arn: {}
       comment: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.12
       createdTime: {}
       lastModifiedTime: {}
       name: {}
@@ -578,7 +641,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -589,7 +652,7 @@ resources:
     fields:
       trails: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -630,9 +693,11 @@ resources:
       cloudWatchLogsRoleArn: {}
       eventSelectors: {}
       hasCustomEventSelectors:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       hasInsightSelectors:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       includeGlobalServiceEvents: {}
       isMultiRegionTrail: {}
       isOrganizationTrail: {}
@@ -646,7 +711,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -659,7 +724,7 @@ resources:
       logGroups: {}
       metrics: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -688,12 +753,14 @@ resources:
       name: {}
       region: {}
       retentionInDays:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       tags:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.95
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -708,7 +775,7 @@ resources:
       metrics: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -727,7 +794,7 @@ resources:
         min_mondoo_version: 5.17.1
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -742,7 +809,7 @@ resources:
       unit: {}
     is_private: true
     min_mondoo_version: 5.17.1
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -751,7 +818,7 @@ resources:
       name: {}
       value: {}
     min_mondoo_version: 5.17.1
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -772,7 +839,7 @@ resources:
       stateReason: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -784,7 +851,7 @@ resources:
       namespace: {}
       region: {}
     min_mondoo_version: 5.17.1
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -795,7 +862,7 @@ resources:
     fields:
       projects: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -838,15 +905,15 @@ resources:
         min_mondoo_version: 5.16.0
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
   aws.codedeploy:
     fields:
       applications: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.49
     platform:
       name:
       - aws
@@ -863,8 +930,8 @@ resources:
       region: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.49
     platform:
       name:
       - aws
@@ -889,8 +956,8 @@ resources:
       status: {}
       targetInstances: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.49
     platform:
       name:
       - aws
@@ -915,8 +982,8 @@ resources:
       tags: {}
       targetRevision: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.49
     platform:
       name:
       - aws
@@ -926,11 +993,12 @@ resources:
         Use the `aws.config` resource to assess the configuration of the AWS Config service. The resource provides the `.recorders` field, which returns a list of `aws.config.recorder` resources representing all AWS Config recorders configured across all enabled regions, as well as the `.rules` field, which returns a list of `aws.config.rule` resources representing all AWS Config rules configured across all enabled regions in the account.
     fields:
       deliveryChannels:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.2.8
       recorders: {}
       rules: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -964,8 +1032,8 @@ resources:
       s3KeyPrefix: {}
       snsTopicARN: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 10.2.8
     platform:
       name:
       - aws
@@ -985,7 +1053,7 @@ resources:
       roleArn: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -996,18 +1064,22 @@ resources:
     fields:
       arn: {}
       description:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.16
       id:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.16
       name:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.16
       region:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.16
       source: {}
       state: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1018,7 +1090,7 @@ resources:
     fields:
       replicationInstances: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1041,8 +1113,8 @@ resources:
     fields:
       jobs: {}
       sourceServers: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.109
     platform:
       name:
       - aws
@@ -1083,8 +1155,8 @@ resources:
       status: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.109
     platform:
       name:
       - aws
@@ -1103,8 +1175,8 @@ resources:
       sourceServerID: {}
       targetInstanceTypeRightSizingMethod: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.109
     platform:
       name:
       - aws
@@ -1123,8 +1195,8 @@ resources:
       stagingAreaTags: {}
       useDedicatedReplicationServer: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.109
     platform:
       name:
       - aws
@@ -1146,8 +1218,8 @@ resources:
       stagingArea: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.109
     platform:
       name:
       - aws
@@ -1158,12 +1230,13 @@ resources:
     fields:
       backups: {}
       exports:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.9
       globalTables: {}
       limits: {}
       tables: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1201,8 +1274,8 @@ resources:
       table: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.9
     platform:
       name:
       - aws
@@ -1218,7 +1291,7 @@ resources:
         min_mondoo_version: 5.16.0
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1235,7 +1308,7 @@ resources:
       tableMaxWrite: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1248,32 +1321,41 @@ resources:
       backups: {}
       continuousBackups: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.12
       createdTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.6
       deletionProtectionEnabled:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.6
       globalTableVersion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.6
       id:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.6
       items:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.0
       latestStreamArn:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.0
       name: {}
       provisionedThroughput: {}
       region: {}
       sizeBytes:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       sseDescription: {}
       status:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       tags:
         min_mondoo_version: 5.16.0
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1284,9 +1366,11 @@ resources:
     fields:
       ebsEncryptionByDefault: {}
       eips:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.8
       images:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.102
       instances: {}
       internetGateways: {}
       keypairs: {}
@@ -1296,7 +1380,7 @@ resources:
       volumes: {}
       vpnConnections: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1342,8 +1426,8 @@ resources:
       region: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.8
     platform:
       name:
       - aws
@@ -1355,41 +1439,54 @@ resources:
       architecture: {}
       arn: {}
       blockDeviceMappings:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.102
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.4
       deprecatedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.6
       enaSupport:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.31
       encrypted:
         min_mondoo_version: 9.0.0
       id: {}
       imdsSupport:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       launchPermissions:
         min_mondoo_version: latest
+        min_provider_version: 11.5.107
       name: {}
       ownerAlias:
         min_mondoo_version: 5.22.0
       ownerId: {}
       public:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.102
       region:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.102
       rootDeviceType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.102
       state:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.102
       tags:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.102
       tpmSupport:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.31
       virtualizationType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.102
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1401,8 +1498,8 @@ resources:
       noDevice: {}
       virtualName: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.102
     platform:
       name:
       - aws
@@ -1417,8 +1514,8 @@ resources:
       volumeSize: {}
       volumeType: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.102
     platform:
       name:
       - aws
@@ -1430,7 +1527,7 @@ resources:
       userId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 11.5.107
     platform:
       name:
       - aws
@@ -1440,35 +1537,44 @@ resources:
         The `aws.ec2.instance` resource provides fields for assessing the configuration of EC2 instances within an account. For usage, see `aws.ec2` resource documentation.
     fields:
       architecture:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       arn: {}
       detailedMonitoring: {}
       deviceMappings: {}
       disableApiTermination:
         min_mondoo_version: latest
+        min_provider_version: 11.5.106
       ebsOptimized: {}
       enaSupported:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       enclaveEnabled:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       httpEndpoint:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.5
       httpPutResponseHopLimit:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       httpTokens: {}
       hypervisor:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       iamInstanceProfile: {}
       image: {}
       instanceId: {}
       instanceLifecycle:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       instanceStatus: {}
       instanceType: {}
       keypair: {}
       launchTime: {}
       networkInterfaces:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       patchState: {}
       platformDetails:
         min_mondoo_version: 8.11.0
@@ -1480,25 +1586,30 @@ resources:
       publicIp: {}
       region: {}
       rootDeviceName:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       rootDeviceType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       securityGroups: {}
       ssm: {}
       state: {}
       stateReason: {}
       stateTransitionReason: {}
       stateTransitionTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.5
       tags: {}
       tpmSupport:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.10
       vpc: {}
       vpcArn:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.15
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1513,7 +1624,7 @@ resources:
       volumeId: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1526,12 +1637,14 @@ resources:
       attachments: {}
       id: {}
       region:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.12.0
       tags:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.12.0
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1546,7 +1659,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1557,17 +1670,20 @@ resources:
     fields:
       arn: {}
       associations:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.1
       entries: {}
       id: {}
       isDefault:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       region: {}
       tags:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1577,8 +1693,8 @@ resources:
       networkAclId: {}
       subnetId: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.1
     platform:
       name:
       - aws
@@ -1588,18 +1704,21 @@ resources:
         The `aws.ec2.networkacl.entry` resource provides fields for assessing the configuration of network ACL entries within an AWS account. For usage, see `aws.ec2` resource documentation.
     fields:
       cidrBlock:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.8
       egress: {}
       id: {}
       ipv6CidrBlock:
         min_mondoo_version: latest
+        min_provider_version: 9.1.8
       portRange: {}
       ruleAction: {}
       ruleNumber:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.8
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1613,7 +1732,7 @@ resources:
       to: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1634,8 +1753,8 @@ resources:
       tags: {}
       vpc: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - aws
@@ -1656,7 +1775,7 @@ resources:
       vpc: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1671,13 +1790,15 @@ resources:
       ipRanges: {}
       ipv6Ranges: {}
       prefixListIds:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.15
       toPort: {}
       userIdGroupPairs:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.15
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1688,27 +1809,33 @@ resources:
     fields:
       arn: {}
       completionTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.31
       createVolumePermission: {}
       description:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       encrypted:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       id: {}
       kmsKey:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.113
       region: {}
       startTime: {}
       state: {}
       storageTier:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.31
       tags: {}
       volumeId: {}
       volumeSize:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1722,7 +1849,7 @@ resources:
       statusMessage: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1739,22 +1866,27 @@ resources:
       encrypted: {}
       id: {}
       iops:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       kmsKey:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.113
       multiAttachEnabled:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       region: {}
       size:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       state: {}
       tags: {}
       throughput:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.15
       volumeType: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1767,7 +1899,7 @@ resources:
       vgwTelemetry: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1780,7 +1912,7 @@ resources:
       privateRepositories: {}
       publicRepositories: {}
     min_mondoo_version: 7.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1799,20 +1931,23 @@ resources:
       arn: {}
       digest: {}
       lastRecordedPullTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.10
       mediaType: {}
       pushedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.10
       region: {}
       registryId: {}
       repoName: {}
       sizeInBytes:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.10
       tags: {}
       uri: {}
     is_private: true
     min_mondoo_version: 7.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1828,13 +1963,17 @@ resources:
     fields:
       arn: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       encryptionType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       imageScanOnPush:
         min_mondoo_version: 8.19.0
+        min_provider_version: 9.0.9
       imageTagMutability:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       images: {}
       name: {}
       public: {}
@@ -1844,7 +1983,7 @@ resources:
       uri: {}
     is_private: true
     min_mondoo_version: 7.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1860,16 +1999,18 @@ resources:
       services:
         min_mondoo_version: 9.0.0
       taskDefinitions:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.110
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
   aws.ecs.cluster:
     fields:
       activeServicesCount:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.78
       arn: {}
       configuration: {}
       containerInstances: {}
@@ -1880,13 +2021,14 @@ resources:
       registeredContainerInstancesCount: {}
       runningTasksCount: {}
       services:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.114
       status: {}
       tags: {}
       tasks: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1897,19 +2039,23 @@ resources:
       command: {}
       containerName: {}
       cpuUnits:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.78
       image: {}
       logDriver: {}
       memoryHardLimit:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.78
       memorySoftLimit:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.78
       name: {}
       platformFamily: {}
       platformVersion: {}
       publicIp: {}
       reason:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.78
       region: {}
       runtimeId: {}
       status: {}
@@ -1917,7 +2063,7 @@ resources:
       taskDefinitionArn: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1931,7 +2077,7 @@ resources:
       region: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -1952,8 +2098,8 @@ resources:
       taskDefinition: {}
       taskSets: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.114
     platform:
       name:
       - aws
@@ -1969,8 +2115,8 @@ resources:
       minimumHealthyPercent: {}
       strategy: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.114
     platform:
       name:
       - aws
@@ -1979,8 +2125,8 @@ resources:
       enable: {}
       rollback: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.114
     platform:
       name:
       - aws
@@ -1988,8 +2134,8 @@ resources:
     fields:
       awsVpcConfiguration: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.114
     platform:
       name:
       - aws
@@ -1999,8 +2145,8 @@ resources:
       securityGroups: {}
       subnets: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.114
     platform:
       name:
       - aws
@@ -2016,7 +2162,7 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2037,8 +2183,8 @@ resources:
       taskRoleArn: {}
       volumes: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2056,8 +2202,8 @@ resources:
       secrets: {}
       user: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2066,8 +2212,8 @@ resources:
       name: {}
       value: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2076,8 +2222,8 @@ resources:
       logDriver: {}
       options: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2087,8 +2233,8 @@ resources:
       hostPort: {}
       protocol: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2097,8 +2243,8 @@ resources:
       name: {}
       valueFrom: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2106,8 +2252,8 @@ resources:
     fields:
       sizeInGiB: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2118,8 +2264,8 @@ resources:
       host: {}
       name: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2131,8 +2277,8 @@ resources:
       labels: {}
       scope: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2144,8 +2290,8 @@ resources:
       transitEncryption: {}
       transitEncryptionPort: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2154,8 +2300,8 @@ resources:
       accessPointId: {}
       iam: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2163,8 +2309,8 @@ resources:
     fields:
       sourcePath: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.110
     platform:
       name:
       - aws
@@ -2190,8 +2336,8 @@ resources:
       taskDefinition: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.9.0
     platform:
       name:
       - aws
@@ -2201,8 +2347,8 @@ resources:
       securityGroups: {}
       subnets: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.9.0
     platform:
       name:
       - aws
@@ -2213,7 +2359,7 @@ resources:
     fields:
       filesystems: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2252,8 +2398,8 @@ resources:
       rootDirectory: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.109
     platform:
       name:
       - aws
@@ -2264,26 +2410,31 @@ resources:
         \n"
     fields:
       accessPoints:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.109
       arn: {}
       availabilityZone:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       backupPolicy: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       encrypted: {}
       fileSystemPolicy:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.109
       id: {}
       kmsKey: {}
       mountTargets:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.109
       name: {}
       region: {}
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2302,8 +2453,8 @@ resources:
       securityGroups: {}
       subnetId: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.109
     platform:
       name:
       - aws
@@ -2314,7 +2465,7 @@ resources:
     fields:
       clusters: {}
     min_mondoo_version: 5.31.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2334,46 +2485,55 @@ resources:
       status: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.11
     platform:
       name:
       - aws
   aws.eks.cluster:
     fields:
       addons:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.11
       arn: {}
       authenticationMode:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.19
       createdAt: {}
       deletionProtection:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.65
       encryptionConfig: {}
       endpoint: {}
       endpointPrivateAccess:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       endpointPublicAccess:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       iamRole:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.12
       logging: {}
       name: {}
       networkConfig: {}
       nodeGroups:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       platformVersion: {}
       publicAccessCidrs:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       region: {}
       resourcesVpcConfig: {}
       status: {}
       supportType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.19
       tags: {}
       version: {}
     min_mondoo_version: 5.31.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2395,8 +2555,8 @@ resources:
       status: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - aws
@@ -2407,9 +2567,10 @@ resources:
     fields:
       cacheClusters: {}
       serverlessCaches:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.0
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2452,12 +2613,13 @@ resources:
       securityGroups: {}
       snapshotRetentionLimit: {}
       snapshotWindow:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.83
       transitEncryptionEnabled: {}
       transitEncryptionMode: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2477,8 +2639,8 @@ resources:
       snapshotRetentionLimit: {}
       status: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.0
     platform:
       name:
       - aws
@@ -2490,7 +2652,7 @@ resources:
       classicLoadBalancers: {}
       loadBalancers: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2536,32 +2698,42 @@ resources:
       arn: {}
       attributes: {}
       availabilityZones:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.3
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.12
       createdTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
       dnsName: {}
       elbType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.4
       hostedZoneId:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.3
       listenerDescriptions: {}
       name: {}
       region:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.4
       scheme: {}
       securityGroups:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.3
       targetGroups:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       vpc:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.4
       vpcId:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2587,8 +2759,8 @@ resources:
       unhealthyThresholdCount: {}
       vpc: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - aws
@@ -2599,7 +2771,7 @@ resources:
     fields:
       clusters: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2639,7 +2811,7 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2650,7 +2822,7 @@ resources:
     fields:
       domains: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2664,11 +2836,14 @@ resources:
     fields:
       arn: {}
       domainId:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       domainName:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       elasticsearchVersion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       encryptionAtRestEnabled: {}
       endpoint: {}
       name: {}
@@ -2677,7 +2852,7 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2690,7 +2865,7 @@ resources:
       caches: {}
       fileSystems: {}
     min_mondoo_version: 12.0.0
-    min_provider_version: 11.5.113
+    min_provider_version: 11.5.108
     platform:
       name:
       - aws
@@ -2741,7 +2916,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: 12.0.0
-    min_provider_version: 11.5.113
+    min_provider_version: 11.5.108
     platform:
       name:
       - aws
@@ -2761,7 +2936,7 @@ resources:
       vpcId: {}
     is_private: true
     min_mondoo_version: 12.0.0
-    min_provider_version: 11.5.113
+    min_provider_version: 11.5.108
     platform:
       name:
       - aws
@@ -2785,7 +2960,7 @@ resources:
       vpcId: {}
     is_private: true
     min_mondoo_version: 12.0.0
-    min_provider_version: 11.5.113
+    min_provider_version: 11.5.108
     platform:
       name:
       - aws
@@ -2796,9 +2971,10 @@ resources:
     fields:
       detectors: {}
       findings:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.0
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2827,22 +3003,27 @@ resources:
         The `aws.guardduty.detector` resource provides fields for assessing the configuration of individual Amazon GuardDuty Detectors. For usage, read the `aws.guardduty` resource documentation
     fields:
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
       features:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.0
       findingPublishingFrequency: {}
       findings:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.0
       id: {}
       region: {}
       status: {}
       tags:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.0
       updatedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2859,8 +3040,8 @@ resources:
       type: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.0
     platform:
       name:
       - aws
@@ -2875,18 +3056,21 @@ resources:
       credentialReport: {}
       groups: {}
       instanceProfiles:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.1
       oidcProviders:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.94
       policies: {}
       roles: {}
       samlProviders:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.94
       serverCertificates: {}
       users: {}
       virtualMfaDevices: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -2922,8 +3106,8 @@ resources:
     fields:
       analyzers: {}
       findings: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.0
     platform:
       name:
       - aws
@@ -2954,8 +3138,8 @@ resources:
       tags: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.0
     platform:
       name:
       - aws
@@ -2974,8 +3158,8 @@ resources:
       type: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.0
     platform:
       name:
       - aws
@@ -2986,14 +3170,15 @@ resources:
     fields:
       arn: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.25
       id: {}
       inlinePolicies: {}
       name: {}
       usernames: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3006,8 +3191,8 @@ resources:
       instanceProfileName: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.1
     platform:
       name:
       - aws
@@ -3016,7 +3201,7 @@ resources:
       createdAt: {}
     is_private: true
     min_mondoo_version: "10"
-    min_provider_version: 11.5.113
+    min_provider_version: 9.1.26
     platform:
       name:
       - aws
@@ -3029,8 +3214,8 @@ resources:
       thumbprints: {}
       url: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.94
     platform:
       name:
       - aws
@@ -3045,21 +3230,24 @@ resources:
       attachedUsers: {}
       attachmentCount: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.18
       defaultVersion: {}
       description: {}
       id: {}
       isAttachable: {}
       name: {}
       policyId:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.14
       scope: {}
       updatedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.72
       versions: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3070,13 +3258,14 @@ resources:
     fields:
       arn: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.18
       document: {}
       isDefaultVersion: {}
       versionId: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3088,22 +3277,27 @@ resources:
       arn: {}
       assumeRolePolicyDocument: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.18
       description: {}
       id: {}
       lastUsedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
       lastUsedRegion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
       maxSessionDuration:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       name: {}
       permissionsBoundaryArn:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3116,8 +3310,8 @@ resources:
       tags: {}
       validUntil: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.94
     platform:
       name:
       - aws
@@ -3130,18 +3324,20 @@ resources:
       arn: {}
       attachedPolicies: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.18
       groups: {}
       id: {}
       loginProfile:
         min_mondoo_version: "10"
+        min_provider_version: 9.1.26
       name: {}
       passwordLastUsed: {}
       policies: {}
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3166,7 +3362,8 @@ resources:
       cert2Active: {}
       cert2LastRotated: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.18
       mfaActive: {}
       passwordEnabled: {}
       passwordLastChanged: {}
@@ -3176,7 +3373,7 @@ resources:
       user: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3190,7 +3387,7 @@ resources:
       user: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3200,8 +3397,8 @@ resources:
         The `aws.inspector` resource provides fields for assessing the configuration of Amazon Inspector.
     fields:
       coverages: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.1
     platform:
       name:
       - aws
@@ -3225,8 +3422,8 @@ resources:
       statusCode: {}
       statusReason: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.1
     platform:
       name:
       - aws
@@ -3236,8 +3433,8 @@ resources:
       region: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.1
     platform:
       name:
       - aws
@@ -3248,8 +3445,8 @@ resources:
       region: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.1
     platform:
       name:
       - aws
@@ -3260,7 +3457,7 @@ resources:
       scanFrequency: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 11.0.1
     platform:
       name:
       - aws
@@ -3271,7 +3468,7 @@ resources:
     fields:
       keys: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3289,8 +3486,8 @@ resources:
       operations: {}
       retiringPrincipal: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.12.0
     platform:
       name:
       - aws
@@ -3300,28 +3497,35 @@ resources:
         The `aws.kms.key` resource provides fields for assessing the configuration of individual KMS keys. For usage, read the `aws.kms` resource documentation.
     fields:
       aliases:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.84
       arn: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       deletedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       description:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       enabled:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       grants: {}
       id: {}
       keyRotationEnabled: {}
       keyState:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
       metadata: {}
       region: {}
       tags:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.82
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3332,7 +3536,7 @@ resources:
     fields:
       functions: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3342,41 +3546,53 @@ resources:
         The `aws.lambda.function` resource provides fields for assessing the configuration of individual AWS Lambda functions. For usage, read the `aws.lambda` resource documentation.
     fields:
       architectures:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
       arn: {}
       codeSha256:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       concurrency: {}
       description:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       dlqTargetArn: {}
       ephemeralStorageSize:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
       handler:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       lastModifiedAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       memorySize:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
       name: {}
       packageType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       policy: {}
       region: {}
       role:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       runtime:
         min_mondoo_version: 8.28.0
+        min_provider_version: 9.0.1
       tags: {}
       timeout:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       tracingMode:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       urlConfig: {}
       vpcConfig: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3393,8 +3609,8 @@ resources:
       functionUrl: {}
       lastModifiedAt: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.12.0
     platform:
       name:
       - aws
@@ -3404,8 +3620,8 @@ resources:
       customDataIdentifiers: {}
       findings: {}
       sessions: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.82
     platform:
       name:
       - aws
@@ -3425,8 +3641,8 @@ resources:
       status: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.82
     platform:
       name:
       - aws
@@ -3441,8 +3657,8 @@ resources:
       regex: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.82
     platform:
       name:
       - aws
@@ -3464,8 +3680,8 @@ resources:
       type: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.82
     platform:
       name:
       - aws
@@ -3480,8 +3696,8 @@ resources:
       status: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.82
     platform:
       name:
       - aws
@@ -3489,8 +3705,8 @@ resources:
     fields:
       clusters: {}
       instances: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.0
     platform:
       name:
       - aws
@@ -3528,8 +3744,8 @@ resources:
       subnetGroup: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.0
     platform:
       name:
       - aws
@@ -3566,16 +3782,16 @@ resources:
       storageType: {}
       tdeCredentialArn: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.0
     platform:
       name:
       - aws
   aws.opensearch:
     fields:
       domains: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.7.0
     platform:
       name:
       - aws
@@ -3624,23 +3840,25 @@ resources:
       warmType: {}
       zoneAwarenessEnabled: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.7.0
     platform:
       name:
       - aws
   aws.organization:
     fields:
       accounts:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.10
       arn: {}
       featureSet: {}
       id:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.82
       masterAccountEmail: {}
       masterAccountId: {}
     min_mondoo_version: 6.11.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3650,17 +3868,22 @@ resources:
         Use the `aws.rds` resource to assess the configuration of AWS RDS deployments. The resource returns lists of `aws.rds.dbcluster`, `aws.rds.dbinstance`, and `aws.rds.snapshot` resources, each with fields for assessing the configuration of those assets.
     fields:
       allPendingMaintenanceActions:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.0
       clusterParameterGroups:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.39
       clusters:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.2
       instances:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.2
       parameterGroups:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.39
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3689,8 +3912,8 @@ resources:
       target: {}
       timezone: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.10
     platform:
       name:
       - aws
@@ -3702,8 +3925,8 @@ resources:
       name: {}
       parameters: {}
       region: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.39
     platform:
       name:
       - aws
@@ -3714,90 +3937,129 @@ resources:
     fields:
       activityStreamMode:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       activityStreamStatus:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       arn: {}
       autoMinorVersionUpgrade:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       availabilityZones:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.23
       backupRetentionPeriod:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       backupSettings:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.10
       certificateAuthority:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       certificateExpiresAt:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       clusterDbInstanceClass:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.12
       createdTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       databaseInsightsMode:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.52
       deletionProtection:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       endpoint:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.23
       engine:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       engineLifecycleSupport:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.19
       engineVersion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       globalClusterIdentifier:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.52
       hostedZoneId:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.1
       httpEndpointEnabled:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.25
       iamDatabaseAuthentication:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       id: {}
       kmsKey:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.113
       latestRestorableTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.1
       masterUsername:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.1
       members: {}
       monitoringInterval:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.0
       multiAZ:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       networkType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.0
       parameterGroupName:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.39
       performanceInsightsEnabled:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
       port:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.23
       preferredBackupWindow:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.1
       preferredMaintenanceWindow:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.1
       publiclyAccessible:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       region: {}
       securityGroups:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.20
       snapshots: {}
       status:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       storageAllocated:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       storageEncrypted:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       storageIops:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       storageType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       tags: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3808,28 +4070,39 @@ resources:
     fields:
       activityStreamMode:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       activityStreamStatus:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       arn: {}
       autoMinorVersionUpgrade:
         min_mondoo_version: 8.22.0
+        min_provider_version: 9.0.1
       availabilityZone:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.6
       backupRetentionPeriod: {}
       backupSettings:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.10
       certificateAuthority:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       certificateExpiresAt:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       copyTagsToSnapshot:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.12
       createdTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
       customIamInstanceProfile:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       dbInstanceClass:
         min_mondoo_version: 5.19.1
       dbInstanceIdentifier:
@@ -3837,41 +4110,56 @@ resources:
       deletionProtection: {}
       enabledCloudwatchLogsExports: {}
       endpoint:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.23
       engine:
         min_mondoo_version: 5.19.1
       engineLifecycleSupport:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.19
       engineVersion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.6
       enhancedMonitoringResourceArn: {}
       iamDatabaseAuthentication:
         min_mondoo_version: latest
+        min_provider_version: 11.3.0
       id: {}
       kmsKey:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.113
       latestRestorableTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.1
       masterUsername:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.4.1
       monitoringInterval:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.0
       multiAZ: {}
       name: {}
       networkType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.0
       pendingMaintenanceActions:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.0
       performanceInsightsEnabled:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
       performanceInsightsKmsKey:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       port:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.23
       preferredBackupWindow:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.1
       preferredMaintenanceWindow:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.1
       publiclyAccessible: {}
       region: {}
       securityGroups:
@@ -3880,17 +4168,21 @@ resources:
       status:
         min_mondoo_version: 5.19.1
       storageAllocated:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.6
       storageEncrypted: {}
       storageIops:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.6
       storageType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.6
       subnets:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.14
       tags: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3903,9 +4195,9 @@ resources:
       name: {}
       parameters: {}
       region:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 11.5.39
     platform:
       name:
       - aws
@@ -3922,8 +4214,8 @@ resources:
       source: {}
       supportedEngineModes: {}
       value: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.39
     platform:
       name:
       - aws
@@ -3937,8 +4229,8 @@ resources:
       optInStatus: {}
       resourceArn: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.0
     platform:
       name:
       - aws
@@ -3948,30 +4240,37 @@ resources:
         The `aws.rds.snapshot` resource provides fields for assessing the configuration of RDS snapshots. For usage, read the `aws.rds` resource documentation.
     fields:
       allocatedStorage:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       arn: {}
       attributes: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.27
       encrypted: {}
       engine:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       engineVersion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.27
       id: {}
       isClusterSnapshot: {}
       kmsKey:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.113
       port:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.27
       region: {}
       status:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.18
       tags: {}
       type: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -3982,7 +4281,7 @@ resources:
     fields:
       clusters: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4021,42 +4320,54 @@ resources:
       arn: {}
       automatedSnapshotRetentionPeriod: {}
       availabilityZone:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       clusterParameterGroupNames: {}
       clusterRevisionNumber:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       clusterStatus:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       clusterSubnetGroupName:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       clusterVersion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.8
       dbName:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       encrypted: {}
       enhancedVpcRouting:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       logging: {}
       masterUsername:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       name: {}
       nextMaintenanceWindowStartTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       nodeType: {}
       numberOfNodes:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       parameters: {}
       preferredMaintenanceWindow: {}
       publiclyAccessible: {}
       region: {}
       tags: {}
       vpcId:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4067,7 +4378,7 @@ resources:
     fields:
       buckets: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4117,9 +4428,11 @@ resources:
       arn: {}
       cors: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.12
       createdTime:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.8
       defaultLock: {}
       encryption: {}
       exists: {}
@@ -4136,10 +4449,11 @@ resources:
       tags: {}
       versioning: {}
       website:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.6.0
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4158,7 +4472,7 @@ resources:
       name: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4170,7 +4484,7 @@ resources:
       permission: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4180,7 +4494,8 @@ resources:
         Bucket policies grant permission to your Amazon S3 resources
     fields:
       bucketName:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.27
       document: {}
       exists:
         min_mondoo_version: 9.0.0
@@ -4190,7 +4505,7 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4205,8 +4520,8 @@ resources:
       redirectAllRequestsTo: {}
       routingRules: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.6.0
     platform:
       name:
       - aws
@@ -4215,8 +4530,8 @@ resources:
       hostname: {}
       protocol: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.6.0
     platform:
       name:
       - aws
@@ -4225,8 +4540,8 @@ resources:
       condition: {}
       redirect: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.6.0
     platform:
       name:
       - aws
@@ -4235,8 +4550,8 @@ resources:
       httpErrorCodeReturnedEquals: {}
       keyPrefixEquals: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.6.0
     platform:
       name:
       - aws
@@ -4248,8 +4563,8 @@ resources:
       replaceKeyPrefixWith: {}
       replaceKeyWith: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.6.0
     platform:
       name:
       - aws
@@ -4257,7 +4572,7 @@ resources:
     fields:
       accountPublicAccessBlock: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4266,7 +4581,7 @@ resources:
       endpoints: {}
       notebookInstances: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4279,7 +4594,7 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4292,7 +4607,7 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4302,8 +4617,8 @@ resources:
       directInternetAccess: {}
       kmsKey: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.8
     platform:
       name:
       - aws
@@ -4311,7 +4626,7 @@ resources:
     fields:
       secrets: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4319,32 +4634,43 @@ resources:
     fields:
       arn: {}
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       description:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       kmsKey:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.104
       lastAccessedDate:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.114
       lastChangedDate:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       lastRotatedDate:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       name: {}
       nextRotationDate:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       owningService:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.114
       primaryRegion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.13
       rotationEnabled: {}
       rotationLambda:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.114
       rotationRules:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.114
       tags: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4354,8 +4680,8 @@ resources:
       duration: {}
       scheduleExpression: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.5.114
     platform:
       name:
       - aws
@@ -4363,7 +4689,7 @@ resources:
     fields:
       hubs: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4374,7 +4700,7 @@ resources:
       subscribedAt: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4382,7 +4708,7 @@ resources:
     fields:
       topics: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4392,7 +4718,7 @@ resources:
       protocol: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4402,21 +4728,22 @@ resources:
       attributes: {}
       region: {}
       signatureVersion:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.11.0
       subscriptions: {}
       tags:
         min_mondoo_version: 5.23.0
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
   aws.sqs:
     fields:
       queues: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - aws
@@ -4439,8 +4766,8 @@ resources:
       url: {}
       visibilityTimeoutSeconds: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - aws
@@ -4449,7 +4776,7 @@ resources:
       instances: {}
       parameters: {}
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4466,7 +4793,7 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4484,8 +4811,8 @@ resources:
       type: {}
       version: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.9
     platform:
       name:
       - aws
@@ -4493,8 +4820,8 @@ resources:
     fields:
       databases: {}
       tables: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.0
     platform:
       name:
       - aws
@@ -4508,8 +4835,8 @@ resources:
       tableCount: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.0
     platform:
       name:
       - aws
@@ -4524,8 +4851,8 @@ resources:
       retentionProperties: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.0
     platform:
       name:
       - aws
@@ -4533,43 +4860,57 @@ resources:
     fields:
       arn: {}
       cidrBlock:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.6
       dhcpOptionsId:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.115
       endpoints:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.11
       flowLogs: {}
       id: {}
       instanceTenancy:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.6
       internetGatewayBlockMode:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.5.31
       internetGateways:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.12.0
       isDefault: {}
       name:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.2
       natGateways:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.8
       networkAcls:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.12.0
       peeringConnections:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.8
       region: {}
       routeTables:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
       securityGroups:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.12.0
       serviceEndpoints:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.8
       state: {}
       subnets:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.0.5
       tags: {}
       vpnGateways:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.12.0
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4586,35 +4927,42 @@ resources:
       type: {}
       vpc: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.11
     platform:
       name:
       - aws
   aws.vpc.flowlog:
     fields:
       createdAt:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       deliverLogsStatus:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.2.6
       destination:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       destinationType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 10.2.4
       id: {}
       logFormat:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.10.0
       maxAggregationInterval:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       region: {}
       status: {}
       tags: {}
       trafficType:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
       vpc: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4628,8 +4976,8 @@ resources:
       tags: {}
       vpc: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.8
     platform:
       name:
       - aws
@@ -4641,8 +4989,8 @@ resources:
       privateIp: {}
       publicIp: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.8
     platform:
       name:
       - aws
@@ -4655,8 +5003,8 @@ resources:
       status: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.8
     platform:
       name:
       - aws
@@ -4670,26 +5018,30 @@ resources:
       vpc: {}
       vpcId: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.8
     platform:
       name:
       - aws
   aws.vpc.routetable:
     fields:
       arn:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.12.0
       associations:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.15
       id: {}
       region:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.12.0
       routes: {}
       tags:
-        min_mondoo_version: 11.5.113
+        min_mondoo_version: 9.0.0
+        min_provider_version: 9.1.19
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.5.113
+    min_provider_version: 9.0.0
     platform:
       name:
       - aws
@@ -4702,8 +5054,8 @@ resources:
       routeTableId: {}
       subnet: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.15
     platform:
       name:
       - aws
@@ -4723,8 +5075,8 @@ resources:
       type: {}
       vpcEndpointPolicySupported: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.8
     platform:
       name:
       - aws
@@ -4745,8 +5097,8 @@ resources:
       state: {}
       tags: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.0.5
     platform:
       name:
       - aws
@@ -4762,8 +5114,8 @@ resources:
       tags: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.12.0
     platform:
       name:
       - aws
@@ -4773,8 +5125,8 @@ resources:
       ipSets: {}
       ruleGroups: {}
       scope: {}
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4788,8 +5140,8 @@ resources:
       rules: {}
       scope: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4803,8 +5155,8 @@ resources:
       name: {}
       scope: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4817,8 +5169,8 @@ resources:
       priority: {}
       statement: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4828,8 +5180,8 @@ resources:
       responseCode: {}
       ruleName: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4851,8 +5203,8 @@ resources:
       target: {}
       uriPath: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4862,8 +5214,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4873,8 +5225,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4884,8 +5236,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4897,8 +5249,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4910,8 +5262,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4921,8 +5273,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4935,8 +5287,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4947,8 +5299,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4958,8 +5310,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4969,8 +5321,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -4995,8 +5347,8 @@ resources:
       sqliMatchStatement: {}
       xssMatchStatement: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5006,8 +5358,8 @@ resources:
       statementID: {}
       statements: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5018,8 +5370,8 @@ resources:
       searchString: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5029,8 +5381,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5041,8 +5393,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5054,8 +5406,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5066,8 +5418,8 @@ resources:
       scope: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5078,8 +5430,8 @@ resources:
       statementID: {}
       vendorName: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5089,8 +5441,8 @@ resources:
       statement: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5100,15 +5452,15 @@ resources:
       statementID: {}
       statements: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
   aws.waf.rule.statement.ratebasedstatement:
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5119,8 +5471,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5131,8 +5483,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5143,8 +5495,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5156,8 +5508,8 @@ resources:
       size: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5168,8 +5520,8 @@ resources:
       sensitivityLevel: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5179,8 +5531,8 @@ resources:
       ruleName: {}
       statementID: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws
@@ -5193,8 +5545,8 @@ resources:
       rules: {}
       scope: {}
     is_private: true
-    min_mondoo_version: 11.5.113
-    min_provider_version: 11.5.113
+    min_mondoo_version: 9.0.0
+    min_provider_version: 9.1.16
     platform:
       name:
       - aws

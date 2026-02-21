@@ -13,7 +13,7 @@ resources:
       resourcePath: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -30,7 +30,7 @@ resources:
       validationState: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -49,7 +49,7 @@ resources:
       updated: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -63,7 +63,7 @@ resources:
       parentId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -81,7 +81,7 @@ resources:
       projects: {}
       state: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -117,14 +117,15 @@ resources:
       pubsub: {}
       recommendations: {}
       redis:
-        min_mondoo_version: 11.0.146
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.79
       secretmanager: {}
       services: {}
       sql: {}
       state: {}
       storage: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -145,7 +146,7 @@ resources:
       updated: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -162,7 +163,7 @@ resources:
       serverKeyRestrictions: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -175,7 +176,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -200,7 +201,7 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -219,7 +220,7 @@ resources:
       viewRef: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -242,7 +243,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -261,7 +262,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -297,7 +298,7 @@ resources:
       viewQuery: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -309,7 +310,7 @@ resources:
       policy: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 11.0.15
     platform:
       name:
       - gcp
@@ -320,7 +321,7 @@ resources:
       requireAttestationsBy: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 11.0.15
     platform:
       name:
       - gcp
@@ -337,7 +338,7 @@ resources:
       updated: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 11.0.15
     platform:
       name:
       - gcp
@@ -378,7 +379,7 @@ resources:
       vpcConnector: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -394,7 +395,7 @@ resources:
       services: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -411,7 +412,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -434,7 +435,7 @@ resources:
       workingDir: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -452,7 +453,7 @@ resources:
       timeoutSeconds: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -485,7 +486,7 @@ resources:
       updated: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -502,7 +503,7 @@ resources:
       template: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -524,7 +525,7 @@ resources:
       vpcAccess: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -538,7 +539,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -572,7 +573,7 @@ resources:
       uri: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -598,7 +599,7 @@ resources:
       vpcAccess: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -625,7 +626,7 @@ resources:
       zones: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -654,7 +655,7 @@ resources:
       subnetworkUrl: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -680,7 +681,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -724,7 +725,7 @@ resources:
       timeoutSec: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -748,7 +749,7 @@ resources:
       maxUtilization: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -772,7 +773,7 @@ resources:
       signedUrlKeyNames: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -800,7 +801,7 @@ resources:
       zone: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -826,7 +827,7 @@ resources:
       targetServiceAccounts: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -864,7 +865,7 @@ resources:
       targetUrl: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -887,7 +888,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -937,7 +938,7 @@ resources:
       zone: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -959,7 +960,7 @@ resources:
       zone: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -985,7 +986,7 @@ resources:
       subnetworks: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1003,7 +1004,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1022,7 +1023,7 @@ resources:
       nats: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1035,7 +1036,7 @@ resources:
       scopes: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1062,7 +1063,7 @@ resources:
       storageBytesStatus: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1095,7 +1096,7 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1113,7 +1114,7 @@ resources:
       metadataFields: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1129,7 +1130,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1144,7 +1145,7 @@ resources:
       regions: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1164,7 +1165,7 @@ resources:
       virtualClusterConfig: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1192,7 +1193,7 @@ resources:
       worker: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1219,7 +1220,7 @@ resources:
       zoneUri: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1234,7 +1235,7 @@ resources:
       values: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1249,7 +1250,7 @@ resources:
       id: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1263,7 +1264,7 @@ resources:
       nodePoolTarget: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1286,7 +1287,7 @@ resources:
       preemptibility: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1302,7 +1303,7 @@ resources:
       numLocalSsds: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1315,7 +1316,7 @@ resources:
       idleStartTime: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1331,7 +1332,7 @@ resources:
       substate: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1346,7 +1347,7 @@ resources:
       stagingBucket: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1360,7 +1361,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1382,7 +1383,7 @@ resources:
       visibility: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1401,7 +1402,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1418,7 +1419,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1431,7 +1432,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1481,7 +1482,7 @@ resources:
       zone: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1505,7 +1506,7 @@ resources:
       statefulHaConfig: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1526,7 +1527,7 @@ resources:
       useRoutes: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1552,7 +1553,7 @@ resources:
       subnetworkPath: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1562,7 +1563,8 @@ resources:
   gcp.project.gkeService.cluster.nodepool:
     fields:
       autoscaling:
-        min_mondoo_version: 11.0.146
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.82
       config: {}
       id: {}
       initialNodeCount: {}
@@ -1575,7 +1577,7 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1591,8 +1593,8 @@ resources:
       totalMaxNodeCount: {}
       totalMinNodeCount: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.82
     platform:
       name:
       - gcp
@@ -1628,7 +1630,7 @@ resources:
       workloadMetadataMode: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1644,7 +1646,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1658,7 +1660,7 @@ resources:
       strategy: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1671,7 +1673,7 @@ resources:
       threadsPerCore: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1684,7 +1686,7 @@ resources:
       id: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1697,7 +1699,7 @@ resources:
       id: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1710,7 +1712,7 @@ resources:
       id: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1725,7 +1727,7 @@ resources:
       podPidsLimit: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1738,7 +1740,7 @@ resources:
       sysctls: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1753,7 +1755,7 @@ resources:
       value: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1763,7 +1765,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1777,7 +1779,7 @@ resources:
       id: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1792,7 +1794,7 @@ resources:
       podRange: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1805,7 +1807,7 @@ resources:
       totalEgressBandwidthTier: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1818,7 +1820,7 @@ resources:
       serviceAccounts: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1838,7 +1840,7 @@ resources:
       uniqueId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1856,7 +1858,7 @@ resources:
       validBeforeTime: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1870,7 +1872,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1887,7 +1889,7 @@ resources:
       resourcePath: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1912,7 +1914,7 @@ resources:
       versions: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1938,7 +1940,7 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1952,7 +1954,7 @@ resources:
       format: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1967,7 +1969,7 @@ resources:
       googlePartitionCerts: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1981,7 +1983,7 @@ resources:
       externalKeyUri: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -1996,7 +1998,7 @@ resources:
       sinks: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2018,7 +2020,7 @@ resources:
       updated: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2033,7 +2035,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2049,7 +2051,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2067,7 +2069,7 @@ resources:
       writerIdentity: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2080,7 +2082,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2106,7 +2108,7 @@ resources:
       validity: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2121,7 +2123,7 @@ resources:
       topics: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2136,7 +2138,7 @@ resources:
       topic: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2150,7 +2152,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2170,7 +2172,7 @@ resources:
       topic: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2184,7 +2186,7 @@ resources:
       endpoint: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2198,7 +2200,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2214,7 +2216,7 @@ resources:
       topicName: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2227,7 +2229,7 @@ resources:
       configId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2240,8 +2242,8 @@ resources:
       instances: {}
       projectId: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.79
     platform:
       name:
       - gcp
@@ -2276,8 +2278,8 @@ resources:
       uid: {}
       zoneDistributionConfig: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2300,8 +2302,8 @@ resources:
       totalSizeBytes: {}
       uid: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2311,8 +2313,8 @@ resources:
       connections: {}
       projectId: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2330,8 +2332,8 @@ resources:
       pscConnectionStatus: {}
       serviceAttachment: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2343,8 +2345,8 @@ resources:
       port: {}
       projectId: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2354,8 +2356,8 @@ resources:
       network: {}
       projectId: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2372,8 +2374,8 @@ resources:
       pscConnectionStatus: {}
       serviceAttachment: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2416,8 +2418,8 @@ resources:
       tier: {}
       transitEncryptionMode: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.79
     platform:
       name:
       - gcp
@@ -2427,8 +2429,8 @@ resources:
       projectId: {}
       zone: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.79
     platform:
       name:
       - gcp
@@ -2441,8 +2443,8 @@ resources:
       serialNumber: {}
       sha1Fingerprint: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2452,7 +2454,7 @@ resources:
       secrets: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2479,7 +2481,7 @@ resources:
       versions: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2499,7 +2501,7 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 11.1.0
     platform:
       name:
       - gcp
@@ -2512,7 +2514,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2548,7 +2550,7 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2565,7 +2567,7 @@ resources:
       sqlserverDatabaseDetails: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2580,7 +2582,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2620,7 +2622,7 @@ resources:
       userLabels: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2639,7 +2641,7 @@ resources:
       transactionLogRetentionDays: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2654,7 +2656,7 @@ resources:
       time: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2673,7 +2675,7 @@ resources:
       sslMode: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2685,7 +2687,7 @@ resources:
       updateTrack: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2703,7 +2705,7 @@ resources:
       reuseInterval: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2716,7 +2718,7 @@ resources:
       projectId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2727,13 +2729,15 @@ resources:
     fields:
       created: {}
       encryption:
-        min_mondoo_version: 11.0.146
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.57
       iamConfiguration: {}
       iamPolicy: {}
       id: {}
       labels: {}
       lifecycle:
-        min_mondoo_version: 11.0.146
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.79
       location: {}
       locationType: {}
       name: {}
@@ -2744,7 +2748,7 @@ resources:
       updated: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2756,8 +2760,8 @@ resources:
       action: {}
       condition: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.79
     platform:
       name:
       - gcp
@@ -2766,8 +2770,8 @@ resources:
       storageClass: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.79
     platform:
       name:
       - gcp
@@ -2786,8 +2790,8 @@ resources:
       noncurrentTimeBefore: {}
       numNewerVersions: {}
     is_private: true
-    min_mondoo_version: 11.0.146
-    min_provider_version: 11.0.146
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.79
     platform:
       name:
       - gcp
@@ -2798,7 +2802,7 @@ resources:
       parentId: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2820,7 +2824,7 @@ resources:
       state: {}
       zoneName: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2834,7 +2838,7 @@ resources:
       role: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp
@@ -2850,7 +2854,7 @@ resources:
       state: {}
       title: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.146
+    min_provider_version: 9.0.0
     platform:
       name:
       - gcp

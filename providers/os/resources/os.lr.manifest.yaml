@@ -6,17 +6,18 @@ resources:
     fields:
       cpes: {}
       purl:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.1
       vulnerabilityReport: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   asset.eol:
     fields:
       date: {}
       docsUrl: {}
       productUrl: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   audit.advisory:
     fields:
       description: {}
@@ -28,7 +29,7 @@ resources:
       worstScore: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   audit.cve:
     fields:
       id: {}
@@ -41,39 +42,39 @@ resources:
       worstScore: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   audit.cvss:
     fields:
       score: {}
       vector: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   auditd.config:
     fields:
       file: {}
       params: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.3
   auditd.rule:
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.21
   auditd.rule.control:
     fields:
       flag: {}
       value: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.21
   auditd.rule.file:
     fields:
       keyname: {}
       path: {}
       permissions: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.21
   auditd.rule.syscall:
     fields:
       action: {}
@@ -83,14 +84,14 @@ resources:
       list: {}
       syscalls: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.21
   auditd.rule.syscall.field:
     fields:
       key: {}
       op: {}
       value: {}
-    min_mondoo_version: 11.4.86
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.86
   auditd.rules:
     fields:
@@ -98,14 +99,14 @@ resources:
       files: {}
       path: {}
       syscalls: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.21
   auditpol:
     fields:
       list:
         min_mondoo_version: latest
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
     snippets:
     - query: auditpol { inclusionsetting exclusionsetting subcategory }
       title: List all audit policies
@@ -123,7 +124,7 @@ resources:
       subcategory: {}
       subcategoryguid: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   authorizedkeys:
     fields:
       content: {}
@@ -131,7 +132,7 @@ resources:
       list: {}
       path: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   authorizedkeys.entry:
     fields:
       file: {}
@@ -141,13 +142,13 @@ resources:
       options: {}
       type: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   chrome:
     fields:
       extensions: {}
       paths: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   chrome.extension:
     fields:
       browser: {}
@@ -160,14 +161,14 @@ resources:
       profile: {}
       version: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   cloud:
     fields:
       instance: {}
       provider: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.32
   cloudInstance:
     fields:
       metadata: {}
@@ -177,7 +178,7 @@ resources:
       publicIpv4: {}
     is_private: true
     min_mondoo_version: 11.45.0
-    min_provider_version: 11.4.86
+    min_provider_version: 11.3.32
   command:
     fields:
       command: {}
@@ -185,7 +186,7 @@ resources:
       stderr: {}
       stdout: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   container.image:
     fields:
       identifier: {}
@@ -195,7 +196,7 @@ resources:
         min_mondoo_version: latest
       repository: {}
     min_mondoo_version: 5.31.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   container.repository:
     fields:
       fullName: {}
@@ -203,12 +204,12 @@ resources:
       registry: {}
       scheme: {}
     min_mondoo_version: 5.31.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   containerd:
     fields:
       containers: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   containerd.container:
     fields:
       id: {}
@@ -219,8 +220,8 @@ resources:
       runtime: {}
       snapshotter: {}
       status: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   crontab:
     docs:
       desc: |
@@ -229,8 +230,8 @@ resources:
     fields:
       entries: {}
       files: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   crontab.entry:
     docs:
       desc: |
@@ -246,14 +247,14 @@ resources:
       month: {}
       user: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   docker:
     fields:
       containers: {}
       images: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     refs:
     - title: Docker overview
       url: https://docs.docker.com/get-started/overview/
@@ -264,7 +265,8 @@ resources:
     fields:
       command: {}
       hostConfig:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.42
       id: {}
       image: {}
       imageid: {}
@@ -275,7 +277,7 @@ resources:
       state: {}
       status: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     refs:
     - title: What is a container?
       url: https://docs.docker.com/guides/walkthroughs/what-is-a-container/
@@ -288,8 +290,8 @@ resources:
       file: {}
       instructions: {}
       stages: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.2
     refs:
     - title: Dockerfile Reference
       url: https://docs.docker.com/reference/dockerfile/
@@ -300,8 +302,8 @@ resources:
       dst: {}
       src: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.2
     refs:
     - title: Dockerfile ADD reference
       url: https://docs.docker.com/reference/dockerfile/#add
@@ -310,8 +312,8 @@ resources:
       default: {}
       name: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.70
   docker.file.copy:
     fields:
       chmod: {}
@@ -319,8 +321,8 @@ resources:
       dst: {}
       src: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.2
     refs:
     - title: Dockerfile COPY reference
       url: https://docs.docker.com/reference/dockerfile/#copy
@@ -329,15 +331,15 @@ resources:
       name: {}
       value: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.70
   docker.file.expose:
     fields:
       port: {}
       protocol: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.3
     refs:
     - title: Dockerfile EXPOSE reference
       url: https://docs.docker.com/reference/dockerfile/#expose
@@ -349,8 +351,8 @@ resources:
       platform: {}
       tag: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.2
     refs:
     - title: Dockerfile FROM reference
       url: https://docs.docker.com/reference/dockerfile/#from
@@ -358,8 +360,8 @@ resources:
     fields:
       script: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.2
     refs:
     - title: Dockerfile RUN reference
       url: https://docs.docker.com/reference/dockerfile/#run
@@ -378,8 +380,8 @@ resources:
       run: {}
       user: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.2
     refs:
     - title: Dockerfile Reference
       url: https://docs.docker.com/reference/dockerfile/
@@ -389,26 +391,27 @@ resources:
     fields:
       name: {}
       value: {}
-    min_mondoo_version: 11.4.86
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.86
   docker.file.user:
     fields:
       group: {}
       user: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.3
   docker.image:
     fields:
       id: {}
       labels: {}
       repoDigests:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.52
       size: {}
       tags: {}
       virtualsize: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     refs:
     - title: What is an image?
       url: https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/
@@ -426,7 +429,7 @@ resources:
       size: {}
       user: {}
     min_mondoo_version: 5.0.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     snippets:
     - query: |
         file('/etc') {
@@ -440,8 +443,8 @@ resources:
       file: {}
       range: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.26
   file.permissions:
     fields:
       group_executable: {}
@@ -464,14 +467,15 @@ resources:
       user_writeable: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   files:
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   files.find:
     fields:
       depth:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.5
       from: {}
       list:
         min_mondoo_version: latest
@@ -481,12 +485,12 @@ resources:
       type: {}
       xdev: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   firefox:
     fields:
       addons: {}
       paths: {}
-    min_mondoo_version: 11.4.86
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.86
   firefox.addon:
     fields:
@@ -505,14 +509,14 @@ resources:
       version: {}
       visible: {}
     is_private: true
-    min_mondoo_version: 11.4.86
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.86
   fstab:
     fields:
       entries: {}
       path: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.5
   fstab.entry:
     fields:
       device: {}
@@ -522,8 +526,8 @@ resources:
       mountpoint: {}
       options: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.5
   group:
     fields:
       gid: {}
@@ -531,13 +535,13 @@ resources:
       name: {}
       sid: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   groups:
     fields:
       list:
         min_mondoo_version: latest
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     snippets:
     - query: groups.where(name == 'wheel').list { members.all( name != 'username')}
       title: Ensure the user is not part of group
@@ -546,7 +550,7 @@ resources:
       input: {}
       output: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   ipAddress:
     fields:
       broadcast: {}
@@ -555,13 +559,13 @@ resources:
       ip: {}
       subnet: {}
     min_mondoo_version: 11.45.0
-    min_provider_version: 11.4.86
+    min_provider_version: 11.3.42
   iptables:
     fields:
       input: {}
       output: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   iptables.entry:
     fields:
       bytes: {}
@@ -577,26 +581,26 @@ resources:
       source: {}
       target: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   journald.config:
     fields:
       file: {}
       params: {}
       sections: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.51
   journald.config.section:
     fields:
       name: {}
       params: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.69
   journald.config.section.param:
     fields:
       name: {}
       value: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.69
   kernel:
     fields:
       info: {}
@@ -604,7 +608,7 @@ resources:
       modules: {}
       parameters: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     snippets:
     - query: kernel.modules { name loaded size }
       title: List all kernel modules
@@ -620,14 +624,14 @@ resources:
       name: {}
       size: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   kubelet:
     fields:
       configFile: {}
       configuration: {}
       process: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   launchd:
     docs:
       desc: |
@@ -637,7 +641,7 @@ resources:
     fields:
       jobs: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 11.8.3
     platform:
       name:
       - macos
@@ -673,7 +677,7 @@ resources:
       workingDirectory: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 11.8.3
     platform:
       name:
       - macos
@@ -682,7 +686,7 @@ resources:
       entries: {}
       files: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 11.6.0
   limits.entry:
     fields:
       domain: {}
@@ -693,20 +697,20 @@ resources:
       value: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 11.6.0
   logindefs:
     fields:
       content: {}
       file: {}
       params: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   lsblk:
     fields:
       list:
         min_mondoo_version: latest
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   lsblk.entry:
     fields:
       fstype: {}
@@ -715,10 +719,10 @@ resources:
       name: {}
       uuid: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   machine:
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   machine.baseboard:
     fields:
       assetTag: {}
@@ -727,14 +731,14 @@ resources:
       serial: {}
       version: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   machine.bios:
     fields:
       releaseDate: {}
       vendor: {}
       version: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   machine.chassis:
     fields:
       assetTag: {}
@@ -742,7 +746,7 @@ resources:
       serial: {}
       version: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   machine.system:
     fields:
       family: {}
@@ -753,18 +757,20 @@ resources:
       uuid: {}
       version: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   macos:
     fields:
       computerName:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.68
       globalAccountPolicies: {}
       systemExtensions:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.20
       userHostPreferences: {}
       userPreferences: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   macos.alf:
     fields:
       allowDownloadSignedEnabled: {}
@@ -779,7 +785,7 @@ resources:
       stealthEnabled: {}
       version: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   macos.hardware:
     fields:
       activationLockStatus: {}
@@ -794,8 +800,8 @@ resources:
       platformUUID: {}
       provisioningUDID: {}
       serialNumber: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.68
   macos.systemExtension:
     fields:
       active: {}
@@ -809,8 +815,8 @@ resources:
       uuid: {}
       version: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.20
   macos.systemsetup:
     fields:
       allowPowerButtonToSleepComputer: {}
@@ -834,12 +840,12 @@ resources:
       wakeOnModem: {}
       wakeOnNetworkAccess: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   macos.timemachine:
     fields:
       preferences: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   modprobe:
     fields:
       aliases: {}
@@ -849,8 +855,8 @@ resources:
       options: {}
       removes: {}
       softdeps: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   modprobe.alias:
     fields:
       alias: {}
@@ -858,16 +864,16 @@ resources:
       lineNumber: {}
       module: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   modprobe.blacklist:
     fields:
       file: {}
       lineNumber: {}
       module: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   modprobe.install:
     fields:
       command: {}
@@ -875,8 +881,8 @@ resources:
       lineNumber: {}
       module: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   modprobe.option:
     fields:
       file: {}
@@ -885,8 +891,8 @@ resources:
       parameters: {}
       params: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   modprobe.remove:
     fields:
       command: {}
@@ -894,8 +900,8 @@ resources:
       lineNumber: {}
       module: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   modprobe.softdep:
     fields:
       file: {}
@@ -904,8 +910,8 @@ resources:
       post: {}
       pre: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   mondoo.eol:
     fields:
       date: {}
@@ -913,13 +919,13 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   mount:
     fields:
       list:
         min_mondoo_version: latest
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
     snippets:
     - query: mount.list { path device fstype options }
       title: List all mount points
@@ -945,13 +951,13 @@ resources:
       options: {}
       path: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   network:
     fields:
       interfaces: {}
       routes: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.42
   networkInterface:
     fields:
       active: {}
@@ -964,7 +970,7 @@ resources:
       virtual: {}
     is_private: true
     min_mondoo_version: 11.45.0
-    min_provider_version: 11.4.86
+    min_provider_version: 11.3.42
   networkRoute:
     fields:
       destination: {}
@@ -972,15 +978,15 @@ resources:
       gateway: {}
       iface: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.69
   networkRoutes:
     fields:
       defaults: {}
       list: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.69
   npm.package:
     fields:
       cpes: {}
@@ -990,7 +996,7 @@ resources:
       purl: {}
       version: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 10.2.1
   npm.packages:
     fields:
       directDependencies: {}
@@ -998,12 +1004,14 @@ resources:
       list: {}
       path: {}
       paths:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.67
       root: {}
       scripts:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.63
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 10.2.1
   ntp.conf:
     fields:
       content: {}
@@ -1013,7 +1021,7 @@ resources:
       servers: {}
       settings: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   openBSMAudit:
     fields:
       content: {}
@@ -1031,14 +1039,15 @@ resources:
       policy: {}
       superuserClearSflagsMask: {}
       superuserSetSflagsMask: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.84
   os:
     fields:
       env: {}
       hostname: {}
       hypervisor:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.35
       machineid: {}
       name: {}
       path: {}
@@ -1046,7 +1055,7 @@ resources:
       updates: {}
       uptime: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     snippets:
     - query: os.env
       title: Show all environment variables
@@ -1065,28 +1074,29 @@ resources:
       uptime: {}
       users: {}
     min_mondoo_version: 6.19.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   os.linux:
     fields:
       fstab:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.3.5
       ip6tables: {}
       iptables: {}
       unix: {}
     min_mondoo_version: 6.19.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   os.rootCertificates:
     fields:
       content: {}
       files: {}
       list: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   os.unix:
     fields:
       base: {}
     min_mondoo_version: 6.19.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   os.update:
     fields:
       category: {}
@@ -1095,7 +1105,7 @@ resources:
       restart: {}
       severity: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   package:
     fields:
       arch: {}
@@ -1104,10 +1114,12 @@ resources:
         min_mondoo_version: latest
       cpes:
         min_mondoo_version: latest
+        min_provider_version: 9.1.8
       description: {}
       epoch: {}
       files:
         min_mondoo_version: latest
+        min_provider_version: 10.2.0
       format: {}
       installed: {}
       name: {}
@@ -1115,12 +1127,14 @@ resources:
       outdated: {}
       purl:
         min_mondoo_version: latest
+        min_provider_version: 9.1.6
       status: {}
       vendor:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.18
       version: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     snippets:
     - query: package('git').installed
       title: Check if a package is installed
@@ -1129,7 +1143,7 @@ resources:
       list:
         min_mondoo_version: latest
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   pam.conf:
     fields:
       content: {}
@@ -1137,7 +1151,7 @@ resources:
       files: {}
       services: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   pam.conf.serviceEntry:
     fields:
       control: {}
@@ -1148,7 +1162,7 @@ resources:
       service: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   parse.certificates:
     fields:
       content: {}
@@ -1157,7 +1171,7 @@ resources:
         min_mondoo_version: latest
       path: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
     snippets:
     - query: parse.certificates('/etc/ssl/cert.pem').list { issuer.dn }
       title: Parse Certificates from target file system
@@ -1171,14 +1185,14 @@ resources:
       params: {}
       sections: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   parse.json:
     fields:
       content: {}
       file: {}
       params: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     snippets:
     - query: 'parse.json(content: ''{ "a": "b"  }'').params'
       title: Parse JSON from string content
@@ -1191,62 +1205,63 @@ resources:
       list: {}
       path: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   parse.plist:
     fields:
       content: {}
       file: {}
       params: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   parse.xml:
     fields:
       content: {}
       file: {}
       params: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.4.3
   parse.yaml:
     fields:
       content: {}
       documents:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.20
       file: {}
       params: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   pkgFileInfo:
     fields:
       path: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 10.2.0
   platform:
     fields:
       vulnerabilityReport: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.9
   platform.advisories:
     fields:
       cvss: {}
       list: {}
       stats: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   platform.cves:
     fields:
       cvss: {}
       list: {}
       stats: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   platform.eol:
     fields:
       date: {}
       docsUrl: {}
       productUrl: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   port:
     fields:
       address: {}
@@ -1259,13 +1274,13 @@ resources:
       tls: {}
       user: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   ports:
     fields:
       list: {}
       listening: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   powershell:
     fields:
       exitcode: {}
@@ -1273,7 +1288,7 @@ resources:
       stderr: {}
       stdout: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     snippets:
     - query: |
         powershell('Get-WmiObject -Class Win32_volume -Filter "DriveType=3"| Select Label') {
@@ -1294,7 +1309,7 @@ resources:
       path: {}
       pem: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   process:
     fields:
       command: {}
@@ -1303,13 +1318,13 @@ resources:
       pid: {}
       state: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   processes:
     fields:
       list:
         min_mondoo_version: latest
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   python:
     fields:
       children: {}
@@ -1317,7 +1332,7 @@ resources:
       path: {}
       toplevel: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   python.package:
     fields:
       author: {}
@@ -1332,7 +1347,7 @@ resources:
       summary: {}
       version: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   python.packages:
     fields:
       "": {}
@@ -1349,7 +1364,7 @@ resources:
       path: {}
       properties: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   registrykey.property:
     fields:
       data:
@@ -1361,7 +1376,7 @@ resources:
         min_mondoo_version: 8.19.0
       value: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
     snippets:
     - query: |
         registrykey.property(path: 'HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\EventLog\System', name: 'MaxSize') {
@@ -1376,11 +1391,11 @@ resources:
         min_mondoo_version: latest
       settings: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   safari:
     fields:
       extensions: {}
-    min_mondoo_version: 11.4.86
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.86
     platform:
       name:
@@ -1399,7 +1414,7 @@ resources:
       path: {}
       version: {}
     is_private: true
-    min_mondoo_version: 11.4.86
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.86
     platform:
       name:
@@ -1411,7 +1426,7 @@ resources:
       registryvalues: {}
       systemaccess: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
     snippets:
     - query: secpol.privilegerights['SeRemoteShutdownPrivilege'].contains( _ == 'S-1-5-32-544')
       title: Check that a specific SID is included in the privilege rights
@@ -1425,19 +1440,19 @@ resources:
       running: {}
       type: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   services:
     fields:
       list:
         min_mondoo_version: latest
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   shadow:
     fields:
       list:
         min_mondoo_version: latest
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   shadow.entry:
     fields:
       expirydates: {}
@@ -1450,14 +1465,15 @@ resources:
       user: {}
       warndays: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   sshd:
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
   sshd.config:
     fields:
       blocks:
         min_mondoo_version: latest
+        min_provider_version: 10.0.5
       ciphers: {}
       content: {}
       file: {}
@@ -1469,33 +1485,39 @@ resources:
       params: {}
       permitRootLogin:
         min_mondoo_version: latest
+        min_provider_version: 10.0.5
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     snippets:
     - query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
       title: Check that the SSH banner is sourced from /etc/ssh/sshd-banner
   sshd.config.matchBlock:
     fields:
       ciphers:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.10
       condition: {}
       context:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
       criteria: {}
       file:
         min_mondoo_version: 9.0.0
       hostkeys:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.10
       kexs:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.10
       macs:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.10
       params: {}
       permitRootLogin:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.4.10
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 10.0.5
   sudoers:
     fields:
       aliases: {}
@@ -1503,8 +1525,8 @@ resources:
       defaults: {}
       files: {}
       userSpecs: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.7.0
   sudoers.alias:
     fields:
       file: {}
@@ -1513,8 +1535,8 @@ resources:
       name: {}
       type: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.7.0
   sudoers.default:
     fields:
       file: {}
@@ -1527,8 +1549,8 @@ resources:
       target: {}
       value: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.7.0
   sudoers.userSpec:
     fields:
       commands: {}
@@ -1540,13 +1562,13 @@ resources:
       tags: {}
       users: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.7.0
   usb:
     fields:
       devices: {}
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.43
   usb.device:
     fields:
       class: {}
@@ -1562,8 +1584,8 @@ resources:
       vendorId: {}
       version: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.3.43
   user:
     fields:
       authorizedkeys: {}
@@ -1577,7 +1599,7 @@ resources:
       sshkeys: {}
       uid: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     snippets:
     - query: |
         user(name: 'vagrant') { home uid }
@@ -1586,7 +1608,7 @@ resources:
     fields:
       list: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.0
     snippets:
     - query: users.list { uid name }
       title: Display all users and their UID
@@ -1603,7 +1625,7 @@ resources:
     fields:
       extensions: {}
       paths: {}
-    min_mondoo_version: 11.4.86
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.86
   vscode.extension:
     fields:
@@ -1618,7 +1640,7 @@ resources:
       version: {}
       vscodeVersion: {}
     is_private: true
-    min_mondoo_version: 11.4.86
+    min_mondoo_version: 9.0.0
     min_provider_version: 11.4.86
   vuln.advisory:
     fields:
@@ -1630,7 +1652,7 @@ resources:
       worstScore: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.1.15
   vuln.cve:
     fields:
       id: {}
@@ -1642,7 +1664,7 @@ resources:
       worstScore: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.1.15
   vuln.package:
     fields:
       arch: {}
@@ -1651,7 +1673,7 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.1.15
   vulnmgmt:
     fields:
       advisories: {}
@@ -1660,18 +1682,20 @@ resources:
       packages: {}
       stats: {}
     min_mondoo_version: latest
-    min_provider_version: 11.4.86
+    min_provider_version: 9.1.15
   windows:
     fields:
       computerInfo: {}
       features: {}
       hotfixes: {}
       optionalFeatures:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.6
       serverFeatures:
-        min_mondoo_version: 11.4.86
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.2.6
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
     snippets:
     - query: windows.computerInfo['WindowsInstallationType'] == 'Server Core'
       title: Check the OS Edition
@@ -1679,7 +1703,7 @@ resources:
     fields:
       volumes: {}
     min_mondoo_version: 5.35.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   windows.bitlocker.volume:
     fields:
       conversionStatus: {}
@@ -1691,7 +1715,7 @@ resources:
       protectionStatus: {}
       version: {}
     min_mondoo_version: 5.35.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   windows.feature:
     fields:
       description: {}
@@ -1702,7 +1726,7 @@ resources:
       path: {}
     is_private: true
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
     snippets:
     - query: windows.feature('SNMP-Service').installed
       title: Check that a specific Windows Server feature is installed
@@ -1714,7 +1738,7 @@ resources:
       rules: {}
       settings: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
     snippets:
     - query: |
         windows.firewall.rules.where ( displayName == "File and Printer Sharing (Echo Request - ICMPv4-In)") {
@@ -1742,7 +1766,7 @@ resources:
       name: {}
       notifyOnListen: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   windows.firewall.rule:
     fields:
       action: {}
@@ -1762,7 +1786,7 @@ resources:
       primaryStatus: {}
       status: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   windows.hotfix:
     fields:
       caption: {}
@@ -1771,7 +1795,7 @@ resources:
       installedBy: {}
       installedOn: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   windows.optionalFeature:
     fields:
       description: {}
@@ -1780,13 +1804,13 @@ resources:
       name: {}
       state: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.6
   windows.security:
     fields:
       products: {}
     min_mondoo_version: 5.35.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   windows.security.health:
     fields:
       antiSpyware: {}
@@ -1797,7 +1821,7 @@ resources:
       securityCenterService: {}
       uac: {}
     min_mondoo_version: 5.35.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   windows.security.product:
     fields:
       guid: {}
@@ -1809,7 +1833,7 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: 5.35.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   windows.serverFeature:
     fields:
       description: {}
@@ -1819,8 +1843,8 @@ resources:
       name: {}
       path: {}
     is_private: true
-    min_mondoo_version: 11.4.86
-    min_provider_version: 11.4.86
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.2.6
     snippets:
     - query: windows.serverFeature('SNMP-Service').installed
       title: Check that a specific Windows Server feature is installed
@@ -1831,7 +1855,7 @@ resources:
       repos: {}
       vars: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
   yum.repo:
     fields:
       baseurl: {}
@@ -1848,7 +1872,7 @@ resources:
       size: {}
       status: {}
     min_mondoo_version: 5.15.0
-    min_provider_version: 11.4.86
+    min_provider_version: 9.0.1
     snippets:
     - query: |
         yum.repo('salt-latest') {

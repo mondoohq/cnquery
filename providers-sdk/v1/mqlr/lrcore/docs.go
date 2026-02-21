@@ -157,18 +157,15 @@ func mergeFields(entry *LrDocsEntry, fields []*BasicField, currentVersion, defau
 	docFields := entry.Fields
 	for _, f := range fields {
 		if docFields[f.ID] == nil {
+			// New field: set versions
 			fDoc := &LrDocsField{
 				MinProviderVersion: currentVersion,
 				MinMondooVersion:   defaultVersion,
 			}
 			entry.Fields[f.ID] = fDoc
-		} else {
-			// Only set min_provider_version if not already set
-			if entry.Fields[f.ID].MinProviderVersion == "" {
-				entry.Fields[f.ID].MinProviderVersion = currentVersion
-			}
 		}
-		// Scrub field versions if same as resource (avoid redundancy)
+		// Scrub field versions if same as resource (avoid redundancy).
+		// An empty value means "inherits from resource" — don't fill it in.
 		if entry.Fields[f.ID].MinProviderVersion == entry.MinProviderVersion {
 			entry.Fields[f.ID].MinProviderVersion = ""
 		}

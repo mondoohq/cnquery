@@ -7,7 +7,7 @@ resources:
       compartments: {}
       regions: {}
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
   oci.compartment:
     fields:
       created: {}
@@ -17,7 +17,7 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: What is a Compartment?
       url: https://docs.oracle.com/en/cloud/foundation/cloud_architecture/governance/compartments.html
@@ -26,65 +26,79 @@ resources:
       images: {}
       instances: {}
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: Compute
       url: https://docs.oracle.com/en-us/iaas/Content/Compute/home.htm
   oci.compute.image:
     fields:
       compartment:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       compartmentId:
         min_mondoo_version: 9.0.0
       created: {}
       definedTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       freeformTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       id: {}
       name: {}
       operatingSystem:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       operatingSystemVersion:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       region: {}
       sizeInMBs:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: Platform Images
       url: https://docs.oracle.com/en-us/iaas/Content/Compute/References/images.htm
   oci.compute.instance:
     fields:
       availabilityDomain:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       compartment:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       compartmentId:
         min_mondoo_version: 9.0.0
       created: {}
       dedicatedVmHostId:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       definedTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       faultDomain:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       freeformTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       id: {}
       imageId:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       name: {}
       region: {}
       shape:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: Working with Instances
       url: https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/instances.htm
@@ -94,7 +108,7 @@ resources:
       policies: {}
       users: {}
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
   oci.identity.apiKey:
     fields:
       created: {}
@@ -104,7 +118,7 @@ resources:
       value: {}
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
   oci.identity.authToken:
     fields:
       created: {}
@@ -114,7 +128,7 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
   oci.identity.customerSecretKey:
     fields:
       created: {}
@@ -123,22 +137,24 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
   oci.identity.group:
     fields:
       compartmentID: {}
       created: {}
       definedTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       description: {}
       freeformTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       id: {}
       name: {}
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: Managing Groups
       url: https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managinggroups.htm
@@ -147,19 +163,22 @@ resources:
       compartmentID: {}
       created: {}
       definedTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       description: {}
       freeformTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       id: {}
       name: {}
       state: {}
       statements: {}
       versionDate:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: Managing Policies
       url: https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managingpolicies.htm
@@ -172,12 +191,14 @@ resources:
       created: {}
       customerSecretKeys: {}
       definedTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       description: {}
       email: {}
       emailVerified: {}
       freeformTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       groups: {}
       id: {}
       lastLogin: {}
@@ -187,7 +208,7 @@ resources:
       state: {}
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: Managing Users
       url: https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/managingusers.htm
@@ -196,7 +217,7 @@ resources:
       securityLists: {}
       vcns: {}
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: Core Network Capabilities
       url: https://docs.oracle.com/en/cloud/foundation/cloud_architecture/network/corecapabilities.html
@@ -205,19 +226,22 @@ resources:
       compartmentID: {}
       created: {}
       definedTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       egressSecurityRules: {}
       freeformTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       id: {}
       ingressSecurityRules: {}
       name: {}
       state: {}
       vcnId:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: Security Lists
       url: https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/securitylists.htm
@@ -228,25 +252,32 @@ resources:
       compartmentID: {}
       created: {}
       defaultDhcpOptionsId:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       defaultRouteTableId:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       defaultSecurityListId:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       definedTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       dnsLabel:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       freeformTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       id: {}
       name: {}
       state: {}
       vcnDomainName:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: VCNs and Subnets
       url: https://docs.oracle.com/en-us/iaas/Content/Network/Tasks/VCNs.htm
@@ -255,31 +286,39 @@ resources:
       buckets: {}
       namespace: {}
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: Object Storage
       url: https://docs.oracle.com/en-us/iaas/Content/Object/home.htm
   oci.objectStorage.bucket:
     fields:
       approximateCount:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       approximateSize:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       autoTiering: {}
       compartmentID: {}
       created: {}
       definedTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       etag:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       freeformTags:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       id:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       isReadOnly:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       kmsKeyId:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       name: {}
       namespace: {}
       objectEventsEnabled: {}
@@ -292,7 +331,7 @@ resources:
       versioning: {}
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: Object Storage Buckets
       url: https://docs.oracle.com/en-us/iaas/Content/Object/Tasks/managingbuckets.htm
@@ -304,7 +343,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: What is a Region?
       url: https://docs.oracle.com/en/cloud/foundation/cloud_architecture/governance/regions.html
@@ -317,7 +356,7 @@ resources:
       name: {}
       retentionPeriod: {}
     min_mondoo_version: 8.10.0
-    min_provider_version: 11.0.133
+    min_provider_version: 9.0.0
     refs:
     - title: What is a Tenancy?
       url: https://docs.oracle.com/en/cloud/foundation/cloud_architecture/governance/tenancy.html

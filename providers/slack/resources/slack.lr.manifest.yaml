@@ -7,7 +7,7 @@ resources:
       accessLogs: {}
       userGroups: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.135
+    min_provider_version: 9.0.0
   slack.conversation:
     fields:
       created: {}
@@ -31,7 +31,7 @@ resources:
       purpose: {}
       topic: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.135
+    min_provider_version: 9.0.0
   slack.conversations:
     fields:
       directMessages: {}
@@ -39,7 +39,7 @@ resources:
       privateChannels: {}
       publicChannels: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.135
+    min_provider_version: 9.1.11
   slack.enterpriseUser:
     fields:
       enterpriseId: {}
@@ -48,7 +48,7 @@ resources:
       isAdmin: {}
       isOwner: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.135
+    min_provider_version: 9.0.0
   slack.login:
     fields:
       count: {}
@@ -62,7 +62,7 @@ resources:
       userID: {}
       username: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.135
+    min_provider_version: 9.0.0
   slack.team:
     fields:
       domain: {}
@@ -70,7 +70,7 @@ resources:
       id: {}
       name: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.135
+    min_provider_version: 9.0.0
   slack.user:
     fields:
       color: {}
@@ -99,7 +99,7 @@ resources:
       timeZoneOffset: {}
       twoFactorType: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.135
+    min_provider_version: 9.0.0
   slack.userGroup:
     fields:
       created: {}
@@ -117,7 +117,7 @@ resources:
       updatedBy: {}
       userCount: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.135
+    min_provider_version: 9.0.0
   slack.users:
     fields:
       admins: {}
@@ -126,4 +126,4 @@ resources:
       members: {}
       owners: {}
     min_mondoo_version: latest
-    min_provider_version: 11.0.135
+    min_provider_version: 9.0.0
