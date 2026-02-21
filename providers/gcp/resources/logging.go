@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -360,6 +361,46 @@ func (g *mqlGcpProjectLoggingserviceBucket) id() (string, error) {
 	}
 	name := g.Name.Data
 	return fmt.Sprintf("%s/%s", projectId, name), nil
+}
+
+func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.loggingservice", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := obj.(*mqlGcpProjectLoggingservice)
+	buckets := svc.GetBuckets()
+	if buckets.Error != nil {
+		return nil, nil, buckets.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	for _, b := range buckets.Data {
+		bucket := b.(*mqlGcpProjectLoggingserviceBucket)
+		if parseResourceName(bucket.Name.Data) == nameVal {
+			return args, bucket, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("logging bucket %q not found", nameVal)
 }
 
 func (g *mqlGcpProjectLoggingserviceBucketIndexConfig) id() (string, error) {

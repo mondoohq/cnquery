@@ -511,7 +511,7 @@ func init() {
 			Create: createGcpProjectPubsubService,
 		},
 		"gcp.project.pubsubService.topic": {
-			// to override args, implement: initGcpProjectPubsubServiceTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectPubsubServiceTopic,
 			Create: createGcpProjectPubsubServiceTopic,
 		},
 		"gcp.project.pubsubService.topic.config": {
@@ -523,7 +523,7 @@ func init() {
 			Create: createGcpProjectPubsubServiceTopicConfigMessagestoragepolicy,
 		},
 		"gcp.project.pubsubService.subscription": {
-			// to override args, implement: initGcpProjectPubsubServiceSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectPubsubServiceSubscription,
 			Create: createGcpProjectPubsubServiceSubscription,
 		},
 		"gcp.project.pubsubService.subscription.config": {
@@ -535,7 +535,7 @@ func init() {
 			Create: createGcpProjectPubsubServiceSubscriptionConfigPushconfig,
 		},
 		"gcp.project.pubsubService.snapshot": {
-			// to override args, implement: initGcpProjectPubsubServiceSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectPubsubServiceSnapshot,
 			Create: createGcpProjectPubsubServiceSnapshot,
 		},
 		"gcp.project.kmsService": {
@@ -571,7 +571,7 @@ func init() {
 			Create: createGcpEssentialContact,
 		},
 		"gcp.project.apiKey": {
-			// to override args, implement: initGcpProjectApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectApiKey,
 			Create: createGcpProjectApiKey,
 		},
 		"gcp.project.apiKey.restrictions": {
@@ -583,7 +583,7 @@ func init() {
 			Create: createGcpProjectLoggingservice,
 		},
 		"gcp.project.loggingservice.bucket": {
-			// to override args, implement: initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectLoggingserviceBucket,
 			Create: createGcpProjectLoggingserviceBucket,
 		},
 		"gcp.project.loggingservice.bucket.indexConfig": {
@@ -611,7 +611,7 @@ func init() {
 			Create: createGcpProjectIamServiceServiceAccountKey,
 		},
 		"gcp.project.cloudFunction": {
-			// to override args, implement: initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectCloudFunction,
 			Create: createGcpProjectCloudFunction,
 		},
 		"gcp.project.dataprocService": {
@@ -619,7 +619,7 @@ func init() {
 			Create: createGcpProjectDataprocService,
 		},
 		"gcp.project.dataprocService.cluster": {
-			// to override args, implement: initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectDataprocServiceCluster,
 			Create: createGcpProjectDataprocServiceCluster,
 		},
 		"gcp.project.dataprocService.cluster.config": {
@@ -671,7 +671,7 @@ func init() {
 			Create: createGcpProjectCloudRunServiceOperation,
 		},
 		"gcp.project.cloudRunService.service": {
-			// to override args, implement: initGcpProjectCloudRunServiceService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectCloudRunServiceService,
 			Create: createGcpProjectCloudRunServiceService,
 		},
 		"gcp.project.cloudRunService.service.revisionTemplate": {
@@ -691,7 +691,7 @@ func init() {
 			Create: createGcpProjectCloudRunServiceCondition,
 		},
 		"gcp.project.cloudRunService.job": {
-			// to override args, implement: initGcpProjectCloudRunServiceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectCloudRunServiceJob,
 			Create: createGcpProjectCloudRunServiceJob,
 		},
 		"gcp.project.cloudRunService.job.executionTemplate": {
