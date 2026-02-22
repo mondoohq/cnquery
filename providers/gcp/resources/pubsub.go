@@ -225,6 +225,7 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 		"labels":               llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
 		"kmsKeyName":           llx.StringData(cfg.KMSKeyName),
 		"messageStoragePolicy": llx.ResourceData(messageStoragePolicy, "gcp.project.pubsubService.topic.config.messagestoragepolicy"),
+		"state":                llx.StringData(topicStateToString(cfg.State)),
 	})
 	if err != nil {
 		return nil, err
@@ -327,15 +328,20 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		expPolicy = llx.DurationToTime(int64(exp.Seconds()))
 	}
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.subscription.config", map[string]*llx.RawData{
-		"projectId":           llx.StringData(projectId),
-		"subscriptionName":    llx.StringData(s.ID()),
-		"topic":               llx.ResourceData(topic, "gcp.project.pubsubService.topic"),
-		"pushConfig":          llx.ResourceData(pushConfig, "gcp.project.pubsubService.subscription.config.pushconfig"),
-		"ackDeadline":         llx.TimeData(llx.DurationToTime(int64(cfg.AckDeadline.Seconds()))),
-		"retainAckedMessages": llx.BoolData(cfg.RetainAckedMessages),
-		"retentionDuration":   llx.TimeData(llx.DurationToTime(int64(cfg.RetentionDuration.Seconds()))),
-		"expirationPolicy":    llx.TimeData(expPolicy),
-		"labels":              llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
+		"projectId":                 llx.StringData(projectId),
+		"subscriptionName":          llx.StringData(s.ID()),
+		"topic":                     llx.ResourceData(topic, "gcp.project.pubsubService.topic"),
+		"pushConfig":                llx.ResourceData(pushConfig, "gcp.project.pubsubService.subscription.config.pushconfig"),
+		"ackDeadline":               llx.TimeData(llx.DurationToTime(int64(cfg.AckDeadline.Seconds()))),
+		"retainAckedMessages":       llx.BoolData(cfg.RetainAckedMessages),
+		"retentionDuration":         llx.TimeData(llx.DurationToTime(int64(cfg.RetentionDuration.Seconds()))),
+		"expirationPolicy":          llx.TimeData(expPolicy),
+		"labels":                    llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
+		"enableMessageOrdering":     llx.BoolData(cfg.EnableMessageOrdering),
+		"enableExactlyOnceDelivery": llx.BoolData(cfg.EnableExactlyOnceDelivery),
+		"filter":                    llx.StringData(cfg.Filter),
+		"detached":                  llx.BoolData(cfg.Detached),
+		"state":                     llx.StringData(subscriptionStateToString(cfg.State)),
 	})
 	if err != nil {
 		return nil, err
@@ -399,6 +405,122 @@ func (g *mqlGcpProjectPubsubService) snapshots() ([]any, error) {
 	}
 
 	return subs, nil
+}
+
+func (g *mqlGcpProjectPubsubServiceTopic) iamPolicy() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	name := g.Name.Data
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	creds, err := conn.Credentials(pubsub.ScopePubSub)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer pubsubSvc.Close()
+
+	policy, err := pubsubSvc.Topic(name).IAM().Policy(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i, role := range policy.Roles() {
+		members := policy.Members(role)
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(fmt.Sprintf("projects/%s/topics/%s-%d", projectId, name, i)),
+			"role":    llx.StringData(string(role)),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	name := g.Name.Data
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	creds, err := conn.Credentials(pubsub.ScopePubSub)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer pubsubSvc.Close()
+
+	policy, err := pubsubSvc.Subscription(name).IAM().Policy(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i, role := range policy.Roles() {
+		members := policy.Members(role)
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(fmt.Sprintf("projects/%s/subscriptions/%s-%d", projectId, name, i)),
+			"role":    llx.StringData(string(role)),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+func topicStateToString(state pubsub.TopicState) string {
+	switch state {
+	case pubsub.TopicStateActive:
+		return "ACTIVE"
+	case pubsub.TopicStateIngestionResourceError:
+		return "INGESTION_RESOURCE_ERROR"
+	default:
+		return "STATE_UNSPECIFIED"
+	}
+}
+
+func subscriptionStateToString(state pubsub.SubscriptionState) string {
+	switch state {
+	case pubsub.SubscriptionStateActive:
+		return "ACTIVE"
+	case pubsub.SubscriptionStateResourceError:
+		return "RESOURCE_ERROR"
+	default:
+		return "STATE_UNSPECIFIED"
+	}
 }
 
 func pubsubConfigId(projectId, parentName string) string {

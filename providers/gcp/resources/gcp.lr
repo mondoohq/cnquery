@@ -2216,6 +2216,8 @@ private gcp.project.pubsubService.topic @defaults("name") {
   name string
   // Topic configuration
   config() gcp.project.pubsubService.topic.config
+  // IAM policy for this topic
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) Pub/Sub topic configuration
@@ -2230,6 +2232,8 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   kmsKeyName string
   // Message storage policy
   messageStoragePolicy gcp.project.pubsubService.topic.config.messagestoragepolicy
+  // State of the topic (ACTIVE, INGESTION_RESOURCE_ERROR)
+  state string
 }
 
 // Google Cloud (GCP) Pub/Sub topic message storage policy
@@ -2248,6 +2252,8 @@ private gcp.project.pubsubService.subscription @defaults("name") {
   name string
   // Subscription configuration
   config() gcp.project.pubsubService.subscription.config
+  // IAM policy for this subscription
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) Pub/Sub subscription configuration
@@ -2270,6 +2276,16 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   expirationPolicy time
   // The labels associated with this subscription
   labels map[string]string
+  // Whether message ordering is enabled
+  enableMessageOrdering bool
+  // Whether exactly-once delivery is enabled
+  enableExactlyOnceDelivery bool
+  // Filter expression for the subscription
+  filter string
+  // Whether the subscription is detached from its topic
+  detached bool
+  // State of the subscription (ACTIVE, RESOURCE_ERROR)
+  state string
 }
 
 // GCP Pub/Sub configuration for subscriptions that operate in push mode
