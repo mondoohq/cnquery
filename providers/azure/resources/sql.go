@@ -844,16 +844,22 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) longTermRetentionPolicy() (*mql
 	}
 
 	var weekOfYear int64
-	if policy.Properties != nil && policy.Properties.WeekOfYear != nil {
-		weekOfYear = int64(*policy.Properties.WeekOfYear)
+	var weeklyRetention, monthlyRetention, yearlyRetention *string
+	if policy.Properties != nil {
+		weeklyRetention = policy.Properties.WeeklyRetention
+		monthlyRetention = policy.Properties.MonthlyRetention
+		yearlyRetention = policy.Properties.YearlyRetention
+		if policy.Properties.WeekOfYear != nil {
+			weekOfYear = int64(*policy.Properties.WeekOfYear)
+		}
 	}
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.database.longtermretentionpolicy",
 		map[string]*llx.RawData{
 			"id":               llx.StringDataPtr(policy.ID),
-			"weeklyRetention":  llx.StringDataPtr(policy.Properties.WeeklyRetention),
-			"monthlyRetention": llx.StringDataPtr(policy.Properties.MonthlyRetention),
-			"yearlyRetention":  llx.StringDataPtr(policy.Properties.YearlyRetention),
+			"weeklyRetention":  llx.StringDataPtr(weeklyRetention),
+			"monthlyRetention": llx.StringDataPtr(monthlyRetention),
+			"yearlyRetention":  llx.StringDataPtr(yearlyRetention),
 			"weekOfYear":       llx.IntData(weekOfYear),
 		})
 	if err != nil {
