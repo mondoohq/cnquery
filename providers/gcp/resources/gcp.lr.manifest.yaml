@@ -342,13 +342,13 @@ resources:
       ingressSettings: {}
       kmsKeyName: {}
       labels: {}
+      location:
+        min_mondoo_version: 11.0.146
       maxInstances: {}
       minInstances: {}
       name: {}
       network: {}
       projectId: {}
-      region:
-        min_mondoo_version: 11.0.146
       runtime: {}
       secretEnvVars: {}
       secretVolumes: {}
@@ -1108,11 +1108,11 @@ resources:
     fields:
       config: {}
       labels: {}
+      location:
+        min_mondoo_version: 11.0.146
       metrics: {}
       name: {}
       projectId: {}
-      region:
-        min_mondoo_version: 11.0.146
       status: {}
       statusHistory: {}
       uuid: {}
