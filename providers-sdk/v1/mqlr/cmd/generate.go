@@ -4,6 +4,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -12,14 +14,12 @@ func init() {
 	rootCmd.AddCommand(generateCmd)
 	generateCmd.Flags().String("dist", "", "folder for output LR and docs generation")
 	generateCmd.MarkFlagRequired("dist") // nolint:errcheck
-	generateCmd.Flags().String("docs-file", "", "path to the docs file")
-	generateCmd.MarkFlagRequired("docs-file") // nolint:errcheck
 }
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "generates Go code and documentation from an LR schema file",
-	Long:  `parse an LR file and convert it to Go, then generates documentation from the LR file. This is the equivalent of running the 'go', 'docs yaml' and 'docs json' commands one after another.`,
+	Short: "generates Go code and versions from an LR schema file",
+	Long:  `parse an LR file and convert it to Go, then generates or updates the .lr.versions file. This is the equivalent of running the 'go' and 'versions' commands one after another.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		dist, err := cmd.Flags().GetString("dist")
@@ -31,19 +31,10 @@ var generateCmd = &cobra.Command{
 			log.Fatal().Msg("dist flag is required")
 		}
 
-		docsFile, err := cmd.Flags().GetString("docs-file")
-		if err != nil {
-			log.Fatal().Err(err).Msg("failed to get docs-file flag")
-		}
-
-		if docsFile == "" {
-			log.Fatal().Msg("docs-file flag is required")
-		}
-
 		lrFile := args[0]
 		headerFile := ""
+		versionsFile := strings.TrimSuffix(lrFile, ".lr") + ".lr.versions"
 		runGoCmd(lrFile, dist, headerFile, false)
-		runDocsYamlCmd(lrFile, headerFile, defaultVersionField, docsFile)
-		runDocsJsonCmd(docsFile, dist)
+		runVersionsCmd(lrFile, headerFile, defaultVersionField, versionsFile)
 	},
 }

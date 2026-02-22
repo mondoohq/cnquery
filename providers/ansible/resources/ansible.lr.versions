@@ -1,0 +1,40 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+ansible 10.0.0
+ansible.handler 10.0.0
+ansible.handler.action 10.0.0
+ansible.handler.name 10.0.0
+ansible.play 10.0.0
+ansible.play.anyErrorsFatal 10.0.0
+ansible.play.become 10.0.0
+ansible.play.becomeFlags 10.0.0
+ansible.play.becomeMethod 10.0.0
+ansible.play.becomeUser 10.0.0
+ansible.play.gatherFacts 11.0.120
+ansible.play.handlers 10.0.0
+ansible.play.hosts 10.0.0
+ansible.play.ignoreUnreachable 10.0.0
+ansible.play.maxFailPercentage 10.0.0
+ansible.play.name 10.0.0
+ansible.play.remoteUser 10.0.0
+ansible.play.roles 10.0.0
+ansible.play.strategy 10.0.0
+ansible.play.tasks 10.0.0
+ansible.play.vars 10.0.0
+ansible.plays 10.0.0
+ansible.task 10.0.0
+ansible.task.action 10.0.0
+ansible.task.block 10.0.0
+ansible.task.changedWhen 10.0.0
+ansible.task.failedWhen 10.0.0
+ansible.task.importPlaybook 10.0.0
+ansible.task.importTasks 10.0.0
+ansible.task.includePlaybook 10.0.0
+ansible.task.includeTasks 10.0.0
+ansible.task.name 10.0.0
+ansible.task.notify 10.0.0
+ansible.task.register 10.0.0
+ansible.task.rescue 10.0.0
+ansible.task.vars 10.0.0
+ansible.task.when 10.0.0

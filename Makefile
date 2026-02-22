@@ -82,8 +82,7 @@ define buildProvider
 	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
 	echo "--> [${$@_NAME}] process resources"
 	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
-	./lr docs yaml ${$@_HOME}/resources/${$@_NAME}.lr --docs-file ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
-	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
+	./lr versions ${$@_HOME}/resources/${$@_NAME}.lr
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
 	@if [ "$(SKIP_COMPILE)" = "yes" ]; then \
@@ -102,8 +101,7 @@ define buildProviderDist
 	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
 	echo "--> [${$@_NAME}] process resources"
 	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
-	./lr docs yaml ${$@_HOME}/resources/${$@_NAME}.lr --docs-file ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
-	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
+	./lr versions ${$@_HOME}/resources/${$@_NAME}.lr
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
 	echo "--> [${$@_NAME}] creating ${$@_BIN}"
@@ -521,157 +519,126 @@ lr/docs/markdown: providers/lr
 	./lr markdown providers/ansible/resources/ansible.lr \
 		--pack-name "Ansible" \
 		--description "The Ansible resource pack lets you use MQL to query and assess the security of your Ansible playbooks." \
-		--docs-file providers/ansible/resources/ansible.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/ansible-pack
 	./lr markdown providers/arista/resources/arista.lr \
 		--pack-name "Arista EOS" \
 		--description "The Arista EOS resource pack lets you use MQL to query and assess the security of your Arista EOS network devices." \
-		--docs-file providers/arista/resources/arista.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/arista-pack
 	./lr markdown providers/atlassian/resources/atlassian.lr \
 		--pack-name "Atlassian" \
 		--description "The Atlassian resource pack lets you use MQL to query and assess the security of your Atlassian services." \
-		--docs-file providers/atlassian/resources/atlassian.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/atlassian-pack
 	./lr markdown providers/aws/resources/aws.lr \
     	--pack-name "Amazon Web Services (AWS)" \
 		--description "The Amazon Web Services (AWS) resource pack lets you use MQL to query and assess the security of your AWS cloud services." \
-		--docs-file providers/aws/resources/aws.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/aws-pack
 	./lr markdown providers/azure/resources/azure.lr \
 		--pack-name "Azure" \
 		--description "The Azure resource pack lets you use MQL to query and assess the security of your Azure cloud services." \
-		--docs-file providers/azure/resources/azure.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/azure-pack
 	./lr markdown providers/cloudflare/resources/cloudflare.lr \
 		--pack-name "Cloudflare" \
 		--description "The Cloudflare resource pack lets you use MQL to query and assess the security of your Cloudflare configuration." \
-		--docs-file providers/cloudflare/resources/cloudflare.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/cloudflare-pack
 	./lr markdown providers/cloudformation/resources/cloudformation.lr \
 		--pack-name "AWS CloudFormation" \
 		--description "The AWS CloudFormation resource pack lets you use MQL to query and assess the security of your AWS CloudFormation." \
-		--docs-file providers/cloudformation/resources/cloudformation.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/cloudformation-pack
 	./lr markdown providers/core/resources/core.lr \
 		--pack-name "Core" \
 		--description "The Core pack provides basic MQL resources that let you query and assess the security of assets in your infrastructure." \
-		--docs-file providers/core/resources/core.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/core-pack
 	./lr markdown providers/equinix/resources/equinix.lr \
 		--pack-name "Equinix Metal" \
 		--description "The Equinix Metal resource pack lets you use MQL to query and assess the security of your Equinix Metal assets." \
-		--docs-file providers/equinix/resources/equinix.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/equinix-pack
 	./lr markdown providers/gcp/resources/gcp.lr \
 		--pack-name "Google Cloud Platform (GCP)" \
 		--description "The Google Cloud Platform (GCP) resource pack lets you use MQL to query and assess the security of your Google cloud services." \
-		--docs-file providers/gcp/resources/gcp.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/gcp-pack
 	./lr markdown providers/github/resources/github.lr \
 		--pack-name "GitHub" \
 		--description "The GitHub resource pack lets you use MQL to query and assess the security of your GitHub organizations and repositories." \
-		--docs-file providers/github/resources/github.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/github-pack
 	./lr markdown providers/gitlab/resources/gitlab.lr \
 		--pack-name "GitLab" \
 		--description "The GitLab resource pack lets you use MQL to query and assess the security of your GitLab groups and projects." \
-		--docs-file providers/gitlab/resources/gitlab.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/gitlab-pack
 	./lr markdown providers/google-workspace/resources/google-workspace.lr \
 		--pack-name "Google Workspace" \
 		--description "The Google Workspace resource pack lets you use MQL to query and assess the security of your Google Workspace identities and configuration." \
-		--docs-file providers/google-workspace/resources/google-workspace.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/google-workspace-pack
 	./lr markdown providers/ipmi/resources/ipmi.lr \
 		--pack-name "IPMI" \
 		--description "The IPMI resource pack lets you use MQL to query and assess the security of your IPMI devices." \
-		--docs-file providers/ipmi/resources/ipmi.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/ipmi-pack
 	./lr markdown providers/ipinfo/resources/ipinfo.lr \
 		--pack-name "IPinfo" \
 		--description "The IPinfo resource pack lets you use MQL to query IP address information from ipinfo.io." \
-		--docs-file providers/ipinfo/resources/ipinfo.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/ipinfo-pack
 	./lr markdown providers/k8s/resources/k8s.lr \
 		--pack-name "Kubernetes (K8s)" \
 		--description "The Kubernetes resource pack lets you use MQL to query and assess the security of your Kubernetes clusters and workloads." \
-		--docs-file providers/k8s/resources/k8s.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/k8s-pack
 	./lr markdown providers/mondoo/resources/mondoo.lr \
 		--pack-name "Mondoo Platform" \
 		--description "The Mondoo resource pack lets you interact with Mondoo Platform and its assets and resources." \
-		--docs-file providers/mondoo/resources/mondoo.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/mondoo-pack
 	./lr markdown providers/ms365/resources/ms365.lr \
 		--pack-name "Microsoft 365 (M365)" \
 		--description "The Microsoft 365 (M365) resource pack lets you use MQL to query and assess the security of your Microsoft 365 identities and configuration." \
-		--docs-file providers/ms365/resources/ms365.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/m365-pack
 	./lr markdown providers/network/resources/network.lr \
 		--pack-name "Network" \
 		--description "The Network resource pack lets you use MQL to query and assess the security of domains and network services." \
-		--docs-file providers/network/resources/network.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/network-pack
 	./lr markdown providers/nmap/resources/nmap.lr \
 		--pack-name "Nmap" \
 		--description "The Nmap resource pack lets you use MQL to query and assess the network devices with Nmap." \
-		--docs-file providers/nmap/resources/nmap.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/nmap-pack
 	./lr markdown providers/oci/resources/oci.lr \
 		--pack-name "Oracle Cloud Infrastructure (OCI)" \
 		--description "The Oracle Cloud Infrastructure (OCI) resource pack lets you use MQL to query and assess the security of your OCI services." \
-		--docs-file providers/oci/resources/oci.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/oci-pack
 	./lr markdown providers/okta/resources/okta.lr \
 		--pack-name "Okta" \
 		--description "The Okta resource pack lets you use MQL to query and assess the security of your Okta identities and configuration." \
-		--docs-file providers/okta/resources/okta.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/okta-pack
 	./lr markdown providers/opcua/resources/opcua.lr \
 		--pack-name "OPC UA" \
 		--description "The OPC UA resource pack lets you use MQL to query and assess the security of your OPC UA assets." \
-		--docs-file providers/opcua/resources/opcua.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/opcua-pack
 	./lr markdown providers/os/resources/os.lr \
 		--pack-name "Operating Systems (OS)" \
 		--description "The Operating Systems (OS) resource pack lets you use MQL to query and assess the security of your operating system packages and configuration." \
-		--docs-file providers/os/resources/os.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/os-pack
 	./lr markdown providers/shodan/resources/shodan.lr \
 		--pack-name "Shodan" \
 		--description "The Shodan resource pack lets you use MQL to query and assess IP and DNS information via Shodan service." \
-		--docs-file providers/shodan/resources/shodan.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/shodan-pack
 	./lr markdown providers/slack/resources/slack.lr \
 		--pack-name "Slack" \
 		--description "The Slack resource pack lets you use MQL to query and assess the security of your Slack identities and configuration." \
-		--docs-file providers/slack/resources/slack.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/slack-pack
 	./lr markdown providers/snowflake/resources/snowflake.lr \
 		--pack-name "Snowflake" \
 		--description "The Snowflake resource pack lets you use MQL to query and assess the security of your Snowflake identities and configuration." \
-		--docs-file providers/snowflake/resources/snowflake.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/snowflake-pack
 	./lr markdown providers/tailscale/resources/tailscale.lr \
 		--pack-name "Tailscale" \
 		--description "The Tailscale resource pack lets you use MQL to query devices, users, DNS nameservers, and more information about a Tailscale network." \
-		--docs-file providers/tailscale/resources/tailscale.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/tailscale-pack
 	./lr markdown providers/terraform/resources/terraform.lr \
 		--pack-name "Terraform IaC" \
 		--description "The Terraform IaC resource pack lets you use MQL to query and assess the security of your Terraform HCL, plan, and state resources." \
-		--docs-file providers/terraform/resources/terraform.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/terraform-pack
 	./lr markdown providers/vcd/resources/vcd.lr \
 		--pack-name "VMware Cloud Director" \
 		--description "The VMware Cloud Director resource pack lets you use MQL to query and assess the security of your VMware Cloud Director configuration." \
-		--docs-file providers/vcd/resources/vcd.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/vcd-pack
 	./lr markdown providers/vsphere/resources/vsphere.lr \
 		--pack-name "VMware vSphere" \
 		--description "The VMware vSphere resource pack lets you use MQL to query and assess the security of your VMware vSphere hosts and services." \
-		--docs-file providers/vsphere/resources/vsphere.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/vsphere-pack
 
 lr/docs/stats:

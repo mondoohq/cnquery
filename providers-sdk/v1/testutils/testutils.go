@@ -31,7 +31,6 @@ import (
 	networkprovider "go.mondoo.com/mql/v13/providers/network/provider"
 	osconf "go.mondoo.com/mql/v13/providers/os/config"
 	osprovider "go.mondoo.com/mql/v13/providers/os/provider"
-	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -151,23 +150,22 @@ func MustLoadSchema(provider SchemaProvider) *resources.Schema {
 	if provider.Path == "" && provider.Provider == "" {
 		panic("cannot load schema without provider name or path")
 	}
-	var path string
-	// path towards the .yaml manifest, containing metadata about the resources
-	var manifestPath string
+	var lrPath string
+	var versionsPath string
 	if provider.Provider != "" {
 		switch provider.Provider {
 		// special handling for the mockprovider
 		case "mockprovider":
-			path = filepath.Join(TestutilsDir, "mockprovider/resources/mockprovider.lr")
+			lrPath = filepath.Join(TestutilsDir, "mockprovider/resources/mockprovider.lr")
 		default:
-			manifestPath = filepath.Join(TestutilsDir, "../../../providers/"+provider.Provider+"/resources/"+provider.Provider+".lr.manifest.yaml")
-			path = filepath.Join(TestutilsDir, "../../../providers/"+provider.Provider+"/resources/"+provider.Provider+".lr")
+			lrPath = filepath.Join(TestutilsDir, "../../../providers/"+provider.Provider+"/resources/"+provider.Provider+".lr")
+			versionsPath = filepath.Join(TestutilsDir, "../../../providers/"+provider.Provider+"/resources/"+provider.Provider+".lr.versions")
 		}
 	} else if provider.Path != "" {
-		path = provider.Path
+		lrPath = provider.Path
 	}
 
-	res, err := lrcore.Resolve(path, func(path string) ([]byte, error) { return os.ReadFile(path) })
+	res, err := lrcore.Resolve(lrPath, func(path string) ([]byte, error) { return os.ReadFile(path) })
 	if err != nil {
 		panic(err.Error())
 	}
@@ -175,18 +173,11 @@ func MustLoadSchema(provider SchemaProvider) *resources.Schema {
 	if err != nil {
 		panic(err.Error())
 	}
-	// TODO: we should make a function that takes the Schema and the metadata and merges those.
-	// Then we can use that in the LR code and the testutils code too
-	if manifestPath != "" {
-		// we will attempt to auto-detect the manifest to inject some metadata
-		// into the schema
-		raw, err := os.ReadFile(manifestPath)
+
+	if versionsPath != "" {
+		versions, err := lrcore.ReadVersions(versionsPath)
 		if err == nil {
-			var lrDocsData lrcore.LrDocs
-			err = yaml.Unmarshal(raw, &lrDocsData)
-			if err == nil {
-				lrcore.InjectMetadata(schema, &lrDocsData)
-			}
+			lrcore.InjectVersions(schema, versions)
 		}
 	}
 

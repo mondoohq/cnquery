@@ -1,0 +1,31 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+opcua 9.0.0
+opcua.namespace 9.0.0
+opcua.namespace.id 9.0.0
+opcua.namespace.name 9.0.0
+opcua.namespaces 9.0.0
+opcua.node 9.0.0
+opcua.node.accessLevel 9.0.0
+opcua.node.class 9.0.0
+opcua.node.components 9.0.0
+opcua.node.dataType 9.0.0
+opcua.node.description 9.0.0
+opcua.node.id 9.0.0
+opcua.node.max 9.0.0
+opcua.node.min 9.0.0
+opcua.node.name 9.0.0
+opcua.node.namespace 9.0.0
+opcua.node.organizes 9.0.0
+opcua.node.properties 9.0.0
+opcua.node.unit 9.0.0
+opcua.node.writeable 9.0.0
+opcua.nodes 9.0.0
+opcua.root 9.0.0
+opcua.server 9.0.0
+opcua.server.buildInfo 9.0.0
+opcua.server.currentTime 9.0.0
+opcua.server.node 9.0.0
+opcua.server.startTime 9.0.0
+opcua.server.state 9.0.0

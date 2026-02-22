@@ -145,10 +145,7 @@ func TestBuilder(t *testing.T) {
 				}},
 				Checksums: map[uint64]string{1: "checksum5", 2: "checksum7"},
 			},
-			MinMondooVersion: "9999.9999.9999",
 		}, nil, nil)
-
-	b.WithMondooVersion("100.0.0")
 
 	ge, err := b.Build(nil, nil, "assetMrn")
 	require.NoError(t, err)
@@ -168,11 +165,8 @@ func TestBuilder(t *testing.T) {
 	hasNode(t, ge, "execution_query/query4", ExecutionQueryNodeType)
 	hasOutEdges(t, ge, "execution_query/query4", "checksum6")
 
-	assert.NotContains(t, ge.nodes, "execution_query/query5")
-	assert.Nil(t, ge.nodes["checksum5"].data.(*DatapointNodeData).res)
-	if assert.NotNil(t, ge.nodes["checksum7"].data.(*DatapointNodeData).res) {
-		assert.Error(t, ge.nodes["checksum7"].data.(*DatapointNodeData).res.Data.Error)
-	}
+	hasNode(t, ge, "execution_query/query5", ExecutionQueryNodeType)
+	hasOutEdges(t, ge, "execution_query/query5", "checksum5", "checksum7")
 
 	hasNode(t, ge, "pqep", DatapointNodeType)
 	hasOutEdges(t, ge, "pqep", CollectionFinisherID)
@@ -194,6 +188,9 @@ func TestBuilder(t *testing.T) {
 
 	hasNode(t, ge, "checksum6", DatapointNodeType)
 	hasOutEdges(t, ge, "checksum6", CollectionFinisherID)
+
+	hasNode(t, ge, "checksum7", DatapointNodeType)
+	hasOutEdges(t, ge, "checksum7", CollectionFinisherID)
 }
 
 func hasNode(t *testing.T, ge *GraphExecutor, nodeID NodeID, nodeType NodeType) {

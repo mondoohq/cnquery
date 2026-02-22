@@ -1,0 +1,25 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+cloudformation.output 11.0.0
+cloudformation.output.name 11.0.0
+cloudformation.output.properties 11.0.0
+cloudformation.resource 11.0.0
+cloudformation.resource.attributes 11.0.0
+cloudformation.resource.condition 11.0.0
+cloudformation.resource.documentation 11.0.0
+cloudformation.resource.name 11.0.0
+cloudformation.resource.properties 11.0.0
+cloudformation.resource.type 11.0.0
+cloudformation.template 11.0.0
+cloudformation.template.conditions 11.0.0
+cloudformation.template.description 11.0.0
+cloudformation.template.globals 11.0.0
+cloudformation.template.mappings 11.0.0
+cloudformation.template.metadata 11.0.0
+cloudformation.template.outputs 11.0.0
+cloudformation.template.parameters 11.0.0
+cloudformation.template.resources 11.0.0
+cloudformation.template.transform 11.0.0
+cloudformation.template.types 11.0.0
+cloudformation.template.version 11.0.0

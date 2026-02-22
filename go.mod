@@ -53,7 +53,6 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-plugin v1.7.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/hashicorp/go-version v1.8.0
 	github.com/hashicorp/vault/api v1.22.0
 	github.com/hnakamur/go-scp v1.0.2
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f

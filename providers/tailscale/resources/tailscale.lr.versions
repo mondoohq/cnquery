@@ -1,0 +1,41 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+tailscale 11.0.0
+tailscale.device 11.0.0
+tailscale.device.addresses 11.0.0
+tailscale.device.authorized 11.0.0
+tailscale.device.blocksIncomingConnections 11.0.0
+tailscale.device.clientVersion 11.0.0
+tailscale.device.createdAt 11.0.0
+tailscale.device.expiresAt 11.0.0
+tailscale.device.hostname 11.0.0
+tailscale.device.id 11.0.0
+tailscale.device.isExternal 11.0.0
+tailscale.device.keyExpiryDisabled 11.0.0
+tailscale.device.lastSeenAt 11.0.0
+tailscale.device.machineKey 11.0.0
+tailscale.device.name 11.0.0
+tailscale.device.nodeKey 11.0.0
+tailscale.device.os 11.0.0
+tailscale.device.tags 11.0.0
+tailscale.device.tailnetLockError 11.0.0
+tailscale.device.tailnetLockKey 11.0.0
+tailscale.device.updateAvailable 11.0.0
+tailscale.device.user 11.0.0
+tailscale.devices 11.0.0
+tailscale.nameservers 11.0.0
+tailscale.tailnet 11.0.0
+tailscale.user 11.0.0
+tailscale.user.createdAt 11.0.0
+tailscale.user.deviceCount 11.0.0
+tailscale.user.displayName 11.0.0
+tailscale.user.id 11.0.0
+tailscale.user.lastSeenAt 11.0.0
+tailscale.user.loginName 11.0.0
+tailscale.user.profilePicUrl 11.0.0
+tailscale.user.role 11.0.0
+tailscale.user.status 11.0.0
+tailscale.user.tailnetId 11.0.0
+tailscale.user.type 11.0.0
+tailscale.users 11.0.0

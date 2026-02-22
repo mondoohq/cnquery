@@ -47,8 +47,8 @@ echo "  - Generate the plugin..."
 cd ${PROVIDER_PATH} && go run gen/main.go .
 echo "  - Compile the resources..."
 ${REPOROOT}/lr go ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr --dist ${PROVIDER_DIST}
-echo "  - Generate the resource docs..."
-${REPOROOT}/lr docs json ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr.manifest.yaml
+echo "  - Generate the resource versions..."
+${REPOROOT}/lr versions ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr
 #echo "  - Build the provider binary..."
 #go build -o ${PROVIDER_DIST}/${PROVIDER_NAME} ${PROVIDER_PATH}/main.go
 

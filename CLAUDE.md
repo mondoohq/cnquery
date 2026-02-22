@@ -30,7 +30,7 @@ make mql/generate
 # Generate specific provider resources (fast - recommended)
 # (if the mqlr binary is not there:)
 make providers/mqlr
-./mqlr generate providers/aws/resources/aws.lr --docs-file providers/aws/resources/aws.lr.manifest.yaml --dist providers/aws/resources
+./mqlr generate providers/aws/resources/aws.lr --dist providers/aws/resources
 ```
 
 ### Step 3: Implementation Strategies
@@ -268,7 +268,7 @@ Think of it as: MQL (like SQL or even better GraphQL) → MQLC (compiler) → LL
     - Resource structs
     - Schema definitions
     - Data accessor methods
-- Generated files: `*.lr.go`, `*.lr.manifest.yaml`, `*.resources.json`
+- Generated files: `*.lr.go`, `*.lr.versions`, `*.resources.json`
 
 ### Resource Caching & __id
 **How caching works:**
@@ -313,7 +313,7 @@ But this also works:
 2. Run code generation:
    ```bash
    make providers/mqlr # if mqlr is not already available
-   ./mqlr generate providers/aws/resources/aws.lr --docs-file providers/aws/resources/aws.lr.manifest.yaml --dist providers/aws/resources
+   ./mqlr generate providers/aws/resources/aws.lr --dist providers/aws/resources
    ```
 3. Implement the resource methods in Go
 4. Rebuild and install the provider:
@@ -402,7 +402,7 @@ for {
 - Place fields split into multiple properties: name, address, latitude, longitude, google_place_id
 - Use JavaScript number types for numeric fields, not strings
 - Prefer typed resource references over raw ID strings. Instead of a `vpcId string` field, define a `vpc aws.vpc` field that returns the actual resource. This enables MQL traversal (e.g., `aws.ec2.instance.vpc.cidrBlock`) instead of requiring users to manually look up IDs.
-- In `.lr.manifest.yaml`, new fields only need `min_mondoo_version` if the resource itself has an older `min_mondoo_version`. If the resource already requires a recent enough version, fields inherit it implicitly.
+- Every resource and field has an explicit entry in `.lr.versions`. When a new field is added to an `.lr` file that isn't yet tracked, the `versions` command automatically assigns it the next patch version (current provider version + 1 patch). Existing entries are never overwritten.
 - **Match SDK types faithfully:** If an SDK field is `*bool`, use `bool` in `.lr` and `llx.BoolDataPtr()` in Go — don't cast it to `string`. If an SDK enum has only two states (Enabled/Disabled), prefer `bool`. Use `*type` intermediate variables with `llx.*DataPtr` helpers to preserve nil semantics.
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
 - **Verify enum values in `.lr` comments:** When listing possible values in field comments, check the SDK/API docs for completeness — don't assume the set is closed.

@@ -1,0 +1,17 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+ipinfo 12.10.0
+ipinfo.bogon 12.10.0
+ipinfo.city 12.10.0
+ipinfo.country 12.10.0
+ipinfo.country_name 12.10.0
+ipinfo.hostname 12.10.0
+ipinfo.is_eu 12.10.0
+ipinfo.location 12.10.0
+ipinfo.org 12.10.0
+ipinfo.postal 12.10.0
+ipinfo.region 12.10.0
+ipinfo.requested_ip 12.10.0
+ipinfo.returned_ip 12.10.0
+ipinfo.timezone 12.10.0

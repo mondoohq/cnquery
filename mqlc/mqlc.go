@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13"
@@ -960,8 +959,6 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
 			}
 
-			c.Result.MinMondooVersion = getMinMondooVersion(c.Schema, c.Result.MinMondooVersion, resource.Name, id)
-
 			// this only happens when we call a field of a bridging resource,
 			// in which case we don't call the field (since there is nothing to do)
 			// and instead we call the resource directly:
@@ -1059,8 +1056,6 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 		call = calls[0]
 		calls = calls[1:]
 	}
-
-	c.Result.MinMondooVersion = getMinMondooVersion(c.Schema, c.Result.MinMondooVersion, id, "")
 
 	typ, err := c.addResource(id, resource, call)
 	return true, calls, typ, err
@@ -2138,35 +2133,6 @@ func (c *compiler) failIfNoEntrypoints() error {
 	return nil
 }
 
-func getMinMondooVersion(schema resources.ResourcesSchema, current string, resource string, field string) string {
-	info := schema.Lookup(resource)
-	if info == nil {
-		return current
-	}
-
-	min := info.MinMondooVersion
-	if field != "" {
-		if finfo, ok := info.Fields[field]; ok && finfo.MinMondooVersion != "" {
-			min = finfo.MinMondooVersion
-		}
-	}
-
-	if current == "" {
-		return min
-	} else if min == "" {
-		return current
-	}
-
-	vMin, err1 := version.NewVersion(min)
-	vCur, err2 := version.NewVersion(current)
-	// if the current version requirement is higher than docs, we keep it,
-	// otherwise docs wins
-	if err1 == nil && err2 == nil && vMin.LessThan(vCur) {
-		return current
-	}
-	return min
-}
-
 // CompileAST with a schema into a chunky code
 func CompileAST(ast *parser.AST, props PropsHandler, conf CompilerConfig) (*llx.CodeBundle, error) {
 	if conf.Schema == nil {
@@ -2186,11 +2152,10 @@ func CompileAST(ast *parser.AST, props PropsHandler, conf CompilerConfig) (*llx.
 		Labels: &llx.Labels{
 			Labels: map[string]string{},
 		},
-		Props:            map[string]string{},
-		Version:          mql.APIVersion(),
-		MinMondooVersion: "",
-		AutoExpand:       map[string]uint64{},
-		Vars:             map[uint64]string{},
+		Props:      map[string]string{},
+		Version:    mql.APIVersion(),
+		AutoExpand: map[string]uint64{},
+		Vars:       map[uint64]string{},
 	}
 
 	c := compiler{

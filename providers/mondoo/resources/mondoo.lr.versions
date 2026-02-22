@@ -1,0 +1,26 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+mondoo.asset 11.0.0
+mondoo.asset.annotations 11.0.0
+mondoo.asset.labels 11.0.0
+mondoo.asset.mrn 11.0.0
+mondoo.asset.name 11.0.0
+mondoo.asset.platform 11.0.0
+mondoo.asset.resources 11.0.0
+mondoo.asset.scoreGrade 11.0.0
+mondoo.asset.scoreValue 11.0.0
+mondoo.asset.updatedAt 11.0.0
+mondoo.client 11.1.0
+mondoo.client.mrn 11.1.0
+mondoo.organization 11.1.112
+mondoo.organization.mrn 11.1.112
+mondoo.organization.name 11.1.112
+mondoo.organization.spaces 11.1.112
+mondoo.resource 11.0.0
+mondoo.resource.id 11.0.0
+mondoo.resource.name 11.0.0
+mondoo.space 11.0.0
+mondoo.space.assets 11.0.0
+mondoo.space.mrn 11.0.0
+mondoo.space.name 11.0.0

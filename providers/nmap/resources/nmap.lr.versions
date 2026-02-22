@@ -1,0 +1,34 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+nmap 11.0.0
+nmap.host 11.0.0
+nmap.host.addresses 11.0.0
+nmap.host.comment 11.0.0
+nmap.host.distance 11.0.0
+nmap.host.endTime 11.0.0
+nmap.host.hostnames 11.0.0
+nmap.host.name 11.0.0
+nmap.host.os 11.0.0
+nmap.host.ports 11.0.0
+nmap.host.state 11.0.0
+nmap.host.trace 11.0.0
+nmap.network 11.0.0
+nmap.network.hosts 11.0.0
+nmap.network.target 11.0.0
+nmap.network.warnings 11.0.0
+nmap.port 11.0.0
+nmap.port.method 11.0.0
+nmap.port.port 11.0.0
+nmap.port.product 11.0.0
+nmap.port.protocol 11.0.0
+nmap.port.service 11.0.0
+nmap.port.state 11.0.0
+nmap.port.version 11.0.0
+nmap.version 11.0.0
+nmap.versionInformation 11.0.0
+nmap.versionInformation.compiledWith 11.0.0
+nmap.versionInformation.compiledWithout 11.0.0
+nmap.versionInformation.nsockEngines 11.0.0
+nmap.versionInformation.platform 11.0.0
+nmap.versionInformation.version 11.0.0

@@ -4,47 +4,36 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
-	"path"
-	"path/filepath"
 	"strings"
 	"text/template"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/mqlr/lrcore"
-	"sigs.k8s.io/yaml"
 )
 
 func init() {
-	docsYamlCmd.Flags().String("docs-file", "", "optional file path to write content to a file")
-	docsYamlCmd.Flags().String("version", defaultVersionField, "optional version to mark resource, default is latest")
-	docsYamlCmd.Flags().String("license-header-file", "", "optional file path to read license header from")
-	docsCmd.AddCommand(docsYamlCmd)
-	docsJsonCmd.Flags().String("dist", "", "folder for output json generation")
-	docsCmd.AddCommand(docsJsonCmd)
-	rootCmd.AddCommand(docsCmd)
+	versionsCmd.Flags().String("versions-file", "", "optional path to the versions file (auto-detected if omitted)")
+	versionsCmd.Flags().String("version", defaultVersionField, "provider version to assign to new entries")
+	versionsCmd.Flags().String("license-header-file", "", "optional file path to read license header from")
+	rootCmd.AddCommand(versionsCmd)
 }
 
 const defaultVersionField = "9.0.0"
 
-var docsCmd = &cobra.Command{
-	Use: "docs",
-}
-
-var docsYamlCmd = &cobra.Command{
-	Use:   "yaml",
-	Short: "generates yaml docs skeleton file and merges it into existing definition",
-	Long:  `parse an LR file and generates a yaml file structure for additional documentation.`,
+var versionsCmd = &cobra.Command{
+	Use:   "versions",
+	Short: "generates or updates an .lr.versions file from an LR schema",
+	Long:  `parse an LR file and generate a .lr.versions file tracking min_provider_version per resource and field.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		lrFile := args[0]
 
-		docsFilePath, err := cmd.Flags().GetString("docs-file")
+		versionsFilePath, err := cmd.Flags().GetString("versions-file")
 		if err != nil {
-			log.Fatal().Err(err).Msg("invalid argument for `docs-file`")
+			log.Fatal().Err(err).Msg("invalid argument for `versions-file`")
 		}
 
 		version, err := cmd.Flags().GetString("version")
@@ -54,81 +43,44 @@ var docsYamlCmd = &cobra.Command{
 
 		headerFile, _ := cmd.Flags().GetString("license-header-file")
 
-		runDocsYamlCmd(lrFile, headerFile, version, docsFilePath)
+		runVersionsCmd(lrFile, headerFile, version, versionsFilePath)
 	},
 }
 
-var docsJsonCmd = &cobra.Command{
-	Use:   "json",
-	Short: "convert yaml docs manifest into json",
-	Long:  `convert a yaml-based docs manifest into its json description, ready for loading`,
-	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		file := args[0]
-
-		dist, err := cmd.Flags().GetString("dist")
-		if err != nil {
-			log.Fatal().Err(err).Msg("failed to get dist flag")
-		}
-
-		runDocsJsonCmd(file, dist)
-	},
-}
-
-func runDocsYamlCmd(lrFile string, headerFile string, version string, docsFilePath string) {
+func runVersionsCmd(lrFile string, headerFile string, version string, versionsFilePath string) {
 	if version == defaultVersionField {
 		version = detectProviderVersion(lrFile)
 	}
 
 	raw, err := os.ReadFile(lrFile)
 	if err != nil {
-		log.Error().Msg(err.Error())
-		return
+		log.Fatal().Err(err).Msg("could not read LR file")
 	}
 
 	res, err := lrcore.Parse(string(raw))
 	if err != nil {
-		log.Error().Msg(err.Error())
-		return
+		log.Fatal().Err(err).Msg("could not parse LR file")
 	}
 
-	// if an file was provided, we check if the file exist and merge existing content with the new resources
-	// to ensure that existing documentation stays available
-	var existingData lrcore.LrDocs
-	_, err = os.Stat(docsFilePath)
+	// Auto-detect versions file path if not provided
+	if versionsFilePath == "" {
+		versionsFilePath = strings.TrimSuffix(lrFile, ".lr") + ".lr.versions"
+	}
+
+	// Load existing versions if the file exists
+	var existing lrcore.LrVersions
+	_, err = os.Stat(versionsFilePath)
 	if err == nil {
-		log.Info().Msg("load existing data")
-		content, err := os.ReadFile(docsFilePath)
+		log.Info().Msg("loading existing versions data")
+		existing, err = lrcore.ReadVersions(versionsFilePath)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not read file " + docsFilePath)
-		}
-		err = yaml.Unmarshal(content, &existingData)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not load yaml data")
+			log.Fatal().Err(err).Msg("could not read versions file " + versionsFilePath)
 		}
 	}
 
-	docs, err := res.GenerateDocs(version, defaultVersionField, existingData)
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not generate docs")
-	}
-	// default behaviour is to output the result on cli
-	if docsFilePath == "" {
-		data, err := yaml.Marshal(docs)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not marshal docs")
-		}
+	versions := lrcore.GenerateVersions(res, version, existing)
 
-		fmt.Println(string(data))
-		return
-	}
-
-	// generate content
-	data, err := yaml.Marshal(docs)
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not marshal docs")
-	}
-	// add license header
+	// Build license header template
 	var headerTpl *template.Template
 	if headerFile != "" {
 		headerRaw, err := os.ReadFile(headerFile)
@@ -141,51 +93,9 @@ func runDocsYamlCmd(lrFile string, headerFile string, version string, docsFilePa
 		}
 	}
 
-	header, err := lrcore.LicenseHeader(headerTpl, lrcore.LicenseHeaderOptions{LineStarter: "#"})
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not generate license header")
-	}
-	data = append([]byte(header), data...)
-
-	log.Info().Str("file", docsFilePath).Msg("write file")
-	err = os.WriteFile(docsFilePath, data, 0o700)
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not write docs file")
-	}
-}
-
-func runDocsJsonCmd(yamlDocsFile string, dist string) {
-	// without dist we want the file to be put alongside the original
-	if dist == "" {
-		src, err := filepath.Abs(yamlDocsFile)
-		if err != nil {
-			log.Fatal().Err(err).Msg("cannot figure out the absolute path for the source file")
-		}
-		dist = filepath.Dir(src)
+	if err := lrcore.WriteVersions(versionsFilePath, versions, headerTpl); err != nil {
+		log.Fatal().Err(err).Msg("could not write versions file")
 	}
 
-	raw, err := os.ReadFile(yamlDocsFile)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-
-	var lrDocsData lrcore.LrDocs
-	err = yaml.Unmarshal(raw, &lrDocsData)
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not load yaml data")
-	}
-
-	out, err := json.Marshal(&lrDocsData)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to convert yaml to json")
-	}
-
-	if err = os.MkdirAll(dist, 0o755); err != nil {
-		log.Fatal().Err(err).Msg("failed to create dist folder")
-	}
-	infoFile := path.Join(dist, strings.TrimSuffix(path.Base(yamlDocsFile), ".yaml")+".json")
-	err = os.WriteFile(infoFile, []byte(out), 0o644)
-	if err != nil {
-		log.Fatal().Err(err).Str("path", infoFile).Msg("failed to write to json file")
-	}
+	fmt.Printf("wrote %s (%d entries)\n", versionsFilePath, len(versions))
 }
