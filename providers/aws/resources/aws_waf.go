@@ -413,6 +413,9 @@ func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleActi
 		if ruleAction.Captcha != nil {
 			action = "captcha"
 		}
+		if ruleAction.Challenge != nil {
+			action = "challenge"
+		}
 	}
 	mqlAction, err = CreateResource(runtime, "aws.waf.rule.action", map[string]*llx.RawData{
 		"ruleName":     llx.StringDataPtr(ruleName),

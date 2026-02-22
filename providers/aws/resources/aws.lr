@@ -333,7 +333,7 @@ private aws.waf.rule @defaults("name") {
 private aws.waf.rule.action @defaults("action") {
   // Name of the rule this action belongs to
   ruleName string
-  // One of Block, Allow, Count, Captcha
+  // One of Block, Allow, Count, Captcha, Challenge
   action string
   // HTTP Response Code, only if the action is Block
   responseCode string
@@ -1225,7 +1225,7 @@ private aws.iam.accessanalyzer.analyzer @defaults("name type region status") {
   name string
   // Status of the analyzer: ACTIVE, CREATING, DISABLED, or FAILED
   status string
-  // Type of analyzer: ACCOUNT or ORGANIZATION
+  // Type of analyzer: ACCOUNT, ORGANIZATION, ACCOUNT_UNUSED_ACCESS, ORGANIZATION_UNUSED_ACCESS, ACCOUNT_INTERNAL_ACCESS, or ORGANIZATION_INTERNAL_ACCESS
   type string
   // Region where the analyzer exists
   region string
@@ -2055,7 +2055,7 @@ private aws.ecs.taskDefinition @defaults("arn family revision") {
   family string
   // Revision number of the task definition
   revision int
-  // Status of the task definition (ACTIVE, INACTIVE)
+  // Status of the task definition (ACTIVE, INACTIVE, DELETE_IN_PROGRESS)
   status string
   // Network mode for the task (bridge, host, awsvpc, none)
   networkMode string
@@ -2883,7 +2883,7 @@ private aws.drs.job @defaults("jobID type status") {
   type string
   // Job status (PENDING, STARTED, COMPLETED)
   status string
-  // How job was initiated (START_RECOVERY, START_DRILL, etc.)
+  // How job was initiated (START_RECOVERY, START_DRILL, FAILBACK, DIAGNOSTIC, TERMINATE_RECOVERY_INSTANCES, TARGET_ACCOUNT, CREATE_NETWORK_RECOVERY, UPDATE_NETWORK_RECOVERY, or ASSOCIATE_NETWORK_RECOVERY)
   initiatedBy string
   // Job creation timestamp
   createdAt time
@@ -3093,7 +3093,7 @@ private aws.dynamodb.table @defaults("name region") {
   sizeBytes int
   // Latest stream for this table
   latestStreamArn string
-  // Current state of the table: CREATING, UPDATING, DELETING, ACTIVE, INACCESSIBLE_ENCRYPTION_CREDENTIALS, ARCHIVING, or ARCHIVED
+  // Current state of the table: CREATING, UPDATING, DELETING, ACTIVE, INACCESSIBLE_ENCRYPTION_CREDENTIALS, ARCHIVING, ARCHIVED, or REPLICATION_NOT_AUTHORIZED
   status string
 }
 
