@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/mqlr/lrcore"
-	"sigs.k8s.io/yaml"
 )
 
 var goCmd = &cobra.Command{
@@ -91,22 +90,15 @@ func runGoCmd(lrFile string, dist string, headerFile string, failOnDups bool) {
 		log.Fatal().Err(err).Msg("failed to generate schema")
 	}
 
-	// we will attempt to auto-detect the manifest to inject some metadata
-	// into the schema
-	manifestPath := lrFile + ".manifest.yaml"
-	raw, err := os.ReadFile(manifestPath)
+	// Auto-detect .lr.versions file and inject version metadata into the schema
+	versionsPath := strings.TrimSuffix(lrFile, ".lr") + ".lr.versions"
+	versions, err := lrcore.ReadVersions(versionsPath)
 	if err == nil {
-		var lrDocsData lrcore.LrDocs
-		err = yaml.Unmarshal(raw, &lrDocsData)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not load yaml data")
-		}
-
-		lrcore.InjectMetadata(schema, &lrDocsData)
+		lrcore.InjectVersions(schema, versions)
 	} else if os.IsNotExist(err) {
-		log.Info().Str("path", manifestPath).Msg("no manifest found, ignoring")
+		log.Info().Str("path", versionsPath).Msg("no versions file found, ignoring")
 	} else {
-		log.Fatal().Err(err).Str("path", manifestPath).Msg("failed to read manifest")
+		log.Fatal().Err(err).Str("path", versionsPath).Msg("failed to read versions file")
 	}
 
 	schemaData, err := json.Marshal(schema)

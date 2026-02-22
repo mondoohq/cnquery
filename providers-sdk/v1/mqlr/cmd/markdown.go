@@ -6,7 +6,6 @@ package cmd
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,13 +20,11 @@ import (
 	"github.com/spf13/cobra"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/mqlr/lrcore"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
-	"sigs.k8s.io/yaml"
 )
 
 func init() {
 	markdownCmd.Flags().String("pack-name", "", "name of the resource pack")
 	markdownCmd.Flags().String("description", "", "description of the resource pack")
-	markdownCmd.Flags().String("docs-file", "", "docs yaml to enrich the resource information")
 	markdownCmd.Flags().StringP("output", "o", ".build", "local path to the resource pack in the docs repo")
 	rootCmd.AddCommand(markdownCmd)
 }
@@ -69,21 +66,6 @@ var markdownCmd = &cobra.Command{
 			log.Error().Err(err).Msg("failed to generate schema")
 		}
 
-		var lrDocsData lrcore.LrDocs
-
-		docsFilepath, _ := cmd.Flags().GetString("docs-file")
-		if docsFilepath != "" { // as soon as a path has been provided, we try to load the file
-			content, err := os.ReadFile(docsFilepath)
-			if err != nil {
-				log.Fatal().Err(err).Msg("could not read file " + docsFilepath)
-			}
-			err = yaml.Unmarshal(content, &lrDocsData)
-			if err != nil {
-				log.Fatal().Err(err).Msg("could not load yaml data")
-			}
-			log.Info().Int("resources", len(lrDocsData.Resources)).Msg("loaded docs from " + docsFilepath)
-		}
-
 		// to ensure we generate the same markdown, we sort the resources first
 		sort.SliceStable(res.Resources, func(i, j int) bool {
 			return res.Resources[i].ID < res.Resources[j].ID
@@ -119,16 +101,7 @@ var markdownCmd = &cobra.Command{
 
 		for i := range res.Resources {
 			resource := res.Resources[i]
-			var docs *lrcore.LrDocsEntry
-			var ok bool
-			if lrDocsData.Resources != nil {
-				docs, ok = lrDocsData.Resources[resource.ID]
-				if !ok {
-					log.Warn().Msg("no docs found for resource " + resource.ID)
-				}
-			}
-
-			err = os.WriteFile(filepath.Join(outputDir, strings.ToLower(resource.ID+".md")), []byte(r.renderResourcePage(resource, schema, docs)), 0o600)
+			err = os.WriteFile(filepath.Join(outputDir, strings.ToLower(resource.ID+".md")), []byte(r.renderResourcePage(resource, schema)), 0o600)
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not write file")
 			}
@@ -224,7 +197,7 @@ func trimColon(s string) string {
 	return strings.ReplaceAll(s, ":", "")
 }
 
-func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema *resources.Schema, docs *lrcore.LrDocsEntry) string {
+func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema *resources.Schema) string {
 	builder := &strings.Builder{}
 
 	builder.WriteString("---\n")
@@ -244,33 +217,9 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	builder.WriteString(resource.ID)
 	builder.WriteString("\n\n")
 
-	if docs != nil && docs.Platform != nil && (len(docs.Platform.Name) > 0 || len(docs.Platform.Family) > 0) {
-		builder.WriteString("**Supported platform**\n\n")
-		for r := range docs.Platform.Name {
-			fmt.Fprintf(builder, "- %s", docs.Platform.Name[r])
-			builder.WriteString("\n")
-		}
-		for r := range docs.Platform.Family {
-			fmt.Fprintf(builder, "- %s", docs.Platform.Name[r])
-			builder.WriteString("\n")
-		}
-		builder.WriteString("\n")
-	}
-
-	if docs != nil && len(docs.Maturity) > 0 {
-		builder.WriteString("**Maturity**\n\n")
-		builder.WriteString(docs.Maturity)
-		builder.WriteString("\n\n")
-	}
-
 	if schema.Resources[resource.ID].Title != "" {
 		builder.WriteString("**Description**\n\n")
 		builder.WriteString(strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), "\n"))
-		builder.WriteString("\n\n")
-	}
-
-	if docs != nil && docs.Docs != nil && docs.Docs.Description != "" {
-		builder.WriteString(docs.Docs.Description)
 		builder.WriteString("\n\n")
 	}
 
@@ -349,37 +298,6 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 		err = table.Render()
 		if err != nil {
 			panic(err)
-		}
-		builder.WriteString("\n")
-	}
-
-	if docs != nil && len(docs.Snippets) > 0 {
-		builder.WriteString("**Examples**\n\n")
-		for si := range docs.Snippets {
-			snippet := docs.Snippets[si]
-			builder.WriteString(snippet.Title)
-			builder.WriteString("\n\n")
-			builder.WriteString("```coffee\n")
-			builder.WriteString(strings.TrimSpace(snippet.Query))
-			builder.WriteString("\n```\n\n")
-		}
-		builder.WriteString("\n")
-	}
-
-	if docs != nil && len(docs.Resources) > 0 {
-		builder.WriteString("**Resources**\n\n")
-		for r := range docs.Resources {
-			fmt.Fprintf(builder, "- [%s](%s)", docs.Resources[r].Title, docs.Resources[r].Url)
-			builder.WriteString("\n")
-		}
-		builder.WriteString("\n")
-	}
-
-	if docs != nil && len(docs.Refs) > 0 {
-		builder.WriteString("**References**\n\n")
-		for r := range docs.Refs {
-			fmt.Fprintf(builder, "- [%s](%s)", docs.Refs[r].Title, docs.Refs[r].Url)
-			builder.WriteString("\n")
 		}
 		builder.WriteString("\n")
 	}

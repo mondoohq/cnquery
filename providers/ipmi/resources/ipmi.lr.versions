@@ -1,0 +1,9 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+ipmi 9.0.0
+ipmi.chassis 9.0.0
+ipmi.chassis.status 9.0.0
+ipmi.chassis.systemBootOptions 9.0.0
+ipmi.deviceID 9.0.0
+ipmi.guid 9.0.0

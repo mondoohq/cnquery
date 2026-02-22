@@ -1,0 +1,39 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+shodan 11.0.0
+shodan.apiPlan 11.0.0
+shodan.apiPlan.monitoredIps 11.0.0
+shodan.apiPlan.plan 11.0.0
+shodan.apiPlan.scanCredits 11.0.0
+shodan.apiPlan.telnet 11.0.0
+shodan.apiPlan.unlocked 11.0.0
+shodan.apiPlan.unlockedLeft 11.0.0
+shodan.domain 11.0.0
+shodan.domain.name 11.0.0
+shodan.domain.nsrecords 11.0.0
+shodan.domain.subdomains 11.0.0
+shodan.domain.tags 11.0.0
+shodan.host 11.0.0
+shodan.host.asn 11.0.0
+shodan.host.city 11.0.0
+shodan.host.country 11.0.0
+shodan.host.hostnames 11.0.0
+shodan.host.ip 11.0.0
+shodan.host.isp 11.0.0
+shodan.host.org 11.0.0
+shodan.host.os 11.0.0
+shodan.host.ports 11.0.0
+shodan.host.tags 11.0.0
+shodan.host.vulnerabilities 11.0.0
+shodan.nsrecord 11.0.0
+shodan.nsrecord.domain 11.0.0
+shodan.nsrecord.lastSeen 11.0.0
+shodan.nsrecord.subdomain 11.0.0
+shodan.nsrecord.type 11.0.0
+shodan.nsrecord.value 11.0.0
+shodan.profile 11.0.0
+shodan.profile.createdAt 11.0.0
+shodan.profile.credits 11.0.0
+shodan.profile.displayName 11.0.0
+shodan.profile.member 11.0.0

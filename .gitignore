@@ -17,7 +17,6 @@ data/
 providers/*.resources.json
 providers/*/dist
 providers/*/resources/*.resources.json
-providers/*/resources/*.manifest.json
 providers/mock_coordinator.go
 providers/mock_plugin_interface.go
 providers/mock_schema.go
