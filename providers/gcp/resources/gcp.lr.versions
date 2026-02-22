@@ -167,12 +167,12 @@ gcp.project.cloudFunction.httpsTrigger 9.0.0
 gcp.project.cloudFunction.ingressSettings 9.0.0
 gcp.project.cloudFunction.kmsKeyName 9.0.0
 gcp.project.cloudFunction.labels 9.0.0
+gcp.project.cloudFunction.location 11.2.1
 gcp.project.cloudFunction.maxInstances 9.0.0
 gcp.project.cloudFunction.minInstances 9.0.0
 gcp.project.cloudFunction.name 9.0.0
 gcp.project.cloudFunction.network 9.0.0
 gcp.project.cloudFunction.projectId 9.0.0
-gcp.project.cloudFunction.region 11.2.1
 gcp.project.cloudFunction.runtime 9.0.0
 gcp.project.cloudFunction.secretEnvVars 9.0.0
 gcp.project.cloudFunction.secretVolumes 9.0.0
@@ -714,10 +714,10 @@ gcp.project.dataprocService.cluster.config.software 9.0.0
 gcp.project.dataprocService.cluster.config.tempBucket 9.0.0
 gcp.project.dataprocService.cluster.config.worker 9.0.0
 gcp.project.dataprocService.cluster.labels 9.0.0
+gcp.project.dataprocService.cluster.location 11.2.1
 gcp.project.dataprocService.cluster.metrics 9.0.0
 gcp.project.dataprocService.cluster.name 9.0.0
 gcp.project.dataprocService.cluster.projectId 9.0.0
-gcp.project.dataprocService.cluster.region 11.2.1
 gcp.project.dataprocService.cluster.status 9.0.0
 gcp.project.dataprocService.cluster.status.detail 9.0.0
 gcp.project.dataprocService.cluster.status.id 9.0.0

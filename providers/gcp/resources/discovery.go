@@ -1032,10 +1032,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 		}
 		for i := range funcs.Data {
 			fn := funcs.Data[i].(*mqlGcpProjectCloudFunction)
-			region := fn.Region.Data
+			location := fn.Location.Data
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{
-					connection.NewResourcePlatformID("cloud-functions", gcpProject.Id.Data, region, "function", fn.Name.Data),
+					connection.NewResourcePlatformID("cloud-functions", gcpProject.Id.Data, location, "function", fn.Name.Data),
 				},
 				Name: fn.Name.Data,
 				Platform: &inventory.Platform{
@@ -1044,7 +1044,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Runtime:               "gcp",
 					Kind:                  "gcp-object",
 					Family:                []string{"google"},
-					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-functions", gcpProject.Id.Data, region, "function", fn.Name.Data),
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("cloud-functions", gcpProject.Id.Data, location, "function", fn.Name.Data),
 				},
 				Labels:      mapStrInterfaceToMapStrStr(fn.GetLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
@@ -1063,10 +1063,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 		}
 		for i := range clusters.Data {
 			cluster := clusters.Data[i].(*mqlGcpProjectDataprocServiceCluster)
-			region := cluster.Region.Data
+			location := cluster.Location.Data
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{
-					connection.NewResourcePlatformID("dataproc", gcpProject.Id.Data, region, "cluster", cluster.Name.Data),
+					connection.NewResourcePlatformID("dataproc", gcpProject.Id.Data, location, "cluster", cluster.Name.Data),
 				},
 				Name: cluster.Name.Data,
 				Platform: &inventory.Platform{
@@ -1075,7 +1075,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Runtime:               "gcp",
 					Kind:                  "gcp-object",
 					Family:                []string{"google"},
-					TechnologyUrlSegments: connection.ResourceTechnologyUrl("dataproc", gcpProject.Id.Data, region, "cluster", cluster.Name.Data),
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("dataproc", gcpProject.Id.Data, location, "cluster", cluster.Name.Data),
 				},
 				Labels:      mapStrInterfaceToMapStrStr(cluster.GetLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
