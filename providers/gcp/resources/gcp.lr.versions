@@ -172,6 +172,7 @@ gcp.project.cloudFunction.minInstances 9.0.0
 gcp.project.cloudFunction.name 9.0.0
 gcp.project.cloudFunction.network 9.0.0
 gcp.project.cloudFunction.projectId 9.0.0
+gcp.project.cloudFunction.region 11.2.1
 gcp.project.cloudFunction.runtime 9.0.0
 gcp.project.cloudFunction.secretEnvVars 9.0.0
 gcp.project.cloudFunction.secretVolumes 9.0.0
@@ -716,6 +717,7 @@ gcp.project.dataprocService.cluster.labels 9.0.0
 gcp.project.dataprocService.cluster.metrics 9.0.0
 gcp.project.dataprocService.cluster.name 9.0.0
 gcp.project.dataprocService.cluster.projectId 9.0.0
+gcp.project.dataprocService.cluster.region 11.2.1
 gcp.project.dataprocService.cluster.status 9.0.0
 gcp.project.dataprocService.cluster.status.detail 9.0.0
 gcp.project.dataprocService.cluster.status.id 9.0.0
@@ -1029,6 +1031,7 @@ gcp.project.loggingservice.bucket.indexConfig.id 9.0.0
 gcp.project.loggingservice.bucket.indexConfig.type 9.0.0
 gcp.project.loggingservice.bucket.indexConfigs 9.0.0
 gcp.project.loggingservice.bucket.lifecycleState 9.0.0
+gcp.project.loggingservice.bucket.location 11.2.1
 gcp.project.loggingservice.bucket.locked 9.0.0
 gcp.project.loggingservice.bucket.name 9.0.0
 gcp.project.loggingservice.bucket.projectId 9.0.0
