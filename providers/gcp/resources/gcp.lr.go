@@ -3539,6 +3539,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.pubsubService.topic.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceTopic).GetConfig()).ToDataRes(types.Resource("gcp.project.pubsubService.topic.config"))
 	},
+	"gcp.project.pubsubService.topic.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceTopic).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
 	"gcp.project.pubsubService.topic.config.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceTopicConfig).GetProjectId()).ToDataRes(types.String)
 	},
@@ -3554,6 +3557,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.pubsubService.topic.config.messageStoragePolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceTopicConfig).GetMessageStoragePolicy()).ToDataRes(types.Resource("gcp.project.pubsubService.topic.config.messagestoragepolicy"))
 	},
+	"gcp.project.pubsubService.topic.config.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceTopicConfig).GetState()).ToDataRes(types.String)
+	},
 	"gcp.project.pubsubService.topic.config.messagestoragepolicy.configId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy).GetConfigId()).ToDataRes(types.String)
 	},
@@ -3568,6 +3574,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.pubsubService.subscription.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscription).GetConfig()).ToDataRes(types.Resource("gcp.project.pubsubService.subscription.config"))
+	},
+	"gcp.project.pubsubService.subscription.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscription).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
 	"gcp.project.pubsubService.subscription.config.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetProjectId()).ToDataRes(types.String)
@@ -3595,6 +3604,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.pubsubService.subscription.config.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.pubsubService.subscription.config.enableMessageOrdering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetEnableMessageOrdering()).ToDataRes(types.Bool)
+	},
+	"gcp.project.pubsubService.subscription.config.enableExactlyOnceDelivery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetEnableExactlyOnceDelivery()).ToDataRes(types.Bool)
+	},
+	"gcp.project.pubsubService.subscription.config.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetFilter()).ToDataRes(types.String)
+	},
+	"gcp.project.pubsubService.subscription.config.detached": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetDetached()).ToDataRes(types.Bool)
+	},
+	"gcp.project.pubsubService.subscription.config.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetState()).ToDataRes(types.String)
 	},
 	"gcp.project.pubsubService.subscription.config.pushconfig.configId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).GetConfigId()).ToDataRes(types.String)
@@ -8856,6 +8880,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectPubsubServiceTopic).Config, ok = plugin.RawToTValue[*mqlGcpProjectPubsubServiceTopicConfig](v.Value, v.Error)
 		return
 	},
+	"gcp.project.pubsubService.topic.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceTopic).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.pubsubService.topic.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceTopicConfig).__id, ok = v.Value.(string)
 		return
@@ -8878,6 +8906,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.pubsubService.topic.config.messageStoragePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceTopicConfig).MessageStoragePolicy, ok = plugin.RawToTValue[*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.topic.config.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceTopicConfig).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.pubsubService.topic.config.messagestoragepolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8906,6 +8938,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.pubsubService.subscription.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSubscription).Config, ok = plugin.RawToTValue[*mqlGcpProjectPubsubServiceSubscriptionConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.subscription.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscription).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.pubsubService.subscription.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8946,6 +8982,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.pubsubService.subscription.config.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.subscription.config.enableMessageOrdering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).EnableMessageOrdering, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.subscription.config.enableExactlyOnceDelivery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).EnableExactlyOnceDelivery, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.subscription.config.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.subscription.config.detached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).Detached, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.subscription.config.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.pubsubService.subscription.config.pushconfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20118,6 +20174,7 @@ type mqlGcpProjectPubsubServiceTopic struct {
 	ProjectId plugin.TValue[string]
 	Name      plugin.TValue[string]
 	Config    plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfig]
+	IamPolicy plugin.TValue[[]any]
 }
 
 // createGcpProjectPubsubServiceTopic creates a new instance of this resource
@@ -20181,6 +20238,22 @@ func (c *mqlGcpProjectPubsubServiceTopic) GetConfig() *plugin.TValue[*mqlGcpProj
 	})
 }
 
+func (c *mqlGcpProjectPubsubServiceTopic) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.pubsubService.topic", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
 // mqlGcpProjectPubsubServiceTopicConfig for the gcp.project.pubsubService.topic.config resource
 type mqlGcpProjectPubsubServiceTopicConfig struct {
 	MqlRuntime *plugin.Runtime
@@ -20191,6 +20264,7 @@ type mqlGcpProjectPubsubServiceTopicConfig struct {
 	Labels               plugin.TValue[map[string]any]
 	KmsKeyName           plugin.TValue[string]
 	MessageStoragePolicy plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy]
+	State                plugin.TValue[string]
 }
 
 // createGcpProjectPubsubServiceTopicConfig creates a new instance of this resource
@@ -20248,6 +20322,10 @@ func (c *mqlGcpProjectPubsubServiceTopicConfig) GetKmsKeyName() *plugin.TValue[s
 
 func (c *mqlGcpProjectPubsubServiceTopicConfig) GetMessageStoragePolicy() *plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy] {
 	return &c.MessageStoragePolicy
+}
+
+func (c *mqlGcpProjectPubsubServiceTopicConfig) GetState() *plugin.TValue[string] {
+	return &c.State
 }
 
 // mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy for the gcp.project.pubsubService.topic.config.messagestoragepolicy resource
@@ -20312,6 +20390,7 @@ type mqlGcpProjectPubsubServiceSubscription struct {
 	ProjectId plugin.TValue[string]
 	Name      plugin.TValue[string]
 	Config    plugin.TValue[*mqlGcpProjectPubsubServiceSubscriptionConfig]
+	IamPolicy plugin.TValue[[]any]
 }
 
 // createGcpProjectPubsubServiceSubscription creates a new instance of this resource
@@ -20375,20 +20454,41 @@ func (c *mqlGcpProjectPubsubServiceSubscription) GetConfig() *plugin.TValue[*mql
 	})
 }
 
+func (c *mqlGcpProjectPubsubServiceSubscription) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.pubsubService.subscription", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
 // mqlGcpProjectPubsubServiceSubscriptionConfig for the gcp.project.pubsubService.subscription.config resource
 type mqlGcpProjectPubsubServiceSubscriptionConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceSubscriptionConfigInternal it will be used here
-	ProjectId           plugin.TValue[string]
-	SubscriptionName    plugin.TValue[string]
-	Topic               plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
-	PushConfig          plugin.TValue[*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig]
-	AckDeadline         plugin.TValue[*time.Time]
-	RetainAckedMessages plugin.TValue[bool]
-	RetentionDuration   plugin.TValue[*time.Time]
-	ExpirationPolicy    plugin.TValue[*time.Time]
-	Labels              plugin.TValue[map[string]any]
+	ProjectId                 plugin.TValue[string]
+	SubscriptionName          plugin.TValue[string]
+	Topic                     plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
+	PushConfig                plugin.TValue[*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig]
+	AckDeadline               plugin.TValue[*time.Time]
+	RetainAckedMessages       plugin.TValue[bool]
+	RetentionDuration         plugin.TValue[*time.Time]
+	ExpirationPolicy          plugin.TValue[*time.Time]
+	Labels                    plugin.TValue[map[string]any]
+	EnableMessageOrdering     plugin.TValue[bool]
+	EnableExactlyOnceDelivery plugin.TValue[bool]
+	Filter                    plugin.TValue[string]
+	Detached                  plugin.TValue[bool]
+	State                     plugin.TValue[string]
 }
 
 // createGcpProjectPubsubServiceSubscriptionConfig creates a new instance of this resource
@@ -20462,6 +20562,26 @@ func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetExpirationPolicy() *pl
 
 func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
+}
+
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetEnableMessageOrdering() *plugin.TValue[bool] {
+	return &c.EnableMessageOrdering
+}
+
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetEnableExactlyOnceDelivery() *plugin.TValue[bool] {
+	return &c.EnableExactlyOnceDelivery
+}
+
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetDetached() *plugin.TValue[bool] {
+	return &c.Detached
+}
+
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetState() *plugin.TValue[string] {
+	return &c.State
 }
 
 // mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig for the gcp.project.pubsubService.subscription.config.pushconfig resource
