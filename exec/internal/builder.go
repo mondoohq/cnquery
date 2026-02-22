@@ -4,14 +4,10 @@
 package internal
 
 import (
-	"fmt"
 	"math"
 	"sort"
 	"time"
 
-	vrs "github.com/hashicorp/go-version"
-	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 )
@@ -37,9 +33,6 @@ type GraphBuilder struct {
 	// progressReporter is a configured interface to receive progress
 	// updates
 	progressReporter ProgressReporter
-	// mondooVersion is the version of mondoo. This is generally sourced
-	// from the binary, but is configurable to make testing easier
-	mondooVersion string
 	// queryTimeout is the amount of time to wait for the underlying lumi
 	// runtime to send all the expected datapoints.
 	queryTimeout time.Duration
@@ -52,7 +45,6 @@ func NewBuilder() *GraphBuilder {
 		collectDatapointChecksums: []string{},
 		datapointType:             map[string]string{},
 		progressReporter:          NoopProgressReporter{},
-		mondooVersion:             mql.GetCoreVersion(),
 		queryTimeout:              5 * time.Minute,
 	}
 }
@@ -87,12 +79,7 @@ func (b *GraphBuilder) WithProgressReporter(r ProgressReporter) {
 	b.progressReporter = r
 }
 
-// WithMondooVersion sets the version of mondoo
-func (b *GraphBuilder) WithMondooVersion(mondooVersion string) {
-	b.mondooVersion = mondooVersion
-}
-
-// WithMondooVersion sets the version of mondoo
+// WithQueryTimeout sets the query timeout for the graph executor
 func (b *GraphBuilder) WithQueryTimeout(timeout time.Duration) {
 	b.queryTimeout = timeout
 }
@@ -125,24 +112,8 @@ func (b *GraphBuilder) Build(schema resources.ResourcesSchema, runtime llx.Runti
 		},
 	}
 
-	unrunnableQueries := []query{}
-
-	var mondooVersion *vrs.Version
-	if b.mondooVersion != "" && b.mondooVersion != "unstable" {
-		var err error
-		mondooVersion, err = vrs.NewVersion(b.mondooVersion)
-		if err != nil {
-			log.Warn().Err(err).Str("version", b.mondooVersion).Msg("unable to parse mondoo version")
-		}
-	}
-
 	for queryID, q := range queries {
-		canRun := checkVersion(q.codeBundle, mondooVersion)
-		if canRun {
-			ge.addExecutionQueryNode(queryID, q, q.resolvedProperties, b.datapointType)
-		} else {
-			unrunnableQueries = append(unrunnableQueries, q)
-		}
+		ge.addExecutionQueryNode(queryID, q, q.resolvedProperties, b.datapointType)
 	}
 
 	datapointsToCollect := make([]string, len(b.collectDatapointChecksums))
@@ -151,8 +122,6 @@ func (b *GraphBuilder) Build(schema resources.ResourcesSchema, runtime llx.Runti
 	for _, datapointChecksum := range datapointsToCollect {
 		ge.addEdge(NodeID(datapointChecksum), DatapointCollectorID)
 	}
-
-	ge.handleUnrunnableQueries(unrunnableQueries)
 
 	ge.createFinisherNode(b.progressReporter)
 
@@ -167,31 +136,6 @@ func (b *GraphBuilder) Build(schema resources.ResourcesSchema, runtime llx.Runti
 	ge.priorityMap[CollectionFinisherID] = math.MinInt
 
 	return ge, nil
-}
-
-// handleUnrunnableQueries takes the queries for which the running version does
-// to meet the minimum version requirement and marks the datapoints as error.
-// This is only done for datapoints which will not be reported by a runnable query
-func (ge *GraphExecutor) handleUnrunnableQueries(unrunnableQueries []query) {
-	for _, q := range unrunnableQueries {
-		for _, checksum := range CodepointChecksums(q.codeBundle) {
-			if _, ok := ge.nodes[NodeID(checksum)]; ok {
-				// If the datapoint will be reported by another query, skip
-				// handling it
-				continue
-			}
-
-			ge.addDatapointNode(
-				checksum,
-				nil,
-				&llx.RawResult{
-					CodeID: checksum,
-					Data: &llx.RawData{
-						Error: fmt.Errorf("unable to run query, at least mql version %s required", q.codeBundle.MinMondooVersion),
-					},
-				})
-		}
-	}
 }
 
 func (ge *GraphExecutor) addEdge(from NodeID, to NodeID) {
@@ -325,17 +269,6 @@ func prioritizeNode(nodes map[NodeID]*Node, edges map[NodeID][]NodeID, priorityM
 	myDepth := childrenMaxDepth + 1
 	priorityMap[n] = myDepth
 	return myDepth
-}
-
-func checkVersion(codeBundle *llx.CodeBundle, curMin *vrs.Version) bool {
-	if curMin != nil && codeBundle.MinMondooVersion != "" {
-		requiredVer := codeBundle.MinMondooVersion
-		reqMin, err := vrs.NewVersion(requiredVer)
-		if err == nil && curMin.LessThan(reqMin) {
-			return false
-		}
-	}
-	return true
 }
 
 func insertSorted(ss []string, s string) []string {

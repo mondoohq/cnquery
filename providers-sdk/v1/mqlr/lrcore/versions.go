@@ -72,8 +72,9 @@ func WriteVersions(path string, versions LrVersions, headerTpl *template.Templat
 }
 
 // InjectVersions sets MinProviderVersion on resources and fields in the schema
-// based on the versions map. Every field is expected to have an explicit entry;
-// fields without one are left empty.
+// based on the versions map. Fields whose version matches the parent resource
+// are left empty (omitted from JSON via omitempty), since consumers treat an
+// unset field version as equal to the resource version.
 func InjectVersions(schema *resources.Schema, versions LrVersions) {
 	// Build a sorted list of resource names (longest first) so we can
 	// disambiguate field paths like "aws.ec2.instance.tags" where the resource
@@ -86,20 +87,26 @@ func InjectVersions(schema *resources.Schema, versions LrVersions) {
 		return len(resourceNames[i]) > len(resourceNames[j])
 	})
 
+	// First pass: set resource versions so we can compare against them.
 	for path, version := range versions {
-		// First check if path is a resource name directly
 		if info, ok := schema.Resources[path]; ok {
 			info.MinProviderVersion = version
+		}
+	}
+
+	// Second pass: set field versions, skipping those that match the resource.
+	for path, version := range versions {
+		if _, isResource := schema.Resources[path]; isResource {
 			continue
 		}
-
-		// Otherwise try to split into resource + field using longest-prefix match
 		for _, rName := range resourceNames {
 			if strings.HasPrefix(path, rName+".") {
 				fieldName := path[len(rName)+1:]
 				info := schema.Resources[rName]
 				if finfo, ok := info.Fields[fieldName]; ok {
-					finfo.MinProviderVersion = version
+					if version != info.MinProviderVersion {
+						finfo.MinProviderVersion = version
+					}
 				}
 				break
 			}

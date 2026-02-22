@@ -1248,18 +1248,6 @@ func TestCompiler_Resource(t *testing.T) {
 	})
 }
 
-func TestCompiler_Resource_versioning(t *testing.T) {
-	compileT(t, "sshd", func(res *llx.CodeBundle) {
-		assert.Equal(t, "5.15.0", res.MinMondooVersion)
-	})
-}
-
-func TestCompiler_Resource_versioning2(t *testing.T) {
-	compileT(t, "file.empty", func(res *llx.CodeBundle) {
-		assert.Equal(t, "5.18.0", res.MinMondooVersion)
-	})
-}
-
 func TestCompiler_ResourceWithCall(t *testing.T) {
 	compileT(t, "sshd()", func(res *llx.CodeBundle) {
 		assertFunction(t, "sshd", nil, res.CodeV2.Blocks[0].Chunks[0])
@@ -1275,7 +1263,6 @@ func TestCompiler_LongResource(t *testing.T) {
 func TestCompiler_ResourceMap(t *testing.T) {
 	compileT(t, "sshd.config.params", func(res *llx.CodeBundle) {
 		assertFunction(t, "sshd.config", nil, res.CodeV2.Blocks[0].Chunks[0])
-		assert.Equal(t, "5.15.0", res.MinMondooVersion)
 		assertFunction(t, "params", &llx.Function{
 			Type:    string(types.Map(types.String, types.String)),
 			Binding: (1 << 32) | 1,

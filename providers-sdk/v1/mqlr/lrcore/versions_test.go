@@ -116,8 +116,11 @@ func TestInjectVersions(t *testing.T) {
 	InjectVersions(schema, versions)
 
 	assert.Equal(t, "9.0.0", schema.Resources["asset"].MinProviderVersion)
+	// annotations (10.4.0) differs from asset (9.0.0) — set explicitly
 	assert.Equal(t, "10.4.0", schema.Resources["asset"].Fields["annotations"].MinProviderVersion)
-	assert.Equal(t, "9.0.0", schema.Resources["asset"].Fields["name"].MinProviderVersion)
+	// name (9.0.0) matches asset (9.0.0) — left empty (omitted from JSON)
+	assert.Equal(t, "", schema.Resources["asset"].Fields["name"].MinProviderVersion)
 	assert.Equal(t, "9.1.1", schema.Resources["asset.eol"].MinProviderVersion)
-	assert.Equal(t, "9.1.1", schema.Resources["asset.eol"].Fields["date"].MinProviderVersion)
+	// date (9.1.1) matches asset.eol (9.1.1) — left empty
+	assert.Equal(t, "", schema.Resources["asset.eol"].Fields["date"].MinProviderVersion)
 }

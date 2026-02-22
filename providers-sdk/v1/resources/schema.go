@@ -51,9 +51,6 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 			if v.Name != "" {
 				existing.Name = v.Name
 			}
-			if v.MinMondooVersion != "" {
-				existing.MinMondooVersion = v.MinMondooVersion
-			}
 			if v.Desc != "" {
 				existing.Desc = v.Desc
 			}
@@ -81,19 +78,18 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 			}
 		} else {
 			ri := &ResourceInfo{
-				Id:               v.Id,
-				Name:             v.Name,
-				Fields:           make(map[string]*Field, len(v.Fields)),
-				Init:             v.Init,
-				ListType:         v.ListType,
-				Title:            v.Title,
-				Desc:             v.Desc,
-				Private:          v.Private,
-				IsExtension:      v.IsExtension,
-				MinMondooVersion: v.MinMondooVersion,
-				Defaults:         v.Defaults,
-				Context:          v.Context,
-				Provider:         v.Provider,
+				Id:          v.Id,
+				Name:        v.Name,
+				Fields:      make(map[string]*Field, len(v.Fields)),
+				Init:        v.Init,
+				ListType:    v.ListType,
+				Title:       v.Title,
+				Desc:        v.Desc,
+				Private:     v.Private,
+				IsExtension: v.IsExtension,
+				Defaults:    v.Defaults,
+				Context:     v.Context,
+				Provider:    v.Provider,
 			}
 			for k, v := range v.Fields {
 				ri.Fields[k] = v
