@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -18,6 +19,8 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (g *mqlGcpProjectPubsubService) id() (string, error) {
@@ -439,6 +442,10 @@ func (g *mqlGcpProjectPubsubServiceTopic) iamPolicy() ([]any, error) {
 
 	policy, err := pubsubSvc.Topic(name).IAM().Policy(ctx)
 	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			log.Warn().Str("project", projectId).Str("topic", name).Err(err).Msg("could not retrieve topic IAM policy")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -487,6 +494,10 @@ func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
 
 	policy, err := pubsubSvc.Subscription(name).IAM().Policy(ctx)
 	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			log.Warn().Str("project", projectId).Str("subscription", name).Err(err).Msg("could not retrieve subscription IAM policy")
+			return nil, nil
+		}
 		return nil, err
 	}
 

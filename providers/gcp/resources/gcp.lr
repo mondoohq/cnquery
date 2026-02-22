@@ -2232,7 +2232,7 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   kmsKeyName string
   // Message storage policy
   messageStoragePolicy gcp.project.pubsubService.topic.config.messagestoragepolicy
-  // State of the topic (ACTIVE, INGESTION_RESOURCE_ERROR)
+  // State of the topic (STATE_UNSPECIFIED, ACTIVE, INGESTION_RESOURCE_ERROR)
   state string
 }
 
@@ -2284,7 +2284,7 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   filter string
   // Whether the subscription is detached from its topic
   detached bool
-  // State of the subscription (ACTIVE, RESOURCE_ERROR)
+  // State of the subscription (STATE_UNSPECIFIED, ACTIVE, RESOURCE_ERROR)
   state string
 }
 
