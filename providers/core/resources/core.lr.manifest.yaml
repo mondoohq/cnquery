@@ -6,6 +6,7 @@ resources:
     fields:
       annotations:
         min_mondoo_version: 10.8.3
+        min_provider_version: 10.4.0
       arch: {}
       build: {}
       family: {}
@@ -17,16 +18,19 @@ resources:
       platform: {}
       platformMetadata:
         min_mondoo_version: 9.0.0
+        min_provider_version: 11.0.40
       runtime: {}
       title: {}
       version: {}
     min_mondoo_version: 6.13.0
+    min_provider_version: 9.0.0
   asset.eol:
     fields:
       date: {}
       docsUrl: {}
       productUrl: {}
     min_mondoo_version: latest
+    min_provider_version: 9.1.1
   cpe:
     fields:
       edition: {}
@@ -42,6 +46,7 @@ resources:
       vendor: {}
       version: {}
     min_mondoo_version: latest
+    min_provider_version: 9.1.5
   mondoo:
     fields:
       arch:
@@ -51,14 +56,17 @@ resources:
       jobEnvironment: {}
       version: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   parse:
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   product:
     fields:
       name: {}
       releaseCycle: {}
       version: {}
     min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.4
   product.releaseCycleInformation:
     fields:
       cycle: {}
@@ -72,6 +80,7 @@ resources:
       name: {}
     is_private: true
     min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.4
   regex:
     fields:
       creditCard: {}
@@ -84,6 +93,7 @@ resources:
       url: {}
       uuid: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   time:
     fields:
       day: {}
@@ -94,6 +104,7 @@ resources:
       today: {}
       tomorrow: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   uuid:
     fields:
       urn: {}
@@ -101,8 +112,10 @@ resources:
       variant: {}
       version: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.1
   vulnerability.exchange:
     fields:
       id: {}
       source: {}
     min_mondoo_version: 9.0.0
+    min_provider_version: 11.0.60

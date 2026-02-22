@@ -18,6 +18,7 @@ resources:
       url: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - equinix
@@ -42,6 +43,7 @@ resources:
       website: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - equinix
@@ -60,6 +62,7 @@ resources:
       url: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - equinix
@@ -77,6 +80,7 @@ resources:
       url: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - equinix
@@ -103,6 +107,7 @@ resources:
     is_private: true
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - equinix

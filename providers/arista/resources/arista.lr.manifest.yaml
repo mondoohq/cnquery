@@ -11,16 +11,20 @@ resources:
       ntp: {}
       roles: {}
       routes:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       snmp: {}
       switchports:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
       systemConfig: {}
       users: {}
       version: {}
       vlans:
-        min_mondoo_version: 11.0.133
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.0
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -57,6 +61,7 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -67,6 +72,7 @@ resources:
       name: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -74,6 +80,7 @@ resources:
     fields:
       status: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -84,6 +91,7 @@ resources:
       rules: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -98,7 +106,8 @@ resources:
       routeAction: {}
       routeType: {}
       vrf: {}
-    min_mondoo_version: 11.0.133
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - arista-eos
@@ -112,6 +121,7 @@ resources:
     fields:
       content: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -120,6 +130,7 @@ resources:
       content: {}
       name: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -128,6 +139,7 @@ resources:
       enabled: {}
       notifications: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -149,6 +161,7 @@ resources:
       role: {}
       state: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -162,6 +175,7 @@ resources:
     fields:
       mstInstances: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -175,6 +189,7 @@ resources:
       regionalRootBridge: {}
       rootBridge: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -186,7 +201,8 @@ resources:
       trunkAllowedVlans: {}
       trunkGroups: {}
       trunkNativeVlan: {}
-    min_mondoo_version: 11.0.133
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - arista-eos
@@ -206,6 +222,7 @@ resources:
       secret: {}
       sshkey: {}
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - arista-eos
@@ -215,7 +232,8 @@ resources:
       name: {}
       state: {}
       trunkGroups: {}
-    min_mondoo_version: 11.0.133
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.0
     platform:
       name:
       - arista-eos

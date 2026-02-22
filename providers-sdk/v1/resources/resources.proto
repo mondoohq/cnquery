@@ -46,7 +46,7 @@ message ResourceInfo {
   string desc = 23;
   bool private = 24;
   bool is_extension = 28;
-  string min_mondoo_version = 25;
+  string min_provider_version = 31;
   string defaults = 26;
   string context = 30;
   string provider = 27;
@@ -56,6 +56,11 @@ message ResourceInfo {
   // removed in the future once binding resources are mandatory for all
   // executions.
   repeated ResourceInfo others = 29;
+
+  // DEPRECATED: remove in v14, not used anymore as of v13.
+  // We now use min_provider_version to show what providers we require.
+  string min_mondoo_version = 25 [deprecated = true];
+  // ^^
 }
 
 message Field {
@@ -66,10 +71,14 @@ message Field {
   string title = 20;
   string desc = 21;
   bool is_private = 22;
-  string min_mondoo_version = 23;
+  string min_provider_version = 30;
+  string provider = 27;
+
+  // DEPRECATED: remove in v14, not used anymore as of v13.
+  // We now use min_provider_version to show what providers we require.
+  string min_mondoo_version = 23 [deprecated = true];
   bool is_implicit_resource = 24;
   bool is_embedded = 25;
-  string provider = 27;
   // This field contains references to other providers with the same 
   // resource/field.
   // Note: Please do not use this field, it is only temporary and will be

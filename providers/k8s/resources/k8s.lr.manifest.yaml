@@ -6,7 +6,8 @@ resources:
     fields:
       apiResources: {}
       apps:
-        min_mondoo_version: 11.1.128
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.75
       clusterrolebindings:
         min_mondoo_version: 5.31.0
       clusterroles:
@@ -42,8 +43,10 @@ resources:
       statefulsets:
         min_mondoo_version: 6.7.0
       validatingWebhookConfigurations:
-        min_mondoo_version: 11.1.128
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.63
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -79,7 +82,8 @@ resources:
       uid: {}
       webhooks: {}
     is_private: true
-    min_mondoo_version: 11.1.128
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.63
     platform:
       name:
       - kubernetes
@@ -93,6 +97,7 @@ resources:
       userInfo: {}
     is_private: true
     min_mondoo_version: 6.17.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -100,6 +105,7 @@ resources:
     fields:
       request: {}
     min_mondoo_version: 6.17.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -115,6 +121,7 @@ resources:
       version: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -127,7 +134,8 @@ resources:
       partOf: {}
       version: {}
     is_private: true
-    min_mondoo_version: 11.1.128
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.75
     platform:
       name:
       - kubernetes
@@ -147,6 +155,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -178,6 +187,7 @@ resources:
       workingDir: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -190,7 +200,8 @@ resources:
       ready: {}
       restartCount: {}
     is_private: true
-    min_mondoo_version: 11.1.128
+    min_mondoo_version: 9.0.0
+    min_provider_version: 11.1.110
     platform:
       name:
       - kubernetes
@@ -218,6 +229,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -239,6 +251,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 6.1.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -269,6 +282,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -299,6 +313,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -323,6 +338,7 @@ resources:
       workingDir: {}
     is_private: true
     min_mondoo_version: 7.2.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -345,6 +361,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 7.9.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -358,6 +375,7 @@ resources:
       service: {}
     is_private: true
     min_mondoo_version: 7.9.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -369,6 +387,7 @@ resources:
       pathType: {}
     is_private: true
     min_mondoo_version: 7.9.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -380,6 +399,7 @@ resources:
       name: {}
     is_private: true
     min_mondoo_version: 7.9.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -390,6 +410,7 @@ resources:
       id: {}
     is_private: true
     min_mondoo_version: 7.9.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -401,6 +422,7 @@ resources:
       portNumber: {}
     is_private: true
     min_mondoo_version: 7.9.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -411,6 +433,7 @@ resources:
       id: {}
     is_private: true
     min_mondoo_version: 7.9.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -435,6 +458,7 @@ resources:
       workingDir: {}
     is_private: true
     min_mondoo_version: 6.10.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -465,6 +489,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -484,6 +509,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -506,6 +532,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -517,22 +544,26 @@ resources:
       annotations:
         min_mondoo_version: 5.29.2
       created:
-        min_mondoo_version: 11.1.128
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.42
       id:
         min_mondoo_version: 6.10.0
       kind: {}
       kubeletPort:
-        min_mondoo_version: 11.1.128
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.42
       labels:
         min_mondoo_version: 5.29.2
       name: {}
       nodeInfo:
-        min_mondoo_version: 11.1.128
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.42
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -544,7 +575,8 @@ resources:
       annotations: {}
       apiVersion: {}
       containerStatuses:
-        min_mondoo_version: 11.1.128
+        min_mondoo_version: 9.0.0
+        min_provider_version: 11.1.110
       containers: {}
       created: {}
       ephemeralContainers:
@@ -565,6 +597,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -587,6 +620,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -609,6 +643,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -631,6 +666,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -654,6 +690,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -684,6 +721,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 6.7.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -696,6 +734,7 @@ resources:
         min_mondoo_version: 5.29.2
       certificates:
         min_mondoo_version: 5.29.2
+        min_provider_version: 9.0.2
       created: {}
       id:
         min_mondoo_version: 6.10.0
@@ -712,6 +751,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.26.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -734,6 +774,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -758,6 +799,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 5.31.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -788,6 +830,7 @@ resources:
       uid: {}
     is_private: true
     min_mondoo_version: 6.7.0
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes
@@ -800,6 +843,7 @@ resources:
       username: {}
     is_private: true
     min_mondoo_version: latest
+    min_provider_version: 9.0.0
     platform:
       name:
       - kubernetes

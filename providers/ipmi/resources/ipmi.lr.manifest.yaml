@@ -8,9 +8,11 @@ resources:
       guid: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
   ipmi.chassis:
     fields:
       status: {}
       systemBootOptions: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+    min_provider_version: 9.0.0
