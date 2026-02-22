@@ -11,14 +11,21 @@ import (
 )
 
 func TestResource_Sudoers(t *testing.T) {
-	// Uses the global 'x' tester from os_test.go (LinuxMock with arch.json)
-	// For parsing unit tests, see sudoers/sudoers_test.go
-
 	t.Run("files are discovered", func(t *testing.T) {
 		res := x.TestQuery(t, "sudoers.files.length")
 		require.NotEmpty(t, res)
 		require.NoError(t, res[0].Data.Error)
 		assert.Equal(t, int64(1), res[0].Data.Value)
+	})
+
+	t.Run("content aggregates all files", func(t *testing.T) {
+		res := x.TestQuery(t, "sudoers.content")
+		require.NotEmpty(t, res)
+		require.NoError(t, res[0].Data.Error)
+		content := res[0].Data.Value.(string)
+		assert.Contains(t, content, "root ALL=(ALL:ALL) ALL")
+		assert.Contains(t, content, "ADMINS ALL=(ALL) NOPASSWD: ALL")
+		assert.Contains(t, content, "Defaults secure_path=")
 	})
 
 	t.Run("userSpecs parsing", func(t *testing.T) {
