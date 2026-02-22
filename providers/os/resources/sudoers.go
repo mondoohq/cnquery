@@ -17,9 +17,16 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-const (
-	defaultSudoersFile = "/etc/sudoers"
-)
+// sudoersPaths lists the sudoers file paths to check per platform.
+// Most systems use /etc/sudoers. BSD variants and AIX install sudo via
+// package managers to non-default prefixes, so /etc/sudoers does not exist.
+var sudoersPaths = map[string][]string{
+	"freebsd":      {"/usr/local/etc/sudoers"},
+	"dragonflybsd": {"/usr/local/etc/sudoers"},
+	"openbsd":      {"/usr/local/etc/sudoers"},
+	"netbsd":       {"/usr/pkg/etc/sudoers"},
+	"aix":          {"/opt/freeware/etc/sudoers"},
+}
 
 func initSudoers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if x, ok := args["path"]; ok {
@@ -80,6 +87,17 @@ func (sa *mqlSudoersAlias) id() (string, error) {
 	return id, nil
 }
 
+// sudoersPathsForPlatform returns the sudoers file paths to check for a given platform.
+func sudoersPathsForPlatform(conn shared.Connection) []string {
+	asset := conn.Asset()
+	if asset != nil && asset.Platform != nil {
+		if paths, ok := sudoersPaths[asset.Platform.Name]; ok {
+			return paths
+		}
+	}
+	return []string{"/etc/sudoers"}
+}
+
 // files returns the list of sudoers configuration files
 func (s *mqlSudoers) files() ([]any, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
@@ -87,8 +105,10 @@ func (s *mqlSudoers) files() ([]any, error) {
 	var allFiles []any
 	var errs []error
 
-	// Start with the main sudoers file
-	s.collectSudoersFiles(conn, defaultSudoersFile, visited, &allFiles, &errs)
+	// Try platform-specific sudoers paths
+	for _, path := range sudoersPathsForPlatform(conn) {
+		s.collectSudoersFiles(conn, path, visited, &allFiles, &errs)
+	}
 
 	if len(errs) > 0 {
 		return allFiles, errors.Join(errs...)
