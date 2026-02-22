@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"cloud.google.com/go/pubsub"
@@ -314,6 +315,9 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		"projectId": llx.StringData(projectId),
 		"name":      llx.StringData(cfg.Topic.ID()),
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	pushConfig, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.subscription.config.pushconfig", map[string]*llx.RawData{
 		"configId":   llx.StringData(pubsubConfigId(projectId, s.ID())),
@@ -438,13 +442,14 @@ func (g *mqlGcpProjectPubsubServiceTopic) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 
-	res := []any{}
-	for i, role := range policy.Roles() {
-		members := policy.Members(role)
-		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":      llx.StringData(fmt.Sprintf("projects/%s/topics/%s-%d", projectId, name, i)),
-			"role":    llx.StringData(string(role)),
-			"members": llx.ArrayData(convert.SliceAnyToInterface(members), types.String),
+	bindings := policy.InternalProto.Bindings
+	res := make([]any, 0, len(bindings))
+	topicPath := fmt.Sprintf("projects/%s/topics/%s", projectId, name)
+	for i, b := range bindings {
+		mqlBinding, err := CreateResource(g.MqlRuntime, ResourceGcpResourcemanagerBinding, map[string]*llx.RawData{
+			"id":      llx.StringData(topicPath + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
 		})
 		if err != nil {
 			return nil, err
@@ -485,13 +490,14 @@ func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 
-	res := []any{}
-	for i, role := range policy.Roles() {
-		members := policy.Members(role)
-		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":      llx.StringData(fmt.Sprintf("projects/%s/subscriptions/%s-%d", projectId, name, i)),
-			"role":    llx.StringData(string(role)),
-			"members": llx.ArrayData(convert.SliceAnyToInterface(members), types.String),
+	bindings := policy.InternalProto.Bindings
+	res := make([]any, 0, len(bindings))
+	subPath := fmt.Sprintf("projects/%s/subscriptions/%s", projectId, name)
+	for i, b := range bindings {
+		mqlBinding, err := CreateResource(g.MqlRuntime, ResourceGcpResourcemanagerBinding, map[string]*llx.RawData{
+			"id":      llx.StringData(subPath + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
 		})
 		if err != nil {
 			return nil, err
