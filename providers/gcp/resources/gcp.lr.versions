@@ -1088,7 +1088,11 @@ gcp.project.pubsubService.snapshots 9.0.0
 gcp.project.pubsubService.subscription 9.0.0
 gcp.project.pubsubService.subscription.config 9.0.0
 gcp.project.pubsubService.subscription.config.ackDeadline 9.0.0
+gcp.project.pubsubService.subscription.config.detached 11.0.146
+gcp.project.pubsubService.subscription.config.enableExactlyOnceDelivery 11.0.146
+gcp.project.pubsubService.subscription.config.enableMessageOrdering 11.0.146
 gcp.project.pubsubService.subscription.config.expirationPolicy 9.0.0
+gcp.project.pubsubService.subscription.config.filter 11.0.146
 gcp.project.pubsubService.subscription.config.labels 9.0.0
 gcp.project.pubsubService.subscription.config.projectId 9.0.0
 gcp.project.pubsubService.subscription.config.pushConfig 9.0.0
@@ -1098,8 +1102,10 @@ gcp.project.pubsubService.subscription.config.pushconfig.configId 9.0.0
 gcp.project.pubsubService.subscription.config.pushconfig.endpoint 9.0.0
 gcp.project.pubsubService.subscription.config.retainAckedMessages 9.0.0
 gcp.project.pubsubService.subscription.config.retentionDuration 9.0.0
+gcp.project.pubsubService.subscription.config.state 11.0.146
 gcp.project.pubsubService.subscription.config.subscriptionName 9.0.0
 gcp.project.pubsubService.subscription.config.topic 9.0.0
+gcp.project.pubsubService.subscription.iamPolicy 11.0.146
 gcp.project.pubsubService.subscription.name 9.0.0
 gcp.project.pubsubService.subscription.projectId 9.0.0
 gcp.project.pubsubService.subscriptions 9.0.0
@@ -1112,7 +1118,9 @@ gcp.project.pubsubService.topic.config.messagestoragepolicy 9.0.0
 gcp.project.pubsubService.topic.config.messagestoragepolicy.allowedPersistenceRegions 9.0.0
 gcp.project.pubsubService.topic.config.messagestoragepolicy.configId 9.0.0
 gcp.project.pubsubService.topic.config.projectId 9.0.0
+gcp.project.pubsubService.topic.config.state 11.0.146
 gcp.project.pubsubService.topic.config.topicName 9.0.0
+gcp.project.pubsubService.topic.iamPolicy 11.0.146
 gcp.project.pubsubService.topic.name 9.0.0
 gcp.project.pubsubService.topic.projectId 9.0.0
 gcp.project.pubsubService.topics 9.0.0
