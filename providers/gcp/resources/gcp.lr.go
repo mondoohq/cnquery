@@ -511,7 +511,7 @@ func init() {
 			Create: createGcpProjectPubsubService,
 		},
 		"gcp.project.pubsubService.topic": {
-			// to override args, implement: initGcpProjectPubsubServiceTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectPubsubServiceTopic,
 			Create: createGcpProjectPubsubServiceTopic,
 		},
 		"gcp.project.pubsubService.topic.config": {
@@ -523,7 +523,7 @@ func init() {
 			Create: createGcpProjectPubsubServiceTopicConfigMessagestoragepolicy,
 		},
 		"gcp.project.pubsubService.subscription": {
-			// to override args, implement: initGcpProjectPubsubServiceSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectPubsubServiceSubscription,
 			Create: createGcpProjectPubsubServiceSubscription,
 		},
 		"gcp.project.pubsubService.subscription.config": {
@@ -535,7 +535,7 @@ func init() {
 			Create: createGcpProjectPubsubServiceSubscriptionConfigPushconfig,
 		},
 		"gcp.project.pubsubService.snapshot": {
-			// to override args, implement: initGcpProjectPubsubServiceSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectPubsubServiceSnapshot,
 			Create: createGcpProjectPubsubServiceSnapshot,
 		},
 		"gcp.project.kmsService": {
@@ -571,7 +571,7 @@ func init() {
 			Create: createGcpEssentialContact,
 		},
 		"gcp.project.apiKey": {
-			// to override args, implement: initGcpProjectApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectApiKey,
 			Create: createGcpProjectApiKey,
 		},
 		"gcp.project.apiKey.restrictions": {
@@ -583,7 +583,7 @@ func init() {
 			Create: createGcpProjectLoggingservice,
 		},
 		"gcp.project.loggingservice.bucket": {
-			// to override args, implement: initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectLoggingserviceBucket,
 			Create: createGcpProjectLoggingserviceBucket,
 		},
 		"gcp.project.loggingservice.bucket.indexConfig": {
@@ -611,7 +611,7 @@ func init() {
 			Create: createGcpProjectIamServiceServiceAccountKey,
 		},
 		"gcp.project.cloudFunction": {
-			// to override args, implement: initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectCloudFunction,
 			Create: createGcpProjectCloudFunction,
 		},
 		"gcp.project.dataprocService": {
@@ -619,7 +619,7 @@ func init() {
 			Create: createGcpProjectDataprocService,
 		},
 		"gcp.project.dataprocService.cluster": {
-			// to override args, implement: initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectDataprocServiceCluster,
 			Create: createGcpProjectDataprocServiceCluster,
 		},
 		"gcp.project.dataprocService.cluster.config": {
@@ -671,7 +671,7 @@ func init() {
 			Create: createGcpProjectCloudRunServiceOperation,
 		},
 		"gcp.project.cloudRunService.service": {
-			// to override args, implement: initGcpProjectCloudRunServiceService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectCloudRunServiceService,
 			Create: createGcpProjectCloudRunServiceService,
 		},
 		"gcp.project.cloudRunService.service.revisionTemplate": {
@@ -691,7 +691,7 @@ func init() {
 			Create: createGcpProjectCloudRunServiceCondition,
 		},
 		"gcp.project.cloudRunService.job": {
-			// to override args, implement: initGcpProjectCloudRunServiceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectCloudRunServiceJob,
 			Create: createGcpProjectCloudRunServiceJob,
 		},
 		"gcp.project.cloudRunService.job.executionTemplate": {
@@ -3866,6 +3866,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.loggingservice.bucket.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetProjectId()).ToDataRes(types.String)
 	},
+	"gcp.project.loggingservice.bucket.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucket).GetLocation()).ToDataRes(types.String)
+	},
 	"gcp.project.loggingservice.bucket.cmekSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetCmekSettings()).ToDataRes(types.Dict)
 	},
@@ -4001,6 +4004,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudFunction.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetProjectId()).ToDataRes(types.String)
 	},
+	"gcp.project.cloudFunction.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunction).GetLocation()).ToDataRes(types.String)
+	},
 	"gcp.project.cloudFunction.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetName()).ToDataRes(types.String)
 	},
@@ -4111,6 +4117,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataprocService.cluster.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceCluster).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.cluster.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceCluster).GetLocation()).ToDataRes(types.String)
 	},
 	"gcp.project.dataprocService.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceCluster).GetName()).ToDataRes(types.String)
@@ -9388,6 +9397,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectLoggingserviceBucket).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.loggingservice.bucket.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucket).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.loggingservice.bucket.cmekSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceBucket).CmekSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -9596,6 +9609,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudFunction).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudFunction.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunction).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudFunction.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9750,6 +9767,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataprocService.cluster.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceCluster).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.cluster.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceCluster).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21653,6 +21674,7 @@ type mqlGcpProjectLoggingserviceBucket struct {
 	__id       string
 	// optional: if you define mqlGcpProjectLoggingserviceBucketInternal it will be used here
 	ProjectId        plugin.TValue[string]
+	Location         plugin.TValue[string]
 	CmekSettings     plugin.TValue[any]
 	Created          plugin.TValue[*time.Time]
 	Description      plugin.TValue[string]
@@ -21704,6 +21726,10 @@ func (c *mqlGcpProjectLoggingserviceBucket) MqlID() string {
 
 func (c *mqlGcpProjectLoggingserviceBucket) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectLoggingserviceBucket) GetLocation() *plugin.TValue[string] {
+	return &c.Location
 }
 
 func (c *mqlGcpProjectLoggingserviceBucket) GetCmekSettings() *plugin.TValue[any] {
@@ -22234,6 +22260,7 @@ type mqlGcpProjectCloudFunction struct {
 	__id       string
 	// optional: if you define mqlGcpProjectCloudFunctionInternal it will be used here
 	ProjectId           plugin.TValue[string]
+	Location            plugin.TValue[string]
 	Name                plugin.TValue[string]
 	Description         plugin.TValue[string]
 	SourceArchiveUrl    plugin.TValue[string]
@@ -22307,6 +22334,10 @@ func (c *mqlGcpProjectCloudFunction) MqlID() string {
 
 func (c *mqlGcpProjectCloudFunction) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectCloudFunction) GetLocation() *plugin.TValue[string] {
+	return &c.Location
 }
 
 func (c *mqlGcpProjectCloudFunction) GetName() *plugin.TValue[string] {
@@ -22521,6 +22552,7 @@ type mqlGcpProjectDataprocServiceCluster struct {
 	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceClusterInternal it will be used here
 	ProjectId            plugin.TValue[string]
+	Location             plugin.TValue[string]
 	Name                 plugin.TValue[string]
 	Uuid                 plugin.TValue[string]
 	Config               plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfig]
@@ -22570,6 +22602,10 @@ func (c *mqlGcpProjectDataprocServiceCluster) MqlID() string {
 
 func (c *mqlGcpProjectDataprocServiceCluster) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDataprocServiceCluster) GetLocation() *plugin.TValue[string] {
+	return &c.Location
 }
 
 func (c *mqlGcpProjectDataprocServiceCluster) GetName() *plugin.TValue[string] {

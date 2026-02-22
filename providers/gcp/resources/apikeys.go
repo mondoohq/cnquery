@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -175,6 +176,46 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 
 func (g *mqlGcpProjectApiKey) id() (string, error) {
 	return g.ResourcePath.Data, g.ResourcePath.Error
+}
+
+func initGcpProjectApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	proj := obj.(*mqlGcpProject)
+	keys := proj.GetApiKeys()
+	if keys.Error != nil {
+		return nil, nil, keys.Error
+	}
+
+	idVal := args["id"].Value.(string)
+	for _, k := range keys.Data {
+		key := k.(*mqlGcpProjectApiKey)
+		if key.Id.Data == idVal {
+			return args, key, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("api key %q not found", idVal)
 }
 
 func (g *mqlGcpProjectApiKeyRestrictions) id() (string, error) {

@@ -74,6 +74,46 @@ func (g *mqlGcpProjectPubsubServiceTopic) id() (string, error) {
 	return fmt.Sprintf("%s/%s", projectId, name), nil
 }
 
+func initGcpProjectPubsubServiceTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.pubsubService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := obj.(*mqlGcpProjectPubsubService)
+	topics := svc.GetTopics()
+	if topics.Error != nil {
+		return nil, nil, topics.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	for _, t := range topics.Data {
+		topic := t.(*mqlGcpProjectPubsubServiceTopic)
+		if topic.Name.Data == nameVal {
+			return args, topic, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("pubsub topic %q not found", nameVal)
+}
+
 func (g *mqlGcpProjectPubsubServiceTopicConfig) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -104,6 +144,46 @@ func (g *mqlGcpProjectPubsubServiceSubscription) id() (string, error) {
 	}
 	name := g.Name.Data
 	return fmt.Sprintf("%s/%s", projectId, name), nil
+}
+
+func initGcpProjectPubsubServiceSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.pubsubService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := obj.(*mqlGcpProjectPubsubService)
+	subs := svc.GetSubscriptions()
+	if subs.Error != nil {
+		return nil, nil, subs.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	for _, s := range subs.Data {
+		sub := s.(*mqlGcpProjectPubsubServiceSubscription)
+		if sub.Name.Data == nameVal {
+			return args, sub, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("pubsub subscription %q not found", nameVal)
 }
 
 func (g *mqlGcpProjectPubsubServiceSubscriptionConfig) id() (string, error) {
@@ -137,6 +217,46 @@ func (g *mqlGcpProjectPubsubServiceSnapshot) id() (string, error) {
 	}
 	name := g.Name.Data
 	return fmt.Sprintf("%s/%s", projectId, name), nil
+}
+
+func initGcpProjectPubsubServiceSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.pubsubService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := obj.(*mqlGcpProjectPubsubService)
+	snapshots := svc.GetSnapshots()
+	if snapshots.Error != nil {
+		return nil, nil, snapshots.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	for _, s := range snapshots.Data {
+		snap := s.(*mqlGcpProjectPubsubServiceSnapshot)
+		if snap.Name.Data == nameVal {
+			return args, snap, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("pubsub snapshot %q not found", nameVal)
 }
 
 func (g *mqlGcpProjectPubsubService) topics() ([]any, error) {

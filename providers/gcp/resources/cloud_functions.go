@@ -5,8 +5,10 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -143,6 +145,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 
 		mqlCloudFuncs, err := CreateResource(g.MqlRuntime, "gcp.project.cloudFunction", map[string]*llx.RawData{
 			"projectId":           llx.StringData(projectId),
+			"location":            llx.StringData(parseLocationFromPath(f.Name)),
 			"name":                llx.StringData(parseResourceName(f.Name)),
 			"description":         llx.StringData(f.Description),
 			"sourceArchiveUrl":    llx.StringData(sourceArchiveUrl),
@@ -194,4 +197,49 @@ func (g *mqlGcpProjectCloudFunction) id() (string, error) {
 	}
 	name := g.Name.Data
 	return fmt.Sprintf("%s/%s", projectId, name), nil
+}
+
+func initGcpProjectCloudFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["location"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	proj := obj.(*mqlGcpProject)
+	funcs := proj.GetCloudFunctions()
+	if funcs.Error != nil {
+		return nil, nil, funcs.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	locationVal := ""
+	if args["location"] != nil {
+		locationVal = args["location"].Value.(string)
+	}
+	for _, f := range funcs.Data {
+		fn := f.(*mqlGcpProjectCloudFunction)
+		if fn.Name.Data == nameVal && (locationVal == "" || fn.Location.Data == locationVal) {
+			return args, fn, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("cloud function %q not found", nameVal)
 }

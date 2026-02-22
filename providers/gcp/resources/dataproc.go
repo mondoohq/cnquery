@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -583,6 +584,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 
 					mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster", map[string]*llx.RawData{
 						"projectId":            llx.StringData(projectId),
+						"location":             llx.StringData(regionName),
 						"name":                 llx.StringData(c.ClusterName),
 						"uuid":                 llx.StringData(c.ClusterUuid),
 						"config":               llx.ResourceData(mqlConfig, "gcp.project.dataprocService.cluster.config"),
@@ -637,6 +639,52 @@ func (g *mqlGcpProjectDataprocServiceCluster) id() (string, error) {
 	}
 	name := g.Name.Data
 	return fmt.Sprintf("%s/dataproc/%s", projectId, name), nil
+}
+
+func initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["location"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.dataprocService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+		"enabled":   llx.BoolData(true),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := obj.(*mqlGcpProjectDataprocService)
+	clusters := svc.GetClusters()
+	if clusters.Error != nil {
+		return nil, nil, clusters.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	locationVal := ""
+	if args["location"] != nil {
+		locationVal = args["location"].Value.(string)
+	}
+	for _, c := range clusters.Data {
+		cluster := c.(*mqlGcpProjectDataprocServiceCluster)
+		if cluster.Name.Data == nameVal && (locationVal == "" || cluster.Location.Data == locationVal) {
+			return args, cluster, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("dataproc cluster %q not found", nameVal)
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfig) id() (string, error) {

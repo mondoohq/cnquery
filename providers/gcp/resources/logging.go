@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -104,6 +105,7 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 
 		mqlBucket, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket", map[string]*llx.RawData{
 			"projectId":        llx.StringData(projectId),
+			"location":         llx.StringData(parseLocationFromPath(bucket.Name)),
 			"cmekSettings":     llx.DictData(mqlCmekSettingsDict),
 			"created":          llx.TimeDataPtr(parseTime(bucket.CreateTime)),
 			"description":      llx.StringData(bucket.Description),
@@ -360,6 +362,51 @@ func (g *mqlGcpProjectLoggingserviceBucket) id() (string, error) {
 	}
 	name := g.Name.Data
 	return fmt.Sprintf("%s/%s", projectId, name), nil
+}
+
+func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["location"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.loggingservice", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := obj.(*mqlGcpProjectLoggingservice)
+	buckets := svc.GetBuckets()
+	if buckets.Error != nil {
+		return nil, nil, buckets.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	locationVal := ""
+	if args["location"] != nil {
+		locationVal = args["location"].Value.(string)
+	}
+	for _, b := range buckets.Data {
+		bucket := b.(*mqlGcpProjectLoggingserviceBucket)
+		if parseResourceName(bucket.Name.Data) == nameVal && (locationVal == "" || bucket.Location.Data == locationVal) {
+			return args, bucket, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("logging bucket %q not found", nameVal)
 }
 
 func (g *mqlGcpProjectLoggingserviceBucketIndexConfig) id() (string, error) {

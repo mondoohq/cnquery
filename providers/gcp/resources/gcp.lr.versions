@@ -167,6 +167,7 @@ gcp.project.cloudFunction.httpsTrigger 9.0.0
 gcp.project.cloudFunction.ingressSettings 9.0.0
 gcp.project.cloudFunction.kmsKeyName 9.0.0
 gcp.project.cloudFunction.labels 9.0.0
+gcp.project.cloudFunction.location 11.2.1
 gcp.project.cloudFunction.maxInstances 9.0.0
 gcp.project.cloudFunction.minInstances 9.0.0
 gcp.project.cloudFunction.name 9.0.0
@@ -713,6 +714,7 @@ gcp.project.dataprocService.cluster.config.software 9.0.0
 gcp.project.dataprocService.cluster.config.tempBucket 9.0.0
 gcp.project.dataprocService.cluster.config.worker 9.0.0
 gcp.project.dataprocService.cluster.labels 9.0.0
+gcp.project.dataprocService.cluster.location 11.2.1
 gcp.project.dataprocService.cluster.metrics 9.0.0
 gcp.project.dataprocService.cluster.name 9.0.0
 gcp.project.dataprocService.cluster.projectId 9.0.0
@@ -1029,6 +1031,7 @@ gcp.project.loggingservice.bucket.indexConfig.id 9.0.0
 gcp.project.loggingservice.bucket.indexConfig.type 9.0.0
 gcp.project.loggingservice.bucket.indexConfigs 9.0.0
 gcp.project.loggingservice.bucket.lifecycleState 9.0.0
+gcp.project.loggingservice.bucket.location 11.2.1
 gcp.project.loggingservice.bucket.locked 9.0.0
 gcp.project.loggingservice.bucket.name 9.0.0
 gcp.project.loggingservice.bucket.projectId 9.0.0
