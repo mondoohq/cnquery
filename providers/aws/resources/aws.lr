@@ -1659,6 +1659,8 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   elbType string
   // VPC where the load balancer is located
   vpc aws.vpc
+  // Tags on the load balancer
+  tags() map[string]string
   // List of target groups for the load balancer
   targetGroups() []aws.elb.targetgroup
 }

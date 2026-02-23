@@ -3272,6 +3272,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
+	"aws.elb.loadbalancer.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.elb.loadbalancer.targetGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetTargetGroups()).ToDataRes(types.Array(types.Resource("aws.elb.targetgroup")))
 	},
@@ -10268,6 +10271,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elb.loadbalancer.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.loadbalancer.targetGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24423,6 +24430,7 @@ type mqlAwsElbLoadbalancer struct {
 	Region               plugin.TValue[string]
 	ElbType              plugin.TValue[string]
 	Vpc                  plugin.TValue[*mqlAwsVpc]
+	Tags                 plugin.TValue[map[string]any]
 	TargetGroups         plugin.TValue[[]any]
 }
 
@@ -24525,6 +24533,12 @@ func (c *mqlAwsElbLoadbalancer) GetElbType() *plugin.TValue[string] {
 
 func (c *mqlAwsElbLoadbalancer) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	return &c.Vpc
+}
+
+func (c *mqlAwsElbLoadbalancer) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsElbLoadbalancer) GetTargetGroups() *plugin.TValue[[]any] {
