@@ -694,6 +694,11 @@ func initAwsEc2Keypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		if errors.As(err, &ae) {
 			if ae.ErrorCode() == "InvalidKeyPair.NotFound" {
 				log.Warn().Msgf("key %s does not exist in %s region", n, r)
+				args["fingerprint"] = llx.StringData("")
+				args["type"] = llx.StringData("")
+				args["tags"] = llx.MapData(map[string]any{}, types.String)
+				args["arn"] = llx.StringData("")
+				args["createdAt"] = llx.NilData
 				return args, nil, nil
 			}
 		}
@@ -713,6 +718,11 @@ func initAwsEc2Keypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 		return args, nil, nil
 	}
+	args["fingerprint"] = llx.StringData("")
+	args["type"] = llx.StringData("")
+	args["tags"] = llx.MapData(map[string]any{}, types.String)
+	args["arn"] = llx.StringData("")
+	args["createdAt"] = llx.NilData
 	return args, nil, nil
 }
 
@@ -1084,6 +1094,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			"instanceLifecycle":  llx.StringData(string(instance.InstanceLifecycle)),
 			"instanceType":       llx.StringData(string(instance.InstanceType)),
 			"launchTime":         llx.TimeDataPtr(instance.LaunchTime),
+			"launchedAt":         llx.TimeDataPtr(instance.LaunchTime),
 			"platformDetails":    llx.StringDataPtr(instance.PlatformDetails),
 			"privateDnsName":     llx.StringDataPtr(instance.PrivateDnsName),
 			"privateIp":          llx.StringDataPtr(instance.PrivateIpAddress),

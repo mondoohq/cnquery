@@ -6482,6 +6482,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.launchTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetLaunchTime()).ToDataRes(types.Time)
 	},
+	"aws.ec2.instance.launchedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetLaunchedAt()).ToDataRes(types.Time)
+	},
 	"aws.ec2.instance.privateIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetPrivateIp()).ToDataRes(types.String)
 	},
@@ -15084,6 +15087,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.instance.launchTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).LaunchTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.launchedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).LaunchedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.privateIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37383,6 +37390,7 @@ type mqlAwsEc2Instance struct {
 	IamInstanceProfile      plugin.TValue[*mqlAwsIamInstanceProfile]
 	Image                   plugin.TValue[*mqlAwsEc2Image]
 	LaunchTime              plugin.TValue[*time.Time]
+	LaunchedAt              plugin.TValue[*time.Time]
 	PrivateIp               plugin.TValue[string]
 	PrivateDnsName          plugin.TValue[string]
 	Keypair                 plugin.TValue[*mqlAwsEc2Keypair]
@@ -37595,6 +37603,10 @@ func (c *mqlAwsEc2Instance) GetImage() *plugin.TValue[*mqlAwsEc2Image] {
 
 func (c *mqlAwsEc2Instance) GetLaunchTime() *plugin.TValue[*time.Time] {
 	return &c.LaunchTime
+}
+
+func (c *mqlAwsEc2Instance) GetLaunchedAt() *plugin.TValue[*time.Time] {
+	return &c.LaunchedAt
 }
 
 func (c *mqlAwsEc2Instance) GetPrivateIp() *plugin.TValue[string] {

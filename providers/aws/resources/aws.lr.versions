@@ -541,6 +541,7 @@ aws.ec2.instance.instanceStatus 9.0.0
 aws.ec2.instance.instanceType 9.0.0
 aws.ec2.instance.keypair 9.0.0
 aws.ec2.instance.launchTime 9.0.0
+aws.ec2.instance.launchedAt 11.12.3
 aws.ec2.instance.networkInterfaces 11.1.0
 aws.ec2.instance.patchState 9.0.0
 aws.ec2.instance.platformDetails 9.0.0
