@@ -4332,8 +4332,10 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   iamInstanceProfile() aws.iam.instanceProfile
   // Image that was used for the instance
   image() aws.ec2.image
-  // Launch time of the instance
+  // Deprecated: use `launchedAt` instead
   launchTime time
+  // Launch time of the instance
+  launchedAt time
   // Private IP address for the instance
   privateIp string
   // Private DNS name for the instance
@@ -4342,7 +4344,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   keypair() aws.ec2.keypair
   // Time when the last state transition occurred
   stateTransitionTime time
-  // ARN of the VPC associated with the instance
+  // Deprecated: use `vpc` instead
   vpcArn string
   // Hypervisor type of the instance: ovm or xen
   hypervisor string
