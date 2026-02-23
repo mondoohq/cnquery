@@ -163,15 +163,38 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 				version = string(*dbServer.Properties.Version)
 			}
 
+			var activeDirectoryAuth, passwordAuth, dataEncryptionType *string
+			var primaryEncryptionKeyStatus, geoBackupEncryptionKeyStatus, publicNetworkAccess *string
+			if dbServer.Properties != nil {
+				if dbServer.Properties.AuthConfig != nil {
+					activeDirectoryAuth = (*string)(dbServer.Properties.AuthConfig.ActiveDirectoryAuth)
+					passwordAuth = (*string)(dbServer.Properties.AuthConfig.PasswordAuth)
+				}
+				if dbServer.Properties.DataEncryption != nil {
+					dataEncryptionType = (*string)(dbServer.Properties.DataEncryption.Type)
+					primaryEncryptionKeyStatus = (*string)(dbServer.Properties.DataEncryption.PrimaryEncryptionKeyStatus)
+					geoBackupEncryptionKeyStatus = (*string)(dbServer.Properties.DataEncryption.GeoBackupEncryptionKeyStatus)
+				}
+				if dbServer.Properties.Network != nil {
+					publicNetworkAccess = (*string)(dbServer.Properties.Network.PublicNetworkAccess)
+				}
+			}
+
 			mqlAzurePostgresServer, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.flexibleServer",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(dbServer.ID),
-					"name":       llx.StringDataPtr(dbServer.Name),
-					"location":   llx.StringDataPtr(dbServer.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":       llx.StringDataPtr(dbServer.Type),
-					"properties": llx.DictData(properties),
-					"version":    llx.StringData(version),
+					"id":                           llx.StringDataPtr(dbServer.ID),
+					"name":                         llx.StringDataPtr(dbServer.Name),
+					"location":                     llx.StringDataPtr(dbServer.Location),
+					"tags":                         llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
+					"type":                         llx.StringDataPtr(dbServer.Type),
+					"properties":                   llx.DictData(properties),
+					"version":                      llx.StringData(version),
+					"activeDirectoryAuth":          llx.StringDataPtr(activeDirectoryAuth),
+					"passwordAuth":                 llx.StringDataPtr(passwordAuth),
+					"dataEncryptionType":           llx.StringDataPtr(dataEncryptionType),
+					"primaryEncryptionKeyStatus":   llx.StringDataPtr(primaryEncryptionKeyStatus),
+					"geoBackupEncryptionKeyStatus": llx.StringDataPtr(geoBackupEncryptionKeyStatus),
+					"publicNetworkAccess":          llx.StringDataPtr(publicNetworkAccess),
 				})
 			if err != nil {
 				return nil, err

@@ -1,5 +1,6 @@
+aad
 ACCOUNTADMIN
-Adddays
+advancedthreatprotection
 antispam
 appslot
 atlassian
@@ -12,11 +13,11 @@ awslogs
 awsvpc
 backupconfiguration
 backupsetting
+backupshorttermretentionpolicy
 bigquery
 bytematchstatement
 cavium
 cdn
-cea
 certificatechains
 clcerts
 cloudflare
@@ -27,7 +28,6 @@ copywrite
 cpe
 cryptokey
 ctx
-CUSTOMERID
 customresources
 cyclonedx
 dast
@@ -58,7 +58,6 @@ gcfs
 gcs
 geomatchstatement
 gistfile
-googleworkplace
 gotestsum
 gpu
 groupname
@@ -79,16 +78,15 @@ iotedge
 ipc
 ipsetforwardedipconfig
 ipsetreferencestatement
-isdir
 istio
 jira
 jsonbody
-kexts
 kqueue
 labelmatchstatement
 lfs
 liveanalytics
 loggingservice
+longtermretentionpolicy
 lsp
 manageddevice
 managedrulegroupstatement
@@ -122,7 +120,6 @@ OIDs
 ondemand
 opcplc
 opensearch
-openssh
 openssl
 orstatement
 ospf
@@ -173,6 +170,8 @@ testutils
 timestream
 toplevel
 tpu
+serviceconnection
+Vnet
 udid
 Uocm
 usb
@@ -182,12 +181,11 @@ vdcs
 virtualmachine
 vlans
 vrf
-Vtpm
+vtpm
 vulnerabilityassessmentsettings
 vulnmgmt
 webide
 WEBSERVERS
 wil
-xoxp
 xssmatchstatement
 zrt
