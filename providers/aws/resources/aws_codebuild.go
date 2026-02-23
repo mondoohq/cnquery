@@ -125,7 +125,44 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	args["environment"] = llx.MapData(jsonEnv, types.String)
 	args["source"] = llx.MapData(jsonSource, types.String)
 	args["tags"] = llx.MapData(cbTagsToMap(project.Tags), types.String)
-	return args, nil, nil
+	args["createdAt"] = llx.TimeDataPtr(project.Created)
+	args["modifiedAt"] = llx.TimeDataPtr(project.LastModified)
+	args["projectVisibility"] = llx.StringData(string(project.ProjectVisibility))
+	args["timeoutInMinutes"] = llx.IntDataDefault(project.TimeoutInMinutes, 0)
+	if project.Environment != nil && project.Environment.PrivilegedMode != nil {
+		args["privilegedMode"] = llx.BoolData(*project.Environment.PrivilegedMode)
+	} else {
+		args["privilegedMode"] = llx.BoolData(false)
+	}
+	args["serviceRole"] = llx.StringDataPtr(project.ServiceRole)
+	args["queuedTimeoutInMinutes"] = llx.IntDataDefault(project.QueuedTimeoutInMinutes, 0)
+
+	// Cache the encryption key ARN for lazy loading in encryptionKey()
+	obj, err := CreateResource(runtime, "aws.codebuild.project", args)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlProject := obj.(*mqlAwsCodebuildProject)
+	mqlProject.cacheEncryptionKeyArn = project.EncryptionKey
+	return args, mqlProject, nil
+}
+
+type mqlAwsCodebuildProjectInternal struct {
+	cacheEncryptionKeyArn *string
+}
+
+func (a *mqlAwsCodebuildProject) encryptionKey() (*mqlAwsKmsKey, error) {
+	if a.cacheEncryptionKeyArn != nil && *a.cacheEncryptionKeyArn != "" {
+		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
+			map[string]*llx.RawData{"arn": llx.StringData(*a.cacheEncryptionKeyArn)},
+		)
+		if err != nil {
+			return nil, err
+		}
+		return mqlKeyResource.(*mqlAwsKmsKey), nil
+	}
+	a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }
 
 func cbTagsToMap(tags []cbtypes.Tag) map[string]any {

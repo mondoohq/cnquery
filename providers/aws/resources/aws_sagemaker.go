@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/smithy-go/transport/http"
@@ -237,18 +238,29 @@ func (a *mqlAwsSagemakerNotebookinstance) details() (*mqlAwsSagemakerNotebookins
 	args := map[string]*llx.RawData{
 		"arn":                  llx.StringDataPtr(instanceDetails.NotebookInstanceArn),
 		"directInternetAccess": llx.StringData(string(instanceDetails.DirectInternetAccess)),
+		"rootAccess":           llx.StringData(string(instanceDetails.RootAccess)),
+	}
+	if instanceDetails.InstanceMetadataServiceConfiguration != nil {
+		args["minimumInstanceMetadataServiceVersion"] = llx.StringDataPtr(instanceDetails.InstanceMetadataServiceConfiguration.MinimumInstanceMetadataServiceVersion)
+	} else {
+		args["minimumInstanceMetadataServiceVersion"] = llx.StringData("1")
 	}
 
 	mqlInstanceDetails, err := CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstancedetails", args)
 	if err != nil {
 		return nil, err
 	}
-	mqlInstanceDetails.(*mqlAwsSagemakerNotebookinstancedetails).cacheKmsKey = instanceDetails.KmsKeyId
-	return mqlInstanceDetails.(*mqlAwsSagemakerNotebookinstancedetails), nil
+	details := mqlInstanceDetails.(*mqlAwsSagemakerNotebookinstancedetails)
+	details.cacheKmsKey = instanceDetails.KmsKeyId
+	details.cacheSubnetId = instanceDetails.SubnetId
+	details.region = region
+	return details, nil
 }
 
 type mqlAwsSagemakerNotebookinstancedetailsInternal struct {
-	cacheKmsKey *string
+	cacheKmsKey   *string
+	cacheSubnetId *string
+	region        string
 }
 
 func (a *mqlAwsSagemakerNotebookinstancedetails) kmsKey() (*mqlAwsKmsKey, error) {
@@ -262,6 +274,20 @@ func (a *mqlAwsSagemakerNotebookinstancedetails) kmsKey() (*mqlAwsKmsKey, error)
 		return mqlKeyResource.(*mqlAwsKmsKey), nil
 	}
 	a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+func (a *mqlAwsSagemakerNotebookinstancedetails) subnet() (*mqlAwsVpcSubnet, error) {
+	if a.cacheSubnetId != nil && *a.cacheSubnetId != "" {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		arn := fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), *a.cacheSubnetId)
+		res, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{"arn": llx.StringData(arn)})
+		if err != nil {
+			return nil, err
+		}
+		return res.(*mqlAwsVpcSubnet), nil
+	}
+	a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
 	return nil, nil
 }
 

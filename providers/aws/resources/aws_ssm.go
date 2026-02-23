@@ -185,6 +185,9 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 						"platformVersion": llx.StringDataPtr(instance.PlatformVersion),
 						"region":          llx.StringData(region),
 						"arn":             llx.StringData(ssmInstanceArn(conn.AccountId(), region, convert.ToValue(instance.InstanceId))),
+						"agentVersion":    llx.StringDataPtr(instance.AgentVersion),
+						"lastPingedAt":    llx.TimeDataPtr(instance.LastPingDateTime),
+						"computerName":    llx.StringDataPtr(instance.ComputerName),
 					})
 				if err != nil {
 					return nil, err

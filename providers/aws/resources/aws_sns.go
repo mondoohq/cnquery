@@ -141,6 +141,32 @@ func (a *mqlAwsSnsTopic) signatureVersion() (string, error) {
 	return topicAttributes.Attributes["SignatureVersion"], nil
 }
 
+func (a *mqlAwsSnsTopic) kmsMasterKey() (*mqlAwsKmsKey, error) {
+	arn := a.Arn.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Sns(region)
+	ctx := context.Background()
+
+	topicAttributes, err := svc.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{TopicArn: &arn})
+	if err != nil {
+		return nil, err
+	}
+	keyId := topicAttributes.Attributes["KmsMasterKeyId"]
+	if keyId != "" {
+		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
+			map[string]*llx.RawData{"arn": llx.StringData(keyId)},
+		)
+		if err != nil {
+			return nil, err
+		}
+		return mqlKeyResource.(*mqlAwsKmsKey), nil
+	}
+	a.KmsMasterKey.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
 func (a *mqlAwsSnsTopic) tags() (map[string]any, error) {
 	arn := a.Arn.Data
 	region := a.Region.Data

@@ -299,3 +299,19 @@ func (a *mqlAwsSqsQueue) visibilityTimeoutSeconds() (int64, error) {
 	}
 	return int64(c), nil
 }
+
+func (a *mqlAwsSqsQueue) deduplicationScope() (string, error) {
+	atts, err := a.fetchAttributes()
+	if err != nil {
+		return "", err
+	}
+	return atts["DeduplicationScope"], nil
+}
+
+func (a *mqlAwsSqsQueue) fifoThroughputLimit() (string, error) {
+	atts, err := a.fetchAttributes()
+	if err != nil {
+		return "", err
+	}
+	return atts["FifoThroughputLimit"], nil
+}

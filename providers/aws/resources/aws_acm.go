@@ -127,6 +127,8 @@ func initAwsAcmCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData
 	args["status"] = llx.StringData(string(certDetails.Certificate.Status))
 	args["subject"] = llx.StringDataPtr(certDetails.Certificate.Subject)
 	args["tags"] = llx.MapData(CertTagsToMapTags(certTags.Tags), types.String)
+	args["renewalEligible"] = llx.BoolData(certDetails.Certificate.RenewalEligibility == acmtypes.RenewalEligibilityEligible)
+	args["signatureAlgorithm"] = llx.StringDataPtr(certDetails.Certificate.SignatureAlgorithm)
 	return args, nil, nil
 }
 

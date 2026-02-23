@@ -526,6 +526,7 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 							"okActions":               llx.ArrayData(okActions, types.Resource("aws.sns.topic")),
 							"name":                    llx.StringDataPtr(alarm.AlarmName),
 							"actions":                 llx.ArrayData(actions, types.Resource("aws.sns.topic")),
+							"actionsEnabled":          llx.BoolDataPtr(alarm.ActionsEnabled),
 						})
 					if err != nil {
 						return nil, err
@@ -600,6 +601,8 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 					args["name"] = llx.StringDataPtr(loggroup.LogGroupName)
 					args["region"] = llx.StringData(region)
 					args["retentionInDays"] = llx.IntDataDefault(loggroup.RetentionInDays, 0)
+					args["dataProtectionStatus"] = llx.StringData(string(loggroup.DataProtectionStatus))
+					args["deletionProtectionEnabled"] = llx.BoolDataPtr(loggroup.DeletionProtectionEnabled)
 
 					// add kms key if there is one
 					if loggroup.KmsKeyId != nil {

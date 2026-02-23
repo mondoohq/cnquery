@@ -3,6 +3,7 @@ ACCOUNTADMIN
 Adddays
 advancedthreatprotection
 alloydb
+alpn
 antispam
 appslot
 atlassian
@@ -18,6 +19,7 @@ backupsetting
 backupshorttermretentionpolicy
 bigquery
 bigtable
+blackhole
 bytematchstatement
 cavium
 cdn
@@ -44,7 +46,9 @@ dfw
 dlp
 dlq
 dlv
+dsse
 eas
+Ecmp
 eip
 ekm
 ekus
@@ -55,6 +59,8 @@ fargate
 filesz
 firefox
 firestore
+FLEXGROUP
+FLEXVOL
 frontmatter
 ftps
 fumadocs
@@ -123,11 +129,14 @@ nullstring
 oidc
 OIDs
 ondemand
+ontap
 opcplc
 opensearch
 openssl
+openzfs
 orstatement
 ospf
+parallelquery
 paravirtual
 PAYG
 Pids
@@ -177,7 +186,9 @@ timestream
 toplevel
 tpu
 serviceconnection
+transitgateway
 udid
+uefi
 Uocm
 usb
 Utc
@@ -195,4 +206,5 @@ webide
 WEBSERVERS
 wil
 xssmatchstatement
+ZSTD
 zrt

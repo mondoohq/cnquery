@@ -634,6 +634,95 @@ func (a *mqlAwsS3Bucket) replication() (any, error) {
 	return convert.JsonToDict(bucketReplication.ReplicationConfiguration)
 }
 
+func (a *mqlAwsS3BucketReplicationRule) id() (string, error) {
+	return a.ResourceId.Data, nil
+}
+
+func (a *mqlAwsS3Bucket) replicationRules() ([]any, error) {
+	bucketname := a.Name.Data
+	region := a.Location.Data
+	bucketArn := a.Arn.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.S3(region)
+	ctx := context.Background()
+
+	bucketReplication, err := svc.GetBucketReplication(ctx, &s3.GetBucketReplicationInput{
+		Bucket: &bucketname,
+	})
+	if err != nil {
+		if isNotFoundForS3(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	if bucketReplication.ReplicationConfiguration == nil {
+		return []any{}, nil
+	}
+
+	res := []any{}
+	for i, rule := range bucketReplication.ReplicationConfiguration.Rules {
+		ruleId := ""
+		if rule.ID != nil {
+			ruleId = *rule.ID
+		}
+
+		resourceId := fmt.Sprintf("%s/replication/%d", bucketArn, i)
+		if ruleId != "" {
+			resourceId = fmt.Sprintf("%s/replication/%s", bucketArn, ruleId)
+		}
+
+		destBucket := ""
+		destAccount := ""
+		destStorageClass := ""
+		if rule.Destination != nil {
+			if rule.Destination.Bucket != nil {
+				destBucket = *rule.Destination.Bucket
+			}
+			if rule.Destination.Account != nil {
+				destAccount = *rule.Destination.Account
+			}
+			destStorageClass = string(rule.Destination.StorageClass)
+		}
+
+		deleteMarkerEnabled := false
+		if rule.DeleteMarkerReplication != nil {
+			deleteMarkerEnabled = rule.DeleteMarkerReplication.Status == s3types.DeleteMarkerReplicationStatusEnabled
+		}
+
+		prefix := ""
+		if rule.Prefix != nil {
+			prefix = *rule.Prefix
+		}
+
+		priority := int64(0)
+		if rule.Priority != nil {
+			priority = int64(*rule.Priority)
+		}
+
+		args := map[string]*llx.RawData{
+			"resourceId":                     llx.StringData(resourceId),
+			"id":                             llx.StringData(ruleId),
+			"status":                         llx.StringData(string(rule.Status)),
+			"priority":                       llx.IntData(priority),
+			"destinationBucket":              llx.StringData(destBucket),
+			"destinationAccount":             llx.StringData(destAccount),
+			"destinationStorageClass":        llx.StringData(destStorageClass),
+			"deleteMarkerReplicationEnabled": llx.BoolData(deleteMarkerEnabled),
+			"prefix":                         llx.StringData(prefix),
+		}
+
+		mqlRule, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.replicationRule", args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRule)
+	}
+	return res, nil
+}
+
 func (a *mqlAwsS3Bucket) encryption() (any, error) {
 	bucketname := a.Name.Data
 	region := a.Location.Data
@@ -658,6 +747,68 @@ func (a *mqlAwsS3Bucket) encryption() (any, error) {
 	}
 
 	return convert.JsonToDict(encryption.ServerSideEncryptionConfiguration)
+}
+
+func (a *mqlAwsS3BucketEncryptionRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsS3Bucket) encryptionRules() ([]any, error) {
+	bucketname := a.Name.Data
+	region := a.Location.Data
+	bucketArn := a.Arn.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.S3(region)
+	ctx := context.Background()
+
+	encryption, err := svc.GetBucketEncryption(ctx, &s3.GetBucketEncryptionInput{
+		Bucket: &bucketname,
+	})
+	if err != nil {
+		var ae smithy.APIError
+		if errors.As(err, &ae) {
+			if ae.ErrorCode() == "ServerSideEncryptionConfigurationNotFoundError" {
+				return []any{}, nil
+			}
+		}
+		return nil, err
+	}
+
+	if encryption.ServerSideEncryptionConfiguration == nil {
+		return []any{}, nil
+	}
+
+	res := []any{}
+	for i, rule := range encryption.ServerSideEncryptionConfiguration.Rules {
+		sseAlgorithm := ""
+		kmsMasterKeyId := ""
+		if rule.ApplyServerSideEncryptionByDefault != nil {
+			sseAlgorithm = string(rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm)
+			if rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID != nil {
+				kmsMasterKeyId = *rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID
+			}
+		}
+		bucketKeyEnabled := false
+		if rule.BucketKeyEnabled != nil {
+			bucketKeyEnabled = *rule.BucketKeyEnabled
+		}
+
+		args := map[string]*llx.RawData{
+			"id":               llx.StringData(fmt.Sprintf("%s/encryption/%d", bucketArn, i)),
+			"sseAlgorithm":     llx.StringData(sseAlgorithm),
+			"kmsMasterKeyId":   llx.StringData(kmsMasterKeyId),
+			"bucketKeyEnabled": llx.BoolData(bucketKeyEnabled),
+		}
+
+		mqlRule, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.encryptionRule", args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRule)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsS3Bucket) defaultLock() (string, error) {

@@ -5,7 +5,9 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -262,6 +264,46 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 		}
 	}
 	return mqlres, nil
+}
+
+func (a *mqlAwsEcrRepository) lifecyclePolicy() (any, error) {
+	if a.Public.Data {
+		a.LifecyclePolicy.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	name := a.Name.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ecr(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetLifecyclePolicy(ctx, &ecr.GetLifecyclePolicyInput{
+		RepositoryName: &name,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.LifecyclePolicy.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		// LifecyclePolicyNotFoundException means no policy is set
+		if strings.Contains(err.Error(), "LifecyclePolicyNotFoundException") {
+			a.LifecyclePolicy.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if resp.LifecyclePolicyText == nil {
+		a.LifecyclePolicy.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	var parsed any
+	if jsonErr := json.Unmarshal([]byte(*resp.LifecyclePolicyText), &parsed); jsonErr != nil {
+		return nil, jsonErr
+	}
+	return convert.JsonToDict(parsed)
 }
 
 type ImageInfo struct {
