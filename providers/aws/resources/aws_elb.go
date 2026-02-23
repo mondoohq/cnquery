@@ -77,14 +77,18 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					lbNames = append(lbNames, convert.ToValue(lb.LoadBalancerName))
 				}
 				tagsByName := map[string]map[string]any{}
-				if len(lbNames) > 0 {
-					tagsResp, err := svc.DescribeTags(ctx, &elasticloadbalancing.DescribeTagsInput{LoadBalancerNames: lbNames})
+				for i := 0; i < len(lbNames); i += 20 {
+					end := i + 20
+					if end > len(lbNames) {
+						end = len(lbNames)
+					}
+					tagsResp, err := svc.DescribeTags(ctx, &elasticloadbalancing.DescribeTagsInput{LoadBalancerNames: lbNames[i:end]})
 					if err != nil {
 						log.Warn().Err(err).Msg("could not fetch tags for classic load balancers")
-					} else {
-						for _, desc := range tagsResp.TagDescriptions {
-							tagsByName[convert.ToValue(desc.LoadBalancerName)] = elbv1TagsToMap(desc.Tags)
-						}
+						break
+					}
+					for _, desc := range tagsResp.TagDescriptions {
+						tagsByName[convert.ToValue(desc.LoadBalancerName)] = elbv1TagsToMap(desc.Tags)
 					}
 				}
 
@@ -178,14 +182,18 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					lbArns = append(lbArns, convert.ToValue(lb.LoadBalancerArn))
 				}
 				tagsByArn := map[string]map[string]any{}
-				if len(lbArns) > 0 {
-					tagsResp, err := svc.DescribeTags(ctx, &elasticloadbalancingv2.DescribeTagsInput{ResourceArns: lbArns})
+				for i := 0; i < len(lbArns); i += 20 {
+					end := i + 20
+					if end > len(lbArns) {
+						end = len(lbArns)
+					}
+					tagsResp, err := svc.DescribeTags(ctx, &elasticloadbalancingv2.DescribeTagsInput{ResourceArns: lbArns[i:end]})
 					if err != nil {
 						log.Warn().Err(err).Msg("could not fetch tags for load balancers")
-					} else {
-						for _, desc := range tagsResp.TagDescriptions {
-							tagsByArn[convert.ToValue(desc.ResourceArn)] = elbv2TagsToMap(desc.Tags)
-						}
+						break
+					}
+					for _, desc := range tagsResp.TagDescriptions {
+						tagsByArn[convert.ToValue(desc.ResourceArn)] = elbv2TagsToMap(desc.Tags)
 					}
 				}
 
