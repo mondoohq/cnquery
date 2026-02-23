@@ -53,7 +53,7 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) [
 			res := []any{}
 
 			// we need to iterate over all the analyzers types in the account
-			analyzerTypes := []aatypes.Type{aatypes.TypeAccount, aatypes.TypeOrganization, aatypes.TypeAccountUnusedAccess, aatypes.TypeOrganizationUnusedAccess}
+			analyzerTypes := []aatypes.Type{aatypes.TypeAccount, aatypes.TypeOrganization, aatypes.TypeAccountUnusedAccess, aatypes.TypeOrganizationUnusedAccess, aatypes.TypeAccountInternalAccess, aatypes.TypeOrganizationInternalAccess}
 			for _, analyzerType := range analyzerTypes {
 				ctx := context.Background()
 

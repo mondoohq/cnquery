@@ -32,7 +32,7 @@ private oci.region @defaults("id name") {
   name string
   // Whether this is the tenancy's home region
   isHomeRegion bool
-  // Region subscription status (e.g., READY, IN_PROGRESS)
+  // Region subscription status (READY, IN_PROGRESS)
   status string
 }
 
@@ -46,7 +46,7 @@ private oci.compartment @defaults("id name") {
   description string
   // Compartment creation time
   created time
-  // Compartment lifecycle state (e.g., ACTIVE, DELETED)
+  // Compartment lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
   state string
 }
 
@@ -72,7 +72,7 @@ private oci.identity.user @defaults("name") {
   description string
   // User creation time
   created time
-  // User lifecycle state (e.g., ACTIVE, INACTIVE)
+  // User lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
   state string
   // Whether multi-factor authentication is enabled
   mfaActivated bool
@@ -110,7 +110,7 @@ private oci.identity.apiKey @defaults("fingerprint") {
   fingerprint string
   // API key creation time
   created time
-  // API key lifecycle state (e.g., ACTIVE, INACTIVE)
+  // API key lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
   state string
 }
 
@@ -122,7 +122,7 @@ private oci.identity.customerSecretKey @defaults("name") {
   name string
   // Key creation time
   created time
-  // Key lifecycle state (e.g., ACTIVE, INACTIVE)
+  // Key lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
   state string
 }
 
@@ -136,7 +136,7 @@ private oci.identity.authToken @defaults("description") {
   created time
   // Token expiration time
   expires time
-  // Token lifecycle state (e.g., ACTIVE, INACTIVE)
+  // Token lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
   state string
 }
 
@@ -152,7 +152,7 @@ private oci.identity.group @defaults("name") {
   description string
   // Group creation time
   created time
-  // Group lifecycle state (e.g., ACTIVE, INACTIVE)
+  // Group lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
   state string
   // Free-form tags for resource management
   freeformTags map[string]string
@@ -172,7 +172,7 @@ private oci.identity.policy @defaults("name description") {
   description string
   // Policy creation time
   created time
-  // Policy lifecycle state (e.g., ACTIVE, INACTIVE)
+  // Policy lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
   state string
   // Policy statements defining permissions
   statements []string
@@ -202,7 +202,7 @@ private oci.compute.instance @defaults("name") {
   region oci.region
   // Instance creation time
   created time
-  // Instance lifecycle state (e.g., RUNNING, STOPPED, TERMINATED)
+  // Instance lifecycle state (MOVING, PROVISIONING, RUNNING, STARTING, STOPPING, STOPPED, CREATING_IMAGE, TERMINATING, TERMINATED)
   state string
   // Compute shape determining CPU and memory (e.g., VM.Standard2.1)
   shape string
@@ -232,7 +232,7 @@ private oci.compute.image @defaults("name") {
   region oci.region
   // Image creation time
   created time
-  // Image lifecycle state (e.g., AVAILABLE, DISABLED, DELETED)
+  // Image lifecycle state (PROVISIONING, IMPORTING, AVAILABLE, EXPORTING, DISABLED, DELETED)
   state string
   // Compartment containing the image
   compartment oci.compartment
@@ -266,7 +266,7 @@ private oci.network.vcn @defaults("name") {
   name string
   // VCN creation time
   created time
-  // VCN lifecycle state (e.g., AVAILABLE, TERMINATED)
+  // VCN lifecycle state (PROVISIONING, AVAILABLE, UPDATING, TERMINATING, TERMINATED)
   state string
   // Deprecated: Use cidrBlocks instead
   cidrBlock string
@@ -298,7 +298,7 @@ private oci.network.securityList @defaults("name") {
   name string
   // Security list creation time
   created time
-  // Security list lifecycle state (e.g., AVAILABLE, TERMINATED)
+  // Security list lifecycle state (PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
   state string
   // Egress security rules for outbound traffic
   egressSecurityRules []dict
