@@ -3608,6 +3608,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.cluster.configuration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetConfiguration()).ToDataRes(types.Dict)
 	},
+	"aws.ecs.cluster.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetSettings()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.ecs.cluster.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetStatus()).ToDataRes(types.String)
 	},
@@ -6193,6 +6196,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.networkacl.entry.ruleNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetRuleNumber()).ToDataRes(types.Int)
+	},
+	"aws.ec2.networkacl.entry.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2NetworkaclEntry).GetProtocol()).ToDataRes(types.String)
 	},
 	"aws.ec2.networkacl.entry.portRange": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetPortRange()).ToDataRes(types.Resource("aws.ec2.networkacl.entry.portrange"))
@@ -10789,6 +10795,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsCluster).Configuration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.cluster.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).Settings, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -14655,6 +14665,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.networkacl.entry.ruleNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2NetworkaclEntry).RuleNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkacl.entry.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2NetworkaclEntry).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkacl.entry.portRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25998,6 +26012,7 @@ type mqlAwsEcsCluster struct {
 	PendingTasksCount                 plugin.TValue[int64]
 	RegisteredContainerInstancesCount plugin.TValue[int64]
 	Configuration                     plugin.TValue[any]
+	Settings                          plugin.TValue[map[string]any]
 	Status                            plugin.TValue[string]
 	Tasks                             plugin.TValue[[]any]
 	ContainerInstances                plugin.TValue[[]any]
@@ -26070,6 +26085,10 @@ func (c *mqlAwsEcsCluster) GetRegisteredContainerInstancesCount() *plugin.TValue
 
 func (c *mqlAwsEcsCluster) GetConfiguration() *plugin.TValue[any] {
 	return &c.Configuration
+}
+
+func (c *mqlAwsEcsCluster) GetSettings() *plugin.TValue[map[string]any] {
+	return &c.Settings
 }
 
 func (c *mqlAwsEcsCluster) GetStatus() *plugin.TValue[string] {
@@ -36380,6 +36399,7 @@ type mqlAwsEc2NetworkaclEntry struct {
 	Egress        plugin.TValue[bool]
 	RuleAction    plugin.TValue[string]
 	RuleNumber    plugin.TValue[int64]
+	Protocol      plugin.TValue[string]
 	PortRange     plugin.TValue[*mqlAwsEc2NetworkaclEntryPortrange]
 	CidrBlock     plugin.TValue[string]
 	Ipv6CidrBlock plugin.TValue[string]
@@ -36433,6 +36453,10 @@ func (c *mqlAwsEc2NetworkaclEntry) GetRuleAction() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2NetworkaclEntry) GetRuleNumber() *plugin.TValue[int64] {
 	return &c.RuleNumber
+}
+
+func (c *mqlAwsEc2NetworkaclEntry) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
 }
 
 func (c *mqlAwsEc2NetworkaclEntry) GetPortRange() *plugin.TValue[*mqlAwsEc2NetworkaclEntryPortrange] {

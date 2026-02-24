@@ -177,7 +177,7 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 	svc := conn.Ecs(region)
 	ctx := context.Background()
-	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{a}, Include: []ecstypes.ClusterField{ecstypes.ClusterFieldConfigurations, ecstypes.ClusterFieldTags}})
+	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{a}, Include: []ecstypes.ClusterField{ecstypes.ClusterFieldConfigurations, ecstypes.ClusterFieldSettings, ecstypes.ClusterFieldTags}})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -198,6 +198,13 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["runningTasksCount"] = llx.IntData(int64(c.RunningTasksCount))
 	args["status"] = llx.StringDataPtr(c.Status)
 	args["tags"] = llx.MapData(ecsTagsToMap(c.Tags), types.String)
+	settingsMap := make(map[string]any)
+	for _, s := range c.Settings {
+		if s.Value != nil {
+			settingsMap[string(s.Name)] = *s.Value
+		}
+	}
+	args["settings"] = llx.MapData(settingsMap, types.String)
 	return args, nil, nil
 }
 
