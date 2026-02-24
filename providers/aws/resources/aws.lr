@@ -1952,6 +1952,8 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   registeredContainerInstancesCount int
   // Configuration for the cluster
   configuration dict
+  // Cluster settings (e.g., Container Insights)
+  settings map[string]string
   // Status of the cluster
   status string
   // List of AWS ECS task definitions
@@ -4094,6 +4096,8 @@ private aws.ec2.networkacl.entry @defaults("id egress ruleAction cidrBlock portR
   ruleAction string
   // Rule number
   ruleNumber int
+  // Protocol number (-1 for all, 6 for TCP, 17 for UDP)
+  protocol string
   // Port range for the ACL entry
   portRange() aws.ec2.networkacl.entry.portrange
   // CIDR block for the ACL entry

@@ -357,6 +357,7 @@ func (a *mqlAwsEc2Networkacl) entries() ([]any, error) {
 			"egress":        llx.BoolData(egress),
 			"ruleAction":    llx.StringData(string(entry.RuleAction)),
 			"ruleNumber":    llx.IntDataDefault(entry.RuleNumber, 0),
+			"protocol":      llx.StringDataPtr(entry.Protocol),
 			"cidrBlock":     llx.StringDataPtr(entry.CidrBlock),
 			"ipv6CidrBlock": llx.StringDataPtr(entry.Ipv6CidrBlock),
 			"id":            llx.StringData(entryId),

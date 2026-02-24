@@ -598,6 +598,7 @@ aws.ec2.networkacl.entry.portrange 9.0.0
 aws.ec2.networkacl.entry.portrange.from 9.0.0
 aws.ec2.networkacl.entry.portrange.id 9.0.0
 aws.ec2.networkacl.entry.portrange.to 9.0.0
+aws.ec2.networkacl.entry.protocol 11.12.3
 aws.ec2.networkacl.entry.ruleAction 9.0.0
 aws.ec2.networkacl.entry.ruleNumber 9.1.8
 aws.ec2.networkacl.id 9.0.0
@@ -723,6 +724,7 @@ aws.ecs.cluster.region 9.0.0
 aws.ecs.cluster.registeredContainerInstancesCount 9.0.0
 aws.ecs.cluster.runningTasksCount 9.0.0
 aws.ecs.cluster.services 11.5.114
+aws.ecs.cluster.settings 11.12.3
 aws.ecs.cluster.status 9.0.0
 aws.ecs.cluster.tags 9.0.0
 aws.ecs.cluster.tasks 9.0.0
