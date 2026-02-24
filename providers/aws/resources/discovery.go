@@ -883,8 +883,9 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 					region = p.Region
 				}
 			}
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
 			m := mqlObject{
-				name: f.Name.Data, labels: map[string]string{},
+				name: f.Name.Data, labels: tags,
 				awsObject: awsObject{
 					account: accountId, region: region, arn: f.Arn.Data,
 					id: f.Name.Data, service: "elb", objectType: "loadbalancer",
@@ -894,24 +895,20 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 		}
 
 		classicLbs := e.GetClassicLoadBalancers()
-		if classicLbs != nil {
-			for i := range classicLbs.Data {
-				f := classicLbs.Data[i].(*mqlAwsElbLoadbalancer)
-				var region string
-				if arn.IsARN(f.Arn.Data) {
-					if p, err := arn.Parse(f.Arn.Data); err == nil {
-						region = p.Region
-					}
-				}
-				m := mqlObject{
-					name: f.Name.Data, labels: map[string]string{},
-					awsObject: awsObject{
-						account: accountId, region: region, arn: f.Arn.Data,
-						id: f.Name.Data, service: "elb", objectType: "loadbalancer",
-					},
-				}
-				assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		if classicLbs == nil {
+			return assetList, nil
+		}
+		for i := range classicLbs.Data {
+			f := classicLbs.Data[i].(*mqlAwsElbLoadbalancer)
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "elb", objectType: "loadbalancer",
+				},
 			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
 	case DiscoveryESDomains:
 		res, err := NewResource(runtime, "aws.es", map[string]*llx.RawData{})
