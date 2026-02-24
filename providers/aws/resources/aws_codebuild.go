@@ -128,14 +128,14 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	args["createdAt"] = llx.TimeDataPtr(project.Created)
 	args["modifiedAt"] = llx.TimeDataPtr(project.LastModified)
 	args["projectVisibility"] = llx.StringData(string(project.ProjectVisibility))
-	args["timeoutInMinutes"] = llx.IntDataDefault(project.TimeoutInMinutes, 0)
+	args["timeoutInMinutes"] = llx.IntDataDefault(project.TimeoutInMinutes, 60)
 	if project.Environment != nil && project.Environment.PrivilegedMode != nil {
 		args["privilegedMode"] = llx.BoolData(*project.Environment.PrivilegedMode)
 	} else {
 		args["privilegedMode"] = llx.BoolData(false)
 	}
 	args["serviceRole"] = llx.StringDataPtr(project.ServiceRole)
-	args["queuedTimeoutInMinutes"] = llx.IntDataDefault(project.QueuedTimeoutInMinutes, 0)
+	args["queuedTimeoutInMinutes"] = llx.IntDataDefault(project.QueuedTimeoutInMinutes, 480)
 
 	// Cache the encryption key ARN for lazy loading in encryptionKey()
 	obj, err := CreateResource(runtime, "aws.codebuild.project", args)
