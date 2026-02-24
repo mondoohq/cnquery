@@ -1680,7 +1680,9 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 
 func (c *compiler) postCompile() {
 	code := c.Result.CodeV2
-	for i := range code.Blocks {
+	// Use index-based loop instead of range so that blocks appended by
+	// expandResourceFields (nested @defaults) are visited in the same pass.
+	for i := 0; i < len(code.Blocks); i++ {
 		block := code.Blocks[i]
 		eps := block.Entrypoints
 
