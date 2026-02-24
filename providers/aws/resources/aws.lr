@@ -1398,9 +1398,9 @@ private aws.sagemaker.notebookinstancedetails @defaults("arn") {
   // KMS key used to encrypt data
   kmsKey() aws.kms.key
   // Whether SageMaker provides internet access to the instance
-  directInternetAccess string
+  directInternetAccess bool
   // Whether root access is enabled for users of the notebook instance
-  rootAccess string
+  rootAccess bool
   // Minimum IMDS version the notebook instance supports (1 or 2)
   minimumInstanceMetadataServiceVersion string
   // VPC subnet the notebook instance is deployed in
@@ -4662,18 +4662,18 @@ private aws.ec2.transitgateway @defaults("arn id state") {
   tags map[string]string
   // Private Autonomous System Number (ASN) for the Amazon side of a BGP session
   amazonSideAsn int
-  // Whether attachment requests are automatically accepted (enable or disable)
-  autoAcceptSharedAttachments string
-  // Whether resource attachments are automatically associated with the default route table (enable or disable)
-  defaultRouteTableAssociation string
-  // Whether resource attachments automatically propagate routes to the default route table (enable or disable)
-  defaultRouteTablePropagation string
-  // Whether DNS support is enabled (enable or disable)
-  dnsSupport string
-  // Whether multicast is enabled (enable or disable)
-  multicastSupport string
-  // Whether Equal Cost Multipath Protocol support is enabled (enable or disable)
-  vpnEcmpSupport string
+  // Whether attachment requests are automatically accepted
+  autoAcceptSharedAttachments bool
+  // Whether resource attachments are automatically associated with the default route table
+  defaultRouteTableAssociation bool
+  // Whether resource attachments automatically propagate routes to the default route table
+  defaultRouteTablePropagation bool
+  // Whether DNS support is enabled
+  dnsSupport bool
+  // Whether multicast is enabled
+  multicastSupport bool
+  // Whether Equal Cost Multipath Protocol support is enabled
+  vpnEcmpSupport bool
   // Transit gateway CIDR blocks
   transitGatewayCidrBlocks []string
   // ID of the default association route table

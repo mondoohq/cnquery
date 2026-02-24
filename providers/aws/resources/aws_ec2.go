@@ -2225,20 +2225,20 @@ func (a *mqlAwsEc2) getTransitGateways(conn *connection.AwsConnection) []*jobpoo
 
 					// Flatten Options
 					var amazonSideAsn int64
-					var autoAcceptSharedAttachments, defaultRouteTableAssociation, defaultRouteTablePropagation string
-					var dnsSupport, multicastSupport, vpnEcmpSupport string
+					var autoAcceptSharedAttachments, defaultRouteTableAssociation, defaultRouteTablePropagation bool
+					var dnsSupport, multicastSupport, vpnEcmpSupport bool
 					var transitGatewayCidrBlocks []string
 					var associationDefaultRouteTableId, propagationDefaultRouteTableId string
 					if opts := tgw.Options; opts != nil {
 						if opts.AmazonSideAsn != nil {
 							amazonSideAsn = *opts.AmazonSideAsn
 						}
-						autoAcceptSharedAttachments = string(opts.AutoAcceptSharedAttachments)
-						defaultRouteTableAssociation = string(opts.DefaultRouteTableAssociation)
-						defaultRouteTablePropagation = string(opts.DefaultRouteTablePropagation)
-						dnsSupport = string(opts.DnsSupport)
-						multicastSupport = string(opts.MulticastSupport)
-						vpnEcmpSupport = string(opts.VpnEcmpSupport)
+						autoAcceptSharedAttachments = string(opts.AutoAcceptSharedAttachments) == "enable"
+						defaultRouteTableAssociation = string(opts.DefaultRouteTableAssociation) == "enable"
+						defaultRouteTablePropagation = string(opts.DefaultRouteTablePropagation) == "enable"
+						dnsSupport = string(opts.DnsSupport) == "enable"
+						multicastSupport = string(opts.MulticastSupport) == "enable"
+						vpnEcmpSupport = string(opts.VpnEcmpSupport) == "enable"
 						transitGatewayCidrBlocks = opts.TransitGatewayCidrBlocks
 						associationDefaultRouteTableId = convert.ToValue(opts.AssociationDefaultRouteTableId)
 						propagationDefaultRouteTableId = convert.ToValue(opts.PropagationDefaultRouteTableId)
@@ -2255,12 +2255,12 @@ func (a *mqlAwsEc2) getTransitGateways(conn *connection.AwsConnection) []*jobpoo
 							"createdAt":                      llx.TimeDataPtr(tgw.CreationTime),
 							"tags":                           llx.MapData(toInterfaceMap(ec2TagsToMap(tgw.Tags)), types.String),
 							"amazonSideAsn":                  llx.IntData(amazonSideAsn),
-							"autoAcceptSharedAttachments":    llx.StringData(autoAcceptSharedAttachments),
-							"defaultRouteTableAssociation":   llx.StringData(defaultRouteTableAssociation),
-							"defaultRouteTablePropagation":   llx.StringData(defaultRouteTablePropagation),
-							"dnsSupport":                     llx.StringData(dnsSupport),
-							"multicastSupport":               llx.StringData(multicastSupport),
-							"vpnEcmpSupport":                 llx.StringData(vpnEcmpSupport),
+							"autoAcceptSharedAttachments":    llx.BoolData(autoAcceptSharedAttachments),
+							"defaultRouteTableAssociation":   llx.BoolData(defaultRouteTableAssociation),
+							"defaultRouteTablePropagation":   llx.BoolData(defaultRouteTablePropagation),
+							"dnsSupport":                     llx.BoolData(dnsSupport),
+							"multicastSupport":               llx.BoolData(multicastSupport),
+							"vpnEcmpSupport":                 llx.BoolData(vpnEcmpSupport),
 							"transitGatewayCidrBlocks":       llx.ArrayData(convert.SliceAnyToInterface(transitGatewayCidrBlocks), types.String),
 							"associationDefaultRouteTableId": llx.StringData(associationDefaultRouteTableId),
 							"propagationDefaultRouteTableId": llx.StringData(propagationDefaultRouteTableId),

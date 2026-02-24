@@ -237,8 +237,8 @@ func (a *mqlAwsSagemakerNotebookinstance) details() (*mqlAwsSagemakerNotebookins
 	}
 	args := map[string]*llx.RawData{
 		"arn":                  llx.StringDataPtr(instanceDetails.NotebookInstanceArn),
-		"directInternetAccess": llx.StringData(string(instanceDetails.DirectInternetAccess)),
-		"rootAccess":           llx.StringData(string(instanceDetails.RootAccess)),
+		"directInternetAccess": llx.BoolData(string(instanceDetails.DirectInternetAccess) == "Enabled"),
+		"rootAccess":           llx.BoolData(string(instanceDetails.RootAccess) == "Enabled"),
 	}
 	if instanceDetails.InstanceMetadataServiceConfiguration != nil {
 		args["minimumInstanceMetadataServiceVersion"] = llx.StringDataPtr(instanceDetails.InstanceMetadataServiceConfiguration.MinimumInstanceMetadataServiceVersion)

@@ -3039,10 +3039,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.sagemaker.notebookinstancedetails.directInternetAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetDirectInternetAccess()).ToDataRes(types.String)
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetDirectInternetAccess()).ToDataRes(types.Bool)
 	},
 	"aws.sagemaker.notebookinstancedetails.rootAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetRootAccess()).ToDataRes(types.String)
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetRootAccess()).ToDataRes(types.Bool)
 	},
 	"aws.sagemaker.notebookinstancedetails.minimumInstanceMetadataServiceVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetMinimumInstanceMetadataServiceVersion()).ToDataRes(types.String)
@@ -7014,22 +7014,22 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsEc2Transitgateway).GetAmazonSideAsn()).ToDataRes(types.Int)
 	},
 	"aws.ec2.transitgateway.autoAcceptSharedAttachments": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Transitgateway).GetAutoAcceptSharedAttachments()).ToDataRes(types.String)
+		return (r.(*mqlAwsEc2Transitgateway).GetAutoAcceptSharedAttachments()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.transitgateway.defaultRouteTableAssociation": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Transitgateway).GetDefaultRouteTableAssociation()).ToDataRes(types.String)
+		return (r.(*mqlAwsEc2Transitgateway).GetDefaultRouteTableAssociation()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.transitgateway.defaultRouteTablePropagation": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Transitgateway).GetDefaultRouteTablePropagation()).ToDataRes(types.String)
+		return (r.(*mqlAwsEc2Transitgateway).GetDefaultRouteTablePropagation()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.transitgateway.dnsSupport": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Transitgateway).GetDnsSupport()).ToDataRes(types.String)
+		return (r.(*mqlAwsEc2Transitgateway).GetDnsSupport()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.transitgateway.multicastSupport": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Transitgateway).GetMulticastSupport()).ToDataRes(types.String)
+		return (r.(*mqlAwsEc2Transitgateway).GetMulticastSupport()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.transitgateway.vpnEcmpSupport": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Transitgateway).GetVpnEcmpSupport()).ToDataRes(types.String)
+		return (r.(*mqlAwsEc2Transitgateway).GetVpnEcmpSupport()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.transitgateway.transitGatewayCidrBlocks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Transitgateway).GetTransitGatewayCidrBlocks()).ToDataRes(types.Array(types.String))
@@ -10664,11 +10664,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.sagemaker.notebookinstancedetails.directInternetAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerNotebookinstancedetails).DirectInternetAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsSagemakerNotebookinstancedetails).DirectInternetAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.notebookinstancedetails.rootAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerNotebookinstancedetails).RootAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsSagemakerNotebookinstancedetails).RootAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.notebookinstancedetails.minimumInstanceMetadataServiceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16580,27 +16580,27 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.ec2.transitgateway.autoAcceptSharedAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Transitgateway).AutoAcceptSharedAttachments, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsEc2Transitgateway).AutoAcceptSharedAttachments, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.transitgateway.defaultRouteTableAssociation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Transitgateway).DefaultRouteTableAssociation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsEc2Transitgateway).DefaultRouteTableAssociation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.transitgateway.defaultRouteTablePropagation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Transitgateway).DefaultRouteTablePropagation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsEc2Transitgateway).DefaultRouteTablePropagation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.transitgateway.dnsSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Transitgateway).DnsSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsEc2Transitgateway).DnsSupport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.transitgateway.multicastSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Transitgateway).MulticastSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsEc2Transitgateway).MulticastSupport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.transitgateway.vpnEcmpSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Transitgateway).VpnEcmpSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsEc2Transitgateway).VpnEcmpSupport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.transitgateway.transitGatewayCidrBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25128,8 +25128,8 @@ type mqlAwsSagemakerNotebookinstancedetails struct {
 	mqlAwsSagemakerNotebookinstancedetailsInternal
 	Arn                                   plugin.TValue[string]
 	KmsKey                                plugin.TValue[*mqlAwsKmsKey]
-	DirectInternetAccess                  plugin.TValue[string]
-	RootAccess                            plugin.TValue[string]
+	DirectInternetAccess                  plugin.TValue[bool]
+	RootAccess                            plugin.TValue[bool]
 	MinimumInstanceMetadataServiceVersion plugin.TValue[string]
 	Subnet                                plugin.TValue[*mqlAwsVpcSubnet]
 }
@@ -25191,11 +25191,11 @@ func (c *mqlAwsSagemakerNotebookinstancedetails) GetKmsKey() *plugin.TValue[*mql
 	})
 }
 
-func (c *mqlAwsSagemakerNotebookinstancedetails) GetDirectInternetAccess() *plugin.TValue[string] {
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetDirectInternetAccess() *plugin.TValue[bool] {
 	return &c.DirectInternetAccess
 }
 
-func (c *mqlAwsSagemakerNotebookinstancedetails) GetRootAccess() *plugin.TValue[string] {
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetRootAccess() *plugin.TValue[bool] {
 	return &c.RootAccess
 }
 
@@ -40574,12 +40574,12 @@ type mqlAwsEc2Transitgateway struct {
 	CreatedAt                      plugin.TValue[*time.Time]
 	Tags                           plugin.TValue[map[string]any]
 	AmazonSideAsn                  plugin.TValue[int64]
-	AutoAcceptSharedAttachments    plugin.TValue[string]
-	DefaultRouteTableAssociation   plugin.TValue[string]
-	DefaultRouteTablePropagation   plugin.TValue[string]
-	DnsSupport                     plugin.TValue[string]
-	MulticastSupport               plugin.TValue[string]
-	VpnEcmpSupport                 plugin.TValue[string]
+	AutoAcceptSharedAttachments    plugin.TValue[bool]
+	DefaultRouteTableAssociation   plugin.TValue[bool]
+	DefaultRouteTablePropagation   plugin.TValue[bool]
+	DnsSupport                     plugin.TValue[bool]
+	MulticastSupport               plugin.TValue[bool]
+	VpnEcmpSupport                 plugin.TValue[bool]
 	TransitGatewayCidrBlocks       plugin.TValue[[]any]
 	AssociationDefaultRouteTableId plugin.TValue[string]
 	PropagationDefaultRouteTableId plugin.TValue[string]
@@ -40658,27 +40658,27 @@ func (c *mqlAwsEc2Transitgateway) GetAmazonSideAsn() *plugin.TValue[int64] {
 	return &c.AmazonSideAsn
 }
 
-func (c *mqlAwsEc2Transitgateway) GetAutoAcceptSharedAttachments() *plugin.TValue[string] {
+func (c *mqlAwsEc2Transitgateway) GetAutoAcceptSharedAttachments() *plugin.TValue[bool] {
 	return &c.AutoAcceptSharedAttachments
 }
 
-func (c *mqlAwsEc2Transitgateway) GetDefaultRouteTableAssociation() *plugin.TValue[string] {
+func (c *mqlAwsEc2Transitgateway) GetDefaultRouteTableAssociation() *plugin.TValue[bool] {
 	return &c.DefaultRouteTableAssociation
 }
 
-func (c *mqlAwsEc2Transitgateway) GetDefaultRouteTablePropagation() *plugin.TValue[string] {
+func (c *mqlAwsEc2Transitgateway) GetDefaultRouteTablePropagation() *plugin.TValue[bool] {
 	return &c.DefaultRouteTablePropagation
 }
 
-func (c *mqlAwsEc2Transitgateway) GetDnsSupport() *plugin.TValue[string] {
+func (c *mqlAwsEc2Transitgateway) GetDnsSupport() *plugin.TValue[bool] {
 	return &c.DnsSupport
 }
 
-func (c *mqlAwsEc2Transitgateway) GetMulticastSupport() *plugin.TValue[string] {
+func (c *mqlAwsEc2Transitgateway) GetMulticastSupport() *plugin.TValue[bool] {
 	return &c.MulticastSupport
 }
 
-func (c *mqlAwsEc2Transitgateway) GetVpnEcmpSupport() *plugin.TValue[string] {
+func (c *mqlAwsEc2Transitgateway) GetVpnEcmpSupport() *plugin.TValue[bool] {
 	return &c.VpnEcmpSupport
 }
 
