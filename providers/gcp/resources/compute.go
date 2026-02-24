@@ -512,14 +512,16 @@ type mqlGcpProjectComputeServiceInstanceInternal struct {
 
 func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeServiceZone, runtime *plugin.Runtime, instance *compute.Instance) (*mqlGcpProjectComputeServiceInstance, error) {
 	metadata := map[string]string{}
-	for m := range instance.Metadata.Items {
-		item := instance.Metadata.Items[m]
+	if instance.Metadata != nil {
+		for m := range instance.Metadata.Items {
+			item := instance.Metadata.Items[m]
 
-		value := ""
-		if item.Value != nil {
-			value = *item.Value
+			value := ""
+			if item.Value != nil {
+				value = *item.Value
+			}
+			metadata[item.Key] = value
 		}
-		metadata[item.Key] = value
 	}
 
 	mqlServiceAccounts := []any{}
@@ -603,6 +605,11 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		}
 	}
 
+	var tagsItems []string
+	if instance.Tags != nil {
+		tagsItems = instance.Tags.Items
+	}
+
 	entry, err := CreateResource(runtime, "gcp.project.computeService.instance", map[string]*llx.RawData{
 		"id":                         llx.StringData(instanceId),
 		"projectId":                  llx.StringData(projectId),
@@ -637,7 +644,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"status":                     llx.StringData(instance.Status),
 		"statusMessage":              llx.StringData(instance.StatusMessage),
 		"sourceMachineImage":         llx.StringData(instance.SourceMachineImage),
-		"tags":                       llx.ArrayData(convert.SliceAnyToInterface(instance.Tags.Items), types.String),
+		"tags":                       llx.ArrayData(convert.SliceAnyToInterface(tagsItems), types.String),
 		"totalEgressBandwidthTier":   llx.StringData(totalEgressBandwidthTier),
 		"serviceAccounts":            llx.ArrayData(mqlServiceAccounts, types.Resource("gcp.project.computeService.serviceaccount")),
 		"disks":                      llx.ArrayData(attachedDisks, types.Resource("gcp.project.computeService.attachedDisk")),
@@ -1818,15 +1825,21 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 
 			var mqlConsistentHash any
 			if b.ConsistentHash != nil {
-				mqlConsistentHash = map[string]any{
-					"httpCookie": map[string]any{
-						"name": b.ConsistentHash.HttpCookie.Name,
-						"path": b.ConsistentHash.HttpCookie.Path,
-						"ttl":  llx.TimeData(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds)),
-					},
+				consistentHashMap := map[string]any{
 					"httpHeaderName":  b.ConsistentHash.HttpHeaderName,
 					"minimumRingSize": b.ConsistentHash.MinimumRingSize,
 				}
+				if b.ConsistentHash.HttpCookie != nil {
+					cookieMap := map[string]any{
+						"name": b.ConsistentHash.HttpCookie.Name,
+						"path": b.ConsistentHash.HttpCookie.Path,
+					}
+					if b.ConsistentHash.HttpCookie.Ttl != nil {
+						cookieMap["ttl"] = llx.TimeData(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds))
+					}
+					consistentHashMap["httpCookie"] = cookieMap
+				}
+				mqlConsistentHash = consistentHashMap
 			}
 
 			var mqlFailoverPolicy any
@@ -2094,7 +2107,7 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
 				})
 			}
 			mqlFwr, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.forwardingRule", map[string]*llx.RawData{
-				"id":                            llx.StringData(fmt.Sprintf("%d", fwr.Id)),
+				"id":                            llx.StringData(fmt.Sprintf("%d", fwr.GetId())),
 				"ipAddress":                     llx.StringData(fwr.GetIPAddress()),
 				"ipProtocol":                    llx.StringData(fwr.GetIPProtocol()),
 				"allPorts":                      llx.BoolData(fwr.GetAllPorts()),
