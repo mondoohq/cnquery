@@ -332,38 +332,49 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 		}
 	}
 
-	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
-		"projectId": args["projectId"],
+	instanceName := args["name"].Value.(string)
+	zoneName := args["region"].Value.(string)
+	projectId := args["projectId"].Value.(string)
+
+	conn := runtime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Fetch the zone resource for this instance
+	zoneData, err := computeSvc.Zones.Get(projectId, zoneName).Do()
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlZone, err := CreateResource(runtime, "gcp.project.computeService.zone", map[string]*llx.RawData{
+		"id":          llx.StringData(strconv.FormatInt(int64(zoneData.Id), 10)),
+		"name":        llx.StringData(zoneData.Name),
+		"description": llx.StringData(zoneData.Description),
+		"status":      llx.StringData(zoneData.Status),
+		"created":     llx.TimeDataPtr(parseTime(zoneData.CreationTimestamp)),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	computeSvc := obj.(*mqlGcpProjectComputeService)
-	instances := computeSvc.GetInstances()
-	if instances.Error != nil {
-		return nil, nil, instances.Error
+
+	// Fetch the specific instance
+	instance, err := computeSvc.Instances.Get(projectId, zoneName, instanceName).Do()
+	if err != nil {
+		return nil, nil, err
 	}
 
-	for _, inst := range instances.Data {
-		instance := inst.(*mqlGcpProjectComputeServiceInstance)
-		name := instance.GetName()
-		if name.Error != nil {
-			return nil, nil, name.Error
-		}
-		projectId := instance.GetProjectId()
-		if projectId.Error != nil {
-			return nil, nil, projectId.Error
-		}
-		instanceZone := instance.GetZone()
-		if instanceZone.Error != nil {
-			return nil, nil, instanceZone.Error
-		}
-
-		if instanceZone.Data.Name.Data == args["region"].Value && name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
-			return args, instance, nil
-		}
+	mqlInstance, err := newMqlComputeServiceInstance(projectId, mqlZone.(*mqlGcpProjectComputeServiceZone), runtime, instance)
+	if err != nil {
+		return nil, nil, err
 	}
-	return nil, nil, errors.New("instance not found")
+	return args, mqlInstance, nil
 }
 
 func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
@@ -1242,34 +1253,56 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 		}
 	}
 
-	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
-		"projectId": args["projectId"],
+	networkName := args["name"].Value.(string)
+	projectId := args["projectId"].Value.(string)
+
+	conn := runtime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	network, err := computeSvc.Networks.Get(projectId, networkName).Do()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	peerings, err := convert.JsonToDictSlice(network.Peerings)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var routingMode string
+	if network.RoutingConfig != nil {
+		routingMode = network.RoutingConfig.RoutingMode
+	}
+
+	mqlNetwork, err := CreateResource(runtime, "gcp.project.computeService.network", map[string]*llx.RawData{
+		"id":                                    llx.StringData(strconv.FormatUint(network.Id, 10)),
+		"projectId":                             llx.StringData(projectId),
+		"name":                                  llx.StringData(network.Name),
+		"description":                           llx.StringData(network.Description),
+		"autoCreateSubnetworks":                 llx.BoolData(network.AutoCreateSubnetworks),
+		"enableUlaInternalIpv6":                 llx.BoolData(network.EnableUlaInternalIpv6),
+		"gatewayIPv4":                           llx.StringData(network.GatewayIPv4),
+		"mtu":                                   llx.IntData(network.Mtu),
+		"networkFirewallPolicyEnforcementOrder": llx.StringData(network.NetworkFirewallPolicyEnforcementOrder),
+		"created":                               llx.TimeDataPtr(parseTime(network.CreationTimestamp)),
+		"peerings":                              llx.ArrayData(peerings, types.Dict),
+		"routingMode":                           llx.StringData(routingMode),
+		"mode":                                  llx.StringData(networkMode(network)),
+		"subnetworkUrls":                        llx.ArrayData(convert.SliceAnyToInterface(network.Subnetworks), types.String),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	computeSvc := obj.(*mqlGcpProjectComputeService)
-	networks := computeSvc.GetNetworks()
-	if networks.Error != nil {
-		return nil, nil, networks.Error
-	}
-
-	for _, n := range networks.Data {
-		network := n.(*mqlGcpProjectComputeServiceNetwork)
-		name := network.GetName()
-		if name.Error != nil {
-			return nil, nil, name.Error
-		}
-		projectId := network.GetProjectId()
-		if projectId.Error != nil {
-			return nil, nil, projectId.Error
-		}
-
-		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
-			return args, network, nil
-		}
-	}
-	return nil, nil, errors.New("network not found")
+	return args, mqlNetwork.(*mqlGcpProjectComputeServiceNetwork), nil
 }
 
 func (g *mqlGcpProjectComputeService) networks() ([]any, error) {
@@ -1370,39 +1403,35 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		}
 	}
 
-	obj, err := NewResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
-		"projectId": llx.StringData(args["projectId"].Value.(string)),
+	subnetworkName := args["name"].Value.(string)
+	projectId := args["projectId"].Value.(string)
+
+	conn := runtime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	subnetSvc, err := computev1.NewSubnetworksRESTClient(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	subnetwork, err := subnetSvc.Get(ctx, &computepb.GetSubnetworkRequest{
+		Project:    projectId,
+		Region:     region,
+		Subnetwork: subnetworkName,
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	computeSvc := obj.(*mqlGcpProjectComputeService)
-	subnetworks := computeSvc.GetSubnetworks()
-	if subnetworks.Error != nil {
-		return nil, nil, subnetworks.Error
-	}
 
-	for _, n := range subnetworks.Data {
-		subnetwork := n.(*mqlGcpProjectComputeServiceSubnetwork)
-		name := subnetwork.GetName()
-		if name.Error != nil {
-			return nil, nil, name.Error
-		}
-		regionUrl := subnetwork.GetRegionUrl()
-		if regionUrl.Error != nil {
-			return nil, nil, regionUrl.Error
-		}
-		subnetRegion := RegionNameFromRegionUrl(regionUrl.Data)
-		projectId := subnetwork.GetProjectId()
-		if projectId.Error != nil {
-			return nil, nil, projectId.Error
-		}
-
-		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value && subnetRegion == region {
-			return args, subnetwork, nil
-		}
+	mqlSubnetwork, err := newMqlSubnetwork(projectId, runtime, subnetwork, nil)
+	if err != nil {
+		return nil, nil, err
 	}
-	return nil, nil, errors.New("subnetwork not found")
+	return args, mqlSubnetwork.(*mqlGcpProjectComputeServiceSubnetwork), nil
 }
 
 func (g *mqlGcpProjectComputeServiceSubnetworkLogConfig) id() (string, error) {
