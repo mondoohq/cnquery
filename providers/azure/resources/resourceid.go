@@ -52,10 +52,11 @@ func ParseResourceID(id string) (*ResourceID, error) {
 
 		// some urls use the same component id twice, ensure we store the subscription id
 		// e.g. Azure Service Bus subscription resource
-		if key == "subscriptions" && subscriptionID == "" {
+		lowerKey := strings.ToLower(key)
+		if lowerKey == "subscriptions" && subscriptionID == "" {
 			subscriptionID = value
 		} else {
-			componentMap[key] = value
+			componentMap[lowerKey] = value
 		}
 	}
 	resID := &ResourceID{
@@ -68,9 +69,9 @@ func ParseResourceID(id string) (*ResourceID, error) {
 	}
 
 	// parse resource group
-	if resourceGroup, ok := componentMap["resourceGroups"]; ok {
+	if resourceGroup, ok := componentMap["resourcegroups"]; ok {
 		resID.ResourceGroup = resourceGroup
-		delete(componentMap, "resourceGroups")
+		delete(componentMap, "resourcegroups")
 	}
 
 	// parse provider
@@ -82,9 +83,10 @@ func ParseResourceID(id string) (*ResourceID, error) {
 	return resID, nil
 }
 
-// Component returns a component from parsed resource id
+// Component returns a component from parsed resource id.
+// The lookup is case-insensitive because Azure ARM resource IDs are case-insensitive.
 func (id *ResourceID) Component(name string) (string, error) {
-	val, ok := id.Path[name]
+	val, ok := id.Path[strings.ToLower(name)]
 	if !ok {
 		return "", fmt.Errorf("ID was missing the `%s` element", name)
 	}

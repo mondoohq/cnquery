@@ -37,10 +37,15 @@ const (
 	DiscoveryMySqlServers            = "mysql-servers"
 	DiscoveryMySqlFlexibleServers    = "mysql-flexible-servers"
 	DiscoveryMariaDbServers          = "mariadb-servers"
+	DiscoveryAksClusters             = "aks-clusters"
+	DiscoveryAppServiceApps          = "app-service-webapps"
+	DiscoveryCacheRedis              = "cache-redis-instances"
+	DiscoveryBatchAccounts           = "batch-accounts"
 	DiscoveryStorageAccounts         = "storage-accounts"
 	DiscoveryStorageContainers       = "storage-containers"
 	DiscoveryKeyVaults               = "keyvaults-vaults"
 	DiscoverySecurityGroups          = "security-groups"
+	DiscoveryCosmosDb                = "cosmosdb"
 )
 
 var All = []string{
@@ -62,10 +67,15 @@ var AllAPIResources = []string{
 	DiscoveryMySqlServers,
 	DiscoveryMySqlFlexibleServers,
 	DiscoveryMariaDbServers,
+	DiscoveryAksClusters,
+	DiscoveryAppServiceApps,
+	DiscoveryCacheRedis,
+	DiscoveryBatchAccounts,
 	DiscoveryStorageAccounts,
 	DiscoveryStorageContainers,
 	DiscoveryKeyVaults,
 	DiscoverySecurityGroups,
+	DiscoveryCosmosDb,
 }
 
 type azureObject struct {
@@ -217,6 +227,38 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		assets = append(assets, mariaDbServers...)
 	}
 
+	if stringx.ContainsAnyOf(targets, DiscoveryAksClusters) {
+		aksClusters, err := discoverAksClusters(runtime, subsWithConfigs)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, aksClusters...)
+	}
+
+	if stringx.ContainsAnyOf(targets, DiscoveryAppServiceApps) {
+		appServiceApps, err := discoverAppServiceApps(runtime, subsWithConfigs)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, appServiceApps...)
+	}
+
+	if stringx.ContainsAnyOf(targets, DiscoveryCacheRedis) {
+		redisInstances, err := discoverCacheRedis(runtime, subsWithConfigs)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, redisInstances...)
+	}
+
+	if stringx.ContainsAnyOf(targets, DiscoveryBatchAccounts) {
+		batchAccounts, err := discoverBatchAccounts(runtime, subsWithConfigs)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, batchAccounts...)
+	}
+
 	if stringx.ContainsAnyOf(targets, DiscoveryStorageAccounts) {
 		accs, err := discoverStorageAccounts(runtime, subsWithConfigs)
 		if err != nil {
@@ -233,6 +275,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		}
 		assets = append(assets, containers...)
 	}
+
 	if stringx.ContainsAnyOf(targets, DiscoverySecurityGroups) {
 		secGrps, err := discoverSecurityGroups(runtime, subsWithConfigs)
 		if err != nil {
@@ -240,12 +283,21 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		}
 		assets = append(assets, secGrps...)
 	}
+
 	if stringx.ContainsAnyOf(targets, DiscoveryKeyVaults) {
 		kvs, err := discoverVaults(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, kvs...)
+	}
+
+	if stringx.ContainsAnyOf(targets, DiscoveryCosmosDb) {
+		cosmosDbAccounts, err := discoverCosmosDb(runtime, subsWithConfigs)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, cosmosDbAccounts...)
 	}
 
 	return &inventory.Inventory{
@@ -563,6 +615,176 @@ func discoverMariadbServers(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 	return assets, nil
 }
 
+func discoverAksClusters(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
+	assets := []*inventory.Asset{}
+	for _, subWithConfig := range subsWithConfigs {
+		svc, err := NewResource(runtime, "azure.subscription.aksService", map[string]*llx.RawData{
+			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		aksSvc := svc.(*mqlAzureSubscriptionAksService)
+		clusters := aksSvc.GetClusters()
+		if clusters.Error != nil {
+			return nil, clusters.Error
+		}
+		for _, c := range clusters.Data {
+			cluster := c.(*mqlAzureSubscriptionAksServiceCluster)
+			asset := mqlObjectToAsset(mqlObject{
+				name:   cluster.Name.Data,
+				labels: interfaceMapToStr(cluster.Tags.Data),
+				azureObject: azureObject{
+					id:           cluster.Id.Data,
+					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
+					location:     cluster.Location.Data,
+					service:      "aks",
+					objectType:   "cluster",
+				},
+			}, subWithConfig.conf, false)
+			assets = append(assets, asset)
+		}
+	}
+	return assets, nil
+}
+
+func discoverAppServiceApps(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
+	assets := []*inventory.Asset{}
+	for _, subWithConfig := range subsWithConfigs {
+		svc, err := NewResource(runtime, "azure.subscription.webService", map[string]*llx.RawData{
+			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		webSvc := svc.(*mqlAzureSubscriptionWebService)
+		apps := webSvc.GetApps()
+		if apps.Error != nil {
+			return nil, apps.Error
+		}
+		for _, a := range apps.Data {
+			app := a.(*mqlAzureSubscriptionWebServiceAppsite)
+			asset := mqlObjectToAsset(mqlObject{
+				name:   app.Name.Data,
+				labels: interfaceMapToStr(app.Tags.Data),
+				azureObject: azureObject{
+					id:           app.Id.Data,
+					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
+					location:     app.Location.Data,
+					service:      "app-service",
+					objectType:   "app",
+				},
+			}, subWithConfig.conf, false)
+			assets = append(assets, asset)
+		}
+	}
+	return assets, nil
+}
+
+func discoverCacheRedis(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
+	assets := []*inventory.Asset{}
+	for _, subWithConfig := range subsWithConfigs {
+		svc, err := NewResource(runtime, "azure.subscription.cacheService", map[string]*llx.RawData{
+			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		cacheSvc := svc.(*mqlAzureSubscriptionCacheService)
+		redisInstances := cacheSvc.GetRedis()
+		if redisInstances.Error != nil {
+			return nil, redisInstances.Error
+		}
+		for _, r := range redisInstances.Data {
+			instance := r.(*mqlAzureSubscriptionCacheServiceRedisInstance)
+			asset := mqlObjectToAsset(mqlObject{
+				name:   instance.Name.Data,
+				labels: interfaceMapToStr(instance.Tags.Data),
+				azureObject: azureObject{
+					id:           instance.Id.Data,
+					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
+					location:     instance.Location.Data,
+					service:      "cache",
+					objectType:   "redis",
+				},
+			}, subWithConfig.conf, false)
+			assets = append(assets, asset)
+		}
+	}
+	return assets, nil
+}
+
+func discoverBatchAccounts(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
+	assets := []*inventory.Asset{}
+	for _, subWithConfig := range subsWithConfigs {
+		svc, err := NewResource(runtime, "azure.subscription.batchService", map[string]*llx.RawData{
+			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		batchSvc := svc.(*mqlAzureSubscriptionBatchService)
+		accounts := batchSvc.GetAccounts()
+		if accounts.Error != nil {
+			return nil, accounts.Error
+		}
+		for _, a := range accounts.Data {
+			account := a.(*mqlAzureSubscriptionBatchServiceAccount)
+			asset := mqlObjectToAsset(mqlObject{
+				name:   account.Name.Data,
+				labels: interfaceMapToStr(account.Tags.Data),
+				azureObject: azureObject{
+					id:           account.Id.Data,
+					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
+					location:     account.Location.Data,
+					service:      "batch",
+					objectType:   "account",
+				},
+			}, subWithConfig.conf, false)
+			assets = append(assets, asset)
+		}
+	}
+	return assets, nil
+}
+
+func discoverCosmosDb(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
+	assets := []*inventory.Asset{}
+	for _, subWithConfig := range subsWithConfigs {
+		svc, err := NewResource(runtime, "azure.subscription.cosmosDbService", map[string]*llx.RawData{
+			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		cosmosDbSvc := svc.(*mqlAzureSubscriptionCosmosDbService)
+		accounts := cosmosDbSvc.GetAccounts()
+		if accounts.Error != nil {
+			return nil, accounts.Error
+		}
+		for _, a := range accounts.Data {
+			account := a.(*mqlAzureSubscriptionCosmosDbServiceAccount)
+			asset := mqlObjectToAsset(mqlObject{
+				name:   account.Name.Data,
+				labels: interfaceMapToStr(account.Tags.Data),
+				azureObject: azureObject{
+					id:           account.Id.Data,
+					subscription: *subWithConfig.sub.SubscriptionID,
+					tenant:       subWithConfig.sub.TenantID,
+					location:     account.Location.Data,
+					service:      "cosmosdb",
+					objectType:   "account",
+				},
+			}, subWithConfig.conf, false)
+			assets = append(assets, asset)
+		}
+	}
+	return assets, nil
+}
+
 func discoverStorageAccounts(runtime *plugin.Runtime, subsWithConfig []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfig {
@@ -847,6 +1069,22 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 		if azureObject.objectType == "server" {
 			return azureObjectPlatformInfo{title: "Azure MariaDB Server", platform: "azure-mariadb-server"}, nil
 		}
+	case "aks":
+		if azureObject.objectType == "cluster" {
+			return azureObjectPlatformInfo{title: "Azure AKS Cluster", platform: "azure-aks-cluster"}, nil
+		}
+	case "app-service":
+		if azureObject.objectType == "app" {
+			return azureObjectPlatformInfo{title: "Azure App Service App", platform: "azure-app-service-webapp"}, nil
+		}
+	case "cache":
+		if azureObject.objectType == "redis" {
+			return azureObjectPlatformInfo{title: "Azure Cache for Redis Instance", platform: "azure-cache-redis-instance"}, nil
+		}
+	case "batch":
+		if azureObject.objectType == "account" {
+			return azureObjectPlatformInfo{title: "Azure Batch Account", platform: "azure-batch-account"}, nil
+		}
 	case "storage":
 		if azureObject.objectType == "account" {
 			return azureObjectPlatformInfo{title: "Azure Storage Account", platform: "azure-storage-account"}, nil
@@ -861,6 +1099,10 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 	case "keyvault":
 		if azureObject.objectType == "vault" {
 			return azureObjectPlatformInfo{title: "Azure Key Vault", platform: "azure-keyvault-vault"}, nil
+		}
+	case "cosmosdb":
+		if azureObject.objectType == "account" {
+			return azureObjectPlatformInfo{title: "Azure Cosmos DB Account", platform: "azure-cosmosdb"}, nil
 		}
 	}
 	return azureObjectPlatformInfo{}, fmt.Errorf("missing runtime info for azure object service %s type %s", azureObject.service, azureObject.objectType)

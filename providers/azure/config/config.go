@@ -27,9 +27,9 @@ var Config = plugin.Provider{
 			Long: `Use the azure provider to query resources within Microsoft Azure, including storage, compute instances, snapshots, databases, and more.
 
 Examples run in your shell:
-  cnspec scan azure compute instance <name> --client-id <your-client-id> --tenant-id <your-tenant-id> --client-secret <your-client-secret-value>
-  cnspec scan azure compute snapshot <name> --client-id <your-client-id> --tenant-id <your-tenant-id> --client-secret <your-client-secret-value>
-	cnquery shell azure <name> --client-id <your-client-id> --tenant-id <your-tenant-id> --client-secret <your-client-secret-value>
+  cnspec scan azure compute instance <instance-name> --client-id <your-client-id> --tenant-id <your-tenant-id> --client-secret <your-client-secret-value>
+  cnspec scan azure compute snapshot <snapshot-name> --client-id <your-client-id> --tenant-id <your-tenant-id> --client-secret <your-client-secret-value>
+  cnquery shell azure <subscription-name> --client-id <your-client-id> --tenant-id <your-tenant-id> --client-secret <your-client-secret-value>
 
 Examples run in the Azure CLI:	
   cnquery shell azure
@@ -47,10 +47,15 @@ Examples run in the Azure CLI:
 				resources.DiscoveryMySqlServers,
 				resources.DiscoveryMySqlFlexibleServers,
 				resources.DiscoveryMariaDbServers,
+				resources.DiscoveryAksClusters,
+				resources.DiscoveryAppServiceApps,
+				resources.DiscoveryCacheRedis,
+				resources.DiscoveryBatchAccounts,
 				resources.DiscoveryStorageAccounts,
 				resources.DiscoveryStorageContainers,
 				resources.DiscoveryKeyVaults,
 				resources.DiscoverySecurityGroups,
+				resources.DiscoveryCosmosDb,
 			},
 			Flags: []plugin.Flag{
 				{
@@ -118,12 +123,16 @@ Examples run in the Azure CLI:
 						"*": {
 							Key: "service",
 							Values: map[string]*inventory.AssetUrlBranch{
-								"account":    nil,
-								"compute":    nil,
-								"mysql":      nil,
-								"postgresql": nil,
-								"mariadb":    nil,
-								"sql":        nil,
+								"account":     nil,
+								"compute":     nil,
+								"mysql":       nil,
+								"postgresql":  nil,
+								"mariadb":     nil,
+								"aks":         nil,
+								"app-service": nil,
+								"cache":       nil,
+								"batch":       nil,
+								"sql":         nil,
 								"storage": {
 									Key: "object",
 									Values: map[string]*inventory.AssetUrlBranch{
@@ -140,6 +149,7 @@ Examples run in the Azure CLI:
 									},
 								},
 								"keyvault": nil,
+								"cosmosdb": nil,
 							},
 						},
 					},

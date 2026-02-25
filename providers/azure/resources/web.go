@@ -328,6 +328,49 @@ func initAzureSubscriptionWebService(runtime *plugin.Runtime, args map[string]*l
 	return args, nil, nil
 }
 
+func initAzureSubscriptionWebServiceAppsite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure app service app")
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	res, err := NewResource(runtime, "azure.subscription.webService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	webSvc := res.(*mqlAzureSubscriptionWebService)
+	appList := webSvc.GetApps()
+	if appList.Error != nil {
+		return nil, nil, appList.Error
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
+	for _, entry := range appList.Data {
+		app := entry.(*mqlAzureSubscriptionWebServiceAppsite)
+		if app.Id.Data == id {
+			return args, app, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure app service app does not exist")
+}
+
 func (a *mqlAzureSubscriptionWebServiceAppsite) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -1348,6 +1391,300 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) privateEndpointConnections() ([]
 
 			res = append(res, mqlRes)
 		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppServicePlan) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceCertificate) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsiteHostNameBinding) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionWebService) appServicePlans() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := web.NewPlansClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(&web.PlansClientListOptions{})
+	res := []any{}
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, plan := range page.Value {
+			if plan == nil {
+				continue
+			}
+
+			properties, err := convert.JsonToDict(plan.Properties)
+			if err != nil {
+				return nil, err
+			}
+
+			skuDict, err := convert.JsonToDict(plan.SKU)
+			if err != nil {
+				return nil, err
+			}
+
+			args := map[string]*llx.RawData{
+				"id":         llx.StringDataPtr(plan.ID),
+				"name":       llx.StringDataPtr(plan.Name),
+				"location":   llx.StringDataPtr(plan.Location),
+				"kind":       llx.StringDataPtr(plan.Kind),
+				"tags":       llx.MapData(convert.PtrMapStrToInterface(plan.Tags), types.String),
+				"properties": llx.DictData(properties),
+				"sku":        llx.DictData(skuDict),
+			}
+
+			if plan.Properties != nil {
+				args["zoneRedundant"] = llx.BoolDataPtr(plan.Properties.ZoneRedundant)
+				args["numberOfSites"] = llx.IntDataPtr(plan.Properties.NumberOfSites)
+				args["maximumNumberOfWorkers"] = llx.IntDataPtr(plan.Properties.MaximumNumberOfWorkers)
+				args["geoRegion"] = llx.StringDataPtr(plan.Properties.GeoRegion)
+				args["reserved"] = llx.BoolDataPtr(plan.Properties.Reserved)
+				args["perSiteScaling"] = llx.BoolDataPtr(plan.Properties.PerSiteScaling)
+				args["elasticScaleEnabled"] = llx.BoolDataPtr(plan.Properties.ElasticScaleEnabled)
+				var status *string
+				if plan.Properties.Status != nil {
+					val := string(*plan.Properties.Status)
+					status = &val
+				}
+				args["status"] = llx.StringDataPtr(status)
+			} else {
+				args["zoneRedundant"] = llx.NilData
+				args["numberOfSites"] = llx.NilData
+				args["maximumNumberOfWorkers"] = llx.NilData
+				args["geoRegion"] = llx.NilData
+				args["reserved"] = llx.NilData
+				args["perSiteScaling"] = llx.NilData
+				args["elasticScaleEnabled"] = llx.NilData
+				args["status"] = llx.NilData
+			}
+
+			mqlResource, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppServicePlan, args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlResource)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionWebService) certificates() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := web.NewCertificatesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(&web.CertificatesClientListOptions{})
+	res := []any{}
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, cert := range page.Value {
+			if cert == nil {
+				continue
+			}
+
+			properties, err := convert.JsonToDict(cert.Properties)
+			if err != nil {
+				return nil, err
+			}
+
+			args := map[string]*llx.RawData{
+				"id":         llx.StringDataPtr(cert.ID),
+				"name":       llx.StringDataPtr(cert.Name),
+				"location":   llx.StringDataPtr(cert.Location),
+				"tags":       llx.MapData(convert.PtrMapStrToInterface(cert.Tags), types.String),
+				"properties": llx.DictData(properties),
+			}
+
+			if cert.Properties != nil {
+				args["thumbprint"] = llx.StringDataPtr(cert.Properties.Thumbprint)
+				args["subjectName"] = llx.StringDataPtr(cert.Properties.SubjectName)
+				args["issuer"] = llx.StringDataPtr(cert.Properties.Issuer)
+				args["issueDate"] = llx.TimeDataPtr(cert.Properties.IssueDate)
+				args["expirationDate"] = llx.TimeDataPtr(cert.Properties.ExpirationDate)
+				args["hostNames"] = llx.ArrayData(convert.SliceStrPtrToInterface(cert.Properties.HostNames), types.String)
+				args["valid"] = llx.BoolDataPtr(cert.Properties.Valid)
+			} else {
+				args["thumbprint"] = llx.NilData
+				args["subjectName"] = llx.NilData
+				args["issuer"] = llx.NilData
+				args["issueDate"] = llx.NilData
+				args["expirationDate"] = llx.NilData
+				args["hostNames"] = llx.ArrayData([]any{}, types.String)
+				args["valid"] = llx.NilData
+			}
+
+			mqlResource, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceCertificate, args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlResource)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsite) hostNameBindings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	site, err := resourceID.Component("sites")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListHostNameBindingsPager(resourceID.ResourceGroup, site, &web.WebAppsClientListHostNameBindingsOptions{})
+	res := []any{}
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, binding := range page.Value {
+			if binding == nil {
+				continue
+			}
+
+			var hostNameType *string
+			if binding.Properties != nil && binding.Properties.HostNameType != nil {
+				val := string(*binding.Properties.HostNameType)
+				hostNameType = &val
+			}
+			var sslState *string
+			if binding.Properties != nil && binding.Properties.SSLState != nil {
+				val := string(*binding.Properties.SSLState)
+				sslState = &val
+			}
+			var thumbprint, virtualIP *string
+			if binding.Properties != nil {
+				thumbprint = binding.Properties.Thumbprint
+				virtualIP = binding.Properties.VirtualIP
+			}
+			args := map[string]*llx.RawData{
+				"id":           llx.StringDataPtr(binding.ID),
+				"name":         llx.StringDataPtr(binding.Name),
+				"hostNameType": llx.StringDataPtr(hostNameType),
+				"sslState":     llx.StringDataPtr(sslState),
+				"thumbprint":   llx.StringDataPtr(thumbprint),
+				"virtualIP":    llx.StringDataPtr(virtualIP),
+			}
+
+			mqlResource, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteHostNameBinding, args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlResource)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsite) virtualNetworkConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	site, err := resourceID.Component("sites")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.ListVnetConnections(ctx, resourceID.ResourceGroup, site, &web.WebAppsClientListVnetConnectionsOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for _, vnet := range resp.VnetInfoResourceArray {
+		if vnet == nil {
+			continue
+		}
+
+		args := map[string]*llx.RawData{
+			"id":   llx.StringDataPtr(vnet.ID),
+			"name": llx.StringDataPtr(vnet.Name),
+		}
+
+		if vnet.Properties != nil {
+			args["vnetResourceId"] = llx.StringDataPtr(vnet.Properties.VnetResourceID)
+			args["isSwift"] = llx.BoolDataPtr(vnet.Properties.IsSwift)
+			args["resyncRequired"] = llx.BoolDataPtr(vnet.Properties.ResyncRequired)
+		} else {
+			args["vnetResourceId"] = llx.NilData
+			args["isSwift"] = llx.NilData
+			args["resyncRequired"] = llx.NilData
+		}
+
+		mqlResource, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection, args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlResource)
 	}
 
 	return res, nil
