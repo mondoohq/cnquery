@@ -877,17 +877,11 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		for i := range lbs.Data {
 			f := lbs.Data[i].(*mqlAwsElbLoadbalancer)
-			var region string
-			if arn.IsARN(f.Arn.Data) {
-				if p, err := arn.Parse(f.Arn.Data); err == nil {
-					region = p.Region
-				}
-			}
 			tags := mapStringInterfaceToStringString(f.Tags.Data)
 			m := mqlObject{
 				name: f.Name.Data, labels: tags,
 				awsObject: awsObject{
-					account: accountId, region: region, arn: f.Arn.Data,
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
 					id: f.Name.Data, service: "elb", objectType: "loadbalancer",
 				},
 			}
