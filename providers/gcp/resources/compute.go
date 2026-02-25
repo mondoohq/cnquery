@@ -332,6 +332,40 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 		}
 	}
 
+	// Try to find the instance in the MQL cache first
+	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	instances := computeSvc.GetInstances()
+	if instances.Error != nil {
+		return nil, nil, instances.Error
+	}
+
+	for _, inst := range instances.Data {
+		instance := inst.(*mqlGcpProjectComputeServiceInstance)
+		name := instance.GetName()
+		if name.Error != nil {
+			return nil, nil, name.Error
+		}
+		projectId := instance.GetProjectId()
+		if projectId.Error != nil {
+			return nil, nil, projectId.Error
+		}
+		instanceZone := instance.GetZone()
+		if instanceZone.Error != nil {
+			return nil, nil, instanceZone.Error
+		}
+
+		if instanceZone.Data.Name.Data == args["region"].Value && name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+			return args, instance, nil
+		}
+	}
+
+	// Fallback: fetch directly from the GCP API
 	instanceName := args["name"].Value.(string)
 	zoneName := args["region"].Value.(string)
 	projectId := args["projectId"].Value.(string)
@@ -343,13 +377,12 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 	}
 
 	ctx := context.Background()
-	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	gcpComputeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Fetch the zone resource for this instance
-	zoneData, err := computeSvc.Zones.Get(projectId, zoneName).Do()
+	zoneData, err := gcpComputeSvc.Zones.Get(projectId, zoneName).Do()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -364,13 +397,12 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 		return nil, nil, err
 	}
 
-	// Fetch the specific instance
-	instance, err := computeSvc.Instances.Get(projectId, zoneName, instanceName).Do()
+	gcpInstance, err := gcpComputeSvc.Instances.Get(projectId, zoneName, instanceName).Do()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	mqlInstance, err := newMqlComputeServiceInstance(projectId, mqlZone.(*mqlGcpProjectComputeServiceZone), runtime, instance)
+	mqlInstance, err := newMqlComputeServiceInstance(projectId, mqlZone.(*mqlGcpProjectComputeServiceZone), runtime, gcpInstance)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1253,6 +1285,36 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 		}
 	}
 
+	// Try to find the network in the MQL cache first
+	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	networks := computeSvc.GetNetworks()
+	if networks.Error != nil {
+		return nil, nil, networks.Error
+	}
+
+	for _, n := range networks.Data {
+		network := n.(*mqlGcpProjectComputeServiceNetwork)
+		name := network.GetName()
+		if name.Error != nil {
+			return nil, nil, name.Error
+		}
+		projectId := network.GetProjectId()
+		if projectId.Error != nil {
+			return nil, nil, projectId.Error
+		}
+
+		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+			return args, network, nil
+		}
+	}
+
+	// Fallback: fetch directly from the GCP API
 	networkName := args["name"].Value.(string)
 	projectId := args["projectId"].Value.(string)
 
@@ -1263,12 +1325,12 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 	}
 
 	ctx := context.Background()
-	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	gcpComputeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	network, err := computeSvc.Networks.Get(projectId, networkName).Do()
+	network, err := gcpComputeSvc.Networks.Get(projectId, networkName).Do()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1403,6 +1465,41 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		}
 	}
 
+	// Try to find the subnetwork in the MQL cache first
+	obj, err := NewResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(args["projectId"].Value.(string)),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	subnetworks := computeSvc.GetSubnetworks()
+	if subnetworks.Error != nil {
+		return nil, nil, subnetworks.Error
+	}
+
+	for _, n := range subnetworks.Data {
+		subnetwork := n.(*mqlGcpProjectComputeServiceSubnetwork)
+		name := subnetwork.GetName()
+		if name.Error != nil {
+			return nil, nil, name.Error
+		}
+		regionUrl := subnetwork.GetRegionUrl()
+		if regionUrl.Error != nil {
+			return nil, nil, regionUrl.Error
+		}
+		subnetRegion := RegionNameFromRegionUrl(regionUrl.Data)
+		projectId := subnetwork.GetProjectId()
+		if projectId.Error != nil {
+			return nil, nil, projectId.Error
+		}
+
+		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value && subnetRegion == region {
+			return args, subnetwork, nil
+		}
+	}
+
+	// Fallback: fetch directly from the GCP API
 	subnetworkName := args["name"].Value.(string)
 	projectId := args["projectId"].Value.(string)
 
@@ -1418,7 +1515,7 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		return nil, nil, err
 	}
 
-	subnetwork, err := subnetSvc.Get(ctx, &computepb.GetSubnetworkRequest{
+	gcpSubnetwork, err := subnetSvc.Get(ctx, &computepb.GetSubnetworkRequest{
 		Project:    projectId,
 		Region:     region,
 		Subnetwork: subnetworkName,
@@ -1427,7 +1524,7 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		return nil, nil, err
 	}
 
-	mqlSubnetwork, err := newMqlSubnetwork(projectId, runtime, subnetwork, nil)
+	mqlSubnetwork, err := newMqlSubnetwork(projectId, runtime, gcpSubnetwork, nil)
 	if err != nil {
 		return nil, nil, err
 	}
