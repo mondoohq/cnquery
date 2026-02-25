@@ -2236,3 +2236,102 @@ func (g *mqlGithubRepository) codeScanningAlerts() ([]any, error) {
 
 	return res, nil
 }
+
+func (g *mqlGithubRepository) sbom() (*mqlGithubRepositorySbom, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	owner := g.Owner.Data
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	result, _, err := conn.Client().DependencyGraph.GetSBOM(conn.Context(), ownerLogin, repoName)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil || result.SBOM == nil {
+		return nil, nil
+	}
+	info := result.SBOM
+
+	creationInfo := map[string]any{}
+	if info.CreationInfo != nil {
+		if info.CreationInfo.Created != nil {
+			creationInfo["created"] = info.CreationInfo.Created.String()
+		}
+		creators := make([]any, len(info.CreationInfo.Creators))
+		for i, c := range info.CreationInfo.Creators {
+			creators[i] = c
+		}
+		creationInfo["creators"] = creators
+	}
+
+	packages := make([]any, 0, len(info.Packages))
+	for _, pkg := range info.Packages {
+		externalRefs := make([]any, 0, len(pkg.ExternalRefs))
+		for _, ref := range pkg.ExternalRefs {
+			externalRefs = append(externalRefs, map[string]any{
+				"referenceCategory": ref.ReferenceCategory,
+				"referenceType":     ref.ReferenceType,
+				"referenceLocator":  ref.ReferenceLocator,
+			})
+		}
+		mqlPkg, err := CreateResource(g.MqlRuntime, "github.repository.sbom.package", map[string]*llx.RawData{
+			"__id":             llx.StringData("github.repository.sbom.package/" + ownerLogin + "/" + repoName + "/" + pkg.GetSPDXID()),
+			"spdxId":           llx.StringDataPtr(pkg.SPDXID),
+			"name":             llx.StringDataPtr(pkg.Name),
+			"versionInfo":      llx.StringDataPtr(pkg.VersionInfo),
+			"downloadLocation": llx.StringDataPtr(pkg.DownloadLocation),
+			"filesAnalyzed":    llx.BoolDataPtr(pkg.FilesAnalyzed),
+			"licenseConcluded": llx.StringDataPtr(pkg.LicenseConcluded),
+			"licenseDeclared":  llx.StringDataPtr(pkg.LicenseDeclared),
+			"supplier":         llx.StringData(""),
+			"copyrightText":    llx.StringData(""),
+			"externalRefs":     llx.ArrayData(externalRefs, types.Dict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		packages = append(packages, mqlPkg)
+	}
+
+	relationships := make([]any, 0, len(info.Relationships))
+	for _, rel := range info.Relationships {
+		mqlRel, err := CreateResource(g.MqlRuntime, "github.repository.sbom.relationship", map[string]*llx.RawData{
+			"__id":               llx.StringData("github.repository.sbom.relationship/" + ownerLogin + "/" + repoName + "/" + rel.SPDXElementID + "/" + rel.RelatedSPDXElement),
+			"relationshipType":   llx.StringData(rel.RelationshipType),
+			"spdxElementId":      llx.StringData(rel.SPDXElementID),
+			"relatedSpdxElement": llx.StringData(rel.RelatedSPDXElement),
+		})
+		if err != nil {
+			return nil, err
+		}
+		relationships = append(relationships, mqlRel)
+	}
+
+	mqlSbom, err := CreateResource(g.MqlRuntime, "github.repository.sbom", map[string]*llx.RawData{
+		"__id":              llx.StringData("github.repository.sbom/" + ownerLogin + "/" + repoName),
+		"spdxId":            llx.StringDataPtr(info.SPDXID),
+		"spdxVersion":       llx.StringDataPtr(info.SPDXVersion),
+		"name":              llx.StringDataPtr(info.Name),
+		"dataLicense":       llx.StringDataPtr(info.DataLicense),
+		"documentNamespace": llx.StringDataPtr(info.DocumentNamespace),
+		"comment":           llx.StringData(""),
+		"creationInfo":      llx.DictData(creationInfo),
+		"packages":          llx.ArrayData(packages, types.Resource("github.repository.sbom.package")),
+		"relationships":     llx.ArrayData(relationships, types.Resource("github.repository.sbom.relationship")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlSbom.(*mqlGithubRepositorySbom), nil
+}

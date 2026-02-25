@@ -29,6 +29,9 @@ const (
 	ResourceGithubPackage                    string = "github.package"
 	ResourceGithubPackages                   string = "github.packages"
 	ResourceGithubRepository                 string = "github.repository"
+	ResourceGithubRepositorySbom             string = "github.repository.sbom"
+	ResourceGithubRepositorySbomPackage      string = "github.repository.sbom.package"
+	ResourceGithubRepositorySbomRelationship string = "github.repository.sbom.relationship"
 	ResourceGithubLicense                    string = "github.license"
 	ResourceGithubFile                       string = "github.file"
 	ResourceGithubRelease                    string = "github.release"
@@ -127,6 +130,18 @@ func init() {
 		"github.repository": {
 			Init:   initGithubRepository,
 			Create: createGithubRepository,
+		},
+		"github.repository.sbom": {
+			// to override args, implement: initGithubRepositorySbom(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubRepositorySbom,
+		},
+		"github.repository.sbom.package": {
+			// to override args, implement: initGithubRepositorySbomPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubRepositorySbomPackage,
+		},
+		"github.repository.sbom.relationship": {
+			// to override args, implement: initGithubRepositorySbomRelationship(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubRepositorySbomRelationship,
 		},
 		"github.license": {
 			// to override args, implement: initGithubLicense(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -948,6 +963,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.repository.deployments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetDeployments()).ToDataRes(types.Array(types.Resource("github.deployment")))
+	},
+	"github.repository.sbom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetSbom()).ToDataRes(types.Resource("github.repository.sbom"))
+	},
+	"github.repository.sbom.spdxId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbom).GetSpdxId()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.spdxVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbom).GetSpdxVersion()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbom).GetName()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.dataLicense": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbom).GetDataLicense()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.documentNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbom).GetDocumentNamespace()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbom).GetComment()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.creationInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbom).GetCreationInfo()).ToDataRes(types.Dict)
+	},
+	"github.repository.sbom.packages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbom).GetPackages()).ToDataRes(types.Array(types.Resource("github.repository.sbom.package")))
+	},
+	"github.repository.sbom.relationships": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbom).GetRelationships()).ToDataRes(types.Array(types.Resource("github.repository.sbom.relationship")))
+	},
+	"github.repository.sbom.package.spdxId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomPackage).GetSpdxId()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomPackage).GetName()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.package.versionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomPackage).GetVersionInfo()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.package.downloadLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomPackage).GetDownloadLocation()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.package.filesAnalyzed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomPackage).GetFilesAnalyzed()).ToDataRes(types.Bool)
+	},
+	"github.repository.sbom.package.licenseConcluded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomPackage).GetLicenseConcluded()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.package.licenseDeclared": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomPackage).GetLicenseDeclared()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.package.supplier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomPackage).GetSupplier()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.package.copyrightText": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomPackage).GetCopyrightText()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.package.externalRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomPackage).GetExternalRefs()).ToDataRes(types.Array(types.Dict))
+	},
+	"github.repository.sbom.relationship.relationshipType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomRelationship).GetRelationshipType()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.relationship.spdxElementId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomRelationship).GetSpdxElementId()).ToDataRes(types.String)
+	},
+	"github.repository.sbom.relationship.relatedSpdxElement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositorySbomRelationship).GetRelatedSpdxElement()).ToDataRes(types.String)
 	},
 	"github.license.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubLicense).GetKey()).ToDataRes(types.String)
@@ -2772,6 +2856,110 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.repository.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).Sbom, ok = plugin.RawToTValue[*mqlGithubRepositorySbom](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbom).__id, ok = v.Value.(string)
+		return
+	},
+	"github.repository.sbom.spdxId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbom).SpdxId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.spdxVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbom).SpdxVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbom).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.dataLicense": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbom).DataLicense, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.documentNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbom).DocumentNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbom).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.creationInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbom).CreationInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.packages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbom).Packages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.relationships": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbom).Relationships, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"github.repository.sbom.package.spdxId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).SpdxId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.package.versionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).VersionInfo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.package.downloadLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).DownloadLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.package.filesAnalyzed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).FilesAnalyzed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.package.licenseConcluded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).LicenseConcluded, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.package.licenseDeclared": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).LicenseDeclared, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.package.supplier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).Supplier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.package.copyrightText": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).CopyrightText, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.package.externalRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomPackage).ExternalRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.relationship.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomRelationship).__id, ok = v.Value.(string)
+		return
+	},
+	"github.repository.sbom.relationship.relationshipType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomRelationship).RelationshipType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.relationship.spdxElementId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomRelationship).SpdxElementId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.sbom.relationship.relatedSpdxElement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositorySbomRelationship).RelatedSpdxElement, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5721,6 +5909,7 @@ type mqlGithubRepository struct {
 	Runners              plugin.TValue[[]any]
 	Environments         plugin.TValue[[]any]
 	Deployments          plugin.TValue[[]any]
+	Sbom                 plugin.TValue[*mqlGithubRepositorySbom]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -6366,6 +6555,249 @@ func (c *mqlGithubRepository) GetDeployments() *plugin.TValue[[]any] {
 
 		return c.deployments()
 	})
+}
+
+func (c *mqlGithubRepository) GetSbom() *plugin.TValue[*mqlGithubRepositorySbom] {
+	return plugin.GetOrCompute[*mqlGithubRepositorySbom](&c.Sbom, func() (*mqlGithubRepositorySbom, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "sbom")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubRepositorySbom), nil
+			}
+		}
+
+		return c.sbom()
+	})
+}
+
+// mqlGithubRepositorySbom for the github.repository.sbom resource
+type mqlGithubRepositorySbom struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubRepositorySbomInternal it will be used here
+	SpdxId            plugin.TValue[string]
+	SpdxVersion       plugin.TValue[string]
+	Name              plugin.TValue[string]
+	DataLicense       plugin.TValue[string]
+	DocumentNamespace plugin.TValue[string]
+	Comment           plugin.TValue[string]
+	CreationInfo      plugin.TValue[any]
+	Packages          plugin.TValue[[]any]
+	Relationships     plugin.TValue[[]any]
+}
+
+// createGithubRepositorySbom creates a new instance of this resource
+func createGithubRepositorySbom(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubRepositorySbom{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.repository.sbom", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubRepositorySbom) MqlName() string {
+	return "github.repository.sbom"
+}
+
+func (c *mqlGithubRepositorySbom) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubRepositorySbom) GetSpdxId() *plugin.TValue[string] {
+	return &c.SpdxId
+}
+
+func (c *mqlGithubRepositorySbom) GetSpdxVersion() *plugin.TValue[string] {
+	return &c.SpdxVersion
+}
+
+func (c *mqlGithubRepositorySbom) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGithubRepositorySbom) GetDataLicense() *plugin.TValue[string] {
+	return &c.DataLicense
+}
+
+func (c *mqlGithubRepositorySbom) GetDocumentNamespace() *plugin.TValue[string] {
+	return &c.DocumentNamespace
+}
+
+func (c *mqlGithubRepositorySbom) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlGithubRepositorySbom) GetCreationInfo() *plugin.TValue[any] {
+	return &c.CreationInfo
+}
+
+func (c *mqlGithubRepositorySbom) GetPackages() *plugin.TValue[[]any] {
+	return &c.Packages
+}
+
+func (c *mqlGithubRepositorySbom) GetRelationships() *plugin.TValue[[]any] {
+	return &c.Relationships
+}
+
+// mqlGithubRepositorySbomPackage for the github.repository.sbom.package resource
+type mqlGithubRepositorySbomPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubRepositorySbomPackageInternal it will be used here
+	SpdxId           plugin.TValue[string]
+	Name             plugin.TValue[string]
+	VersionInfo      plugin.TValue[string]
+	DownloadLocation plugin.TValue[string]
+	FilesAnalyzed    plugin.TValue[bool]
+	LicenseConcluded plugin.TValue[string]
+	LicenseDeclared  plugin.TValue[string]
+	Supplier         plugin.TValue[string]
+	CopyrightText    plugin.TValue[string]
+	ExternalRefs     plugin.TValue[[]any]
+}
+
+// createGithubRepositorySbomPackage creates a new instance of this resource
+func createGithubRepositorySbomPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubRepositorySbomPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.repository.sbom.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubRepositorySbomPackage) MqlName() string {
+	return "github.repository.sbom.package"
+}
+
+func (c *mqlGithubRepositorySbomPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubRepositorySbomPackage) GetSpdxId() *plugin.TValue[string] {
+	return &c.SpdxId
+}
+
+func (c *mqlGithubRepositorySbomPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGithubRepositorySbomPackage) GetVersionInfo() *plugin.TValue[string] {
+	return &c.VersionInfo
+}
+
+func (c *mqlGithubRepositorySbomPackage) GetDownloadLocation() *plugin.TValue[string] {
+	return &c.DownloadLocation
+}
+
+func (c *mqlGithubRepositorySbomPackage) GetFilesAnalyzed() *plugin.TValue[bool] {
+	return &c.FilesAnalyzed
+}
+
+func (c *mqlGithubRepositorySbomPackage) GetLicenseConcluded() *plugin.TValue[string] {
+	return &c.LicenseConcluded
+}
+
+func (c *mqlGithubRepositorySbomPackage) GetLicenseDeclared() *plugin.TValue[string] {
+	return &c.LicenseDeclared
+}
+
+func (c *mqlGithubRepositorySbomPackage) GetSupplier() *plugin.TValue[string] {
+	return &c.Supplier
+}
+
+func (c *mqlGithubRepositorySbomPackage) GetCopyrightText() *plugin.TValue[string] {
+	return &c.CopyrightText
+}
+
+func (c *mqlGithubRepositorySbomPackage) GetExternalRefs() *plugin.TValue[[]any] {
+	return &c.ExternalRefs
+}
+
+// mqlGithubRepositorySbomRelationship for the github.repository.sbom.relationship resource
+type mqlGithubRepositorySbomRelationship struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubRepositorySbomRelationshipInternal it will be used here
+	RelationshipType   plugin.TValue[string]
+	SpdxElementId      plugin.TValue[string]
+	RelatedSpdxElement plugin.TValue[string]
+}
+
+// createGithubRepositorySbomRelationship creates a new instance of this resource
+func createGithubRepositorySbomRelationship(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubRepositorySbomRelationship{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.repository.sbom.relationship", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubRepositorySbomRelationship) MqlName() string {
+	return "github.repository.sbom.relationship"
+}
+
+func (c *mqlGithubRepositorySbomRelationship) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubRepositorySbomRelationship) GetRelationshipType() *plugin.TValue[string] {
+	return &c.RelationshipType
+}
+
+func (c *mqlGithubRepositorySbomRelationship) GetSpdxElementId() *plugin.TValue[string] {
+	return &c.SpdxElementId
+}
+
+func (c *mqlGithubRepositorySbomRelationship) GetRelatedSpdxElement() *plugin.TValue[string] {
+	return &c.RelatedSpdxElement
 }
 
 // mqlGithubLicense for the github.license resource
