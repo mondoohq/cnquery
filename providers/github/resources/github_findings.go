@@ -4,12 +4,14 @@
 package resources
 
 import (
+	"strconv"
+
 	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	coreresources "go.mondoo.com/mql/v13/providers/core/resources"
+	"go.mondoo.com/mql/v13/types"
 )
 
-func (g *mqlGithubRepository) findings() (plugin.Resource, error) {
+func (g *mqlGithubRepository) findings() ([]any, error) {
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -25,49 +27,166 @@ func (g *mqlGithubRepository) findings() (plugin.Resource, error) {
 	}
 	ownerLogin := owner.Login.Data
 
-	return dependabotAlertFindings(g, ownerLogin, repoName)
+	findings, err := dependabotAlertFindings(g, ownerLogin, repoName)
+	if err != nil {
+		return nil, err
+	}
+
+	return findings, nil
 }
 
-func dependabotAlertFindings(g *mqlGithubRepository, owner, repository string) (plugin.Resource, error) {
+func dependabotAlertFindings(g *mqlGithubRepository, owner, repository string) ([]any, error) {
 	alertsResult := g.GetDependabotAlerts()
 	if alertsResult.Error != nil {
 		return nil, alertsResult.Error
 	}
 
-	if len(alertsResult.Data) == 0 {
-		return nil, nil
-	}
-	a := alertsResult.Data[0]
-	if a == nil {
-		return nil, nil
+	res := []any{}
+	for _, a := range alertsResult.Data {
+		alert, ok := a.(*mqlGithubDependabotAlert)
+		if !ok {
+			continue
+		}
+
+		alertID, err := alert.id()
+		if err != nil {
+			return nil, err
+		}
+
+		var summary, severityStr, description, cvssVector string
+		var cvssScore float64
+		if alert.SecurityAdvisory.Error == nil && alert.SecurityAdvisory.Data != nil {
+			if advisory, ok := alert.SecurityAdvisory.Data.(map[string]any); ok {
+				summary, _ = advisory["summary"].(string)
+				severityStr, _ = advisory["severity"].(string)
+				description, _ = advisory["description"].(string)
+				if cvss, ok := advisory["cvss"].(map[string]any); ok {
+					cvssScore, _ = cvss["score"].(float64)
+					cvssVector, _ = cvss["vectorString"].(string)
+				}
+			}
+		}
+
+		// SecurityVulnerability provides package-specific severity and version range,
+		// which take precedence over the advisory-level values.
+		var vulnerableVersionRange, firstPatchedVersion string
+		if alert.SecurityVulnerability.Error == nil && alert.SecurityVulnerability.Data != nil {
+			if vuln, ok := alert.SecurityVulnerability.Data.(map[string]any); ok {
+				if s, ok := vuln["severity"].(string); ok && s != "" {
+					severityStr = s
+				}
+				vulnerableVersionRange, _ = vuln["vulnerableVersionRange"].(string)
+				if fpv, ok := vuln["firstPatchedVersion"].(map[string]any); ok {
+					firstPatchedVersion, _ = fpv["identifier"].(string)
+				}
+			}
+		}
+
+		// Shared source resource representing GitHub Dependabot
+		source, err := CreateResource(g.MqlRuntime, coreresources.ResourceFindingSource, map[string]*llx.RawData{
+			"__id": llx.StringData(coreresources.ResourceFindingSource + "/" + owner + "/" + repository + "/" + alertID),
+			"name": llx.StringData("github-dependabot"),
+			"url":  llx.StringData(alert.Url.Data),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		severity, err := CreateResource(g.MqlRuntime, coreresources.ResourceFindingSeverity, map[string]*llx.RawData{
+			"__id":     llx.StringData(coreresources.ResourceFindingSeverity + "/" + owner + "/" + repository + "/" + alertID),
+			"source":   llx.ResourceData(source, coreresources.ResourceFindingSource),
+			"score":    llx.FloatData(cvssScore),
+			"severity": llx.StringData(severityStr),
+			"vector":   llx.StringData(cvssVector),
+			"method":   llx.StringData(""),
+			"rating":   llx.StringData(severityStr),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		detail, err := CreateResource(g.MqlRuntime, coreresources.ResourceFindingDetail, map[string]*llx.RawData{
+			"__id":        llx.StringData(coreresources.ResourceFindingDetail + "/" + owner + "/" + repository + "/" + alertID),
+			"category":    llx.StringData("vulnerability"),
+			"severity":    llx.ResourceData(severity, coreresources.ResourceFindingSeverity),
+			"confidence":  llx.StringData(""),
+			"description": llx.StringData(description),
+			"references":  llx.ArrayData([]any{}, types.Resource(coreresources.ResourceFindingReference)),
+			"properties":  llx.MapData(map[string]any{}, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		affectsList := []any{}
+		if alert.Dependency.Error == nil && alert.Dependency.Data != nil {
+			if dep, ok := alert.Dependency.Data.(map[string]any); ok {
+				componentID := ""
+				identifiers := map[string]any{}
+				if pkg, ok := dep["package"].(map[string]any); ok {
+					if name, ok := pkg["name"].(string); ok {
+						componentID = name
+					}
+					if ecosystem, ok := pkg["ecosystem"].(string); ok {
+						identifiers["ecosystem"] = ecosystem
+					}
+				}
+				if manifestPath, ok := dep["manifestPath"].(string); ok {
+					identifiers["manifestPath"] = manifestPath
+				}
+				if vulnerableVersionRange != "" {
+					identifiers["vulnerableVersionRange"] = vulnerableVersionRange
+				}
+				if firstPatchedVersion != "" {
+					identifiers["firstPatchedVersion"] = firstPatchedVersion
+				}
+
+				component, err := CreateResource(g.MqlRuntime, coreresources.ResourceFindingComponent, map[string]*llx.RawData{
+					"__id":        llx.StringData(coreresources.ResourceFindingComponent + "/" + owner + "/" + repository + "/" + alertID),
+					"id":          llx.StringData(componentID),
+					"identifiers": llx.MapData(identifiers, types.String),
+					"properties":  llx.MapData(map[string]any{}, types.String),
+					"file":        llx.NilData,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				affects, err := CreateResource(g.MqlRuntime, coreresources.ResourceFindingAffects, map[string]*llx.RawData{
+					"__id":          llx.StringData(coreresources.ResourceFindingAffects + "/" + owner + "/" + repository + "/" + alertID),
+					"component":     llx.ResourceData(component, coreresources.ResourceFindingComponent),
+					"subComponents": llx.ArrayData([]any{}, types.Resource(coreresources.ResourceFindingComponent)),
+				})
+				if err != nil {
+					return nil, err
+				}
+				affectsList = []any{affects}
+			}
+		}
+
+		id := coreresources.ResourceFinding + "/" + owner + "/" + repository + "/" + alertID
+		finding, err := CreateResource(g.MqlRuntime, coreresources.ResourceFinding, map[string]*llx.RawData{
+			"__id":         llx.StringData(id),
+			"id":           llx.StringData(""),
+			"ref":          llx.StringData(strconv.FormatInt(alert.Number.Data, 10)),
+			"mrn":          llx.StringData(""),
+			"groupId":      llx.StringData(""),
+			"summary":      llx.StringData(summary),
+			"details":      llx.ResourceData(detail, coreresources.ResourceFindingDetail),
+			"firstSeenAt":  llx.TimeDataPtr(alert.CreatedAt.Data),
+			"lastSeenAt":   llx.TimeDataPtr(alert.UpdatedAt.Data),
+			"remediatedAt": llx.TimeDataPtr(alert.FixedAt.Data),
+			"status":       llx.StringData(alert.State.Data),
+			"source":       llx.ResourceData(source, coreresources.ResourceFindingSource),
+			"affects":      llx.ArrayData(affectsList, types.Resource(coreresources.ResourceFindingAffects)),
+			"evidences":    llx.ArrayData([]any{}, types.Resource(coreresources.ResourceFindingEvidence)),
+			"remediations": llx.ArrayData([]any{}, types.Dict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, finding)
 	}
 
-	alert, ok := a.(*mqlGithubDependabotAlert)
-	if !ok {
-		return nil, nil
-	}
-
-	alertID, err := alert.id()
-	if err != nil {
-		return nil, err
-	}
-
-	id := coreresources.ResourceFinding + "/" + owner + "/" + repository + "/" + alertID
-	args := map[string]*llx.RawData{
-		"id":   llx.StringData(id),
-		"__id": llx.StringData(id),
-	}
-	finding, err := CreateResource(g.MqlRuntime, coreresources.ResourceFinding, args)
-	if err != nil {
-		return nil, err
-	}
-
-	return finding, nil
-	mqlId := finding.MqlID()
-	v, err := g.MqlRuntime.GetSharedData("finding", mqlId, "")
-	if err != nil {
-		return nil, err
-	}
-	casted := v.Value.(plugin.Resource)
-	return casted, nil
+	return res, nil
 }

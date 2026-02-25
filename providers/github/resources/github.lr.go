@@ -853,7 +853,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGithubRepository).GetCodeScanningAlerts()).ToDataRes(types.Array(types.Resource("github.codeScanningAlert")))
 	},
 	"github.repository.findings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepository).GetFindings()).ToDataRes(types.Resource("finding"))
+		return (r.(*mqlGithubRepository).GetFindings()).ToDataRes(types.Array(types.Resource("finding")))
 	},
 	"github.repository.runners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetRunners()).ToDataRes(types.Array(types.Resource("github.runner")))
@@ -2467,7 +2467,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"github.repository.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Findings, ok = plugin.RawToTValue[plugin.Resource](v.Value, v.Error)
+		r.(*mqlGithubRepository).Findings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.runners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5081,7 +5081,7 @@ type mqlGithubRepository struct {
 	DependabotAlerts     plugin.TValue[[]any]
 	SecretScanningAlerts plugin.TValue[[]any]
 	CodeScanningAlerts   plugin.TValue[[]any]
-	Findings             plugin.TValue[plugin.Resource]
+	Findings             plugin.TValue[[]any]
 	Runners              plugin.TValue[[]any]
 	Environments         plugin.TValue[[]any]
 	Deployments          plugin.TValue[[]any]
@@ -5669,15 +5669,15 @@ func (c *mqlGithubRepository) GetCodeScanningAlerts() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlGithubRepository) GetFindings() *plugin.TValue[plugin.Resource] {
-	return plugin.GetOrCompute[plugin.Resource](&c.Findings, func() (plugin.Resource, error) {
+func (c *mqlGithubRepository) GetFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Findings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "findings")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(plugin.Resource), nil
+				return d.Value.([]any), nil
 			}
 		}
 
