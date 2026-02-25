@@ -1030,6 +1030,7 @@ aws.elb.loadbalancer.name 9.0.0
 aws.elb.loadbalancer.region 11.0.4
 aws.elb.loadbalancer.scheme 9.0.0
 aws.elb.loadbalancer.securityGroups 11.0.3
+aws.elb.loadbalancer.tags 11.12.3
 aws.elb.loadbalancer.targetGroups 11.1.0
 aws.elb.loadbalancer.vpc 11.0.4
 aws.elb.loadbalancer.vpcId 9.0.8

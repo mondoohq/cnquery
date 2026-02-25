@@ -883,10 +883,28 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 					region = p.Region
 				}
 			}
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
 			m := mqlObject{
-				name: f.Name.Data, labels: map[string]string{},
+				name: f.Name.Data, labels: tags,
 				awsObject: awsObject{
 					account: accountId, region: region, arn: f.Arn.Data,
+					id: f.Name.Data, service: "elb", objectType: "loadbalancer",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+
+		classicLbs := e.GetClassicLoadBalancers()
+		if classicLbs == nil {
+			return assetList, nil
+		}
+		for i := range classicLbs.Data {
+			f := classicLbs.Data[i].(*mqlAwsElbLoadbalancer)
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
 					id: f.Name.Data, service: "elb", objectType: "loadbalancer",
 				},
 			}

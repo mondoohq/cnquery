@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	elbv1types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/rs/zerolog/log"
@@ -69,14 +70,16 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					}
 					return nil, err
 				}
+
 				for _, lb := range lbs.LoadBalancerDescriptions {
 					jsonListeners, err := convert.JsonToDictSlice(lb.ListenerDescriptions)
 					if err != nil {
 						return nil, err
 					}
+					lbName := convert.ToValue(lb.LoadBalancerName)
 					mqlLb, err := CreateResource(a.MqlRuntime, ResourceAwsElbLoadbalancer,
 						map[string]*llx.RawData{
-							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, region, conn.AccountId(), convert.ToValue(lb.LoadBalancerName))),
+							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, region, conn.AccountId(), lbName)),
 							"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
 							"createdAt":            llx.TimeDataPtr(lb.CreatedTime),
 							"dnsName":              llx.StringDataPtr(lb.DNSName),
@@ -90,6 +93,18 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					if err != nil {
 						return nil, err
 					}
+					res = append(res, mqlLb)
+					// keeps the tags lazy unless the filters need to be evaluated
+					if conn.Filters.General.HasTags() {
+						tags, err := mqlLb.(*mqlAwsElbLoadbalancer).tags()
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							continue
+						}
+					}
+
 					res = append(res, mqlLb)
 				}
 			}
@@ -147,6 +162,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					}
 					return nil, err
 				}
+
 				for _, lb := range lbs.LoadBalancers {
 					availabilityZones := []any{}
 					for _, zone := range lb.AvailabilityZones {
@@ -198,6 +214,18 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 						return nil, err
 					}
 					res = append(res, mqlLb)
+					// keeps the tags lazy unless the filters need to be evaluated
+					if conn.Filters.General.HasTags() {
+						tags, err := mqlLb.(*mqlAwsElbLoadbalancer).tags()
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							continue
+						}
+					}
+
+					res = append(res, mqlLb)
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -229,18 +257,30 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	elb := obj.(*mqlAwsElb)
 
+	arnVal := args["arn"].Value.(string)
+
 	rawResources := elb.GetLoadBalancers()
 	if rawResources.Error != nil {
 		return nil, nil, rawResources.Error
 	}
-
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		lb := rawResource.(*mqlAwsElbLoadbalancer)
 		if lb.Arn.Data == arnVal {
 			return args, lb, nil
 		}
 	}
+
+	classicResources := elb.GetClassicLoadBalancers()
+	if classicResources.Error != nil {
+		return nil, nil, classicResources.Error
+	}
+	for _, rawResource := range classicResources.Data {
+		lb := rawResource.(*mqlAwsElbLoadbalancer)
+		if lb.Arn.Data == arnVal {
+			return args, lb, nil
+		}
+	}
+
 	return nil, nil, errors.New("elb load balancer does not exist")
 }
 
@@ -305,6 +345,60 @@ func isV1LoadBalancerArn(a string) bool {
 		return true
 	}
 	return false
+}
+
+func elbv2TagsToMap(tags []elbtypes.Tag) map[string]any {
+	tagsMap := make(map[string]any)
+	for _, tag := range tags {
+		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
+	}
+	return tagsMap
+}
+
+func elbv1TagsToMap(tags []elbv1types.Tag) map[string]any {
+	tagsMap := make(map[string]any)
+	for _, tag := range tags {
+		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
+	}
+	return tagsMap
+}
+
+func (a *mqlAwsElbLoadbalancer) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	lbArn := a.Arn.Data
+	name := a.Name.Data
+
+	region, err := GetRegionFromArn(lbArn)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+
+	if isV1LoadBalancerArn(lbArn) {
+		svc := conn.Elb(region)
+		resp, err := svc.DescribeTags(ctx, &elasticloadbalancing.DescribeTagsInput{LoadBalancerNames: []string{name}})
+		if err != nil {
+			return nil, err
+		}
+		for _, desc := range resp.TagDescriptions {
+			if convert.ToValue(desc.LoadBalancerName) == name {
+				return elbv1TagsToMap(desc.Tags), nil
+			}
+		}
+		return map[string]any{}, nil
+	}
+
+	svc := conn.Elbv2(region)
+	resp, err := svc.DescribeTags(ctx, &elasticloadbalancingv2.DescribeTagsInput{ResourceArns: []string{lbArn}})
+	if err != nil {
+		return nil, err
+	}
+	for _, desc := range resp.TagDescriptions {
+		if convert.ToValue(desc.ResourceArn) == lbArn {
+			return elbv2TagsToMap(desc.Tags), nil
+		}
+	}
+	return map[string]any{}, nil
 }
 
 func (a *mqlAwsElbTargetgroup) id() (string, error) {
