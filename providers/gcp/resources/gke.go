@@ -651,6 +651,9 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 
 func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, nodePoolId, projectId string) (plugin.Resource, error) {
 	cfg := np.Config
+	if cfg == nil {
+		cfg = &containerpb.NodeConfig{}
+	}
 	var err error
 	mqlAccelerators := make([]any, 0, len(cfg.Accelerators))
 	for i, acc := range cfg.Accelerators {
@@ -745,7 +748,7 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 	}
 
 	var mqlGvnicCfg plugin.Resource
-	if cfg.GcfsConfig != nil {
+	if cfg.Gvnic != nil {
 		mqlGvnicCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.gvnicConfig", map[string]*llx.RawData{
 			"id":      llx.StringData(fmt.Sprintf("%s/gvnicConfig", nodePoolId)),
 			"enabled": llx.BoolData(cfg.Gvnic.Enabled),

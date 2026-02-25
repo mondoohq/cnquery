@@ -688,7 +688,7 @@ private gcp.project.computeService.machineType @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute instances
-private gcp.project.computeService.instance @defaults("name") {
+gcp.project.computeService.instance @defaults("name id") {
   // Unique identifier for the instance
   id string
   // Project ID
@@ -948,7 +948,7 @@ private gcp.project.computeService.firewall @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute VPC network resource
-private gcp.project.computeService.network @defaults("name") {
+gcp.project.computeService.network @defaults("name") {
   // Unique identifier
   id string
   // Project ID
@@ -982,7 +982,7 @@ private gcp.project.computeService.network @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute VPC network partitioning
-private gcp.project.computeService.subnetwork @defaults("name") {
+gcp.project.computeService.subnetwork @defaults("name") {
   // Unique identifier
   id string
   // Project ID
