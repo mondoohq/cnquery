@@ -357,7 +357,10 @@ func initAzureSubscriptionWebServiceAppsite(runtime *plugin.Runtime, args map[st
 	if appList.Error != nil {
 		return nil, nil, appList.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range appList.Data {
 		app := entry.(*mqlAzureSubscriptionWebServiceAppsite)
 		if app.Id.Data == id {

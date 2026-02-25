@@ -80,7 +80,7 @@ func TestParseResourceID(t *testing.T) {
 				ResourceGroup:  "resGroup1",
 				Provider:       "Microsoft.Network",
 				Path: map[string]string{
-					"virtualNetworks": "net1",
+					"virtualnetworks": "net1",
 				},
 			},
 			false,
@@ -92,7 +92,7 @@ func TestParseResourceID(t *testing.T) {
 				ResourceGroup:  "resGroup1",
 				Provider:       "Microsoft.Network",
 				Path: map[string]string{
-					"virtualNetworks": "net1",
+					"virtualnetworks": "net1",
 				},
 			},
 			false,
@@ -104,7 +104,7 @@ func TestParseResourceID(t *testing.T) {
 				ResourceGroup:  "resGroup1",
 				Provider:       "Microsoft.Network",
 				Path: map[string]string{
-					"virtualNetworks": "net1",
+					"virtualnetworks": "net1",
 					"subnets":         "pubInstance",
 				},
 			},

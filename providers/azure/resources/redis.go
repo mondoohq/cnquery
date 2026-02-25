@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -34,7 +33,7 @@ func initAzureSubscriptionCacheService(runtime *plugin.Runtime, args map[string]
 
 	conn, ok := runtime.Connection.(*connection.AzureConnection)
 	if !ok {
-		return nil, nil, fmt.Errorf("invalid connection provided, it is not an Azure connection")
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 	args["subscriptionId"] = llx.StringData(conn.SubId())
 
@@ -53,11 +52,11 @@ func initAzureSubscriptionCacheServiceRedisInstance(runtime *plugin.Runtime, arg
 	}
 
 	if args["id"] == nil {
-		return nil, nil, fmt.Errorf("id required to fetch azure cache redis instance")
+		return nil, nil, errors.New("id required to fetch azure cache redis instance")
 	}
 	conn, ok := runtime.Connection.(*connection.AzureConnection)
 	if !ok {
-		return nil, nil, fmt.Errorf("invalid connection provided, it is not an Azure connection")
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 	res, err := NewResource(runtime, "azure.subscription.cacheService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
@@ -70,7 +69,10 @@ func initAzureSubscriptionCacheServiceRedisInstance(runtime *plugin.Runtime, arg
 	if redisList.Error != nil {
 		return nil, nil, redisList.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range redisList.Data {
 		instance := entry.(*mqlAzureSubscriptionCacheServiceRedisInstance)
 		if instance.Id.Data == id {
@@ -78,7 +80,7 @@ func initAzureSubscriptionCacheServiceRedisInstance(runtime *plugin.Runtime, arg
 		}
 	}
 
-	return nil, nil, fmt.Errorf("azure cache redis instance does not exist")
+	return nil, nil, errors.New("azure cache redis instance does not exist")
 }
 
 func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
@@ -177,42 +179,44 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 
 	// Map private endpoint connections as typed sub-resources
 	privateEndpointConns := []any{}
-	for _, pec := range cache.Properties.PrivateEndpointConnections {
-		if pec == nil {
-			continue
+	if runtime != nil {
+		for _, pec := range cache.Properties.PrivateEndpointConnections {
+			if pec == nil {
+				continue
+			}
+			var privateEndpointId *string
+			if pec.Properties != nil && pec.Properties.PrivateEndpoint != nil {
+				privateEndpointId = pec.Properties.PrivateEndpoint.ID
+			}
+			var status *string
+			if pec.Properties != nil && pec.Properties.PrivateLinkServiceConnectionState != nil && pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
+				val := string(*pec.Properties.PrivateLinkServiceConnectionState.Status)
+				status = &val
+			}
+			var description *string
+			if pec.Properties != nil && pec.Properties.PrivateLinkServiceConnectionState != nil {
+				description = pec.Properties.PrivateLinkServiceConnectionState.Description
+			}
+			var pecProvisioningState *string
+			if pec.Properties != nil && pec.Properties.ProvisioningState != nil {
+				val := string(*pec.Properties.ProvisioningState)
+				pecProvisioningState = &val
+			}
+			pecResource, err := CreateResource(runtime, "azure.subscription.cacheService.redisInstance.privateEndpointConnection",
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(pec.ID),
+					"name":              llx.StringDataPtr(pec.Name),
+					"type":              llx.StringDataPtr(pec.Type),
+					"privateEndpointId": llx.StringDataPtr(privateEndpointId),
+					"status":            llx.StringDataPtr(status),
+					"description":       llx.StringDataPtr(description),
+					"provisioningState": llx.StringDataPtr(pecProvisioningState),
+				})
+			if err != nil {
+				return nil, err
+			}
+			privateEndpointConns = append(privateEndpointConns, pecResource)
 		}
-		var privateEndpointId *string
-		if pec.Properties != nil && pec.Properties.PrivateEndpoint != nil {
-			privateEndpointId = pec.Properties.PrivateEndpoint.ID
-		}
-		var status *string
-		if pec.Properties != nil && pec.Properties.PrivateLinkServiceConnectionState != nil && pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
-			val := string(*pec.Properties.PrivateLinkServiceConnectionState.Status)
-			status = &val
-		}
-		var description *string
-		if pec.Properties != nil && pec.Properties.PrivateLinkServiceConnectionState != nil {
-			description = pec.Properties.PrivateLinkServiceConnectionState.Description
-		}
-		var pecProvisioningState *string
-		if pec.Properties != nil && pec.Properties.ProvisioningState != nil {
-			val := string(*pec.Properties.ProvisioningState)
-			pecProvisioningState = &val
-		}
-		pecResource, err := CreateResource(runtime, "azure.subscription.cacheService.redisInstance.privateEndpointConnection",
-			map[string]*llx.RawData{
-				"id":                llx.StringDataPtr(pec.ID),
-				"name":              llx.StringDataPtr(pec.Name),
-				"type":              llx.StringDataPtr(pec.Type),
-				"privateEndpointId": llx.StringDataPtr(privateEndpointId),
-				"status":            llx.StringDataPtr(status),
-				"description":       llx.StringDataPtr(description),
-				"provisioningState": llx.StringDataPtr(pecProvisioningState),
-			})
-		if err != nil {
-			return nil, err
-		}
-		privateEndpointConns = append(privateEndpointConns, pecResource)
 	}
 
 	return map[string]*llx.RawData{

@@ -67,7 +67,10 @@ func initAzureSubscriptionBatchServiceAccount(runtime *plugin.Runtime, args map[
 	if accountList.Error != nil {
 		return nil, nil, accountList.Error
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	for _, entry := range accountList.Data {
 		account := entry.(*mqlAzureSubscriptionBatchServiceAccount)
 		if account.Id.Data == id {
