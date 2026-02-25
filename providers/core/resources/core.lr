@@ -190,3 +190,269 @@ vulnerability.exchange @defaults("id source") {
   // Vulnerability source
   source string  
 }
+
+
+
+// Experimental: Finding Exchange information
+public finding @defaults("id summary") {
+  // Required. Unique identifier for this finding
+  id string
+  // Optional. External reference identifier from the original data source
+  ref string
+  // Mondoo Resource Name (MRN), assigned by Mondoo
+  mrn string
+  // Optional. Result group identifier used to group related findings
+  groupId string
+  // Required. Brief summary of the finding (e.g. "SQL Injection in endpoint")
+  summary string
+  // Optional. Detailed information about the finding
+  details finding.detail
+  // Required. Timestamp when the finding was first detected
+  firstSeenAt time
+  // Optional. Timestamp when the finding was last seen
+  lastSeenAt time
+  // Optional. Timestamp when the finding was remediated
+  remediatedAt time
+  // Required. Current status of the finding
+  status string
+  // Required. Information about the source that produced this finding
+  source finding.source
+  // Required. List of affected components
+  affects []finding.affects
+  // Optional. Technical evidence
+  evidences []finding.evidence
+  // Optional. Available remediation options
+  remediations []dict
+}
+
+// Core information about a finding
+public finding.detail {
+  // Category of the finding
+  category string
+  // Severity of the finding
+  severity finding.severity
+  // How confident the source is in this finding
+  confidence string
+  // Detailed description of the finding
+  description string
+  // External references (e.g., CVE, CWE, OWASP)
+  references []finding.reference
+  // Additional properties specific to this finding type
+  properties map[string]string
+}
+
+// Source of a finding (e.g., a scanner or advisory database)
+public finding.source {
+  // Required. Name of the source
+  name string
+  // Optional. URL of the source
+  url string
+}
+
+// Severity scoring information for a finding
+public finding.severity {
+  // Required. Source of the rating
+  source finding.source
+  // Optional. Numeric score
+  score float
+  // Optional. Severity label (e.g., "high", "medium", "low"); deprecated, use rating
+  severity string
+  // Optional. Scoring vector string
+  vector string
+  // Optional. Scoring method (e.g., "CVSSv3")
+  method string
+  // Required. Severity rating
+  rating string
+}
+
+// External reference for a finding (e.g., CVE, CWE, OWASP)
+public finding.reference {
+  // Optional. ID of the reference
+  id string
+  // Required. Name of the reference
+  name string
+  // Required. URL of the reference
+  url string
+  // Type of reference (e.g., "CVE", "CWE")
+  referenceType string
+  // Additional reference metadata
+  metadata map[string]string
+}
+
+// Affected component information for a finding
+public finding.affects {
+  // Required. Root component that is affected
+  component finding.component
+  // Optional. List of sub-components that are affected
+  subComponents []finding.component
+}
+
+// Component identifier for an affected resource
+public finding.component {
+  // Required. Identifier of the component
+  id string
+  // Component version and identification metadata
+  identifiers map[string]string
+  // Additional properties
+  properties map[string]string
+  // Optional. File-specific component details
+  file finding.fileComponent
+}
+
+// File-specific component details
+public finding.fileComponent {
+  // Path to the file
+  path string
+  // File hash for version tracking
+  hash string
+  // File format or type
+  format string
+  // File size in bytes
+  size int
+}
+
+// Technical evidence that leads to a finding
+public finding.evidence {
+  // Attack tactic used
+  tactic finding.attackTactic
+  // Attack technique used
+  technique finding.attackTechnique
+  // Confidence in the finding
+  confidence string
+  // User evidence detail
+  user finding.user
+  // File evidence detail
+  file finding.file
+  // Process evidence detail
+  process finding.process
+  // Container evidence detail
+  container finding.container
+  // Kubernetes evidence detail
+  kubernetes finding.kubernetes
+  // Registry key evidence detail
+  registryKey finding.registryKey
+  // Connection evidence detail
+  connection finding.connection
+  // Additional properties specific to this evidence
+  properties map[string]string
+}
+
+// File information for evidence
+public finding.file {
+  // Absolute path to the file
+  path string
+  // File size in bytes
+  size int
+  // MD5 hash of the file
+  md5 string
+  // SHA256 hash of the file
+  sha256 string
+  // Optional. File content
+  contents string
+}
+
+// User information for evidence
+public finding.user {
+  // User ID
+  id string
+  // User name
+  name string
+  // Additional properties
+  properties map[string]string
+}
+
+// Process information for evidence
+public finding.process {
+  // Process name or command line as displayed in the process list
+  cmdline string
+  // Process file information (e.g., python binary)
+  binary finding.file
+  // For scripts, the script file information
+  script finding.file
+  // The process ID
+  pid int
+  // User running the process
+  user finding.user
+  // The parent process
+  parent finding.process
+}
+
+// Container information for evidence
+public finding.container {
+  // Container name
+  name string
+  // Container image URI (e.g. marketplace.gcr.io/google/ubuntu1804:latest)
+  imageUri string
+  // Container image digest
+  digest string
+}
+
+// Kubernetes resource information for evidence
+public finding.kubernetes {
+  // Affected pods
+  pods []finding.kubernetes.pod
+  // Affected nodes
+  nodes []finding.kubernetes.node
+}
+
+// Kubernetes pod information
+public finding.kubernetes.pod {
+  // Pod name
+  name string
+  // Pod namespace
+  namespace string
+  // Container information
+  containers []finding.container
+}
+
+// Kubernetes node information
+public finding.kubernetes.node {
+  // Node name
+  name string
+  // Unique identifier for the node (e.g., EC2 instance ID)
+  id string
+}
+
+// Windows Registry Key information for evidence
+public finding.registryKey {
+  // Path to the registry key (e.g., "HKLM\\SOFTWARE\\Microsoft\\Windows")
+  path string
+  // Name of the value (empty string for default value)
+  name string
+  // The actual data
+  data string
+}
+
+// Network Connection information for evidence
+public finding.connection {
+  // Destination address, either hostname or IP
+  destinationAddress string
+  // Destination port
+  destinationPort int
+  // Optional. Source address, either hostname or IP
+  sourceAddress string
+  // Optional. Source port
+  sourcePort int
+  // Protocol used in the connection (e.g., TCP, UDP, ICMP)
+  protocol string
+}
+
+// Attack tactic information (e.g., MITRE ATT&CK)
+public finding.attackTactic {
+  // Unique identifier for the tactic
+  id string
+  // Name of the tactic
+  name string
+  // Description of the tactic
+  description string
+}
+
+// Attack technique information (e.g., MITRE ATT&CK)
+public finding.attackTechnique {
+  // Unique identifier for the technique
+  id string
+  // Name of the technique
+  name string
+  // Description of the technique
+  description string
+}

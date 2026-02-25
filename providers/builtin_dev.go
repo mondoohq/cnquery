@@ -10,15 +10,10 @@ import (
 	_ "embed"
 	// osconf "go.mondoo.com/mql/v13/providers/os/config"
 	// os "go.mondoo.com/mql/v13/providers/os/provider"
-	githubconf "go.mondoo.com/mql/v13/providers/github/config"
-	github "go.mondoo.com/mql/v13/providers/github/provider"
 )
 
 // //go:embed os/resources/os.resources.json
 // var osInfo []byte
-
-//go:embed github.resources.json
-var githubInfo []byte
 
 func init() {
 	// builtinProviders[osconf.Config.ID] = &builtinProvider{
@@ -31,16 +26,4 @@ func init() {
 	// 	},
 	// 	Config: &osconf.Config,
 	// }
-
-	builtinProviders[githubconf.Config.ID] = &builtinProvider{
-		Runtime: &RunningProvider{
-			Name:     githubconf.Config.Name,
-			ID:       githubconf.Config.ID,
-			Plugin:   github.Init(),
-			Schema:   MustLoadSchema("github", githubInfo),
-			isClosed: false,
-		},
-		Config: &githubconf.Config,
-	}
-
 }

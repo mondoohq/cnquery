@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"go.mondoo.com/mql/v13/llx"
+	coreresources "go.mondoo.com/mql/v13/providers/core/resources"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -82,8 +83,8 @@ func dependabotAlertFindings(g *mqlGithubRepository, owner, repository string) (
 		}
 
 		// Shared source resource representing GitHub Dependabot
-		source, err := CreateResource(g.MqlRuntime, ResourceFindingSource, map[string]*llx.RawData{
-			"__id": llx.StringData(ResourceFindingSource + "/" + owner + "/" + repository + "/" + alertID),
+		source, err := CreateResource(g.MqlRuntime, coreresources.ResourceFindingSource, map[string]*llx.RawData{
+			"__id": llx.StringData(coreresources.ResourceFindingSource + "/" + owner + "/" + repository + "/" + alertID),
 			"name": llx.StringData("github-dependabot"),
 			"url":  llx.StringData(alert.Url.Data),
 		})
@@ -91,9 +92,9 @@ func dependabotAlertFindings(g *mqlGithubRepository, owner, repository string) (
 			return nil, err
 		}
 
-		severity, err := CreateResource(g.MqlRuntime, ResourceFindingSeverity, map[string]*llx.RawData{
-			"__id":     llx.StringData(ResourceFindingSeverity + "/" + owner + "/" + repository + "/" + alertID),
-			"source":   llx.ResourceData(source, ResourceFindingSource),
+		severity, err := CreateResource(g.MqlRuntime, coreresources.ResourceFindingSeverity, map[string]*llx.RawData{
+			"__id":     llx.StringData(coreresources.ResourceFindingSeverity + "/" + owner + "/" + repository + "/" + alertID),
+			"source":   llx.ResourceData(source, coreresources.ResourceFindingSource),
 			"score":    llx.FloatData(cvssScore),
 			"severity": llx.StringData(severityStr),
 			"vector":   llx.StringData(cvssVector),
@@ -104,13 +105,13 @@ func dependabotAlertFindings(g *mqlGithubRepository, owner, repository string) (
 			return nil, err
 		}
 
-		detail, err := CreateResource(g.MqlRuntime, ResourceFindingDetail, map[string]*llx.RawData{
-			"__id":        llx.StringData(ResourceFindingDetail + "/" + owner + "/" + repository + "/" + alertID),
+		detail, err := CreateResource(g.MqlRuntime, coreresources.ResourceFindingDetail, map[string]*llx.RawData{
+			"__id":        llx.StringData(coreresources.ResourceFindingDetail + "/" + owner + "/" + repository + "/" + alertID),
 			"category":    llx.StringData("vulnerability"),
-			"severity":    llx.ResourceData(severity, ResourceFindingSeverity),
+			"severity":    llx.ResourceData(severity, coreresources.ResourceFindingSeverity),
 			"confidence":  llx.StringData(""),
 			"description": llx.StringData(description),
-			"references":  llx.ArrayData([]any{}, types.Resource(ResourceFindingReference)),
+			"references":  llx.ArrayData([]any{}, types.Resource(coreresources.ResourceFindingReference)),
 			"properties":  llx.MapData(map[string]any{}, types.String),
 		})
 		if err != nil {
@@ -140,8 +141,8 @@ func dependabotAlertFindings(g *mqlGithubRepository, owner, repository string) (
 					identifiers["firstPatchedVersion"] = firstPatchedVersion
 				}
 
-				component, err := CreateResource(g.MqlRuntime, ResourceFindingComponent, map[string]*llx.RawData{
-					"__id":        llx.StringData(ResourceFindingComponent + "/" + owner + "/" + repository + "/" + alertID),
+				component, err := CreateResource(g.MqlRuntime, coreresources.ResourceFindingComponent, map[string]*llx.RawData{
+					"__id":        llx.StringData(coreresources.ResourceFindingComponent + "/" + owner + "/" + repository + "/" + alertID),
 					"id":          llx.StringData(componentID),
 					"identifiers": llx.MapData(identifiers, types.String),
 					"properties":  llx.MapData(map[string]any{}, types.String),
@@ -151,10 +152,10 @@ func dependabotAlertFindings(g *mqlGithubRepository, owner, repository string) (
 					return nil, err
 				}
 
-				affects, err := CreateResource(g.MqlRuntime, ResourceFindingAffects, map[string]*llx.RawData{
-					"__id":          llx.StringData(ResourceFindingAffects + "/" + owner + "/" + repository + "/" + alertID),
-					"component":     llx.ResourceData(component, ResourceFindingComponent),
-					"subComponents": llx.ArrayData([]any{}, types.Resource(ResourceFindingComponent)),
+				affects, err := CreateResource(g.MqlRuntime, coreresources.ResourceFindingAffects, map[string]*llx.RawData{
+					"__id":          llx.StringData(coreresources.ResourceFindingAffects + "/" + owner + "/" + repository + "/" + alertID),
+					"component":     llx.ResourceData(component, coreresources.ResourceFindingComponent),
+					"subComponents": llx.ArrayData([]any{}, types.Resource(coreresources.ResourceFindingComponent)),
 				})
 				if err != nil {
 					return nil, err
@@ -163,22 +164,22 @@ func dependabotAlertFindings(g *mqlGithubRepository, owner, repository string) (
 			}
 		}
 
-		id := ResourceFinding + "/" + owner + "/" + repository + "/" + alertID
-		finding, err := CreateResource(g.MqlRuntime, ResourceFinding, map[string]*llx.RawData{
+		id := coreresources.ResourceFinding + "/" + owner + "/" + repository + "/" + alertID
+		finding, err := CreateResource(g.MqlRuntime, coreresources.ResourceFinding, map[string]*llx.RawData{
 			"__id":         llx.StringData(id),
 			"id":           llx.StringData(""),
 			"ref":          llx.StringData(strconv.FormatInt(alert.Number.Data, 10)),
 			"mrn":          llx.StringData(""),
 			"groupId":      llx.StringData(""),
 			"summary":      llx.StringData(summary),
-			"details":      llx.ResourceData(detail, ResourceFindingDetail),
+			"details":      llx.ResourceData(detail, coreresources.ResourceFindingDetail),
 			"firstSeenAt":  llx.TimeDataPtr(alert.CreatedAt.Data),
 			"lastSeenAt":   llx.TimeDataPtr(alert.UpdatedAt.Data),
 			"remediatedAt": llx.TimeDataPtr(alert.FixedAt.Data),
 			"status":       llx.StringData(alert.State.Data),
-			"source":       llx.ResourceData(source, ResourceFindingSource),
-			"affects":      llx.ArrayData(affectsList, types.Resource(ResourceFindingAffects)),
-			"evidences":    llx.ArrayData([]any{}, types.Resource(ResourceFindingEvidence)),
+			"source":       llx.ResourceData(source, coreresources.ResourceFindingSource),
+			"affects":      llx.ArrayData(affectsList, types.Resource(coreresources.ResourceFindingAffects)),
+			"evidences":    llx.ArrayData([]any{}, types.Resource(coreresources.ResourceFindingEvidence)),
 			"remediations": llx.ArrayData([]any{}, types.Dict),
 		})
 		if err != nil {
