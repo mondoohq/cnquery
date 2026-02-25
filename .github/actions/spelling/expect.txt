@@ -1,6 +1,8 @@
 aad
 ACCOUNTADMIN
+Adddays
 advancedthreatprotection
+alloydb
 antispam
 appslot
 atlassian
@@ -15,6 +17,7 @@ backupconfiguration
 backupsetting
 backupshorttermretentionpolicy
 bigquery
+bigtable
 bytematchstatement
 cavium
 cdn
@@ -51,6 +54,7 @@ failback
 fargate
 filesz
 firefox
+firestore
 frontmatter
 ftps
 fumadocs

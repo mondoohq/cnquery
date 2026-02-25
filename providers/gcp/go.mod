@@ -6,9 +6,12 @@ go 1.25.1
 
 require (
 	cloud.google.com/go/accessapproval v1.8.8
-	cloud.google.com/go/bigquery v1.72.0
+	cloud.google.com/go/alloydb v1.20.0
+	cloud.google.com/go/bigquery v1.73.1
+	cloud.google.com/go/bigtable v1.42.0
 	cloud.google.com/go/compute v1.54.0
-	cloud.google.com/go/container v1.45.0
+	cloud.google.com/go/container v1.46.0
+	cloud.google.com/go/firestore v1.21.0
 	cloud.google.com/go/functions v1.19.7
 	cloud.google.com/go/iam v1.5.3
 	cloud.google.com/go/kms v1.25.0
@@ -20,6 +23,7 @@ require (
 	cloud.google.com/go/redis v1.18.3
 	cloud.google.com/go/run v1.15.0
 	cloud.google.com/go/serviceusage v1.9.7
+	cloud.google.com/go/spanner v1.87.0
 	github.com/aws/smithy-go v1.24.0
 	github.com/cockroachdb/errors v1.12.0
 	github.com/google/go-containerregistry v0.20.7
@@ -41,8 +45,8 @@ require (
 	github.com/CycloneDX/cyclonedx-go v0.10.0 // indirect
 	github.com/GoogleCloudPlatform/berglas/v2 v2.0.8 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.30.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.53.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.54.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.54.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/anchore/go-struct-converter v0.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.5 // indirect
@@ -130,7 +134,7 @@ require (
 	cloud.google.com/go/binaryauthorization v1.10.0
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/secretmanager v1.16.0
-	cloud.google.com/go/storage v1.56.1 // indirect
+	cloud.google.com/go/storage v1.59.0 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

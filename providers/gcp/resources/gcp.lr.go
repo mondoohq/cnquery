@@ -160,6 +160,22 @@ const (
 	ResourceGcpProjectSecretmanagerService                                            string = "gcp.project.secretmanagerService"
 	ResourceGcpProjectSecretmanagerServiceSecret                                      string = "gcp.project.secretmanagerService.secret"
 	ResourceGcpProjectSecretmanagerServiceSecretVersion                               string = "gcp.project.secretmanagerService.secret.version"
+	ResourceGcpProjectFirestoreService                                                string = "gcp.project.firestoreService"
+	ResourceGcpProjectFirestoreServiceDatabase                                        string = "gcp.project.firestoreService.database"
+	ResourceGcpProjectSpannerService                                                  string = "gcp.project.spannerService"
+	ResourceGcpProjectSpannerServiceInstance                                          string = "gcp.project.spannerService.instance"
+	ResourceGcpProjectSpannerServiceInstanceDatabase                                  string = "gcp.project.spannerService.instance.database"
+	ResourceGcpProjectSpannerServiceInstanceBackup                                    string = "gcp.project.spannerService.instance.backup"
+	ResourceGcpProjectBigtableService                                                 string = "gcp.project.bigtableService"
+	ResourceGcpProjectBigtableServiceInstance                                         string = "gcp.project.bigtableService.instance"
+	ResourceGcpProjectBigtableServiceCluster                                          string = "gcp.project.bigtableService.cluster"
+	ResourceGcpProjectBigtableServiceTable                                            string = "gcp.project.bigtableService.table"
+	ResourceGcpProjectBigtableServiceAppProfile                                       string = "gcp.project.bigtableService.appProfile"
+	ResourceGcpProjectBigtableServiceBackup                                           string = "gcp.project.bigtableService.backup"
+	ResourceGcpProjectAlloydbService                                                  string = "gcp.project.alloydbService"
+	ResourceGcpProjectAlloydbServiceCluster                                           string = "gcp.project.alloydbService.cluster"
+	ResourceGcpProjectAlloydbServiceInstance                                          string = "gcp.project.alloydbService.instance"
+	ResourceGcpProjectAlloydbServiceBackup                                            string = "gcp.project.alloydbService.backup"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -737,6 +753,70 @@ func init() {
 		"gcp.project.secretmanagerService.secret.version": {
 			// to override args, implement: initGcpProjectSecretmanagerServiceSecretVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectSecretmanagerServiceSecretVersion,
+		},
+		"gcp.project.firestoreService": {
+			Init:   initGcpProjectFirestoreService,
+			Create: createGcpProjectFirestoreService,
+		},
+		"gcp.project.firestoreService.database": {
+			// to override args, implement: initGcpProjectFirestoreServiceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectFirestoreServiceDatabase,
+		},
+		"gcp.project.spannerService": {
+			Init:   initGcpProjectSpannerService,
+			Create: createGcpProjectSpannerService,
+		},
+		"gcp.project.spannerService.instance": {
+			// to override args, implement: initGcpProjectSpannerServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSpannerServiceInstance,
+		},
+		"gcp.project.spannerService.instance.database": {
+			// to override args, implement: initGcpProjectSpannerServiceInstanceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSpannerServiceInstanceDatabase,
+		},
+		"gcp.project.spannerService.instance.backup": {
+			// to override args, implement: initGcpProjectSpannerServiceInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSpannerServiceInstanceBackup,
+		},
+		"gcp.project.bigtableService": {
+			Init:   initGcpProjectBigtableService,
+			Create: createGcpProjectBigtableService,
+		},
+		"gcp.project.bigtableService.instance": {
+			// to override args, implement: initGcpProjectBigtableServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBigtableServiceInstance,
+		},
+		"gcp.project.bigtableService.cluster": {
+			// to override args, implement: initGcpProjectBigtableServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBigtableServiceCluster,
+		},
+		"gcp.project.bigtableService.table": {
+			// to override args, implement: initGcpProjectBigtableServiceTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBigtableServiceTable,
+		},
+		"gcp.project.bigtableService.appProfile": {
+			// to override args, implement: initGcpProjectBigtableServiceAppProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBigtableServiceAppProfile,
+		},
+		"gcp.project.bigtableService.backup": {
+			// to override args, implement: initGcpProjectBigtableServiceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBigtableServiceBackup,
+		},
+		"gcp.project.alloydbService": {
+			Init:   initGcpProjectAlloydbService,
+			Create: createGcpProjectAlloydbService,
+		},
+		"gcp.project.alloydbService.cluster": {
+			// to override args, implement: initGcpProjectAlloydbServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectAlloydbServiceCluster,
+		},
+		"gcp.project.alloydbService.instance": {
+			// to override args, implement: initGcpProjectAlloydbServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectAlloydbServiceInstance,
+		},
+		"gcp.project.alloydbService.backup": {
+			// to override args, implement: initGcpProjectAlloydbServiceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectAlloydbServiceBackup,
 		},
 	}
 }
@@ -1351,6 +1431,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.secretmanager": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetSecretmanager()).ToDataRes(types.Resource("gcp.project.secretmanagerService"))
+	},
+	"gcp.project.firestore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetFirestore()).ToDataRes(types.Resource("gcp.project.firestoreService"))
+	},
+	"gcp.project.spanner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetSpanner()).ToDataRes(types.Resource("gcp.project.spannerService"))
+	},
+	"gcp.project.bigtable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetBigtable()).ToDataRes(types.Resource("gcp.project.bigtableService"))
+	},
+	"gcp.project.alloydb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetAlloydb()).ToDataRes(types.Resource("gcp.project.alloydbService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -4901,6 +4993,543 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.secretmanagerService.secret.version.customerManagedEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetCustomerManagedEncryption()).ToDataRes(types.Dict)
 	},
+	"gcp.project.firestoreService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreService).GetDatabases()).ToDataRes(types.Array(types.Resource("gcp.project.firestoreService.database")))
+	},
+	"gcp.project.firestoreService.database.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.locationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetLocationId()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.concurrencyMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetConcurrencyMode()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.appEngineIntegrationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetAppEngineIntegrationMode()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.pointInTimeRecoveryEnablement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetPointInTimeRecoveryEnablement()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.deleteProtectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetDeleteProtectionState()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.cmekConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetCmekConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.firestoreService.database.versionRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetVersionRetentionPeriod()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.earliestVersionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetEarliestVersionTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.firestoreService.database.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.firestoreService.database.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.spannerService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerService).GetInstances()).ToDataRes(types.Array(types.Resource("gcp.project.spannerService.instance")))
+	},
+	"gcp.project.spannerService.instance.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetConfig()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.nodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetNodeCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.spannerService.instance.processingUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetProcessingUnits()).ToDataRes(types.Int)
+	},
+	"gcp.project.spannerService.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetInstanceType()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.spannerService.instance.edition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetEdition()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.autoscalingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetAutoscalingConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.spannerService.instance.defaultBackupScheduleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetDefaultBackupScheduleType()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.spannerService.instance.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.spannerService.instance.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetDatabases()).ToDataRes(types.Array(types.Resource("gcp.project.spannerService.instance.database")))
+	},
+	"gcp.project.spannerService.instance.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetBackups()).ToDataRes(types.Array(types.Resource("gcp.project.spannerService.instance.backup")))
+	},
+	"gcp.project.spannerService.instance.database.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.database.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.database.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.database.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.database.databaseDialect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetDatabaseDialect()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.database.versionRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetVersionRetentionPeriod()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.database.earliestVersionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetEarliestVersionTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.spannerService.instance.database.encryptionConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetEncryptionConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.spannerService.instance.database.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetEncryptionInfo()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.spannerService.instance.database.defaultLeader": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetDefaultLeader()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.database.enableDropProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetEnableDropProtection()).ToDataRes(types.Bool)
+	},
+	"gcp.project.spannerService.instance.database.reconciling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetReconciling()).ToDataRes(types.Bool)
+	},
+	"gcp.project.spannerService.instance.database.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.spannerService.instance.backup.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.backup.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.backup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.backup.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetDatabase()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.backup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.backup.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.spannerService.instance.backup.versionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetVersionTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.spannerService.instance.backup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.spannerService.instance.backup.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"gcp.project.spannerService.instance.backup.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetEncryptionInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.spannerService.instance.backup.databaseDialect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetDatabaseDialect()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.backup.maxExpireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetMaxExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.bigtableService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableService).GetInstances()).ToDataRes(types.Array(types.Resource("gcp.project.bigtableService.instance")))
+	},
+	"gcp.project.bigtableService.instance.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.instance.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.instance.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetInstanceType()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.instance.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.bigtableService.instance.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.bigtableService.instance.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetClusters()).ToDataRes(types.Array(types.Resource("gcp.project.bigtableService.cluster")))
+	},
+	"gcp.project.bigtableService.instance.appProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetAppProfiles()).ToDataRes(types.Array(types.Resource("gcp.project.bigtableService.appProfile")))
+	},
+	"gcp.project.bigtableService.instance.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetTables()).ToDataRes(types.Array(types.Resource("gcp.project.bigtableService.table")))
+	},
+	"gcp.project.bigtableService.instance.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetBackups()).ToDataRes(types.Array(types.Resource("gcp.project.bigtableService.backup")))
+	},
+	"gcp.project.bigtableService.cluster.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.cluster.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.cluster.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.cluster.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.cluster.serveNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetServeNodes()).ToDataRes(types.Int)
+	},
+	"gcp.project.bigtableService.cluster.defaultStorageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetDefaultStorageType()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.cluster.encryptionConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetEncryptionConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.bigtableService.cluster.nodeScalingFactor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetNodeScalingFactor()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.cluster.autoscalingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetAutoscalingConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.bigtableService.table.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceTable).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.table.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceTable).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceTable).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.table.columnFamilies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceTable).GetColumnFamilies()).ToDataRes(types.Dict)
+	},
+	"gcp.project.bigtableService.table.granularity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceTable).GetGranularity()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.table.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceTable).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"gcp.project.bigtableService.table.automatedBackupPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceTable).GetAutomatedBackupPolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.bigtableService.table.changeStreamConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceTable).GetChangeStreamConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.bigtableService.appProfile.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceAppProfile).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.appProfile.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceAppProfile).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.appProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceAppProfile).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.appProfile.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceAppProfile).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.appProfile.routingPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceAppProfile).GetRoutingPolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.bigtableService.appProfile.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceAppProfile).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.backup.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceBackup).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.backup.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceBackup).GetClusterName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.backup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceBackup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.backup.sourceTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceBackup).GetSourceTable()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.backup.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceBackup).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.bigtableService.backup.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceBackup).GetStartTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.bigtableService.backup.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceBackup).GetEndTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.bigtableService.backup.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceBackup).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"gcp.project.bigtableService.backup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceBackup).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.bigtableService.backup.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceBackup).GetEncryptionInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbService).GetClusters()).ToDataRes(types.Array(types.Resource("gcp.project.alloydbService.cluster")))
+	},
+	"gcp.project.alloydbService.cluster.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.clusterType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetClusterType()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.databaseVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetDatabaseVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.networkConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetNetworkConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.encryptionConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetEncryptionConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetEncryptionInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.automatedBackupPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetAutomatedBackupPolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.continuousBackupConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetContinuousBackupConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.continuousBackupInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetContinuousBackupInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.sslConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetSslConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.alloydbService.cluster.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.alloydbService.cluster.primaryConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetPrimaryConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.secondaryConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetSecondaryConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.maintenanceUpdatePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetMaintenanceUpdatePolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.maintenanceSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetMaintenanceSchedule()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.cluster.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.reconciling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetReconciling()).ToDataRes(types.Bool)
+	},
+	"gcp.project.alloydbService.cluster.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.alloydbService.cluster.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.alloydbService.cluster.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetInstances()).ToDataRes(types.Array(types.Resource("gcp.project.alloydbService.instance")))
+	},
+	"gcp.project.alloydbService.cluster.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetBackups()).ToDataRes(types.Array(types.Resource("gcp.project.alloydbService.backup")))
+	},
+	"gcp.project.alloydbService.instance.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetClusterName()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetInstanceType()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.machineConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetMachineConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.instance.availabilityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetAvailabilityType()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.gceZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetGceZone()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetIpAddress()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetPublicIpAddress()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.databaseFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetDatabaseFlags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.alloydbService.instance.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.alloydbService.instance.queryInsightsConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetQueryInsightsConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.instance.readPoolConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetReadPoolConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.instance.clientConnectionConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetClientConnectionConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.instance.pscInstanceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetPscInstanceConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.instance.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetNodes()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.alloydbService.instance.writableNode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetWritableNode()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.instance.reconciling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetReconciling()).ToDataRes(types.Bool)
+	},
+	"gcp.project.alloydbService.instance.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.instance.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.alloydbService.instance.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.alloydbService.backup.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.backup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.backup.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.backup.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.backup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.backup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.backup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.backup.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetClusterName()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.backup.databaseVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetDatabaseVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.backup.encryptionConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetEncryptionConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.backup.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetEncryptionInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.backup.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"gcp.project.alloydbService.backup.expiryTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetExpiryTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.alloydbService.backup.expiryQuantity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetExpiryQuantity()).ToDataRes(types.Dict)
+	},
+	"gcp.project.alloydbService.backup.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.alloydbService.backup.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.backup.reconciling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetReconciling()).ToDataRes(types.Bool)
+	},
+	"gcp.project.alloydbService.backup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.alloydbService.backup.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetUpdatedAt()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -5687,6 +6316,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.secretmanager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).Secretmanager, ok = plugin.RawToTValue[*mqlGcpProjectSecretmanagerService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Firestore, ok = plugin.RawToTValue[*mqlGcpProjectFirestoreService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spanner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Spanner, ok = plugin.RawToTValue[*mqlGcpProjectSpannerService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Bigtable, ok = plugin.RawToTValue[*mqlGcpProjectBigtableService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Alloydb, ok = plugin.RawToTValue[*mqlGcpProjectAlloydbService](v.Value, v.Error)
 		return
 	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10929,6 +11574,786 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).CustomerManagedEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.firestoreService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.firestoreService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreService).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.firestoreService.database.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.locationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).LocationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.concurrencyMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).ConcurrencyMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.appEngineIntegrationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).AppEngineIntegrationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.pointInTimeRecoveryEnablement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).PointInTimeRecoveryEnablement, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.deleteProtectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).DeleteProtectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.cmekConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).CmekConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.versionRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).VersionRetentionPeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.earliestVersionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).EarliestVersionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.spannerService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerService).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.spannerService.instance.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).Config, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.nodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).NodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.processingUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).ProcessingUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.edition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).Edition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.autoscalingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).AutoscalingConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.defaultBackupScheduleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).DefaultBackupScheduleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.spannerService.instance.database.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.databaseDialect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).DatabaseDialect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.versionRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).VersionRetentionPeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.earliestVersionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).EarliestVersionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.encryptionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).EncryptionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.encryptionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).EncryptionInfo, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.defaultLeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).DefaultLeader, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.enableDropProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).EnableDropProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.reconciling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).Reconciling, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).Database, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.versionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).VersionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.encryptionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).EncryptionInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.databaseDialect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).DatabaseDialect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.backup.maxExpireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceBackup).MaxExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.bigtableService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableService).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.bigtableService.instance.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.appProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).AppProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.instance.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.bigtableService.cluster.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.serveNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).ServeNodes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.defaultStorageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).DefaultStorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.encryptionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).EncryptionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.nodeScalingFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).NodeScalingFactor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.autoscalingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).AutoscalingConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceTable).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.bigtableService.table.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceTable).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.table.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceTable).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.table.columnFamilies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceTable).ColumnFamilies, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.table.granularity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceTable).Granularity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.table.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceTable).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.table.automatedBackupPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceTable).AutomatedBackupPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.table.changeStreamConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceTable).ChangeStreamConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.appProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceAppProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.bigtableService.appProfile.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceAppProfile).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.appProfile.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceAppProfile).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.appProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceAppProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.appProfile.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceAppProfile).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.appProfile.routingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceAppProfile).RoutingPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.appProfile.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceAppProfile).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.bigtableService.backup.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.backup.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.backup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.backup.sourceTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).SourceTable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.backup.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.backup.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.backup.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.backup.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.backup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.backup.encryptionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceBackup).EncryptionInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.alloydbService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbService).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.alloydbService.cluster.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.clusterType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).ClusterType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.databaseVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).DatabaseVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.networkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).NetworkConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.encryptionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).EncryptionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.encryptionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).EncryptionInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.automatedBackupPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).AutomatedBackupPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.continuousBackupConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).ContinuousBackupConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.continuousBackupInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).ContinuousBackupInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.sslConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).SslConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.primaryConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).PrimaryConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.secondaryConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).SecondaryConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.maintenanceUpdatePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).MaintenanceUpdatePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.maintenanceSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).MaintenanceSchedule, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.reconciling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).Reconciling, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.alloydbService.instance.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.machineConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).MachineConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.availabilityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).AvailabilityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.gceZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).GceZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.publicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).PublicIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.databaseFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).DatabaseFlags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.queryInsightsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).QueryInsightsConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.readPoolConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).ReadPoolConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.clientConnectionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).ClientConnectionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.pscInstanceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).PscInstanceConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.writableNode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).WritableNode, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.reconciling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).Reconciling, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.instance.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceInstance).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.alloydbService.backup.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.databaseVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).DatabaseVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.encryptionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).EncryptionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.encryptionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).EncryptionInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.expiryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).ExpiryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.expiryQuantity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).ExpiryQuantity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.reconciling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).Reconciling, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.backup.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceBackup).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -12542,6 +13967,10 @@ type mqlGcpProject struct {
 	BinaryAuthorization    plugin.TValue[*mqlGcpProjectBinaryAuthorizationControl]
 	Redis                  plugin.TValue[*mqlGcpProjectRedisService]
 	Secretmanager          plugin.TValue[*mqlGcpProjectSecretmanagerService]
+	Firestore              plugin.TValue[*mqlGcpProjectFirestoreService]
+	Spanner                plugin.TValue[*mqlGcpProjectSpannerService]
+	Bigtable               plugin.TValue[*mqlGcpProjectBigtableService]
+	Alloydb                plugin.TValue[*mqlGcpProjectAlloydbService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -12998,6 +14427,70 @@ func (c *mqlGcpProject) GetSecretmanager() *plugin.TValue[*mqlGcpProjectSecretma
 		}
 
 		return c.secretmanager()
+	})
+}
+
+func (c *mqlGcpProject) GetFirestore() *plugin.TValue[*mqlGcpProjectFirestoreService] {
+	return plugin.GetOrCompute[*mqlGcpProjectFirestoreService](&c.Firestore, func() (*mqlGcpProjectFirestoreService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "firestore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectFirestoreService), nil
+			}
+		}
+
+		return c.firestore()
+	})
+}
+
+func (c *mqlGcpProject) GetSpanner() *plugin.TValue[*mqlGcpProjectSpannerService] {
+	return plugin.GetOrCompute[*mqlGcpProjectSpannerService](&c.Spanner, func() (*mqlGcpProjectSpannerService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "spanner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectSpannerService), nil
+			}
+		}
+
+		return c.spanner()
+	})
+}
+
+func (c *mqlGcpProject) GetBigtable() *plugin.TValue[*mqlGcpProjectBigtableService] {
+	return plugin.GetOrCompute[*mqlGcpProjectBigtableService](&c.Bigtable, func() (*mqlGcpProjectBigtableService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "bigtable")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectBigtableService), nil
+			}
+		}
+
+		return c.bigtable()
+	})
+}
+
+func (c *mqlGcpProject) GetAlloydb() *plugin.TValue[*mqlGcpProjectAlloydbService] {
+	return plugin.GetOrCompute[*mqlGcpProjectAlloydbService](&c.Alloydb, func() (*mqlGcpProjectAlloydbService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "alloydb")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectAlloydbService), nil
+			}
+		}
+
+		return c.alloydb()
 	})
 }
 
@@ -25281,4 +26774,1747 @@ func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetScheduledDestroyTime
 
 func (c *mqlGcpProjectSecretmanagerServiceSecretVersion) GetCustomerManagedEncryption() *plugin.TValue[any] {
 	return &c.CustomerManagedEncryption
+}
+
+// mqlGcpProjectFirestoreService for the gcp.project.firestoreService resource
+type mqlGcpProjectFirestoreService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectFirestoreServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Databases plugin.TValue[[]any]
+}
+
+// createGcpProjectFirestoreService creates a new instance of this resource
+func createGcpProjectFirestoreService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectFirestoreService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.firestoreService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectFirestoreService) MqlName() string {
+	return "gcp.project.firestoreService"
+}
+
+func (c *mqlGcpProjectFirestoreService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectFirestoreService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectFirestoreService) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.firestoreService", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.databases()
+	})
+}
+
+// mqlGcpProjectFirestoreServiceDatabase for the gcp.project.firestoreService.database resource
+type mqlGcpProjectFirestoreServiceDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectFirestoreServiceDatabaseInternal it will be used here
+	ProjectId                     plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Uid                           plugin.TValue[string]
+	LocationId                    plugin.TValue[string]
+	Type                          plugin.TValue[string]
+	ConcurrencyMode               plugin.TValue[string]
+	AppEngineIntegrationMode      plugin.TValue[string]
+	PointInTimeRecoveryEnablement plugin.TValue[string]
+	DeleteProtectionState         plugin.TValue[string]
+	CmekConfig                    plugin.TValue[any]
+	VersionRetentionPeriod        plugin.TValue[string]
+	EarliestVersionTime           plugin.TValue[*time.Time]
+	Etag                          plugin.TValue[string]
+	CreatedAt                     plugin.TValue[*time.Time]
+	UpdatedAt                     plugin.TValue[*time.Time]
+}
+
+// createGcpProjectFirestoreServiceDatabase creates a new instance of this resource
+func createGcpProjectFirestoreServiceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectFirestoreServiceDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.firestoreService.database", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) MqlName() string {
+	return "gcp.project.firestoreService.database"
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetLocationId() *plugin.TValue[string] {
+	return &c.LocationId
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetConcurrencyMode() *plugin.TValue[string] {
+	return &c.ConcurrencyMode
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetAppEngineIntegrationMode() *plugin.TValue[string] {
+	return &c.AppEngineIntegrationMode
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetPointInTimeRecoveryEnablement() *plugin.TValue[string] {
+	return &c.PointInTimeRecoveryEnablement
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetDeleteProtectionState() *plugin.TValue[string] {
+	return &c.DeleteProtectionState
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetCmekConfig() *plugin.TValue[any] {
+	return &c.CmekConfig
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetVersionRetentionPeriod() *plugin.TValue[string] {
+	return &c.VersionRetentionPeriod
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetEarliestVersionTime() *plugin.TValue[*time.Time] {
+	return &c.EarliestVersionTime
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectSpannerService for the gcp.project.spannerService resource
+type mqlGcpProjectSpannerService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSpannerServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Instances plugin.TValue[[]any]
+}
+
+// createGcpProjectSpannerService creates a new instance of this resource
+func createGcpProjectSpannerService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSpannerService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.spannerService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSpannerService) MqlName() string {
+	return "gcp.project.spannerService"
+}
+
+func (c *mqlGcpProjectSpannerService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSpannerService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSpannerService) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.spannerService", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlGcpProjectSpannerServiceInstance for the gcp.project.spannerService.instance resource
+type mqlGcpProjectSpannerServiceInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSpannerServiceInstanceInternal it will be used here
+	ProjectId                 plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	DisplayName               plugin.TValue[string]
+	Config                    plugin.TValue[string]
+	NodeCount                 plugin.TValue[int64]
+	ProcessingUnits           plugin.TValue[int64]
+	State                     plugin.TValue[string]
+	InstanceType              plugin.TValue[string]
+	Labels                    plugin.TValue[map[string]any]
+	Edition                   plugin.TValue[string]
+	AutoscalingConfig         plugin.TValue[any]
+	DefaultBackupScheduleType plugin.TValue[string]
+	CreatedAt                 plugin.TValue[*time.Time]
+	UpdatedAt                 plugin.TValue[*time.Time]
+	Databases                 plugin.TValue[[]any]
+	Backups                   plugin.TValue[[]any]
+}
+
+// createGcpProjectSpannerServiceInstance creates a new instance of this resource
+func createGcpProjectSpannerServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSpannerServiceInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.spannerService.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) MqlName() string {
+	return "gcp.project.spannerService.instance"
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetConfig() *plugin.TValue[string] {
+	return &c.Config
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetNodeCount() *plugin.TValue[int64] {
+	return &c.NodeCount
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetProcessingUnits() *plugin.TValue[int64] {
+	return &c.ProcessingUnits
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetEdition() *plugin.TValue[string] {
+	return &c.Edition
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetAutoscalingConfig() *plugin.TValue[any] {
+	return &c.AutoscalingConfig
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetDefaultBackupScheduleType() *plugin.TValue[string] {
+	return &c.DefaultBackupScheduleType
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.spannerService.instance", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.databases()
+	})
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.spannerService.instance", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+// mqlGcpProjectSpannerServiceInstanceDatabase for the gcp.project.spannerService.instance.database resource
+type mqlGcpProjectSpannerServiceInstanceDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSpannerServiceInstanceDatabaseInternal it will be used here
+	ProjectId              plugin.TValue[string]
+	InstanceName           plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	State                  plugin.TValue[string]
+	DatabaseDialect        plugin.TValue[string]
+	VersionRetentionPeriod plugin.TValue[string]
+	EarliestVersionTime    plugin.TValue[*time.Time]
+	EncryptionConfig       plugin.TValue[any]
+	EncryptionInfo         plugin.TValue[[]any]
+	DefaultLeader          plugin.TValue[string]
+	EnableDropProtection   plugin.TValue[bool]
+	Reconciling            plugin.TValue[bool]
+	CreatedAt              plugin.TValue[*time.Time]
+}
+
+// createGcpProjectSpannerServiceInstanceDatabase creates a new instance of this resource
+func createGcpProjectSpannerServiceInstanceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSpannerServiceInstanceDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.spannerService.instance.database", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) MqlName() string {
+	return "gcp.project.spannerService.instance.database"
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetDatabaseDialect() *plugin.TValue[string] {
+	return &c.DatabaseDialect
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetVersionRetentionPeriod() *plugin.TValue[string] {
+	return &c.VersionRetentionPeriod
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetEarliestVersionTime() *plugin.TValue[*time.Time] {
+	return &c.EarliestVersionTime
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetEncryptionConfig() *plugin.TValue[any] {
+	return &c.EncryptionConfig
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetEncryptionInfo() *plugin.TValue[[]any] {
+	return &c.EncryptionInfo
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetDefaultLeader() *plugin.TValue[string] {
+	return &c.DefaultLeader
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetEnableDropProtection() *plugin.TValue[bool] {
+	return &c.EnableDropProtection
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetReconciling() *plugin.TValue[bool] {
+	return &c.Reconciling
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlGcpProjectSpannerServiceInstanceBackup for the gcp.project.spannerService.instance.backup resource
+type mqlGcpProjectSpannerServiceInstanceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSpannerServiceInstanceBackupInternal it will be used here
+	ProjectId       plugin.TValue[string]
+	InstanceName    plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Database        plugin.TValue[string]
+	State           plugin.TValue[string]
+	ExpireTime      plugin.TValue[*time.Time]
+	VersionTime     plugin.TValue[*time.Time]
+	CreatedAt       plugin.TValue[*time.Time]
+	SizeBytes       plugin.TValue[int64]
+	EncryptionInfo  plugin.TValue[any]
+	DatabaseDialect plugin.TValue[string]
+	MaxExpireTime   plugin.TValue[*time.Time]
+}
+
+// createGcpProjectSpannerServiceInstanceBackup creates a new instance of this resource
+func createGcpProjectSpannerServiceInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSpannerServiceInstanceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.spannerService.instance.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) MqlName() string {
+	return "gcp.project.spannerService.instance.backup"
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetDatabase() *plugin.TValue[string] {
+	return &c.Database
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetVersionTime() *plugin.TValue[*time.Time] {
+	return &c.VersionTime
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetEncryptionInfo() *plugin.TValue[any] {
+	return &c.EncryptionInfo
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetDatabaseDialect() *plugin.TValue[string] {
+	return &c.DatabaseDialect
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetMaxExpireTime() *plugin.TValue[*time.Time] {
+	return &c.MaxExpireTime
+}
+
+// mqlGcpProjectBigtableService for the gcp.project.bigtableService resource
+type mqlGcpProjectBigtableService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectBigtableServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Instances plugin.TValue[[]any]
+}
+
+// createGcpProjectBigtableService creates a new instance of this resource
+func createGcpProjectBigtableService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBigtableService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.bigtableService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBigtableService) MqlName() string {
+	return "gcp.project.bigtableService"
+}
+
+func (c *mqlGcpProjectBigtableService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBigtableService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectBigtableService) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigtableService", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlGcpProjectBigtableServiceInstance for the gcp.project.bigtableService.instance resource
+type mqlGcpProjectBigtableServiceInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectBigtableServiceInstanceInternal it will be used here
+	ProjectId    plugin.TValue[string]
+	Name         plugin.TValue[string]
+	DisplayName  plugin.TValue[string]
+	State        plugin.TValue[string]
+	InstanceType plugin.TValue[string]
+	Labels       plugin.TValue[map[string]any]
+	CreatedAt    plugin.TValue[*time.Time]
+	Clusters     plugin.TValue[[]any]
+	AppProfiles  plugin.TValue[[]any]
+	Tables       plugin.TValue[[]any]
+	Backups      plugin.TValue[[]any]
+}
+
+// createGcpProjectBigtableServiceInstance creates a new instance of this resource
+func createGcpProjectBigtableServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBigtableServiceInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.bigtableService.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) MqlName() string {
+	return "gcp.project.bigtableService.instance"
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigtableService.instance", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetAppProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AppProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigtableService.instance", c.__id, "appProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.appProfiles()
+	})
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigtableService.instance", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+func (c *mqlGcpProjectBigtableServiceInstance) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigtableService.instance", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+// mqlGcpProjectBigtableServiceCluster for the gcp.project.bigtableService.cluster resource
+type mqlGcpProjectBigtableServiceCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectBigtableServiceClusterInternal it will be used here
+	ProjectId          plugin.TValue[string]
+	InstanceName       plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Location           plugin.TValue[string]
+	State              plugin.TValue[string]
+	ServeNodes         plugin.TValue[int64]
+	DefaultStorageType plugin.TValue[string]
+	EncryptionConfig   plugin.TValue[any]
+	NodeScalingFactor  plugin.TValue[string]
+	AutoscalingConfig  plugin.TValue[any]
+}
+
+// createGcpProjectBigtableServiceCluster creates a new instance of this resource
+func createGcpProjectBigtableServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBigtableServiceCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.bigtableService.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) MqlName() string {
+	return "gcp.project.bigtableService.cluster"
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetServeNodes() *plugin.TValue[int64] {
+	return &c.ServeNodes
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetDefaultStorageType() *plugin.TValue[string] {
+	return &c.DefaultStorageType
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetEncryptionConfig() *plugin.TValue[any] {
+	return &c.EncryptionConfig
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetNodeScalingFactor() *plugin.TValue[string] {
+	return &c.NodeScalingFactor
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetAutoscalingConfig() *plugin.TValue[any] {
+	return &c.AutoscalingConfig
+}
+
+// mqlGcpProjectBigtableServiceTable for the gcp.project.bigtableService.table resource
+type mqlGcpProjectBigtableServiceTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectBigtableServiceTableInternal it will be used here
+	ProjectId             plugin.TValue[string]
+	InstanceName          plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	ColumnFamilies        plugin.TValue[any]
+	Granularity           plugin.TValue[string]
+	DeletionProtection    plugin.TValue[bool]
+	AutomatedBackupPolicy plugin.TValue[any]
+	ChangeStreamConfig    plugin.TValue[any]
+}
+
+// createGcpProjectBigtableServiceTable creates a new instance of this resource
+func createGcpProjectBigtableServiceTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBigtableServiceTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.bigtableService.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBigtableServiceTable) MqlName() string {
+	return "gcp.project.bigtableService.table"
+}
+
+func (c *mqlGcpProjectBigtableServiceTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBigtableServiceTable) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectBigtableServiceTable) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectBigtableServiceTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectBigtableServiceTable) GetColumnFamilies() *plugin.TValue[any] {
+	return &c.ColumnFamilies
+}
+
+func (c *mqlGcpProjectBigtableServiceTable) GetGranularity() *plugin.TValue[string] {
+	return &c.Granularity
+}
+
+func (c *mqlGcpProjectBigtableServiceTable) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlGcpProjectBigtableServiceTable) GetAutomatedBackupPolicy() *plugin.TValue[any] {
+	return &c.AutomatedBackupPolicy
+}
+
+func (c *mqlGcpProjectBigtableServiceTable) GetChangeStreamConfig() *plugin.TValue[any] {
+	return &c.ChangeStreamConfig
+}
+
+// mqlGcpProjectBigtableServiceAppProfile for the gcp.project.bigtableService.appProfile resource
+type mqlGcpProjectBigtableServiceAppProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectBigtableServiceAppProfileInternal it will be used here
+	ProjectId     plugin.TValue[string]
+	InstanceName  plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	RoutingPolicy plugin.TValue[any]
+	Etag          plugin.TValue[string]
+}
+
+// createGcpProjectBigtableServiceAppProfile creates a new instance of this resource
+func createGcpProjectBigtableServiceAppProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBigtableServiceAppProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.bigtableService.appProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBigtableServiceAppProfile) MqlName() string {
+	return "gcp.project.bigtableService.appProfile"
+}
+
+func (c *mqlGcpProjectBigtableServiceAppProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBigtableServiceAppProfile) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectBigtableServiceAppProfile) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectBigtableServiceAppProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectBigtableServiceAppProfile) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectBigtableServiceAppProfile) GetRoutingPolicy() *plugin.TValue[any] {
+	return &c.RoutingPolicy
+}
+
+func (c *mqlGcpProjectBigtableServiceAppProfile) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+// mqlGcpProjectBigtableServiceBackup for the gcp.project.bigtableService.backup resource
+type mqlGcpProjectBigtableServiceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectBigtableServiceBackupInternal it will be used here
+	ProjectId      plugin.TValue[string]
+	ClusterName    plugin.TValue[string]
+	Name           plugin.TValue[string]
+	SourceTable    plugin.TValue[string]
+	ExpireTime     plugin.TValue[*time.Time]
+	StartTime      plugin.TValue[*time.Time]
+	EndTime        plugin.TValue[*time.Time]
+	SizeBytes      plugin.TValue[int64]
+	State          plugin.TValue[string]
+	EncryptionInfo plugin.TValue[any]
+}
+
+// createGcpProjectBigtableServiceBackup creates a new instance of this resource
+func createGcpProjectBigtableServiceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBigtableServiceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.bigtableService.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) MqlName() string {
+	return "gcp.project.bigtableService.backup"
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) GetSourceTable() *plugin.TValue[string] {
+	return &c.SourceTable
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectBigtableServiceBackup) GetEncryptionInfo() *plugin.TValue[any] {
+	return &c.EncryptionInfo
+}
+
+// mqlGcpProjectAlloydbService for the gcp.project.alloydbService resource
+type mqlGcpProjectAlloydbService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectAlloydbServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Clusters  plugin.TValue[[]any]
+}
+
+// createGcpProjectAlloydbService creates a new instance of this resource
+func createGcpProjectAlloydbService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectAlloydbService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.alloydbService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectAlloydbService) MqlName() string {
+	return "gcp.project.alloydbService"
+}
+
+func (c *mqlGcpProjectAlloydbService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectAlloydbService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectAlloydbService) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.alloydbService", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+// mqlGcpProjectAlloydbServiceCluster for the gcp.project.alloydbService.cluster resource
+type mqlGcpProjectAlloydbServiceCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectAlloydbServiceClusterInternal it will be used here
+	ProjectId               plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	DisplayName             plugin.TValue[string]
+	Uid                     plugin.TValue[string]
+	State                   plugin.TValue[string]
+	ClusterType             plugin.TValue[string]
+	DatabaseVersion         plugin.TValue[string]
+	NetworkConfig           plugin.TValue[any]
+	EncryptionConfig        plugin.TValue[any]
+	EncryptionInfo          plugin.TValue[any]
+	AutomatedBackupPolicy   plugin.TValue[any]
+	ContinuousBackupConfig  plugin.TValue[any]
+	ContinuousBackupInfo    plugin.TValue[any]
+	SslConfig               plugin.TValue[any]
+	Labels                  plugin.TValue[map[string]any]
+	Annotations             plugin.TValue[map[string]any]
+	PrimaryConfig           plugin.TValue[any]
+	SecondaryConfig         plugin.TValue[any]
+	MaintenanceUpdatePolicy plugin.TValue[any]
+	MaintenanceSchedule     plugin.TValue[any]
+	Location                plugin.TValue[string]
+	Reconciling             plugin.TValue[bool]
+	Etag                    plugin.TValue[string]
+	CreatedAt               plugin.TValue[*time.Time]
+	UpdatedAt               plugin.TValue[*time.Time]
+	Instances               plugin.TValue[[]any]
+	Backups                 plugin.TValue[[]any]
+}
+
+// createGcpProjectAlloydbServiceCluster creates a new instance of this resource
+func createGcpProjectAlloydbServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectAlloydbServiceCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.alloydbService.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) MqlName() string {
+	return "gcp.project.alloydbService.cluster"
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetClusterType() *plugin.TValue[string] {
+	return &c.ClusterType
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetDatabaseVersion() *plugin.TValue[string] {
+	return &c.DatabaseVersion
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetNetworkConfig() *plugin.TValue[any] {
+	return &c.NetworkConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetEncryptionConfig() *plugin.TValue[any] {
+	return &c.EncryptionConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetEncryptionInfo() *plugin.TValue[any] {
+	return &c.EncryptionInfo
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetAutomatedBackupPolicy() *plugin.TValue[any] {
+	return &c.AutomatedBackupPolicy
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetContinuousBackupConfig() *plugin.TValue[any] {
+	return &c.ContinuousBackupConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetContinuousBackupInfo() *plugin.TValue[any] {
+	return &c.ContinuousBackupInfo
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetSslConfig() *plugin.TValue[any] {
+	return &c.SslConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetAnnotations() *plugin.TValue[map[string]any] {
+	return &c.Annotations
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetPrimaryConfig() *plugin.TValue[any] {
+	return &c.PrimaryConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetSecondaryConfig() *plugin.TValue[any] {
+	return &c.SecondaryConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetMaintenanceUpdatePolicy() *plugin.TValue[any] {
+	return &c.MaintenanceUpdatePolicy
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetMaintenanceSchedule() *plugin.TValue[any] {
+	return &c.MaintenanceSchedule
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetReconciling() *plugin.TValue[bool] {
+	return &c.Reconciling
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.alloydbService.cluster", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.alloydbService.cluster", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+// mqlGcpProjectAlloydbServiceInstance for the gcp.project.alloydbService.instance resource
+type mqlGcpProjectAlloydbServiceInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectAlloydbServiceInstanceInternal it will be used here
+	ProjectId              plugin.TValue[string]
+	ClusterName            plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	DisplayName            plugin.TValue[string]
+	Uid                    plugin.TValue[string]
+	State                  plugin.TValue[string]
+	InstanceType           plugin.TValue[string]
+	MachineConfig          plugin.TValue[any]
+	AvailabilityType       plugin.TValue[string]
+	GceZone                plugin.TValue[string]
+	IpAddress              plugin.TValue[string]
+	PublicIpAddress        plugin.TValue[string]
+	DatabaseFlags          plugin.TValue[map[string]any]
+	Labels                 plugin.TValue[map[string]any]
+	QueryInsightsConfig    plugin.TValue[any]
+	ReadPoolConfig         plugin.TValue[any]
+	ClientConnectionConfig plugin.TValue[any]
+	PscInstanceConfig      plugin.TValue[any]
+	Nodes                  plugin.TValue[[]any]
+	WritableNode           plugin.TValue[any]
+	Reconciling            plugin.TValue[bool]
+	Etag                   plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	UpdatedAt              plugin.TValue[*time.Time]
+}
+
+// createGcpProjectAlloydbServiceInstance creates a new instance of this resource
+func createGcpProjectAlloydbServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectAlloydbServiceInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.alloydbService.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) MqlName() string {
+	return "gcp.project.alloydbService.instance"
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetMachineConfig() *plugin.TValue[any] {
+	return &c.MachineConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetAvailabilityType() *plugin.TValue[string] {
+	return &c.AvailabilityType
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetGceZone() *plugin.TValue[string] {
+	return &c.GceZone
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetPublicIpAddress() *plugin.TValue[string] {
+	return &c.PublicIpAddress
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetDatabaseFlags() *plugin.TValue[map[string]any] {
+	return &c.DatabaseFlags
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetQueryInsightsConfig() *plugin.TValue[any] {
+	return &c.QueryInsightsConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetReadPoolConfig() *plugin.TValue[any] {
+	return &c.ReadPoolConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetClientConnectionConfig() *plugin.TValue[any] {
+	return &c.ClientConnectionConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetPscInstanceConfig() *plugin.TValue[any] {
+	return &c.PscInstanceConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetNodes() *plugin.TValue[[]any] {
+	return &c.Nodes
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetWritableNode() *plugin.TValue[any] {
+	return &c.WritableNode
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetReconciling() *plugin.TValue[bool] {
+	return &c.Reconciling
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectAlloydbServiceInstance) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectAlloydbServiceBackup for the gcp.project.alloydbService.backup resource
+type mqlGcpProjectAlloydbServiceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectAlloydbServiceBackupInternal it will be used here
+	ProjectId        plugin.TValue[string]
+	Name             plugin.TValue[string]
+	DisplayName      plugin.TValue[string]
+	Uid              plugin.TValue[string]
+	State            plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	ClusterName      plugin.TValue[string]
+	DatabaseVersion  plugin.TValue[string]
+	EncryptionConfig plugin.TValue[any]
+	EncryptionInfo   plugin.TValue[any]
+	SizeBytes        plugin.TValue[int64]
+	ExpiryTime       plugin.TValue[*time.Time]
+	ExpiryQuantity   plugin.TValue[any]
+	Labels           plugin.TValue[map[string]any]
+	Etag             plugin.TValue[string]
+	Reconciling      plugin.TValue[bool]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+}
+
+// createGcpProjectAlloydbServiceBackup creates a new instance of this resource
+func createGcpProjectAlloydbServiceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectAlloydbServiceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.alloydbService.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) MqlName() string {
+	return "gcp.project.alloydbService.backup"
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetDatabaseVersion() *plugin.TValue[string] {
+	return &c.DatabaseVersion
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetEncryptionConfig() *plugin.TValue[any] {
+	return &c.EncryptionConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetEncryptionInfo() *plugin.TValue[any] {
+	return &c.EncryptionInfo
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetExpiryTime() *plugin.TValue[*time.Time] {
+	return &c.ExpiryTime
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetExpiryQuantity() *plugin.TValue[any] {
+	return &c.ExpiryQuantity
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetReconciling() *plugin.TValue[bool] {
+	return &c.Reconciling
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectAlloydbServiceBackup) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }

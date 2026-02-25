@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -12,8 +13,27 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+// protoToDict converts a protobuf message to a map[string]any suitable for use as a dict field.
+// Returns nil for nil input.
+func protoToDict(msg proto.Message) (map[string]any, error) {
+	if msg == nil {
+		return nil, nil
+	}
+	data, err := protojson.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
 
 func RegionNameFromRegionUrl(regionUrl string) string {
 	regionUrlSegments := strings.Split(regionUrl, "/")
