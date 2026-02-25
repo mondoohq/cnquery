@@ -1,0 +1,2573 @@
+[
+  {
+    "number": 32,
+    "state": "open",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "manifest_path": "tool/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-37cx-329c-33x3",
+      "cve_id": "CVE-2026-25934",
+      "summary": "go-git improperly verifies data integrity values for .idx and .pack files",
+      "description": "### Impact \n\nA vulnerability was discovered in `go-git` whereby data integrity values for `.pack` and `.idx` files were not properly verified. This resulted in `go-git` potentially consuming corrupted files, which would likely result in unexpected errors such as `object not found`.\n\nFor context, clients fetch [`packfiles`](https://git-scm.com/docs/pack-protocol#_packfile_data) from upstream Git servers. Those files contain a checksum of their contents, so that clients can perform integrity checks before consuming it. The pack indexes (`.idx`) are [generated](https://git-scm.com/docs/pack-format) locally by `go-git`, or the `git` cli, when new `.pack` files are received and processed. The integrity checks for both files were not being verified correctly.\n\nNote that the lack of verification of the packfile checksum has no impact on the trust relationship between the client and server, which is enforced based on the protocol being used (e.g. TLS in the case of `https://` or known hosts for `ssh://`). In other words, the packfile checksum verification does not provide any security benefits when connecting to a malicious or compromised Git server.\n\n### Patches\n\nUsers should upgrade to `v5.16.5`, or the latest `v6` [pseudo-version](https://go.dev/ref/mod#pseudo-versions), in order to mitigate this vulnerability.\n\n### Workarounds\n\nIn case updating to a fixed version of `go-git` is not possible, users can run [git fsck](https://git-scm.com/docs/git-fsck) from the `git` cli to check for data corruption on a given repository. \n\n### Credit\n\nThanks @N0zoM1z0 for finding and reporting this issue privately to the `go-git` project.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-git/go-git/v5"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c= 5.16.4",
+          "first_patched_version": {
+            "identifier": "5.16.5"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 4.3,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-354",
+          "name": "Improper Validation of Integrity Check Value"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00006,
+        "percentile": 0.0028
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-37cx-329c-33x3",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2026-25934",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-git/go-git/security/advisories/GHSA-37cx-329c-33x3"
+        },
+        {
+          "url": "https://github.com/go-git/go-git/releases/tag/v5.16.5"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-25934"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-37cx-329c-33x3"
+        }
+      ],
+      "published_at": "2026-02-10T00:28:53Z",
+      "updated_at": "2026-02-10T02:57:14Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c= 5.16.4",
+      "first_patched_version": {
+        "identifier": "5.16.5"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/32",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/32",
+    "created_at": "2026-02-10T00:34:34Z",
+    "updated_at": "2026-02-10T00:34:34Z"
+  },
+  {
+    "number": 31,
+    "state": "open",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-37cx-329c-33x3",
+      "cve_id": "CVE-2026-25934",
+      "summary": "go-git improperly verifies data integrity values for .idx and .pack files",
+      "description": "### Impact \n\nA vulnerability was discovered in `go-git` whereby data integrity values for `.pack` and `.idx` files were not properly verified. This resulted in `go-git` potentially consuming corrupted files, which would likely result in unexpected errors such as `object not found`.\n\nFor context, clients fetch [`packfiles`](https://git-scm.com/docs/pack-protocol#_packfile_data) from upstream Git servers. Those files contain a checksum of their contents, so that clients can perform integrity checks before consuming it. The pack indexes (`.idx`) are [generated](https://git-scm.com/docs/pack-format) locally by `go-git`, or the `git` cli, when new `.pack` files are received and processed. The integrity checks for both files were not being verified correctly.\n\nNote that the lack of verification of the packfile checksum has no impact on the trust relationship between the client and server, which is enforced based on the protocol being used (e.g. TLS in the case of `https://` or known hosts for `ssh://`). In other words, the packfile checksum verification does not provide any security benefits when connecting to a malicious or compromised Git server.\n\n### Patches\n\nUsers should upgrade to `v5.16.5`, or the latest `v6` [pseudo-version](https://go.dev/ref/mod#pseudo-versions), in order to mitigate this vulnerability.\n\n### Workarounds\n\nIn case updating to a fixed version of `go-git` is not possible, users can run [git fsck](https://git-scm.com/docs/git-fsck) from the `git` cli to check for data corruption on a given repository. \n\n### Credit\n\nThanks @N0zoM1z0 for finding and reporting this issue privately to the `go-git` project.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-git/go-git/v5"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c= 5.16.4",
+          "first_patched_version": {
+            "identifier": "5.16.5"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 4.3,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-354",
+          "name": "Improper Validation of Integrity Check Value"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00006,
+        "percentile": 0.0028
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-37cx-329c-33x3",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2026-25934",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-git/go-git/security/advisories/GHSA-37cx-329c-33x3"
+        },
+        {
+          "url": "https://github.com/go-git/go-git/releases/tag/v5.16.5"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-25934"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-37cx-329c-33x3"
+        }
+      ],
+      "published_at": "2026-02-10T00:28:53Z",
+      "updated_at": "2026-02-10T02:57:14Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c= 5.16.4",
+      "first_patched_version": {
+        "identifier": "5.16.5"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/31",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/31",
+    "created_at": "2026-02-10T00:34:34Z",
+    "updated_at": "2026-02-10T00:34:34Z"
+  },
+  {
+    "number": 30,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "manifest_path": "tool/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-f6x5-jh6r-wrfv",
+      "cve_id": "CVE-2025-47914",
+      "summary": "golang.org/x/crypto/ssh/agent vulnerable to panic if message is malformed due to out of bounds read",
+      "description": "SSH Agent servers do not validate the size of messages when processing new identity requests, which may cause the program to panic if the message is malformed due to an out of bounds read.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "golang.org/x/crypto"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 0.45.0",
+          "first_patched_version": {
+            "identifier": "0.45.0"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 5.3,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-125",
+          "name": "Out-of-bounds Read"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00018,
+        "percentile": 0.03724
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-f6x5-jh6r-wrfv",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-47914",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-47914"
+        },
+        {
+          "url": "https://go.dev/cl/721960"
+        },
+        {
+          "url": "https://go.dev/issue/76364"
+        },
+        {
+          "url": "https://groups.google.com/g/golang-announce/c/w-oX3UxNcZA"
+        },
+        {
+          "url": "https://pkg.go.dev/vuln/GO-2025-4135"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-f6x5-jh6r-wrfv"
+        }
+      ],
+      "published_at": "2025-11-19T23:16:40Z",
+      "updated_at": "2025-11-20T16:36:10Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 0.45.0",
+      "first_patched_version": {
+        "identifier": "0.45.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/30",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/30",
+    "created_at": "2025-11-20T02:27:27Z",
+    "updated_at": "2025-12-09T07:26:38Z",
+    "fixed_at": "2025-12-09T07:26:38Z"
+  },
+  {
+    "number": 29,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-f6x5-jh6r-wrfv",
+      "cve_id": "CVE-2025-47914",
+      "summary": "golang.org/x/crypto/ssh/agent vulnerable to panic if message is malformed due to out of bounds read",
+      "description": "SSH Agent servers do not validate the size of messages when processing new identity requests, which may cause the program to panic if the message is malformed due to an out of bounds read.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "golang.org/x/crypto"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 0.45.0",
+          "first_patched_version": {
+            "identifier": "0.45.0"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 5.3,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-125",
+          "name": "Out-of-bounds Read"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00018,
+        "percentile": 0.03724
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-f6x5-jh6r-wrfv",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-47914",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-47914"
+        },
+        {
+          "url": "https://go.dev/cl/721960"
+        },
+        {
+          "url": "https://go.dev/issue/76364"
+        },
+        {
+          "url": "https://groups.google.com/g/golang-announce/c/w-oX3UxNcZA"
+        },
+        {
+          "url": "https://pkg.go.dev/vuln/GO-2025-4135"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-f6x5-jh6r-wrfv"
+        }
+      ],
+      "published_at": "2025-11-19T23:16:40Z",
+      "updated_at": "2025-11-20T16:36:10Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 0.45.0",
+      "first_patched_version": {
+        "identifier": "0.45.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/29",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/29",
+    "created_at": "2025-11-20T02:27:27Z",
+    "updated_at": "2025-12-09T07:20:02Z",
+    "fixed_at": "2025-12-09T07:20:02Z"
+  },
+  {
+    "number": 28,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "manifest_path": "tool/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-j5w8-q4qc-rx2x",
+      "cve_id": "CVE-2025-58181",
+      "summary": "golang.org/x/crypto/ssh allows an attacker to cause unbounded memory consumption",
+      "description": "SSH servers parsing GSSAPI authentication requests do not validate the number of mechanisms specified in the request, allowing an attacker to cause unbounded memory consumption.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "golang.org/x/crypto"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 0.45.0",
+          "first_patched_version": {
+            "identifier": "0.45.0"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 5.3,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-770",
+          "name": "Allocation of Resources Without Limits or Throttling"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00083,
+        "percentile": 0.24419
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-j5w8-q4qc-rx2x",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-58181",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-58181"
+        },
+        {
+          "url": "https://go.dev/cl/721961"
+        },
+        {
+          "url": "https://go.dev/issue/76363"
+        },
+        {
+          "url": "https://groups.google.com/g/golang-announce/c/w-oX3UxNcZA"
+        },
+        {
+          "url": "https://pkg.go.dev/vuln/GO-2025-4134"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-j5w8-q4qc-rx2x"
+        }
+      ],
+      "published_at": "2025-11-19T23:01:20Z",
+      "updated_at": "2025-11-19T23:01:22Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 0.45.0",
+      "first_patched_version": {
+        "identifier": "0.45.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/28",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/28",
+    "created_at": "2025-11-20T02:17:48Z",
+    "updated_at": "2025-12-09T07:26:38Z",
+    "fixed_at": "2025-12-09T07:26:38Z"
+  },
+  {
+    "number": 27,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-j5w8-q4qc-rx2x",
+      "cve_id": "CVE-2025-58181",
+      "summary": "golang.org/x/crypto/ssh allows an attacker to cause unbounded memory consumption",
+      "description": "SSH servers parsing GSSAPI authentication requests do not validate the number of mechanisms specified in the request, allowing an attacker to cause unbounded memory consumption.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "golang.org/x/crypto"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 0.45.0",
+          "first_patched_version": {
+            "identifier": "0.45.0"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 5.3,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-770",
+          "name": "Allocation of Resources Without Limits or Throttling"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00083,
+        "percentile": 0.24419
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-j5w8-q4qc-rx2x",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-58181",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-58181"
+        },
+        {
+          "url": "https://go.dev/cl/721961"
+        },
+        {
+          "url": "https://go.dev/issue/76363"
+        },
+        {
+          "url": "https://groups.google.com/g/golang-announce/c/w-oX3UxNcZA"
+        },
+        {
+          "url": "https://pkg.go.dev/vuln/GO-2025-4134"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-j5w8-q4qc-rx2x"
+        }
+      ],
+      "published_at": "2025-11-19T23:01:20Z",
+      "updated_at": "2025-11-19T23:01:22Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 0.45.0",
+      "first_patched_version": {
+        "identifier": "0.45.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/27",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/27",
+    "created_at": "2025-11-20T02:17:48Z",
+    "updated_at": "2025-12-09T07:20:02Z",
+    "fixed_at": "2025-12-09T07:20:02Z"
+  },
+  {
+    "number": 26,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/ulikunitz/xz"
+      },
+      "manifest_path": "tool/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-jc7w-c686-c4v9",
+      "cve_id": "CVE-2025-58058",
+      "summary": "github.com/ulikunitz/xz leaks memory when decoding a corrupted multiple LZMA archives",
+      "description": "### Summary\n\nIt is possible to put data in front of an LZMA-encoded byte stream without detecting the situation while reading the header. This can lead to increased memory consumption because the current implementation allocates the full decoding buffer directly after reading the header. The LZMA header doesn't include a magic number or has  a checksum to detect such an issue according to the [specification](https://github.com/jljusten/LZMA-SDK/blob/master/DOC/lzma-specification.txt).\n\nNote that the code recognizes the issue later while reading the stream, but at this time the memory allocation has already been done.\n\n### Mitigations\n\nThe release v0.5.15 includes following mitigations:\n\n- The ReaderConfig DictCap field is now interpreted as a limit for the dictionary size.\n- The default is 2 Gigabytes - 1 byte (2^31-1 bytes).\n- Users can check with the [Reader.Header] method what the actual values are in  their LZMA files and set a smaller limit using ReaderConfig.\n- The dictionary size will not exceed the larger of the file size and the minimum dictionary size. This is another measure to prevent huge memory allocations for the dictionary.\n- The code supports stream sizes only up to a pebibyte (1024^5).\n\nNote that the original v0.5.14 version had a compiler error for 32 bit platforms, which has been fixed by v0.5.15.\n\n### Methods affected\n\nOnly software that uses [lzma.NewReader](https://pkg.go.dev/github.com/ulikunitz/xz/lzma#NewReader) or [lzma.ReaderConfig.NewReader](https://pkg.go.dev/github.com/ulikunitz/xz/lzma#ReaderConfig.NewReader) is affected. There is no issue for software using the xz functionality.\n\nI thank  @GregoryBuligin for his report, which is provided below.\n\n### Summary\nWhen unpacking a large number of LZMA archives, even in a single goroutine, if the first byte of the archive file is 0 (a zero byte added to the beginning), an error __writeMatch: distance out of range__ occurs. Memory consumption spikes sharply, and the GC clearly cannot handle this situation.\n\n### Details\nJudging by the error  __writeMatch: distance out of range__, the problems occur in the code around this function.\nhttps://github.com/ulikunitz/xz/blob/c8314b8f21e9c5e25b52da07544cac14db277e89/lzma/decoderdict.go#L81\n\n### PoC\nRun a function similar to this one in 1 or several goroutines on a multitude of LZMA archives that have a 0 (a zero byte) added to the beginning.\n```\nconst ProjectLocalPath = \"some/path\"\nconst TmpDir = \"tmp\"\n\nfunc UnpackLZMA(lzmaFile string) error {\n\tfile, err := os.Open(lzmaFile)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer file.Close()\n\n\treader, err := lzma.NewReader(bufio.NewReader(file))\n\tif err != nil {\n\t\treturn err\n\t}\n\n\ttmpFile, err := os.CreateTemp(TmpDir, TmpLZMAPrefix)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer func() {\n\t\ttmpFile.Close()\n\t\t_ = os.Remove(tmpFile.Name())\n\t}()\n\n\tsha256Hasher := sha256.New()\n\tmultiWriter := io.MultiWriter(tmpFile, sha256Hasher)\n\n\tif _, err = io.Copy(multiWriter, reader); err != nil {\n\t\treturn err\n\t}\n\n\tunpackHash := hex.EncodeToString(sha256Hasher.Sum(nil))\n\tunpackDir := filepath.Join(\n\t\tProjectLocalPath, unpackHash[:2],\n\t)\n\t_ = os.MkdirAll(unpackDir, DirPerm)\n\n\tunpackPath := filepath.Join(unpackDir, unpackHash)\n\n\treturn os.Rename(tmpFile.Name(), unpackPath)\n}\n```\n\n\n\n### Impact\nServers with a small amount of RAM that download and unpack a large number of unverified LZMA archives",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/ulikunitz/xz"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c= 0.5.13",
+          "first_patched_version": {
+            "identifier": "0.5.15"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 5.3,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-770",
+          "name": "Allocation of Resources Without Limits or Throttling"
+        }
+      ],
+      "epss": {
+        "percentage": 0.0006,
+        "percentile": 0.18868
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-jc7w-c686-c4v9",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-58058",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/ulikunitz/xz/security/advisories/GHSA-jc7w-c686-c4v9"
+        },
+        {
+          "url": "https://github.com/ulikunitz/xz/commit/88ddf1d0d98d688db65de034f48960b2760d2ae2"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-58058"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-jc7w-c686-c4v9"
+        }
+      ],
+      "published_at": "2025-08-28T19:36:22Z",
+      "updated_at": "2025-08-29T20:25:39Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/ulikunitz/xz"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c= 0.5.13",
+      "first_patched_version": {
+        "identifier": "0.5.15"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/26",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/26",
+    "created_at": "2025-08-28T19:40:50Z",
+    "updated_at": "2025-09-08T14:41:31Z",
+    "fixed_at": "2025-09-08T14:41:31Z"
+  },
+  {
+    "number": 25,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/ulikunitz/xz"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-jc7w-c686-c4v9",
+      "cve_id": "CVE-2025-58058",
+      "summary": "github.com/ulikunitz/xz leaks memory when decoding a corrupted multiple LZMA archives",
+      "description": "### Summary\n\nIt is possible to put data in front of an LZMA-encoded byte stream without detecting the situation while reading the header. This can lead to increased memory consumption because the current implementation allocates the full decoding buffer directly after reading the header. The LZMA header doesn't include a magic number or has  a checksum to detect such an issue according to the [specification](https://github.com/jljusten/LZMA-SDK/blob/master/DOC/lzma-specification.txt).\n\nNote that the code recognizes the issue later while reading the stream, but at this time the memory allocation has already been done.\n\n### Mitigations\n\nThe release v0.5.15 includes following mitigations:\n\n- The ReaderConfig DictCap field is now interpreted as a limit for the dictionary size.\n- The default is 2 Gigabytes - 1 byte (2^31-1 bytes).\n- Users can check with the [Reader.Header] method what the actual values are in  their LZMA files and set a smaller limit using ReaderConfig.\n- The dictionary size will not exceed the larger of the file size and the minimum dictionary size. This is another measure to prevent huge memory allocations for the dictionary.\n- The code supports stream sizes only up to a pebibyte (1024^5).\n\nNote that the original v0.5.14 version had a compiler error for 32 bit platforms, which has been fixed by v0.5.15.\n\n### Methods affected\n\nOnly software that uses [lzma.NewReader](https://pkg.go.dev/github.com/ulikunitz/xz/lzma#NewReader) or [lzma.ReaderConfig.NewReader](https://pkg.go.dev/github.com/ulikunitz/xz/lzma#ReaderConfig.NewReader) is affected. There is no issue for software using the xz functionality.\n\nI thank  @GregoryBuligin for his report, which is provided below.\n\n### Summary\nWhen unpacking a large number of LZMA archives, even in a single goroutine, if the first byte of the archive file is 0 (a zero byte added to the beginning), an error __writeMatch: distance out of range__ occurs. Memory consumption spikes sharply, and the GC clearly cannot handle this situation.\n\n### Details\nJudging by the error  __writeMatch: distance out of range__, the problems occur in the code around this function.\nhttps://github.com/ulikunitz/xz/blob/c8314b8f21e9c5e25b52da07544cac14db277e89/lzma/decoderdict.go#L81\n\n### PoC\nRun a function similar to this one in 1 or several goroutines on a multitude of LZMA archives that have a 0 (a zero byte) added to the beginning.\n```\nconst ProjectLocalPath = \"some/path\"\nconst TmpDir = \"tmp\"\n\nfunc UnpackLZMA(lzmaFile string) error {\n\tfile, err := os.Open(lzmaFile)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer file.Close()\n\n\treader, err := lzma.NewReader(bufio.NewReader(file))\n\tif err != nil {\n\t\treturn err\n\t}\n\n\ttmpFile, err := os.CreateTemp(TmpDir, TmpLZMAPrefix)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer func() {\n\t\ttmpFile.Close()\n\t\t_ = os.Remove(tmpFile.Name())\n\t}()\n\n\tsha256Hasher := sha256.New()\n\tmultiWriter := io.MultiWriter(tmpFile, sha256Hasher)\n\n\tif _, err = io.Copy(multiWriter, reader); err != nil {\n\t\treturn err\n\t}\n\n\tunpackHash := hex.EncodeToString(sha256Hasher.Sum(nil))\n\tunpackDir := filepath.Join(\n\t\tProjectLocalPath, unpackHash[:2],\n\t)\n\t_ = os.MkdirAll(unpackDir, DirPerm)\n\n\tunpackPath := filepath.Join(unpackDir, unpackHash)\n\n\treturn os.Rename(tmpFile.Name(), unpackPath)\n}\n```\n\n\n\n### Impact\nServers with a small amount of RAM that download and unpack a large number of unverified LZMA archives",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/ulikunitz/xz"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c= 0.5.13",
+          "first_patched_version": {
+            "identifier": "0.5.15"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 5.3,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-770",
+          "name": "Allocation of Resources Without Limits or Throttling"
+        }
+      ],
+      "epss": {
+        "percentage": 0.0006,
+        "percentile": 0.18868
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-jc7w-c686-c4v9",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-58058",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/ulikunitz/xz/security/advisories/GHSA-jc7w-c686-c4v9"
+        },
+        {
+          "url": "https://github.com/ulikunitz/xz/commit/88ddf1d0d98d688db65de034f48960b2760d2ae2"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-58058"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-jc7w-c686-c4v9"
+        }
+      ],
+      "published_at": "2025-08-28T19:36:22Z",
+      "updated_at": "2025-08-29T20:25:39Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/ulikunitz/xz"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c= 0.5.13",
+      "first_patched_version": {
+        "identifier": "0.5.15"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/25",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/25",
+    "created_at": "2025-08-28T19:39:55Z",
+    "updated_at": "2025-09-07T06:40:48Z",
+    "fixed_at": "2025-09-07T06:40:48Z"
+  },
+  {
+    "number": 24,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-viper/mapstructure/v2"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-fv92-fjc5-jj9h",
+      "summary": "mapstructure May Leak Sensitive Information in Logs When Processing Malformed Data",
+      "description": "### Summary\n\nUse of this library in a security-critical context may result in leaking sensitive information, if used to process sensitive fields.\n\n### Details\n\nOpenBao (and presumably HashiCorp Vault) have surfaced error messages from `mapstructure` as follows:\n\nhttps://github.com/openbao/openbao/blob/98c3a59c040efca724353ca46ca79bd5cdbab920/sdk/framework/field_data.go#L43-L50\n\n```go\n\t\t\t_, _, err := d.getPrimitive(field, schema)\n\t\t\tif err != nil {\n\t\t\t\treturn fmt.Errorf(\"error converting input for field %q: %w\", field, err)\n\t\t\t}\n```\n\nwhere this calls `mapstructure.WeakDecode(...)`: https://github.com/openbao/openbao/blob/98c3a59c040efca724353ca46ca79bd5cdbab920/sdk/framework/field_data.go#L181-L193\n\n```go\n\nfunc (d *FieldData) getPrimitive(k string, schema *FieldSchema) (interface{}, bool, error) {\n\traw, ok := d.Raw[k]\n\tif !ok {\n\t\treturn nil, false, nil\n\t}\n\n\tswitch t := schema.Type; t {\n\tcase TypeBool:\n\t\tvar result bool\n\t\tif err := mapstructure.WeakDecode(raw, \u0026result); err != nil {\n\t\t\treturn nil, false, err\n\t\t}\n\t\treturn result, true, nil\n```\n\nNotably, `WeakDecode(...)` eventually calls one of the decode helpers, which surfaces the original value:\n\nhttps://github.com/go-viper/mapstructure/blob/1a66224d5e54d8757f63bd66339cf764c3292c21/mapstructure.go#L679-L686\n\nhttps://github.com/go-viper/mapstructure/blob/1a66224d5e54d8757f63bd66339cf764c3292c21/mapstructure.go#L726-L730\n\nhttps://github.com/go-viper/mapstructure/blob/1a66224d5e54d8757f63bd66339cf764c3292c21/mapstructure.go#L783-L787\n\n\u0026 more.\n\n### PoC\n\nTo reproduce with OpenBao:\n\n```\n$ podman run -p 8300:8300 openbao/openbao:latest server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8300\n```\n\nand in a new tab:\n\n```\n$ BAO_TOKEN=root BAO_ADDR=http://localhost:8300 bao auth enable userpass\nSuccess! Enabled userpass auth method at: userpass/\n$ curl -X PUT -H \"X-Vault-Request: true\" -H \"X-Vault-Token: root\" -d '{\"password\":{\"asdf\":\"my-sensitive-value\"}}' \"http://localhost:8300/v1/auth/userpass/users/adsf\"\n{\"errors\":[\"error converting input for field \\\"password\\\": '' expected type 'string', got unconvertible type 'map[string]interface {}', value: 'map[asdf:my-sensitive-value]'\"]}\n```\n\n### Impact\n\nThis is an information disclosure bug with little mitigation. See https://discuss.hashicorp.com/t/hcsec-2025-09-vault-may-expose-sensitive-information-in-error-logs-when-processing-malformed-data-with-the-kv-v2-plugin/74717 for a previous version. That version was fixed, but this is in the second part of that error message (starting at `'' expected a map, got 'string'` -- when the field type is `string` and a `map` is provided, we see the above information leak -- the previous example had a `map` type field with a `string` value provided).\n\nThis was rated 4.5 Medium by HashiCorp in the past iteration.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-viper/mapstructure/v2"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 2.3.0",
+          "first_patched_version": {
+            "identifier": "2.3.0"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 5.3,
+        "vector_string": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-532",
+          "name": "Insertion of Sensitive Information into Log File"
+        }
+      ],
+      "identifiers": [
+        {
+          "value": "GHSA-fv92-fjc5-jj9h",
+          "type": "GHSA"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-viper/mapstructure/security/advisories/GHSA-fv92-fjc5-jj9h"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-fv92-fjc5-jj9h"
+        }
+      ],
+      "published_at": "2025-06-27T16:24:59Z",
+      "updated_at": "2025-06-27T16:24:59Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-viper/mapstructure/v2"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 2.3.0",
+      "first_patched_version": {
+        "identifier": "2.3.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/24",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/24",
+    "created_at": "2025-06-27T16:27:34Z",
+    "updated_at": "2025-07-01T09:50:54Z",
+    "fixed_at": "2025-07-01T09:50:54Z"
+  },
+  {
+    "number": 23,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/net"
+      },
+      "manifest_path": "util/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-vvgc-356p-c3xw",
+      "cve_id": "CVE-2025-22872",
+      "summary": "golang.org/x/net vulnerable to Cross-site Scripting",
+      "description": "The tokenizer incorrectly interprets tags with unquoted attribute values that end with a solidus character (/) as self-closing. When directly using Tokenizer, this can result in such tags incorrectly being marked as self-closing, and when using the Parse functions, this can result in content following such tags as being placed in the wrong scope during DOM construction, but only when tags are in foreign content (e.g. \u003cmath\u003e, \u003csvg\u003e, etc contexts).",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "golang.org/x/net"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 0.38.0",
+          "first_patched_version": {
+            "identifier": "0.38.0"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 0
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-79",
+          "name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00119,
+        "percentile": 0.30964
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-vvgc-356p-c3xw",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-22872",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-22872"
+        },
+        {
+          "url": "https://go.dev/cl/662715"
+        },
+        {
+          "url": "https://go.dev/issue/73070"
+        },
+        {
+          "url": "https://groups.google.com/g/golang-announce/c/ezSKR9vqbqA"
+        },
+        {
+          "url": "https://pkg.go.dev/vuln/GO-2025-3595"
+        },
+        {
+          "url": "https://security.netapp.com/advisory/ntap-20250516-0007"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-vvgc-356p-c3xw"
+        }
+      ],
+      "published_at": "2025-04-16T19:22:51Z",
+      "updated_at": "2025-05-17T18:49:26Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/net"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 0.38.0",
+      "first_patched_version": {
+        "identifier": "0.38.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/23",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/23",
+    "created_at": "2025-04-16T23:21:41Z",
+    "updated_at": "2025-05-05T10:12:27Z",
+    "fixed_at": "2025-05-05T10:12:27Z"
+  },
+  {
+    "number": 22,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/golang-jwt/jwt/v5"
+      },
+      "manifest_path": "util/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-mh63-6h87-95cp",
+      "cve_id": "CVE-2025-30204",
+      "summary": "jwt-go allows excessive memory allocation during header parsing",
+      "description": "### Summary\n\nFunction [`parse.ParseUnverified`](https://github.com/golang-jwt/jwt/blob/c035977d9e11c351f4c05dfeae193923cbab49ee/parser.go#L138-L139) currently splits (via a call to [strings.Split](https://pkg.go.dev/strings#Split)) its argument (which is untrusted data) on periods.\n\nAs a result, in the face of a malicious request whose _Authorization_ header consists of `Bearer ` followed by many period characters, a call to that function incurs allocations to the tune of O(n) bytes (where n stands for the length of the function's argument), with a constant factor of about 16. Relevant weakness: [CWE-405: Asymmetric Resource Consumption (Amplification)](https://cwe.mitre.org/data/definitions/405.html)\n\n### Details\n\nSee [`parse.ParseUnverified`](https://github.com/golang-jwt/jwt/blob/c035977d9e11c351f4c05dfeae193923cbab49ee/parser.go#L138-L139) \n\n### Impact\n\nExcessive memory allocation",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/golang-jwt/jwt/v5"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003e= 5.0.0-rc.1, \u003c 5.2.2",
+          "first_patched_version": {
+            "identifier": "5.2.2"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/golang-jwt/jwt/v4"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003c 4.5.2",
+          "first_patched_version": {
+            "identifier": "4.5.2"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/golang-jwt/jwt"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003e= 3.2.0, \u003c= 3.2.2"
+        }
+      ],
+      "severity": "high",
+      "cvss": {
+        "score": 7.5,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-405",
+          "name": "Asymmetric Resource Consumption (Amplification)"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00083,
+        "percentile": 0.24297
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-mh63-6h87-95cp",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-30204",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/golang-jwt/jwt/security/advisories/GHSA-mh63-6h87-95cp"
+        },
+        {
+          "url": "https://github.com/golang-jwt/jwt/commit/0951d184286dece21f73c85673fd308786ffe9c3"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-30204"
+        },
+        {
+          "url": "https://github.com/golang-jwt/jwt/commit/bf316c48137a1212f8d0af9288cc9ce8e59f1afb"
+        },
+        {
+          "url": "https://security.netapp.com/advisory/ntap-20250404-0002"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-mh63-6h87-95cp"
+        }
+      ],
+      "published_at": "2025-03-21T22:04:00Z",
+      "updated_at": "2025-04-10T13:02:35Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/golang-jwt/jwt/v5"
+      },
+      "severity": "high",
+      "vulnerable_version_range": "\u003e= 5.0.0-rc.1, \u003c 5.2.2",
+      "first_patched_version": {
+        "identifier": "5.2.2"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/22",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/22",
+    "created_at": "2025-03-21T22:13:44Z",
+    "updated_at": "2025-05-05T10:12:27Z",
+    "fixed_at": "2025-05-05T10:12:27Z"
+  },
+  {
+    "number": 21,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/golang-jwt/jwt/v5"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-mh63-6h87-95cp",
+      "cve_id": "CVE-2025-30204",
+      "summary": "jwt-go allows excessive memory allocation during header parsing",
+      "description": "### Summary\n\nFunction [`parse.ParseUnverified`](https://github.com/golang-jwt/jwt/blob/c035977d9e11c351f4c05dfeae193923cbab49ee/parser.go#L138-L139) currently splits (via a call to [strings.Split](https://pkg.go.dev/strings#Split)) its argument (which is untrusted data) on periods.\n\nAs a result, in the face of a malicious request whose _Authorization_ header consists of `Bearer ` followed by many period characters, a call to that function incurs allocations to the tune of O(n) bytes (where n stands for the length of the function's argument), with a constant factor of about 16. Relevant weakness: [CWE-405: Asymmetric Resource Consumption (Amplification)](https://cwe.mitre.org/data/definitions/405.html)\n\n### Details\n\nSee [`parse.ParseUnverified`](https://github.com/golang-jwt/jwt/blob/c035977d9e11c351f4c05dfeae193923cbab49ee/parser.go#L138-L139) \n\n### Impact\n\nExcessive memory allocation",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/golang-jwt/jwt/v5"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003e= 5.0.0-rc.1, \u003c 5.2.2",
+          "first_patched_version": {
+            "identifier": "5.2.2"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/golang-jwt/jwt/v4"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003c 4.5.2",
+          "first_patched_version": {
+            "identifier": "4.5.2"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/golang-jwt/jwt"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003e= 3.2.0, \u003c= 3.2.2"
+        }
+      ],
+      "severity": "high",
+      "cvss": {
+        "score": 7.5,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-405",
+          "name": "Asymmetric Resource Consumption (Amplification)"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00083,
+        "percentile": 0.24297
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-mh63-6h87-95cp",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-30204",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/golang-jwt/jwt/security/advisories/GHSA-mh63-6h87-95cp"
+        },
+        {
+          "url": "https://github.com/golang-jwt/jwt/commit/0951d184286dece21f73c85673fd308786ffe9c3"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-30204"
+        },
+        {
+          "url": "https://github.com/golang-jwt/jwt/commit/bf316c48137a1212f8d0af9288cc9ce8e59f1afb"
+        },
+        {
+          "url": "https://security.netapp.com/advisory/ntap-20250404-0002"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-mh63-6h87-95cp"
+        }
+      ],
+      "published_at": "2025-03-21T22:04:00Z",
+      "updated_at": "2025-04-10T13:02:35Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/golang-jwt/jwt/v5"
+      },
+      "severity": "high",
+      "vulnerable_version_range": "\u003e= 5.0.0-rc.1, \u003c 5.2.2",
+      "first_patched_version": {
+        "identifier": "5.2.2"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/21",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/21",
+    "created_at": "2025-03-21T22:08:15Z",
+    "updated_at": "2025-04-16T07:59:49Z",
+    "fixed_at": "2025-04-16T07:59:49Z"
+  },
+  {
+    "number": 20,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/net"
+      },
+      "manifest_path": "util/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-qxp5-gwg8-xv66",
+      "cve_id": "CVE-2025-22870",
+      "summary": "HTTP Proxy bypass using IPv6 Zone IDs in golang.org/x/net",
+      "description": "Matching of hosts against proxy patterns can improperly treat an IPv6 zone ID as a hostname component. For example, when the NO_PROXY environment variable is set to \"*.example.com\", a request to \"[::1%25.example.com]:80` will incorrectly match and not be proxied.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "golang.org/x/net"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 0.36.0",
+          "first_patched_version": {
+            "identifier": "0.36.0"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 4.4,
+        "vector_string": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:L"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-20",
+          "name": "Improper Input Validation"
+        },
+        {
+          "cwe_id": "CWE-115",
+          "name": "Misinterpretation of Input"
+        }
+      ],
+      "epss": {
+        "percentage": 0.0002,
+        "percentile": 0.04885
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-qxp5-gwg8-xv66",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-22870",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-22870"
+        },
+        {
+          "url": "https://go.dev/cl/654697"
+        },
+        {
+          "url": "https://go.dev/issue/71984"
+        },
+        {
+          "url": "https://pkg.go.dev/vuln/GO-2025-3503"
+        },
+        {
+          "url": "http://www.openwall.com/lists/oss-security/2025/03/07/2"
+        },
+        {
+          "url": "https://security.netapp.com/advisory/ntap-20250509-0007"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-qxp5-gwg8-xv66"
+        }
+      ],
+      "published_at": "2025-03-12T22:06:40Z",
+      "updated_at": "2025-05-09T21:31:54Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/net"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 0.36.0",
+      "first_patched_version": {
+        "identifier": "0.36.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/20",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/20",
+    "created_at": "2025-03-13T01:49:47Z",
+    "updated_at": "2025-03-31T06:18:27Z",
+    "fixed_at": "2025-03-31T06:18:27Z"
+  },
+  {
+    "number": 19,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/net"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-qxp5-gwg8-xv66",
+      "cve_id": "CVE-2025-22870",
+      "summary": "HTTP Proxy bypass using IPv6 Zone IDs in golang.org/x/net",
+      "description": "Matching of hosts against proxy patterns can improperly treat an IPv6 zone ID as a hostname component. For example, when the NO_PROXY environment variable is set to \"*.example.com\", a request to \"[::1%25.example.com]:80` will incorrectly match and not be proxied.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "golang.org/x/net"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 0.36.0",
+          "first_patched_version": {
+            "identifier": "0.36.0"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 4.4,
+        "vector_string": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:L"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-20",
+          "name": "Improper Input Validation"
+        },
+        {
+          "cwe_id": "CWE-115",
+          "name": "Misinterpretation of Input"
+        }
+      ],
+      "epss": {
+        "percentage": 0.0002,
+        "percentile": 0.04885
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-qxp5-gwg8-xv66",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-22870",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-22870"
+        },
+        {
+          "url": "https://go.dev/cl/654697"
+        },
+        {
+          "url": "https://go.dev/issue/71984"
+        },
+        {
+          "url": "https://pkg.go.dev/vuln/GO-2025-3503"
+        },
+        {
+          "url": "http://www.openwall.com/lists/oss-security/2025/03/07/2"
+        },
+        {
+          "url": "https://security.netapp.com/advisory/ntap-20250509-0007"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-qxp5-gwg8-xv66"
+        }
+      ],
+      "published_at": "2025-03-12T22:06:40Z",
+      "updated_at": "2025-05-09T21:31:54Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/net"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 0.36.0",
+      "first_patched_version": {
+        "identifier": "0.36.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/19",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/19",
+    "created_at": "2025-03-13T01:49:46Z",
+    "updated_at": "2025-03-25T08:31:32Z",
+    "fixed_at": "2025-03-25T08:31:32Z"
+  },
+  {
+    "number": 18,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-jose/go-jose/v3"
+      },
+      "manifest_path": "util/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-c6gw-w398-hv78",
+      "cve_id": "CVE-2025-27144",
+      "summary": "DoS in go-jose Parsing",
+      "description": "### Impact\nWhen parsing compact JWS or JWE input, go-jose could use excessive memory. The code used strings.Split(token, \".\") to split JWT tokens, which is vulnerable to excessive memory consumption when processing maliciously crafted tokens with a large number of '.' characters.  An attacker could exploit this by sending numerous malformed tokens, leading to memory exhaustion and a Denial of Service.\n\n### Patches\nVersion 4.0.5 fixes this issue\n\n### Workarounds\nApplications could pre-validate payloads passed to go-jose do not contain an excessive number of '.' characters.\n\n### References\nThis is the same sort of issue as in the golang.org/x/oauth2/jws package as CVE-2025-22868 and Go issue https://go.dev/issue/71490.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose/v4"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 4.0.5",
+          "first_patched_version": {
+            "identifier": "4.0.5"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose/v3"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 3.0.4",
+          "first_patched_version": {
+            "identifier": "3.0.4"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 3.0.4",
+          "first_patched_version": {
+            "identifier": "3.0.4"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 0
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-400",
+          "name": "Uncontrolled Resource Consumption"
+        },
+        {
+          "cwe_id": "CWE-770",
+          "name": "Allocation of Resources Without Limits or Throttling"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00063,
+        "percentile": 0.19773
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-c6gw-w398-hv78",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-27144",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-jose/go-jose/security/advisories/GHSA-c6gw-w398-hv78"
+        },
+        {
+          "url": "https://github.com/golang/go/issues/71490"
+        },
+        {
+          "url": "https://github.com/go-jose/go-jose/commit/99b346cec4e86d102284642c5dcbe9bb0cacfc22"
+        },
+        {
+          "url": "https://go.dev/issue/71490"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-27144"
+        },
+        {
+          "url": "https://github.com/go-jose/go-jose/releases/tag/v4.0.5"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-c6gw-w398-hv78"
+        }
+      ],
+      "published_at": "2025-02-24T22:49:19Z",
+      "updated_at": "2025-02-26T22:16:38Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-jose/go-jose/v3"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 3.0.4",
+      "first_patched_version": {
+        "identifier": "3.0.4"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/18",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/18",
+    "created_at": "2025-02-26T22:19:43Z",
+    "updated_at": "2025-05-05T10:12:27Z",
+    "fixed_at": "2025-05-05T10:12:27Z"
+  },
+  {
+    "number": 17,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-jose/go-jose/v3"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-c6gw-w398-hv78",
+      "cve_id": "CVE-2025-27144",
+      "summary": "DoS in go-jose Parsing",
+      "description": "### Impact\nWhen parsing compact JWS or JWE input, go-jose could use excessive memory. The code used strings.Split(token, \".\") to split JWT tokens, which is vulnerable to excessive memory consumption when processing maliciously crafted tokens with a large number of '.' characters.  An attacker could exploit this by sending numerous malformed tokens, leading to memory exhaustion and a Denial of Service.\n\n### Patches\nVersion 4.0.5 fixes this issue\n\n### Workarounds\nApplications could pre-validate payloads passed to go-jose do not contain an excessive number of '.' characters.\n\n### References\nThis is the same sort of issue as in the golang.org/x/oauth2/jws package as CVE-2025-22868 and Go issue https://go.dev/issue/71490.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose/v4"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 4.0.5",
+          "first_patched_version": {
+            "identifier": "4.0.5"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose/v3"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 3.0.4",
+          "first_patched_version": {
+            "identifier": "3.0.4"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 3.0.4",
+          "first_patched_version": {
+            "identifier": "3.0.4"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 0
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-400",
+          "name": "Uncontrolled Resource Consumption"
+        },
+        {
+          "cwe_id": "CWE-770",
+          "name": "Allocation of Resources Without Limits or Throttling"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00063,
+        "percentile": 0.19773
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-c6gw-w398-hv78",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-27144",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-jose/go-jose/security/advisories/GHSA-c6gw-w398-hv78"
+        },
+        {
+          "url": "https://github.com/golang/go/issues/71490"
+        },
+        {
+          "url": "https://github.com/go-jose/go-jose/commit/99b346cec4e86d102284642c5dcbe9bb0cacfc22"
+        },
+        {
+          "url": "https://go.dev/issue/71490"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-27144"
+        },
+        {
+          "url": "https://github.com/go-jose/go-jose/releases/tag/v4.0.5"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-c6gw-w398-hv78"
+        }
+      ],
+      "published_at": "2025-02-24T22:49:19Z",
+      "updated_at": "2025-02-26T22:16:38Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-jose/go-jose/v3"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 3.0.4",
+      "first_patched_version": {
+        "identifier": "3.0.4"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/17",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/17",
+    "created_at": "2025-02-26T22:18:19Z",
+    "updated_at": "2025-04-16T07:59:49Z",
+    "fixed_at": "2025-04-16T07:59:49Z"
+  },
+  {
+    "number": 16,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-jose/go-jose/v4"
+      },
+      "manifest_path": "util/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-c6gw-w398-hv78",
+      "cve_id": "CVE-2025-27144",
+      "summary": "DoS in go-jose Parsing",
+      "description": "### Impact\nWhen parsing compact JWS or JWE input, go-jose could use excessive memory. The code used strings.Split(token, \".\") to split JWT tokens, which is vulnerable to excessive memory consumption when processing maliciously crafted tokens with a large number of '.' characters.  An attacker could exploit this by sending numerous malformed tokens, leading to memory exhaustion and a Denial of Service.\n\n### Patches\nVersion 4.0.5 fixes this issue\n\n### Workarounds\nApplications could pre-validate payloads passed to go-jose do not contain an excessive number of '.' characters.\n\n### References\nThis is the same sort of issue as in the golang.org/x/oauth2/jws package as CVE-2025-22868 and Go issue https://go.dev/issue/71490.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose/v4"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 4.0.5",
+          "first_patched_version": {
+            "identifier": "4.0.5"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose/v3"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 3.0.4",
+          "first_patched_version": {
+            "identifier": "3.0.4"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 3.0.4",
+          "first_patched_version": {
+            "identifier": "3.0.4"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 0
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-400",
+          "name": "Uncontrolled Resource Consumption"
+        },
+        {
+          "cwe_id": "CWE-770",
+          "name": "Allocation of Resources Without Limits or Throttling"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00063,
+        "percentile": 0.19773
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-c6gw-w398-hv78",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-27144",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-jose/go-jose/security/advisories/GHSA-c6gw-w398-hv78"
+        },
+        {
+          "url": "https://github.com/golang/go/issues/71490"
+        },
+        {
+          "url": "https://github.com/go-jose/go-jose/commit/99b346cec4e86d102284642c5dcbe9bb0cacfc22"
+        },
+        {
+          "url": "https://go.dev/issue/71490"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-27144"
+        },
+        {
+          "url": "https://github.com/go-jose/go-jose/releases/tag/v4.0.5"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-c6gw-w398-hv78"
+        }
+      ],
+      "published_at": "2025-02-24T22:49:19Z",
+      "updated_at": "2025-02-26T22:16:38Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-jose/go-jose/v4"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 4.0.5",
+      "first_patched_version": {
+        "identifier": "4.0.5"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/16",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/16",
+    "created_at": "2025-02-24T22:51:21Z",
+    "updated_at": "2025-05-05T10:12:27Z",
+    "fixed_at": "2025-05-05T10:12:27Z"
+  },
+  {
+    "number": 15,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-jose/go-jose/v4"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-c6gw-w398-hv78",
+      "cve_id": "CVE-2025-27144",
+      "summary": "DoS in go-jose Parsing",
+      "description": "### Impact\nWhen parsing compact JWS or JWE input, go-jose could use excessive memory. The code used strings.Split(token, \".\") to split JWT tokens, which is vulnerable to excessive memory consumption when processing maliciously crafted tokens with a large number of '.' characters.  An attacker could exploit this by sending numerous malformed tokens, leading to memory exhaustion and a Denial of Service.\n\n### Patches\nVersion 4.0.5 fixes this issue\n\n### Workarounds\nApplications could pre-validate payloads passed to go-jose do not contain an excessive number of '.' characters.\n\n### References\nThis is the same sort of issue as in the golang.org/x/oauth2/jws package as CVE-2025-22868 and Go issue https://go.dev/issue/71490.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose/v4"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 4.0.5",
+          "first_patched_version": {
+            "identifier": "4.0.5"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose/v3"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 3.0.4",
+          "first_patched_version": {
+            "identifier": "3.0.4"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-jose/go-jose"
+          },
+          "severity": "medium",
+          "vulnerable_version_range": "\u003c 3.0.4",
+          "first_patched_version": {
+            "identifier": "3.0.4"
+          }
+        }
+      ],
+      "severity": "medium",
+      "cvss": {
+        "score": 0
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-400",
+          "name": "Uncontrolled Resource Consumption"
+        },
+        {
+          "cwe_id": "CWE-770",
+          "name": "Allocation of Resources Without Limits or Throttling"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00063,
+        "percentile": 0.19773
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-c6gw-w398-hv78",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-27144",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-jose/go-jose/security/advisories/GHSA-c6gw-w398-hv78"
+        },
+        {
+          "url": "https://github.com/golang/go/issues/71490"
+        },
+        {
+          "url": "https://github.com/go-jose/go-jose/commit/99b346cec4e86d102284642c5dcbe9bb0cacfc22"
+        },
+        {
+          "url": "https://go.dev/issue/71490"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-27144"
+        },
+        {
+          "url": "https://github.com/go-jose/go-jose/releases/tag/v4.0.5"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-c6gw-w398-hv78"
+        }
+      ],
+      "published_at": "2025-02-24T22:49:19Z",
+      "updated_at": "2025-02-26T22:16:38Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-jose/go-jose/v4"
+      },
+      "severity": "medium",
+      "vulnerable_version_range": "\u003c 4.0.5",
+      "first_patched_version": {
+        "identifier": "4.0.5"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/15",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/15",
+    "created_at": "2025-02-24T22:50:45Z",
+    "updated_at": "2025-04-16T07:59:49Z",
+    "fixed_at": "2025-04-16T07:59:49Z"
+  },
+  {
+    "number": 12,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "manifest_path": "util/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-r9px-m959-cxf4",
+      "cve_id": "CVE-2025-21614",
+      "summary": "go-git clients vulnerable to DoS via maliciously crafted Git server replies",
+      "description": "### Impact\nA denial of service (DoS) vulnerability was discovered in go-git versions prior to `v5.13`. This vulnerability allows an attacker to perform denial of service attacks by providing specially crafted responses from a Git server which triggers resource exhaustion in `go-git` clients. \n\nThis is a `go-git` implementation issue and does not affect the upstream `git` cli.\n\n### Patches\nUsers running versions of `go-git` from `v4` and above are recommended to upgrade to `v5.13` in order to mitigate this vulnerability.\n\n### Workarounds\nIn cases where a bump to the latest version of `go-git` is not possible, we recommend limiting its use to only trust-worthy Git servers.\n\n## Credit\nThanks to Ionut Lalu for responsibly disclosing this vulnerability to us.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "gopkg.in/src-d/go-git.v4"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003e= 4.0.0, \u003c= 4.13.1"
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-git/go-git/v5"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003c 5.13.0",
+          "first_patched_version": {
+            "identifier": "5.13.0"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-git/go-git"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003e= 4.0.0, \u003c= 4.13.1"
+        }
+      ],
+      "severity": "high",
+      "cvss": {
+        "score": 7.5,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-20",
+          "name": "Improper Input Validation"
+        },
+        {
+          "cwe_id": "CWE-400",
+          "name": "Uncontrolled Resource Consumption"
+        },
+        {
+          "cwe_id": "CWE-770",
+          "name": "Allocation of Resources Without Limits or Throttling"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00222,
+        "percentile": 0.44588
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-r9px-m959-cxf4",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-21614",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-git/go-git/security/advisories/GHSA-r9px-m959-cxf4"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-21614"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-r9px-m959-cxf4"
+        }
+      ],
+      "published_at": "2025-01-06T16:20:28Z",
+      "updated_at": "2025-08-27T14:24:38Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "severity": "high",
+      "vulnerable_version_range": "\u003c 5.13.0",
+      "first_patched_version": {
+        "identifier": "5.13.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/12",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/12",
+    "created_at": "2025-01-06T16:23:45Z",
+    "updated_at": "2025-02-03T14:49:39Z",
+    "fixed_at": "2025-02-03T14:49:39Z"
+  },
+  {
+    "number": 11,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-r9px-m959-cxf4",
+      "cve_id": "CVE-2025-21614",
+      "summary": "go-git clients vulnerable to DoS via maliciously crafted Git server replies",
+      "description": "### Impact\nA denial of service (DoS) vulnerability was discovered in go-git versions prior to `v5.13`. This vulnerability allows an attacker to perform denial of service attacks by providing specially crafted responses from a Git server which triggers resource exhaustion in `go-git` clients. \n\nThis is a `go-git` implementation issue and does not affect the upstream `git` cli.\n\n### Patches\nUsers running versions of `go-git` from `v4` and above are recommended to upgrade to `v5.13` in order to mitigate this vulnerability.\n\n### Workarounds\nIn cases where a bump to the latest version of `go-git` is not possible, we recommend limiting its use to only trust-worthy Git servers.\n\n## Credit\nThanks to Ionut Lalu for responsibly disclosing this vulnerability to us.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "gopkg.in/src-d/go-git.v4"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003e= 4.0.0, \u003c= 4.13.1"
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-git/go-git/v5"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003c 5.13.0",
+          "first_patched_version": {
+            "identifier": "5.13.0"
+          }
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-git/go-git"
+          },
+          "severity": "high",
+          "vulnerable_version_range": "\u003e= 4.0.0, \u003c= 4.13.1"
+        }
+      ],
+      "severity": "high",
+      "cvss": {
+        "score": 7.5,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-20",
+          "name": "Improper Input Validation"
+        },
+        {
+          "cwe_id": "CWE-400",
+          "name": "Uncontrolled Resource Consumption"
+        },
+        {
+          "cwe_id": "CWE-770",
+          "name": "Allocation of Resources Without Limits or Throttling"
+        }
+      ],
+      "epss": {
+        "percentage": 0.00222,
+        "percentile": 0.44588
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-r9px-m959-cxf4",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-21614",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-git/go-git/security/advisories/GHSA-r9px-m959-cxf4"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-21614"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-r9px-m959-cxf4"
+        }
+      ],
+      "published_at": "2025-01-06T16:20:28Z",
+      "updated_at": "2025-08-27T14:24:38Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "severity": "high",
+      "vulnerable_version_range": "\u003c 5.13.0",
+      "first_patched_version": {
+        "identifier": "5.13.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/11",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/11",
+    "created_at": "2025-01-06T16:22:40Z",
+    "updated_at": "2025-01-27T10:08:12Z",
+    "fixed_at": "2025-01-27T10:08:12Z"
+  },
+  {
+    "number": 10,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "manifest_path": "util/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-v725-9546-7q7m",
+      "cve_id": "CVE-2025-21613",
+      "summary": "go-git has an Argument Injection via the URL field",
+      "description": "### Impact\nAn argument injection vulnerability was discovered in `go-git` versions prior to `v5.13`. \n\nSuccessful exploitation of this vulnerability could allow an attacker to set arbitrary values to [git-upload-pack flags](https://git-scm.com/docs/git-upload-pack). This only happens when the `file` transport protocol is being used, as that is the only protocol that shells out to `git` binaries.\n\n### Affected versions\nUsers running versions of `go-git` from `v4` and above are recommended to upgrade to `v5.13` in order to mitigate this vulnerability.\n\n### Workarounds\nIn cases where a bump to the latest version of `go-git` is not possible, we recommend users to enforce restrict validation rules for values passed in the URL field.\n\n## Credit\nThanks to @vin01 for responsibly disclosing this vulnerability to us.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "gopkg.in/src-d/go-git.v4"
+          },
+          "severity": "critical",
+          "vulnerable_version_range": "\u003e= 4.0.0, \u003c= 4.13.1"
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-git/go-git/v5"
+          },
+          "severity": "critical",
+          "vulnerable_version_range": "\u003c 5.13.0",
+          "first_patched_version": {
+            "identifier": "5.13.0"
+          }
+        }
+      ],
+      "severity": "critical",
+      "cvss": {
+        "score": 9.8,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-88",
+          "name": "Improper Neutralization of Argument Delimiters in a Command ('Argument Injection')"
+        }
+      ],
+      "epss": {
+        "percentage": 0.0286,
+        "percentile": 0.85937
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-v725-9546-7q7m",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-21613",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-git/go-git/security/advisories/GHSA-v725-9546-7q7m"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-21613"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-v725-9546-7q7m"
+        }
+      ],
+      "published_at": "2025-01-06T16:16:30Z",
+      "updated_at": "2025-01-06T18:43:12Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "severity": "critical",
+      "vulnerable_version_range": "\u003c 5.13.0",
+      "first_patched_version": {
+        "identifier": "5.13.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/10",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/10",
+    "created_at": "2025-01-06T16:19:40Z",
+    "updated_at": "2025-02-03T14:49:39Z",
+    "fixed_at": "2025-02-03T14:49:39Z"
+  },
+  {
+    "number": 9,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-v725-9546-7q7m",
+      "cve_id": "CVE-2025-21613",
+      "summary": "go-git has an Argument Injection via the URL field",
+      "description": "### Impact\nAn argument injection vulnerability was discovered in `go-git` versions prior to `v5.13`. \n\nSuccessful exploitation of this vulnerability could allow an attacker to set arbitrary values to [git-upload-pack flags](https://git-scm.com/docs/git-upload-pack). This only happens when the `file` transport protocol is being used, as that is the only protocol that shells out to `git` binaries.\n\n### Affected versions\nUsers running versions of `go-git` from `v4` and above are recommended to upgrade to `v5.13` in order to mitigate this vulnerability.\n\n### Workarounds\nIn cases where a bump to the latest version of `go-git` is not possible, we recommend users to enforce restrict validation rules for values passed in the URL field.\n\n## Credit\nThanks to @vin01 for responsibly disclosing this vulnerability to us.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "gopkg.in/src-d/go-git.v4"
+          },
+          "severity": "critical",
+          "vulnerable_version_range": "\u003e= 4.0.0, \u003c= 4.13.1"
+        },
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "github.com/go-git/go-git/v5"
+          },
+          "severity": "critical",
+          "vulnerable_version_range": "\u003c 5.13.0",
+          "first_patched_version": {
+            "identifier": "5.13.0"
+          }
+        }
+      ],
+      "severity": "critical",
+      "cvss": {
+        "score": 9.8,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-88",
+          "name": "Improper Neutralization of Argument Delimiters in a Command ('Argument Injection')"
+        }
+      ],
+      "epss": {
+        "percentage": 0.0286,
+        "percentile": 0.85937
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-v725-9546-7q7m",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2025-21613",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/go-git/go-git/security/advisories/GHSA-v725-9546-7q7m"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-21613"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-v725-9546-7q7m"
+        }
+      ],
+      "published_at": "2025-01-06T16:16:30Z",
+      "updated_at": "2025-01-06T18:43:12Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "github.com/go-git/go-git/v5"
+      },
+      "severity": "critical",
+      "vulnerable_version_range": "\u003c 5.13.0",
+      "first_patched_version": {
+        "identifier": "5.13.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/9",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/9",
+    "created_at": "2025-01-06T16:18:39Z",
+    "updated_at": "2025-01-27T10:08:12Z",
+    "fixed_at": "2025-01-27T10:08:12Z"
+  },
+  {
+    "number": 7,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "manifest_path": "util/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-v778-237x-gjrc",
+      "cve_id": "CVE-2024-45337",
+      "summary": "Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
+      "description": "Applications and libraries which misuse the ServerConfig.PublicKeyCallback callback may be susceptible to an authorization bypass.\n\nThe documentation for ServerConfig.PublicKeyCallback says that \"A call to this function does not guarantee that the key offered is in fact used to authenticate.\" Specifically, the SSH protocol allows clients to inquire about whether a public key is acceptable before proving control of the corresponding private key. PublicKeyCallback may be called with multiple keys, and the order in which the keys were provided cannot be used to infer which key the client successfully authenticated with, if any. Some applications, which store the key(s) passed to PublicKeyCallback (or derived information) and make security relevant determinations based on it once the connection is established, may make incorrect assumptions.\n\nFor example, an attacker may send public keys A and B, and then authenticate with A. PublicKeyCallback would be called only twice, first with A and then with B. A vulnerable application may then make authorization decisions based on key B for which the attacker does not actually control the private key.\n\nSince this API is widely misused, as a partial mitigation golang.org/x/crypto@v0.31.0 enforces the property that, when successfully authenticating via public key, the last key passed to ServerConfig.PublicKeyCallback will be the key used to authenticate the connection. PublicKeyCallback will now be called multiple times with the same key, if necessary. Note that the client may still not control the last key passed to PublicKeyCallback if the connection is then authenticated with a different method, such as PasswordCallback, KeyboardInteractiveCallback, or NoClientAuth.\n\nUsers should be using the Extensions field of the Permissions return value from the various authentication callbacks to record data associated with the authentication attempt instead of referencing external state. Once the connection is established the state corresponding to the successful authentication attempt can be retrieved via the ServerConn.Permissions field. Note that some third-party libraries misuse the Permissions type by sharing it across authentication attempts; users of third-party libraries should refer to the relevant projects for guidance.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "golang.org/x/crypto"
+          },
+          "severity": "critical",
+          "vulnerable_version_range": "\u003c 0.31.0",
+          "first_patched_version": {
+            "identifier": "0.31.0"
+          }
+        }
+      ],
+      "severity": "critical",
+      "cvss": {
+        "score": 9.1,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-285",
+          "name": "Improper Authorization"
+        }
+      ],
+      "epss": {
+        "percentage": 0.3331,
+        "percentile": 0.96791
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-v778-237x-gjrc",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2024-45337",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/golang/crypto/commit/b4f1988a35dee11ec3e05d6bf3e90b695fbd8909"
+        },
+        {
+          "url": "https://go.dev/cl/635315"
+        },
+        {
+          "url": "https://go.dev/issue/70779"
+        },
+        {
+          "url": "https://groups.google.com/g/golang-announce/c/-nPEi39gI4Q/m/cGVPJCqdAQAJ"
+        },
+        {
+          "url": "https://pkg.go.dev/vuln/GO-2024-3321"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-45337"
+        },
+        {
+          "url": "http://www.openwall.com/lists/oss-security/2024/12/11/2"
+        },
+        {
+          "url": "https://security.netapp.com/advisory/ntap-20250131-0007"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-v778-237x-gjrc"
+        }
+      ],
+      "published_at": "2024-12-11T22:03:04Z",
+      "updated_at": "2025-01-31T15:30:44Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "severity": "critical",
+      "vulnerable_version_range": "\u003c 0.31.0",
+      "first_patched_version": {
+        "identifier": "0.31.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/7",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/7",
+    "created_at": "2024-12-20T16:19:08Z",
+    "updated_at": "2025-02-03T14:49:39Z",
+    "fixed_at": "2025-02-03T14:49:39Z"
+  },
+  {
+    "number": 5,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-v778-237x-gjrc",
+      "cve_id": "CVE-2024-45337",
+      "summary": "Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
+      "description": "Applications and libraries which misuse the ServerConfig.PublicKeyCallback callback may be susceptible to an authorization bypass.\n\nThe documentation for ServerConfig.PublicKeyCallback says that \"A call to this function does not guarantee that the key offered is in fact used to authenticate.\" Specifically, the SSH protocol allows clients to inquire about whether a public key is acceptable before proving control of the corresponding private key. PublicKeyCallback may be called with multiple keys, and the order in which the keys were provided cannot be used to infer which key the client successfully authenticated with, if any. Some applications, which store the key(s) passed to PublicKeyCallback (or derived information) and make security relevant determinations based on it once the connection is established, may make incorrect assumptions.\n\nFor example, an attacker may send public keys A and B, and then authenticate with A. PublicKeyCallback would be called only twice, first with A and then with B. A vulnerable application may then make authorization decisions based on key B for which the attacker does not actually control the private key.\n\nSince this API is widely misused, as a partial mitigation golang.org/x/crypto@v0.31.0 enforces the property that, when successfully authenticating via public key, the last key passed to ServerConfig.PublicKeyCallback will be the key used to authenticate the connection. PublicKeyCallback will now be called multiple times with the same key, if necessary. Note that the client may still not control the last key passed to PublicKeyCallback if the connection is then authenticated with a different method, such as PasswordCallback, KeyboardInteractiveCallback, or NoClientAuth.\n\nUsers should be using the Extensions field of the Permissions return value from the various authentication callbacks to record data associated with the authentication attempt instead of referencing external state. Once the connection is established the state corresponding to the successful authentication attempt can be retrieved via the ServerConn.Permissions field. Note that some third-party libraries misuse the Permissions type by sharing it across authentication attempts; users of third-party libraries should refer to the relevant projects for guidance.",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "golang.org/x/crypto"
+          },
+          "severity": "critical",
+          "vulnerable_version_range": "\u003c 0.31.0",
+          "first_patched_version": {
+            "identifier": "0.31.0"
+          }
+        }
+      ],
+      "severity": "critical",
+      "cvss": {
+        "score": 9.1,
+        "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-285",
+          "name": "Improper Authorization"
+        }
+      ],
+      "epss": {
+        "percentage": 0.3331,
+        "percentile": 0.96791
+      },
+      "identifiers": [
+        {
+          "value": "GHSA-v778-237x-gjrc",
+          "type": "GHSA"
+        },
+        {
+          "value": "CVE-2024-45337",
+          "type": "CVE"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/golang/crypto/commit/b4f1988a35dee11ec3e05d6bf3e90b695fbd8909"
+        },
+        {
+          "url": "https://go.dev/cl/635315"
+        },
+        {
+          "url": "https://go.dev/issue/70779"
+        },
+        {
+          "url": "https://groups.google.com/g/golang-announce/c/-nPEi39gI4Q/m/cGVPJCqdAQAJ"
+        },
+        {
+          "url": "https://pkg.go.dev/vuln/GO-2024-3321"
+        },
+        {
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-45337"
+        },
+        {
+          "url": "http://www.openwall.com/lists/oss-security/2024/12/11/2"
+        },
+        {
+          "url": "https://security.netapp.com/advisory/ntap-20250131-0007"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-v778-237x-gjrc"
+        }
+      ],
+      "published_at": "2024-12-11T22:03:04Z",
+      "updated_at": "2025-01-31T15:30:44Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "golang.org/x/crypto"
+      },
+      "severity": "critical",
+      "vulnerable_version_range": "\u003c 0.31.0",
+      "first_patched_version": {
+        "identifier": "0.31.0"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/5",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/5",
+    "created_at": "2024-12-12T00:36:59Z",
+    "updated_at": "2025-01-09T16:11:31Z",
+    "fixed_at": "2025-01-09T16:11:31Z"
+  },
+  {
+    "number": 4,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "google.golang.org/grpc"
+      },
+      "manifest_path": "testparser/go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-xr7q-jx4m-x55m",
+      "summary": "Private tokens could appear in logs if context containing gRPC metadata is logged in github.com/grpc/grpc-go",
+      "description": "### Impact\nThis issue represents a potential PII concern.  If applications were printing or logging a context containing gRPC metadata, the affected versions will contain all the metadata, which may include private information.\n\n### Patches\nThe issue first appeared in 1.64.0 and is patched in 1.64.1 and 1.65.0\n\n### Workarounds\nIf using an affected version and upgrading is not possible, ensuring you do not log or print contexts will avoid the problem.\n",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "google.golang.org/grpc"
+          },
+          "severity": "low",
+          "vulnerable_version_range": "\u003e= 1.64.0, \u003c 1.64.1",
+          "first_patched_version": {
+            "identifier": "1.64.1"
+          }
+        }
+      ],
+      "severity": "low",
+      "cvss": {
+        "score": 0
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-200",
+          "name": "Exposure of Sensitive Information to an Unauthorized Actor"
+        }
+      ],
+      "identifiers": [
+        {
+          "value": "GHSA-xr7q-jx4m-x55m",
+          "type": "GHSA"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/grpc/grpc-go/security/advisories/GHSA-xr7q-jx4m-x55m"
+        },
+        {
+          "url": "https://github.com/grpc/grpc-go/commit/ab292411ddc0f3b7a7786754d1fe05264c3021eb"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-xr7q-jx4m-x55m"
+        }
+      ],
+      "published_at": "2024-07-05T20:07:01Z",
+      "updated_at": "2024-07-09T21:38:29Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "google.golang.org/grpc"
+      },
+      "severity": "low",
+      "vulnerable_version_range": "\u003e= 1.64.0, \u003c 1.64.1",
+      "first_patched_version": {
+        "identifier": "1.64.1"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/4",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/4",
+    "created_at": "2024-07-09T21:40:21Z",
+    "updated_at": "2024-07-23T09:31:53Z",
+    "fixed_at": "2024-07-23T09:31:53Z"
+  },
+  {
+    "number": 3,
+    "state": "fixed",
+    "dependency": {
+      "package": {
+        "ecosystem": "go",
+        "name": "google.golang.org/grpc"
+      },
+      "manifest_path": "go.mod",
+      "scope": "runtime"
+    },
+    "security_advisory": {
+      "ghsa_id": "GHSA-xr7q-jx4m-x55m",
+      "summary": "Private tokens could appear in logs if context containing gRPC metadata is logged in github.com/grpc/grpc-go",
+      "description": "### Impact\nThis issue represents a potential PII concern.  If applications were printing or logging a context containing gRPC metadata, the affected versions will contain all the metadata, which may include private information.\n\n### Patches\nThe issue first appeared in 1.64.0 and is patched in 1.64.1 and 1.65.0\n\n### Workarounds\nIf using an affected version and upgrading is not possible, ensuring you do not log or print contexts will avoid the problem.\n",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "go",
+            "name": "google.golang.org/grpc"
+          },
+          "severity": "low",
+          "vulnerable_version_range": "\u003e= 1.64.0, \u003c 1.64.1",
+          "first_patched_version": {
+            "identifier": "1.64.1"
+          }
+        }
+      ],
+      "severity": "low",
+      "cvss": {
+        "score": 0
+      },
+      "cwes": [
+        {
+          "cwe_id": "CWE-200",
+          "name": "Exposure of Sensitive Information to an Unauthorized Actor"
+        }
+      ],
+      "identifiers": [
+        {
+          "value": "GHSA-xr7q-jx4m-x55m",
+          "type": "GHSA"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://github.com/grpc/grpc-go/security/advisories/GHSA-xr7q-jx4m-x55m"
+        },
+        {
+          "url": "https://github.com/grpc/grpc-go/commit/ab292411ddc0f3b7a7786754d1fe05264c3021eb"
+        },
+        {
+          "url": "https://github.com/advisories/GHSA-xr7q-jx4m-x55m"
+        }
+      ],
+      "published_at": "2024-07-05T20:07:01Z",
+      "updated_at": "2024-07-09T21:38:29Z"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "go",
+        "name": "google.golang.org/grpc"
+      },
+      "severity": "low",
+      "vulnerable_version_range": "\u003e= 1.64.0, \u003c 1.64.1",
+      "first_patched_version": {
+        "identifier": "1.64.1"
+      }
+    },
+    "url": "https://api.github.com/repos/mondoohq/purplebox/dependabot/alerts/3",
+    "html_url": "https://github.com/mondoohq/purplebox/security/dependabot/3",
+    "created_at": "2024-07-09T21:39:58Z",
+    "updated_at": "2024-07-23T09:31:53Z",
+    "fixed_at": "2024-07-23T09:31:53Z"
+  }
+]
