@@ -8,39 +8,23 @@ package providers
 
 import (
 	_ "embed"
-	// osconf "go.mondoo.com/mql/v13/providers/os/config"
-	// os "go.mondoo.com/mql/v13/providers/os/provider"
-	githubconf "go.mondoo.com/mql/v13/providers/github/config"
-	github "go.mondoo.com/mql/v13/providers/github/provider"
+
+	osconf "go.mondoo.com/mql/v13/providers/os/config"
+	os "go.mondoo.com/mql/v13/providers/os/provider"
 )
 
-// //go:embed os/resources/os.resources.json
-// var osInfo []byte
-
-//go:embed github.resources.json
-var githubInfo []byte
+//go:embed os/resources/os.resources.json
+var osInfo []byte
 
 func init() {
-	// builtinProviders[osconf.Config.ID] = &builtinProvider{
-	// 	Runtime: &RunningProvider{
-	// 		Name:     osconf.Config.Name,
-	// 		ID:       osconf.Config.ID,
-	// 		Plugin:   os.Init(),
-	// 		Schema:   MustLoadSchema("os", osInfo),
-	// 		isClosed: false,
-	// 	},
-	// 	Config: &osconf.Config,
-	// }
-
-	builtinProviders[githubconf.Config.ID] = &builtinProvider{
+	builtinProviders[osconf.Config.ID] = &builtinProvider{
 		Runtime: &RunningProvider{
-			Name:     githubconf.Config.Name,
-			ID:       githubconf.Config.ID,
-			Plugin:   github.Init(),
-			Schema:   MustLoadSchema("github", githubInfo),
+			Name:     osconf.Config.Name,
+			ID:       osconf.Config.ID,
+			Plugin:   os.Init(),
+			Schema:   MustLoadSchema("os", osInfo),
 			isClosed: false,
 		},
-		Config: &githubconf.Config,
+		Config: &osconf.Config,
 	}
-
 }
