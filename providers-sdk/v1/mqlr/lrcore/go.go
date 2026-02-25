@@ -72,7 +72,7 @@ func hasTimeImports(ast *LR, b *goBuilder) bool {
 		r := ast.Resources[i]
 		for j := range r.Body.Fields {
 			field := r.Body.Fields[j]
-			if field.BasicField != nil && field.BasicField.Type.goType(b) == timeType {
+			if field.BasicField != nil && field.BasicField.Type.goType(b, r.IsPublic) == timeType {
 				return true
 			}
 		}
@@ -315,7 +315,7 @@ func (b *goBuilder) goSetData(r []*Resource) {
 	},`,
 				resource.ID, field.BasicField.ID,
 				resource.structName(b), field.BasicField.methodname(),
-				field.BasicField.Type.goType(b),
+				field.BasicField.Type.goType(b, resource.IsPublic),
 			)
 			fields = append(fields, x)
 		}
@@ -371,7 +371,7 @@ func (b *goBuilder) goStruct(r *Resource) {
 		if field.Init != nil {
 			continue
 		}
-		fields = append(fields, field.BasicField.goName()+" plugin.TValue["+field.BasicField.Type.goType(b)+"]")
+		fields = append(fields, field.BasicField.goName()+" plugin.TValue["+field.BasicField.Type.goType(b, r.IsPublic)+"]")
 	}
 
 	sFields := strings.Join(fields, "\n\t")
@@ -469,7 +469,7 @@ func (c *%s) Get%s() *plugin.TValue[%s] {
 	return &c.%s
 }
 `,
-		r.structName(b), goName, field.BasicField.Type.goType(b),
+		r.structName(b), goName, field.BasicField.Type.goType(b, r.IsPublic),
 		goName,
 	)
 }
@@ -486,7 +486,7 @@ func (b *goBuilder) goField(r *Resource, field *Field) {
 	}
 
 	goName := field.BasicField.goName()
-	goType := field.BasicField.Type.goType(b)
+	goType := field.BasicField.Type.goType(b, r.IsPublic)
 	goZero := field.BasicField.Type.goZeroValue()
 
 	argDefs := []string{}
@@ -786,26 +786,26 @@ func (t *Type) containsResource(b *goBuilder) bool {
 
 // The go type is the golang-equivalent code type, i.e. the type of the
 // actual objects that are being moved around.
-func (t *Type) goType(b *goBuilder) string {
+func (t *Type) goType(b *goBuilder, public bool) string {
 	if t.SimpleType != nil {
-		return t.SimpleType.goType(b)
+		return t.SimpleType.goType(b, public)
 	}
 	if t.ListType != nil {
-		return t.ListType.goType()
+		return t.ListType.goType(public)
 	}
 	if t.MapType != nil {
-		return t.MapType.goType(b)
+		return t.MapType.goType(b, public)
 	}
 	return "NO_TYPE_DETECTED"
 }
 
-func (t *MapType) goType(b *goBuilder) string {
+func (t *MapType) goType(b *goBuilder, public bool) string {
 	// limited to any because we cannot cast as universally
 	// between types yet
-	return "map[" + t.Key.goType(b) + "]any"
+	return "map[" + t.Key.goType(b, public) + "]any"
 }
 
-func (t *ListType) goType() string {
+func (t *ListType) goType(public bool) string {
 	// limited to []any because we cannot cast as universally
 	// between types yet
 	return "[]any"
@@ -825,7 +825,7 @@ var primitiveTypes = map[string]string{
 	"any":     "any",
 }
 
-func (t *SimpleType) goType(b *goBuilder) string {
+func (t *SimpleType) goType(b *goBuilder, public bool) string {
 	pt, ok := primitiveTypes[t.Type]
 	if ok {
 		return pt
@@ -835,6 +835,9 @@ func (t *SimpleType) goType(b *goBuilder) string {
 		return "plugin.Resource"
 	}
 
+	if public {
+		return "*Mql" + resource2goname(t.Type, b)
+	}
 	return "*mql" + resource2goname(t.Type, b)
 }
 
