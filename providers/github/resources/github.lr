@@ -417,7 +417,7 @@ github.repository @defaults("fullName") {
   // Code scanning alerts for the repository
   codeScanningAlerts() []github.codeScanningAlert
   // Security findings.
-  findings() []core.finding
+  findings() core.finding
   // Self-hosted runners for the repository
   runners() []github.runner
   // Deployment environments for the repository
