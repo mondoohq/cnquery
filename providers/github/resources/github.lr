@@ -1018,9 +1018,8 @@ private github.deploymentStatus @defaults("id state") {
   environmentUrl string
 }
 
-
 // Experimental: Finding Exchange information
-private finding @defaults("id summary") {
+public finding @defaults("id summary") {
   // Required. Unique identifier for this finding
   id string
   // Optional. External reference identifier from the original data source
@@ -1052,7 +1051,7 @@ private finding @defaults("id summary") {
 }
 
 // Core information about a finding
-private finding.detail {
+public finding.detail {
   // Category of the finding
   category string
   // Severity of the finding
@@ -1068,7 +1067,7 @@ private finding.detail {
 }
 
 // Source of a finding (e.g., a scanner or advisory database)
-private finding.source {
+public finding.source {
   // Required. Name of the source
   name string
   // Optional. URL of the source
@@ -1076,7 +1075,7 @@ private finding.source {
 }
 
 // Severity scoring information for a finding
-private finding.severity {
+public finding.severity {
   // Required. Source of the rating
   source finding.source
   // Optional. Numeric score
@@ -1092,7 +1091,7 @@ private finding.severity {
 }
 
 // External reference for a finding (e.g., CVE, CWE, OWASP)
-private finding.reference {
+public finding.reference {
   // Optional. ID of the reference
   id string
   // Required. Name of the reference
@@ -1106,7 +1105,7 @@ private finding.reference {
 }
 
 // Affected component information for a finding
-private finding.affects {
+public finding.affects {
   // Required. Root component that is affected
   component finding.component
   // Optional. List of sub-components that are affected
@@ -1114,7 +1113,7 @@ private finding.affects {
 }
 
 // Component identifier for an affected resource
-private finding.component {
+public finding.component {
   // Required. Identifier of the component
   id string
   // Component version and identification metadata
@@ -1126,7 +1125,7 @@ private finding.component {
 }
 
 // File-specific component details
-private finding.fileComponent {
+public finding.fileComponent {
   // Path to the file
   path string
   // File hash for version tracking
@@ -1138,7 +1137,7 @@ private finding.fileComponent {
 }
 
 // Technical evidence that leads to a finding
-private finding.evidence {
+public finding.evidence {
   // Attack tactic used
   tactic finding.attackTactic
   // Attack technique used
@@ -1164,7 +1163,7 @@ private finding.evidence {
 }
 
 // File information for evidence
-private finding.file {
+public finding.file {
   // Absolute path to the file
   path string
   // File size in bytes
@@ -1178,7 +1177,7 @@ private finding.file {
 }
 
 // User information for evidence
-private finding.user {
+public finding.user {
   // User ID
   id string
   // User name
@@ -1188,7 +1187,7 @@ private finding.user {
 }
 
 // Process information for evidence
-private finding.process {
+public finding.process {
   // Process name or command line as displayed in the process list
   cmdline string
   // Process file information (e.g., python binary)
@@ -1204,7 +1203,7 @@ private finding.process {
 }
 
 // Container information for evidence
-private finding.container {
+public finding.container {
   // Container name
   name string
   // Container image URI (e.g. marketplace.gcr.io/google/ubuntu1804:latest)
@@ -1214,7 +1213,7 @@ private finding.container {
 }
 
 // Kubernetes resource information for evidence
-private finding.kubernetes {
+public finding.kubernetes {
   // Affected pods
   pods []finding.kubernetes.pod
   // Affected nodes
@@ -1222,7 +1221,7 @@ private finding.kubernetes {
 }
 
 // Kubernetes pod information
-private finding.kubernetes.pod {
+public finding.kubernetes.pod {
   // Pod name
   name string
   // Pod namespace
@@ -1232,7 +1231,7 @@ private finding.kubernetes.pod {
 }
 
 // Kubernetes node information
-private finding.kubernetes.node {
+public finding.kubernetes.node {
   // Node name
   name string
   // Unique identifier for the node (e.g., EC2 instance ID)
@@ -1240,7 +1239,7 @@ private finding.kubernetes.node {
 }
 
 // Windows Registry Key information for evidence
-private finding.registryKey {
+public finding.registryKey {
   // Path to the registry key (e.g., "HKLM\\SOFTWARE\\Microsoft\\Windows")
   path string
   // Name of the value (empty string for default value)
@@ -1250,7 +1249,7 @@ private finding.registryKey {
 }
 
 // Network Connection information for evidence
-private finding.connection {
+public finding.connection {
   // Destination address, either hostname or IP
   destinationAddress string
   // Destination port
@@ -1264,7 +1263,7 @@ private finding.connection {
 }
 
 // Attack tactic information (e.g., MITRE ATT&CK)
-private finding.attackTactic {
+public finding.attackTactic {
   // Unique identifier for the tactic
   id string
   // Name of the tactic
@@ -1274,7 +1273,7 @@ private finding.attackTactic {
 }
 
 // Attack technique information (e.g., MITRE ATT&CK)
-private finding.attackTechnique {
+public finding.attackTechnique {
   // Unique identifier for the technique
   id string
   // Name of the technique

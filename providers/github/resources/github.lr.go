@@ -1691,280 +1691,280 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGithubDeploymentStatus).GetEnvironmentUrl()).ToDataRes(types.String)
 	},
 	"finding.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetId()).ToDataRes(types.String)
+		return (r.(*MqlFinding).GetId()).ToDataRes(types.String)
 	},
 	"finding.ref": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetRef()).ToDataRes(types.String)
+		return (r.(*MqlFinding).GetRef()).ToDataRes(types.String)
 	},
 	"finding.mrn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetMrn()).ToDataRes(types.String)
+		return (r.(*MqlFinding).GetMrn()).ToDataRes(types.String)
 	},
 	"finding.groupId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetGroupId()).ToDataRes(types.String)
+		return (r.(*MqlFinding).GetGroupId()).ToDataRes(types.String)
 	},
 	"finding.summary": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetSummary()).ToDataRes(types.String)
+		return (r.(*MqlFinding).GetSummary()).ToDataRes(types.String)
 	},
 	"finding.details": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetDetails()).ToDataRes(types.Resource("finding.detail"))
+		return (r.(*MqlFinding).GetDetails()).ToDataRes(types.Resource("finding.detail"))
 	},
 	"finding.firstSeenAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetFirstSeenAt()).ToDataRes(types.Time)
+		return (r.(*MqlFinding).GetFirstSeenAt()).ToDataRes(types.Time)
 	},
 	"finding.lastSeenAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetLastSeenAt()).ToDataRes(types.Time)
+		return (r.(*MqlFinding).GetLastSeenAt()).ToDataRes(types.Time)
 	},
 	"finding.remediatedAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetRemediatedAt()).ToDataRes(types.Time)
+		return (r.(*MqlFinding).GetRemediatedAt()).ToDataRes(types.Time)
 	},
 	"finding.status": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetStatus()).ToDataRes(types.String)
+		return (r.(*MqlFinding).GetStatus()).ToDataRes(types.String)
 	},
 	"finding.source": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetSource()).ToDataRes(types.Resource("finding.source"))
+		return (r.(*MqlFinding).GetSource()).ToDataRes(types.Resource("finding.source"))
 	},
 	"finding.affects": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetAffects()).ToDataRes(types.Array(types.Resource("finding.affects")))
+		return (r.(*MqlFinding).GetAffects()).ToDataRes(types.Array(types.Resource("finding.affects")))
 	},
 	"finding.evidences": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetEvidences()).ToDataRes(types.Array(types.Resource("finding.evidence")))
+		return (r.(*MqlFinding).GetEvidences()).ToDataRes(types.Array(types.Resource("finding.evidence")))
 	},
 	"finding.remediations": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFinding).GetRemediations()).ToDataRes(types.Array(types.Dict))
+		return (r.(*MqlFinding).GetRemediations()).ToDataRes(types.Array(types.Dict))
 	},
 	"finding.detail.category": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingDetail).GetCategory()).ToDataRes(types.String)
+		return (r.(*MqlFindingDetail).GetCategory()).ToDataRes(types.String)
 	},
 	"finding.detail.severity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingDetail).GetSeverity()).ToDataRes(types.Resource("finding.severity"))
+		return (r.(*MqlFindingDetail).GetSeverity()).ToDataRes(types.Resource("finding.severity"))
 	},
 	"finding.detail.confidence": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingDetail).GetConfidence()).ToDataRes(types.String)
+		return (r.(*MqlFindingDetail).GetConfidence()).ToDataRes(types.String)
 	},
 	"finding.detail.description": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingDetail).GetDescription()).ToDataRes(types.String)
+		return (r.(*MqlFindingDetail).GetDescription()).ToDataRes(types.String)
 	},
 	"finding.detail.references": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingDetail).GetReferences()).ToDataRes(types.Array(types.Resource("finding.reference")))
+		return (r.(*MqlFindingDetail).GetReferences()).ToDataRes(types.Array(types.Resource("finding.reference")))
 	},
 	"finding.detail.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingDetail).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+		return (r.(*MqlFindingDetail).GetProperties()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"finding.source.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingSource).GetName()).ToDataRes(types.String)
+		return (r.(*MqlFindingSource).GetName()).ToDataRes(types.String)
 	},
 	"finding.source.url": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingSource).GetUrl()).ToDataRes(types.String)
+		return (r.(*MqlFindingSource).GetUrl()).ToDataRes(types.String)
 	},
 	"finding.severity.source": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingSeverity).GetSource()).ToDataRes(types.Resource("finding.source"))
+		return (r.(*MqlFindingSeverity).GetSource()).ToDataRes(types.Resource("finding.source"))
 	},
 	"finding.severity.score": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingSeverity).GetScore()).ToDataRes(types.Float)
+		return (r.(*MqlFindingSeverity).GetScore()).ToDataRes(types.Float)
 	},
 	"finding.severity.severity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingSeverity).GetSeverity()).ToDataRes(types.String)
+		return (r.(*MqlFindingSeverity).GetSeverity()).ToDataRes(types.String)
 	},
 	"finding.severity.vector": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingSeverity).GetVector()).ToDataRes(types.String)
+		return (r.(*MqlFindingSeverity).GetVector()).ToDataRes(types.String)
 	},
 	"finding.severity.method": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingSeverity).GetMethod()).ToDataRes(types.String)
+		return (r.(*MqlFindingSeverity).GetMethod()).ToDataRes(types.String)
 	},
 	"finding.severity.rating": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingSeverity).GetRating()).ToDataRes(types.String)
+		return (r.(*MqlFindingSeverity).GetRating()).ToDataRes(types.String)
 	},
 	"finding.reference.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingReference).GetId()).ToDataRes(types.String)
+		return (r.(*MqlFindingReference).GetId()).ToDataRes(types.String)
 	},
 	"finding.reference.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingReference).GetName()).ToDataRes(types.String)
+		return (r.(*MqlFindingReference).GetName()).ToDataRes(types.String)
 	},
 	"finding.reference.url": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingReference).GetUrl()).ToDataRes(types.String)
+		return (r.(*MqlFindingReference).GetUrl()).ToDataRes(types.String)
 	},
 	"finding.reference.referenceType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingReference).GetReferenceType()).ToDataRes(types.String)
+		return (r.(*MqlFindingReference).GetReferenceType()).ToDataRes(types.String)
 	},
 	"finding.reference.metadata": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingReference).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+		return (r.(*MqlFindingReference).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"finding.affects.component": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingAffects).GetComponent()).ToDataRes(types.Resource("finding.component"))
+		return (r.(*MqlFindingAffects).GetComponent()).ToDataRes(types.Resource("finding.component"))
 	},
 	"finding.affects.subComponents": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingAffects).GetSubComponents()).ToDataRes(types.Array(types.Resource("finding.component")))
+		return (r.(*MqlFindingAffects).GetSubComponents()).ToDataRes(types.Array(types.Resource("finding.component")))
 	},
 	"finding.component.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingComponent).GetId()).ToDataRes(types.String)
+		return (r.(*MqlFindingComponent).GetId()).ToDataRes(types.String)
 	},
 	"finding.component.identifiers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingComponent).GetIdentifiers()).ToDataRes(types.Map(types.String, types.String))
+		return (r.(*MqlFindingComponent).GetIdentifiers()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"finding.component.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingComponent).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+		return (r.(*MqlFindingComponent).GetProperties()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"finding.component.file": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingComponent).GetFile()).ToDataRes(types.Resource("finding.fileComponent"))
+		return (r.(*MqlFindingComponent).GetFile()).ToDataRes(types.Resource("finding.fileComponent"))
 	},
 	"finding.fileComponent.path": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingFileComponent).GetPath()).ToDataRes(types.String)
+		return (r.(*MqlFindingFileComponent).GetPath()).ToDataRes(types.String)
 	},
 	"finding.fileComponent.hash": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingFileComponent).GetHash()).ToDataRes(types.String)
+		return (r.(*MqlFindingFileComponent).GetHash()).ToDataRes(types.String)
 	},
 	"finding.fileComponent.format": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingFileComponent).GetFormat()).ToDataRes(types.String)
+		return (r.(*MqlFindingFileComponent).GetFormat()).ToDataRes(types.String)
 	},
 	"finding.fileComponent.size": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingFileComponent).GetSize()).ToDataRes(types.Int)
+		return (r.(*MqlFindingFileComponent).GetSize()).ToDataRes(types.Int)
 	},
 	"finding.evidence.tactic": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetTactic()).ToDataRes(types.Resource("finding.attackTactic"))
+		return (r.(*MqlFindingEvidence).GetTactic()).ToDataRes(types.Resource("finding.attackTactic"))
 	},
 	"finding.evidence.technique": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetTechnique()).ToDataRes(types.Resource("finding.attackTechnique"))
+		return (r.(*MqlFindingEvidence).GetTechnique()).ToDataRes(types.Resource("finding.attackTechnique"))
 	},
 	"finding.evidence.confidence": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetConfidence()).ToDataRes(types.String)
+		return (r.(*MqlFindingEvidence).GetConfidence()).ToDataRes(types.String)
 	},
 	"finding.evidence.user": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetUser()).ToDataRes(types.Resource("finding.user"))
+		return (r.(*MqlFindingEvidence).GetUser()).ToDataRes(types.Resource("finding.user"))
 	},
 	"finding.evidence.file": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetFile()).ToDataRes(types.Resource("finding.file"))
+		return (r.(*MqlFindingEvidence).GetFile()).ToDataRes(types.Resource("finding.file"))
 	},
 	"finding.evidence.process": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetProcess()).ToDataRes(types.Resource("finding.process"))
+		return (r.(*MqlFindingEvidence).GetProcess()).ToDataRes(types.Resource("finding.process"))
 	},
 	"finding.evidence.container": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetContainer()).ToDataRes(types.Resource("finding.container"))
+		return (r.(*MqlFindingEvidence).GetContainer()).ToDataRes(types.Resource("finding.container"))
 	},
 	"finding.evidence.kubernetes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetKubernetes()).ToDataRes(types.Resource("finding.kubernetes"))
+		return (r.(*MqlFindingEvidence).GetKubernetes()).ToDataRes(types.Resource("finding.kubernetes"))
 	},
 	"finding.evidence.registryKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetRegistryKey()).ToDataRes(types.Resource("finding.registryKey"))
+		return (r.(*MqlFindingEvidence).GetRegistryKey()).ToDataRes(types.Resource("finding.registryKey"))
 	},
 	"finding.evidence.connection": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetConnection()).ToDataRes(types.Resource("finding.connection"))
+		return (r.(*MqlFindingEvidence).GetConnection()).ToDataRes(types.Resource("finding.connection"))
 	},
 	"finding.evidence.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingEvidence).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+		return (r.(*MqlFindingEvidence).GetProperties()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"finding.file.path": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingFile).GetPath()).ToDataRes(types.String)
+		return (r.(*MqlFindingFile).GetPath()).ToDataRes(types.String)
 	},
 	"finding.file.size": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingFile).GetSize()).ToDataRes(types.Int)
+		return (r.(*MqlFindingFile).GetSize()).ToDataRes(types.Int)
 	},
 	"finding.file.md5": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingFile).GetMd5()).ToDataRes(types.String)
+		return (r.(*MqlFindingFile).GetMd5()).ToDataRes(types.String)
 	},
 	"finding.file.sha256": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingFile).GetSha256()).ToDataRes(types.String)
+		return (r.(*MqlFindingFile).GetSha256()).ToDataRes(types.String)
 	},
 	"finding.file.contents": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingFile).GetContents()).ToDataRes(types.String)
+		return (r.(*MqlFindingFile).GetContents()).ToDataRes(types.String)
 	},
 	"finding.user.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingUser).GetId()).ToDataRes(types.String)
+		return (r.(*MqlFindingUser).GetId()).ToDataRes(types.String)
 	},
 	"finding.user.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingUser).GetName()).ToDataRes(types.String)
+		return (r.(*MqlFindingUser).GetName()).ToDataRes(types.String)
 	},
 	"finding.user.properties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingUser).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+		return (r.(*MqlFindingUser).GetProperties()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"finding.process.cmdline": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingProcess).GetCmdline()).ToDataRes(types.String)
+		return (r.(*MqlFindingProcess).GetCmdline()).ToDataRes(types.String)
 	},
 	"finding.process.binary": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingProcess).GetBinary()).ToDataRes(types.Resource("finding.file"))
+		return (r.(*MqlFindingProcess).GetBinary()).ToDataRes(types.Resource("finding.file"))
 	},
 	"finding.process.script": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingProcess).GetScript()).ToDataRes(types.Resource("finding.file"))
+		return (r.(*MqlFindingProcess).GetScript()).ToDataRes(types.Resource("finding.file"))
 	},
 	"finding.process.pid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingProcess).GetPid()).ToDataRes(types.Int)
+		return (r.(*MqlFindingProcess).GetPid()).ToDataRes(types.Int)
 	},
 	"finding.process.user": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingProcess).GetUser()).ToDataRes(types.Resource("finding.user"))
+		return (r.(*MqlFindingProcess).GetUser()).ToDataRes(types.Resource("finding.user"))
 	},
 	"finding.process.parent": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingProcess).GetParent()).ToDataRes(types.Resource("finding.process"))
+		return (r.(*MqlFindingProcess).GetParent()).ToDataRes(types.Resource("finding.process"))
 	},
 	"finding.container.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingContainer).GetName()).ToDataRes(types.String)
+		return (r.(*MqlFindingContainer).GetName()).ToDataRes(types.String)
 	},
 	"finding.container.imageUri": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingContainer).GetImageUri()).ToDataRes(types.String)
+		return (r.(*MqlFindingContainer).GetImageUri()).ToDataRes(types.String)
 	},
 	"finding.container.digest": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingContainer).GetDigest()).ToDataRes(types.String)
+		return (r.(*MqlFindingContainer).GetDigest()).ToDataRes(types.String)
 	},
 	"finding.kubernetes.pods": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingKubernetes).GetPods()).ToDataRes(types.Array(types.Resource("finding.kubernetes.pod")))
+		return (r.(*MqlFindingKubernetes).GetPods()).ToDataRes(types.Array(types.Resource("finding.kubernetes.pod")))
 	},
 	"finding.kubernetes.nodes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingKubernetes).GetNodes()).ToDataRes(types.Array(types.Resource("finding.kubernetes.node")))
+		return (r.(*MqlFindingKubernetes).GetNodes()).ToDataRes(types.Array(types.Resource("finding.kubernetes.node")))
 	},
 	"finding.kubernetes.pod.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingKubernetesPod).GetName()).ToDataRes(types.String)
+		return (r.(*MqlFindingKubernetesPod).GetName()).ToDataRes(types.String)
 	},
 	"finding.kubernetes.pod.namespace": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingKubernetesPod).GetNamespace()).ToDataRes(types.String)
+		return (r.(*MqlFindingKubernetesPod).GetNamespace()).ToDataRes(types.String)
 	},
 	"finding.kubernetes.pod.containers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingKubernetesPod).GetContainers()).ToDataRes(types.Array(types.Resource("finding.container")))
+		return (r.(*MqlFindingKubernetesPod).GetContainers()).ToDataRes(types.Array(types.Resource("finding.container")))
 	},
 	"finding.kubernetes.node.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingKubernetesNode).GetName()).ToDataRes(types.String)
+		return (r.(*MqlFindingKubernetesNode).GetName()).ToDataRes(types.String)
 	},
 	"finding.kubernetes.node.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingKubernetesNode).GetId()).ToDataRes(types.String)
+		return (r.(*MqlFindingKubernetesNode).GetId()).ToDataRes(types.String)
 	},
 	"finding.registryKey.path": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingRegistryKey).GetPath()).ToDataRes(types.String)
+		return (r.(*MqlFindingRegistryKey).GetPath()).ToDataRes(types.String)
 	},
 	"finding.registryKey.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingRegistryKey).GetName()).ToDataRes(types.String)
+		return (r.(*MqlFindingRegistryKey).GetName()).ToDataRes(types.String)
 	},
 	"finding.registryKey.data": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingRegistryKey).GetData()).ToDataRes(types.String)
+		return (r.(*MqlFindingRegistryKey).GetData()).ToDataRes(types.String)
 	},
 	"finding.connection.destinationAddress": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingConnection).GetDestinationAddress()).ToDataRes(types.String)
+		return (r.(*MqlFindingConnection).GetDestinationAddress()).ToDataRes(types.String)
 	},
 	"finding.connection.destinationPort": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingConnection).GetDestinationPort()).ToDataRes(types.Int)
+		return (r.(*MqlFindingConnection).GetDestinationPort()).ToDataRes(types.Int)
 	},
 	"finding.connection.sourceAddress": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingConnection).GetSourceAddress()).ToDataRes(types.String)
+		return (r.(*MqlFindingConnection).GetSourceAddress()).ToDataRes(types.String)
 	},
 	"finding.connection.sourcePort": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingConnection).GetSourcePort()).ToDataRes(types.Int)
+		return (r.(*MqlFindingConnection).GetSourcePort()).ToDataRes(types.Int)
 	},
 	"finding.connection.protocol": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingConnection).GetProtocol()).ToDataRes(types.String)
+		return (r.(*MqlFindingConnection).GetProtocol()).ToDataRes(types.String)
 	},
 	"finding.attackTactic.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingAttackTactic).GetId()).ToDataRes(types.String)
+		return (r.(*MqlFindingAttackTactic).GetId()).ToDataRes(types.String)
 	},
 	"finding.attackTactic.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingAttackTactic).GetName()).ToDataRes(types.String)
+		return (r.(*MqlFindingAttackTactic).GetName()).ToDataRes(types.String)
 	},
 	"finding.attackTactic.description": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingAttackTactic).GetDescription()).ToDataRes(types.String)
+		return (r.(*MqlFindingAttackTactic).GetDescription()).ToDataRes(types.String)
 	},
 	"finding.attackTechnique.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingAttackTechnique).GetId()).ToDataRes(types.String)
+		return (r.(*MqlFindingAttackTechnique).GetId()).ToDataRes(types.String)
 	},
 	"finding.attackTechnique.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingAttackTechnique).GetName()).ToDataRes(types.String)
+		return (r.(*MqlFindingAttackTechnique).GetName()).ToDataRes(types.String)
 	},
 	"finding.attackTechnique.description": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlFindingAttackTechnique).GetDescription()).ToDataRes(types.String)
+		return (r.(*MqlFindingAttackTechnique).GetDescription()).ToDataRes(types.String)
 	},
 }
 
@@ -3863,451 +3863,451 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).__id, ok = v.Value.(string)
+		r.(*MqlFinding).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.ref": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).Ref, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFinding).Ref, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.mrn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).Mrn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFinding).Mrn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFinding).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFinding).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.details": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).Details, ok = plugin.RawToTValue[*mqlFindingDetail](v.Value, v.Error)
+		r.(*MqlFinding).Details, ok = plugin.RawToTValue[*mqlFindingDetail](v.Value, v.Error)
 		return
 	},
 	"finding.firstSeenAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).FirstSeenAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		r.(*MqlFinding).FirstSeenAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"finding.lastSeenAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).LastSeenAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		r.(*MqlFinding).LastSeenAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"finding.remediatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).RemediatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		r.(*MqlFinding).RemediatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"finding.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFinding).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).Source, ok = plugin.RawToTValue[*mqlFindingSource](v.Value, v.Error)
+		r.(*MqlFinding).Source, ok = plugin.RawToTValue[*mqlFindingSource](v.Value, v.Error)
 		return
 	},
 	"finding.affects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).Affects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*MqlFinding).Affects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"finding.evidences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).Evidences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*MqlFinding).Evidences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"finding.remediations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFinding).Remediations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*MqlFinding).Remediations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"finding.detail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingDetail).__id, ok = v.Value.(string)
+		r.(*MqlFindingDetail).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.detail.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingDetail).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingDetail).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.detail.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingDetail).Severity, ok = plugin.RawToTValue[*mqlFindingSeverity](v.Value, v.Error)
+		r.(*MqlFindingDetail).Severity, ok = plugin.RawToTValue[*mqlFindingSeverity](v.Value, v.Error)
 		return
 	},
 	"finding.detail.confidence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingDetail).Confidence, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingDetail).Confidence, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.detail.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingDetail).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingDetail).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.detail.references": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingDetail).References, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*MqlFindingDetail).References, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"finding.detail.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingDetail).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		r.(*MqlFindingDetail).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"finding.source.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingSource).__id, ok = v.Value.(string)
+		r.(*MqlFindingSource).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.source.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingSource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingSource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.source.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingSource).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingSource).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.severity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingSeverity).__id, ok = v.Value.(string)
+		r.(*MqlFindingSeverity).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.severity.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingSeverity).Source, ok = plugin.RawToTValue[*mqlFindingSource](v.Value, v.Error)
+		r.(*MqlFindingSeverity).Source, ok = plugin.RawToTValue[*mqlFindingSource](v.Value, v.Error)
 		return
 	},
 	"finding.severity.score": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingSeverity).Score, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		r.(*MqlFindingSeverity).Score, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
 	},
 	"finding.severity.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingSeverity).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingSeverity).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.severity.vector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingSeverity).Vector, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingSeverity).Vector, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.severity.method": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingSeverity).Method, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingSeverity).Method, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.severity.rating": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingSeverity).Rating, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingSeverity).Rating, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.reference.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingReference).__id, ok = v.Value.(string)
+		r.(*MqlFindingReference).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.reference.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingReference).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingReference).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.reference.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingReference).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingReference).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.reference.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingReference).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingReference).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.reference.referenceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingReference).ReferenceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingReference).ReferenceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.reference.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingReference).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		r.(*MqlFindingReference).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"finding.affects.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAffects).__id, ok = v.Value.(string)
+		r.(*MqlFindingAffects).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.affects.component": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAffects).Component, ok = plugin.RawToTValue[*mqlFindingComponent](v.Value, v.Error)
+		r.(*MqlFindingAffects).Component, ok = plugin.RawToTValue[*mqlFindingComponent](v.Value, v.Error)
 		return
 	},
 	"finding.affects.subComponents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAffects).SubComponents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*MqlFindingAffects).SubComponents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"finding.component.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingComponent).__id, ok = v.Value.(string)
+		r.(*MqlFindingComponent).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.component.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingComponent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingComponent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.component.identifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingComponent).Identifiers, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		r.(*MqlFindingComponent).Identifiers, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"finding.component.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingComponent).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		r.(*MqlFindingComponent).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"finding.component.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingComponent).File, ok = plugin.RawToTValue[*mqlFindingFileComponent](v.Value, v.Error)
+		r.(*MqlFindingComponent).File, ok = plugin.RawToTValue[*mqlFindingFileComponent](v.Value, v.Error)
 		return
 	},
 	"finding.fileComponent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFileComponent).__id, ok = v.Value.(string)
+		r.(*MqlFindingFileComponent).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.fileComponent.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFileComponent).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingFileComponent).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.fileComponent.hash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFileComponent).Hash, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingFileComponent).Hash, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.fileComponent.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFileComponent).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingFileComponent).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.fileComponent.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFileComponent).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*MqlFindingFileComponent).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).__id, ok = v.Value.(string)
+		r.(*MqlFindingEvidence).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.evidence.tactic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).Tactic, ok = plugin.RawToTValue[*mqlFindingAttackTactic](v.Value, v.Error)
+		r.(*MqlFindingEvidence).Tactic, ok = plugin.RawToTValue[*mqlFindingAttackTactic](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.technique": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).Technique, ok = plugin.RawToTValue[*mqlFindingAttackTechnique](v.Value, v.Error)
+		r.(*MqlFindingEvidence).Technique, ok = plugin.RawToTValue[*mqlFindingAttackTechnique](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.confidence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).Confidence, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingEvidence).Confidence, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).User, ok = plugin.RawToTValue[*mqlFindingUser](v.Value, v.Error)
+		r.(*MqlFindingEvidence).User, ok = plugin.RawToTValue[*mqlFindingUser](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).File, ok = plugin.RawToTValue[*mqlFindingFile](v.Value, v.Error)
+		r.(*MqlFindingEvidence).File, ok = plugin.RawToTValue[*mqlFindingFile](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.process": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).Process, ok = plugin.RawToTValue[*mqlFindingProcess](v.Value, v.Error)
+		r.(*MqlFindingEvidence).Process, ok = plugin.RawToTValue[*mqlFindingProcess](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.container": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).Container, ok = plugin.RawToTValue[*mqlFindingContainer](v.Value, v.Error)
+		r.(*MqlFindingEvidence).Container, ok = plugin.RawToTValue[*mqlFindingContainer](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.kubernetes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).Kubernetes, ok = plugin.RawToTValue[*mqlFindingKubernetes](v.Value, v.Error)
+		r.(*MqlFindingEvidence).Kubernetes, ok = plugin.RawToTValue[*mqlFindingKubernetes](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.registryKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).RegistryKey, ok = plugin.RawToTValue[*mqlFindingRegistryKey](v.Value, v.Error)
+		r.(*MqlFindingEvidence).RegistryKey, ok = plugin.RawToTValue[*mqlFindingRegistryKey](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.connection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).Connection, ok = plugin.RawToTValue[*mqlFindingConnection](v.Value, v.Error)
+		r.(*MqlFindingEvidence).Connection, ok = plugin.RawToTValue[*mqlFindingConnection](v.Value, v.Error)
 		return
 	},
 	"finding.evidence.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingEvidence).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		r.(*MqlFindingEvidence).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"finding.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFile).__id, ok = v.Value.(string)
+		r.(*MqlFindingFile).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.file.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFile).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingFile).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.file.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFile).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*MqlFindingFile).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"finding.file.md5": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFile).Md5, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingFile).Md5, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.file.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFile).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingFile).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.file.contents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingFile).Contents, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingFile).Contents, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingUser).__id, ok = v.Value.(string)
+		r.(*MqlFindingUser).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.user.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingUser).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		r.(*MqlFindingUser).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"finding.process.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingProcess).__id, ok = v.Value.(string)
+		r.(*MqlFindingProcess).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.process.cmdline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingProcess).Cmdline, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingProcess).Cmdline, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.process.binary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingProcess).Binary, ok = plugin.RawToTValue[*mqlFindingFile](v.Value, v.Error)
+		r.(*MqlFindingProcess).Binary, ok = plugin.RawToTValue[*mqlFindingFile](v.Value, v.Error)
 		return
 	},
 	"finding.process.script": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingProcess).Script, ok = plugin.RawToTValue[*mqlFindingFile](v.Value, v.Error)
+		r.(*MqlFindingProcess).Script, ok = plugin.RawToTValue[*mqlFindingFile](v.Value, v.Error)
 		return
 	},
 	"finding.process.pid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingProcess).Pid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*MqlFindingProcess).Pid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"finding.process.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingProcess).User, ok = plugin.RawToTValue[*mqlFindingUser](v.Value, v.Error)
+		r.(*MqlFindingProcess).User, ok = plugin.RawToTValue[*mqlFindingUser](v.Value, v.Error)
 		return
 	},
 	"finding.process.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingProcess).Parent, ok = plugin.RawToTValue[*mqlFindingProcess](v.Value, v.Error)
+		r.(*MqlFindingProcess).Parent, ok = plugin.RawToTValue[*mqlFindingProcess](v.Value, v.Error)
 		return
 	},
 	"finding.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingContainer).__id, ok = v.Value.(string)
+		r.(*MqlFindingContainer).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.container.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.container.imageUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingContainer).ImageUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingContainer).ImageUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.container.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingContainer).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingContainer).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.kubernetes.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingKubernetes).__id, ok = v.Value.(string)
+		r.(*MqlFindingKubernetes).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.kubernetes.pods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingKubernetes).Pods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*MqlFindingKubernetes).Pods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"finding.kubernetes.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingKubernetes).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*MqlFindingKubernetes).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"finding.kubernetes.pod.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingKubernetesPod).__id, ok = v.Value.(string)
+		r.(*MqlFindingKubernetesPod).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.kubernetes.pod.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingKubernetesPod).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingKubernetesPod).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.kubernetes.pod.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingKubernetesPod).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingKubernetesPod).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.kubernetes.pod.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingKubernetesPod).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*MqlFindingKubernetesPod).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"finding.kubernetes.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingKubernetesNode).__id, ok = v.Value.(string)
+		r.(*MqlFindingKubernetesNode).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.kubernetes.node.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingKubernetesNode).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingKubernetesNode).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.kubernetes.node.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingKubernetesNode).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingKubernetesNode).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.registryKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingRegistryKey).__id, ok = v.Value.(string)
+		r.(*MqlFindingRegistryKey).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.registryKey.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingRegistryKey).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingRegistryKey).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.registryKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingRegistryKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingRegistryKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.registryKey.data": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingRegistryKey).Data, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingRegistryKey).Data, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingConnection).__id, ok = v.Value.(string)
+		r.(*MqlFindingConnection).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.connection.destinationAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingConnection).DestinationAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingConnection).DestinationAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.connection.destinationPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingConnection).DestinationPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*MqlFindingConnection).DestinationPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"finding.connection.sourceAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingConnection).SourceAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingConnection).SourceAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.connection.sourcePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingConnection).SourcePort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*MqlFindingConnection).SourcePort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"finding.connection.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingConnection).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingConnection).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.attackTactic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAttackTactic).__id, ok = v.Value.(string)
+		r.(*MqlFindingAttackTactic).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.attackTactic.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAttackTactic).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingAttackTactic).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.attackTactic.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAttackTactic).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingAttackTactic).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.attackTactic.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAttackTactic).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingAttackTactic).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.attackTechnique.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAttackTechnique).__id, ok = v.Value.(string)
+		r.(*MqlFindingAttackTechnique).__id, ok = v.Value.(string)
 		return
 	},
 	"finding.attackTechnique.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAttackTechnique).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingAttackTechnique).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.attackTechnique.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAttackTechnique).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingAttackTechnique).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"finding.attackTechnique.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlFindingAttackTechnique).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*MqlFindingAttackTechnique).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -8793,11 +8793,11 @@ func (c *mqlGithubDeploymentStatus) GetEnvironmentUrl() *plugin.TValue[string] {
 	return &c.EnvironmentUrl
 }
 
-// mqlFinding for the finding resource
-type mqlFinding struct {
+// MqlFinding for the finding resource
+type MqlFinding struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingInternal it will be used here
+	// optional: if you define MqlFindingInternal it will be used here
 	Id           plugin.TValue[string]
 	Ref          plugin.TValue[string]
 	Mrn          plugin.TValue[string]
@@ -8816,7 +8816,7 @@ type mqlFinding struct {
 
 // createFinding creates a new instance of this resource
 func createFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFinding{
+	res := &MqlFinding{
 		MqlRuntime: runtime,
 	}
 
@@ -8838,75 +8838,75 @@ func createFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 	return res, nil
 }
 
-func (c *mqlFinding) MqlName() string {
+func (c *MqlFinding) MqlName() string {
 	return "finding"
 }
 
-func (c *mqlFinding) MqlID() string {
+func (c *MqlFinding) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFinding) GetId() *plugin.TValue[string] {
+func (c *MqlFinding) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlFinding) GetRef() *plugin.TValue[string] {
+func (c *MqlFinding) GetRef() *plugin.TValue[string] {
 	return &c.Ref
 }
 
-func (c *mqlFinding) GetMrn() *plugin.TValue[string] {
+func (c *MqlFinding) GetMrn() *plugin.TValue[string] {
 	return &c.Mrn
 }
 
-func (c *mqlFinding) GetGroupId() *plugin.TValue[string] {
+func (c *MqlFinding) GetGroupId() *plugin.TValue[string] {
 	return &c.GroupId
 }
 
-func (c *mqlFinding) GetSummary() *plugin.TValue[string] {
+func (c *MqlFinding) GetSummary() *plugin.TValue[string] {
 	return &c.Summary
 }
 
-func (c *mqlFinding) GetDetails() *plugin.TValue[*mqlFindingDetail] {
+func (c *MqlFinding) GetDetails() *plugin.TValue[*mqlFindingDetail] {
 	return &c.Details
 }
 
-func (c *mqlFinding) GetFirstSeenAt() *plugin.TValue[*time.Time] {
+func (c *MqlFinding) GetFirstSeenAt() *plugin.TValue[*time.Time] {
 	return &c.FirstSeenAt
 }
 
-func (c *mqlFinding) GetLastSeenAt() *plugin.TValue[*time.Time] {
+func (c *MqlFinding) GetLastSeenAt() *plugin.TValue[*time.Time] {
 	return &c.LastSeenAt
 }
 
-func (c *mqlFinding) GetRemediatedAt() *plugin.TValue[*time.Time] {
+func (c *MqlFinding) GetRemediatedAt() *plugin.TValue[*time.Time] {
 	return &c.RemediatedAt
 }
 
-func (c *mqlFinding) GetStatus() *plugin.TValue[string] {
+func (c *MqlFinding) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlFinding) GetSource() *plugin.TValue[*mqlFindingSource] {
+func (c *MqlFinding) GetSource() *plugin.TValue[*mqlFindingSource] {
 	return &c.Source
 }
 
-func (c *mqlFinding) GetAffects() *plugin.TValue[[]any] {
+func (c *MqlFinding) GetAffects() *plugin.TValue[[]any] {
 	return &c.Affects
 }
 
-func (c *mqlFinding) GetEvidences() *plugin.TValue[[]any] {
+func (c *MqlFinding) GetEvidences() *plugin.TValue[[]any] {
 	return &c.Evidences
 }
 
-func (c *mqlFinding) GetRemediations() *plugin.TValue[[]any] {
+func (c *MqlFinding) GetRemediations() *plugin.TValue[[]any] {
 	return &c.Remediations
 }
 
-// mqlFindingDetail for the finding.detail resource
-type mqlFindingDetail struct {
+// MqlFindingDetail for the finding.detail resource
+type MqlFindingDetail struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingDetailInternal it will be used here
+	// optional: if you define MqlFindingDetailInternal it will be used here
 	Category    plugin.TValue[string]
 	Severity    plugin.TValue[*mqlFindingSeverity]
 	Confidence  plugin.TValue[string]
@@ -8917,7 +8917,7 @@ type mqlFindingDetail struct {
 
 // createFindingDetail creates a new instance of this resource
 func createFindingDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingDetail{
+	res := &MqlFindingDetail{
 		MqlRuntime: runtime,
 	}
 
@@ -8939,50 +8939,50 @@ func createFindingDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	return res, nil
 }
 
-func (c *mqlFindingDetail) MqlName() string {
+func (c *MqlFindingDetail) MqlName() string {
 	return "finding.detail"
 }
 
-func (c *mqlFindingDetail) MqlID() string {
+func (c *MqlFindingDetail) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingDetail) GetCategory() *plugin.TValue[string] {
+func (c *MqlFindingDetail) GetCategory() *plugin.TValue[string] {
 	return &c.Category
 }
 
-func (c *mqlFindingDetail) GetSeverity() *plugin.TValue[*mqlFindingSeverity] {
+func (c *MqlFindingDetail) GetSeverity() *plugin.TValue[*mqlFindingSeverity] {
 	return &c.Severity
 }
 
-func (c *mqlFindingDetail) GetConfidence() *plugin.TValue[string] {
+func (c *MqlFindingDetail) GetConfidence() *plugin.TValue[string] {
 	return &c.Confidence
 }
 
-func (c *mqlFindingDetail) GetDescription() *plugin.TValue[string] {
+func (c *MqlFindingDetail) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlFindingDetail) GetReferences() *plugin.TValue[[]any] {
+func (c *MqlFindingDetail) GetReferences() *plugin.TValue[[]any] {
 	return &c.References
 }
 
-func (c *mqlFindingDetail) GetProperties() *plugin.TValue[map[string]any] {
+func (c *MqlFindingDetail) GetProperties() *plugin.TValue[map[string]any] {
 	return &c.Properties
 }
 
-// mqlFindingSource for the finding.source resource
-type mqlFindingSource struct {
+// MqlFindingSource for the finding.source resource
+type MqlFindingSource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingSourceInternal it will be used here
+	// optional: if you define MqlFindingSourceInternal it will be used here
 	Name plugin.TValue[string]
 	Url  plugin.TValue[string]
 }
 
 // createFindingSource creates a new instance of this resource
 func createFindingSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingSource{
+	res := &MqlFindingSource{
 		MqlRuntime: runtime,
 	}
 
@@ -9004,27 +9004,27 @@ func createFindingSource(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	return res, nil
 }
 
-func (c *mqlFindingSource) MqlName() string {
+func (c *MqlFindingSource) MqlName() string {
 	return "finding.source"
 }
 
-func (c *mqlFindingSource) MqlID() string {
+func (c *MqlFindingSource) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingSource) GetName() *plugin.TValue[string] {
+func (c *MqlFindingSource) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlFindingSource) GetUrl() *plugin.TValue[string] {
+func (c *MqlFindingSource) GetUrl() *plugin.TValue[string] {
 	return &c.Url
 }
 
-// mqlFindingSeverity for the finding.severity resource
-type mqlFindingSeverity struct {
+// MqlFindingSeverity for the finding.severity resource
+type MqlFindingSeverity struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingSeverityInternal it will be used here
+	// optional: if you define MqlFindingSeverityInternal it will be used here
 	Source   plugin.TValue[*mqlFindingSource]
 	Score    plugin.TValue[float64]
 	Severity plugin.TValue[string]
@@ -9035,7 +9035,7 @@ type mqlFindingSeverity struct {
 
 // createFindingSeverity creates a new instance of this resource
 func createFindingSeverity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingSeverity{
+	res := &MqlFindingSeverity{
 		MqlRuntime: runtime,
 	}
 
@@ -9057,43 +9057,43 @@ func createFindingSeverity(runtime *plugin.Runtime, args map[string]*llx.RawData
 	return res, nil
 }
 
-func (c *mqlFindingSeverity) MqlName() string {
+func (c *MqlFindingSeverity) MqlName() string {
 	return "finding.severity"
 }
 
-func (c *mqlFindingSeverity) MqlID() string {
+func (c *MqlFindingSeverity) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingSeverity) GetSource() *plugin.TValue[*mqlFindingSource] {
+func (c *MqlFindingSeverity) GetSource() *plugin.TValue[*mqlFindingSource] {
 	return &c.Source
 }
 
-func (c *mqlFindingSeverity) GetScore() *plugin.TValue[float64] {
+func (c *MqlFindingSeverity) GetScore() *plugin.TValue[float64] {
 	return &c.Score
 }
 
-func (c *mqlFindingSeverity) GetSeverity() *plugin.TValue[string] {
+func (c *MqlFindingSeverity) GetSeverity() *plugin.TValue[string] {
 	return &c.Severity
 }
 
-func (c *mqlFindingSeverity) GetVector() *plugin.TValue[string] {
+func (c *MqlFindingSeverity) GetVector() *plugin.TValue[string] {
 	return &c.Vector
 }
 
-func (c *mqlFindingSeverity) GetMethod() *plugin.TValue[string] {
+func (c *MqlFindingSeverity) GetMethod() *plugin.TValue[string] {
 	return &c.Method
 }
 
-func (c *mqlFindingSeverity) GetRating() *plugin.TValue[string] {
+func (c *MqlFindingSeverity) GetRating() *plugin.TValue[string] {
 	return &c.Rating
 }
 
-// mqlFindingReference for the finding.reference resource
-type mqlFindingReference struct {
+// MqlFindingReference for the finding.reference resource
+type MqlFindingReference struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingReferenceInternal it will be used here
+	// optional: if you define MqlFindingReferenceInternal it will be used here
 	Id            plugin.TValue[string]
 	Name          plugin.TValue[string]
 	Url           plugin.TValue[string]
@@ -9103,7 +9103,7 @@ type mqlFindingReference struct {
 
 // createFindingReference creates a new instance of this resource
 func createFindingReference(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingReference{
+	res := &MqlFindingReference{
 		MqlRuntime: runtime,
 	}
 
@@ -9125,46 +9125,46 @@ func createFindingReference(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	return res, nil
 }
 
-func (c *mqlFindingReference) MqlName() string {
+func (c *MqlFindingReference) MqlName() string {
 	return "finding.reference"
 }
 
-func (c *mqlFindingReference) MqlID() string {
+func (c *MqlFindingReference) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingReference) GetId() *plugin.TValue[string] {
+func (c *MqlFindingReference) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlFindingReference) GetName() *plugin.TValue[string] {
+func (c *MqlFindingReference) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlFindingReference) GetUrl() *plugin.TValue[string] {
+func (c *MqlFindingReference) GetUrl() *plugin.TValue[string] {
 	return &c.Url
 }
 
-func (c *mqlFindingReference) GetReferenceType() *plugin.TValue[string] {
+func (c *MqlFindingReference) GetReferenceType() *plugin.TValue[string] {
 	return &c.ReferenceType
 }
 
-func (c *mqlFindingReference) GetMetadata() *plugin.TValue[map[string]any] {
+func (c *MqlFindingReference) GetMetadata() *plugin.TValue[map[string]any] {
 	return &c.Metadata
 }
 
-// mqlFindingAffects for the finding.affects resource
-type mqlFindingAffects struct {
+// MqlFindingAffects for the finding.affects resource
+type MqlFindingAffects struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingAffectsInternal it will be used here
+	// optional: if you define MqlFindingAffectsInternal it will be used here
 	Component     plugin.TValue[*mqlFindingComponent]
 	SubComponents plugin.TValue[[]any]
 }
 
 // createFindingAffects creates a new instance of this resource
 func createFindingAffects(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingAffects{
+	res := &MqlFindingAffects{
 		MqlRuntime: runtime,
 	}
 
@@ -9186,27 +9186,27 @@ func createFindingAffects(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	return res, nil
 }
 
-func (c *mqlFindingAffects) MqlName() string {
+func (c *MqlFindingAffects) MqlName() string {
 	return "finding.affects"
 }
 
-func (c *mqlFindingAffects) MqlID() string {
+func (c *MqlFindingAffects) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingAffects) GetComponent() *plugin.TValue[*mqlFindingComponent] {
+func (c *MqlFindingAffects) GetComponent() *plugin.TValue[*mqlFindingComponent] {
 	return &c.Component
 }
 
-func (c *mqlFindingAffects) GetSubComponents() *plugin.TValue[[]any] {
+func (c *MqlFindingAffects) GetSubComponents() *plugin.TValue[[]any] {
 	return &c.SubComponents
 }
 
-// mqlFindingComponent for the finding.component resource
-type mqlFindingComponent struct {
+// MqlFindingComponent for the finding.component resource
+type MqlFindingComponent struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingComponentInternal it will be used here
+	// optional: if you define MqlFindingComponentInternal it will be used here
 	Id          plugin.TValue[string]
 	Identifiers plugin.TValue[map[string]any]
 	Properties  plugin.TValue[map[string]any]
@@ -9215,7 +9215,7 @@ type mqlFindingComponent struct {
 
 // createFindingComponent creates a new instance of this resource
 func createFindingComponent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingComponent{
+	res := &MqlFindingComponent{
 		MqlRuntime: runtime,
 	}
 
@@ -9237,35 +9237,35 @@ func createFindingComponent(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	return res, nil
 }
 
-func (c *mqlFindingComponent) MqlName() string {
+func (c *MqlFindingComponent) MqlName() string {
 	return "finding.component"
 }
 
-func (c *mqlFindingComponent) MqlID() string {
+func (c *MqlFindingComponent) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingComponent) GetId() *plugin.TValue[string] {
+func (c *MqlFindingComponent) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlFindingComponent) GetIdentifiers() *plugin.TValue[map[string]any] {
+func (c *MqlFindingComponent) GetIdentifiers() *plugin.TValue[map[string]any] {
 	return &c.Identifiers
 }
 
-func (c *mqlFindingComponent) GetProperties() *plugin.TValue[map[string]any] {
+func (c *MqlFindingComponent) GetProperties() *plugin.TValue[map[string]any] {
 	return &c.Properties
 }
 
-func (c *mqlFindingComponent) GetFile() *plugin.TValue[*mqlFindingFileComponent] {
+func (c *MqlFindingComponent) GetFile() *plugin.TValue[*mqlFindingFileComponent] {
 	return &c.File
 }
 
-// mqlFindingFileComponent for the finding.fileComponent resource
-type mqlFindingFileComponent struct {
+// MqlFindingFileComponent for the finding.fileComponent resource
+type MqlFindingFileComponent struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingFileComponentInternal it will be used here
+	// optional: if you define MqlFindingFileComponentInternal it will be used here
 	Path   plugin.TValue[string]
 	Hash   plugin.TValue[string]
 	Format plugin.TValue[string]
@@ -9274,7 +9274,7 @@ type mqlFindingFileComponent struct {
 
 // createFindingFileComponent creates a new instance of this resource
 func createFindingFileComponent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingFileComponent{
+	res := &MqlFindingFileComponent{
 		MqlRuntime: runtime,
 	}
 
@@ -9296,35 +9296,35 @@ func createFindingFileComponent(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return res, nil
 }
 
-func (c *mqlFindingFileComponent) MqlName() string {
+func (c *MqlFindingFileComponent) MqlName() string {
 	return "finding.fileComponent"
 }
 
-func (c *mqlFindingFileComponent) MqlID() string {
+func (c *MqlFindingFileComponent) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingFileComponent) GetPath() *plugin.TValue[string] {
+func (c *MqlFindingFileComponent) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
 
-func (c *mqlFindingFileComponent) GetHash() *plugin.TValue[string] {
+func (c *MqlFindingFileComponent) GetHash() *plugin.TValue[string] {
 	return &c.Hash
 }
 
-func (c *mqlFindingFileComponent) GetFormat() *plugin.TValue[string] {
+func (c *MqlFindingFileComponent) GetFormat() *plugin.TValue[string] {
 	return &c.Format
 }
 
-func (c *mqlFindingFileComponent) GetSize() *plugin.TValue[int64] {
+func (c *MqlFindingFileComponent) GetSize() *plugin.TValue[int64] {
 	return &c.Size
 }
 
-// mqlFindingEvidence for the finding.evidence resource
-type mqlFindingEvidence struct {
+// MqlFindingEvidence for the finding.evidence resource
+type MqlFindingEvidence struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingEvidenceInternal it will be used here
+	// optional: if you define MqlFindingEvidenceInternal it will be used here
 	Tactic      plugin.TValue[*mqlFindingAttackTactic]
 	Technique   plugin.TValue[*mqlFindingAttackTechnique]
 	Confidence  plugin.TValue[string]
@@ -9340,7 +9340,7 @@ type mqlFindingEvidence struct {
 
 // createFindingEvidence creates a new instance of this resource
 func createFindingEvidence(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingEvidence{
+	res := &MqlFindingEvidence{
 		MqlRuntime: runtime,
 	}
 
@@ -9362,63 +9362,63 @@ func createFindingEvidence(runtime *plugin.Runtime, args map[string]*llx.RawData
 	return res, nil
 }
 
-func (c *mqlFindingEvidence) MqlName() string {
+func (c *MqlFindingEvidence) MqlName() string {
 	return "finding.evidence"
 }
 
-func (c *mqlFindingEvidence) MqlID() string {
+func (c *MqlFindingEvidence) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingEvidence) GetTactic() *plugin.TValue[*mqlFindingAttackTactic] {
+func (c *MqlFindingEvidence) GetTactic() *plugin.TValue[*mqlFindingAttackTactic] {
 	return &c.Tactic
 }
 
-func (c *mqlFindingEvidence) GetTechnique() *plugin.TValue[*mqlFindingAttackTechnique] {
+func (c *MqlFindingEvidence) GetTechnique() *plugin.TValue[*mqlFindingAttackTechnique] {
 	return &c.Technique
 }
 
-func (c *mqlFindingEvidence) GetConfidence() *plugin.TValue[string] {
+func (c *MqlFindingEvidence) GetConfidence() *plugin.TValue[string] {
 	return &c.Confidence
 }
 
-func (c *mqlFindingEvidence) GetUser() *plugin.TValue[*mqlFindingUser] {
+func (c *MqlFindingEvidence) GetUser() *plugin.TValue[*mqlFindingUser] {
 	return &c.User
 }
 
-func (c *mqlFindingEvidence) GetFile() *plugin.TValue[*mqlFindingFile] {
+func (c *MqlFindingEvidence) GetFile() *plugin.TValue[*mqlFindingFile] {
 	return &c.File
 }
 
-func (c *mqlFindingEvidence) GetProcess() *plugin.TValue[*mqlFindingProcess] {
+func (c *MqlFindingEvidence) GetProcess() *plugin.TValue[*mqlFindingProcess] {
 	return &c.Process
 }
 
-func (c *mqlFindingEvidence) GetContainer() *plugin.TValue[*mqlFindingContainer] {
+func (c *MqlFindingEvidence) GetContainer() *plugin.TValue[*mqlFindingContainer] {
 	return &c.Container
 }
 
-func (c *mqlFindingEvidence) GetKubernetes() *plugin.TValue[*mqlFindingKubernetes] {
+func (c *MqlFindingEvidence) GetKubernetes() *plugin.TValue[*mqlFindingKubernetes] {
 	return &c.Kubernetes
 }
 
-func (c *mqlFindingEvidence) GetRegistryKey() *plugin.TValue[*mqlFindingRegistryKey] {
+func (c *MqlFindingEvidence) GetRegistryKey() *plugin.TValue[*mqlFindingRegistryKey] {
 	return &c.RegistryKey
 }
 
-func (c *mqlFindingEvidence) GetConnection() *plugin.TValue[*mqlFindingConnection] {
+func (c *MqlFindingEvidence) GetConnection() *plugin.TValue[*mqlFindingConnection] {
 	return &c.Connection
 }
 
-func (c *mqlFindingEvidence) GetProperties() *plugin.TValue[map[string]any] {
+func (c *MqlFindingEvidence) GetProperties() *plugin.TValue[map[string]any] {
 	return &c.Properties
 }
 
-// mqlFindingFile for the finding.file resource
-type mqlFindingFile struct {
+// MqlFindingFile for the finding.file resource
+type MqlFindingFile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingFileInternal it will be used here
+	// optional: if you define MqlFindingFileInternal it will be used here
 	Path     plugin.TValue[string]
 	Size     plugin.TValue[int64]
 	Md5      plugin.TValue[string]
@@ -9428,7 +9428,7 @@ type mqlFindingFile struct {
 
 // createFindingFile creates a new instance of this resource
 func createFindingFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingFile{
+	res := &MqlFindingFile{
 		MqlRuntime: runtime,
 	}
 
@@ -9450,39 +9450,39 @@ func createFindingFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	return res, nil
 }
 
-func (c *mqlFindingFile) MqlName() string {
+func (c *MqlFindingFile) MqlName() string {
 	return "finding.file"
 }
 
-func (c *mqlFindingFile) MqlID() string {
+func (c *MqlFindingFile) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingFile) GetPath() *plugin.TValue[string] {
+func (c *MqlFindingFile) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
 
-func (c *mqlFindingFile) GetSize() *plugin.TValue[int64] {
+func (c *MqlFindingFile) GetSize() *plugin.TValue[int64] {
 	return &c.Size
 }
 
-func (c *mqlFindingFile) GetMd5() *plugin.TValue[string] {
+func (c *MqlFindingFile) GetMd5() *plugin.TValue[string] {
 	return &c.Md5
 }
 
-func (c *mqlFindingFile) GetSha256() *plugin.TValue[string] {
+func (c *MqlFindingFile) GetSha256() *plugin.TValue[string] {
 	return &c.Sha256
 }
 
-func (c *mqlFindingFile) GetContents() *plugin.TValue[string] {
+func (c *MqlFindingFile) GetContents() *plugin.TValue[string] {
 	return &c.Contents
 }
 
-// mqlFindingUser for the finding.user resource
-type mqlFindingUser struct {
+// MqlFindingUser for the finding.user resource
+type MqlFindingUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingUserInternal it will be used here
+	// optional: if you define MqlFindingUserInternal it will be used here
 	Id         plugin.TValue[string]
 	Name       plugin.TValue[string]
 	Properties plugin.TValue[map[string]any]
@@ -9490,7 +9490,7 @@ type mqlFindingUser struct {
 
 // createFindingUser creates a new instance of this resource
 func createFindingUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingUser{
+	res := &MqlFindingUser{
 		MqlRuntime: runtime,
 	}
 
@@ -9512,31 +9512,31 @@ func createFindingUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 	return res, nil
 }
 
-func (c *mqlFindingUser) MqlName() string {
+func (c *MqlFindingUser) MqlName() string {
 	return "finding.user"
 }
 
-func (c *mqlFindingUser) MqlID() string {
+func (c *MqlFindingUser) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingUser) GetId() *plugin.TValue[string] {
+func (c *MqlFindingUser) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlFindingUser) GetName() *plugin.TValue[string] {
+func (c *MqlFindingUser) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlFindingUser) GetProperties() *plugin.TValue[map[string]any] {
+func (c *MqlFindingUser) GetProperties() *plugin.TValue[map[string]any] {
 	return &c.Properties
 }
 
-// mqlFindingProcess for the finding.process resource
-type mqlFindingProcess struct {
+// MqlFindingProcess for the finding.process resource
+type MqlFindingProcess struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingProcessInternal it will be used here
+	// optional: if you define MqlFindingProcessInternal it will be used here
 	Cmdline plugin.TValue[string]
 	Binary  plugin.TValue[*mqlFindingFile]
 	Script  plugin.TValue[*mqlFindingFile]
@@ -9547,7 +9547,7 @@ type mqlFindingProcess struct {
 
 // createFindingProcess creates a new instance of this resource
 func createFindingProcess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingProcess{
+	res := &MqlFindingProcess{
 		MqlRuntime: runtime,
 	}
 
@@ -9569,43 +9569,43 @@ func createFindingProcess(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	return res, nil
 }
 
-func (c *mqlFindingProcess) MqlName() string {
+func (c *MqlFindingProcess) MqlName() string {
 	return "finding.process"
 }
 
-func (c *mqlFindingProcess) MqlID() string {
+func (c *MqlFindingProcess) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingProcess) GetCmdline() *plugin.TValue[string] {
+func (c *MqlFindingProcess) GetCmdline() *plugin.TValue[string] {
 	return &c.Cmdline
 }
 
-func (c *mqlFindingProcess) GetBinary() *plugin.TValue[*mqlFindingFile] {
+func (c *MqlFindingProcess) GetBinary() *plugin.TValue[*mqlFindingFile] {
 	return &c.Binary
 }
 
-func (c *mqlFindingProcess) GetScript() *plugin.TValue[*mqlFindingFile] {
+func (c *MqlFindingProcess) GetScript() *plugin.TValue[*mqlFindingFile] {
 	return &c.Script
 }
 
-func (c *mqlFindingProcess) GetPid() *plugin.TValue[int64] {
+func (c *MqlFindingProcess) GetPid() *plugin.TValue[int64] {
 	return &c.Pid
 }
 
-func (c *mqlFindingProcess) GetUser() *plugin.TValue[*mqlFindingUser] {
+func (c *MqlFindingProcess) GetUser() *plugin.TValue[*mqlFindingUser] {
 	return &c.User
 }
 
-func (c *mqlFindingProcess) GetParent() *plugin.TValue[*mqlFindingProcess] {
+func (c *MqlFindingProcess) GetParent() *plugin.TValue[*mqlFindingProcess] {
 	return &c.Parent
 }
 
-// mqlFindingContainer for the finding.container resource
-type mqlFindingContainer struct {
+// MqlFindingContainer for the finding.container resource
+type MqlFindingContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingContainerInternal it will be used here
+	// optional: if you define MqlFindingContainerInternal it will be used here
 	Name     plugin.TValue[string]
 	ImageUri plugin.TValue[string]
 	Digest   plugin.TValue[string]
@@ -9613,7 +9613,7 @@ type mqlFindingContainer struct {
 
 // createFindingContainer creates a new instance of this resource
 func createFindingContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingContainer{
+	res := &MqlFindingContainer{
 		MqlRuntime: runtime,
 	}
 
@@ -9635,38 +9635,38 @@ func createFindingContainer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	return res, nil
 }
 
-func (c *mqlFindingContainer) MqlName() string {
+func (c *MqlFindingContainer) MqlName() string {
 	return "finding.container"
 }
 
-func (c *mqlFindingContainer) MqlID() string {
+func (c *MqlFindingContainer) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingContainer) GetName() *plugin.TValue[string] {
+func (c *MqlFindingContainer) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlFindingContainer) GetImageUri() *plugin.TValue[string] {
+func (c *MqlFindingContainer) GetImageUri() *plugin.TValue[string] {
 	return &c.ImageUri
 }
 
-func (c *mqlFindingContainer) GetDigest() *plugin.TValue[string] {
+func (c *MqlFindingContainer) GetDigest() *plugin.TValue[string] {
 	return &c.Digest
 }
 
-// mqlFindingKubernetes for the finding.kubernetes resource
-type mqlFindingKubernetes struct {
+// MqlFindingKubernetes for the finding.kubernetes resource
+type MqlFindingKubernetes struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingKubernetesInternal it will be used here
+	// optional: if you define MqlFindingKubernetesInternal it will be used here
 	Pods  plugin.TValue[[]any]
 	Nodes plugin.TValue[[]any]
 }
 
 // createFindingKubernetes creates a new instance of this resource
 func createFindingKubernetes(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingKubernetes{
+	res := &MqlFindingKubernetes{
 		MqlRuntime: runtime,
 	}
 
@@ -9688,27 +9688,27 @@ func createFindingKubernetes(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	return res, nil
 }
 
-func (c *mqlFindingKubernetes) MqlName() string {
+func (c *MqlFindingKubernetes) MqlName() string {
 	return "finding.kubernetes"
 }
 
-func (c *mqlFindingKubernetes) MqlID() string {
+func (c *MqlFindingKubernetes) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingKubernetes) GetPods() *plugin.TValue[[]any] {
+func (c *MqlFindingKubernetes) GetPods() *plugin.TValue[[]any] {
 	return &c.Pods
 }
 
-func (c *mqlFindingKubernetes) GetNodes() *plugin.TValue[[]any] {
+func (c *MqlFindingKubernetes) GetNodes() *plugin.TValue[[]any] {
 	return &c.Nodes
 }
 
-// mqlFindingKubernetesPod for the finding.kubernetes.pod resource
-type mqlFindingKubernetesPod struct {
+// MqlFindingKubernetesPod for the finding.kubernetes.pod resource
+type MqlFindingKubernetesPod struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingKubernetesPodInternal it will be used here
+	// optional: if you define MqlFindingKubernetesPodInternal it will be used here
 	Name       plugin.TValue[string]
 	Namespace  plugin.TValue[string]
 	Containers plugin.TValue[[]any]
@@ -9716,7 +9716,7 @@ type mqlFindingKubernetesPod struct {
 
 // createFindingKubernetesPod creates a new instance of this resource
 func createFindingKubernetesPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingKubernetesPod{
+	res := &MqlFindingKubernetesPod{
 		MqlRuntime: runtime,
 	}
 
@@ -9738,38 +9738,38 @@ func createFindingKubernetesPod(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return res, nil
 }
 
-func (c *mqlFindingKubernetesPod) MqlName() string {
+func (c *MqlFindingKubernetesPod) MqlName() string {
 	return "finding.kubernetes.pod"
 }
 
-func (c *mqlFindingKubernetesPod) MqlID() string {
+func (c *MqlFindingKubernetesPod) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingKubernetesPod) GetName() *plugin.TValue[string] {
+func (c *MqlFindingKubernetesPod) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlFindingKubernetesPod) GetNamespace() *plugin.TValue[string] {
+func (c *MqlFindingKubernetesPod) GetNamespace() *plugin.TValue[string] {
 	return &c.Namespace
 }
 
-func (c *mqlFindingKubernetesPod) GetContainers() *plugin.TValue[[]any] {
+func (c *MqlFindingKubernetesPod) GetContainers() *plugin.TValue[[]any] {
 	return &c.Containers
 }
 
-// mqlFindingKubernetesNode for the finding.kubernetes.node resource
-type mqlFindingKubernetesNode struct {
+// MqlFindingKubernetesNode for the finding.kubernetes.node resource
+type MqlFindingKubernetesNode struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingKubernetesNodeInternal it will be used here
+	// optional: if you define MqlFindingKubernetesNodeInternal it will be used here
 	Name plugin.TValue[string]
 	Id   plugin.TValue[string]
 }
 
 // createFindingKubernetesNode creates a new instance of this resource
 func createFindingKubernetesNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingKubernetesNode{
+	res := &MqlFindingKubernetesNode{
 		MqlRuntime: runtime,
 	}
 
@@ -9791,27 +9791,27 @@ func createFindingKubernetesNode(runtime *plugin.Runtime, args map[string]*llx.R
 	return res, nil
 }
 
-func (c *mqlFindingKubernetesNode) MqlName() string {
+func (c *MqlFindingKubernetesNode) MqlName() string {
 	return "finding.kubernetes.node"
 }
 
-func (c *mqlFindingKubernetesNode) MqlID() string {
+func (c *MqlFindingKubernetesNode) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingKubernetesNode) GetName() *plugin.TValue[string] {
+func (c *MqlFindingKubernetesNode) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlFindingKubernetesNode) GetId() *plugin.TValue[string] {
+func (c *MqlFindingKubernetesNode) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-// mqlFindingRegistryKey for the finding.registryKey resource
-type mqlFindingRegistryKey struct {
+// MqlFindingRegistryKey for the finding.registryKey resource
+type MqlFindingRegistryKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingRegistryKeyInternal it will be used here
+	// optional: if you define MqlFindingRegistryKeyInternal it will be used here
 	Path plugin.TValue[string]
 	Name plugin.TValue[string]
 	Data plugin.TValue[string]
@@ -9819,7 +9819,7 @@ type mqlFindingRegistryKey struct {
 
 // createFindingRegistryKey creates a new instance of this resource
 func createFindingRegistryKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingRegistryKey{
+	res := &MqlFindingRegistryKey{
 		MqlRuntime: runtime,
 	}
 
@@ -9841,31 +9841,31 @@ func createFindingRegistryKey(runtime *plugin.Runtime, args map[string]*llx.RawD
 	return res, nil
 }
 
-func (c *mqlFindingRegistryKey) MqlName() string {
+func (c *MqlFindingRegistryKey) MqlName() string {
 	return "finding.registryKey"
 }
 
-func (c *mqlFindingRegistryKey) MqlID() string {
+func (c *MqlFindingRegistryKey) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingRegistryKey) GetPath() *plugin.TValue[string] {
+func (c *MqlFindingRegistryKey) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
 
-func (c *mqlFindingRegistryKey) GetName() *plugin.TValue[string] {
+func (c *MqlFindingRegistryKey) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlFindingRegistryKey) GetData() *plugin.TValue[string] {
+func (c *MqlFindingRegistryKey) GetData() *plugin.TValue[string] {
 	return &c.Data
 }
 
-// mqlFindingConnection for the finding.connection resource
-type mqlFindingConnection struct {
+// MqlFindingConnection for the finding.connection resource
+type MqlFindingConnection struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingConnectionInternal it will be used here
+	// optional: if you define MqlFindingConnectionInternal it will be used here
 	DestinationAddress plugin.TValue[string]
 	DestinationPort    plugin.TValue[int64]
 	SourceAddress      plugin.TValue[string]
@@ -9875,7 +9875,7 @@ type mqlFindingConnection struct {
 
 // createFindingConnection creates a new instance of this resource
 func createFindingConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingConnection{
+	res := &MqlFindingConnection{
 		MqlRuntime: runtime,
 	}
 
@@ -9897,39 +9897,39 @@ func createFindingConnection(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	return res, nil
 }
 
-func (c *mqlFindingConnection) MqlName() string {
+func (c *MqlFindingConnection) MqlName() string {
 	return "finding.connection"
 }
 
-func (c *mqlFindingConnection) MqlID() string {
+func (c *MqlFindingConnection) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingConnection) GetDestinationAddress() *plugin.TValue[string] {
+func (c *MqlFindingConnection) GetDestinationAddress() *plugin.TValue[string] {
 	return &c.DestinationAddress
 }
 
-func (c *mqlFindingConnection) GetDestinationPort() *plugin.TValue[int64] {
+func (c *MqlFindingConnection) GetDestinationPort() *plugin.TValue[int64] {
 	return &c.DestinationPort
 }
 
-func (c *mqlFindingConnection) GetSourceAddress() *plugin.TValue[string] {
+func (c *MqlFindingConnection) GetSourceAddress() *plugin.TValue[string] {
 	return &c.SourceAddress
 }
 
-func (c *mqlFindingConnection) GetSourcePort() *plugin.TValue[int64] {
+func (c *MqlFindingConnection) GetSourcePort() *plugin.TValue[int64] {
 	return &c.SourcePort
 }
 
-func (c *mqlFindingConnection) GetProtocol() *plugin.TValue[string] {
+func (c *MqlFindingConnection) GetProtocol() *plugin.TValue[string] {
 	return &c.Protocol
 }
 
-// mqlFindingAttackTactic for the finding.attackTactic resource
-type mqlFindingAttackTactic struct {
+// MqlFindingAttackTactic for the finding.attackTactic resource
+type MqlFindingAttackTactic struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingAttackTacticInternal it will be used here
+	// optional: if you define MqlFindingAttackTacticInternal it will be used here
 	Id          plugin.TValue[string]
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -9937,7 +9937,7 @@ type mqlFindingAttackTactic struct {
 
 // createFindingAttackTactic creates a new instance of this resource
 func createFindingAttackTactic(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingAttackTactic{
+	res := &MqlFindingAttackTactic{
 		MqlRuntime: runtime,
 	}
 
@@ -9959,31 +9959,31 @@ func createFindingAttackTactic(runtime *plugin.Runtime, args map[string]*llx.Raw
 	return res, nil
 }
 
-func (c *mqlFindingAttackTactic) MqlName() string {
+func (c *MqlFindingAttackTactic) MqlName() string {
 	return "finding.attackTactic"
 }
 
-func (c *mqlFindingAttackTactic) MqlID() string {
+func (c *MqlFindingAttackTactic) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingAttackTactic) GetId() *plugin.TValue[string] {
+func (c *MqlFindingAttackTactic) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlFindingAttackTactic) GetName() *plugin.TValue[string] {
+func (c *MqlFindingAttackTactic) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlFindingAttackTactic) GetDescription() *plugin.TValue[string] {
+func (c *MqlFindingAttackTactic) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-// mqlFindingAttackTechnique for the finding.attackTechnique resource
-type mqlFindingAttackTechnique struct {
+// MqlFindingAttackTechnique for the finding.attackTechnique resource
+type MqlFindingAttackTechnique struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFindingAttackTechniqueInternal it will be used here
+	// optional: if you define MqlFindingAttackTechniqueInternal it will be used here
 	Id          plugin.TValue[string]
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -9991,7 +9991,7 @@ type mqlFindingAttackTechnique struct {
 
 // createFindingAttackTechnique creates a new instance of this resource
 func createFindingAttackTechnique(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlFindingAttackTechnique{
+	res := &MqlFindingAttackTechnique{
 		MqlRuntime: runtime,
 	}
 
@@ -10013,22 +10013,22 @@ func createFindingAttackTechnique(runtime *plugin.Runtime, args map[string]*llx.
 	return res, nil
 }
 
-func (c *mqlFindingAttackTechnique) MqlName() string {
+func (c *MqlFindingAttackTechnique) MqlName() string {
 	return "finding.attackTechnique"
 }
 
-func (c *mqlFindingAttackTechnique) MqlID() string {
+func (c *MqlFindingAttackTechnique) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlFindingAttackTechnique) GetId() *plugin.TValue[string] {
+func (c *MqlFindingAttackTechnique) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlFindingAttackTechnique) GetName() *plugin.TValue[string] {
+func (c *MqlFindingAttackTechnique) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlFindingAttackTechnique) GetDescription() *plugin.TValue[string] {
+func (c *MqlFindingAttackTechnique) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }

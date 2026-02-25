@@ -70,6 +70,7 @@ type LR struct {
 type Resource struct {
 	Comments    []string       `{ @Comment }`
 	IsPrivate   bool           `@"private"?`
+	IsPublic    bool           `@"public"?`
 	IsExtension bool           `@"extend"?`
 	ID          string         `@Ident { @'.' @Ident }`
 	Defaults    string         ` ( '@' "defaults" '(' @String ')' )? `

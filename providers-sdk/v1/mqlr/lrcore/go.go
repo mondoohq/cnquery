@@ -567,6 +567,9 @@ func (r *Resource) constTypeName(b *goBuilder) string {
 }
 
 func (r *Resource) structName(b *goBuilder) string {
+	if r.IsPublic {
+		return "Mql" + r.interfaceName(b)
+	}
 	return "mql" + r.interfaceName(b)
 }
 
