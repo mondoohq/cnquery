@@ -31,16 +31,34 @@ jobs:
           go-version: ">=${{ env.golang-version }}"
           cache: false
 
-      - name: Run Windows-specific tests
+      - name: Find packages with Windows-specific tests
+        id: find-packages
         shell: pwsh
         run: |
-          # Run tests for packages with Windows-specific code
-          # The build tag ensures only Windows tests are compiled and run
-          go test -v -tags windows ./providers/os/resources/services/... 2>&1 | Tee-Object -FilePath windows-test-output.txt
+          # Find all _windows_test.go files and extract unique package directories
+          $packages = Get-ChildItem -Path providers/os -Recurse -Filter "*_windows_test.go" |
+            ForEach-Object { "./$($_.DirectoryName -replace '\\','/')/..." } |
+            Sort-Object -Unique
+          if ($packages.Count -eq 0) {
+            Write-Output "No Windows-specific test packages found"
+            echo "has_tests=false" >> $env:GITHUB_OUTPUT
+          } else {
+            $pkgList = $packages -join " "
+            Write-Output "Found Windows test packages: $pkgList"
+            echo "has_tests=true" >> $env:GITHUB_OUTPUT
+            echo "packages=$pkgList" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Run Windows-specific tests
+        if: steps.find-packages.outputs.has_tests == 'true'
+        shell: pwsh
+        run: |
+          $packages = "${{ steps.find-packages.outputs.packages }}" -split " "
+          go test -v @packages 2>&1 | Tee-Object -FilePath windows-test-output.txt
 
       - name: Upload test output
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        if: success() || failure()
+        if: steps.find-packages.outputs.has_tests == 'true' && (success() || failure())
         with:
           name: windows-test-output
           path: windows-test-output.txt
