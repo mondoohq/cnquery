@@ -1,0 +1,64 @@
+name: Windows Tests
+
+on:
+  push:
+    paths:
+      - "providers/os/**"
+      - ".github/workflows/pr-test-windows.yml"
+  pull_request:
+    paths:
+      - "providers/os/**"
+      - ".github/workflows/pr-test-windows.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  windows-test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Import environment variables from file
+        shell: bash
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version: ">=${{ env.golang-version }}"
+          cache: false
+
+      - name: Find packages with Windows-specific tests
+        id: find-packages
+        shell: pwsh
+        run: |
+          # Find all _windows_test.go files and extract unique package directories
+          $packages = Get-ChildItem -Path providers/os -Recurse -Filter "*_windows_test.go" |
+            ForEach-Object { "./$($_.DirectoryName -replace '\\','/')/..." } |
+            Sort-Object -Unique
+          if ($packages.Count -eq 0) {
+            Write-Output "No Windows-specific test packages found"
+            echo "has_tests=false" >> $env:GITHUB_OUTPUT
+          } else {
+            $pkgList = $packages -join " "
+            Write-Output "Found Windows test packages: $pkgList"
+            echo "has_tests=true" >> $env:GITHUB_OUTPUT
+            echo "packages=$pkgList" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Run Windows-specific tests
+        if: steps.find-packages.outputs.has_tests == 'true'
+        shell: pwsh
+        run: |
+          $packages = "${{ steps.find-packages.outputs.packages }}" -split " "
+          go test -v @packages 2>&1 | Tee-Object -FilePath windows-test-output.txt
+
+      - name: Upload test output
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: steps.find-packages.outputs.has_tests == 'true' && (success() || failure())
+        with:
+          name: windows-test-output
+          path: windows-test-output.txt
