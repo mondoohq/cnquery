@@ -423,7 +423,7 @@ github.repository @defaults("fullName") {
   // Deployments for the repository
   deployments() []github.deployment
   // Software Bill of Materials (SPDX format) for the repository
-  sbom() github.repository.sbom
+  softwareBom() github.repository.sbom
 }
 
 // SPDX SBOM for a GitHub repository
@@ -1099,9 +1099,9 @@ public finding @defaults("id summary") {
   // Required. Current status of the finding
   status string
   // Required. Information about the source that produced this finding
-  source finding.source
+  src finding.source
   // Required. List of affected components
-  affects []finding.affects
+  affectedComponents []finding.affectedComponent
   // Optional. Technical evidence
   evidences []finding.evidence
   // Optional. Available remediation options
@@ -1163,7 +1163,7 @@ public finding.reference {
 }
 
 // Affected component information for a finding
-public finding.affects {
+public finding.affectedComponent {
   // Required. Root component that is affected
   component finding.component
   // Optional. List of sub-components that are affected

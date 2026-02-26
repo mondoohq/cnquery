@@ -62,7 +62,7 @@ const (
 	ResourceFindingSource                    string = "finding.source"
 	ResourceFindingSeverity                  string = "finding.severity"
 	ResourceFindingReference                 string = "finding.reference"
-	ResourceFindingAffects                   string = "finding.affects"
+	ResourceFindingAffectedComponent         string = "finding.affectedComponent"
 	ResourceFindingComponent                 string = "finding.component"
 	ResourceFindingFileComponent             string = "finding.fileComponent"
 	ResourceFindingEvidence                  string = "finding.evidence"
@@ -263,9 +263,9 @@ func init() {
 			// to override args, implement: initFindingReference(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFindingReference,
 		},
-		"finding.affects": {
-			// to override args, implement: initFindingAffects(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createFindingAffects,
+		"finding.affectedComponent": {
+			// to override args, implement: initFindingAffectedComponent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFindingAffectedComponent,
 		},
 		"finding.component": {
 			// to override args, implement: initFindingComponent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -964,8 +964,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.deployments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetDeployments()).ToDataRes(types.Array(types.Resource("github.deployment")))
 	},
-	"github.repository.sbom": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepository).GetSbom()).ToDataRes(types.Resource("github.repository.sbom"))
+	"github.repository.softwareBom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetSoftwareBom()).ToDataRes(types.Resource("github.repository.sbom"))
 	},
 	"github.repository.sbom.spdxId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepositorySbom).GetSpdxId()).ToDataRes(types.String)
@@ -1804,11 +1804,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"finding.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*MqlFinding).GetStatus()).ToDataRes(types.String)
 	},
-	"finding.source": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*MqlFinding).GetSource()).ToDataRes(types.Resource("finding.source"))
+	"finding.src": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*MqlFinding).GetSrc()).ToDataRes(types.Resource("finding.source"))
 	},
-	"finding.affects": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*MqlFinding).GetAffects()).ToDataRes(types.Array(types.Resource("finding.affects")))
+	"finding.affectedComponents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*MqlFinding).GetAffectedComponents()).ToDataRes(types.Array(types.Resource("finding.affectedComponent")))
 	},
 	"finding.evidences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*MqlFinding).GetEvidences()).ToDataRes(types.Array(types.Resource("finding.evidence")))
@@ -1873,11 +1873,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"finding.reference.metadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*MqlFindingReference).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"finding.affects.component": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*MqlFindingAffects).GetComponent()).ToDataRes(types.Resource("finding.component"))
+	"finding.affectedComponent.component": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*MqlFindingAffectedComponent).GetComponent()).ToDataRes(types.Resource("finding.component"))
 	},
-	"finding.affects.subComponents": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*MqlFindingAffects).GetSubComponents()).ToDataRes(types.Array(types.Resource("finding.component")))
+	"finding.affectedComponent.subComponents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*MqlFindingAffectedComponent).GetSubComponents()).ToDataRes(types.Array(types.Resource("finding.component")))
 	},
 	"finding.component.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*MqlFindingComponent).GetId()).ToDataRes(types.String)
@@ -2858,8 +2858,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubRepository).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"github.repository.sbom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).Sbom, ok = plugin.RawToTValue[*mqlGithubRepositorySbom](v.Value, v.Error)
+	"github.repository.softwareBom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).SoftwareBom, ok = plugin.RawToTValue[*mqlGithubRepositorySbom](v.Value, v.Error)
 		return
 	},
 	"github.repository.sbom.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4094,12 +4094,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*MqlFinding).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"finding.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*MqlFinding).Source, ok = plugin.RawToTValue[*MqlFindingSource](v.Value, v.Error)
+	"finding.src": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*MqlFinding).Src, ok = plugin.RawToTValue[*MqlFindingSource](v.Value, v.Error)
 		return
 	},
-	"finding.affects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*MqlFinding).Affects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"finding.affectedComponents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*MqlFinding).AffectedComponents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"finding.evidences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4202,16 +4202,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*MqlFindingReference).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"finding.affects.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*MqlFindingAffects).__id, ok = v.Value.(string)
+	"finding.affectedComponent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*MqlFindingAffectedComponent).__id, ok = v.Value.(string)
 		return
 	},
-	"finding.affects.component": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*MqlFindingAffects).Component, ok = plugin.RawToTValue[*MqlFindingComponent](v.Value, v.Error)
+	"finding.affectedComponent.component": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*MqlFindingAffectedComponent).Component, ok = plugin.RawToTValue[*MqlFindingComponent](v.Value, v.Error)
 		return
 	},
-	"finding.affects.subComponents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*MqlFindingAffects).SubComponents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"finding.affectedComponent.subComponents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*MqlFindingAffectedComponent).SubComponents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"finding.component.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5909,7 +5909,7 @@ type mqlGithubRepository struct {
 	Runners              plugin.TValue[[]any]
 	Environments         plugin.TValue[[]any]
 	Deployments          plugin.TValue[[]any]
-	Sbom                 plugin.TValue[*mqlGithubRepositorySbom]
+	SoftwareBom          plugin.TValue[*mqlGithubRepositorySbom]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -6557,10 +6557,10 @@ func (c *mqlGithubRepository) GetDeployments() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlGithubRepository) GetSbom() *plugin.TValue[*mqlGithubRepositorySbom] {
-	return plugin.GetOrCompute[*mqlGithubRepositorySbom](&c.Sbom, func() (*mqlGithubRepositorySbom, error) {
+func (c *mqlGithubRepository) GetSoftwareBom() *plugin.TValue[*mqlGithubRepositorySbom] {
+	return plugin.GetOrCompute[*mqlGithubRepositorySbom](&c.SoftwareBom, func() (*mqlGithubRepositorySbom, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "sbom")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "softwareBom")
 			if err != nil {
 				return nil, err
 			}
@@ -6569,7 +6569,7 @@ func (c *mqlGithubRepository) GetSbom() *plugin.TValue[*mqlGithubRepositorySbom]
 			}
 		}
 
-		return c.sbom()
+		return c.softwareBom()
 	})
 }
 
@@ -9230,20 +9230,20 @@ type MqlFinding struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define MqlFindingInternal it will be used here
-	Id           plugin.TValue[string]
-	Ref          plugin.TValue[string]
-	Mrn          plugin.TValue[string]
-	GroupId      plugin.TValue[string]
-	Summary      plugin.TValue[string]
-	Details      plugin.TValue[*MqlFindingDetail]
-	FirstSeenAt  plugin.TValue[*time.Time]
-	LastSeenAt   plugin.TValue[*time.Time]
-	RemediatedAt plugin.TValue[*time.Time]
-	Status       plugin.TValue[string]
-	Source       plugin.TValue[*MqlFindingSource]
-	Affects      plugin.TValue[[]any]
-	Evidences    plugin.TValue[[]any]
-	Remediations plugin.TValue[[]any]
+	Id                 plugin.TValue[string]
+	Ref                plugin.TValue[string]
+	Mrn                plugin.TValue[string]
+	GroupId            plugin.TValue[string]
+	Summary            plugin.TValue[string]
+	Details            plugin.TValue[*MqlFindingDetail]
+	FirstSeenAt        plugin.TValue[*time.Time]
+	LastSeenAt         plugin.TValue[*time.Time]
+	RemediatedAt       plugin.TValue[*time.Time]
+	Status             plugin.TValue[string]
+	Src                plugin.TValue[*MqlFindingSource]
+	AffectedComponents plugin.TValue[[]any]
+	Evidences          plugin.TValue[[]any]
+	Remediations       plugin.TValue[[]any]
 }
 
 // createFinding creates a new instance of this resource
@@ -9318,12 +9318,12 @@ func (c *MqlFinding) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *MqlFinding) GetSource() *plugin.TValue[*MqlFindingSource] {
-	return &c.Source
+func (c *MqlFinding) GetSrc() *plugin.TValue[*MqlFindingSource] {
+	return &c.Src
 }
 
-func (c *MqlFinding) GetAffects() *plugin.TValue[[]any] {
-	return &c.Affects
+func (c *MqlFinding) GetAffectedComponents() *plugin.TValue[[]any] {
+	return &c.AffectedComponents
 }
 
 func (c *MqlFinding) GetEvidences() *plugin.TValue[[]any] {
@@ -9585,18 +9585,18 @@ func (c *MqlFindingReference) GetMetadata() *plugin.TValue[map[string]any] {
 	return &c.Metadata
 }
 
-// MqlFindingAffects for the finding.affects resource
-type MqlFindingAffects struct {
+// MqlFindingAffectedComponent for the finding.affectedComponent resource
+type MqlFindingAffectedComponent struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define MqlFindingAffectsInternal it will be used here
+	// optional: if you define MqlFindingAffectedComponentInternal it will be used here
 	Component     plugin.TValue[*MqlFindingComponent]
 	SubComponents plugin.TValue[[]any]
 }
 
-// createFindingAffects creates a new instance of this resource
-func createFindingAffects(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &MqlFindingAffects{
+// createFindingAffectedComponent creates a new instance of this resource
+func createFindingAffectedComponent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &MqlFindingAffectedComponent{
 		MqlRuntime: runtime,
 	}
 
@@ -9608,7 +9608,7 @@ func createFindingAffects(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("finding.affects", res.__id)
+		args, err = runtime.ResourceFromRecording("finding.affectedComponent", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -9618,19 +9618,19 @@ func createFindingAffects(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	return res, nil
 }
 
-func (c *MqlFindingAffects) MqlName() string {
-	return "finding.affects"
+func (c *MqlFindingAffectedComponent) MqlName() string {
+	return "finding.affectedComponent"
 }
 
-func (c *MqlFindingAffects) MqlID() string {
+func (c *MqlFindingAffectedComponent) MqlID() string {
 	return c.__id
 }
 
-func (c *MqlFindingAffects) GetComponent() *plugin.TValue[*MqlFindingComponent] {
+func (c *MqlFindingAffectedComponent) GetComponent() *plugin.TValue[*MqlFindingComponent] {
 	return &c.Component
 }
 
-func (c *MqlFindingAffects) GetSubComponents() *plugin.TValue[[]any] {
+func (c *MqlFindingAffectedComponent) GetSubComponents() *plugin.TValue[[]any] {
 	return &c.SubComponents
 }
 

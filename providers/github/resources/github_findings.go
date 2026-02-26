@@ -151,8 +151,8 @@ func dependabotAlertFindings(g *mqlGithubRepository, owner, repository string) (
 					return nil, err
 				}
 
-				affects, err := CreateResource(g.MqlRuntime, ResourceFindingAffects, map[string]*llx.RawData{
-					"__id":          llx.StringData(ResourceFindingAffects + "/" + owner + "/" + repository + "/" + alertID),
+				affects, err := CreateResource(g.MqlRuntime, ResourceFindingAffectedComponent, map[string]*llx.RawData{
+					"__id":          llx.StringData(ResourceFindingAffectedComponent + "/" + owner + "/" + repository + "/" + alertID),
 					"component":     llx.ResourceData(component, ResourceFindingComponent),
 					"subComponents": llx.ArrayData([]any{}, types.Resource(ResourceFindingComponent)),
 				})
@@ -165,21 +165,21 @@ func dependabotAlertFindings(g *mqlGithubRepository, owner, repository string) (
 
 		id := ResourceFinding + "/" + owner + "/" + repository + "/" + alertID
 		finding, err := CreateResource(g.MqlRuntime, ResourceFinding, map[string]*llx.RawData{
-			"__id":         llx.StringData(id),
-			"id":           llx.StringData(""),
-			"ref":          llx.StringData(strconv.FormatInt(alert.Number.Data, 10)),
-			"mrn":          llx.StringData(""),
-			"groupId":      llx.StringData(""),
-			"summary":      llx.StringData(summary),
-			"details":      llx.ResourceData(detail, ResourceFindingDetail),
-			"firstSeenAt":  llx.TimeDataPtr(alert.CreatedAt.Data),
-			"lastSeenAt":   llx.TimeDataPtr(alert.UpdatedAt.Data),
-			"remediatedAt": llx.TimeDataPtr(alert.FixedAt.Data),
-			"status":       llx.StringData(alert.State.Data),
-			"source":       llx.ResourceData(source, ResourceFindingSource),
-			"affects":      llx.ArrayData(affectsList, types.Resource(ResourceFindingAffects)),
-			"evidences":    llx.ArrayData([]any{}, types.Resource(ResourceFindingEvidence)),
-			"remediations": llx.ArrayData([]any{}, types.Dict),
+			"__id":               llx.StringData(id),
+			"id":                 llx.StringData(""),
+			"ref":                llx.StringData(strconv.FormatInt(alert.Number.Data, 10)),
+			"mrn":                llx.StringData(""),
+			"groupId":            llx.StringData(""),
+			"summary":            llx.StringData(summary),
+			"details":            llx.ResourceData(detail, ResourceFindingDetail),
+			"firstSeenAt":        llx.TimeDataPtr(alert.CreatedAt.Data),
+			"lastSeenAt":         llx.TimeDataPtr(alert.UpdatedAt.Data),
+			"remediatedAt":       llx.TimeDataPtr(alert.FixedAt.Data),
+			"status":             llx.StringData(alert.State.Data),
+			"src":                llx.ResourceData(source, ResourceFindingSource),
+			"affectedComponents": llx.ArrayData(affectsList, types.Resource(ResourceFindingAffectedComponent)),
+			"evidences":          llx.ArrayData([]any{}, types.Resource(ResourceFindingEvidence)),
+			"remediations":       llx.ArrayData([]any{}, types.Dict),
 		})
 		if err != nil {
 			return nil, err

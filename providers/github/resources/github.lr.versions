@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 finding 11.4.127
-finding.affects 11.4.127
-finding.affects.component 11.4.127
-finding.affects.subComponents 11.4.127
+finding.affectedComponent 11.4.127
+finding.affectedComponent.component 11.4.127
+finding.affectedComponent.subComponents 11.4.127
+finding.affectedComponents 11.4.127
 finding.attackTactic 11.4.127
 finding.attackTactic.description 11.4.127
 finding.attackTactic.id 11.4.127
@@ -105,6 +106,7 @@ finding.severity.vector 11.4.127
 finding.source 11.4.127
 finding.source.name 11.4.127
 finding.source.url 11.4.127
+finding.src 11.4.127
 finding.status 11.4.127
 finding.summary 11.4.127
 finding.user 11.4.127
@@ -515,6 +517,7 @@ github.repository.sbom.spdxId 11.4.127
 github.repository.sbom.spdxVersion 11.4.127
 github.repository.secretScanningAlerts 11.4.121
 github.repository.securityFile 11.4.14
+github.repository.softwareBom 11.4.127
 github.repository.sshUrl 9.0.0
 github.repository.stargazers 9.0.0
 github.repository.stargazersCount 9.0.0
