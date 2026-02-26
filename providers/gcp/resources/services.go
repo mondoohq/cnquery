@@ -28,6 +28,8 @@ const (
 	service_apikeys             = "apikeys.googleapis.com"
 	service_dataproc            = "dataproc.googleapis.com"
 	service_binaryauthorization = "binaryauthorization.googleapis.com"
+	service_privateca           = "privateca.googleapis.com"
+	service_orgpolicy           = "orgpolicy.googleapis.com"
 )
 
 func serviceName(name string) string {

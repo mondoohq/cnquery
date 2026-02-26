@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -140,6 +141,75 @@ func (g *mqlGcpOrganization) iamPolicy() ([]any, error) {
 	return res, nil
 }
 
+// auditConfigID returns the cache ID for an audit config resource.
+func auditConfigID(parentId, service string) string {
+	return fmt.Sprintf("%s-auditConfig-%s", parentId, service)
+}
+
+// auditLogConfigID returns the cache ID for an audit log config resource.
+func auditLogConfigID(parentId, service, logType string) string {
+	return fmt.Sprintf("%s-auditConfig-%s-%s", parentId, service, logType)
+}
+
+// extractAuditConfigs converts cloudresourcemanager AuditConfig entries to MQL resources.
+// parentId is used for constructing unique IDs (e.g., "organizations/123" or "projects/my-project").
+func extractAuditConfigs(runtime *plugin.Runtime, parentId string, auditConfigs []*cloudresourcemanager.AuditConfig) ([]any, error) {
+	var res []any
+	for _, ac := range auditConfigs {
+		logConfigs := make([]any, 0, len(ac.AuditLogConfigs))
+		for _, lc := range ac.AuditLogConfigs {
+			mqlLogConfig, err := CreateResource(runtime, "gcp.resourcemanager.auditConfig.logConfig", map[string]*llx.RawData{
+				"id":              llx.StringData(auditLogConfigID(parentId, ac.Service, lc.LogType)),
+				"logType":         llx.StringData(lc.LogType),
+				"exemptedMembers": llx.ArrayData(convert.SliceAnyToInterface(lc.ExemptedMembers), types.String),
+			})
+			if err != nil {
+				return nil, err
+			}
+			logConfigs = append(logConfigs, mqlLogConfig)
+		}
+
+		mqlAuditConfig, err := CreateResource(runtime, "gcp.resourcemanager.auditConfig", map[string]*llx.RawData{
+			"id":              llx.StringData(auditConfigID(parentId, ac.Service)),
+			"service":         llx.StringData(ac.Service),
+			"auditLogConfigs": llx.ArrayData(logConfigs, types.Resource("gcp.resourcemanager.auditConfig.logConfig")),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAuditConfig)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpOrganization) auditConfig() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	orgId, err := conn.OrganizationID()
+	if err != nil {
+		return nil, err
+	}
+
+	name := "organizations/" + orgId
+	policy, err := svc.Organizations.GetIamPolicy(name, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return extractAuditConfigs(g.MqlRuntime, name, policy.AuditConfigs)
+}
+
 func (g *mqlGcpOrganization) folders() (*mqlGcpFolders, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -169,5 +239,13 @@ func (g *mqlGcpOrganization) projects() (*mqlGcpProjects, error) {
 }
 
 func (g *mqlGcpResourcemanagerBinding) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpResourcemanagerAuditConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpResourcemanagerAuditConfigLogConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }

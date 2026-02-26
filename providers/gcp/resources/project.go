@@ -167,6 +167,33 @@ func (g *mqlGcpProject) iamPolicy() ([]any, error) {
 	return res, nil
 }
 
+func (g *mqlGcpProject) auditConfig() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := svc.Projects.GetIamPolicy(fmt.Sprintf("projects/%s", projectId), &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return extractAuditConfigs(g.MqlRuntime, fmt.Sprintf("projects/%s", projectId), policy.AuditConfigs)
+}
+
 func (g *mqlGcpProject) commonInstanceMetadata() (map[string]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
