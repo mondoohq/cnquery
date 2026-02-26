@@ -5,7 +5,10 @@ package plugin
 
 import (
 	"errors"
+	"os"
+	"strconv"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 	"go.mondoo.com/mql/v13/types"
@@ -24,6 +27,12 @@ type Runtime struct {
 	Upstream       *upstream.UpstreamClient
 }
 
+const (
+	EnvSQLiteResources = "MQL_SQLITE_RESOURCES"
+	EnvSQLiteCacheSize = "MQL_SQLITE_CACHE_SIZE"
+	DefaultCacheSize   = 10000
+)
+
 func NewRuntime(
 	conn Connection,
 	callback ProviderCallback,
@@ -34,9 +43,8 @@ func NewRuntime(
 	setData SetData,
 	upstream *upstream.UpstreamClient,
 ) *Runtime {
-	return &Runtime{
+	runtime := &Runtime{
 		Connection:     conn,
-		Resources:      &syncx.Map[Resource]{},
 		Callback:       callback,
 		HasRecording:   hasRecording,
 		CreateResource: createResource,
@@ -44,7 +52,31 @@ func NewRuntime(
 		GetData:        getData,
 		SetData:        setData,
 		Upstream:       upstream,
+		Resources:      &syncx.Map[Resource]{},
 	}
+	return runtime
+}
+
+// InitSqliteResources upgrades the runtime's resource cache from the default
+// in-memory map to a SQLite-backed LRU cache, if MQL_SQLITE_RESOURCES=1.
+// This is called by Service.AddRuntime only for root connections (not children
+// that share the parent's cache), avoiding throwaway temp DB files.
+func InitSqliteResources(runtime *Runtime) {
+	if os.Getenv(EnvSQLiteResources) != "1" {
+		return
+	}
+	cacheSize := DefaultCacheSize
+	if v := os.Getenv(EnvSQLiteCacheSize); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			cacheSize = n
+		}
+	}
+	sqliteRes, err := NewSqliteResources(cacheSize, runtime)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to create SQLite resource cache, falling back to in-memory")
+		return
+	}
+	runtime.Resources = sqliteRes
 }
 
 type (
