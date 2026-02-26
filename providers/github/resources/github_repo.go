@@ -2236,3 +2236,106 @@ func (g *mqlGithubRepository) codeScanningAlerts() ([]any, error) {
 
 	return res, nil
 }
+
+func (g *mqlGithubRepository) spdxSbom() (*mqlGithubRepositorySbom, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	owner := g.Owner.Data
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	result, _, err := conn.Client().DependencyGraph.GetSBOM(conn.Context(), ownerLogin, repoName)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil || result.SBOM == nil {
+		return nil, nil
+	}
+	info := result.SBOM
+
+	var createdAt *time.Time
+	if info.CreationInfo != nil && info.CreationInfo.Created != nil {
+		createdAt = &info.CreationInfo.Created.Time
+	}
+
+	creators := []any{}
+	if info.CreationInfo != nil {
+		for _, c := range info.CreationInfo.Creators {
+			creators = append(creators, c)
+		}
+	}
+
+	packages := make([]any, 0, len(info.Packages))
+	for _, pkg := range info.Packages {
+		externalRefs := make([]any, 0, len(pkg.ExternalRefs))
+		for _, ref := range pkg.ExternalRefs {
+			mqlExternalRef, err := CreateResource(g.MqlRuntime, ResourceGithubRepositorySbomPackageExternalRef, map[string]*llx.RawData{
+				"__id":              llx.StringData(ResourceGithubRepositorySbomPackageExternalRef + "/" + ownerLogin + "/" + repoName + "/" + pkg.GetSPDXID() + "/" + ref.ReferenceType + "/" + ref.ReferenceLocator),
+				"referenceCategory": llx.StringData(ref.ReferenceCategory),
+				"referenceType":     llx.StringData(ref.ReferenceType),
+				"referenceLocator":  llx.StringData(ref.ReferenceLocator),
+			})
+			if err != nil {
+				return nil, err
+			}
+			externalRefs = append(externalRefs, mqlExternalRef)
+		}
+		mqlPkg, err := CreateResource(g.MqlRuntime, ResourceGithubRepositorySbomPackage, map[string]*llx.RawData{
+			"__id":             llx.StringData(ResourceGithubRepositorySbomPackage + "/" + ownerLogin + "/" + repoName + "/" + pkg.GetSPDXID()),
+			"spdxId":           llx.StringDataPtr(pkg.SPDXID),
+			"name":             llx.StringDataPtr(pkg.Name),
+			"versionInfo":      llx.StringDataPtr(pkg.VersionInfo),
+			"downloadLocation": llx.StringDataPtr(pkg.DownloadLocation),
+			"filesAnalyzed":    llx.BoolDataPtr(pkg.FilesAnalyzed),
+			"licenseConcluded": llx.StringDataPtr(pkg.LicenseConcluded),
+			"licenseDeclared":  llx.StringDataPtr(pkg.LicenseDeclared),
+			"externalRefs":     llx.ArrayData(externalRefs, types.Dict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		packages = append(packages, mqlPkg)
+	}
+
+	relationships := make([]any, 0, len(info.Relationships))
+	for _, rel := range info.Relationships {
+		mqlRel, err := CreateResource(g.MqlRuntime, ResourceGithubRepositorySbomRelationship, map[string]*llx.RawData{
+			"__id":               llx.StringData(ResourceGithubRepositorySbomRelationship + "/" + ownerLogin + "/" + repoName + "/" + rel.SPDXElementID + "/" + rel.RelatedSPDXElement),
+			"relationshipType":   llx.StringData(rel.RelationshipType),
+			"spdxElementId":      llx.StringData(rel.SPDXElementID),
+			"relatedSpdxElement": llx.StringData(rel.RelatedSPDXElement),
+		})
+		if err != nil {
+			return nil, err
+		}
+		relationships = append(relationships, mqlRel)
+	}
+
+	mqlSbom, err := CreateResource(g.MqlRuntime, ResourceGithubRepositorySbom, map[string]*llx.RawData{
+		"__id":              llx.StringData(ResourceGithubRepositorySbom + "/" + ownerLogin + "/" + repoName),
+		"spdxId":            llx.StringDataPtr(info.SPDXID),
+		"spdxVersion":       llx.StringDataPtr(info.SPDXVersion),
+		"name":              llx.StringDataPtr(info.Name),
+		"dataLicense":       llx.StringDataPtr(info.DataLicense),
+		"documentNamespace": llx.StringDataPtr(info.DocumentNamespace),
+		"comment":           llx.StringData(""),
+		"createdAt":         llx.TimeDataPtr(createdAt),
+		"creators":          llx.ArrayData(creators, types.String),
+		"packages":          llx.ArrayData(packages, types.Resource(ResourceGithubRepositorySbomPackage)),
+		"relationships":     llx.ArrayData(relationships, types.Resource(ResourceGithubRepositorySbomRelationship)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlSbom.(*mqlGithubRepositorySbom), nil
+}
