@@ -221,6 +221,8 @@ const (
 	ResourceAwsRedshiftSnapshot                                                 string = "aws.redshift.snapshot"
 	ResourceAwsEcr                                                              string = "aws.ecr"
 	ResourceAwsEcrRepository                                                    string = "aws.ecr.repository"
+	ResourceAwsEcrLifecyclePolicy                                               string = "aws.ecr.lifecyclePolicy"
+	ResourceAwsEcrLifecyclePolicyRule                                           string = "aws.ecr.lifecyclePolicy.rule"
 	ResourceAwsEcrImage                                                         string = "aws.ecr.image"
 	ResourceAwsDms                                                              string = "aws.dms"
 	ResourceAwsApigateway                                                       string = "aws.apigateway"
@@ -1104,6 +1106,14 @@ func init() {
 		"aws.ecr.repository": {
 			// to override args, implement: initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEcrRepository,
+		},
+		"aws.ecr.lifecyclePolicy": {
+			// to override args, implement: initAwsEcrLifecyclePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcrLifecyclePolicy,
+		},
+		"aws.ecr.lifecyclePolicy.rule": {
+			// to override args, implement: initAwsEcrLifecyclePolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcrLifecyclePolicyRule,
 		},
 		"aws.ecr.image": {
 			Init:   initAwsEcrImage,
@@ -6402,7 +6412,46 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsEcrRepository).GetScanningFrequency()).ToDataRes(types.String)
 	},
 	"aws.ecr.repository.lifecyclePolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcrRepository).GetLifecyclePolicy()).ToDataRes(types.Dict)
+		return (r.(*mqlAwsEcrRepository).GetLifecyclePolicy()).ToDataRes(types.Resource("aws.ecr.lifecyclePolicy"))
+	},
+	"aws.ecr.lifecyclePolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.ecr.lifecyclePolicy.lastEvaluatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicy).GetLastEvaluatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ecr.lifecyclePolicy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicy).GetRules()).ToDataRes(types.Array(types.Resource("aws.ecr.lifecyclePolicy.rule")))
+	},
+	"aws.ecr.lifecyclePolicy.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicyRule).GetId()).ToDataRes(types.String)
+	},
+	"aws.ecr.lifecyclePolicy.rule.rulePriority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicyRule).GetRulePriority()).ToDataRes(types.Int)
+	},
+	"aws.ecr.lifecyclePolicy.rule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicyRule).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ecr.lifecyclePolicy.rule.tagStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicyRule).GetTagStatus()).ToDataRes(types.String)
+	},
+	"aws.ecr.lifecyclePolicy.rule.tagPatternList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicyRule).GetTagPatternList()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecr.lifecyclePolicy.rule.tagPrefixList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicyRule).GetTagPrefixList()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecr.lifecyclePolicy.rule.countType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicyRule).GetCountType()).ToDataRes(types.String)
+	},
+	"aws.ecr.lifecyclePolicy.rule.countUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicyRule).GetCountUnit()).ToDataRes(types.String)
+	},
+	"aws.ecr.lifecyclePolicy.rule.countNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicyRule).GetCountNumber()).ToDataRes(types.Int)
+	},
+	"aws.ecr.lifecyclePolicy.rule.actionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrLifecyclePolicyRule).GetActionType()).ToDataRes(types.String)
 	},
 	"aws.ecr.image.digest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrImage).GetDigest()).ToDataRes(types.String)
@@ -15663,7 +15712,67 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.ecr.repository.lifecyclePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcrRepository).LifecyclePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAwsEcrRepository).LifecyclePolicy, ok = plugin.RawToTValue[*mqlAwsEcrLifecyclePolicy](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.lastEvaluatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicy).LastEvaluatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.rulePriority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).RulePriority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.tagStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).TagStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.tagPatternList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).TagPatternList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.tagPrefixList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).TagPrefixList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.countType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).CountType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.countUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).CountUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.countNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).CountNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.lifecyclePolicy.rule.actionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrLifecyclePolicyRule).ActionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38034,7 +38143,7 @@ type mqlAwsEcrRepository struct {
 	EncryptionType     plugin.TValue[string]
 	CreatedAt          plugin.TValue[*time.Time]
 	ScanningFrequency  plugin.TValue[string]
-	LifecyclePolicy    plugin.TValue[any]
+	LifecyclePolicy    plugin.TValue[*mqlAwsEcrLifecyclePolicy]
 }
 
 // createAwsEcrRepository creates a new instance of this resource
@@ -38136,10 +38245,173 @@ func (c *mqlAwsEcrRepository) GetScanningFrequency() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsEcrRepository) GetLifecyclePolicy() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.LifecyclePolicy, func() (any, error) {
+func (c *mqlAwsEcrRepository) GetLifecyclePolicy() *plugin.TValue[*mqlAwsEcrLifecyclePolicy] {
+	return plugin.GetOrCompute[*mqlAwsEcrLifecyclePolicy](&c.LifecyclePolicy, func() (*mqlAwsEcrLifecyclePolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr.repository", c.__id, "lifecyclePolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcrLifecyclePolicy), nil
+			}
+		}
+
 		return c.lifecyclePolicy()
 	})
+}
+
+// mqlAwsEcrLifecyclePolicy for the aws.ecr.lifecyclePolicy resource
+type mqlAwsEcrLifecyclePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcrLifecyclePolicyInternal it will be used here
+	Id              plugin.TValue[string]
+	LastEvaluatedAt plugin.TValue[*time.Time]
+	Rules           plugin.TValue[[]any]
+}
+
+// createAwsEcrLifecyclePolicy creates a new instance of this resource
+func createAwsEcrLifecyclePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcrLifecyclePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecr.lifecyclePolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcrLifecyclePolicy) MqlName() string {
+	return "aws.ecr.lifecyclePolicy"
+}
+
+func (c *mqlAwsEcrLifecyclePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcrLifecyclePolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEcrLifecyclePolicy) GetLastEvaluatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastEvaluatedAt
+}
+
+func (c *mqlAwsEcrLifecyclePolicy) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+// mqlAwsEcrLifecyclePolicyRule for the aws.ecr.lifecyclePolicy.rule resource
+type mqlAwsEcrLifecyclePolicyRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcrLifecyclePolicyRuleInternal it will be used here
+	Id             plugin.TValue[string]
+	RulePriority   plugin.TValue[int64]
+	Description    plugin.TValue[string]
+	TagStatus      plugin.TValue[string]
+	TagPatternList plugin.TValue[[]any]
+	TagPrefixList  plugin.TValue[[]any]
+	CountType      plugin.TValue[string]
+	CountUnit      plugin.TValue[string]
+	CountNumber    plugin.TValue[int64]
+	ActionType     plugin.TValue[string]
+}
+
+// createAwsEcrLifecyclePolicyRule creates a new instance of this resource
+func createAwsEcrLifecyclePolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcrLifecyclePolicyRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecr.lifecyclePolicy.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) MqlName() string {
+	return "aws.ecr.lifecyclePolicy.rule"
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) GetRulePriority() *plugin.TValue[int64] {
+	return &c.RulePriority
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) GetTagStatus() *plugin.TValue[string] {
+	return &c.TagStatus
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) GetTagPatternList() *plugin.TValue[[]any] {
+	return &c.TagPatternList
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) GetTagPrefixList() *plugin.TValue[[]any] {
+	return &c.TagPrefixList
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) GetCountType() *plugin.TValue[string] {
+	return &c.CountType
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) GetCountUnit() *plugin.TValue[string] {
+	return &c.CountUnit
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) GetCountNumber() *plugin.TValue[int64] {
+	return &c.CountNumber
+}
+
+func (c *mqlAwsEcrLifecyclePolicyRule) GetActionType() *plugin.TValue[string] {
+	return &c.ActionType
 }
 
 // mqlAwsEcrImage for the aws.ecr.image resource

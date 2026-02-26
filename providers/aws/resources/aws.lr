@@ -4150,8 +4150,42 @@ private aws.ecr.repository @defaults("uri region") {
   createdAt time
   // Scanning frequency for the repository: SCAN_ON_PUSH, CONTINUOUS_SCAN, or MANUAL
   scanningFrequency() string
-  // Lifecycle policy for the repository (parsed JSON policy document)
-  lifecyclePolicy() dict
+  // Lifecycle policy for the repository
+  lifecyclePolicy() aws.ecr.lifecyclePolicy
+}
+
+// AWS ECR repository lifecycle policy
+private aws.ecr.lifecyclePolicy @defaults("rules") {
+  // Unique identifier for this lifecycle policy
+  id string
+  // Time the lifecycle policy was last evaluated
+  lastEvaluatedAt time
+  // Rules in the lifecycle policy
+  rules []aws.ecr.lifecyclePolicy.rule
+}
+
+// AWS ECR lifecycle policy rule
+private aws.ecr.lifecyclePolicy.rule @defaults("rulePriority description") {
+  // Unique identifier for this rule
+  id string
+  // Priority of the rule (lower numbers are evaluated first)
+  rulePriority int
+  // Description of the rule
+  description string
+  // Tag status filter: tagged, untagged, or any
+  tagStatus string
+  // Tag pattern list for filtering images (glob patterns)
+  tagPatternList []string
+  // Tag prefix list for filtering images
+  tagPrefixList []string
+  // Count type: imageCountMoreThan, sinceImagePushed, sinceImagePulled, or sinceImageTransitioned
+  countType string
+  // Count unit for time-based rules (days)
+  countUnit string
+  // Count number threshold
+  countNumber int
+  // Action type: expire or transition
+  actionType string
 }
 
 // AWS Elastic Container Registry image

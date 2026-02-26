@@ -23,6 +23,32 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// ecrLifecyclePolicyDoc represents the parsed JSON lifecycle policy document.
+// The AWS SDK returns this as a raw JSON string with no typed structs.
+type ecrLifecyclePolicyDoc struct {
+	Rules []ecrLifecyclePolicyRule `json:"rules"`
+}
+
+type ecrLifecyclePolicyRule struct {
+	RulePriority int                         `json:"rulePriority"`
+	Description  string                      `json:"description"`
+	Selection    ecrLifecyclePolicySelection `json:"selection"`
+	Action       ecrLifecyclePolicyAction    `json:"action"`
+}
+
+type ecrLifecyclePolicySelection struct {
+	TagStatus      string   `json:"tagStatus"`
+	TagPatternList []string `json:"tagPatternList"`
+	TagPrefixList  []string `json:"tagPrefixList"`
+	CountType      string   `json:"countType"`
+	CountUnit      string   `json:"countUnit"`
+	CountNumber    int      `json:"countNumber"`
+}
+
+type ecrLifecyclePolicyAction struct {
+	Type string `json:"type"`
+}
+
 func (a *mqlAwsEcr) id() (string, error) {
 	return "aws.ecr", nil
 }
@@ -36,6 +62,14 @@ func (a *mqlAwsEcrImage) id() (string, error) {
 	sha := a.Digest.Data
 	name := a.RepoName.Data
 	return id + "/" + name + "/" + sha, nil
+}
+
+func (a *mqlAwsEcrLifecyclePolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsEcrLifecyclePolicyRule) id() (string, error) {
+	return a.Id.Data, nil
 }
 
 func (a *mqlAwsEcr) images() ([]any, error) {
@@ -266,7 +300,39 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 	return mqlres, nil
 }
 
-func (a *mqlAwsEcrRepository) lifecyclePolicy() (any, error) {
+func newMqlEcrLifecyclePolicyRule(runtime *plugin.Runtime, repoArn string, rule ecrLifecyclePolicyRule) (*mqlAwsEcrLifecyclePolicyRule, error) {
+	ruleId := fmt.Sprintf("%s/lifecyclePolicy/rule/%d", repoArn, rule.RulePriority)
+
+	tagPatternList := rule.Selection.TagPatternList
+	if tagPatternList == nil {
+		tagPatternList = []string{}
+	}
+	tagPrefixList := rule.Selection.TagPrefixList
+	if tagPrefixList == nil {
+		tagPrefixList = []string{}
+	}
+
+	resource, err := CreateResource(runtime, "aws.ecr.lifecyclePolicy.rule",
+		map[string]*llx.RawData{
+			"__id":           llx.StringData(ruleId),
+			"id":             llx.StringData(ruleId),
+			"rulePriority":   llx.IntData(rule.RulePriority),
+			"description":    llx.StringData(rule.Description),
+			"tagStatus":      llx.StringData(rule.Selection.TagStatus),
+			"tagPatternList": llx.ArrayData(toInterfaceArr(tagPatternList), types.String),
+			"tagPrefixList":  llx.ArrayData(toInterfaceArr(tagPrefixList), types.String),
+			"countType":      llx.StringData(rule.Selection.CountType),
+			"countUnit":      llx.StringData(rule.Selection.CountUnit),
+			"countNumber":    llx.IntData(rule.Selection.CountNumber),
+			"actionType":     llx.StringData(rule.Action.Type),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsEcrLifecyclePolicyRule), nil
+}
+
+func (a *mqlAwsEcrRepository) lifecyclePolicy() (*mqlAwsEcrLifecyclePolicy, error) {
 	if a.Public.Data {
 		a.LifecyclePolicy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -274,6 +340,7 @@ func (a *mqlAwsEcrRepository) lifecyclePolicy() (any, error) {
 
 	name := a.Name.Data
 	region := a.Region.Data
+	repoArn := a.Arn.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Ecr(region)
 	ctx := context.Background()
@@ -300,11 +367,32 @@ func (a *mqlAwsEcrRepository) lifecyclePolicy() (any, error) {
 		return nil, nil
 	}
 
-	var parsed any
-	if jsonErr := json.Unmarshal([]byte(*resp.LifecyclePolicyText), &parsed); jsonErr != nil {
+	var doc ecrLifecyclePolicyDoc
+	if jsonErr := json.Unmarshal([]byte(*resp.LifecyclePolicyText), &doc); jsonErr != nil {
 		return nil, jsonErr
 	}
-	return convert.JsonToDict(parsed)
+
+	rules := []any{}
+	for _, rule := range doc.Rules {
+		mqlRule, err := newMqlEcrLifecyclePolicyRule(a.MqlRuntime, repoArn, rule)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, mqlRule)
+	}
+
+	policyId := repoArn + "/lifecyclePolicy"
+	resource, err := CreateResource(a.MqlRuntime, "aws.ecr.lifecyclePolicy",
+		map[string]*llx.RawData{
+			"__id":            llx.StringData(policyId),
+			"id":              llx.StringData(policyId),
+			"lastEvaluatedAt": llx.TimeDataPtr(resp.LastEvaluatedAt),
+			"rules":           llx.ArrayData(rules, types.Resource("aws.ecr.lifecyclePolicy.rule")),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsEcrLifecyclePolicy), nil
 }
 
 type ImageInfo struct {
