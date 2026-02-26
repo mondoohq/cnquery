@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -53,7 +54,104 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) id() (string, 
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (any, error) {
+// commonPricingArgs extracts common pricing fields from an Azure PricingProperties response
+// into a map suitable for CreateResource.
+func commonPricingArgs(props *security.PricingProperties, mqlResourceName, subId string) map[string]*llx.RawData {
+	args := map[string]*llx.RawData{
+		"__id":           llx.StringData(mqlResourceName + "/" + subId),
+		"subscriptionId": llx.StringData(subId),
+	}
+
+	enabled := false
+	pricingTier := ""
+	if props.PricingTier != nil {
+		pricingTier = string(*props.PricingTier)
+		enabled = *props.PricingTier == security.PricingTierStandard
+	}
+	args["enabled"] = llx.BoolData(enabled)
+	args["pricingTier"] = llx.StringData(pricingTier)
+
+	subPlan := ""
+	if props.SubPlan != nil {
+		subPlan = *props.SubPlan
+	}
+	args["subPlan"] = llx.StringData(subPlan)
+
+	enforce := false
+	if props.Enforce != nil {
+		enforce = *props.Enforce == security.EnforceTrue
+	}
+	args["enforce"] = llx.BoolData(enforce)
+
+	deprecated := false
+	if props.Deprecated != nil {
+		deprecated = *props.Deprecated
+	}
+	args["deprecated"] = llx.BoolData(deprecated)
+
+	freeTrialRemainingTime := ""
+	if props.FreeTrialRemainingTime != nil {
+		freeTrialRemainingTime = *props.FreeTrialRemainingTime
+	}
+	args["freeTrialRemainingTime"] = llx.StringData(freeTrialRemainingTime)
+
+	var enablementTime *time.Time
+	if props.EnablementTime != nil {
+		enablementTime = props.EnablementTime
+	}
+	args["enablementTime"] = llx.TimeDataPtr(enablementTime)
+
+	inherited := false
+	if props.Inherited != nil {
+		inherited = *props.Inherited == security.InheritedTrue
+	}
+	args["inherited"] = llx.BoolData(inherited)
+
+	inheritedFrom := ""
+	if props.InheritedFrom != nil {
+		inheritedFrom = *props.InheritedFrom
+	}
+	args["inheritedFrom"] = llx.StringData(inheritedFrom)
+
+	replacedBy := []any{}
+	for _, s := range props.ReplacedBy {
+		if s != nil {
+			replacedBy = append(replacedBy, *s)
+		}
+	}
+	args["replacedBy"] = llx.ArrayData(replacedBy, types.String)
+
+	resourcesCoverageStatus := ""
+	if props.ResourcesCoverageStatus != nil {
+		resourcesCoverageStatus = string(*props.ResourcesCoverageStatus)
+	}
+	args["resourcesCoverageStatus"] = llx.StringData(resourcesCoverageStatus)
+
+	return args
+}
+
+// getSimpleDefenderPricing fetches pricing data for a Defender component and creates a typed resource.
+func (a *mqlAzureSubscriptionCloudDefenderService) getSimpleDefenderPricing(azurePricingName, mqlResourceName string) (plugin.Resource, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), azurePricingName, &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	args := commonPricingArgs(pricing.Properties, mqlResourceName, subId)
+	return CreateResource(a.MqlRuntime, mqlResourceName, args)
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -80,264 +178,96 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (any, er
 		return nil, err
 	}
 
-	type defenderForServers struct {
-		Enabled                         bool   `json:"enabled"`
-		VulnerabilityManagementToolName string `json:"vulnerabilityManagementToolName"`
-	}
+	args := commonPricingArgs(vmPricing.Properties, ResourceAzureSubscriptionCloudDefenderServiceDefenderForServers, subId)
 
-	resp := defenderForServers{}
-	if vmPricing.Properties.PricingTier != nil {
-		// According to the CIS implementation of checking if the defender for servers is on, we need to check if the pricing tier is standard
-		// https://learn.microsoft.com/en-us/rest/api/defenderforcloud/pricings/list?view=rest-defenderforcloud-2024-01-01&tabs=HTTP#pricingtier
-		resp.Enabled = *vmPricing.Properties.PricingTier == security.PricingTierStandard
-	}
-
+	// Override enabled based on policy assignments and vulnerability assessment settings
+	vulnToolName := ""
 	for _, it := range list.PolicyAssignments {
 		if it.Properties.PolicyDefinitionID == vaQualysPolicyDefinitionId {
-			resp.Enabled = true
-			resp.VulnerabilityManagementToolName = "Microsoft Defender for Cloud integrated Qualys scanner"
+			args["enabled"] = llx.BoolData(true)
+			vulnToolName = "Microsoft Defender for Cloud integrated Qualys scanner"
 		}
 	}
 	for _, sett := range serverVASetings.Settings {
 		if sett.Properties.SelectedProvider == "MdeTvm" && sett.Name == "AzureServersSetting" {
-			resp.Enabled = true
-			resp.VulnerabilityManagementToolName = "Microsoft Defender vulnerability management"
-
+			args["enabled"] = llx.BoolData(true)
+			vulnToolName = "Microsoft Defender vulnerability management"
 		}
 	}
-	return convert.JsonToDict(resp)
+	args["vulnerabilityManagementToolName"] = llx.StringData(vulnToolName)
+
+	resource, err := CreateResource(a.MqlRuntime,
+		ResourceAzureSubscriptionCloudDefenderServiceDefenderForServers,
+		args,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForAppServices() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	subId := a.SubscriptionId.Data
-
-	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForAppServices() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices, error) {
+	resource, err := a.getSimpleDefenderPricing("AppServices", ResourceAzureSubscriptionCloudDefenderServiceDefenderForAppServices)
 	if err != nil {
 		return nil, err
 	}
-
-	appServicePricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "AppServices", &security.PricingsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	type defenderForAppServices struct {
-		Enabled bool `json:"enabled"`
-	}
-
-	resp := defenderForAppServices{}
-	if appServicePricing.Properties.PricingTier != nil {
-		// Check if the pricing tier is set to 'Standard' which indicates that Defender for App Services is enabled
-		resp.Enabled = *appServicePricing.Properties.PricingTier == security.PricingTierStandard
-	}
-
-	return convert.JsonToDict(resp)
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlServersOnMachines() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	subId := a.SubscriptionId.Data
-
-	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlServersOnMachines() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines, error) {
+	resource, err := a.getSimpleDefenderPricing("SqlServerVirtualMachines", ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines)
 	if err != nil {
 		return nil, err
 	}
-
-	sqlServerVmPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "SqlServerVirtualMachines", &security.PricingsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	type defenderForSqlServersOnMachines struct {
-		Enabled bool `json:"enabled"`
-	}
-
-	resp := defenderForSqlServersOnMachines{}
-	if sqlServerVmPricing.Properties.PricingTier != nil {
-		// Check if the pricing tier is set to 'Standard' which indicates that Defender for SQL Servers on Machines is enabled
-		resp.Enabled = *sqlServerVmPricing.Properties.PricingTier == security.PricingTierStandard
-	}
-
-	return convert.JsonToDict(resp)
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlDatabases() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	subId := a.SubscriptionId.Data
-
-	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForSqlDatabases() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases, error) {
+	resource, err := a.getSimpleDefenderPricing("SqlServers", ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases)
 	if err != nil {
 		return nil, err
 	}
-
-	sqlDbPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "SqlServers", &security.PricingsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	type defenderForSqlDatabases struct {
-		Enabled bool `json:"enabled"`
-	}
-
-	resp := defenderForSqlDatabases{}
-	if sqlDbPricing.Properties.PricingTier != nil {
-		// Check if the pricing tier is set to 'Standard' which indicates that Defender for SQL Databases is enabled
-		resp.Enabled = *sqlDbPricing.Properties.PricingTier == security.PricingTierStandard
-	}
-
-	return convert.JsonToDict(resp)
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForOpenSourceDatabases() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	subId := a.SubscriptionId.Data
-
-	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForOpenSourceDatabases() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases, error) {
+	resource, err := a.getSimpleDefenderPricing("OpenSourceRelationalDatabases", ResourceAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases)
 	if err != nil {
 		return nil, err
 	}
-
-	openSourceDbPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "OpenSourceRelationalDatabases", &security.PricingsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	type defenderForOpenSourceDatabases struct {
-		Enabled bool `json:"enabled"`
-	}
-
-	resp := defenderForOpenSourceDatabases{}
-	if openSourceDbPricing.Properties.PricingTier != nil {
-		// Check if the pricing tier is set to 'Standard' which indicates that Defender for Open-source Relational Databases is enabled
-		resp.Enabled = *openSourceDbPricing.Properties.PricingTier == security.PricingTierStandard
-	}
-
-	return convert.JsonToDict(resp)
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForCosmosDb() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	subId := a.SubscriptionId.Data
-
-	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForCosmosDb() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb, error) {
+	resource, err := a.getSimpleDefenderPricing("CosmosDbs", ResourceAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb)
 	if err != nil {
 		return nil, err
 	}
-
-	cosmosDbPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "CosmosDbs", &security.PricingsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	type defenderForCosmosDb struct {
-		Enabled bool `json:"enabled"`
-	}
-
-	resp := defenderForCosmosDb{}
-	if cosmosDbPricing.Properties.PricingTier != nil {
-		// Check if the pricing tier is set to 'Standard' which indicates that Defender for Cosmos DB is enabled
-		resp.Enabled = *cosmosDbPricing.Properties.PricingTier == security.PricingTierStandard
-	}
-
-	return convert.JsonToDict(resp)
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForStorageAccounts() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	subId := a.SubscriptionId.Data
-
-	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForStorageAccounts() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts, error) {
+	resource, err := a.getSimpleDefenderPricing("StorageAccounts", ResourceAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts)
 	if err != nil {
 		return nil, err
 	}
-
-	storageAccountsPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "StorageAccounts", &security.PricingsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	type defenderForStorageAccounts struct {
-		Enabled bool `json:"enabled"`
-	}
-
-	resp := defenderForStorageAccounts{}
-	if storageAccountsPricing.Properties.PricingTier != nil {
-		// Check if the pricing tier is set to 'Standard' which indicates that Defender for Storage Accounts is enabled
-		resp.Enabled = *storageAccountsPricing.Properties.PricingTier == security.PricingTierStandard
-	}
-
-	return convert.JsonToDict(resp)
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForKeyVaults() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	subId := a.SubscriptionId.Data
-
-	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForKeyVaults() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults, error) {
+	resource, err := a.getSimpleDefenderPricing("KeyVaults", ResourceAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults)
 	if err != nil {
 		return nil, err
 	}
-
-	keyVaultsPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "KeyVaults", &security.PricingsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	type defenderForKeyVaults struct {
-		Enabled bool `json:"enabled"`
-	}
-
-	resp := defenderForKeyVaults{}
-	if keyVaultsPricing.Properties.PricingTier != nil {
-		// Check if the pricing tier is set to 'Standard' which indicates that Defender for Key Vaults is enabled
-		resp.Enabled = *keyVaultsPricing.Properties.PricingTier == security.PricingTierStandard
-	}
-
-	return convert.JsonToDict(resp)
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults), nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForResourceManager() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	subId := a.SubscriptionId.Data
-
-	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForResourceManager() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager, error) {
+	resource, err := a.getSimpleDefenderPricing("Arm", ResourceAzureSubscriptionCloudDefenderServiceDefenderForResourceManager)
 	if err != nil {
 		return nil, err
 	}
-
-	resourceManagerPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "Arm", &security.PricingsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	type defenderForResourceManager struct {
-		Enabled bool `json:"enabled"`
-	}
-
-	resp := defenderForResourceManager{}
-	if resourceManagerPricing.Properties.PricingTier != nil {
-		// Check if the pricing tier is set to 'Standard' which indicates that Defender for Resource Manager is enabled
-		resp.Enabled = *resourceManagerPricing.Properties.PricingTier == security.PricingTierStandard
-	}
-
-	return convert.JsonToDict(resp)
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager), nil
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) defenderForApis() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis, error) {
@@ -356,22 +286,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForApis() (*mqlAzureS
 		return nil, err
 	}
 
-	enabled := false
-	pricingTier := ""
-	if apiPricing.Properties.PricingTier != nil {
-		pricingTier = string(*apiPricing.Properties.PricingTier)
-		// Check if the pricing tier is set to 'Standard' which indicates that Defender for APIs is enabled
-		enabled = *apiPricing.Properties.PricingTier == security.PricingTierStandard
-	}
+	args := commonPricingArgs(apiPricing.Properties, ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis, subId)
 
 	resource, err := CreateResource(a.MqlRuntime,
 		ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis,
-		map[string]*llx.RawData{
-			"__id":           llx.StringData(ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis + "/" + subId),
-			"enabled":        llx.BoolData(enabled),
-			"pricingTier":    llx.StringData(pricingTier),
-			"subscriptionId": llx.StringData(subId),
-		},
+		args,
 	)
 	if err != nil {
 		return nil, err
@@ -395,27 +314,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderCSPM() (*mqlAzureSubs
 		return nil, err
 	}
 
-	enabled := false
-	pricingTier := ""
-	if cloudPosturePricing.Properties.PricingTier != nil {
-		pricingTier = string(*cloudPosturePricing.Properties.PricingTier)
-		enabled = *cloudPosturePricing.Properties.PricingTier == security.PricingTierStandard
-	}
-
-	subPlan := ""
-	if cloudPosturePricing.Properties.SubPlan != nil {
-		subPlan = *cloudPosturePricing.Properties.SubPlan
-	}
+	args := commonPricingArgs(cloudPosturePricing.Properties, ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM, subId)
 
 	resource, err := CreateResource(a.MqlRuntime,
 		ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM,
-		map[string]*llx.RawData{
-			"__id":           llx.StringData(ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM + "/" + subId),
-			"enabled":        llx.BoolData(enabled),
-			"pricingTier":    llx.StringData(pricingTier),
-			"subPlan":        llx.StringData(subPlan),
-			"subscriptionId": llx.StringData(subId),
-		},
+		args,
 	)
 	if err != nil {
 		return nil, err
@@ -444,7 +347,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) monitoringAgentAutoProvision(
 	return autoProvision == security.AutoProvisionOn, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (any, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	subId := a.SubscriptionId.Data
@@ -457,17 +360,6 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (any,
 	pas, err := getPolicyAssignments(ctx, armConn)
 	if err != nil {
 		return nil, err
-	}
-	type extension struct {
-		Name      string `json:"name"`
-		IsEnabled bool   `json:"isEnabled"`
-	}
-
-	type defenderForContainers struct {
-		DefenderDaemonSet        bool        `json:"defenderDaemonSet"`
-		AzurePolicyForKubernetes bool        `json:"azurePolicyForKubernetes"`
-		Enabled                  bool        `json:"enabled"`
-		Extensions               []extension `json:"extensions"`
 	}
 
 	kubernetesDefender := false
@@ -504,30 +396,18 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (any,
 		return nil, err
 	}
 
-	enabled := false
-	if containersPricing.Properties.PricingTier != nil {
-		enabled = *containersPricing.Properties.PricingTier == security.PricingTierStandard
-	}
-	extensions := []extension{}
-	for _, ext := range containersPricing.Properties.Extensions {
-		if ext.IsEnabled == nil || ext.Name == nil {
-			continue
-		}
-		e := false
-		if *ext.IsEnabled == security.IsEnabledTrue {
-			e = true
-		}
-		extensions = append(extensions, extension{Name: *ext.Name, IsEnabled: e})
-	}
+	args := commonPricingArgs(containersPricing.Properties, ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers, subId)
+	args["defenderDaemonSet"] = llx.BoolData(arcDefender && kubernetesDefender)
+	args["azurePolicyForKubernetes"] = llx.BoolData(arcPolicyExt && kubernetesPolicyExt)
 
-	def := defenderForContainers{
-		DefenderDaemonSet:        arcDefender && kubernetesDefender,
-		AzurePolicyForKubernetes: arcPolicyExt && kubernetesPolicyExt,
-		Enabled:                  enabled,
-		Extensions:               extensions,
+	resource, err := CreateResource(a.MqlRuntime,
+		ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers,
+		args,
+	)
+	if err != nil {
+		return nil, err
 	}
-
-	return convert.JsonToDict(def)
+	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers), nil
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) settingsMCAS() (*mqlAzureSubscriptionCloudDefenderServiceSettings, error) {
@@ -708,7 +588,61 @@ func argsFromContactProperties(props *armsecurity.ContactProperties) map[string]
 	mailsArr := strings.Split(mails, ";")
 	args["emails"] = llx.ArrayData(convert.SliceAnyToInterface(mailsArr), types.String)
 
+	args["isEnabled"] = llx.BoolDataPtr(props.IsEnabled)
+	args["phone"] = llx.StringDataPtr(props.Phone)
+
 	return args
+}
+
+// buildExtensionResources creates typed extension sub-resources from a list of Azure SDK extensions.
+func buildExtensionResources(runtime *plugin.Runtime, extensions []*security.Extension, mqlResourceName, parentIdPrefix string) ([]any, error) {
+	res := []any{}
+	for _, ext := range extensions {
+		if ext == nil {
+			continue
+		}
+
+		name := ""
+		if ext.Name != nil {
+			name = *ext.Name
+		}
+
+		isEnabled := false
+		if ext.IsEnabled != nil {
+			isEnabled = *ext.IsEnabled == security.IsEnabledTrue
+		}
+
+		additionalProps, err := convert.JsonToDict(ext.AdditionalExtensionProperties)
+		if err != nil {
+			log.Debug().Err(err).Str("extension", name).Msg("unable to convert extension additional properties to dict")
+			additionalProps = nil
+		}
+
+		opCode := ""
+		opMessage := ""
+		if ext.OperationStatus != nil {
+			if ext.OperationStatus.Code != nil {
+				opCode = string(*ext.OperationStatus.Code)
+			}
+			if ext.OperationStatus.Message != nil {
+				opMessage = *ext.OperationStatus.Message
+			}
+		}
+
+		extResource, err := CreateResource(runtime, mqlResourceName, map[string]*llx.RawData{
+			"__id":                   llx.StringData(parentIdPrefix + "/extensions/" + name),
+			"name":                   llx.StringData(name),
+			"isEnabled":              llx.BoolData(isEnabled),
+			"additionalProperties":   llx.DictData(additionalProps),
+			"operationStatusCode":    llx.StringData(opCode),
+			"operationStatusMessage": llx.StringData(opMessage),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, extResource)
+	}
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) id() (string, error) {
@@ -731,33 +665,9 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) extensions() ([]a
 		return nil, err
 	}
 
-	extensions := []any{}
-	if cloudPosturePricing.Properties.Extensions != nil {
-		for _, ext := range cloudPosturePricing.Properties.Extensions {
-			if ext.Name == nil {
-				continue
-			}
-			isEnabled := false
-			if ext.IsEnabled != nil {
-				isEnabled = *ext.IsEnabled == security.IsEnabledTrue
-			}
-
-			extensionResource, err := CreateResource(a.MqlRuntime,
-				"azure.subscription.cloudDefenderService.defenderCSPM.extension",
-				map[string]*llx.RawData{
-					"__id":      llx.StringData(ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM + "/" + subId + "/extension/" + *ext.Name),
-					"name":      llx.StringData(*ext.Name),
-					"isEnabled": llx.BoolData(isEnabled),
-				},
-			)
-			if err != nil {
-				return nil, err
-			}
-			extensions = append(extensions, extensionResource)
-		}
-	}
-
-	return extensions, nil
+	return buildExtensionResources(a.MqlRuntime, cloudPosturePricing.Properties.Extensions,
+		ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension,
+		ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM+"/"+subId)
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) id() (string, error) {
@@ -765,5 +675,70 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) id() (string, err
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) extensions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	containersPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "Containers", &security.PricingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return buildExtensionResources(a.MqlRuntime, containersPricing.Properties.Extensions,
+		ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension,
+		ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers+"/"+subId)
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension) id() (string, error) {
 	return a.__id, nil
 }
