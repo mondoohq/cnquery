@@ -2590,29 +2590,29 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
   // List of Defender for Servers components and whether they are enabled
-  defenderForServers() dict
+  defenderForServers() azure.subscription.cloudDefenderService.defenderForServers
   // Microsoft Defender for App Service configuration
-  defenderForAppServices() dict
+  defenderForAppServices() azure.subscription.cloudDefenderService.defenderForAppServices
   // Microsoft Defender for SQL servers on machines configuration
-  defenderForSqlServersOnMachines() dict
+  defenderForSqlServersOnMachines() azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines
   // Microsoft Defender for Azure SQL Databases configuration
-  defenderForSqlDatabases() dict
+  defenderForSqlDatabases() azure.subscription.cloudDefenderService.defenderForSqlDatabases
   // Microsoft Defender for open-source relational databases configuration
-  defenderForOpenSourceDatabases() dict
+  defenderForOpenSourceDatabases() azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases
   // Microsoft Defender for Azure Cosmos DB configuration
-  defenderForCosmosDb() dict
+  defenderForCosmosDb() azure.subscription.cloudDefenderService.defenderForCosmosDb
   // Microsoft Defender for Storage Accounts configuration
-  defenderForStorageAccounts() dict
+  defenderForStorageAccounts() azure.subscription.cloudDefenderService.defenderForStorageAccounts
   // Microsoft Defender for Key Vault configuration
-  defenderForKeyVaults() dict
+  defenderForKeyVaults() azure.subscription.cloudDefenderService.defenderForKeyVaults
   // Microsoft Defender for Resource Manager configuration
-  defenderForResourceManager() dict
+  defenderForResourceManager() azure.subscription.cloudDefenderService.defenderForResourceManager
   // Microsoft Defender for APIs configuration
   defenderForApis() azure.subscription.cloudDefenderService.defenderForApis
   // Microsoft Defender Cloud Security Posture Management (CSPM) configuration
   defenderCSPM() azure.subscription.cloudDefenderService.defenderCSPM
   // Defender for Containers components configuration
-  defenderForContainers() dict
+  defenderForContainers() azure.subscription.cloudDefenderService.defenderForContainers
   // List of configured security contacts
   securityContacts() []azure.subscription.cloudDefenderService.securityContact
   // Settings for MCAS
@@ -2643,8 +2643,26 @@ private azure.subscription.cloudDefenderService.defenderForApis @defaults("enabl
   subscriptionId string
   // Whether Defender for APIs is enabled
   enabled bool
-  // Pricing tier for Defender for APIs
+  // Pricing tier (Free or Standard)
   pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
 }
 
 // Microsoft Defender Cloud Security Posture Management (CSPM)
@@ -2653,10 +2671,26 @@ private azure.subscription.cloudDefenderService.defenderCSPM @defaults("enabled 
   subscriptionId string
   // Whether Defender CSPM is enabled
   enabled bool
-  // Pricing tier for Defender CSPM
+  // Pricing tier (Free or Standard)
   pricingTier string
-  // Sub-plan for Defender CSPM
+  // Sub-plan selected for the pricing tier
   subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
   // Extensions configured for Defender CSPM
   extensions() []azure.subscription.cloudDefenderService.defenderCSPM.extension
 }
@@ -2667,6 +2701,314 @@ private azure.subscription.cloudDefenderService.defenderCSPM.extension {
   name string
   // Whether the extension is enabled
   isEnabled bool
+  // Additional extension properties
+  additionalProperties dict
+  // Status code of the enablement/disablement operation (Succeeded or Failed)
+  operationStatusCode string
+  // Status message of the enablement/disablement operation
+  operationStatusMessage string
+}
+
+// Microsoft Defender for Servers
+private azure.subscription.cloudDefenderService.defenderForServers @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for Servers is enabled
+  enabled bool
+  // Pricing tier (Free or Standard)
+  pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
+  // Name of the vulnerability management tool in use
+  vulnerabilityManagementToolName string
+}
+
+// Microsoft Defender for App Service
+private azure.subscription.cloudDefenderService.defenderForAppServices @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for App Service is enabled
+  enabled bool
+  // Pricing tier (Free or Standard)
+  pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
+}
+
+// Microsoft Defender for SQL servers on machines
+private azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for SQL servers on machines is enabled
+  enabled bool
+  // Pricing tier (Free or Standard)
+  pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
+}
+
+// Microsoft Defender for Azure SQL Databases
+private azure.subscription.cloudDefenderService.defenderForSqlDatabases @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for Azure SQL Databases is enabled
+  enabled bool
+  // Pricing tier (Free or Standard)
+  pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
+}
+
+// Microsoft Defender for open-source relational databases
+private azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for open-source relational databases is enabled
+  enabled bool
+  // Pricing tier (Free or Standard)
+  pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
+}
+
+// Microsoft Defender for Azure Cosmos DB
+private azure.subscription.cloudDefenderService.defenderForCosmosDb @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for Azure Cosmos DB is enabled
+  enabled bool
+  // Pricing tier (Free or Standard)
+  pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
+}
+
+// Microsoft Defender for Storage Accounts
+private azure.subscription.cloudDefenderService.defenderForStorageAccounts @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for Storage Accounts is enabled
+  enabled bool
+  // Pricing tier (Free or Standard)
+  pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
+}
+
+// Microsoft Defender for Key Vault
+private azure.subscription.cloudDefenderService.defenderForKeyVaults @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for Key Vault is enabled
+  enabled bool
+  // Pricing tier (Free or Standard)
+  pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
+}
+
+// Microsoft Defender for Resource Manager
+private azure.subscription.cloudDefenderService.defenderForResourceManager @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for Resource Manager is enabled
+  enabled bool
+  // Pricing tier (Free or Standard)
+  pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
+}
+
+// Microsoft Defender for Containers
+private azure.subscription.cloudDefenderService.defenderForContainers @defaults("enabled pricingTier") {
+  // Subscription identifier
+  subscriptionId string
+  // Whether Defender for Containers is enabled
+  enabled bool
+  // Pricing tier (Free or Standard)
+  pricingTier string
+  // Sub-plan selected for the pricing tier
+  subPlan string
+  // Whether the pricing configuration is enforced on child scopes
+  enforce bool
+  // Whether the pricing plan is deprecated
+  deprecated bool
+  // ISO 8601 duration of the free trial remaining
+  freeTrialRemainingTime string
+  // When the pricing tier was last set to Standard
+  enablementTime time
+  // Whether the pricing configuration is inherited from a parent scope
+  inherited bool
+  // ID of the parent scope from which the configuration is inherited
+  inheritedFrom string
+  // List of plan IDs that replace this plan if deprecated
+  replacedBy []string
+  // Coverage status of resources under this plan (FullyCovered, NotCovered, PartiallyCovered)
+  resourcesCoverageStatus string
+  // Whether the Defender DaemonSet is deployed
+  defenderDaemonSet bool
+  // Whether Azure Policy for Kubernetes is enabled
+  azurePolicyForKubernetes bool
+  // Extensions configured for Defender for Containers
+  extensions []azure.subscription.cloudDefenderService.defenderForContainers.extension
+}
+
+// Microsoft Defender for Containers extension
+private azure.subscription.cloudDefenderService.defenderForContainers.extension {
+  // Extension name
+  name string
+  // Whether the extension is enabled
+  isEnabled bool
+  // Additional extension properties
+  additionalProperties dict
+  // Status code of the enablement/disablement operation (Succeeded or Failed)
+  operationStatusCode string
+  // Status message of the enablement/disablement operation
+  operationStatusMessage string
 }
 
 // Microsoft Defender for Cloud security contact
@@ -2675,6 +3017,10 @@ private azure.subscription.cloudDefenderService.securityContact @defaults("id na
   id string
   // Name of the security contact
   name string
+  // Whether the security contact is enabled
+  isEnabled bool
+  // Phone number of the security contact
+  phone string
   // Emails that receive security alerts
   emails []string
   // Deprecated: use `notificationSources` instead

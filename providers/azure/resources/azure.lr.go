@@ -146,6 +146,17 @@ const (
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis                                 string = "azure.subscription.cloudDefenderService.defenderForApis"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                                    string = "azure.subscription.cloudDefenderService.defenderCSPM"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension                           string = "azure.subscription.cloudDefenderService.defenderCSPM.extension"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForServers                              string = "azure.subscription.cloudDefenderService.defenderForServers"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForAppServices                          string = "azure.subscription.cloudDefenderService.defenderForAppServices"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines                 string = "azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases                         string = "azure.subscription.cloudDefenderService.defenderForSqlDatabases"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases                  string = "azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb                             string = "azure.subscription.cloudDefenderService.defenderForCosmosDb"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts                      string = "azure.subscription.cloudDefenderService.defenderForStorageAccounts"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults                            string = "azure.subscription.cloudDefenderService.defenderForKeyVaults"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForResourceManager                      string = "azure.subscription.cloudDefenderService.defenderForResourceManager"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers                           string = "azure.subscription.cloudDefenderService.defenderForContainers"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension                  string = "azure.subscription.cloudDefenderService.defenderForContainers.extension"
 	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                                 string = "azure.subscription.cloudDefenderService.securityContact"
 	ResourceAzureSubscriptionAuthorizationService                                                string = "azure.subscription.authorizationService"
 	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                                  string = "azure.subscription.authorizationService.roleDefinition"
@@ -690,6 +701,50 @@ func init() {
 		"azure.subscription.cloudDefenderService.defenderCSPM.extension": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension,
+		},
+		"azure.subscription.cloudDefenderService.defenderForServers": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForServers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForServers,
+		},
+		"azure.subscription.cloudDefenderService.defenderForAppServices": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForAppServices(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForAppServices,
+		},
+		"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines,
+		},
+		"azure.subscription.cloudDefenderService.defenderForSqlDatabases": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases,
+		},
+		"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases,
+		},
+		"azure.subscription.cloudDefenderService.defenderForCosmosDb": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb,
+		},
+		"azure.subscription.cloudDefenderService.defenderForStorageAccounts": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts,
+		},
+		"azure.subscription.cloudDefenderService.defenderForKeyVaults": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults,
+		},
+		"azure.subscription.cloudDefenderService.defenderForResourceManager": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForResourceManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForResourceManager,
+		},
+		"azure.subscription.cloudDefenderService.defenderForContainers": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForContainers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForContainers,
+		},
+		"azure.subscription.cloudDefenderService.defenderForContainers.extension": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension,
 		},
 		"azure.subscription.cloudDefenderService.securityContact": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSecurityContact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3996,31 +4051,31 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetMonitoringAgentAutoProvision()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.cloudDefenderService.defenderForServers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForServers()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForServers()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForServers"))
 	},
 	"azure.subscription.cloudDefenderService.defenderForAppServices": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForAppServices()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForAppServices()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForAppServices"))
 	},
 	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForSqlServersOnMachines()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForSqlServersOnMachines()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines"))
 	},
 	"azure.subscription.cloudDefenderService.defenderForSqlDatabases": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForSqlDatabases()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForSqlDatabases()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForSqlDatabases"))
 	},
 	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForOpenSourceDatabases()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForOpenSourceDatabases()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases"))
 	},
 	"azure.subscription.cloudDefenderService.defenderForCosmosDb": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForCosmosDb()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForCosmosDb()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForCosmosDb"))
 	},
 	"azure.subscription.cloudDefenderService.defenderForStorageAccounts": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForStorageAccounts()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForStorageAccounts()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForStorageAccounts"))
 	},
 	"azure.subscription.cloudDefenderService.defenderForKeyVaults": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForKeyVaults()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForKeyVaults()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForKeyVaults"))
 	},
 	"azure.subscription.cloudDefenderService.defenderForResourceManager": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForResourceManager()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForResourceManager()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForResourceManager"))
 	},
 	"azure.subscription.cloudDefenderService.defenderForApis": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForApis()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForApis"))
@@ -4029,7 +4084,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderCSPM()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderCSPM"))
 	},
 	"azure.subscription.cloudDefenderService.defenderForContainers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForContainers()).ToDataRes(types.Dict)
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetDefenderForContainers()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.defenderForContainers"))
 	},
 	"azure.subscription.cloudDefenderService.securityContacts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSecurityContacts()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.securityContact")))
@@ -4067,6 +4122,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.defenderForApis.pricingTier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetPricingTier()).ToDataRes(types.String)
 	},
+	"azure.subscription.cloudDefenderService.defenderForApis.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
 	"azure.subscription.cloudDefenderService.defenderCSPM.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -4079,6 +4161,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.defenderCSPM.subPlan": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetSubPlan()).ToDataRes(types.String)
 	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
 	"azure.subscription.cloudDefenderService.defenderCSPM.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).GetExtensions()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.defenderCSPM.extension")))
 	},
@@ -4088,11 +4194,413 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.defenderCSPM.extension.isEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).GetIsEnabled()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.additionalProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).GetAdditionalProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.operationStatusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).GetOperationStatusCode()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.operationStatusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).GetOperationStatusMessage()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.vulnerabilityManagementToolName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetVulnerabilityManagementToolName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.pricingTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetPricingTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.subPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetSubPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.enforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetEnforce()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.freeTrialRemainingTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetFreeTrialRemainingTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.enablementTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetEnablementTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.inherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetInherited()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.inheritedFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetInheritedFrom()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.replacedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetReplacedBy()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.resourcesCoverageStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetResourcesCoverageStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.defenderDaemonSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetDefenderDaemonSet()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.azurePolicyForKubernetes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetAzurePolicyForKubernetes()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).GetExtensions()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.defenderForContainers.extension")))
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.additionalProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).GetAdditionalProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.operationStatusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).GetOperationStatusCode()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.operationStatusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).GetOperationStatusMessage()).ToDataRes(types.String)
+	},
 	"azure.subscription.cloudDefenderService.securityContact.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetId()).ToDataRes(types.String)
 	},
 	"azure.subscription.cloudDefenderService.securityContact.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.securityContact.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.securityContact.phone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetPhone()).ToDataRes(types.String)
 	},
 	"azure.subscription.cloudDefenderService.securityContact.emails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetEmails()).ToDataRes(types.Array(types.String))
@@ -9269,39 +9777,39 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForServers, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForServers, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForAppServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForAppServices, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForAppServices, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForSqlServersOnMachines, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForSqlServersOnMachines, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForSqlDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForSqlDatabases, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForSqlDatabases, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForOpenSourceDatabases, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForOpenSourceDatabases, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForCosmosDb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForCosmosDb, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForCosmosDb, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForStorageAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForStorageAccounts, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForStorageAccounts, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForKeyVaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForKeyVaults, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForKeyVaults, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForResourceManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForResourceManager, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForResourceManager, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForApis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9313,7 +9821,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForContainers, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionCloudDefenderService).DefenderForContainers, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.securityContacts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9372,6 +9880,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cloudDefenderService.defenderForApis.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForApis.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cloudDefenderService.defenderCSPM.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).__id, ok = v.Value.(string)
 		return
@@ -9392,6 +9936,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cloudDefenderService.defenderCSPM.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -9408,6 +9984,578 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.additionalProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).AdditionalProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.operationStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).OperationStatusCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderCSPM.extension.operationStatusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension).OperationStatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.vulnerabilityManagementToolName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).VulnerabilityManagementToolName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForAppServices.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForSqlDatabases.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForCosmosDb.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForStorageAccounts.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForKeyVaults.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForResourceManager.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.pricingTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).PricingTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.subPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).SubPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.enforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).Enforce, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.freeTrialRemainingTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).FreeTrialRemainingTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.enablementTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).EnablementTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.inherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).Inherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.inheritedFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).InheritedFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.replacedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).ReplacedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.resourcesCoverageStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).ResourcesCoverageStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.defenderDaemonSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).DefenderDaemonSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.azurePolicyForKubernetes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).AzurePolicyForKubernetes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.additionalProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).AdditionalProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.operationStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).OperationStatusCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForContainers.extension.operationStatusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).OperationStatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cloudDefenderService.securityContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).__id, ok = v.Value.(string)
 		return
@@ -9418,6 +10566,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.securityContact.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityContact.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityContact.phone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).Phone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.securityContact.emails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22576,18 +23732,18 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceInternal it will be used here
 	SubscriptionId                  plugin.TValue[string]
 	MonitoringAgentAutoProvision    plugin.TValue[bool]
-	DefenderForServers              plugin.TValue[any]
-	DefenderForAppServices          plugin.TValue[any]
-	DefenderForSqlServersOnMachines plugin.TValue[any]
-	DefenderForSqlDatabases         plugin.TValue[any]
-	DefenderForOpenSourceDatabases  plugin.TValue[any]
-	DefenderForCosmosDb             plugin.TValue[any]
-	DefenderForStorageAccounts      plugin.TValue[any]
-	DefenderForKeyVaults            plugin.TValue[any]
-	DefenderForResourceManager      plugin.TValue[any]
+	DefenderForServers              plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers]
+	DefenderForAppServices          plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices]
+	DefenderForSqlServersOnMachines plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines]
+	DefenderForSqlDatabases         plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases]
+	DefenderForOpenSourceDatabases  plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases]
+	DefenderForCosmosDb             plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb]
+	DefenderForStorageAccounts      plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts]
+	DefenderForKeyVaults            plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults]
+	DefenderForResourceManager      plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager]
 	DefenderForApis                 plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForApis]
 	DefenderCSPM                    plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM]
-	DefenderForContainers           plugin.TValue[any]
+	DefenderForContainers           plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers]
 	SecurityContacts                plugin.TValue[[]any]
 	SettingsMCAS                    plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
 	SettingsWDATP                   plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
@@ -22641,56 +23797,146 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetMonitoringAgentAutoProvisi
 	})
 }
 
-func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForServers() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.DefenderForServers, func() (any, error) {
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForServers() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers](&c.DefenderForServers, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers), nil
+			}
+		}
+
 		return c.defenderForServers()
 	})
 }
 
-func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForAppServices() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.DefenderForAppServices, func() (any, error) {
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForAppServices() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices](&c.DefenderForAppServices, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForAppServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices), nil
+			}
+		}
+
 		return c.defenderForAppServices()
 	})
 }
 
-func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForSqlServersOnMachines() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.DefenderForSqlServersOnMachines, func() (any, error) {
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForSqlServersOnMachines() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines](&c.DefenderForSqlServersOnMachines, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForSqlServersOnMachines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines), nil
+			}
+		}
+
 		return c.defenderForSqlServersOnMachines()
 	})
 }
 
-func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForSqlDatabases() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.DefenderForSqlDatabases, func() (any, error) {
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForSqlDatabases() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases](&c.DefenderForSqlDatabases, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForSqlDatabases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases), nil
+			}
+		}
+
 		return c.defenderForSqlDatabases()
 	})
 }
 
-func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForOpenSourceDatabases() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.DefenderForOpenSourceDatabases, func() (any, error) {
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForOpenSourceDatabases() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases](&c.DefenderForOpenSourceDatabases, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForOpenSourceDatabases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases), nil
+			}
+		}
+
 		return c.defenderForOpenSourceDatabases()
 	})
 }
 
-func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForCosmosDb() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.DefenderForCosmosDb, func() (any, error) {
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForCosmosDb() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb](&c.DefenderForCosmosDb, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForCosmosDb")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb), nil
+			}
+		}
+
 		return c.defenderForCosmosDb()
 	})
 }
 
-func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForStorageAccounts() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.DefenderForStorageAccounts, func() (any, error) {
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForStorageAccounts() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts](&c.DefenderForStorageAccounts, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForStorageAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts), nil
+			}
+		}
+
 		return c.defenderForStorageAccounts()
 	})
 }
 
-func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForKeyVaults() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.DefenderForKeyVaults, func() (any, error) {
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForKeyVaults() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults](&c.DefenderForKeyVaults, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForKeyVaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults), nil
+			}
+		}
+
 		return c.defenderForKeyVaults()
 	})
 }
 
-func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForResourceManager() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.DefenderForResourceManager, func() (any, error) {
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForResourceManager() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager](&c.DefenderForResourceManager, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForResourceManager")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager), nil
+			}
+		}
+
 		return c.defenderForResourceManager()
 	})
 }
@@ -22727,8 +23973,18 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderCSPM() *plugin.TVa
 	})
 }
 
-func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForContainers() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.DefenderForContainers, func() (any, error) {
+func (c *mqlAzureSubscriptionCloudDefenderService) GetDefenderForContainers() *plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers](&c.DefenderForContainers, func() (*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "defenderForContainers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers), nil
+			}
+		}
+
 		return c.defenderForContainers()
 	})
 }
@@ -22871,9 +24127,18 @@ type mqlAzureSubscriptionCloudDefenderServiceDefenderForApis struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForApisInternal it will be used here
-	SubscriptionId plugin.TValue[string]
-	Enabled        plugin.TValue[bool]
-	PricingTier    plugin.TValue[string]
+	SubscriptionId          plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	PricingTier             plugin.TValue[string]
+	SubPlan                 plugin.TValue[string]
+	Enforce                 plugin.TValue[bool]
+	Deprecated              plugin.TValue[bool]
+	FreeTrialRemainingTime  plugin.TValue[string]
+	EnablementTime          plugin.TValue[*time.Time]
+	Inherited               plugin.TValue[bool]
+	InheritedFrom           plugin.TValue[string]
+	ReplacedBy              plugin.TValue[[]any]
+	ResourcesCoverageStatus plugin.TValue[string]
 }
 
 // createAzureSubscriptionCloudDefenderServiceDefenderForApis creates a new instance of this resource
@@ -22925,16 +24190,60 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetPricingTier
 	return &c.PricingTier
 }
 
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
 // mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM for the azure.subscription.cloudDefenderService.defenderCSPM resource
 type mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMInternal it will be used here
-	SubscriptionId plugin.TValue[string]
-	Enabled        plugin.TValue[bool]
-	PricingTier    plugin.TValue[string]
-	SubPlan        plugin.TValue[string]
-	Extensions     plugin.TValue[[]any]
+	SubscriptionId          plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	PricingTier             plugin.TValue[string]
+	SubPlan                 plugin.TValue[string]
+	Enforce                 plugin.TValue[bool]
+	Deprecated              plugin.TValue[bool]
+	FreeTrialRemainingTime  plugin.TValue[string]
+	EnablementTime          plugin.TValue[*time.Time]
+	Inherited               plugin.TValue[bool]
+	InheritedFrom           plugin.TValue[string]
+	ReplacedBy              plugin.TValue[[]any]
+	ResourcesCoverageStatus plugin.TValue[string]
+	Extensions              plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCloudDefenderServiceDefenderCSPM creates a new instance of this resource
@@ -22990,6 +24299,38 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetSubPlan() *plu
 	return &c.SubPlan
 }
 
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
 func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) GetExtensions() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -23011,8 +24352,11 @@ type mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtensionInternal it will be used here
-	Name      plugin.TValue[string]
-	IsEnabled plugin.TValue[bool]
+	Name                   plugin.TValue[string]
+	IsEnabled              plugin.TValue[bool]
+	AdditionalProperties   plugin.TValue[any]
+	OperationStatusCode    plugin.TValue[string]
+	OperationStatusMessage plugin.TValue[string]
 }
 
 // createAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension creates a new instance of this resource
@@ -23060,6 +24404,1147 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) GetIsEna
 	return &c.IsEnabled
 }
 
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) GetAdditionalProperties() *plugin.TValue[any] {
+	return &c.AdditionalProperties
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) GetOperationStatusCode() *plugin.TValue[string] {
+	return &c.OperationStatusCode
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) GetOperationStatusMessage() *plugin.TValue[string] {
+	return &c.OperationStatusMessage
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForServers for the azure.subscription.cloudDefenderService.defenderForServers resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForServers struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForServersInternal it will be used here
+	SubscriptionId                  plugin.TValue[string]
+	Enabled                         plugin.TValue[bool]
+	PricingTier                     plugin.TValue[string]
+	SubPlan                         plugin.TValue[string]
+	Enforce                         plugin.TValue[bool]
+	Deprecated                      plugin.TValue[bool]
+	FreeTrialRemainingTime          plugin.TValue[string]
+	EnablementTime                  plugin.TValue[*time.Time]
+	Inherited                       plugin.TValue[bool]
+	InheritedFrom                   plugin.TValue[string]
+	ReplacedBy                      plugin.TValue[[]any]
+	ResourcesCoverageStatus         plugin.TValue[string]
+	VulnerabilityManagementToolName plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForServers creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForServers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForServers{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForServers", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForServers"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetVulnerabilityManagementToolName() *plugin.TValue[string] {
+	return &c.VulnerabilityManagementToolName
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices for the azure.subscription.cloudDefenderService.defenderForAppServices resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServicesInternal it will be used here
+	SubscriptionId          plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	PricingTier             plugin.TValue[string]
+	SubPlan                 plugin.TValue[string]
+	Enforce                 plugin.TValue[bool]
+	Deprecated              plugin.TValue[bool]
+	FreeTrialRemainingTime  plugin.TValue[string]
+	EnablementTime          plugin.TValue[*time.Time]
+	Inherited               plugin.TValue[bool]
+	InheritedFrom           plugin.TValue[string]
+	ReplacedBy              plugin.TValue[[]any]
+	ResourcesCoverageStatus plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForAppServices creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForAppServices(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForAppServices", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForAppServices"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines for the azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachinesInternal it will be used here
+	SubscriptionId          plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	PricingTier             plugin.TValue[string]
+	SubPlan                 plugin.TValue[string]
+	Enforce                 plugin.TValue[bool]
+	Deprecated              plugin.TValue[bool]
+	FreeTrialRemainingTime  plugin.TValue[string]
+	EnablementTime          plugin.TValue[*time.Time]
+	Inherited               plugin.TValue[bool]
+	InheritedFrom           plugin.TValue[string]
+	ReplacedBy              plugin.TValue[[]any]
+	ResourcesCoverageStatus plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases for the azure.subscription.cloudDefenderService.defenderForSqlDatabases resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabasesInternal it will be used here
+	SubscriptionId          plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	PricingTier             plugin.TValue[string]
+	SubPlan                 plugin.TValue[string]
+	Enforce                 plugin.TValue[bool]
+	Deprecated              plugin.TValue[bool]
+	FreeTrialRemainingTime  plugin.TValue[string]
+	EnablementTime          plugin.TValue[*time.Time]
+	Inherited               plugin.TValue[bool]
+	InheritedFrom           plugin.TValue[string]
+	ReplacedBy              plugin.TValue[[]any]
+	ResourcesCoverageStatus plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForSqlDatabases", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForSqlDatabases"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases for the azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabasesInternal it will be used here
+	SubscriptionId          plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	PricingTier             plugin.TValue[string]
+	SubPlan                 plugin.TValue[string]
+	Enforce                 plugin.TValue[bool]
+	Deprecated              plugin.TValue[bool]
+	FreeTrialRemainingTime  plugin.TValue[string]
+	EnablementTime          plugin.TValue[*time.Time]
+	Inherited               plugin.TValue[bool]
+	InheritedFrom           plugin.TValue[string]
+	ReplacedBy              plugin.TValue[[]any]
+	ResourcesCoverageStatus plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb for the azure.subscription.cloudDefenderService.defenderForCosmosDb resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDbInternal it will be used here
+	SubscriptionId          plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	PricingTier             plugin.TValue[string]
+	SubPlan                 plugin.TValue[string]
+	Enforce                 plugin.TValue[bool]
+	Deprecated              plugin.TValue[bool]
+	FreeTrialRemainingTime  plugin.TValue[string]
+	EnablementTime          plugin.TValue[*time.Time]
+	Inherited               plugin.TValue[bool]
+	InheritedFrom           plugin.TValue[string]
+	ReplacedBy              plugin.TValue[[]any]
+	ResourcesCoverageStatus plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForCosmosDb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForCosmosDb"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts for the azure.subscription.cloudDefenderService.defenderForStorageAccounts resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccountsInternal it will be used here
+	SubscriptionId          plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	PricingTier             plugin.TValue[string]
+	SubPlan                 plugin.TValue[string]
+	Enforce                 plugin.TValue[bool]
+	Deprecated              plugin.TValue[bool]
+	FreeTrialRemainingTime  plugin.TValue[string]
+	EnablementTime          plugin.TValue[*time.Time]
+	Inherited               plugin.TValue[bool]
+	InheritedFrom           plugin.TValue[string]
+	ReplacedBy              plugin.TValue[[]any]
+	ResourcesCoverageStatus plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForStorageAccounts", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForStorageAccounts"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults for the azure.subscription.cloudDefenderService.defenderForKeyVaults resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaultsInternal it will be used here
+	SubscriptionId          plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	PricingTier             plugin.TValue[string]
+	SubPlan                 plugin.TValue[string]
+	Enforce                 plugin.TValue[bool]
+	Deprecated              plugin.TValue[bool]
+	FreeTrialRemainingTime  plugin.TValue[string]
+	EnablementTime          plugin.TValue[*time.Time]
+	Inherited               plugin.TValue[bool]
+	InheritedFrom           plugin.TValue[string]
+	ReplacedBy              plugin.TValue[[]any]
+	ResourcesCoverageStatus plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForKeyVaults", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForKeyVaults"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager for the azure.subscription.cloudDefenderService.defenderForResourceManager resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManagerInternal it will be used here
+	SubscriptionId          plugin.TValue[string]
+	Enabled                 plugin.TValue[bool]
+	PricingTier             plugin.TValue[string]
+	SubPlan                 plugin.TValue[string]
+	Enforce                 plugin.TValue[bool]
+	Deprecated              plugin.TValue[bool]
+	FreeTrialRemainingTime  plugin.TValue[string]
+	EnablementTime          plugin.TValue[*time.Time]
+	Inherited               plugin.TValue[bool]
+	InheritedFrom           plugin.TValue[string]
+	ReplacedBy              plugin.TValue[[]any]
+	ResourcesCoverageStatus plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForResourceManager creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForResourceManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForResourceManager", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForResourceManager"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers for the azure.subscription.cloudDefenderService.defenderForContainers resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersInternal it will be used here
+	SubscriptionId           plugin.TValue[string]
+	Enabled                  plugin.TValue[bool]
+	PricingTier              plugin.TValue[string]
+	SubPlan                  plugin.TValue[string]
+	Enforce                  plugin.TValue[bool]
+	Deprecated               plugin.TValue[bool]
+	FreeTrialRemainingTime   plugin.TValue[string]
+	EnablementTime           plugin.TValue[*time.Time]
+	Inherited                plugin.TValue[bool]
+	InheritedFrom            plugin.TValue[string]
+	ReplacedBy               plugin.TValue[[]any]
+	ResourcesCoverageStatus  plugin.TValue[string]
+	DefenderDaemonSet        plugin.TValue[bool]
+	AzurePolicyForKubernetes plugin.TValue[bool]
+	Extensions               plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForContainers creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForContainers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForContainers", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForContainers"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetPricingTier() *plugin.TValue[string] {
+	return &c.PricingTier
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetSubPlan() *plugin.TValue[string] {
+	return &c.SubPlan
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetEnforce() *plugin.TValue[bool] {
+	return &c.Enforce
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetDeprecated() *plugin.TValue[bool] {
+	return &c.Deprecated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetFreeTrialRemainingTime() *plugin.TValue[string] {
+	return &c.FreeTrialRemainingTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetEnablementTime() *plugin.TValue[*time.Time] {
+	return &c.EnablementTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetInherited() *plugin.TValue[bool] {
+	return &c.Inherited
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetInheritedFrom() *plugin.TValue[string] {
+	return &c.InheritedFrom
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetReplacedBy() *plugin.TValue[[]any] {
+	return &c.ReplacedBy
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetResourcesCoverageStatus() *plugin.TValue[string] {
+	return &c.ResourcesCoverageStatus
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetDefenderDaemonSet() *plugin.TValue[bool] {
+	return &c.DefenderDaemonSet
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetAzurePolicyForKubernetes() *plugin.TValue[bool] {
+	return &c.AzurePolicyForKubernetes
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetExtensions() *plugin.TValue[[]any] {
+	return &c.Extensions
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension for the azure.subscription.cloudDefenderService.defenderForContainers.extension resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtensionInternal it will be used here
+	Name                   plugin.TValue[string]
+	IsEnabled              plugin.TValue[bool]
+	AdditionalProperties   plugin.TValue[any]
+	OperationStatusCode    plugin.TValue[string]
+	OperationStatusMessage plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForContainers.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForContainers.extension"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension) GetAdditionalProperties() *plugin.TValue[any] {
+	return &c.AdditionalProperties
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension) GetOperationStatusCode() *plugin.TValue[string] {
+	return &c.OperationStatusCode
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension) GetOperationStatusMessage() *plugin.TValue[string] {
+	return &c.OperationStatusMessage
+}
+
 // mqlAzureSubscriptionCloudDefenderServiceSecurityContact for the azure.subscription.cloudDefenderService.securityContact resource
 type mqlAzureSubscriptionCloudDefenderServiceSecurityContact struct {
 	MqlRuntime *plugin.Runtime
@@ -23067,6 +25552,8 @@ type mqlAzureSubscriptionCloudDefenderServiceSecurityContact struct {
 	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceSecurityContactInternal it will be used here
 	Id                  plugin.TValue[string]
 	Name                plugin.TValue[string]
+	IsEnabled           plugin.TValue[bool]
+	Phone               plugin.TValue[string]
 	Emails              plugin.TValue[[]any]
 	AlertNotifications  plugin.TValue[any]
 	NotificationSources plugin.TValue[any]
@@ -23116,6 +25603,14 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetId() *plugi
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetPhone() *plugin.TValue[string] {
+	return &c.Phone
 }
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) GetEmails() *plugin.TValue[[]any] {
