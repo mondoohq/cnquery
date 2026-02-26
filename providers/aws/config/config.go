@@ -132,7 +132,7 @@ Notes:
 					Long:    "filters",
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",
-					Desc:    "Filter options, e.g., --filters regions=us-east-2,us-east-1 , --filters ec2:instance-ids=i-093439483935",
+					Desc:    "Filter options, e.g., --filters regions=us-east-2,us-east-1 --filters ec2:instance-ids=i-093439483935 --filters tag:Environment=production --filters tag:Team=platform --filters exclude:tag:Environment=dev",
 				},
 			},
 		},
