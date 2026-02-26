@@ -2276,11 +2276,11 @@ func (g *mqlGithubRepository) spdxSbom() (*mqlGithubRepositorySbom, error) {
 	}
 
 	packages := make([]any, 0, len(info.Packages))
-	for _, pkg := range info.Packages {
+	for i, pkg := range info.Packages {
 		externalRefs := make([]any, 0, len(pkg.ExternalRefs))
-		for _, ref := range pkg.ExternalRefs {
+		for j, ref := range pkg.ExternalRefs {
 			mqlExternalRef, err := CreateResource(g.MqlRuntime, ResourceGithubRepositorySbomPackageExternalRef, map[string]*llx.RawData{
-				"__id":              llx.StringData(ResourceGithubRepositorySbomPackageExternalRef + "/" + ownerLogin + "/" + repoName + "/" + pkg.GetSPDXID() + "/" + ref.ReferenceType + "/" + ref.ReferenceLocator),
+				"__id":              llx.StringData(fmt.Sprintf("%s/%s/%s/%d/%d", ResourceGithubRepositorySbomPackageExternalRef, ownerLogin, repoName, i, j)),
 				"referenceCategory": llx.StringData(ref.ReferenceCategory),
 				"referenceType":     llx.StringData(ref.ReferenceType),
 				"referenceLocator":  llx.StringData(ref.ReferenceLocator),
@@ -2291,7 +2291,7 @@ func (g *mqlGithubRepository) spdxSbom() (*mqlGithubRepositorySbom, error) {
 			externalRefs = append(externalRefs, mqlExternalRef)
 		}
 		mqlPkg, err := CreateResource(g.MqlRuntime, ResourceGithubRepositorySbomPackage, map[string]*llx.RawData{
-			"__id":             llx.StringData(ResourceGithubRepositorySbomPackage + "/" + ownerLogin + "/" + repoName + "/" + pkg.GetSPDXID()),
+			"__id":             llx.StringData(fmt.Sprintf("%s/%s/%s/%d", ResourceGithubRepositorySbomPackage, ownerLogin, repoName, i)),
 			"spdxId":           llx.StringDataPtr(pkg.SPDXID),
 			"name":             llx.StringDataPtr(pkg.Name),
 			"versionInfo":      llx.StringDataPtr(pkg.VersionInfo),
@@ -2308,9 +2308,9 @@ func (g *mqlGithubRepository) spdxSbom() (*mqlGithubRepositorySbom, error) {
 	}
 
 	relationships := make([]any, 0, len(info.Relationships))
-	for _, rel := range info.Relationships {
+	for i, rel := range info.Relationships {
 		mqlRel, err := CreateResource(g.MqlRuntime, ResourceGithubRepositorySbomRelationship, map[string]*llx.RawData{
-			"__id":               llx.StringData(ResourceGithubRepositorySbomRelationship + "/" + ownerLogin + "/" + repoName + "/" + rel.SPDXElementID + "/" + rel.RelatedSPDXElement),
+			"__id":               llx.StringData(fmt.Sprintf("%s/%s/%s/%d", ResourceGithubRepositorySbomRelationship, ownerLogin, repoName, i)),
 			"relationshipType":   llx.StringData(rel.RelationshipType),
 			"spdxElementId":      llx.StringData(rel.SPDXElementID),
 			"relatedSpdxElement": llx.StringData(rel.RelatedSPDXElement),
