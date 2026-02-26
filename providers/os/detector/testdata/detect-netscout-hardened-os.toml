@@ -1,0 +1,37 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "3.11.10-301.fc20.x86_64"
+
+[files."/etc/fedora-release"]
+content = "NetScout Hardened OS 20"
+
+[files."/etc/redhat-release"]
+content = "NetScout Hardened OS 20"
+
+[files."/etc/system-release"]
+content = "NetScout Hardened OS 20"
+
+[files."/etc/system-release-cpe"]
+content = "cpe:/o:fedoraproject:fedora:20"
+
+[files."/etc/os-release"]
+content = """
+NAME="NetScout Hardened OS"
+VERSION="20"
+ID="NetScout Hardened OS"
+VERSION_ID=20
+PRETTY_NAME="NetScout Hardened OS"
+ANSI_COLOR="0;34"
+CPE_NAME="cpe:/o:fedoraproject:fedora:20"
+HOME_URL="https://fedoraproject.org/"
+BUG_REPORT_URL="https://bugzilla.redhat.com/"
+REDHAT_BUGZILLA_PRODUCT="Fedora"
+REDHAT_BUGZILLA_PRODUCT_VERSION=20
+REDHAT_SUPPORT_PRODUCT="Fedora"
+REDHAT_SUPPORT_PRODUCT_VERSION=20
+"""

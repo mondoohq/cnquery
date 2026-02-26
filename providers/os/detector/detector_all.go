@@ -384,6 +384,18 @@ var qubes = &PlatformResolver{
 	},
 }
 
+var netscoutHardenedOS = &PlatformResolver{
+	Name:     "netscout-hardened-os",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "NetScout Hardened OS" {
+			pf.Name = "netscout-hardened-os"
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var tails = &PlatformResolver{
 	Name:     "tails",
 	IsFamily: false,
@@ -1082,7 +1094,7 @@ var redhatFamily = &PlatformResolver{
 	IsFamily: true,
 	// NOTE: oracle pretends to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
 	// want to check that platform before redhat
-	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux, nobara, qubes},
+	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux, nobara, qubes, netscoutHardenedOS},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		f, err := conn.FileSystem().Open("/etc/redhat-release")
 		if err != nil {

@@ -1134,6 +1134,17 @@ func TestKDENeonDetector(t *testing.T) {
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
+func TestNetscoutHardenedOSDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-netscout-hardened-os.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "netscout-hardened-os", di.Name, "os name should be identified")
+	assert.Equal(t, "NetScout Hardened OS", di.Title, "os title should be identified")
+	assert.Equal(t, "20", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
 func TestQubesOSDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-qubes.toml")
 	assert.Nil(t, err, "was able to create the provider")
