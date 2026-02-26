@@ -50,8 +50,6 @@ azure.subscription @defaults ("name") {
   mySql() azure.subscription.mySqlService
   // PostgreSQL resources in the subscription
   postgreSql() azure.subscription.postgreSqlService
-  // MariaDB resources in the subscription
-  mariaDb() azure.subscription.mariaDbService
   // Cosmos DB resources in the subscription
   cosmosDb() azure.subscription.cosmosDbService
   // Azure Key Vault resources in the subscription
@@ -2153,50 +2151,6 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   databases() []azure.subscription.mySqlService.database
   // MySQL flexible server firewall rules
   firewallRules() []azure.subscription.sqlService.firewallrule
-}
-
-// Azure Database for MariaDB
-private azure.subscription.mariaDbService {
-  // Subscription identifier
-  subscriptionId string
-  // List of MariaDB servers
-  servers() []azure.subscription.mariaDbService.server
-}
-
-// Azure Database for MariaDB server
-private azure.subscription.mariaDbService.server @defaults("id name location") {
-  // MariaDB server ID
-  id string
-  // MariaDB server name
-  name string
-  // MariaDB server location
-  location string
-  // MariaDB server tags
-  tags map[string]string
-  // MariaDB server type
-  type string
-  // MariaDB server properties
-  properties dict
-  // MariaDB server configuration
-  configuration() []azure.subscription.sqlService.configuration
-  // MariaDB server databases
-  databases() []azure.subscription.mariaDbService.database
-  // MariaDB server firewall rules
-  firewallRules() []azure.subscription.sqlService.firewallrule
-}
-
-// Azure Database for MariaDB database
-private azure.subscription.mariaDbService.database @defaults("id name") {
-  // MariaDB database ID
-  id string
-  // MariaDB database name
-  name string
-  // MariaDB database type
-  type string
-  // MariaDB database character set
-  charset string
-  // MariaDB database collation
-  collation string
 }
 
 // Azure Cosmos DB

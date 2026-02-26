@@ -116,8 +116,6 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/iothub/armiothub v1.3.0 h1
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/iothub/armiothub v1.3.0/go.mod h1:djbLk3ngutFfQ9fSOM29UzywAkcBI1YUsuUnxTQGsqU=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2 v2.0.1 h1:nFZ7AvJqTpWobmnZlprsK6GucrByFsXWB+DwkhRxM9I=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2 v2.0.1/go.mod h1:ZNiswYTEPuQ/D+mHxONII+FeHHNNVQlJ5IUG88opjS0=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mariadb/armmariadb v1.2.0 h1:seh4IsOzJkO3AxKPSHWmBKbTtO/4kiSDPa7spQmMxDY=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mariadb/armmariadb v1.2.0/go.mod h1:DjMBNXv1qSHIv81Mj/MeAru4hk5WhOW4YZ40c+zo+Us=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor v0.11.0 h1:Ds0KRF8ggpEGg4Vo42oX1cIt/IfOhHWJBikksZbVxeg=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor v0.11.0/go.mod h1:jj6P8ybImR+5topJ+eH6fgcemSFBmU6/6bFF8KkwuDI=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi v1.3.0 h1:L7G3dExHBgUxsO3qpTGhk/P2dgnYyW48yn7AO33Tbek=
