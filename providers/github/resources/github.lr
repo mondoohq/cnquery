@@ -456,7 +456,7 @@ private github.repository.sbom.package @defaults("name versionInfo") {
   name string
   // Package version or version range
   versionInfo string
-  // Download location or NOASSERTION
+  // Download location
   downloadLocation string
   // Whether file contents were analyzed
   filesAnalyzed bool
