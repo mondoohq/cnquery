@@ -1603,14 +1603,57 @@ func newMqlRouter(projectId string, region *mqlGcpProjectComputeServiceRegion, r
 		return nil, err
 	}
 
+	routerId := strconv.FormatUint(router.Id, 10)
+	natResources := make([]any, 0, len(router.Nats))
+	for _, nat := range router.Nats {
+		logConfig, err := convert.JsonToDict(nat.LogConfig)
+		if err != nil {
+			return nil, err
+		}
+		subnetworks, err := convert.JsonToDictSlice(nat.Subnetworks)
+		if err != nil {
+			return nil, err
+		}
+		rules, err := convert.JsonToDictSlice(nat.Rules)
+		if err != nil {
+			return nil, err
+		}
+		mqlNat, err := CreateResource(runtime, "gcp.project.computeService.router.nat", map[string]*llx.RawData{
+			"id":                               llx.StringData(fmt.Sprintf("gcp.project.computeService.router.nat/%s/%s", routerId, nat.Name)),
+			"name":                             llx.StringData(nat.Name),
+			"natIpAllocateOption":              llx.StringData(nat.NatIpAllocateOption),
+			"sourceSubnetworkIpRangesToNat":    llx.StringData(nat.SourceSubnetworkIpRangesToNat),
+			"enableDynamicPortAllocation":      llx.BoolData(nat.EnableDynamicPortAllocation),
+			"enableEndpointIndependentMapping": llx.BoolData(nat.EnableEndpointIndependentMapping),
+			"minPortsPerVm":                    llx.IntData(nat.MinPortsPerVm),
+			"maxPortsPerVm":                    llx.IntData(nat.MaxPortsPerVm),
+			"natIps":                           llx.ArrayData(convert.SliceAnyToInterface(nat.NatIps), types.String),
+			"subnetworks":                      llx.ArrayData(subnetworks, types.Dict),
+			"rules":                            llx.ArrayData(rules, types.Dict),
+			"logConfig":                        llx.DictData(logConfig),
+			"endpointTypes":                    llx.ArrayData(convert.SliceAnyToInterface(nat.EndpointTypes), types.String),
+			"autoNetworkTier":                  llx.StringData(nat.AutoNetworkTier),
+			"icmpIdleTimeoutSec":               llx.IntData(nat.IcmpIdleTimeoutSec),
+			"tcpEstablishedIdleTimeoutSec":     llx.IntData(nat.TcpEstablishedIdleTimeoutSec),
+			"tcpTransitoryIdleTimeoutSec":      llx.IntData(nat.TcpTransitoryIdleTimeoutSec),
+			"tcpTimeWaitTimeoutSec":            llx.IntData(nat.TcpTimeWaitTimeoutSec),
+			"udpIdleTimeoutSec":                llx.IntData(nat.UdpIdleTimeoutSec),
+		})
+		if err != nil {
+			return nil, err
+		}
+		natResources = append(natResources, mqlNat)
+	}
+
 	return CreateResource(runtime, "gcp.project.computeService.router", map[string]*llx.RawData{
-		"id":                          llx.StringData(strconv.FormatUint(router.Id, 10)),
+		"id":                          llx.StringData(routerId),
 		"name":                        llx.StringData(router.Name),
 		"description":                 llx.StringData(router.Description),
 		"bgp":                         llx.DictData(bgp),
 		"bgpPeers":                    llx.ArrayData(bgpPeers, types.Dict),
 		"encryptedInterconnectRouter": llx.BoolData(router.EncryptedInterconnectRouter),
 		"nats":                        llx.ArrayData(nats, types.Dict),
+		"natServices":                 llx.ArrayData(natResources, types.Resource("gcp.project.computeService.router.nat")),
 		"created":                     llx.TimeDataPtr(parseTime(router.CreationTimestamp)),
 	})
 }
@@ -2147,4 +2190,307 @@ func (g *mqlGcpProjectComputeServiceForwardingRule) subnetwork() (*mqlGcpProject
 	}
 	subnetUrl := g.SubnetworkUrl.Data
 	return getSubnetworkByUrl(subnetUrl, g.MqlRuntime)
+}
+
+// Cloud NAT
+
+func (g *mqlGcpProjectComputeServiceRouterNat) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+// Cloud Armor security policies
+
+func (g *mqlGcpProjectComputeServiceSecurityPolicy) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectComputeServiceSecurityPolicyRule) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectComputeService) securityPolicies() ([]any, error) {
+	if !g.GetEnabled().Data {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	req := computeSvc.SecurityPolicies.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.SecurityPoliciesAggregatedList) error {
+		for _, scopedList := range page.Items {
+			for _, policy := range scopedList.SecurityPolicies {
+				adaptiveProtectionConfig, err := convert.JsonToDict(policy.AdaptiveProtectionConfig)
+				if err != nil {
+					return err
+				}
+				advancedOptionsConfig, err := convert.JsonToDict(policy.AdvancedOptionsConfig)
+				if err != nil {
+					return err
+				}
+				ddosProtectionConfig, err := convert.JsonToDict(policy.DdosProtectionConfig)
+				if err != nil {
+					return err
+				}
+				recaptchaOptionsConfig, err := convert.JsonToDict(policy.RecaptchaOptionsConfig)
+				if err != nil {
+					return err
+				}
+
+				policyId := strconv.FormatUint(policy.Id, 10)
+				mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.securityPolicy", map[string]*llx.RawData{
+					"id":                       llx.StringData(policyId),
+					"name":                     llx.StringData(policy.Name),
+					"description":              llx.StringData(policy.Description),
+					"type":                     llx.StringData(policy.Type),
+					"labels":                   llx.MapData(convert.MapToInterfaceMap(policy.Labels), types.String),
+					"adaptiveProtectionConfig": llx.DictData(adaptiveProtectionConfig),
+					"advancedOptionsConfig":    llx.DictData(advancedOptionsConfig),
+					"ddosProtectionConfig":     llx.DictData(ddosProtectionConfig),
+					"recaptchaOptionsConfig":   llx.DictData(recaptchaOptionsConfig),
+					"regionUrl":                llx.StringData(policy.Region),
+					"selfLink":                 llx.StringData(policy.SelfLink),
+					"createdAt":                llx.TimeDataPtr(parseTime(policy.CreationTimestamp)),
+				})
+				if err != nil {
+					return err
+				}
+				res = append(res, mqlPolicy)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceSecurityPolicy) rules() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	policyId := g.Id.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the policy name to fetch its rules
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	policyName := g.Name.Data
+
+	// We need the project ID from the connection since the policy doesn't store it
+	projectId := conn.ResourceID()
+
+	policy, err := computeSvc.SecurityPolicies.Get(projectId, policyName).Context(ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	for _, rule := range policy.Rules {
+		matchDict, err := convert.JsonToDict(rule.Match)
+		if err != nil {
+			return nil, err
+		}
+		networkMatch, err := convert.JsonToDict(rule.NetworkMatch)
+		if err != nil {
+			return nil, err
+		}
+		rateLimitOptions, err := convert.JsonToDict(rule.RateLimitOptions)
+		if err != nil {
+			return nil, err
+		}
+		redirectOptions, err := convert.JsonToDict(rule.RedirectOptions)
+		if err != nil {
+			return nil, err
+		}
+		headerAction, err := convert.JsonToDict(rule.HeaderAction)
+		if err != nil {
+			return nil, err
+		}
+		preconfiguredWafConfig, err := convert.JsonToDict(rule.PreconfiguredWafConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlRule, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.securityPolicy.rule", map[string]*llx.RawData{
+			"id":                     llx.StringData(fmt.Sprintf("gcp.project.computeService.securityPolicy.rule/%s/%d", policyId, rule.Priority)),
+			"action":                 llx.StringData(rule.Action),
+			"description":            llx.StringData(rule.Description),
+			"priority":               llx.IntData(rule.Priority),
+			"preview":                llx.BoolData(rule.Preview),
+			"match":                  llx.DictData(matchDict),
+			"networkMatch":           llx.DictData(networkMatch),
+			"rateLimitOptions":       llx.DictData(rateLimitOptions),
+			"redirectOptions":        llx.DictData(redirectOptions),
+			"headerAction":           llx.DictData(headerAction),
+			"preconfiguredWafConfig": llx.DictData(preconfiguredWafConfig),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRule)
+	}
+	return res, nil
+}
+
+// SSL Policies
+
+func (g *mqlGcpProjectComputeServiceSslPolicy) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectComputeService) sslPolicies() ([]any, error) {
+	if !g.GetEnabled().Data {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	req := computeSvc.SslPolicies.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.SslPoliciesAggregatedList) error {
+		for _, scopedList := range page.Items {
+			for _, policy := range scopedList.SslPolicies {
+				warnings := make([]any, 0, len(policy.Warnings))
+				for _, w := range policy.Warnings {
+					wDict, err := convert.JsonToDict(w)
+					if err != nil {
+						return err
+					}
+					warnings = append(warnings, wDict)
+				}
+
+				mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.sslPolicy", map[string]*llx.RawData{
+					"id":              llx.StringData(strconv.FormatUint(policy.Id, 10)),
+					"name":            llx.StringData(policy.Name),
+					"description":     llx.StringData(policy.Description),
+					"profile":         llx.StringData(policy.Profile),
+					"minTlsVersion":   llx.StringData(policy.MinTlsVersion),
+					"customFeatures":  llx.ArrayData(convert.SliceAnyToInterface(policy.CustomFeatures), types.String),
+					"enabledFeatures": llx.ArrayData(convert.SliceAnyToInterface(policy.EnabledFeatures), types.String),
+					"regionUrl":       llx.StringData(policy.Region),
+					"selfLink":        llx.StringData(policy.SelfLink),
+					"warnings":        llx.ArrayData(warnings, types.Dict),
+					"createdAt":       llx.TimeDataPtr(parseTime(policy.CreationTimestamp)),
+				})
+				if err != nil {
+					return err
+				}
+				res = append(res, mqlPolicy)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// SSL Certificates
+
+func (g *mqlGcpProjectComputeServiceSslCertificate) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectComputeService) sslCertificates() ([]any, error) {
+	if !g.GetEnabled().Data {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	req := computeSvc.SslCertificates.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.SslCertificateAggregatedList) error {
+		for _, scopedList := range page.Items {
+			for _, cert := range scopedList.SslCertificates {
+				managed, err := convert.JsonToDict(cert.Managed)
+				if err != nil {
+					return err
+				}
+
+				mqlCert, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.sslCertificate", map[string]*llx.RawData{
+					"id":                      llx.StringData(strconv.FormatUint(cert.Id, 10)),
+					"name":                    llx.StringData(cert.Name),
+					"description":             llx.StringData(cert.Description),
+					"type":                    llx.StringData(cert.Type),
+					"subjectAlternativeNames": llx.ArrayData(convert.SliceAnyToInterface(cert.SubjectAlternativeNames), types.String),
+					"managed":                 llx.DictData(managed),
+					"regionUrl":               llx.StringData(cert.Region),
+					"selfLink":                llx.StringData(cert.SelfLink),
+					"expireTime":              llx.StringData(cert.ExpireTime),
+					"createdAt":               llx.TimeDataPtr(parseTime(cert.CreationTimestamp)),
+				})
+				if err != nil {
+					return err
+				}
+				res = append(res, mqlCert)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return res, nil
 }

@@ -18,10 +18,12 @@ require (
 	cloud.google.com/go/logging v1.13.1
 	cloud.google.com/go/longrunning v0.8.0
 	cloud.google.com/go/monitoring v1.24.3
+	cloud.google.com/go/orgpolicy v1.15.1
 	cloud.google.com/go/pubsub v1.50.1
 	cloud.google.com/go/recommender v1.13.6
 	cloud.google.com/go/redis v1.18.3
 	cloud.google.com/go/run v1.15.0
+	cloud.google.com/go/security v1.19.2
 	cloud.google.com/go/serviceusage v1.9.7
 	cloud.google.com/go/spanner v1.87.0
 	github.com/aws/smithy-go v1.24.0
@@ -285,7 +287,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260122232226-8e98ce8d340d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
-	google.golang.org/grpc v1.79.1 // indirect
+	google.golang.org/grpc v1.79.1
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v1.0.1 // indirect

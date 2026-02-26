@@ -36,6 +36,10 @@ gcp.organization @defaults("name") {
   lifecycleState() string
   // Organization IAM policy
   iamPolicy() []gcp.resourcemanager.binding
+  // Audit logging configuration
+  auditConfig() []gcp.resourcemanager.auditConfig
+  // Organization policies
+  orgPolicies() []gcp.orgPolicy
   // Access approval settings
   accessApprovalSettings() gcp.accessApprovalSettings
   // List of folders
@@ -397,6 +401,10 @@ gcp.project @defaults("name") {
   labels() map[string]string
   // IAM policy
   iamPolicy() []gcp.resourcemanager.binding
+  // Audit logging configuration
+  auditConfig() []gcp.resourcemanager.auditConfig
+  // Organization policies
+  orgPolicies() []gcp.orgPolicy
   // List of available and enabled services for the project
   services() []gcp.service
   // List of recommendations
@@ -451,6 +459,8 @@ gcp.project @defaults("name") {
   bigtable() gcp.project.bigtableService
   // GCP AlloyDB resources
   alloydb() gcp.project.alloydbService
+  // GCP Certificate Authority Service resources
+  certificateAuthority() gcp.project.certificateAuthorityService
 }
 
 // Google Cloud (GCP) service
@@ -541,6 +551,12 @@ private gcp.project.computeService {
   addresses() []gcp.project.computeService.address
   // List of forwarding rules
   forwardingRules() []gcp.project.computeService.forwardingRule
+  // Cloud Armor security policies
+  securityPolicies() []gcp.project.computeService.securityPolicy
+  // SSL/TLS policies for load balancers
+  sslPolicies() []gcp.project.computeService.sslPolicy
+  // SSL/TLS certificates
+  sslCertificates() []gcp.project.computeService.sslCertificate
 }
 
 // Google Cloud (GCP) Compute address
@@ -1073,8 +1089,10 @@ private gcp.project.computeService.router @defaults("name")  {
   bgpPeers []dict
   // Whether a router is dedicated for use with encrypted VLAN attachments
   encryptedInterconnectRouter bool
-  // NAT services created in this router
+  // Deprecated: Use natServices instead
   nats []dict
+  // NAT services created in this router
+  natServices []gcp.project.computeService.router.nat
   // Creation timestamp
   created time
 }
@@ -3775,5 +3793,299 @@ private gcp.project.alloydbService.backup @defaults("name") {
   // Creation time
   createdAt time
   // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Compute Cloud Armor security policy
+private gcp.project.computeService.securityPolicy @defaults("name type") {
+  // Unique identifier
+  id string
+  // Security policy name
+  name string
+  // Description
+  description string
+  // The type of security policy (CLOUD_ARMOR, CLOUD_ARMOR_EDGE, CLOUD_ARMOR_NETWORK)
+  type string
+  // Labels
+  labels map[string]string
+  // Adaptive protection configuration
+  adaptiveProtectionConfig dict
+  // Advanced options configuration
+  advancedOptionsConfig dict
+  // DDoS protection configuration
+  ddosProtectionConfig dict
+  // reCAPTCHA options configuration
+  recaptchaOptionsConfig dict
+  // URL of the region (empty for global policies)
+  regionUrl string
+  // Self-link URL
+  selfLink string
+  // Creation timestamp
+  createdAt time
+  // Security policy rules
+  rules() []gcp.project.computeService.securityPolicy.rule
+}
+
+// Google Cloud (GCP) Compute Cloud Armor security policy rule
+private gcp.project.computeService.securityPolicy.rule @defaults("priority action") {
+  // Internal ID for this resource
+  id string
+  // Rule action (allow, deny(403), deny(404), deny(502), rate_based_ban, redirect, throttle)
+  action string
+  // Rule description
+  description string
+  // Rule priority (0 to 2147483647)
+  priority int
+  // Whether the rule is in preview mode (not enforced)
+  preview bool
+  // Match condition
+  match dict
+  // Network match condition (for CLOUD_ARMOR_NETWORK policies)
+  networkMatch dict
+  // Rate limit options
+  rateLimitOptions dict
+  // Redirect options
+  redirectOptions dict
+  // Header action
+  headerAction dict
+  // Preconfigured WAF configuration
+  preconfiguredWafConfig dict
+}
+
+// Google Cloud (GCP) Compute SSL policy
+private gcp.project.computeService.sslPolicy @defaults("name profile minTlsVersion") {
+  // Unique identifier
+  id string
+  // SSL policy name
+  name string
+  // Description
+  description string
+  // Profile (COMPATIBLE, MODERN, RESTRICTED, CUSTOM)
+  profile string
+  // Minimum TLS version (TLS_1_0, TLS_1_1, TLS_1_2)
+  minTlsVersion string
+  // Custom features enabled when profile is CUSTOM
+  customFeatures []string
+  // Features enabled in the SSL policy
+  enabledFeatures []string
+  // URL of the region (empty for global policies)
+  regionUrl string
+  // Self-link URL
+  selfLink string
+  // Warnings
+  warnings []dict
+  // Creation timestamp
+  createdAt time
+}
+
+// Google Cloud (GCP) Compute SSL certificate
+private gcp.project.computeService.sslCertificate @defaults("name type") {
+  // Unique identifier
+  id string
+  // Certificate name
+  name string
+  // Description
+  description string
+  // Certificate type (SELF_MANAGED, MANAGED)
+  type string
+  // Subject alternative names
+  subjectAlternativeNames []string
+  // Managed certificate configuration and status
+  managed dict
+  // URL of the region (empty for global certificates)
+  regionUrl string
+  // Self-link URL
+  selfLink string
+  // Expiration time
+  expireTime string
+  // Creation timestamp
+  createdAt time
+}
+
+// Google Cloud (GCP) Compute Cloud NAT configuration on a router
+private gcp.project.computeService.router.nat @defaults("name") {
+  // Internal ID for this resource
+  id string
+  // NAT service name
+  name string
+  // How NAT IPs are allocated (AUTO_ONLY, MANUAL_ONLY)
+  natIpAllocateOption string
+  // Which subnet IP ranges to NAT (ALL_SUBNETWORKS_ALL_IP_RANGES, ALL_SUBNETWORKS_ALL_PRIMARY_IP_RANGES, LIST_OF_SUBNETWORKS)
+  sourceSubnetworkIpRangesToNat string
+  // Whether dynamic port allocation is enabled
+  enableDynamicPortAllocation bool
+  // Whether endpoint-independent mapping is enabled
+  enableEndpointIndependentMapping bool
+  // Minimum number of ports per VM
+  minPortsPerVm int
+  // Maximum number of ports per VM (when dynamic port allocation is enabled)
+  maxPortsPerVm int
+  // NAT IP addresses
+  natIps []string
+  // Subnetworks configured for NAT
+  subnetworks []dict
+  // NAT rules
+  rules []dict
+  // Log configuration
+  logConfig dict
+  // Endpoint types (ENDPOINT_TYPE_VM, ENDPOINT_TYPE_SWG, ENDPOINT_TYPE_MANAGED_PROXY_LB)
+  endpointTypes []string
+  // Auto network tier (PREMIUM, STANDARD)
+  autoNetworkTier string
+  // ICMP idle timeout in seconds
+  icmpIdleTimeoutSec int
+  // TCP established idle timeout in seconds
+  tcpEstablishedIdleTimeoutSec int
+  // TCP transitory idle timeout in seconds
+  tcpTransitoryIdleTimeoutSec int
+  // TCP time-wait timeout in seconds
+  tcpTimeWaitTimeoutSec int
+  // UDP idle timeout in seconds
+  udpIdleTimeoutSec int
+}
+
+// Google Cloud (GCP) Certificate Authority Service
+private gcp.project.certificateAuthorityService {
+  // Project ID
+  projectId string
+  // CA Pools in the project
+  caPools() []gcp.project.certificateAuthorityService.caPool
+}
+
+// Google Cloud (GCP) Certificate Authority Service CA pool
+private gcp.project.certificateAuthorityService.caPool @defaults("name tier") {
+  // Project ID
+  projectId string
+  // Full resource path
+  resourcePath string
+  // CA pool name
+  name string
+  // Location
+  location string
+  // Tier (ENTERPRISE, DEVOPS)
+  tier string
+  // Issuance policy
+  issuancePolicy dict
+  // Publishing options
+  publishingOptions dict
+  // Labels
+  labels map[string]string
+  // Certificate authorities in this pool
+  certificateAuthorities() []gcp.project.certificateAuthorityService.certificateAuthority
+  // Certificates in this pool
+  certificates() []gcp.project.certificateAuthorityService.certificate
+}
+
+// Google Cloud (GCP) Certificate Authority
+private gcp.project.certificateAuthorityService.certificateAuthority @defaults("name state type") {
+  // Project ID
+  projectId string
+  // Full resource path
+  resourcePath string
+  // Certificate authority name
+  name string
+  // Location
+  location string
+  // CA pool name
+  caPool string
+  // Type (SELF_SIGNED, SUBORDINATE)
+  type string
+  // Current state (ENABLED, DISABLED, STAGED, AWAITING_USER_ACTIVATION, DELETION_REQUESTED, PURGED)
+  state string
+  // Key specification
+  keySpec dict
+  // Certificate authority configuration (subject, subject alt name, etc.)
+  config dict
+  // Lifetime of certificates issued by this CA
+  lifetime string
+  // PEM-encoded CA certificate chains
+  pemCaCertificates []string
+  // Subordinate configuration
+  subordinateConfig dict
+  // Labels
+  labels map[string]string
+  // GCS bucket for published CRL and CA certificates
+  gcsBucket string
+  // Access URLs (CA certificate and CRL)
+  accessUrls dict
+  // Time created
+  createdAt time
+  // Time last updated
+  updatedAt time
+  // Time deleted
+  deletedAt time
+  // Expiry time
+  expireTime time
+}
+
+// Google Cloud (GCP) Certificate Authority Service certificate
+private gcp.project.certificateAuthorityService.certificate @defaults("name") {
+  // Project ID
+  projectId string
+  // Full resource path
+  resourcePath string
+  // Certificate name
+  name string
+  // Location
+  location string
+  // CA pool name
+  caPool string
+  // Issuer certificate authority name
+  issuerCertificateAuthority string
+  // Certificate lifetime
+  lifetime string
+  // Subject description
+  subjectDescription dict
+  // Certificate description (config)
+  certDescription dict
+  // PEM-encoded certificate
+  pemCertificate string
+  // PEM-encoded certificate chain
+  pemCertificateChain []string
+  // Revocation details
+  revocationDetails dict
+  // Labels
+  labels map[string]string
+  // Time created
+  createdAt time
+  // Time last updated
+  updatedAt time
+}
+
+// Google Cloud (GCP) audit logging configuration for a service
+private gcp.resourcemanager.auditConfig @defaults("service") {
+  // Internal ID for this resource
+  id string
+  // Service name (e.g., "allServices", "storage.googleapis.com")
+  service string
+  // Audit log configurations per log type
+  auditLogConfigs []gcp.resourcemanager.auditConfig.logConfig
+}
+
+// Google Cloud (GCP) audit log configuration for a specific log type
+private gcp.resourcemanager.auditConfig.logConfig @defaults("logType") {
+  // Internal ID for this resource
+  id string
+  // Log type (ADMIN_READ, DATA_READ, DATA_WRITE)
+  logType string
+  // Principals exempt from this log type
+  exemptedMembers []string
+}
+
+// Google Cloud (GCP) Organization Policy
+private gcp.orgPolicy @defaults("constraintName") {
+  // Internal ID
+  id string
+  // Full resource name of the policy
+  name string
+  // Constraint name (e.g., "constraints/compute.disableSerialPortAccess")
+  constraintName string
+  // Policy specification
+  spec dict
+  // Dry-run policy specification (for testing)
+  dryRunSpec dict
+  // Etag for optimistic concurrency control
+  etag string
+  // Time last updated
   updatedAt time
 }

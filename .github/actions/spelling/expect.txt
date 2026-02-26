@@ -38,7 +38,7 @@ databricks
 datapath
 DATAUSER
 datetime
-Ddos
+ddos
 deliverychannel
 dfw
 dlp
@@ -138,6 +138,7 @@ psc
 pushconfig
 querypack
 ratebasedstatement
+recaptcha
 regexmatchstatement
 regexpatternsetreferencestatement
 resourcegroup
@@ -176,7 +177,6 @@ timestream
 toplevel
 tpu
 serviceconnection
-Vnet
 udid
 Uocm
 usb
