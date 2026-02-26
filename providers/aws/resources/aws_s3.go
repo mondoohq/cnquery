@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -613,25 +614,73 @@ func (a *mqlAwsS3Bucket) versioning() (map[string]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsS3Bucket) replication() (any, error) {
-	bucketname := a.Name.Data
-	region := a.Location.Data
+type mqlAwsS3BucketInternal struct {
+	replicationOnce   sync.Once
+	replicationConfig *s3types.ReplicationConfiguration
+	replicationErr    error
+	encryptionOnce    sync.Once
+	encryptionConfig  *s3types.ServerSideEncryptionConfiguration
+	encryptionErr     error
+}
 
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+func (a *mqlAwsS3Bucket) fetchReplicationConfig() (*s3types.ReplicationConfiguration, error) {
+	a.replicationOnce.Do(func() {
+		bucketname := a.Name.Data
+		region := a.Location.Data
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.S3(region)
+		ctx := context.Background()
 
-	svc := conn.S3(region)
-	ctx := context.Background()
-
-	bucketReplication, err := svc.GetBucketReplication(ctx, &s3.GetBucketReplicationInput{
-		Bucket: &bucketname,
-	})
-	if err != nil {
-		if isNotFoundForS3(err) {
-			return nil, nil
+		resp, err := svc.GetBucketReplication(ctx, &s3.GetBucketReplicationInput{
+			Bucket: &bucketname,
+		})
+		if err != nil {
+			if isNotFoundForS3(err) {
+				return
+			}
+			a.replicationErr = err
+			return
 		}
+		a.replicationConfig = resp.ReplicationConfiguration
+	})
+	return a.replicationConfig, a.replicationErr
+}
+
+func (a *mqlAwsS3Bucket) fetchEncryptionConfig() (*s3types.ServerSideEncryptionConfiguration, error) {
+	a.encryptionOnce.Do(func() {
+		bucketname := a.Name.Data
+		region := a.Location.Data
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.S3(region)
+		ctx := context.Background()
+
+		resp, err := svc.GetBucketEncryption(ctx, &s3.GetBucketEncryptionInput{
+			Bucket: &bucketname,
+		})
+		if err != nil {
+			var ae smithy.APIError
+			if errors.As(err, &ae) {
+				if ae.ErrorCode() == "ServerSideEncryptionConfigurationNotFoundError" {
+					return
+				}
+			}
+			a.encryptionErr = err
+			return
+		}
+		a.encryptionConfig = resp.ServerSideEncryptionConfiguration
+	})
+	return a.encryptionConfig, a.encryptionErr
+}
+
+func (a *mqlAwsS3Bucket) replication() (any, error) {
+	config, err := a.fetchReplicationConfig()
+	if err != nil {
 		return nil, err
 	}
-	return convert.JsonToDict(bucketReplication.ReplicationConfiguration)
+	if config == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(config)
 }
 
 func (a *mqlAwsS3BucketReplicationRule) id() (string, error) {
@@ -639,31 +688,18 @@ func (a *mqlAwsS3BucketReplicationRule) id() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) replicationRules() ([]any, error) {
-	bucketname := a.Name.Data
-	region := a.Location.Data
 	bucketArn := a.Arn.Data
 
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3(region)
-	ctx := context.Background()
-
-	bucketReplication, err := svc.GetBucketReplication(ctx, &s3.GetBucketReplicationInput{
-		Bucket: &bucketname,
-	})
+	config, err := a.fetchReplicationConfig()
 	if err != nil {
-		if isNotFoundForS3(err) {
-			return []any{}, nil
-		}
 		return nil, err
 	}
-
-	if bucketReplication.ReplicationConfiguration == nil {
+	if config == nil {
 		return []any{}, nil
 	}
 
 	res := []any{}
-	for i, rule := range bucketReplication.ReplicationConfiguration.Rules {
+	for i, rule := range config.Rules {
 		ruleId := ""
 		if rule.ID != nil {
 			ruleId = *rule.ID
@@ -724,29 +760,14 @@ func (a *mqlAwsS3Bucket) replicationRules() ([]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) encryption() (any, error) {
-	bucketname := a.Name.Data
-	region := a.Location.Data
-
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3(region)
-	ctx := context.Background()
-
-	encryption, err := svc.GetBucketEncryption(ctx, &s3.GetBucketEncryptionInput{
-		Bucket: &bucketname,
-	})
-	var res any
+	config, err := a.fetchEncryptionConfig()
 	if err != nil {
-		var ae smithy.APIError
-		if errors.As(err, &ae) {
-			if ae.ErrorCode() == "ServerSideEncryptionConfigurationNotFoundError" {
-				return res, nil
-			}
-		}
 		return nil, err
 	}
-
-	return convert.JsonToDict(encryption.ServerSideEncryptionConfiguration)
+	if config == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(config)
 }
 
 func (a *mqlAwsS3BucketEncryptionRule) id() (string, error) {
@@ -754,34 +775,18 @@ func (a *mqlAwsS3BucketEncryptionRule) id() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) encryptionRules() ([]any, error) {
-	bucketname := a.Name.Data
-	region := a.Location.Data
 	bucketArn := a.Arn.Data
 
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3(region)
-	ctx := context.Background()
-
-	encryption, err := svc.GetBucketEncryption(ctx, &s3.GetBucketEncryptionInput{
-		Bucket: &bucketname,
-	})
+	config, err := a.fetchEncryptionConfig()
 	if err != nil {
-		var ae smithy.APIError
-		if errors.As(err, &ae) {
-			if ae.ErrorCode() == "ServerSideEncryptionConfigurationNotFoundError" {
-				return []any{}, nil
-			}
-		}
 		return nil, err
 	}
-
-	if encryption.ServerSideEncryptionConfiguration == nil {
+	if config == nil {
 		return []any{}, nil
 	}
 
 	res := []any{}
-	for i, rule := range encryption.ServerSideEncryptionConfiguration.Rules {
+	for i, rule := range config.Rules {
 		sseAlgorithm := ""
 		kmsMasterKeyId := ""
 		if rule.ApplyServerSideEncryptionByDefault != nil {

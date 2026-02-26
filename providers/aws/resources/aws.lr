@@ -903,8 +903,8 @@ private aws.fsx.cache @defaults("id lifecycle") {
   lustreConfiguration dict
   // S3 data repository associations
   dataRepositoryAssociations []dict
-  // Resource tags
-  tags map[string]string
+  // Region where the cache exists
+  region string
 }
 
 // AWS FSx backup
@@ -925,6 +925,8 @@ private aws.fsx.backup @defaults("backupId type lifecycle") {
   kmsKeyId string
   // Creation timestamp
   createdAt time
+  // Region where the backup exists
+  region string
   // Resource tags
   tags map[string]string
 }
@@ -4053,7 +4055,7 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   // Total storage capacity in megabytes
   totalStorageCapacityInMegaBytes int
   // Whether the cluster is a Multi-AZ deployment
-  multiAZ string
+  multiAZ bool
   // Number of days manual snapshots are retained (-1 means indefinite)
   manualSnapshotRetentionPeriod int
   // IP address type for the cluster (ipv4 or dualstack)

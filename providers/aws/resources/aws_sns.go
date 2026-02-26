@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
@@ -111,49 +112,56 @@ func (a *mqlAwsSns) getTopics(conn *connection.AwsConnection) []*jobpool.Job {
 	return tasks
 }
 
-func (a *mqlAwsSnsTopic) attributes() (any, error) {
-	arn := a.Arn.Data
-	region := a.Region.Data
+type mqlAwsSnsTopicInternal struct {
+	fetched   bool
+	topicAtts map[string]string
+	lock      sync.Mutex
+}
+
+func (a *mqlAwsSnsTopic) fetchTopicAttributes() (map[string]string, error) {
+	if a.fetched {
+		return a.topicAtts, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.topicAtts, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Sns(region)
+	svc := conn.Sns(a.Region.Data)
 	ctx := context.Background()
-
-	topicAttributes, err := svc.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{TopicArn: &arn})
+	arn := a.Arn.Data
+	resp, err := svc.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{TopicArn: &arn})
 	if err != nil {
 		return nil, err
 	}
-	return convert.JsonToDict(topicAttributes.Attributes)
+	a.fetched = true
+	a.topicAtts = resp.Attributes
+	return a.topicAtts, nil
+}
+
+func (a *mqlAwsSnsTopic) attributes() (any, error) {
+	atts, err := a.fetchTopicAttributes()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(atts)
 }
 
 func (a *mqlAwsSnsTopic) signatureVersion() (string, error) {
-	arn := a.Arn.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Sns(region)
-	ctx := context.Background()
-
-	topicAttributes, err := svc.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{TopicArn: &arn})
+	atts, err := a.fetchTopicAttributes()
 	if err != nil {
 		return "", err
 	}
-	return topicAttributes.Attributes["SignatureVersion"], nil
+	return atts["SignatureVersion"], nil
 }
 
 func (a *mqlAwsSnsTopic) kmsMasterKey() (*mqlAwsKmsKey, error) {
-	arn := a.Arn.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Sns(region)
-	ctx := context.Background()
-
-	topicAttributes, err := svc.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{TopicArn: &arn})
+	atts, err := a.fetchTopicAttributes()
 	if err != nil {
 		return nil, err
 	}
-	keyId := topicAttributes.Attributes["KmsMasterKeyId"]
+	keyId := atts["KmsMasterKeyId"]
 	if keyId != "" {
 		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
 			map[string]*llx.RawData{"arn": llx.StringData(keyId)},

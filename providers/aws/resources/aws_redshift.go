@@ -112,7 +112,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 							"vpcId":                            llx.StringDataPtr(cluster.VpcId),
 							"clusterAvailabilityStatus":        llx.StringDataPtr(cluster.ClusterAvailabilityStatus),
 							"totalStorageCapacityInMegaBytes":  llx.IntDataDefault(cluster.TotalStorageCapacityInMegaBytes, 0),
-							"multiAZ":                          llx.StringDataPtr(cluster.MultiAZ),
+							"multiAZ":                          llx.BoolData(convert.ToValue(cluster.MultiAZ) == "enabled"),
 							"manualSnapshotRetentionPeriod":    llx.IntDataDefault(cluster.ManualSnapshotRetentionPeriod, 0),
 							"ipAddressType":                    llx.StringDataPtr(cluster.IpAddressType),
 						})

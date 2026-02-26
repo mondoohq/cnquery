@@ -1221,6 +1221,7 @@ aws.fsx.backup.fileSystemId 11.5.108
 aws.fsx.backup.fileSystemType 11.5.108
 aws.fsx.backup.kmsKeyId 11.5.108
 aws.fsx.backup.lifecycle 11.5.108
+aws.fsx.backup.region 11.14.1
 aws.fsx.backup.tags 11.5.108
 aws.fsx.backup.type 11.5.108
 aws.fsx.backups 11.5.108
@@ -1230,9 +1231,9 @@ aws.fsx.cache.dataRepositoryAssociations 11.5.108
 aws.fsx.cache.id 11.5.108
 aws.fsx.cache.lifecycle 11.5.108
 aws.fsx.cache.lustreConfiguration 11.5.108
+aws.fsx.cache.region 11.14.1
 aws.fsx.cache.storageCapacity 11.5.108
 aws.fsx.cache.subnetIds 11.5.108
-aws.fsx.cache.tags 11.5.108
 aws.fsx.cache.vpcId 11.5.108
 aws.fsx.caches 11.5.108
 aws.fsx.fileSystems 11.5.108

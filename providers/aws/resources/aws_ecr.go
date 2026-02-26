@@ -7,10 +7,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -287,7 +287,8 @@ func (a *mqlAwsEcrRepository) lifecyclePolicy() (any, error) {
 			return nil, nil
 		}
 		// LifecyclePolicyNotFoundException means no policy is set
-		if strings.Contains(err.Error(), "LifecyclePolicyNotFoundException") {
+		var notFoundErr *ecrtypes.LifecyclePolicyNotFoundException
+		if errors.As(err, &notFoundErr) {
 			a.LifecyclePolicy.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}

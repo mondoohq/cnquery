@@ -233,6 +233,7 @@ func (a *mqlAwsFsx) getCaches(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 
 					args := map[string]*llx.RawData{
+						"__id":                       llx.StringDataPtr(cache.ResourceARN),
 						"id":                         llx.StringDataPtr(cache.FileCacheId),
 						"arn":                        llx.StringDataPtr(cache.ResourceARN),
 						"lifecycle":                  llx.StringData(string(cache.Lifecycle)),
@@ -241,7 +242,7 @@ func (a *mqlAwsFsx) getCaches(conn *connection.AwsConnection) []*jobpool.Job {
 						"subnetIds":                  llx.ArrayData(convert.SliceAnyToInterface(cache.SubnetIds), types.String),
 						"lustreConfiguration":        llx.DictData(lustreConfig),
 						"dataRepositoryAssociations": llx.ArrayData(dataRepoAssocs, types.Dict),
-						"tags":                       llx.MapData(make(map[string]any), types.String), // FileCache doesn't have Tags
+						"region":                     llx.StringData(regionVal),
 					}
 					mqlCache, err := CreateResource(a.MqlRuntime, ResourceAwsFsxCache, args)
 					if err != nil {
@@ -370,6 +371,7 @@ func (a *mqlAwsFsx) getBackups(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 
 					args := map[string]*llx.RawData{
+						"__id":           llx.StringDataPtr(backup.ResourceARN),
 						"backupId":       llx.StringDataPtr(backup.BackupId),
 						"arn":            llx.StringDataPtr(backup.ResourceARN),
 						"type":           llx.StringData(string(backup.Type)),
@@ -378,6 +380,7 @@ func (a *mqlAwsFsx) getBackups(conn *connection.AwsConnection) []*jobpool.Job {
 						"fileSystemType": llx.StringData(fileSystemType),
 						"kmsKeyId":       llx.StringData(kmsKeyIdStr),
 						"createdAt":      llx.TimeDataPtr(backup.CreationTime),
+						"region":         llx.StringData(regionVal),
 						"tags":           llx.MapData(fsxTagsToMap(backup.Tags), types.String),
 					}
 					mqlBackup, err := CreateResource(a.MqlRuntime, ResourceAwsFsxBackup, args)

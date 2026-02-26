@@ -424,6 +424,7 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 			}
 
 			args := map[string]*llx.RawData{
+				"__id":            llx.StringDataPtr(l.ListenerArn),
 				"arn":             llx.StringDataPtr(l.ListenerArn),
 				"loadBalancerArn": llx.StringDataPtr(l.LoadBalancerArn),
 				"port":            llx.IntDataPtr(l.Port),
@@ -613,6 +614,7 @@ func (a *mqlAwsElbTargetgroup) attributes() (*mqlAwsElbTargetgroupAttributes, er
 	}
 
 	args := map[string]*llx.RawData{
+		"__id":                                         llx.StringData(tgArn + "/attributes"),
 		"targetGroupArn":                               llx.StringData(tgArn),
 		"deregistrationDelayTimeoutSeconds":            llx.IntData(attrMapInt(attrMap, "deregistration_delay.timeout_seconds")),
 		"stickinessEnabled":                            llx.BoolData(attrMapBool(attrMap, "stickiness.enabled")),
@@ -695,6 +697,7 @@ func (a *mqlAwsElbLoadbalancer) attribute() (*mqlAwsElbLoadbalancerAttribute, er
 	}
 
 	args := map[string]*llx.RawData{
+		"__id":                      llx.StringData(arnVal + "/attributes"),
 		"loadBalancerArn":           llx.StringData(arnVal),
 		"deletionProtectionEnabled": llx.BoolData(attrMapBool(attrMap, "deletion_protection.enabled")),
 		"crossZoneEnabled":          llx.StringData(attrMap["load_balancing.cross_zone.enabled"]),

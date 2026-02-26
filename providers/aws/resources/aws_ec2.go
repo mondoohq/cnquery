@@ -2246,6 +2246,7 @@ func (a *mqlAwsEc2) getTransitGateways(conn *connection.AwsConnection) []*jobpoo
 
 					mqlTgw, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Transitgateway,
 						map[string]*llx.RawData{
+							"__id":                           llx.StringData(tgwArn),
 							"arn":                            llx.StringData(tgwArn),
 							"id":                             llx.StringData(convert.ToValue(tgw.TransitGatewayId)),
 							"ownerId":                        llx.StringData(convert.ToValue(tgw.OwnerId)),

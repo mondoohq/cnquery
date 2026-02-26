@@ -2450,8 +2450,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.fsx.cache.dataRepositoryAssociations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetDataRepositoryAssociations()).ToDataRes(types.Array(types.Dict))
 	},
-	"aws.fsx.cache.tags": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsFsxCache).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	"aws.fsx.cache.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.fsx.backup.backupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxBackup).GetBackupId()).ToDataRes(types.String)
@@ -2476,6 +2476,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.fsx.backup.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxBackup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.fsx.backup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.fsx.backup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxBackup).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -6273,7 +6276,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsRedshiftCluster).GetTotalStorageCapacityInMegaBytes()).ToDataRes(types.Int)
 	},
 	"aws.redshift.cluster.multiAZ": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetMultiAZ()).ToDataRes(types.String)
+		return (r.(*mqlAwsRedshiftCluster).GetMultiAZ()).ToDataRes(types.Bool)
 	},
 	"aws.redshift.cluster.manualSnapshotRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetManualSnapshotRetentionPeriod()).ToDataRes(types.Int)
@@ -9787,8 +9790,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsFsxCache).DataRepositoryAssociations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.fsx.cache.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsFsxCache).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+	"aws.fsx.cache.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9825,6 +9828,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.fsx.backup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxBackup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.backup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15476,7 +15483,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.redshift.cluster.multiAZ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).MultiAZ, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsRedshiftCluster).MultiAZ, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.manualSnapshotRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22696,7 +22703,7 @@ type mqlAwsFsxCache struct {
 	SubnetIds                  plugin.TValue[[]any]
 	LustreConfiguration        plugin.TValue[any]
 	DataRepositoryAssociations plugin.TValue[[]any]
-	Tags                       plugin.TValue[map[string]any]
+	Region                     plugin.TValue[string]
 }
 
 // createAwsFsxCache creates a new instance of this resource
@@ -22768,8 +22775,8 @@ func (c *mqlAwsFsxCache) GetDataRepositoryAssociations() *plugin.TValue[[]any] {
 	return &c.DataRepositoryAssociations
 }
 
-func (c *mqlAwsFsxCache) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+func (c *mqlAwsFsxCache) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsFsxBackup for the aws.fsx.backup resource
@@ -22785,6 +22792,7 @@ type mqlAwsFsxBackup struct {
 	FileSystemType plugin.TValue[string]
 	KmsKeyId       plugin.TValue[string]
 	CreatedAt      plugin.TValue[*time.Time]
+	Region         plugin.TValue[string]
 	Tags           plugin.TValue[map[string]any]
 }
 
@@ -22855,6 +22863,10 @@ func (c *mqlAwsFsxBackup) GetKmsKeyId() *plugin.TValue[string] {
 
 func (c *mqlAwsFsxBackup) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsFsxBackup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 func (c *mqlAwsFsxBackup) GetTags() *plugin.TValue[map[string]any] {
@@ -25355,7 +25367,7 @@ func (c *mqlAwsSns) GetTopics() *plugin.TValue[[]any] {
 type mqlAwsSnsTopic struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsSnsTopicInternal it will be used here
+	mqlAwsSnsTopicInternal
 	Arn              plugin.TValue[string]
 	Region           plugin.TValue[string]
 	Subscriptions    plugin.TValue[[]any]
@@ -32422,7 +32434,7 @@ func (c *mqlAwsS3) GetBuckets() *plugin.TValue[[]any] {
 type mqlAwsS3Bucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsS3BucketInternal it will be used here
+	mqlAwsS3BucketInternal
 	Arn                  plugin.TValue[string]
 	Name                 plugin.TValue[string]
 	Policy               plugin.TValue[*mqlAwsS3BucketPolicy]
@@ -37556,7 +37568,7 @@ type mqlAwsRedshiftCluster struct {
 	VpcId                            plugin.TValue[string]
 	ClusterAvailabilityStatus        plugin.TValue[string]
 	TotalStorageCapacityInMegaBytes  plugin.TValue[int64]
-	MultiAZ                          plugin.TValue[string]
+	MultiAZ                          plugin.TValue[bool]
 	ManualSnapshotRetentionPeriod    plugin.TValue[int64]
 	IpAddressType                    plugin.TValue[string]
 	Snapshots                        plugin.TValue[[]any]
@@ -37711,7 +37723,7 @@ func (c *mqlAwsRedshiftCluster) GetTotalStorageCapacityInMegaBytes() *plugin.TVa
 	return &c.TotalStorageCapacityInMegaBytes
 }
 
-func (c *mqlAwsRedshiftCluster) GetMultiAZ() *plugin.TValue[string] {
+func (c *mqlAwsRedshiftCluster) GetMultiAZ() *plugin.TValue[bool] {
 	return &c.MultiAZ
 }
 
