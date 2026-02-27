@@ -1,11 +1,11 @@
 aad
 ACCOUNTADMIN
-Adddays
 advancedthreatprotection
 alloydb
 alpn
 antispam
 appslot
+artifactregistry
 atlassian
 auditlog
 Auths
@@ -145,6 +145,8 @@ posix
 postgre
 psc
 pushconfig
+Pzi
+Pzs
 querypack
 ratebasedstatement
 recaptcha
