@@ -129,9 +129,10 @@ nullstring
 oidc
 OIDs
 ondemand
-ontap
+ONTAP
 opcplc
 opensearch
+OPENZFS
 openssl
 openzfs
 orstatement
