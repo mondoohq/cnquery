@@ -6,6 +6,7 @@ alpn
 antispam
 appslot
 arp
+artifactregistry
 atlassian
 auditlog
 Auths
@@ -161,6 +162,8 @@ POWERUSER
 priorityclass
 psc
 pushconfig
+Pzi
+Pzs
 querypack
 ratebasedstatement
 recaptcha
