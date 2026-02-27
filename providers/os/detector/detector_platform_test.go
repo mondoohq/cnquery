@@ -322,17 +322,6 @@ func TestPoposDetector(t *testing.T) {
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
-func TestWindriver7Detector(t *testing.T) {
-	di, err := detectPlatformFromMock("./testdata/detect-windriver7.toml")
-	assert.Nil(t, err, "was able to create the provider")
-
-	assert.Equal(t, "wrlinux", di.Name, "os name should be identified")
-	assert.Equal(t, "Wind River Linux 7.0.0.2", di.Title, "os title should be identified")
-	assert.Equal(t, "7.0.0.2", di.Version, "os version should be identified")
-	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
-	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
-}
-
 func TestOpenWrtDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-openwrt.toml")
 	assert.Nil(t, err, "was able to create the provider")
@@ -1134,13 +1123,13 @@ func TestKDENeonDetector(t *testing.T) {
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
-func TestWrlinuxDetector(t *testing.T) {
-	di, err := detectPlatformFromMock("./testdata/detect-wrlinux.toml")
+func TestWindriver7Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-windriver7.toml")
 	assert.Nil(t, err, "was able to create the provider")
 
 	assert.Equal(t, "wrlinux", di.Name, "os name should be identified")
-	assert.Equal(t, "Wind River Linux 6.0.0.25", di.Title, "os title should be identified")
-	assert.Equal(t, "6.0.0.25", di.Version, "os version should be identified")
+	assert.Equal(t, "Wind River Linux 7.0.0.2", di.Title, "os title should be identified")
+	assert.Equal(t, "7.0.0.2", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
