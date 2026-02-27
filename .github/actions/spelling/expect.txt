@@ -1,6 +1,5 @@
 aad
 ACCOUNTADMIN
-Adddays
 advancedthreatprotection
 alloydb
 alpn
@@ -46,6 +45,7 @@ dfw
 dlp
 dlq
 dlv
+dnskey
 dsse
 eas
 Ecmp
@@ -75,6 +75,7 @@ gvnic
 headerorder
 Hns
 hostkeys
+hostedzone
 hotlink
 hvm
 iana
@@ -92,6 +93,7 @@ istio
 jira
 jsonbody
 kqueue
+KSK
 labelmatchstatement
 lfs
 liveanalytics
