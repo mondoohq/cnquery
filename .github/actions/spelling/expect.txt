@@ -7,6 +7,7 @@ alpn
 antispam
 appslot
 arp
+artifactregistry
 atlassian
 auditlog
 Auths
@@ -180,6 +181,7 @@ psc
 PTn
 pushconfig
 Pzi
+Pzs
 pzs
 querypack
 RABBITMQ
