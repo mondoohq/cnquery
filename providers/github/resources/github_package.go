@@ -7,7 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v82/github"
+	"github.com/google/go-github/v84/github"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -49,6 +50,76 @@ func (g *mqlGithubPackages) private() ([]any, error) {
 func (g *mqlGithubPackages) internal() ([]any, error) {
 	visibility := GITHUB_PACKAGE_VISIBILITY_INTERNAL
 	return newMqlGithubPackages(g.MqlRuntime, &visibility)
+}
+
+func (g *mqlGithubPackageVersion) id() (string, error) {
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return "github.packageVersion/" + strconv.FormatInt(g.Id.Data, 10), nil
+}
+
+func (g *mqlGithubPackage) versions() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	// Package versions are only available for organization-scoped connections.
+	org, err := conn.Organization()
+	if err != nil {
+		log.Debug().Err(err).Msg("cannot fetch package versions: organization not available")
+		return nil, nil
+	}
+
+	// Always read from the resource's own schema fields so versions() works
+	// regardless of how the package was created (list, cache, or recording).
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	pkgName := g.Name.Data
+	if g.PackageType.Error != nil {
+		return nil, g.PackageType.Error
+	}
+	pkgType := g.PackageType.Data
+	if pkgName == "" || pkgType == "" {
+		log.Debug().Msg("package name or type not available, cannot fetch versions")
+		return nil, nil
+	}
+
+	listOpts := &github.PackageListOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+	}
+	var allVersions []*github.PackageVersion
+	for {
+		versions, resp, err := conn.Client().Organizations.PackageGetAllVersions(conn.Context(), org.Name, pkgType, pkgName, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allVersions = append(allVersions, versions...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
+	}
+
+	res := make([]any, 0, len(allVersions))
+	for _, v := range allVersions {
+		r, err := CreateResource(g.MqlRuntime, "github.packageVersion", map[string]*llx.RawData{
+			"id":             llx.IntDataPtr(v.ID),
+			"name":           llx.StringDataPtr(v.Name),
+			"url":            llx.StringDataPtr(v.URL),
+			"packageHtmlUrl": llx.StringDataPtr(v.PackageHTMLURL),
+			"license":        llx.StringDataPtr(v.License),
+			"description":    llx.StringDataPtr(v.Description),
+			"createdAt":      llx.TimeDataPtr(githubTimestamp(v.CreatedAt)),
+			"updatedAt":      llx.TimeDataPtr(githubTimestamp(v.UpdatedAt)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
 }
 
 func newMqlGithubPackages(runtime *plugin.Runtime, visibility *string) ([]any, error) {

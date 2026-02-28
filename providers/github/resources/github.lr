@@ -160,6 +160,30 @@ github.organization @defaults("login name") {
   auditLog() []github.auditLogEntry
   // Organization self-hosted runners
   runners() []github.runner
+  // Available fine-grained permissions for organization repositories
+  repositoryFineGrainedPermissions() []github.repositoryFineGrainedPermission
+  // Whether web-based commit signoff is required
+  webCommitSignoffRequired bool
+  // Whether members can invite outside collaborators
+  membersCanInviteOutsideCollaborators bool
+  // Whether the dependency graph is enabled for new repositories
+  dependencyGraphEnabledForNewRepos bool
+  // Whether members can create teams
+  membersCanCreateTeams bool
+  // Whether members can view dependency insights
+  membersCanViewDependencyInsights bool
+  // Default branch name for new repositories
+  defaultRepositoryBranch string
+  // GitHub Actions settings for this organization
+  actionsSettings() github.organizationActionsSettings
+}
+
+// GitHub repository fine-grained permission
+private github.repositoryFineGrainedPermission @defaults("name") {
+  // Permission name
+  name string
+  // Permission description
+  description string
 }
 
 // GitHub organization-level custom property
@@ -238,6 +262,8 @@ private github.team @defaults("id name") {
   privacy string
   // Team default permission
   defaultPermission string
+  // Team type (organization, enterprise)
+  type string
   // Team members
   members() []github.user
   // Team owned repositories
@@ -276,6 +302,28 @@ private github.package @defaults("name packageType visibility repository.fullNam
   visibility string
   // Package repository information
   repository() github.repository
+  // Package versions
+  versions() []github.packageVersion
+}
+
+// GitHub package version
+private github.packageVersion @defaults("id name") {
+  // Version ID
+  id int
+  // Version name
+  name string
+  // Version URL
+  url string
+  // Package HTML URL
+  packageHtmlUrl string
+  // Version license
+  license string
+  // Version description
+  description string
+  // Version creation time
+  createdAt time
+  // Version update time
+  updatedAt time
 }
 
 // GitHub packages
@@ -420,6 +468,22 @@ github.repository @defaults("fullName") {
   environments() []github.environment
   // Deployments for the repository
   deployments() []github.deployment
+  // Status of GitHub Advanced Security (enabled, disabled, or empty if not set)
+  advancedSecurityEnabled string
+  // Status of secret scanning (enabled, disabled, or empty if not set)
+  secretScanningEnabled string
+  // Status of secret scanning push protection (enabled, disabled, or empty if not set)
+  secretScanningPushProtectionEnabled string
+  // Status of Dependabot security updates (enabled, disabled, or empty if not set)
+  dependabotSecurityUpdatesEnabled string
+  // Status of secret scanning validity checks (enabled, disabled, or empty if not set)
+  secretScanningValidityChecksEnabled string
+  // Whether web-based commit signoff is required
+  webCommitSignoffRequired bool
+  // Repository rulesets
+  rulesets() []github.repositoryRuleset
+  // GitHub Actions settings for this repository
+  actionsSettings() github.repositoryActionsSettings
 }
 
 // GitHub license
@@ -432,6 +496,60 @@ private github.license @defaults("spdxId") {
   url string
   // License spdx ID
   spdxId string
+}
+
+// GitHub repository ruleset
+private github.repositoryRuleset @defaults("id name enforcement") {
+  // Ruleset ID
+  id int
+  // Ruleset name
+  name string
+  // Target type (branch, tag)
+  target string
+  // Source type (Repository, Organization)
+  sourceType string
+  // Source (repo or org name)
+  source string
+  // Enforcement level (active, evaluate, disabled)
+  enforcement string
+  // Bypass actors
+  bypassActors []dict
+  // Branch/tag name conditions
+  conditions dict
+  // Rules in this ruleset
+  rules []dict
+  // Ruleset creation time
+  createdAt time
+  // Ruleset update time
+  updatedAt time
+}
+
+// GitHub Actions security settings for a repository
+private github.repositoryActionsSettings @defaults("allowedActions") {
+  // Whether GitHub Actions is enabled
+  enabled bool
+  // Which actions are allowed (all, local_only, selected)
+  allowedActions string
+  // Whether SHA pinning is required for actions
+  shaPinningRequired bool
+  // Default workflow permissions (read, write)
+  defaultWorkflowPermissions string
+  // Whether Actions can approve pull request reviews
+  canApprovePullRequestReviews bool
+}
+
+// GitHub Actions security settings for an organization
+private github.organizationActionsSettings @defaults("allowedActions") {
+  // Which repositories can use Actions (all, none, selected)
+  enabledRepositories string
+  // Which actions are allowed (all, local_only, selected)
+  allowedActions string
+  // Whether SHA pinning is required for actions
+  shaPinningRequired bool
+  // Default workflow permissions (read, write)
+  defaultWorkflowPermissions string
+  // Whether Actions can approve pull request reviews
+  canApprovePullRequestReviews bool
 }
 
 // GitHub repository file
@@ -556,6 +674,12 @@ private github.branchprotection @defaults("id") {
   allowForcePushes dict
   // Allow deletions
   allowDeletions dict
+  // Whether creation of branches matching the pattern is blocked
+  blockCreations bool
+  // Whether the branch is locked (read-only)
+  lockBranch bool
+  // Whether fork syncing is allowed
+  allowForkSyncing bool
 }
 
 // GitHub repository commit

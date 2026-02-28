@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v82/github"
+	"github.com/google/go-github/v84/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/internal/workerpool"
 	"go.mondoo.com/mql/v13/llx"
@@ -112,6 +112,14 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["membersCanChangeRepoVisibility"] = llx.BoolData(convert.ToValue(org.MembersCanChangeRepoVisibility))
 	args["membersCanDeleteIssues"] = llx.BoolData(convert.ToValue(org.MembersCanDeleteIssues))
 	args["readersCanCreateDiscussions"] = llx.BoolData(convert.ToValue(org.ReadersCanCreateDiscussions))
+
+	// Additional security and governance fields
+	args["webCommitSignoffRequired"] = llx.BoolData(convert.ToValue(org.WebCommitSignoffRequired))
+	args["membersCanInviteOutsideCollaborators"] = llx.BoolData(convert.ToValue(org.MembersCanInviteOutsideCollaborators))
+	args["dependencyGraphEnabledForNewRepos"] = llx.BoolData(convert.ToValue(org.DependencyGraphEnabledForNewRepos))
+	args["membersCanCreateTeams"] = llx.BoolData(convert.ToValue(org.MembersCanCreateTeams))
+	args["membersCanViewDependencyInsights"] = llx.BoolData(convert.ToValue(org.MembersCanViewDependencyInsights))
+	args["defaultRepositoryBranch"] = llx.StringDataPtr(org.DefaultRepositoryBranch)
 
 	return args, nil, nil
 }
@@ -308,6 +316,7 @@ func (g *mqlGithubOrganization) teams() ([]any, error) {
 			"slug":              llx.StringDataPtr(team.Slug),
 			"privacy":           llx.StringDataPtr(team.Privacy),
 			"defaultPermission": llx.StringDataPtr(team.Permission),
+			"type":              llx.StringDataPtr(team.Type),
 			"organization":      llx.ResourceData(g, g.MqlName()),
 		})
 		if err != nil {
@@ -465,6 +474,43 @@ func (g *mqlGithubOrganization) webhooks() ([]any, error) {
 	return res, nil
 }
 
+func (g *mqlGithubRepositoryFineGrainedPermission) id() (string, error) {
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return "github.repositoryFineGrainedPermission/" + g.Name.Data, nil
+}
+
+func (g *mqlGithubOrganization) repositoryFineGrainedPermissions() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
+	if g.Login.Error != nil {
+		return nil, g.Login.Error
+	}
+	orgLogin := g.Login.Data
+
+	perms, _, err := conn.Client().Organizations.ListRepositoryFineGrainedPermissions(conn.Context(), orgLogin)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	res := make([]any, 0, len(perms))
+	for _, p := range perms {
+		r, err := CreateResource(g.MqlRuntime, "github.repositoryFineGrainedPermission", map[string]*llx.RawData{
+			"name":        llx.StringData(p.Name),
+			"description": llx.StringData(p.Description),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
 type mqlGithubPackageInternal struct {
 	packageRepository string
 	parentResource    *mqlGithubOrganization
@@ -616,4 +662,67 @@ func (g *mqlGithubOrganization) installations() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+type mqlGithubOrganizationActionsSettingsInternal struct {
+	orgLogin string
+}
+
+func (g *mqlGithubOrganizationActionsSettings) id() (string, error) {
+	if g.orgLogin != "" {
+		return "github.organizationActionsSettings/" + g.orgLogin, nil
+	}
+	if g.AllowedActions.Error != nil {
+		return "", g.AllowedActions.Error
+	}
+	return "github.organizationActionsSettings/" + g.AllowedActions.Data, nil
+}
+
+func (g *mqlGithubOrganization) actionsSettings() (*mqlGithubOrganizationActionsSettings, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
+	if g.Login.Error != nil {
+		return nil, g.Login.Error
+	}
+	orgLogin := g.Login.Data
+
+	perms, _, err := conn.Client().Organizations.GetActionsPermissions(conn.Context(), orgLogin)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			g.ActionsSettings.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	wfPerms, _, err := conn.Client().Actions.GetDefaultWorkflowPermissionsInOrganization(conn.Context(), orgLogin)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			g.ActionsSettings.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var defaultWfPerms string
+	var canApprove bool
+	if wfPerms != nil {
+		defaultWfPerms = wfPerms.GetDefaultWorkflowPermissions()
+		canApprove = wfPerms.GetCanApprovePullRequestReviews()
+	}
+
+	res, err := CreateResource(g.MqlRuntime, "github.organizationActionsSettings", map[string]*llx.RawData{
+		"__id":                         llx.StringData("github.organizationActionsSettings/" + orgLogin),
+		"enabledRepositories":          llx.StringDataPtr(perms.EnabledRepositories),
+		"allowedActions":               llx.StringDataPtr(perms.AllowedActions),
+		"shaPinningRequired":           llx.BoolDataPtr(perms.SHAPinningRequired),
+		"defaultWorkflowPermissions":   llx.StringData(defaultWfPerms),
+		"canApprovePullRequestReviews": llx.BoolData(canApprove),
+	})
+	if err != nil {
+		return nil, err
+	}
+	settings := res.(*mqlGithubOrganizationActionsSettings)
+	settings.orgLogin = orgLogin
+	return settings, nil
 }
