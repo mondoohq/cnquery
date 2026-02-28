@@ -470,16 +470,16 @@ github.repository @defaults("fullName") {
   deployments() []github.deployment
   // Software Bill of Materials (SPDX format) for the repository
   spdxSbom() github.repository.sbom
-  // Status of GitHub Advanced Security (enabled, disabled, or empty if not set)
-  advancedSecurityEnabled string
-  // Status of secret scanning (enabled, disabled, or empty if not set)
-  secretScanningEnabled string
-  // Status of secret scanning push protection (enabled, disabled, or empty if not set)
-  secretScanningPushProtectionEnabled string
-  // Status of Dependabot security updates (enabled, disabled, or empty if not set)
-  dependabotSecurityUpdatesEnabled string
-  // Status of secret scanning validity checks (enabled, disabled, or empty if not set)
-  secretScanningValidityChecksEnabled string
+  // Whether GitHub Advanced Security is enabled
+  advancedSecurityEnabled bool
+  // Whether secret scanning is enabled
+  secretScanningEnabled bool
+  // Whether secret scanning push protection is enabled
+  secretScanningPushProtectionEnabled bool
+  // Whether Dependabot security updates are enabled
+  dependabotSecurityUpdatesEnabled bool
+  // Whether secret scanning validity checks are enabled
+  secretScanningValidityChecksEnabled bool
   // Whether web-based commit signoff is required
   webCommitSignoffRequired bool
   // Repository rulesets

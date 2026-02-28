@@ -32,33 +32,33 @@ const (
 	saSecretScanningValidityChecks
 )
 
-func saStatus(sa *github.SecurityAndAnalysis, field saField) string {
+func saEnabled(sa *github.SecurityAndAnalysis, field saField) bool {
 	if sa == nil {
-		return ""
+		return false
 	}
 	switch field {
 	case saAdvancedSecurity:
 		if sa.AdvancedSecurity != nil {
-			return sa.AdvancedSecurity.GetStatus()
+			return sa.AdvancedSecurity.GetStatus() == "enabled"
 		}
 	case saSecretScanning:
 		if sa.SecretScanning != nil {
-			return sa.SecretScanning.GetStatus()
+			return sa.SecretScanning.GetStatus() == "enabled"
 		}
 	case saSecretScanningPushProtection:
 		if sa.SecretScanningPushProtection != nil {
-			return sa.SecretScanningPushProtection.GetStatus()
+			return sa.SecretScanningPushProtection.GetStatus() == "enabled"
 		}
 	case saDependabotSecurityUpdates:
 		if sa.DependabotSecurityUpdates != nil {
-			return sa.DependabotSecurityUpdates.GetStatus()
+			return sa.DependabotSecurityUpdates.GetStatus() == "enabled"
 		}
 	case saSecretScanningValidityChecks:
 		if sa.SecretScanningValidityChecks != nil {
-			return sa.SecretScanningValidityChecks.GetStatus()
+			return sa.SecretScanningValidityChecks.GetStatus() == "enabled"
 		}
 	}
-	return ""
+	return false
 }
 
 func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*mqlGithubRepository, error) {
@@ -113,11 +113,11 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		"owner":                               llx.ResourceData(owner, owner.MqlName()),
 		"customProperties":                    llx.DictData(repo.CustomProperties),
 		"webCommitSignoffRequired":            llx.BoolDataPtr(repo.WebCommitSignoffRequired),
-		"advancedSecurityEnabled":             llx.StringData(saStatus(repo.SecurityAndAnalysis, saAdvancedSecurity)),
-		"secretScanningEnabled":               llx.StringData(saStatus(repo.SecurityAndAnalysis, saSecretScanning)),
-		"secretScanningPushProtectionEnabled": llx.StringData(saStatus(repo.SecurityAndAnalysis, saSecretScanningPushProtection)),
-		"dependabotSecurityUpdatesEnabled":    llx.StringData(saStatus(repo.SecurityAndAnalysis, saDependabotSecurityUpdates)),
-		"secretScanningValidityChecksEnabled": llx.StringData(saStatus(repo.SecurityAndAnalysis, saSecretScanningValidityChecks)),
+		"advancedSecurityEnabled":             llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saAdvancedSecurity)),
+		"secretScanningEnabled":               llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saSecretScanning)),
+		"secretScanningPushProtectionEnabled": llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saSecretScanningPushProtection)),
+		"dependabotSecurityUpdatesEnabled":    llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saDependabotSecurityUpdates)),
+		"secretScanningValidityChecksEnabled": llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saSecretScanningValidityChecks)),
 	})
 	if err != nil {
 		return nil, err
@@ -2344,7 +2344,6 @@ func (g *mqlGithubRepository) spdxSbom() (*mqlGithubRepositorySbom, error) {
 	}
 	ownerLogin := owner.Login.Data
 
-<<<<<<< HEAD
 	result, _, err := conn.Client().DependencyGraph.GetSBOM(conn.Context(), ownerLogin, repoName)
 	if err != nil {
 		return nil, err

@@ -955,19 +955,19 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGithubRepository).GetSpdxSbom()).ToDataRes(types.Resource("github.repository.sbom"))
 	},
 	"github.repository.advancedSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepository).GetAdvancedSecurityEnabled()).ToDataRes(types.String)
+		return (r.(*mqlGithubRepository).GetAdvancedSecurityEnabled()).ToDataRes(types.Bool)
 	},
 	"github.repository.secretScanningEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepository).GetSecretScanningEnabled()).ToDataRes(types.String)
+		return (r.(*mqlGithubRepository).GetSecretScanningEnabled()).ToDataRes(types.Bool)
 	},
 	"github.repository.secretScanningPushProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepository).GetSecretScanningPushProtectionEnabled()).ToDataRes(types.String)
+		return (r.(*mqlGithubRepository).GetSecretScanningPushProtectionEnabled()).ToDataRes(types.Bool)
 	},
 	"github.repository.dependabotSecurityUpdatesEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepository).GetDependabotSecurityUpdatesEnabled()).ToDataRes(types.String)
+		return (r.(*mqlGithubRepository).GetDependabotSecurityUpdatesEnabled()).ToDataRes(types.Bool)
 	},
 	"github.repository.secretScanningValidityChecksEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepository).GetSecretScanningValidityChecksEnabled()).ToDataRes(types.String)
+		return (r.(*mqlGithubRepository).GetSecretScanningValidityChecksEnabled()).ToDataRes(types.Bool)
 	},
 	"github.repository.webCommitSignoffRequired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetWebCommitSignoffRequired()).ToDataRes(types.Bool)
@@ -2757,23 +2757,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"github.repository.advancedSecurityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).AdvancedSecurityEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGithubRepository).AdvancedSecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.repository.secretScanningEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).SecretScanningEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGithubRepository).SecretScanningEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.repository.secretScanningPushProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).SecretScanningPushProtectionEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGithubRepository).SecretScanningPushProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.repository.dependabotSecurityUpdatesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).DependabotSecurityUpdatesEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGithubRepository).DependabotSecurityUpdatesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.repository.secretScanningValidityChecksEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepository).SecretScanningValidityChecksEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGithubRepository).SecretScanningValidityChecksEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.repository.webCommitSignoffRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5727,11 +5727,11 @@ type mqlGithubRepository struct {
 	Environments                        plugin.TValue[[]any]
 	Deployments                         plugin.TValue[[]any]
 	SpdxSbom                            plugin.TValue[*mqlGithubRepositorySbom]
-	AdvancedSecurityEnabled             plugin.TValue[string]
-	SecretScanningEnabled               plugin.TValue[string]
-	SecretScanningPushProtectionEnabled plugin.TValue[string]
-	DependabotSecurityUpdatesEnabled    plugin.TValue[string]
-	SecretScanningValidityChecksEnabled plugin.TValue[string]
+	AdvancedSecurityEnabled             plugin.TValue[bool]
+	SecretScanningEnabled               plugin.TValue[bool]
+	SecretScanningPushProtectionEnabled plugin.TValue[bool]
+	DependabotSecurityUpdatesEnabled    plugin.TValue[bool]
+	SecretScanningValidityChecksEnabled plugin.TValue[bool]
 	WebCommitSignoffRequired            plugin.TValue[bool]
 	Rulesets                            plugin.TValue[[]any]
 	ActionsSettings                     plugin.TValue[*mqlGithubRepositoryActionsSettings]
@@ -6382,23 +6382,23 @@ func (c *mqlGithubRepository) GetSpdxSbom() *plugin.TValue[*mqlGithubRepositoryS
 	})
 }
 
-func (c *mqlGithubRepository) GetAdvancedSecurityEnabled() *plugin.TValue[string] {
+func (c *mqlGithubRepository) GetAdvancedSecurityEnabled() *plugin.TValue[bool] {
 	return &c.AdvancedSecurityEnabled
 }
 
-func (c *mqlGithubRepository) GetSecretScanningEnabled() *plugin.TValue[string] {
+func (c *mqlGithubRepository) GetSecretScanningEnabled() *plugin.TValue[bool] {
 	return &c.SecretScanningEnabled
 }
 
-func (c *mqlGithubRepository) GetSecretScanningPushProtectionEnabled() *plugin.TValue[string] {
+func (c *mqlGithubRepository) GetSecretScanningPushProtectionEnabled() *plugin.TValue[bool] {
 	return &c.SecretScanningPushProtectionEnabled
 }
 
-func (c *mqlGithubRepository) GetDependabotSecurityUpdatesEnabled() *plugin.TValue[string] {
+func (c *mqlGithubRepository) GetDependabotSecurityUpdatesEnabled() *plugin.TValue[bool] {
 	return &c.DependabotSecurityUpdatesEnabled
 }
 
-func (c *mqlGithubRepository) GetSecretScanningValidityChecksEnabled() *plugin.TValue[string] {
+func (c *mqlGithubRepository) GetSecretScanningValidityChecksEnabled() *plugin.TValue[bool] {
 	return &c.SecretScanningValidityChecksEnabled
 }
 
@@ -6876,7 +6876,7 @@ func (c *mqlGithubRepositoryRuleset) GetUpdatedAt() *plugin.TValue[*time.Time] {
 type mqlGithubRepositoryActionsSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGithubRepositoryActionsSettingsInternal it will be used here
+	mqlGithubRepositoryActionsSettingsInternal
 	Enabled                      plugin.TValue[bool]
 	AllowedActions               plugin.TValue[string]
 	ShaPinningRequired           plugin.TValue[bool]
@@ -6945,7 +6945,7 @@ func (c *mqlGithubRepositoryActionsSettings) GetCanApprovePullRequestReviews() *
 type mqlGithubOrganizationActionsSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGithubOrganizationActionsSettingsInternal it will be used here
+	mqlGithubOrganizationActionsSettingsInternal
 	EnabledRepositories          plugin.TValue[string]
 	AllowedActions               plugin.TValue[string]
 	ShaPinningRequired           plugin.TValue[bool]

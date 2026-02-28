@@ -10,26 +10,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSaStatus(t *testing.T) {
+func TestSaEnabled(t *testing.T) {
 	strPtr := func(s string) *string { return &s }
 
 	tests := []struct {
 		name  string
 		sa    *github.SecurityAndAnalysis
 		field saField
-		want  string
+		want  bool
 	}{
 		{
 			name:  "nil SecurityAndAnalysis",
 			sa:    nil,
 			field: saAdvancedSecurity,
-			want:  "",
+			want:  false,
 		},
 		{
 			name:  "nil sub-field",
 			sa:    &github.SecurityAndAnalysis{},
 			field: saAdvancedSecurity,
-			want:  "",
+			want:  false,
 		},
 		{
 			name: "advanced security enabled",
@@ -37,7 +37,7 @@ func TestSaStatus(t *testing.T) {
 				AdvancedSecurity: &github.AdvancedSecurity{Status: strPtr("enabled")},
 			},
 			field: saAdvancedSecurity,
-			want:  "enabled",
+			want:  true,
 		},
 		{
 			name: "secret scanning disabled",
@@ -45,7 +45,7 @@ func TestSaStatus(t *testing.T) {
 				SecretScanning: &github.SecretScanning{Status: strPtr("disabled")},
 			},
 			field: saSecretScanning,
-			want:  "disabled",
+			want:  false,
 		},
 		{
 			name: "secret scanning push protection",
@@ -53,7 +53,7 @@ func TestSaStatus(t *testing.T) {
 				SecretScanningPushProtection: &github.SecretScanningPushProtection{Status: strPtr("enabled")},
 			},
 			field: saSecretScanningPushProtection,
-			want:  "enabled",
+			want:  true,
 		},
 		{
 			name: "dependabot security updates",
@@ -61,7 +61,7 @@ func TestSaStatus(t *testing.T) {
 				DependabotSecurityUpdates: &github.DependabotSecurityUpdates{Status: strPtr("disabled")},
 			},
 			field: saDependabotSecurityUpdates,
-			want:  "disabled",
+			want:  false,
 		},
 		{
 			name: "secret scanning validity checks",
@@ -69,7 +69,7 @@ func TestSaStatus(t *testing.T) {
 				SecretScanningValidityChecks: &github.SecretScanningValidityChecks{Status: strPtr("enabled")},
 			},
 			field: saSecretScanningValidityChecks,
-			want:  "enabled",
+			want:  true,
 		},
 		{
 			name: "querying one field ignores others",
@@ -78,13 +78,13 @@ func TestSaStatus(t *testing.T) {
 				SecretScanning:   &github.SecretScanning{Status: strPtr("disabled")},
 			},
 			field: saSecretScanning,
-			want:  "disabled",
+			want:  false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := saStatus(tt.sa, tt.field)
+			got := saEnabled(tt.sa, tt.field)
 			assert.Equal(t, tt.want, got)
 		})
 	}
