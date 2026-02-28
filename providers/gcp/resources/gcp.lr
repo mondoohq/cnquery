@@ -4169,9 +4169,9 @@ private gcp.project.artifactRegistryService.repository.cleanupPolicy @defaults("
   action string
   // Policy type: "condition" or "mostRecentVersions"
   policyType string
-  // Condition for matching artifacts (only set when policyType == "condition")
+  // Condition filter details; fields are non-empty only when policyType == "condition"
   condition gcp.project.artifactRegistryService.repository.cleanupPolicy.condition
-  // Keep the most recent N versions (only set when policyType == "mostRecentVersions")
+  // Most-recent-version details; fields are non-empty only when policyType == "mostRecentVersions"
   mostRecentVersions gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions
 }
 
