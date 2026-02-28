@@ -677,6 +677,10 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) extensions() ([]a
 		return nil, err
 	}
 
+	if cloudPosturePricing.Properties == nil {
+		return []any{}, nil
+	}
+
 	return buildExtensionResources(a.MqlRuntime, cloudPosturePricing.Properties.Extensions,
 		ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension,
 		ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM+"/"+subId)
@@ -746,6 +750,10 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) extensio
 	containersPricing, err := clientFactory.NewPricingsClient().Get(ctx, fmt.Sprintf("subscriptions/%s", subId), "Containers", &security.PricingsClientGetOptions{})
 	if err != nil {
 		return nil, err
+	}
+
+	if containersPricing.Properties == nil {
+		return []any{}, nil
 	}
 
 	return buildExtensionResources(a.MqlRuntime, containersPricing.Properties.Extensions,
