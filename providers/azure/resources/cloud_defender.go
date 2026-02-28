@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -62,6 +61,21 @@ func commonPricingArgs(props *security.PricingProperties, mqlResourceName, subId
 		"subscriptionId": llx.StringData(subId),
 	}
 
+	if props == nil {
+		args["enabled"] = llx.BoolData(false)
+		args["pricingTier"] = llx.StringData("")
+		args["subPlan"] = llx.StringData("")
+		args["enforce"] = llx.BoolData(false)
+		args["deprecated"] = llx.BoolData(false)
+		args["freeTrialRemainingTime"] = llx.StringData("")
+		args["enablementTime"] = llx.TimeDataPtr(nil)
+		args["inherited"] = llx.BoolData(false)
+		args["inheritedFrom"] = llx.StringData("")
+		args["replacedBy"] = llx.ArrayData([]any{}, types.String)
+		args["resourcesCoverageStatus"] = llx.StringData("")
+		return args
+	}
+
 	enabled := false
 	pricingTier := ""
 	if props.PricingTier != nil {
@@ -95,11 +109,7 @@ func commonPricingArgs(props *security.PricingProperties, mqlResourceName, subId
 	}
 	args["freeTrialRemainingTime"] = llx.StringData(freeTrialRemainingTime)
 
-	var enablementTime *time.Time
-	if props.EnablementTime != nil {
-		enablementTime = props.EnablementTime
-	}
-	args["enablementTime"] = llx.TimeDataPtr(enablementTime)
+	args["enablementTime"] = llx.TimeDataPtr(props.EnablementTime)
 
 	inherited := false
 	if props.Inherited != nil {
