@@ -649,6 +649,8 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForApis) id() (string, 
 	return a.__id, nil
 }
 
+// extensions lazily fetches extension data for Defender CSPM. This re-fetches the CloudPosture
+// pricing data (already retrieved by defenderCSPM) so that extensions are only loaded when accessed.
 func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM) extensions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -718,6 +720,8 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) id() (st
 	return a.__id, nil
 }
 
+// extensions lazily fetches extension data for Defender for Containers. This re-fetches the Containers
+// pricing data (already retrieved by defenderForContainers) so that extensions are only loaded when accessed.
 func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) extensions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
