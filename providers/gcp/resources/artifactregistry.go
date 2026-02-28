@@ -336,14 +336,6 @@ func newCleanupPolicies(runtime *plugin.Runtime, repoPath string, policies map[s
 		p := policies[policyId]
 		cpId := repoPath + "/cleanupPolicy/" + policyId
 
-		// Determine policy type from the oneof field
-		var policyType string
-		if p.GetCondition() != nil {
-			policyType = "condition"
-		} else if p.GetMostRecentVersions() != nil {
-			policyType = "mostRecentVersions"
-		}
-
 		// Build condition sub-resource
 		condRes, err := newCleanupPolicyCondition(runtime, cpId, p.GetCondition())
 		if err != nil {
@@ -359,7 +351,7 @@ func newCleanupPolicies(runtime *plugin.Runtime, repoPath string, policies map[s
 		res, err := CreateResource(runtime, "gcp.project.artifactRegistryService.repository.cleanupPolicy", map[string]*llx.RawData{
 			"id":                 llx.StringData(cpId),
 			"action":             llx.StringData(p.Action.String()),
-			"policyType":         llx.StringData(policyType),
+			"policyType":         llx.StringData(cleanupPolicyType(p)),
 			"condition":          llx.ResourceData(condRes, "gcp.project.artifactRegistryService.repository.cleanupPolicy.condition"),
 			"mostRecentVersions": llx.ResourceData(mrvRes, "gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions"),
 		})
@@ -429,30 +421,51 @@ func newCleanupPolicyMostRecentVersions(runtime *plugin.Runtime, parentId string
 	return res.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions), nil
 }
 
-func newFormatConfig(runtime *plugin.Runtime, repoPath string, r *artifactregistrypb.Repository) (*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig, error) {
-	id := repoPath + "/formatConfig"
+// formatConfigFields holds extracted format-specific configuration from a repository.
+type formatConfigFields struct {
+	immutableTags           bool
+	allowSnapshotOverwrites bool
+	mavenVersionPolicy      string
+}
 
-	var immutableTags, allowSnapshotOverwrites bool
-	var mavenVersionPolicy string
-
+// extractFormatConfigFields extracts format-specific fields from a repository's FormatConfig oneof.
+func extractFormatConfigFields(r *artifactregistrypb.Repository) formatConfigFields {
+	var f formatConfigFields
 	switch cfg := r.FormatConfig.(type) {
 	case *artifactregistrypb.Repository_DockerConfig:
 		if cfg.DockerConfig != nil {
-			immutableTags = cfg.DockerConfig.ImmutableTags
+			f.immutableTags = cfg.DockerConfig.ImmutableTags
 		}
 	case *artifactregistrypb.Repository_MavenConfig:
 		if cfg.MavenConfig != nil {
-			allowSnapshotOverwrites = cfg.MavenConfig.AllowSnapshotOverwrites
-			mavenVersionPolicy = cfg.MavenConfig.VersionPolicy.String()
+			f.allowSnapshotOverwrites = cfg.MavenConfig.AllowSnapshotOverwrites
+			f.mavenVersionPolicy = cfg.MavenConfig.VersionPolicy.String()
 		}
 	}
+	return f
+}
+
+// cleanupPolicyType returns the policy type discriminator for a cleanup policy's oneof field.
+func cleanupPolicyType(p *artifactregistrypb.CleanupPolicy) string {
+	if p.GetCondition() != nil {
+		return "condition"
+	}
+	if p.GetMostRecentVersions() != nil {
+		return "mostRecentVersions"
+	}
+	return ""
+}
+
+func newFormatConfig(runtime *plugin.Runtime, repoPath string, r *artifactregistrypb.Repository) (*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig, error) {
+	id := repoPath + "/formatConfig"
+	f := extractFormatConfigFields(r)
 
 	res, err := CreateResource(runtime, "gcp.project.artifactRegistryService.repository.formatConfig", map[string]*llx.RawData{
 		"id":                      llx.StringData(id),
 		"format":                  llx.StringData(r.Format.String()),
-		"immutableTags":           llx.BoolData(immutableTags),
-		"allowSnapshotOverwrites": llx.BoolData(allowSnapshotOverwrites),
-		"mavenVersionPolicy":      llx.StringData(mavenVersionPolicy),
+		"immutableTags":           llx.BoolData(f.immutableTags),
+		"allowSnapshotOverwrites": llx.BoolData(f.allowSnapshotOverwrites),
+		"mavenVersionPolicy":      llx.StringData(f.mavenVersionPolicy),
 	})
 	if err != nil {
 		return nil, err
