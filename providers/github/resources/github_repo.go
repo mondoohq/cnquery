@@ -2423,6 +2423,9 @@ func (g *mqlGithubRepository) rulesets() ([]any, error) {
 type mqlGithubRepositoryActionsSettingsInternal struct{}
 
 func (g *mqlGithubRepositoryActionsSettings) id() (string, error) {
+	if g.AllowedActions.Error != nil {
+		return "", g.AllowedActions.Error
+	}
 	return "github.repositoryActionsSettings/" + g.AllowedActions.Data, nil
 }
 

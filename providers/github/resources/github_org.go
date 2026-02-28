@@ -671,6 +671,9 @@ func (g *mqlGithubOrganization) installations() ([]any, error) {
 type mqlGithubOrganizationActionsSettingsInternal struct{}
 
 func (g *mqlGithubOrganizationActionsSettings) id() (string, error) {
+	if g.AllowedActions.Error != nil {
+		return "", g.AllowedActions.Error
+	}
 	return "github.organizationActionsSettings/" + g.AllowedActions.Data, nil
 }
 
