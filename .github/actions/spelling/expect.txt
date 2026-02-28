@@ -1,6 +1,5 @@
 aad
 ACCOUNTADMIN
-Adddays
 advancedthreatprotection
 alloydb
 alpn
@@ -132,6 +131,7 @@ ondemand
 ontap
 opcplc
 opensearch
+OPENZFS
 openssl
 openzfs
 orstatement
