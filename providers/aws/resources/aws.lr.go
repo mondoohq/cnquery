@@ -271,6 +271,7 @@ const (
 	ResourceAwsEc2ImageBlockDeviceMapping                                       string = "aws.ec2.image.blockDeviceMapping"
 	ResourceAwsEc2ImageEbsBlockDevice                                           string = "aws.ec2.image.ebsBlockDevice"
 	ResourceAwsEc2InstanceDevice                                                string = "aws.ec2.instance.device"
+	ResourceAwsEc2InstancePlacement                                             string = "aws.ec2.instance.placement"
 	ResourceAwsEc2Securitygroup                                                 string = "aws.ec2.securitygroup"
 	ResourceAwsEc2SecuritygroupIppermission                                     string = "aws.ec2.securitygroup.ippermission"
 	ResourceAwsConfig                                                           string = "aws.config"
@@ -1313,6 +1314,10 @@ func init() {
 		"aws.ec2.instance.device": {
 			// to override args, implement: initAwsEc2InstanceDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2InstanceDevice,
+		},
+		"aws.ec2.instance.placement": {
+			// to override args, implement: initAwsEc2InstancePlacement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2InstancePlacement,
 		},
 		"aws.ec2.securitygroup": {
 			Init:   initAwsEc2Securitygroup,
@@ -7631,6 +7636,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.ipv6Address": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetIpv6Address()).ToDataRes(types.String)
 	},
+	"aws.ec2.instance.cpuCoreCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetCpuCoreCount()).ToDataRes(types.Int)
+	},
+	"aws.ec2.instance.cpuThreadsPerCore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetCpuThreadsPerCore()).ToDataRes(types.Int)
+	},
+	"aws.ec2.instance.hibernationConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetHibernationConfigured()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.instance.maintenanceAutoRecovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetMaintenanceAutoRecovery()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.currentInstanceBootMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetCurrentInstanceBootMode()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.spotInstanceRequestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetSpotInstanceRequestId()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.placement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetPlacement()).ToDataRes(types.Resource("aws.ec2.instance.placement"))
+	},
+	"aws.ec2.instance.virtualizationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetVirtualizationType()).ToDataRes(types.String)
+	},
 	"aws.ec2.networkinterface.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetId()).ToDataRes(types.String)
 	},
@@ -7754,6 +7783,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.image.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetDescription()).ToDataRes(types.String)
 	},
+	"aws.ec2.image.imageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetImageType()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.freeTierEligible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetFreeTierEligible()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.image.imageAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetImageAllowed()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.image.deregistrationProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetDeregistrationProtection()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.lastLaunchedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetLastLaunchedAt()).ToDataRes(types.Time)
+	},
+	"aws.ec2.image.platformDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetPlatformDetails()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.bootMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetBootMode()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.rootDeviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetRootDeviceName()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.sourceImageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetSourceImageId()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.sourceImageRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetSourceImageRegion()).ToDataRes(types.String)
+	},
 	"aws.ec2.image.launchPermission.userId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ImageLaunchPermission).GetUserId()).ToDataRes(types.String)
 	},
@@ -7813,6 +7872,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.instance.device.deviceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceDevice).GetDeviceName()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.placement.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstancePlacement).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.placement.availabilityZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstancePlacement).GetAvailabilityZoneId()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.placement.tenancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstancePlacement).GetTenancy()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.placement.groupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstancePlacement).GetGroupName()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.placement.groupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstancePlacement).GetGroupId()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.placement.hostId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstancePlacement).GetHostId()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.placement.hostResourceGroupArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstancePlacement).GetHostResourceGroupArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.placement.partitionNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstancePlacement).GetPartitionNumber()).ToDataRes(types.Int)
+	},
+	"aws.ec2.instance.placement.affinity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstancePlacement).GetAffinity()).ToDataRes(types.String)
 	},
 	"aws.ec2.securitygroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Securitygroup).GetArn()).ToDataRes(types.String)
@@ -17714,6 +17800,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Instance).Ipv6Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.instance.cpuCoreCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).CpuCoreCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.cpuThreadsPerCore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).CpuThreadsPerCore, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.hibernationConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).HibernationConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.maintenanceAutoRecovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).MaintenanceAutoRecovery, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.currentInstanceBootMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).CurrentInstanceBootMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.spotInstanceRequestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).SpotInstanceRequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.placement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).Placement, ok = plugin.RawToTValue[*mqlAwsEc2InstancePlacement](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.virtualizationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).VirtualizationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.networkinterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Networkinterface).__id, ok = v.Value.(string)
 		return
@@ -17890,6 +18008,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Image).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.image.imageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).ImageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.freeTierEligible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).FreeTierEligible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.imageAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).ImageAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.deregistrationProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).DeregistrationProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.lastLaunchedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).LastLaunchedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.platformDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).PlatformDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.bootMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).BootMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.rootDeviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).RootDeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.sourceImageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).SourceImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.sourceImageRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).SourceImageRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.image.launchPermission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2ImageLaunchPermission).__id, ok = v.Value.(string)
 		return
@@ -17984,6 +18142,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.instance.device.deviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2InstanceDevice).DeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.placement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstancePlacement).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.instance.placement.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstancePlacement).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.placement.availabilityZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstancePlacement).AvailabilityZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.placement.tenancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstancePlacement).Tenancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.placement.groupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstancePlacement).GroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.placement.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstancePlacement).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.placement.hostId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstancePlacement).HostId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.placement.hostResourceGroupArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstancePlacement).HostResourceGroupArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.placement.partitionNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstancePlacement).PartitionNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.placement.affinity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstancePlacement).Affinity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42988,6 +43186,14 @@ type mqlAwsEc2Instance struct {
 	BootMode                plugin.TValue[string]
 	SourceDestCheck         plugin.TValue[bool]
 	Ipv6Address             plugin.TValue[string]
+	CpuCoreCount            plugin.TValue[int64]
+	CpuThreadsPerCore       plugin.TValue[int64]
+	HibernationConfigured   plugin.TValue[bool]
+	MaintenanceAutoRecovery plugin.TValue[string]
+	CurrentInstanceBootMode plugin.TValue[string]
+	SpotInstanceRequestId   plugin.TValue[string]
+	Placement               plugin.TValue[*mqlAwsEc2InstancePlacement]
+	VirtualizationType      plugin.TValue[string]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -43283,6 +43489,38 @@ func (c *mqlAwsEc2Instance) GetIpv6Address() *plugin.TValue[string] {
 	return &c.Ipv6Address
 }
 
+func (c *mqlAwsEc2Instance) GetCpuCoreCount() *plugin.TValue[int64] {
+	return &c.CpuCoreCount
+}
+
+func (c *mqlAwsEc2Instance) GetCpuThreadsPerCore() *plugin.TValue[int64] {
+	return &c.CpuThreadsPerCore
+}
+
+func (c *mqlAwsEc2Instance) GetHibernationConfigured() *plugin.TValue[bool] {
+	return &c.HibernationConfigured
+}
+
+func (c *mqlAwsEc2Instance) GetMaintenanceAutoRecovery() *plugin.TValue[string] {
+	return &c.MaintenanceAutoRecovery
+}
+
+func (c *mqlAwsEc2Instance) GetCurrentInstanceBootMode() *plugin.TValue[string] {
+	return &c.CurrentInstanceBootMode
+}
+
+func (c *mqlAwsEc2Instance) GetSpotInstanceRequestId() *plugin.TValue[string] {
+	return &c.SpotInstanceRequestId
+}
+
+func (c *mqlAwsEc2Instance) GetPlacement() *plugin.TValue[*mqlAwsEc2InstancePlacement] {
+	return &c.Placement
+}
+
+func (c *mqlAwsEc2Instance) GetVirtualizationType() *plugin.TValue[string] {
+	return &c.VirtualizationType
+}
+
 // mqlAwsEc2Networkinterface for the aws.ec2.networkinterface resource
 type mqlAwsEc2Networkinterface struct {
 	MqlRuntime *plugin.Runtime
@@ -43512,26 +43750,36 @@ type mqlAwsEc2Image struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEc2ImageInternal it will be used here
-	Arn                 plugin.TValue[string]
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Architecture        plugin.TValue[string]
-	OwnerId             plugin.TValue[string]
-	OwnerAlias          plugin.TValue[string]
-	CreatedAt           plugin.TValue[*time.Time]
-	DeprecatedAt        plugin.TValue[*time.Time]
-	EnaSupport          plugin.TValue[bool]
-	TpmSupport          plugin.TValue[string]
-	ImdsSupport         plugin.TValue[string]
-	State               plugin.TValue[string]
-	Public              plugin.TValue[bool]
-	RootDeviceType      plugin.TValue[string]
-	VirtualizationType  plugin.TValue[string]
-	BlockDeviceMappings plugin.TValue[[]any]
-	Tags                plugin.TValue[map[string]any]
-	Region              plugin.TValue[string]
-	LaunchPermissions   plugin.TValue[[]any]
-	Description         plugin.TValue[string]
+	Arn                      plugin.TValue[string]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Architecture             plugin.TValue[string]
+	OwnerId                  plugin.TValue[string]
+	OwnerAlias               plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
+	DeprecatedAt             plugin.TValue[*time.Time]
+	EnaSupport               plugin.TValue[bool]
+	TpmSupport               plugin.TValue[string]
+	ImdsSupport              plugin.TValue[string]
+	State                    plugin.TValue[string]
+	Public                   plugin.TValue[bool]
+	RootDeviceType           plugin.TValue[string]
+	VirtualizationType       plugin.TValue[string]
+	BlockDeviceMappings      plugin.TValue[[]any]
+	Tags                     plugin.TValue[map[string]any]
+	Region                   plugin.TValue[string]
+	LaunchPermissions        plugin.TValue[[]any]
+	Description              plugin.TValue[string]
+	ImageType                plugin.TValue[string]
+	FreeTierEligible         plugin.TValue[bool]
+	ImageAllowed             plugin.TValue[bool]
+	DeregistrationProtection plugin.TValue[string]
+	LastLaunchedAt           plugin.TValue[*time.Time]
+	PlatformDetails          plugin.TValue[string]
+	BootMode                 plugin.TValue[string]
+	RootDeviceName           plugin.TValue[string]
+	SourceImageId            plugin.TValue[string]
+	SourceImageRegion        plugin.TValue[string]
 }
 
 // createAwsEc2Image creates a new instance of this resource
@@ -43661,6 +43909,46 @@ func (c *mqlAwsEc2Image) GetLaunchPermissions() *plugin.TValue[[]any] {
 
 func (c *mqlAwsEc2Image) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlAwsEc2Image) GetImageType() *plugin.TValue[string] {
+	return &c.ImageType
+}
+
+func (c *mqlAwsEc2Image) GetFreeTierEligible() *plugin.TValue[bool] {
+	return &c.FreeTierEligible
+}
+
+func (c *mqlAwsEc2Image) GetImageAllowed() *plugin.TValue[bool] {
+	return &c.ImageAllowed
+}
+
+func (c *mqlAwsEc2Image) GetDeregistrationProtection() *plugin.TValue[string] {
+	return &c.DeregistrationProtection
+}
+
+func (c *mqlAwsEc2Image) GetLastLaunchedAt() *plugin.TValue[*time.Time] {
+	return &c.LastLaunchedAt
+}
+
+func (c *mqlAwsEc2Image) GetPlatformDetails() *plugin.TValue[string] {
+	return &c.PlatformDetails
+}
+
+func (c *mqlAwsEc2Image) GetBootMode() *plugin.TValue[string] {
+	return &c.BootMode
+}
+
+func (c *mqlAwsEc2Image) GetRootDeviceName() *plugin.TValue[string] {
+	return &c.RootDeviceName
+}
+
+func (c *mqlAwsEc2Image) GetSourceImageId() *plugin.TValue[string] {
+	return &c.SourceImageId
+}
+
+func (c *mqlAwsEc2Image) GetSourceImageRegion() *plugin.TValue[string] {
+	return &c.SourceImageRegion
 }
 
 // mqlAwsEc2ImageLaunchPermission for the aws.ec2.image.launchPermission resource
@@ -43922,6 +44210,90 @@ func (c *mqlAwsEc2InstanceDevice) GetVolumeId() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2InstanceDevice) GetDeviceName() *plugin.TValue[string] {
 	return &c.DeviceName
+}
+
+// mqlAwsEc2InstancePlacement for the aws.ec2.instance.placement resource
+type mqlAwsEc2InstancePlacement struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2InstancePlacementInternal it will be used here
+	AvailabilityZone     plugin.TValue[string]
+	AvailabilityZoneId   plugin.TValue[string]
+	Tenancy              plugin.TValue[string]
+	GroupName            plugin.TValue[string]
+	GroupId              plugin.TValue[string]
+	HostId               plugin.TValue[string]
+	HostResourceGroupArn plugin.TValue[string]
+	PartitionNumber      plugin.TValue[int64]
+	Affinity             plugin.TValue[string]
+}
+
+// createAwsEc2InstancePlacement creates a new instance of this resource
+func createAwsEc2InstancePlacement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2InstancePlacement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.instance.placement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2InstancePlacement) MqlName() string {
+	return "aws.ec2.instance.placement"
+}
+
+func (c *mqlAwsEc2InstancePlacement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2InstancePlacement) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsEc2InstancePlacement) GetAvailabilityZoneId() *plugin.TValue[string] {
+	return &c.AvailabilityZoneId
+}
+
+func (c *mqlAwsEc2InstancePlacement) GetTenancy() *plugin.TValue[string] {
+	return &c.Tenancy
+}
+
+func (c *mqlAwsEc2InstancePlacement) GetGroupName() *plugin.TValue[string] {
+	return &c.GroupName
+}
+
+func (c *mqlAwsEc2InstancePlacement) GetGroupId() *plugin.TValue[string] {
+	return &c.GroupId
+}
+
+func (c *mqlAwsEc2InstancePlacement) GetHostId() *plugin.TValue[string] {
+	return &c.HostId
+}
+
+func (c *mqlAwsEc2InstancePlacement) GetHostResourceGroupArn() *plugin.TValue[string] {
+	return &c.HostResourceGroupArn
+}
+
+func (c *mqlAwsEc2InstancePlacement) GetPartitionNumber() *plugin.TValue[int64] {
+	return &c.PartitionNumber
+}
+
+func (c *mqlAwsEc2InstancePlacement) GetAffinity() *plugin.TValue[string] {
+	return &c.Affinity
 }
 
 // mqlAwsEc2Securitygroup for the aws.ec2.securitygroup resource

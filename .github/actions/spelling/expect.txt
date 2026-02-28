@@ -29,6 +29,7 @@ cloudflare
 Clusterwide
 cmek
 cmnd
+cooldown
 copywrite
 cpe
 cryptokey
