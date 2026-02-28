@@ -231,6 +231,13 @@ const (
 	ResourceAwsLambda                                                           string = "aws.lambda"
 	ResourceAwsLambdaFunction                                                   string = "aws.lambda.function"
 	ResourceAwsLambdaFunctionUrlConfig                                          string = "aws.lambda.function.urlConfig"
+	ResourceAwsLambdaFunctionLoggingConfig                                      string = "aws.lambda.function.loggingConfig"
+	ResourceAwsLambdaFunctionLayer                                              string = "aws.lambda.function.layer"
+	ResourceAwsLambdaLayer                                                      string = "aws.lambda.layer"
+	ResourceAwsLambdaEventSourceMapping                                         string = "aws.lambda.eventSourceMapping"
+	ResourceAwsLambdaFunctionAlias                                              string = "aws.lambda.function.alias"
+	ResourceAwsLambdaFunctionProvisionedConcurrencyConfig                       string = "aws.lambda.function.provisionedConcurrencyConfig"
+	ResourceAwsLambdaCodeSigningConfig                                          string = "aws.lambda.codeSigningConfig"
 	ResourceAwsSsm                                                              string = "aws.ssm"
 	ResourceAwsSsmParameter                                                     string = "aws.ssm.parameter"
 	ResourceAwsSsmInstance                                                      string = "aws.ssm.instance"
@@ -1146,6 +1153,34 @@ func init() {
 		"aws.lambda.function.urlConfig": {
 			// to override args, implement: initAwsLambdaFunctionUrlConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsLambdaFunctionUrlConfig,
+		},
+		"aws.lambda.function.loggingConfig": {
+			// to override args, implement: initAwsLambdaFunctionLoggingConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLambdaFunctionLoggingConfig,
+		},
+		"aws.lambda.function.layer": {
+			// to override args, implement: initAwsLambdaFunctionLayer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLambdaFunctionLayer,
+		},
+		"aws.lambda.layer": {
+			// to override args, implement: initAwsLambdaLayer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLambdaLayer,
+		},
+		"aws.lambda.eventSourceMapping": {
+			// to override args, implement: initAwsLambdaEventSourceMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLambdaEventSourceMapping,
+		},
+		"aws.lambda.function.alias": {
+			// to override args, implement: initAwsLambdaFunctionAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLambdaFunctionAlias,
+		},
+		"aws.lambda.function.provisionedConcurrencyConfig": {
+			// to override args, implement: initAwsLambdaFunctionProvisionedConcurrencyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLambdaFunctionProvisionedConcurrencyConfig,
+		},
+		"aws.lambda.codeSigningConfig": {
+			// to override args, implement: initAwsLambdaCodeSigningConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLambdaCodeSigningConfig,
 		},
 		"aws.ssm": {
 			// to override args, implement: initAwsSsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6588,6 +6623,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambda).GetFunctions()).ToDataRes(types.Array(types.Resource("aws.lambda.function")))
 	},
+	"aws.lambda.layers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambda).GetLayers()).ToDataRes(types.Array(types.Resource("aws.lambda.layer")))
+	},
+	"aws.lambda.eventSourceMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambda).GetEventSourceMappings()).ToDataRes(types.Array(types.Resource("aws.lambda.eventSourceMapping")))
+	},
 	"aws.lambda.function.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetArn()).ToDataRes(types.String)
 	},
@@ -6663,6 +6704,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.lastUpdateStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetLastUpdateStatus()).ToDataRes(types.String)
 	},
+	"aws.lambda.function.kmsKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetKmsKeyArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.environment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetEnvironment()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.lambda.function.layers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetLayers()).ToDataRes(types.Array(types.Resource("aws.lambda.function.layer")))
+	},
+	"aws.lambda.function.loggingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetLoggingConfig()).ToDataRes(types.Resource("aws.lambda.function.loggingConfig"))
+	},
+	"aws.lambda.function.snapStartApplyOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetSnapStartApplyOn()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.snapStartOptimizationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetSnapStartOptimizationStatus()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.fileSystemConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetFileSystemConfigs()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.lambda.function.signingProfileVersionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetSigningProfileVersionArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.signingJobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetSigningJobArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.eventSourceMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetEventSourceMappings()).ToDataRes(types.Array(types.Resource("aws.lambda.eventSourceMapping")))
+	},
+	"aws.lambda.function.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetAliases()).ToDataRes(types.Array(types.Resource("aws.lambda.function.alias")))
+	},
+	"aws.lambda.function.provisionedConcurrencyConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetProvisionedConcurrencyConfigs()).ToDataRes(types.Array(types.Resource("aws.lambda.function.provisionedConcurrencyConfig")))
+	},
+	"aws.lambda.function.codeSigningConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetCodeSigningConfig()).ToDataRes(types.Resource("aws.lambda.codeSigningConfig"))
+	},
 	"aws.lambda.function.urlConfig.functionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetFunctionUrl()).ToDataRes(types.String)
 	},
@@ -6692,6 +6772,177 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lambda.function.urlConfig.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.lambda.function.loggingConfig.logFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionLoggingConfig).GetLogFormat()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.loggingConfig.applicationLogLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionLoggingConfig).GetApplicationLogLevel()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.loggingConfig.systemLogLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionLoggingConfig).GetSystemLogLevel()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.loggingConfig.logGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionLoggingConfig).GetLogGroup()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.layer.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionLayer).GetArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.layer.codeSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionLayer).GetCodeSize()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.layer.signingJobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionLayer).GetSigningJobArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.layer.signingProfileVersionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionLayer).GetSigningProfileVersionArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.layer.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayer).GetArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.layer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayer).GetName()).ToDataRes(types.String)
+	},
+	"aws.lambda.layer.latestVersionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayer).GetLatestVersionArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.layer.latestVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayer).GetLatestVersion()).ToDataRes(types.Int)
+	},
+	"aws.lambda.layer.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayer).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.lambda.layer.compatibleRuntimes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayer).GetCompatibleRuntimes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.layer.compatibleArchitectures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayer).GetCompatibleArchitectures()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.layer.createdDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayer).GetCreatedDate()).ToDataRes(types.Time)
+	},
+	"aws.lambda.layer.licenseInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayer).GetLicenseInfo()).ToDataRes(types.String)
+	},
+	"aws.lambda.eventSourceMapping.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetUuid()).ToDataRes(types.String)
+	},
+	"aws.lambda.eventSourceMapping.eventSourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetEventSourceArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.eventSourceMapping.functionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetFunctionArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.eventSourceMapping.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.lambda.eventSourceMapping.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetState()).ToDataRes(types.String)
+	},
+	"aws.lambda.eventSourceMapping.stateTransitionReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetStateTransitionReason()).ToDataRes(types.String)
+	},
+	"aws.lambda.eventSourceMapping.batchSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetBatchSize()).ToDataRes(types.Int)
+	},
+	"aws.lambda.eventSourceMapping.maximumBatchingWindowInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetMaximumBatchingWindowInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.lambda.eventSourceMapping.parallelizationFactor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetParallelizationFactor()).ToDataRes(types.Int)
+	},
+	"aws.lambda.eventSourceMapping.maximumRetryAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetMaximumRetryAttempts()).ToDataRes(types.Int)
+	},
+	"aws.lambda.eventSourceMapping.maximumRecordAgeInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetMaximumRecordAgeInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.lambda.eventSourceMapping.bisectBatchOnFunctionError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetBisectBatchOnFunctionError()).ToDataRes(types.Bool)
+	},
+	"aws.lambda.eventSourceMapping.lastModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetLastModified()).ToDataRes(types.Time)
+	},
+	"aws.lambda.eventSourceMapping.lastProcessingResult": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetLastProcessingResult()).ToDataRes(types.String)
+	},
+	"aws.lambda.eventSourceMapping.topics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetTopics()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.eventSourceMapping.queues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetQueues()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.eventSourceMapping.tumblingWindowInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetTumblingWindowInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.lambda.eventSourceMapping.startingPosition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetStartingPosition()).ToDataRes(types.String)
+	},
+	"aws.lambda.eventSourceMapping.onFailureDestinationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetOnFailureDestinationArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.eventSourceMapping.filterCriteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetFilterCriteria()).ToDataRes(types.Dict)
+	},
+	"aws.lambda.eventSourceMapping.maximumConcurrency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetMaximumConcurrency()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.alias.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionAlias).GetArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.alias.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionAlias).GetName()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.alias.functionVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionAlias).GetFunctionVersion()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.alias.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionAlias).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.alias.revisionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionAlias).GetRevisionId()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.alias.routingConfigWeights": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionAlias).GetRoutingConfigWeights()).ToDataRes(types.Map(types.String, types.Float))
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.functionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).GetFunctionArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.requestedConcurrentExecutions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).GetRequestedConcurrentExecutions()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.allocatedConcurrentExecutions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).GetAllocatedConcurrentExecutions()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.availableConcurrentExecutions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).GetAvailableConcurrentExecutions()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).GetStatusReason()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.lastModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).GetLastModified()).ToDataRes(types.Time)
+	},
+	"aws.lambda.codeSigningConfig.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaCodeSigningConfig).GetArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.codeSigningConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaCodeSigningConfig).GetId()).ToDataRes(types.String)
+	},
+	"aws.lambda.codeSigningConfig.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaCodeSigningConfig).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.lambda.codeSigningConfig.allowedPublisherProfileArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaCodeSigningConfig).GetAllowedPublisherProfileArns()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.codeSigningConfig.untrustedArtifactOnDeployment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaCodeSigningConfig).GetUntrustedArtifactOnDeployment()).ToDataRes(types.String)
+	},
+	"aws.lambda.codeSigningConfig.lastModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaCodeSigningConfig).GetLastModified()).ToDataRes(types.Time)
 	},
 	"aws.ssm.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsm).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ssm.instance")))
@@ -15979,6 +16230,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLambda).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.lambda.layers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambda).Layers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambda).EventSourceMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.lambda.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).__id, ok = v.Value.(string)
 		return
@@ -16083,6 +16342,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLambdaFunction).LastUpdateStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.lambda.function.kmsKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).KmsKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).Environment, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.layers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).Layers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.loggingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).LoggingConfig, ok = plugin.RawToTValue[*mqlAwsLambdaFunctionLoggingConfig](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.snapStartApplyOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).SnapStartApplyOn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.snapStartOptimizationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).SnapStartOptimizationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.fileSystemConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).FileSystemConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.signingProfileVersionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).SigningProfileVersionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.signingJobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).SigningJobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.eventSourceMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).EventSourceMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.provisionedConcurrencyConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).ProvisionedConcurrencyConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.codeSigningConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).CodeSigningConfig, ok = plugin.RawToTValue[*mqlAwsLambdaCodeSigningConfig](v.Value, v.Error)
+		return
+	},
 	"aws.lambda.function.urlConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunctionUrlConfig).__id, ok = v.Value.(string)
 		return
@@ -16125,6 +16436,262 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.urlConfig.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunctionUrlConfig).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.loggingConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionLoggingConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lambda.function.loggingConfig.logFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionLoggingConfig).LogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.loggingConfig.applicationLogLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionLoggingConfig).ApplicationLogLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.loggingConfig.systemLogLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionLoggingConfig).SystemLogLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.loggingConfig.logGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionLoggingConfig).LogGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.layer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionLayer).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lambda.function.layer.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionLayer).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.layer.codeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionLayer).CodeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.layer.signingJobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionLayer).SigningJobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.layer.signingProfileVersionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionLayer).SigningProfileVersionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lambda.layer.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.latestVersionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).LatestVersionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.latestVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).LatestVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.compatibleRuntimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).CompatibleRuntimes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.compatibleArchitectures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).CompatibleArchitectures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).CreatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.licenseInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).LicenseInfo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lambda.eventSourceMapping.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.eventSourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).EventSourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.functionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).FunctionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.stateTransitionReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).StateTransitionReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.batchSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).BatchSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.maximumBatchingWindowInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).MaximumBatchingWindowInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.parallelizationFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).ParallelizationFactor, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.maximumRetryAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).MaximumRetryAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.maximumRecordAgeInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).MaximumRecordAgeInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.bisectBatchOnFunctionError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).BisectBatchOnFunctionError, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.lastModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).LastModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.lastProcessingResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).LastProcessingResult, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.queues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).Queues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.tumblingWindowInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).TumblingWindowInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.startingPosition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).StartingPosition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.onFailureDestinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).OnFailureDestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.filterCriteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).FilterCriteria, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.eventSourceMapping.maximumConcurrency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).MaximumConcurrency, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.alias.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionAlias).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lambda.function.alias.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionAlias).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.alias.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionAlias).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.alias.functionVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionAlias).FunctionVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.alias.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionAlias).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.alias.revisionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionAlias).RevisionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.alias.routingConfigWeights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionAlias).RoutingConfigWeights, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.functionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).FunctionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.requestedConcurrentExecutions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).RequestedConcurrentExecutions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.allocatedConcurrentExecutions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).AllocatedConcurrentExecutions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.availableConcurrentExecutions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).AvailableConcurrentExecutions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.provisionedConcurrencyConfig.lastModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).LastModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.codeSigningConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaCodeSigningConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lambda.codeSigningConfig.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaCodeSigningConfig).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.codeSigningConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaCodeSigningConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.codeSigningConfig.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaCodeSigningConfig).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.codeSigningConfig.allowedPublisherProfileArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaCodeSigningConfig).AllowedPublisherProfileArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.codeSigningConfig.untrustedArtifactOnDeployment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaCodeSigningConfig).UntrustedArtifactOnDeployment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.codeSigningConfig.lastModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaCodeSigningConfig).LastModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38885,7 +39452,9 @@ type mqlAwsLambda struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsLambdaInternal it will be used here
-	Functions plugin.TValue[[]any]
+	Functions           plugin.TValue[[]any]
+	Layers              plugin.TValue[[]any]
+	EventSourceMappings plugin.TValue[[]any]
 }
 
 // createAwsLambda creates a new instance of this resource
@@ -38941,36 +39510,81 @@ func (c *mqlAwsLambda) GetFunctions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsLambda) GetLayers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Layers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda", c.__id, "layers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.layers()
+	})
+}
+
+func (c *mqlAwsLambda) GetEventSourceMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventSourceMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda", c.__id, "eventSourceMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventSourceMappings()
+	})
+}
+
 // mqlAwsLambdaFunction for the aws.lambda.function resource
 type mqlAwsLambdaFunction struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsLambdaFunctionInternal
-	Arn                  plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Runtime              plugin.TValue[string]
-	Concurrency          plugin.TValue[int64]
-	DlqTargetArn         plugin.TValue[string]
-	Policy               plugin.TValue[any]
-	VpcConfig            plugin.TValue[any]
-	Region               plugin.TValue[string]
-	Tags                 plugin.TValue[map[string]any]
-	Architectures        plugin.TValue[[]any]
-	EphemeralStorageSize plugin.TValue[int64]
-	MemorySize           plugin.TValue[int64]
-	Role                 plugin.TValue[*mqlAwsIamRole]
-	Timeout              plugin.TValue[int64]
-	Handler              plugin.TValue[string]
-	TracingMode          plugin.TValue[string]
-	PackageType          plugin.TValue[string]
-	CodeSha256           plugin.TValue[string]
-	Description          plugin.TValue[string]
-	LastModifiedAt       plugin.TValue[*time.Time]
-	UrlConfig            plugin.TValue[*mqlAwsLambdaFunctionUrlConfig]
-	State                plugin.TValue[string]
-	CodeSize             plugin.TValue[int64]
-	StateReason          plugin.TValue[string]
-	LastUpdateStatus     plugin.TValue[string]
+	Arn                           plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Runtime                       plugin.TValue[string]
+	Concurrency                   plugin.TValue[int64]
+	DlqTargetArn                  plugin.TValue[string]
+	Policy                        plugin.TValue[any]
+	VpcConfig                     plugin.TValue[any]
+	Region                        plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
+	Architectures                 plugin.TValue[[]any]
+	EphemeralStorageSize          plugin.TValue[int64]
+	MemorySize                    plugin.TValue[int64]
+	Role                          plugin.TValue[*mqlAwsIamRole]
+	Timeout                       plugin.TValue[int64]
+	Handler                       plugin.TValue[string]
+	TracingMode                   plugin.TValue[string]
+	PackageType                   plugin.TValue[string]
+	CodeSha256                    plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	LastModifiedAt                plugin.TValue[*time.Time]
+	UrlConfig                     plugin.TValue[*mqlAwsLambdaFunctionUrlConfig]
+	State                         plugin.TValue[string]
+	CodeSize                      plugin.TValue[int64]
+	StateReason                   plugin.TValue[string]
+	LastUpdateStatus              plugin.TValue[string]
+	KmsKeyArn                     plugin.TValue[string]
+	Environment                   plugin.TValue[map[string]any]
+	Layers                        plugin.TValue[[]any]
+	LoggingConfig                 plugin.TValue[*mqlAwsLambdaFunctionLoggingConfig]
+	SnapStartApplyOn              plugin.TValue[string]
+	SnapStartOptimizationStatus   plugin.TValue[string]
+	FileSystemConfigs             plugin.TValue[[]any]
+	SigningProfileVersionArn      plugin.TValue[string]
+	SigningJobArn                 plugin.TValue[string]
+	EventSourceMappings           plugin.TValue[[]any]
+	Aliases                       plugin.TValue[[]any]
+	ProvisionedConcurrencyConfigs plugin.TValue[[]any]
+	CodeSigningConfig             plugin.TValue[*mqlAwsLambdaCodeSigningConfig]
 }
 
 // createAwsLambdaFunction creates a new instance of this resource
@@ -39138,6 +39752,106 @@ func (c *mqlAwsLambdaFunction) GetLastUpdateStatus() *plugin.TValue[string] {
 	return &c.LastUpdateStatus
 }
 
+func (c *mqlAwsLambdaFunction) GetKmsKeyArn() *plugin.TValue[string] {
+	return &c.KmsKeyArn
+}
+
+func (c *mqlAwsLambdaFunction) GetEnvironment() *plugin.TValue[map[string]any] {
+	return &c.Environment
+}
+
+func (c *mqlAwsLambdaFunction) GetLayers() *plugin.TValue[[]any] {
+	return &c.Layers
+}
+
+func (c *mqlAwsLambdaFunction) GetLoggingConfig() *plugin.TValue[*mqlAwsLambdaFunctionLoggingConfig] {
+	return &c.LoggingConfig
+}
+
+func (c *mqlAwsLambdaFunction) GetSnapStartApplyOn() *plugin.TValue[string] {
+	return &c.SnapStartApplyOn
+}
+
+func (c *mqlAwsLambdaFunction) GetSnapStartOptimizationStatus() *plugin.TValue[string] {
+	return &c.SnapStartOptimizationStatus
+}
+
+func (c *mqlAwsLambdaFunction) GetFileSystemConfigs() *plugin.TValue[[]any] {
+	return &c.FileSystemConfigs
+}
+
+func (c *mqlAwsLambdaFunction) GetSigningProfileVersionArn() *plugin.TValue[string] {
+	return &c.SigningProfileVersionArn
+}
+
+func (c *mqlAwsLambdaFunction) GetSigningJobArn() *plugin.TValue[string] {
+	return &c.SigningJobArn
+}
+
+func (c *mqlAwsLambdaFunction) GetEventSourceMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventSourceMappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "eventSourceMappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventSourceMappings()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetAliases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aliases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "aliases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.aliases()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetProvisionedConcurrencyConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProvisionedConcurrencyConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "provisionedConcurrencyConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.provisionedConcurrencyConfigs()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetCodeSigningConfig() *plugin.TValue[*mqlAwsLambdaCodeSigningConfig] {
+	return plugin.GetOrCompute[*mqlAwsLambdaCodeSigningConfig](&c.CodeSigningConfig, func() (*mqlAwsLambdaCodeSigningConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "codeSigningConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaCodeSigningConfig), nil
+			}
+		}
+
+		return c.codeSigningConfig()
+	})
+}
+
 // mqlAwsLambdaFunctionUrlConfig for the aws.lambda.function.urlConfig resource
 type mqlAwsLambdaFunctionUrlConfig struct {
 	MqlRuntime *plugin.Runtime
@@ -39230,6 +39944,599 @@ func (c *mqlAwsLambdaFunctionUrlConfig) GetCreatedAt() *plugin.TValue[*time.Time
 
 func (c *mqlAwsLambdaFunctionUrlConfig) GetLastModifiedAt() *plugin.TValue[*time.Time] {
 	return &c.LastModifiedAt
+}
+
+// mqlAwsLambdaFunctionLoggingConfig for the aws.lambda.function.loggingConfig resource
+type mqlAwsLambdaFunctionLoggingConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLambdaFunctionLoggingConfigInternal it will be used here
+	LogFormat           plugin.TValue[string]
+	ApplicationLogLevel plugin.TValue[string]
+	SystemLogLevel      plugin.TValue[string]
+	LogGroup            plugin.TValue[string]
+}
+
+// createAwsLambdaFunctionLoggingConfig creates a new instance of this resource
+func createAwsLambdaFunctionLoggingConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLambdaFunctionLoggingConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lambda.function.loggingConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLambdaFunctionLoggingConfig) MqlName() string {
+	return "aws.lambda.function.loggingConfig"
+}
+
+func (c *mqlAwsLambdaFunctionLoggingConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLambdaFunctionLoggingConfig) GetLogFormat() *plugin.TValue[string] {
+	return &c.LogFormat
+}
+
+func (c *mqlAwsLambdaFunctionLoggingConfig) GetApplicationLogLevel() *plugin.TValue[string] {
+	return &c.ApplicationLogLevel
+}
+
+func (c *mqlAwsLambdaFunctionLoggingConfig) GetSystemLogLevel() *plugin.TValue[string] {
+	return &c.SystemLogLevel
+}
+
+func (c *mqlAwsLambdaFunctionLoggingConfig) GetLogGroup() *plugin.TValue[string] {
+	return &c.LogGroup
+}
+
+// mqlAwsLambdaFunctionLayer for the aws.lambda.function.layer resource
+type mqlAwsLambdaFunctionLayer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLambdaFunctionLayerInternal it will be used here
+	Arn                      plugin.TValue[string]
+	CodeSize                 plugin.TValue[int64]
+	SigningJobArn            plugin.TValue[string]
+	SigningProfileVersionArn plugin.TValue[string]
+}
+
+// createAwsLambdaFunctionLayer creates a new instance of this resource
+func createAwsLambdaFunctionLayer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLambdaFunctionLayer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lambda.function.layer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLambdaFunctionLayer) MqlName() string {
+	return "aws.lambda.function.layer"
+}
+
+func (c *mqlAwsLambdaFunctionLayer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLambdaFunctionLayer) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsLambdaFunctionLayer) GetCodeSize() *plugin.TValue[int64] {
+	return &c.CodeSize
+}
+
+func (c *mqlAwsLambdaFunctionLayer) GetSigningJobArn() *plugin.TValue[string] {
+	return &c.SigningJobArn
+}
+
+func (c *mqlAwsLambdaFunctionLayer) GetSigningProfileVersionArn() *plugin.TValue[string] {
+	return &c.SigningProfileVersionArn
+}
+
+// mqlAwsLambdaLayer for the aws.lambda.layer resource
+type mqlAwsLambdaLayer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLambdaLayerInternal it will be used here
+	Arn                     plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	LatestVersionArn        plugin.TValue[string]
+	LatestVersion           plugin.TValue[int64]
+	Description             plugin.TValue[string]
+	CompatibleRuntimes      plugin.TValue[[]any]
+	CompatibleArchitectures plugin.TValue[[]any]
+	CreatedDate             plugin.TValue[*time.Time]
+	LicenseInfo             plugin.TValue[string]
+}
+
+// createAwsLambdaLayer creates a new instance of this resource
+func createAwsLambdaLayer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLambdaLayer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lambda.layer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLambdaLayer) MqlName() string {
+	return "aws.lambda.layer"
+}
+
+func (c *mqlAwsLambdaLayer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLambdaLayer) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsLambdaLayer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsLambdaLayer) GetLatestVersionArn() *plugin.TValue[string] {
+	return &c.LatestVersionArn
+}
+
+func (c *mqlAwsLambdaLayer) GetLatestVersion() *plugin.TValue[int64] {
+	return &c.LatestVersion
+}
+
+func (c *mqlAwsLambdaLayer) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsLambdaLayer) GetCompatibleRuntimes() *plugin.TValue[[]any] {
+	return &c.CompatibleRuntimes
+}
+
+func (c *mqlAwsLambdaLayer) GetCompatibleArchitectures() *plugin.TValue[[]any] {
+	return &c.CompatibleArchitectures
+}
+
+func (c *mqlAwsLambdaLayer) GetCreatedDate() *plugin.TValue[*time.Time] {
+	return &c.CreatedDate
+}
+
+func (c *mqlAwsLambdaLayer) GetLicenseInfo() *plugin.TValue[string] {
+	return &c.LicenseInfo
+}
+
+// mqlAwsLambdaEventSourceMapping for the aws.lambda.eventSourceMapping resource
+type mqlAwsLambdaEventSourceMapping struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLambdaEventSourceMappingInternal it will be used here
+	Uuid                           plugin.TValue[string]
+	EventSourceArn                 plugin.TValue[string]
+	FunctionArn                    plugin.TValue[string]
+	Region                         plugin.TValue[string]
+	State                          plugin.TValue[string]
+	StateTransitionReason          plugin.TValue[string]
+	BatchSize                      plugin.TValue[int64]
+	MaximumBatchingWindowInSeconds plugin.TValue[int64]
+	ParallelizationFactor          plugin.TValue[int64]
+	MaximumRetryAttempts           plugin.TValue[int64]
+	MaximumRecordAgeInSeconds      plugin.TValue[int64]
+	BisectBatchOnFunctionError     plugin.TValue[bool]
+	LastModified                   plugin.TValue[*time.Time]
+	LastProcessingResult           plugin.TValue[string]
+	Topics                         plugin.TValue[[]any]
+	Queues                         plugin.TValue[[]any]
+	TumblingWindowInSeconds        plugin.TValue[int64]
+	StartingPosition               plugin.TValue[string]
+	OnFailureDestinationArn        plugin.TValue[string]
+	FilterCriteria                 plugin.TValue[any]
+	MaximumConcurrency             plugin.TValue[int64]
+}
+
+// createAwsLambdaEventSourceMapping creates a new instance of this resource
+func createAwsLambdaEventSourceMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLambdaEventSourceMapping{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lambda.eventSourceMapping", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) MqlName() string {
+	return "aws.lambda.eventSourceMapping"
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetEventSourceArn() *plugin.TValue[string] {
+	return &c.EventSourceArn
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetFunctionArn() *plugin.TValue[string] {
+	return &c.FunctionArn
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetStateTransitionReason() *plugin.TValue[string] {
+	return &c.StateTransitionReason
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetBatchSize() *plugin.TValue[int64] {
+	return &c.BatchSize
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetMaximumBatchingWindowInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumBatchingWindowInSeconds
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetParallelizationFactor() *plugin.TValue[int64] {
+	return &c.ParallelizationFactor
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetMaximumRetryAttempts() *plugin.TValue[int64] {
+	return &c.MaximumRetryAttempts
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetMaximumRecordAgeInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumRecordAgeInSeconds
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetBisectBatchOnFunctionError() *plugin.TValue[bool] {
+	return &c.BisectBatchOnFunctionError
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetLastModified() *plugin.TValue[*time.Time] {
+	return &c.LastModified
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetLastProcessingResult() *plugin.TValue[string] {
+	return &c.LastProcessingResult
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetTopics() *plugin.TValue[[]any] {
+	return &c.Topics
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetQueues() *plugin.TValue[[]any] {
+	return &c.Queues
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetTumblingWindowInSeconds() *plugin.TValue[int64] {
+	return &c.TumblingWindowInSeconds
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetStartingPosition() *plugin.TValue[string] {
+	return &c.StartingPosition
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetOnFailureDestinationArn() *plugin.TValue[string] {
+	return &c.OnFailureDestinationArn
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetFilterCriteria() *plugin.TValue[any] {
+	return &c.FilterCriteria
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetMaximumConcurrency() *plugin.TValue[int64] {
+	return &c.MaximumConcurrency
+}
+
+// mqlAwsLambdaFunctionAlias for the aws.lambda.function.alias resource
+type mqlAwsLambdaFunctionAlias struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLambdaFunctionAliasInternal it will be used here
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	FunctionVersion      plugin.TValue[string]
+	Description          plugin.TValue[string]
+	RevisionId           plugin.TValue[string]
+	RoutingConfigWeights plugin.TValue[map[string]any]
+}
+
+// createAwsLambdaFunctionAlias creates a new instance of this resource
+func createAwsLambdaFunctionAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLambdaFunctionAlias{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lambda.function.alias", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLambdaFunctionAlias) MqlName() string {
+	return "aws.lambda.function.alias"
+}
+
+func (c *mqlAwsLambdaFunctionAlias) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLambdaFunctionAlias) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsLambdaFunctionAlias) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsLambdaFunctionAlias) GetFunctionVersion() *plugin.TValue[string] {
+	return &c.FunctionVersion
+}
+
+func (c *mqlAwsLambdaFunctionAlias) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsLambdaFunctionAlias) GetRevisionId() *plugin.TValue[string] {
+	return &c.RevisionId
+}
+
+func (c *mqlAwsLambdaFunctionAlias) GetRoutingConfigWeights() *plugin.TValue[map[string]any] {
+	return &c.RoutingConfigWeights
+}
+
+// mqlAwsLambdaFunctionProvisionedConcurrencyConfig for the aws.lambda.function.provisionedConcurrencyConfig resource
+type mqlAwsLambdaFunctionProvisionedConcurrencyConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLambdaFunctionProvisionedConcurrencyConfigInternal it will be used here
+	FunctionArn                   plugin.TValue[string]
+	RequestedConcurrentExecutions plugin.TValue[int64]
+	AllocatedConcurrentExecutions plugin.TValue[int64]
+	AvailableConcurrentExecutions plugin.TValue[int64]
+	Status                        plugin.TValue[string]
+	StatusReason                  plugin.TValue[string]
+	LastModified                  plugin.TValue[*time.Time]
+}
+
+// createAwsLambdaFunctionProvisionedConcurrencyConfig creates a new instance of this resource
+func createAwsLambdaFunctionProvisionedConcurrencyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLambdaFunctionProvisionedConcurrencyConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lambda.function.provisionedConcurrencyConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLambdaFunctionProvisionedConcurrencyConfig) MqlName() string {
+	return "aws.lambda.function.provisionedConcurrencyConfig"
+}
+
+func (c *mqlAwsLambdaFunctionProvisionedConcurrencyConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLambdaFunctionProvisionedConcurrencyConfig) GetFunctionArn() *plugin.TValue[string] {
+	return &c.FunctionArn
+}
+
+func (c *mqlAwsLambdaFunctionProvisionedConcurrencyConfig) GetRequestedConcurrentExecutions() *plugin.TValue[int64] {
+	return &c.RequestedConcurrentExecutions
+}
+
+func (c *mqlAwsLambdaFunctionProvisionedConcurrencyConfig) GetAllocatedConcurrentExecutions() *plugin.TValue[int64] {
+	return &c.AllocatedConcurrentExecutions
+}
+
+func (c *mqlAwsLambdaFunctionProvisionedConcurrencyConfig) GetAvailableConcurrentExecutions() *plugin.TValue[int64] {
+	return &c.AvailableConcurrentExecutions
+}
+
+func (c *mqlAwsLambdaFunctionProvisionedConcurrencyConfig) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsLambdaFunctionProvisionedConcurrencyConfig) GetStatusReason() *plugin.TValue[string] {
+	return &c.StatusReason
+}
+
+func (c *mqlAwsLambdaFunctionProvisionedConcurrencyConfig) GetLastModified() *plugin.TValue[*time.Time] {
+	return &c.LastModified
+}
+
+// mqlAwsLambdaCodeSigningConfig for the aws.lambda.codeSigningConfig resource
+type mqlAwsLambdaCodeSigningConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLambdaCodeSigningConfigInternal it will be used here
+	Arn                           plugin.TValue[string]
+	Id                            plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	AllowedPublisherProfileArns   plugin.TValue[[]any]
+	UntrustedArtifactOnDeployment plugin.TValue[string]
+	LastModified                  plugin.TValue[*time.Time]
+}
+
+// createAwsLambdaCodeSigningConfig creates a new instance of this resource
+func createAwsLambdaCodeSigningConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLambdaCodeSigningConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lambda.codeSigningConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLambdaCodeSigningConfig) MqlName() string {
+	return "aws.lambda.codeSigningConfig"
+}
+
+func (c *mqlAwsLambdaCodeSigningConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLambdaCodeSigningConfig) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsLambdaCodeSigningConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsLambdaCodeSigningConfig) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsLambdaCodeSigningConfig) GetAllowedPublisherProfileArns() *plugin.TValue[[]any] {
+	return &c.AllowedPublisherProfileArns
+}
+
+func (c *mqlAwsLambdaCodeSigningConfig) GetUntrustedArtifactOnDeployment() *plugin.TValue[string] {
+	return &c.UntrustedArtifactOnDeployment
+}
+
+func (c *mqlAwsLambdaCodeSigningConfig) GetLastModified() *plugin.TValue[*time.Time] {
+	return &c.LastModified
 }
 
 // mqlAwsSsm for the aws.ssm resource

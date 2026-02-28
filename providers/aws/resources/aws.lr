@@ -4300,6 +4300,10 @@ private aws.apigateway.stage @defaults("arn") {
 aws.lambda {
   // List of Lambda functions across all regions in the account
   functions() []aws.lambda.function
+  // List of Lambda layers across all regions in the account
+  layers() []aws.lambda.layer
+  // List of event source mappings across all regions in the account
+  eventSourceMappings() []aws.lambda.eventSourceMapping
 }
 
 // AWS Lambda function
@@ -4354,6 +4358,32 @@ private aws.lambda.function @defaults("arn") {
   stateReason string
   // Status of the last function update (Successful, Failed, InProgress)
   lastUpdateStatus string
+  // KMS key ARN used to encrypt environment variables
+  kmsKeyArn string
+  // Environment variables configured for the function
+  environment map[string]string
+  // Layers attached to the function
+  layers []aws.lambda.function.layer
+  // Logging configuration for the function
+  loggingConfig aws.lambda.function.loggingConfig
+  // SnapStart apply mode: PublishedVersions or None
+  snapStartApplyOn string
+  // SnapStart optimization status: On or Off
+  snapStartOptimizationStatus string
+  // EFS file system mount configurations
+  fileSystemConfigs []dict
+  // Code signing profile version ARN
+  signingProfileVersionArn string
+  // Code signing job ARN
+  signingJobArn string
+  // Event source mappings for this function
+  eventSourceMappings() []aws.lambda.eventSourceMapping
+  // Aliases for this function
+  aliases() []aws.lambda.function.alias
+  // Provisioned concurrency configurations for this function
+  provisionedConcurrencyConfigs() []aws.lambda.function.provisionedConcurrencyConfig
+  // Code signing configuration (null if not configured)
+  codeSigningConfig() aws.lambda.codeSigningConfig
 }
 
 // AWS Lambda function URL configuration
@@ -4378,6 +4408,148 @@ private aws.lambda.function.urlConfig @defaults("functionUrl authType") {
   createdAt time
   // When the function URL was last modified
   lastModifiedAt time
+}
+
+// Logging configuration for an AWS Lambda function
+private aws.lambda.function.loggingConfig @defaults("logFormat logGroup") {
+  // Log format: Text or JSON
+  logFormat string
+  // Application log level: TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+  applicationLogLevel string
+  // System log level: DEBUG, INFO, WARN
+  systemLogLevel string
+  // CloudWatch log group name
+  logGroup string
+}
+
+// Layer attached to an AWS Lambda function
+private aws.lambda.function.layer @defaults("arn") {
+  // ARN of the function layer version
+  arn string
+  // Size of the layer archive in bytes
+  codeSize int
+  // ARN of the signing job
+  signingJobArn string
+  // ARN of the signing profile version
+  signingProfileVersionArn string
+}
+
+// AWS Lambda layer
+private aws.lambda.layer @defaults("arn name") {
+  // ARN of the layer
+  arn string
+  // Name of the layer
+  name string
+  // ARN of the latest layer version
+  latestVersionArn string
+  // Latest version number
+  latestVersion int
+  // Description of the latest version
+  description string
+  // Compatible runtimes for the latest version
+  compatibleRuntimes []string
+  // Compatible instruction set architectures for the latest version
+  compatibleArchitectures []string
+  // When the latest version was created
+  createdDate time
+  // License information for the latest version
+  licenseInfo string
+}
+
+// AWS Lambda event source mapping
+private aws.lambda.eventSourceMapping @defaults("uuid eventSourceArn") {
+  // UUID of the event source mapping
+  uuid string
+  // ARN of the event source
+  eventSourceArn string
+  // ARN of the Lambda function
+  functionArn string
+  // Region where the event source mapping exists
+  region string
+  // State of the event source mapping: Creating, Enabling, Enabled, Disabling, Disabled, Updating, Deleting
+  state string
+  // Reason for the current state transition
+  stateTransitionReason string
+  // Maximum number of records in each batch
+  batchSize int
+  // Maximum time in seconds to gather records before invoking the function
+  maximumBatchingWindowInSeconds int
+  // Number of batches to process concurrently from each shard
+  parallelizationFactor int
+  // Maximum number of retry attempts (-1 for infinite)
+  maximumRetryAttempts int
+  // Maximum age of a record in seconds (-1 for infinite)
+  maximumRecordAgeInSeconds int
+  // Whether to split the batch on function error
+  bisectBatchOnFunctionError bool
+  // When the event source mapping was last modified
+  lastModified time
+  // Result of the last processing attempt
+  lastProcessingResult string
+  // Kafka topics for the event source mapping
+  topics []string
+  // Amazon MQ broker destination queues
+  queues []string
+  // Duration in seconds of the tumbling window
+  tumblingWindowInSeconds int
+  // Position in stream to start reading: AT_TIMESTAMP, LATEST, TRIM_HORIZON
+  startingPosition string
+  // ARN of the on-failure destination
+  onFailureDestinationArn string
+  // Filter criteria as JSON
+  filterCriteria dict
+  // Maximum concurrency for SQS event sources
+  maximumConcurrency int
+}
+
+// AWS Lambda function alias
+private aws.lambda.function.alias @defaults("arn name") {
+  // ARN of the alias
+  arn string
+  // Name of the alias
+  name string
+  // Function version that the alias invokes
+  functionVersion string
+  // Description of the alias
+  description string
+  // Unique identifier that changes when the alias is updated
+  revisionId string
+  // Traffic-shifting configuration weights (version to weight percentage, e.g. "2": 0.5)
+  routingConfigWeights map[string]float
+}
+
+// AWS Lambda function provisioned concurrency configuration
+private aws.lambda.function.provisionedConcurrencyConfig @defaults("functionArn status") {
+  // ARN of the alias or version
+  functionArn string
+  // Requested provisioned concurrency amount
+  requestedConcurrentExecutions int
+  // Allocated provisioned concurrency amount
+  allocatedConcurrentExecutions int
+  // Available provisioned concurrency amount
+  availableConcurrentExecutions int
+  // Status of the allocation: IN_PROGRESS, READY, FAILED
+  status string
+  // Reason for the current status
+  statusReason string
+  // When the configuration was last modified
+  lastModified time
+}
+
+// AWS Lambda code signing configuration
+private aws.lambda.codeSigningConfig @defaults("arn") {
+  // ARN of the code signing configuration
+  arn string
+  // Unique identifier of the code signing configuration
+  id string
+  // Description of the code signing configuration
+  description string
+  // Allowed publisher signing profile version ARNs
+  allowedPublisherProfileArns []string
+  // Action on untrusted artifact deployment: Warn or Enforce
+  untrustedArtifactOnDeployment string
+  // When the configuration was last modified
+  lastModified time
 }
 
 // Amazon Systems Manager
