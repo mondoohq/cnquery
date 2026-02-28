@@ -354,6 +354,8 @@ func (a *mqlAwsRoute53HostedZone) queryLoggingConfig() (*mqlAwsRoute53QueryLoggi
 	ctx := context.Background()
 	svc := conn.Route53("")
 
+	// AWS allows at most one query logging config per hosted zone, so
+	// pagination is not needed here.
 	listResp, err := svc.ListQueryLoggingConfigs(ctx, &route53.ListQueryLoggingConfigsInput{
 		HostedZoneId: &hostedZoneId,
 	})
