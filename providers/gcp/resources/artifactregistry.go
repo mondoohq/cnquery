@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
 	"time"
 
 	artifactregistry "cloud.google.com/go/artifactregistry/apiv1"
@@ -257,9 +256,9 @@ func (g *mqlGcpProjectArtifactRegistryServiceRepository) iamPolicy() ([]any, err
 		return nil, err
 	}
 	res := make([]any, 0, len(policy.Bindings))
-	for i, b := range policy.Bindings {
+	for _, b := range policy.Bindings {
 		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":      llx.StringData(repoPath + "-" + strconv.Itoa(i)),
+			"id":      llx.StringData(repoPath + "/" + b.Role),
 			"role":    llx.StringData(b.Role),
 			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
 		})
