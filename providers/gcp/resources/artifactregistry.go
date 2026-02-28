@@ -213,10 +213,15 @@ func initGcpProjectArtifactRegistryServiceRepository(runtime *plugin.Runtime, ar
 		return nil, nil, repositories.Error
 	}
 
-	nameVal := nameRaw.Value.(string)
-	locationVal := ""
-	if args["location"] != nil {
-		locationVal = args["location"].Value.(string)
+	nameVal, ok := nameRaw.Value.(string)
+	if !ok {
+		return nil, nil, errors.New("artifact registry repository init: \"name\" must be a string")
+	}
+	var locationVal string
+	if locRaw := args["location"]; locRaw != nil {
+		if v, ok := locRaw.Value.(string); ok {
+			locationVal = v
+		}
 	}
 	for _, r := range repositories.Data {
 		repo := r.(*mqlGcpProjectArtifactRegistryServiceRepository)
