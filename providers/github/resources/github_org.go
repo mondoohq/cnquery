@@ -664,9 +664,14 @@ func (g *mqlGithubOrganization) installations() ([]any, error) {
 	return res, nil
 }
 
-type mqlGithubOrganizationActionsSettingsInternal struct{}
+type mqlGithubOrganizationActionsSettingsInternal struct {
+	orgLogin string
+}
 
 func (g *mqlGithubOrganizationActionsSettings) id() (string, error) {
+	if g.orgLogin != "" {
+		return "github.organizationActionsSettings/" + g.orgLogin, nil
+	}
 	if g.AllowedActions.Error != nil {
 		return "", g.AllowedActions.Error
 	}
@@ -717,5 +722,7 @@ func (g *mqlGithubOrganization) actionsSettings() (*mqlGithubOrganizationActions
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGithubOrganizationActionsSettings), nil
+	settings := res.(*mqlGithubOrganizationActionsSettings)
+	settings.orgLogin = orgLogin
+	return settings, nil
 }
