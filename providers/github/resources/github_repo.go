@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v82/github"
+	"github.com/google/go-github/v84/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/logger"
@@ -21,6 +21,45 @@ import (
 	"go.mondoo.com/mql/v13/providers/github/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type saField int
+
+const (
+	saAdvancedSecurity saField = iota
+	saSecretScanning
+	saSecretScanningPushProtection
+	saDependabotSecurityUpdates
+	saSecretScanningValidityChecks
+)
+
+func saStatus(sa *github.SecurityAndAnalysis, field saField) string {
+	if sa == nil {
+		return ""
+	}
+	switch field {
+	case saAdvancedSecurity:
+		if sa.AdvancedSecurity != nil {
+			return sa.AdvancedSecurity.GetStatus()
+		}
+	case saSecretScanning:
+		if sa.SecretScanning != nil {
+			return sa.SecretScanning.GetStatus()
+		}
+	case saSecretScanningPushProtection:
+		if sa.SecretScanningPushProtection != nil {
+			return sa.SecretScanningPushProtection.GetStatus()
+		}
+	case saDependabotSecurityUpdates:
+		if sa.DependabotSecurityUpdates != nil {
+			return sa.DependabotSecurityUpdates.GetStatus()
+		}
+	case saSecretScanningValidityChecks:
+		if sa.SecretScanningValidityChecks != nil {
+			return sa.SecretScanningValidityChecks.GetStatus()
+		}
+	}
+	return ""
+}
 
 func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*mqlGithubRepository, error) {
 	var id int64
@@ -37,42 +76,48 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 	}
 
 	res, err := CreateResource(runtime, "github.repository", map[string]*llx.RawData{
-		"id":                llx.IntData(id),
-		"name":              llx.StringDataPtr(repo.Name),
-		"fullName":          llx.StringDataPtr(repo.FullName),
-		"description":       llx.StringDataPtr(repo.Description),
-		"homepage":          llx.StringDataPtr(repo.Homepage),
-		"topics":            llx.ArrayData(convert.SliceAnyToInterface[string](repo.Topics), types.String),
-		"language":          llx.StringData(repo.GetLanguage()),
-		"createdAt":         llx.TimeDataPtr(githubTimestamp(repo.CreatedAt)),
-		"updatedAt":         llx.TimeDataPtr(githubTimestamp(repo.UpdatedAt)),
-		"pushedAt":          llx.TimeDataPtr(githubTimestamp(repo.PushedAt)),
-		"archived":          llx.BoolDataPtr(repo.Archived),
-		"disabled":          llx.BoolDataPtr(repo.Disabled),
-		"private":           llx.BoolDataPtr(repo.Private),
-		"isFork":            llx.BoolDataPtr(repo.Fork),
-		"watchersCount":     llx.IntData(int64(repo.GetWatchersCount())),
-		"forksCount":        llx.IntData(int64(repo.GetForksCount())),
-		"openIssuesCount":   llx.IntData(int64(repo.GetOpenIssues())),
-		"stargazersCount":   llx.IntData(int64(repo.GetStargazersCount())),
-		"visibility":        llx.StringDataPtr(repo.Visibility),
-		"allowAutoMerge":    llx.BoolDataPtr(repo.AllowAutoMerge),
-		"allowForking":      llx.BoolDataPtr(repo.AllowForking),
-		"allowMergeCommit":  llx.BoolDataPtr(repo.AllowMergeCommit),
-		"allowRebaseMerge":  llx.BoolDataPtr(repo.AllowRebaseMerge),
-		"allowSquashMerge":  llx.BoolDataPtr(repo.AllowSquashMerge),
-		"hasIssues":         llx.BoolData(repo.GetHasIssues()),
-		"hasProjects":       llx.BoolData(repo.GetHasProjects()),
-		"hasWiki":           llx.BoolData(repo.GetHasWiki()),
-		"hasPages":          llx.BoolData(repo.GetHasPages()),
-		"hasDownloads":      llx.BoolData(repo.GetHasDownloads()),
-		"hasDiscussions":    llx.BoolData(repo.GetHasDiscussions()),
-		"isTemplate":        llx.BoolData(repo.GetIsTemplate()),
-		"defaultBranchName": llx.StringDataPtr(repo.DefaultBranch),
-		"cloneUrl":          llx.StringData(repo.GetCloneURL()),
-		"sshUrl":            llx.StringData(repo.GetSSHURL()),
-		"owner":             llx.ResourceData(owner, owner.MqlName()),
-		"customProperties":  llx.DictData(repo.CustomProperties),
+		"id":                                  llx.IntData(id),
+		"name":                                llx.StringDataPtr(repo.Name),
+		"fullName":                            llx.StringDataPtr(repo.FullName),
+		"description":                         llx.StringDataPtr(repo.Description),
+		"homepage":                            llx.StringDataPtr(repo.Homepage),
+		"topics":                              llx.ArrayData(convert.SliceAnyToInterface[string](repo.Topics), types.String),
+		"language":                            llx.StringData(repo.GetLanguage()),
+		"createdAt":                           llx.TimeDataPtr(githubTimestamp(repo.CreatedAt)),
+		"updatedAt":                           llx.TimeDataPtr(githubTimestamp(repo.UpdatedAt)),
+		"pushedAt":                            llx.TimeDataPtr(githubTimestamp(repo.PushedAt)),
+		"archived":                            llx.BoolDataPtr(repo.Archived),
+		"disabled":                            llx.BoolDataPtr(repo.Disabled),
+		"private":                             llx.BoolDataPtr(repo.Private),
+		"isFork":                              llx.BoolDataPtr(repo.Fork),
+		"watchersCount":                       llx.IntData(int64(repo.GetWatchersCount())),
+		"forksCount":                          llx.IntData(int64(repo.GetForksCount())),
+		"openIssuesCount":                     llx.IntData(int64(repo.GetOpenIssues())),
+		"stargazersCount":                     llx.IntData(int64(repo.GetStargazersCount())),
+		"visibility":                          llx.StringDataPtr(repo.Visibility),
+		"allowAutoMerge":                      llx.BoolDataPtr(repo.AllowAutoMerge),
+		"allowForking":                        llx.BoolDataPtr(repo.AllowForking),
+		"allowMergeCommit":                    llx.BoolDataPtr(repo.AllowMergeCommit),
+		"allowRebaseMerge":                    llx.BoolDataPtr(repo.AllowRebaseMerge),
+		"allowSquashMerge":                    llx.BoolDataPtr(repo.AllowSquashMerge),
+		"hasIssues":                           llx.BoolData(repo.GetHasIssues()),
+		"hasProjects":                         llx.BoolData(repo.GetHasProjects()),
+		"hasWiki":                             llx.BoolData(repo.GetHasWiki()),
+		"hasPages":                            llx.BoolData(repo.GetHasPages()),
+		"hasDownloads":                        llx.BoolData(repo.GetHasDownloads()),
+		"hasDiscussions":                      llx.BoolData(repo.GetHasDiscussions()),
+		"isTemplate":                          llx.BoolData(repo.GetIsTemplate()),
+		"defaultBranchName":                   llx.StringDataPtr(repo.DefaultBranch),
+		"cloneUrl":                            llx.StringData(repo.GetCloneURL()),
+		"sshUrl":                              llx.StringData(repo.GetSSHURL()),
+		"owner":                               llx.ResourceData(owner, owner.MqlName()),
+		"customProperties":                    llx.DictData(repo.CustomProperties),
+		"webCommitSignoffRequired":            llx.BoolDataPtr(repo.WebCommitSignoffRequired),
+		"advancedSecurityEnabled":             llx.StringData(saStatus(repo.SecurityAndAnalysis, saAdvancedSecurity)),
+		"secretScanningEnabled":               llx.StringData(saStatus(repo.SecurityAndAnalysis, saSecretScanning)),
+		"secretScanningPushProtectionEnabled": llx.StringData(saStatus(repo.SecurityAndAnalysis, saSecretScanningPushProtection)),
+		"dependabotSecurityUpdatesEnabled":    llx.StringData(saStatus(repo.SecurityAndAnalysis, saDependabotSecurityUpdates)),
+		"secretScanningValidityChecksEnabled": llx.StringData(saStatus(repo.SecurityAndAnalysis, saSecretScanningValidityChecks)),
 	})
 	if err != nil {
 		return nil, err
@@ -504,15 +549,19 @@ type githubDismissalRestrictions struct {
 	Teams []string `json:"teams"`
 }
 
+type githubBypassAllowances struct {
+	Users []string `json:"users"`
+	Teams []string `json:"teams"`
+	Apps  []string `json:"apps"`
+}
+
 type githubRequiredPullRequestReviews struct {
-	DismissalRestrictions *githubDismissalRestrictions `json:"dismissalRestrictions"`
-	// Specifies if approved reviews are dismissed automatically, when a new commit is pushed.
-	DismissStaleReviews bool `json:"dismissStaleReviews"`
-	// RequireCodeOwnerReviews specifies if an approved review is required in pull requests including files with a designated code owner.
-	RequireCodeOwnerReviews bool `json:"requireCodeOwnerReviews"`
-	// RequiredApprovingReviewCount specifies the number of approvals required before the pull request can be merged.
-	// Valid values are 1-6.
-	RequiredApprovingReviewCount int `json:"requiredApprovingReviewCount"`
+	DismissalRestrictions        *githubDismissalRestrictions `json:"dismissalRestrictions"`
+	DismissStaleReviews          bool                         `json:"dismissStaleReviews"`
+	RequireCodeOwnerReviews      bool                         `json:"requireCodeOwnerReviews"`
+	RequiredApprovingReviewCount int                          `json:"requiredApprovingReviewCount"`
+	RequireLastPushApproval      bool                         `json:"requireLastPushApproval"`
+	BypassPullRequestAllowances  *githubBypassAllowances      `json:"bypassPullRequestAllowances"`
 }
 
 func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) {
@@ -582,12 +631,33 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 			}
 		}
 
+		var ghBypassAllowances *githubBypassAllowances
+		if branchProtection.RequiredPullRequestReviews.BypassPullRequestAllowances != nil {
+			bpa := branchProtection.RequiredPullRequestReviews.BypassPullRequestAllowances
+			ghBypassAllowances = &githubBypassAllowances{
+				Users: make([]string, 0, len(bpa.Users)),
+				Teams: make([]string, 0, len(bpa.Teams)),
+				Apps:  make([]string, 0, len(bpa.Apps)),
+			}
+			for _, u := range bpa.Users {
+				ghBypassAllowances.Users = append(ghBypassAllowances.Users, u.GetLogin())
+			}
+			for _, t := range bpa.Teams {
+				ghBypassAllowances.Teams = append(ghBypassAllowances.Teams, t.GetName())
+			}
+			for _, a := range bpa.Apps {
+				ghBypassAllowances.Apps = append(ghBypassAllowances.Apps, a.GetSlug())
+			}
+		}
+
 		// we use a separate struct to ensure that the output is proper camelCase
 		rprr, err = convert.JsonToDict(githubRequiredPullRequestReviews{
 			DismissStaleReviews:          branchProtection.RequiredPullRequestReviews.DismissStaleReviews,
 			RequireCodeOwnerReviews:      branchProtection.RequiredPullRequestReviews.RequireCodeOwnerReviews,
 			RequiredApprovingReviewCount: branchProtection.RequiredPullRequestReviews.RequiredApprovingReviewCount,
+			RequireLastPushApproval:      branchProtection.RequiredPullRequestReviews.RequireLastPushApproval,
 			DismissalRestrictions:        ghDismissalRestrictions,
+			BypassPullRequestAllowances:  ghBypassAllowances,
 		})
 		if err != nil {
 			return nil, err
@@ -636,6 +706,9 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 		"allowDeletions":                 llx.MapData(ad, types.Any),
 		"requiredConversationResolution": llx.MapData(rcr, types.Any),
 		"requiredSignatures":             llx.BoolDataPtr(sc.Enabled),
+		"blockCreations":                 llx.BoolData(branchProtection.GetBlockCreations().GetEnabled()),
+		"lockBranch":                     llx.BoolData(branchProtection.GetLockBranch().GetEnabled()),
+		"allowForkSyncing":               llx.BoolData(branchProtection.GetAllowForkSyncing().GetEnabled()),
 	})
 	if err != nil {
 		return nil, err
@@ -974,10 +1047,7 @@ func (g *mqlGithubRepository) collaborators() ([]any, error) {
 			return nil, err
 		}
 
-		permissions := []string{}
-		for k := range contributor.Permissions {
-			permissions = append(permissions, k)
-		}
+		permissions := permissionsFromUser(contributor)
 
 		mqlContributor, err := CreateResource(g.MqlRuntime, "github.collaborator", map[string]*llx.RawData{
 			"id":          llx.IntDataPtr(contributor.ID),
@@ -990,6 +1060,29 @@ func (g *mqlGithubRepository) collaborators() ([]any, error) {
 		res = append(res, mqlContributor)
 	}
 	return res, nil
+}
+
+func permissionsFromUser(u *github.User) []string {
+	if u.Permissions == nil {
+		return []string{}
+	}
+	perms := []string{}
+	if u.Permissions.GetAdmin() {
+		perms = append(perms, "admin")
+	}
+	if u.Permissions.GetMaintain() {
+		perms = append(perms, "maintain")
+	}
+	if u.Permissions.GetPush() {
+		perms = append(perms, "push")
+	}
+	if u.Permissions.GetTriage() {
+		perms = append(perms, "triage")
+	}
+	if u.Permissions.GetPull() {
+		perms = append(perms, "pull")
+	}
+	return perms
 }
 
 func (g *mqlGithubRepository) adminCollaborators() ([]any, error) {
@@ -1038,10 +1131,7 @@ func (g *mqlGithubRepository) adminCollaborators() ([]any, error) {
 			return nil, err
 		}
 
-		permissions := []string{}
-		for k := range contributor.Permissions {
-			permissions = append(permissions, k)
-		}
+		permissions := permissionsFromUser(contributor)
 
 		mqlContributor, err := CreateResource(g.MqlRuntime, "github.collaborator", map[string]*llx.RawData{
 			"id":          llx.IntDataPtr(contributor.ID),
@@ -2235,4 +2325,158 @@ func (g *mqlGithubRepository) codeScanningAlerts() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (g *mqlGithubRepositoryRuleset) id() (string, error) {
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return "github.repositoryRuleset/" + strconv.FormatInt(g.Id.Data, 10), nil
+}
+
+func (g *mqlGithubRepository) rulesets() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	owner := g.Owner.Data
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	listOpts := &github.RepositoryListRulesetsOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+	}
+	var allRulesets []*github.RepositoryRuleset
+	for {
+		rulesets, resp, err := conn.Client().Repositories.GetAllRulesets(conn.Context(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allRulesets = append(allRulesets, rulesets...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
+	}
+
+	res := make([]any, 0, len(allRulesets))
+	for _, rs := range allRulesets {
+		bypassActors := make([]any, 0, len(rs.BypassActors))
+		for _, ba := range rs.BypassActors {
+			d, err := convert.JsonToDict(ba)
+			if err != nil {
+				return nil, err
+			}
+			bypassActors = append(bypassActors, d)
+		}
+
+		conditions, err := convert.JsonToDict(rs.Conditions)
+		if err != nil {
+			return nil, err
+		}
+
+		rules, err := convert.JsonToDictSlice(rs.Rules)
+		if err != nil {
+			return nil, err
+		}
+
+		var target, sourceType, enforcement string
+		if rs.Target != nil {
+			target = string(*rs.Target)
+		}
+		if rs.SourceType != nil {
+			sourceType = string(*rs.SourceType)
+		}
+		enforcement = string(rs.Enforcement)
+
+		r, err := CreateResource(g.MqlRuntime, "github.repositoryRuleset", map[string]*llx.RawData{
+			"id":           llx.IntDataPtr(rs.ID),
+			"name":         llx.StringData(rs.Name),
+			"target":       llx.StringData(target),
+			"sourceType":   llx.StringData(sourceType),
+			"source":       llx.StringData(rs.Source),
+			"enforcement":  llx.StringData(enforcement),
+			"bypassActors": llx.ArrayData(bypassActors, types.Dict),
+			"conditions":   llx.MapData(conditions, types.Any),
+			"rules":        llx.ArrayData(rules, types.Dict),
+			"createdAt":    llx.TimeDataPtr(githubTimestamp(rs.CreatedAt)),
+			"updatedAt":    llx.TimeDataPtr(githubTimestamp(rs.UpdatedAt)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+type mqlGithubRepositoryActionsSettingsInternal struct{}
+
+func (g *mqlGithubRepositoryActionsSettings) id() (string, error) {
+	return "github.repositoryActionsSettings/" + g.AllowedActions.Data, nil
+}
+
+func (g *mqlGithubRepository) actionsSettings() (*mqlGithubRepositoryActionsSettings, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	owner := g.Owner.Data
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	perms, _, err := conn.Client().Repositories.GetActionsPermissions(conn.Context(), ownerLogin, repoName)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			g.ActionsSettings.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	wfPerms, _, err := conn.Client().Repositories.GetDefaultWorkflowPermissions(conn.Context(), ownerLogin, repoName)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			g.ActionsSettings.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var defaultWfPerms string
+	var canApprove bool
+	if wfPerms != nil {
+		defaultWfPerms = wfPerms.GetDefaultWorkflowPermissions()
+		canApprove = wfPerms.GetCanApprovePullRequestReviews()
+	}
+
+	res, err := CreateResource(g.MqlRuntime, "github.repositoryActionsSettings", map[string]*llx.RawData{
+		"__id":                         llx.StringData("github.repositoryActionsSettings/" + ownerLogin + "/" + repoName),
+		"enabled":                      llx.BoolDataPtr(perms.Enabled),
+		"allowedActions":               llx.StringDataPtr(perms.AllowedActions),
+		"shaPinningRequired":           llx.BoolDataPtr(perms.SHAPinningRequired),
+		"defaultWorkflowPermissions":   llx.StringData(defaultWfPerms),
+		"canApprovePullRequestReviews": llx.BoolData(canApprove),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGithubRepositoryActionsSettings), nil
 }
