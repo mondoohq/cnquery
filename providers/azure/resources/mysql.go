@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"go.mondoo.com/mql/v13/llx"
@@ -146,17 +147,11 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 				version = string(*dbServer.Properties.Version)
 			}
 
-			var sslEnforcement bool
 			var publicNetworkAccess string
 			if dbServer.Properties != nil {
 				if dbServer.Properties.Network != nil && dbServer.Properties.Network.PublicNetworkAccess != nil {
 					publicNetworkAccess = string(*dbServer.Properties.Network.PublicNetworkAccess)
 				}
-				// MySQL flexible servers enforce SSL via the require_secure_transport server parameter.
-				// Check if it's enabled via the replication configuration or network settings.
-				// Note: The actual SSL enforcement is controlled by server parameter, not a top-level property.
-				// We default to true as MySQL flexible servers enforce SSL by default.
-				sslEnforcement = true
 			}
 
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
@@ -168,7 +163,6 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 					"type":               llx.StringDataPtr(dbServer.Type),
 					"properties":         llx.DictData(properties),
 					"version":            llx.StringData(version),
-					"sslEnforcement":     llx.BoolData(sslEnforcement),
 					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
 				})
 			if err != nil {
@@ -178,6 +172,41 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) sslEnforcement() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return false, err
+	}
+
+	server, err := resourceID.Component("flexibleServers")
+	if err != nil {
+		return false, err
+	}
+
+	dbConfClient, err := flexible.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	resp, err := dbConfClient.Get(ctx, resourceID.ResourceGroup, server, "require_secure_transport", nil)
+	if err != nil {
+		// Default to true as MySQL flexible servers enforce SSL by default
+		return true, nil
+	}
+
+	if resp.Properties != nil && resp.Properties.Value != nil {
+		return strings.EqualFold(*resp.Properties.Value, "ON"), nil
+	}
+
+	return true, nil
 }
 
 func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]any, error) {

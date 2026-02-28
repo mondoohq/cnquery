@@ -307,10 +307,10 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		if disk.Properties.PublicNetworkAccess != nil {
 			args["publicNetworkAccess"] = llx.StringData(string(*disk.Properties.PublicNetworkAccess))
 		}
-		if disk.Properties.Encryption != nil && disk.Properties.Encryption.Type != nil {
-			args["encryptionType"] = llx.StringData(string(*disk.Properties.Encryption.Type))
-		}
 		if disk.Properties.Encryption != nil {
+			if disk.Properties.Encryption.Type != nil {
+				args["encryptionType"] = llx.StringData(string(*disk.Properties.Encryption.Type))
+			}
 			args["diskEncryptionSetId"] = llx.StringDataPtr(disk.Properties.Encryption.DiskEncryptionSetID)
 		}
 		if disk.Properties.DataAccessAuthMode != nil {

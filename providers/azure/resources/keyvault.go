@@ -317,7 +317,12 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 
 						// Derive key size from RSA modulus length
 						if keyResp.Key.N != nil {
-							args["keySize"] = llx.IntData(int64(len(keyResp.Key.N) * 8))
+							bits := len(keyResp.Key.N) * 8
+							// RSA modulus can have a leading zero byte
+							if bits%256 == 8 {
+								bits -= 8
+							}
+							args["keySize"] = llx.IntData(int64(bits))
 						}
 					}
 				}
