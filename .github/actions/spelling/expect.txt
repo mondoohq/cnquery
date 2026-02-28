@@ -1,6 +1,5 @@
 aad
 ACCOUNTADMIN
-Adddays
 advancedthreatprotection
 alloydb
 alpn
@@ -129,7 +128,7 @@ nullstring
 oidc
 OIDs
 ondemand
-ONTAP
+ontap
 opcplc
 opensearch
 OPENZFS
