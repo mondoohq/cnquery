@@ -80,6 +80,26 @@ func TestCommonPricingArgs(t *testing.T) {
 		assert.Empty(t, replacedBy)
 	})
 
+	t.Run("NilProperties", func(t *testing.T) {
+		args := commonPricingArgs(nil, "azure.subscription.cloudDefenderService.defenderForServers", "sub-nil")
+
+		assert.Equal(t, "azure.subscription.cloudDefenderService.defenderForServers/sub-nil", args["__id"].Value)
+		assert.Equal(t, "sub-nil", args["subscriptionId"].Value)
+		assert.Equal(t, false, args["enabled"].Value)
+		assert.Equal(t, "", args["pricingTier"].Value)
+		assert.Equal(t, "", args["subPlan"].Value)
+		assert.Equal(t, false, args["enforce"].Value)
+		assert.Equal(t, false, args["deprecated"].Value)
+		assert.Equal(t, "", args["freeTrialRemainingTime"].Value)
+		assert.Nil(t, args["enablementTime"].Value)
+		assert.Equal(t, false, args["inherited"].Value)
+		assert.Equal(t, "", args["inheritedFrom"].Value)
+		assert.Equal(t, "", args["resourcesCoverageStatus"].Value)
+
+		replacedBy := args["replacedBy"].Value.([]any)
+		assert.Empty(t, replacedBy)
+	})
+
 	t.Run("EnforceEnum", func(t *testing.T) {
 		propsFalse := &security.PricingProperties{
 			Enforce: ptr(security.EnforceFalse),
