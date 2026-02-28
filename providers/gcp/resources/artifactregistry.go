@@ -186,9 +186,7 @@ func initGcpProjectArtifactRegistryServiceRepository(runtime *plugin.Runtime, ar
 	}
 
 	if len(args) == 0 {
-		if args == nil {
-			args = make(map[string]*llx.RawData)
-		}
+		args = make(map[string]*llx.RawData)
 		if ids := getAssetIdentifier(runtime); ids != nil {
 			args["name"] = llx.StringData(ids.name)
 			args["location"] = llx.StringData(ids.region)
@@ -196,6 +194,11 @@ func initGcpProjectArtifactRegistryServiceRepository(runtime *plugin.Runtime, ar
 		} else {
 			return nil, nil, errors.New("no asset identifier found")
 		}
+	}
+
+	nameRaw, ok := args["name"]
+	if !ok || nameRaw == nil {
+		return nil, nil, errors.New("artifact registry repository init requires a \"name\" argument")
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.artifactRegistryService", map[string]*llx.RawData{
@@ -210,7 +213,7 @@ func initGcpProjectArtifactRegistryServiceRepository(runtime *plugin.Runtime, ar
 		return nil, nil, repositories.Error
 	}
 
-	nameVal := args["name"].Value.(string)
+	nameVal := nameRaw.Value.(string)
 	locationVal := ""
 	if args["location"] != nil {
 		locationVal = args["location"].Value.(string)
