@@ -8,7 +8,7 @@ require (
 	github.com/bradleyfalzon/ghinstallation/v2 v2.17.0
 	github.com/cockroachdb/errors v1.12.0
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-github/v82 v82.0.0
+	github.com/google/go-github/v84 v84.0.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/rs/zerolog v1.34.0
@@ -151,7 +151,6 @@ require (
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.7 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
-	github.com/hashicorp/go-version v1.8.0 // indirect
 	github.com/hashicorp/hcl v1.0.1-vault-7 // indirect
 	github.com/hashicorp/vault/api v1.22.0 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
