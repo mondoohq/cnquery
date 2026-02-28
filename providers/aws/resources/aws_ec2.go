@@ -1181,8 +1181,10 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 		// Placement
 		if instance.Placement != nil {
 			p := instance.Placement
+			instanceArn := fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.InstanceId))
 			mqlPlacement, err := CreateResource(a.MqlRuntime, ResourceAwsEc2InstancePlacement,
 				map[string]*llx.RawData{
+					"__id":                 llx.StringData(instanceArn + "/placement"),
 					"availabilityZone":     llx.StringDataPtr(p.AvailabilityZone),
 					"availabilityZoneId":   llx.StringDataPtr(p.AvailabilityZoneId),
 					"tenancy":              llx.StringData(string(p.Tenancy)),
