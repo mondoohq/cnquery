@@ -91,6 +91,7 @@ ipsetreferencestatement
 istio
 jira
 jsonbody
+KFP
 kqueue
 labelmatchstatement
 lfs
