@@ -2399,7 +2399,9 @@ func (g *mqlGithubRepository) rulesets() ([]any, error) {
 		}
 		enforcement = string(rs.Enforcement)
 
+		rulesetID := strconv.FormatInt(rs.GetID(), 10)
 		r, err := CreateResource(g.MqlRuntime, "github.repositoryRuleset", map[string]*llx.RawData{
+			"__id":         llx.StringData("github.repositoryRuleset/" + ownerLogin + "/" + repoName + "/" + rulesetID),
 			"id":           llx.IntDataPtr(rs.ID),
 			"name":         llx.StringData(rs.Name),
 			"target":       llx.StringData(target),
