@@ -2177,8 +2177,8 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   properties dict
   // MySQL flexible server engine version
   version string
-  // Whether SSL enforcement is enabled
-  sslEnforcement bool
+  // Whether SSL enforcement is enabled (queries the require_secure_transport server parameter)
+  sslEnforcement() bool
   // Whether public network access is allowed
   publicNetworkAccess string
   // MySQL flexible server configuration
@@ -2396,13 +2396,13 @@ private azure.subscription.keyVaultService.key @defaults("kid keyName") {
   // Key recovery level
   recoveryLevel string
   // Key type (RSA, EC, oct, RSA-HSM, EC-HSM, oct-HSM)
-  keyType string
+  keyType() string
   // Key size in bits (e.g. 2048, 3072, 4096 for RSA)
-  keySize int
-  // Elliptic curve name for EC keys (P-256, P-384, P-521)
-  curveName string
+  keySize() int
+  // Elliptic curve name for EC keys (P-256, P-256K, P-384, P-521)
+  curveName() string
   // Permitted key operations (sign, verify, encrypt, decrypt, wrapKey, unwrapKey)
-  keyOps []string
+  keyOps() []string
   // Key name
   keyName() string
   // Key version

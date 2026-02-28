@@ -20530,7 +20530,9 @@ func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetVersion() *plugin.TV
 }
 
 func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetSslEnforcement() *plugin.TValue[bool] {
-	return &c.SslEnforcement
+	return plugin.GetOrCompute[bool](&c.SslEnforcement, func() (bool, error) {
+		return c.sslEnforcement()
+	})
 }
 
 func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetPublicNetworkAccess() *plugin.TValue[string] {
@@ -21661,19 +21663,27 @@ func (c *mqlAzureSubscriptionKeyVaultServiceKey) GetRecoveryLevel() *plugin.TVal
 }
 
 func (c *mqlAzureSubscriptionKeyVaultServiceKey) GetKeyType() *plugin.TValue[string] {
-	return &c.KeyType
+	return plugin.GetOrCompute[string](&c.KeyType, func() (string, error) {
+		return c.keyType()
+	})
 }
 
 func (c *mqlAzureSubscriptionKeyVaultServiceKey) GetKeySize() *plugin.TValue[int64] {
-	return &c.KeySize
+	return plugin.GetOrCompute[int64](&c.KeySize, func() (int64, error) {
+		return c.keySize()
+	})
 }
 
 func (c *mqlAzureSubscriptionKeyVaultServiceKey) GetCurveName() *plugin.TValue[string] {
-	return &c.CurveName
+	return plugin.GetOrCompute[string](&c.CurveName, func() (string, error) {
+		return c.curveName()
+	})
 }
 
 func (c *mqlAzureSubscriptionKeyVaultServiceKey) GetKeyOps() *plugin.TValue[[]any] {
-	return &c.KeyOps
+	return plugin.GetOrCompute[[]any](&c.KeyOps, func() ([]any, error) {
+		return c.keyOps()
+	})
 }
 
 func (c *mqlAzureSubscriptionKeyVaultServiceKey) GetKeyName() *plugin.TValue[string] {

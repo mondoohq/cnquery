@@ -8,10 +8,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/http"
 	"regexp"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -283,62 +285,18 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 		}
 
 		for _, entry := range page.Value {
-			args := map[string]*llx.RawData{
-				"kid":           llx.StringDataPtr((*string)(entry.KID)),
-				"managed":       llx.BoolDataPtr(entry.Managed),
-				"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-				"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
-				"created":       llx.TimeDataPtr(entry.Attributes.Created),
-				"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
-				"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
-				"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-				"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
-			}
-
-			// Fetch full key details to get key type, size, curve, and operations
-			if entry.KID != nil {
-				kvid, err := parseKeyVaultId(string(*entry.KID))
-				if err == nil {
-					keyResp, err := client.GetKey(ctx, kvid.Name, kvid.Version, nil)
-					if err == nil && keyResp.Key != nil {
-						if keyResp.Key.Kty != nil {
-							args["keyType"] = llx.StringData(string(*keyResp.Key.Kty))
-						}
-						if keyResp.Key.Crv != nil {
-							args["curveName"] = llx.StringData(string(*keyResp.Key.Crv))
-						}
-						keyOps := []any{}
-						for _, op := range keyResp.Key.KeyOps {
-							if op != nil {
-								keyOps = append(keyOps, string(*op))
-							}
-						}
-						args["keyOps"] = llx.ArrayData(keyOps, types.String)
-
-						// Derive key size: RSA from modulus length, EC from curve name
-						if keyResp.Key.N != nil {
-							bits := len(keyResp.Key.N) * 8
-							// RSA modulus can have a leading zero byte
-							if bits%256 == 8 {
-								bits -= 8
-							}
-							args["keySize"] = llx.IntData(int64(bits))
-						} else if keyResp.Key.Crv != nil {
-							// For EC keys, derive key size from curve name
-							switch string(*keyResp.Key.Crv) {
-							case "P-256":
-								args["keySize"] = llx.IntData(256)
-							case "P-384":
-								args["keySize"] = llx.IntData(384)
-							case "P-521":
-								args["keySize"] = llx.IntData(521)
-							}
-						}
-					}
-				}
-			}
-
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key", args)
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
+				map[string]*llx.RawData{
+					"kid":           llx.StringDataPtr((*string)(entry.KID)),
+					"managed":       llx.BoolDataPtr(entry.Managed),
+					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
+					"created":       llx.TimeDataPtr(entry.Attributes.Created),
+					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
+					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
+					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
+					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
+				})
 			if err != nil {
 				return nil, err
 			}
@@ -783,6 +741,106 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) version() (string, error) {
 	}
 
 	return kvid.Version, nil
+}
+
+// fetchKeyDetails fetches the full key from Azure Key Vault and populates
+// keyType, keySize, curveName, and keyOps fields. This is called lazily
+// when any of those fields are first accessed, avoiding N+1 API calls
+// when listing keys.
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) fetchKeyDetails() (*azkeys.GetKeyResponse, error) {
+	id := a.Kid.Data
+	kvid, err := parseKeyVaultId(id)
+	if err != nil {
+		log.Warn().Err(err).Str("kid", id).Msg("failed to parse key vault key ID")
+		return nil, err
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	client, err := azkeys.NewClient(kvid.BaseUrl, conn.Token(), &azkeys.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	keyResp, err := client.GetKey(ctx, kvid.Name, kvid.Version, nil)
+	if err != nil {
+		log.Warn().Err(err).Str("kid", id).Msg("failed to fetch key vault key details")
+		return nil, err
+	}
+
+	return &keyResp, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) keyType() (string, error) {
+	keyResp, err := a.fetchKeyDetails()
+	if err != nil {
+		return "", err
+	}
+	if keyResp.Key != nil && keyResp.Key.Kty != nil {
+		return string(*keyResp.Key.Kty), nil
+	}
+	return "", nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) keySize() (int64, error) {
+	keyResp, err := a.fetchKeyDetails()
+	if err != nil {
+		return 0, err
+	}
+	if keyResp.Key == nil {
+		return 0, nil
+	}
+
+	// RSA keys: derive size from modulus
+	if keyResp.Key.N != nil {
+		n := new(big.Int).SetBytes(keyResp.Key.N)
+		return int64(n.BitLen()), nil
+	}
+
+	// EC keys: derive size from curve name
+	if keyResp.Key.Crv != nil {
+		switch string(*keyResp.Key.Crv) {
+		case "P-256":
+			return 256, nil
+		case "P-256K":
+			return 256, nil
+		case "P-384":
+			return 384, nil
+		case "P-521":
+			return 521, nil
+		}
+	}
+
+	return 0, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) curveName() (string, error) {
+	keyResp, err := a.fetchKeyDetails()
+	if err != nil {
+		return "", err
+	}
+	if keyResp.Key != nil && keyResp.Key.Crv != nil {
+		return string(*keyResp.Key.Crv), nil
+	}
+	return "", nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) keyOps() ([]any, error) {
+	keyResp, err := a.fetchKeyDetails()
+	if err != nil {
+		return nil, err
+	}
+	ops := []any{}
+	if keyResp.Key != nil {
+		for _, op := range keyResp.Key.KeyOps {
+			if op != nil {
+				ops = append(ops, string(*op))
+			}
+		}
+	}
+	return ops, nil
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]any, error) {
