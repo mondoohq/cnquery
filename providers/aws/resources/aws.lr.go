@@ -39339,7 +39339,7 @@ func (c *mqlAwsRoute53) GetQueryLoggingConfigs() *plugin.TValue[[]any] {
 type mqlAwsRoute53HostedZone struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsRoute53HostedZoneInternal it will be used here
+	mqlAwsRoute53HostedZoneInternal
 	Id                     plugin.TValue[string]
 	Name                   plugin.TValue[string]
 	ResourceRecordSetCount plugin.TValue[int64]

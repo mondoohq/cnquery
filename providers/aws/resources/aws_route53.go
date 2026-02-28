@@ -223,11 +223,22 @@ func initAwsRoute53HostedZone(runtime *plugin.Runtime, args map[string]*llx.RawD
 
 // aws.route53.hostedZone
 
+type mqlAwsRoute53HostedZoneInternal struct {
+	getHostedZoneResp *route53.GetHostedZoneOutput
+	getHostedZoneDone bool
+}
+
 func (a *mqlAwsRoute53HostedZone) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAwsRoute53HostedZone) vpcs() ([]interface{}, error) {
+// getHostedZone fetches and caches the GetHostedZone response so that vpcs()
+// and nameServers() don't each make a separate API call for the same data.
+func (a *mqlAwsRoute53HostedZone) getHostedZone() (*route53.GetHostedZoneOutput, error) {
+	if a.getHostedZoneDone {
+		return a.getHostedZoneResp, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Route53("")
@@ -236,8 +247,20 @@ func (a *mqlAwsRoute53HostedZone) vpcs() ([]interface{}, error) {
 	resp, err := svc.GetHostedZone(ctx, &route53.GetHostedZoneInput{Id: &hostedZoneId})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			a.getHostedZoneDone = true
 			return nil, nil
 		}
+		return nil, err
+	}
+
+	a.getHostedZoneResp = resp
+	a.getHostedZoneDone = true
+	return resp, nil
+}
+
+func (a *mqlAwsRoute53HostedZone) vpcs() ([]interface{}, error) {
+	resp, err := a.getHostedZone()
+	if err != nil {
 		return nil, err
 	}
 	if resp == nil {
@@ -255,16 +278,8 @@ func (a *mqlAwsRoute53HostedZone) vpcs() ([]interface{}, error) {
 }
 
 func (a *mqlAwsRoute53HostedZone) nameServers() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	ctx := context.Background()
-	svc := conn.Route53("")
-	hostedZoneId := a.Id.Data
-
-	resp, err := svc.GetHostedZone(ctx, &route53.GetHostedZoneInput{Id: &hostedZoneId})
+	resp, err := a.getHostedZone()
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return nil, nil
-		}
 		return nil, err
 	}
 	if resp == nil {
@@ -543,7 +558,11 @@ func (a *mqlAwsRoute53HealthCheck) status() (string, error) {
 		return "", nil
 	}
 
-	// Return the status from the first observation
+	// Return the status from the first health checker region. The API returns one
+	// observation per region; we surface a single representative status string
+	// rather than a per-region map because MQL consumers typically need a simple
+	// healthy/unhealthy signal. The full per-region breakdown is available via
+	// the AWS console or direct API call if needed.
 	obs := resp.HealthCheckObservations[0]
 	if obs.StatusReport != nil && obs.StatusReport.Status != nil {
 		return *obs.StatusReport.Status, nil
@@ -704,6 +723,9 @@ func newMqlAwsRoute53Record(runtime *plugin.Runtime, hostedZoneId string, rrs ro
 
 func newMqlAwsRoute53HealthCheck(runtime *plugin.Runtime, hc route53types.HealthCheck, tags map[string]interface{}) (*mqlAwsRoute53HealthCheck, error) {
 	config := hc.HealthCheckConfig
+	if config == nil {
+		return nil, errors.New("health check config is nil for id: " + convert.ToValue(hc.Id))
+	}
 
 	regions := []interface{}{}
 	for _, region := range config.Regions {
