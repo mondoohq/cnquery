@@ -68,22 +68,16 @@ func (g *mqlGithubPackage) versions() ([]any, error) {
 		return nil, nil
 	}
 
-	// Use the resource's own schema fields so versions() works regardless of
-	// how the package was created (list, cache, or recording).
-	pkgName := g.pkgName
-	if pkgName == "" {
-		if g.Name.Error != nil {
-			return nil, g.Name.Error
-		}
-		pkgName = g.Name.Data
+	// Always read from the resource's own schema fields so versions() works
+	// regardless of how the package was created (list, cache, or recording).
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
 	}
-	pkgType := g.pkgType
-	if pkgType == "" {
-		if g.PackageType.Error != nil {
-			return nil, g.PackageType.Error
-		}
-		pkgType = g.PackageType.Data
+	pkgName := g.Name.Data
+	if g.PackageType.Error != nil {
+		return nil, g.PackageType.Error
 	}
+	pkgType := g.PackageType.Data
 	if pkgName == "" || pkgType == "" {
 		log.Debug().Msg("package name or type not available, cannot fetch versions")
 		return nil, nil
@@ -185,8 +179,6 @@ func newMqlGithubPackages(runtime *plugin.Runtime, visibility *string) ([]any, e
 				return nil, err
 			}
 			pkg := mqlGhPackage.(*mqlGithubPackage)
-			pkg.pkgName = p.GetName()
-			pkg.pkgType = p.GetPackageType()
 
 			// NOTE: we need to fetch repo separately because the Github repo object is not complete, instead of
 			// call the repo fetching all the time, we make this lazy loading

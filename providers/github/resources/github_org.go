@@ -514,8 +514,6 @@ func (g *mqlGithubOrganization) repositoryFineGrainedPermissions() ([]any, error
 type mqlGithubPackageInternal struct {
 	packageRepository string
 	parentResource    *mqlGithubOrganization
-	pkgName           string
-	pkgType           string
 }
 
 func (g *mqlGithubOrganization) packages() ([]any, error) {
@@ -575,8 +573,6 @@ func (g *mqlGithubOrganization) packages() ([]any, error) {
 				return nil, err
 			}
 			pkg := mqlGhPackage.(*mqlGithubPackage)
-			pkg.pkgName = p.GetName()
-			pkg.pkgType = p.GetPackageType()
 
 			// NOTE: we need to fetch repo separately because the Github repo object is not complete, instead of
 			// call the repo fetching all the time, we make this lazy loading
