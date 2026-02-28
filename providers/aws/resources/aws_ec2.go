@@ -1545,9 +1545,12 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		} else {
 			lastLaunchedAt, err := time.Parse(time.RFC3339, *image.LastLaunchedTime)
 			if err != nil {
-				return nil, nil, err
+				log.Warn().Str("imageId", convert.ToValue(image.ImageId)).Err(err).
+					Str("bad_value", *image.LastLaunchedTime).Msg("failed to parse image LastLaunchedTime")
+				args["lastLaunchedAt"] = llx.NilData
+			} else {
+				args["lastLaunchedAt"] = llx.TimeData(lastLaunchedAt)
 			}
-			args["lastLaunchedAt"] = llx.TimeData(lastLaunchedAt)
 		}
 		return args, nil, nil
 	}
