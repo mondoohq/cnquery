@@ -10,7 +10,9 @@ import (
 	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gitlab/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (g *mqlGitlabGroup) id() (string, error) {
@@ -294,4 +296,224 @@ func (g *mqlGitlabGroup) labels() ([]any, error) {
 	}
 
 	return mqlLabels, nil
+}
+
+// id function for gitlab.group.pushRule
+func (r *mqlGitlabGroupPushRule) id() (string, error) {
+	return "gitlab.group.pushRule/" + strconv.FormatInt(r.Id.Data, 10), nil
+}
+
+// pushRules fetches push rules for the group
+func (g *mqlGitlabGroup) pushRules() (*mqlGitlabGroupPushRule, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	groupID := int(g.Id.Data)
+	rules, resp, err := conn.Client().Groups.GetGroupPushRules(groupID)
+	if err != nil {
+		if resp != nil && resp.StatusCode == 404 {
+			return nil, nil // no push rules configured
+		}
+		return nil, err
+	}
+
+	ruleInfo := map[string]*llx.RawData{
+		"id":                         llx.IntData(rules.ID),
+		"commitMessageRegex":         llx.StringData(rules.CommitMessageRegex),
+		"commitMessageNegativeRegex": llx.StringData(rules.CommitMessageNegativeRegex),
+		"branchNameRegex":            llx.StringData(rules.BranchNameRegex),
+		"denyDeleteTag":              llx.BoolData(rules.DenyDeleteTag),
+		"memberCheck":                llx.BoolData(rules.MemberCheck),
+		"preventSecrets":             llx.BoolData(rules.PreventSecrets),
+		"authorEmailRegex":           llx.StringData(rules.AuthorEmailRegex),
+		"fileNameRegex":              llx.StringData(rules.FileNameRegex),
+		"maxFileSize":                llx.IntData(rules.MaxFileSize),
+		"commitCommitterCheck":       llx.BoolData(rules.CommitCommitterCheck),
+		"commitCommitterNameCheck":   llx.BoolData(rules.CommitCommitterNameCheck),
+		"rejectUnsignedCommits":      llx.BoolData(rules.RejectUnsignedCommits),
+		"rejectNonDCOCommits":        llx.BoolData(rules.RejectNonDCOCommits),
+		"createdAt":                  llx.TimeDataPtr(rules.CreatedAt),
+	}
+
+	mqlRule, err := CreateResource(g.MqlRuntime, "gitlab.group.pushRule", ruleInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlRule.(*mqlGitlabGroupPushRule), nil
+}
+
+// id function for gitlab.group.accessToken
+func (t *mqlGitlabGroupAccessToken) id() (string, error) {
+	return "gitlab.group.accessToken/" + strconv.FormatInt(t.Id.Data, 10), nil
+}
+
+// accessTokens fetches the list of access tokens for the group
+func (g *mqlGitlabGroup) accessTokens() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	groupID := int(g.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allTokens []*gitlab.GroupAccessToken
+
+	for {
+		tokens, resp, err := conn.Client().GroupAccessTokens.ListGroupAccessTokens(groupID, &gitlab.ListGroupAccessTokensOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allTokens = append(allTokens, tokens...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlTokens []any
+	for _, token := range allTokens {
+		var expiresAt *time.Time
+		if token.ExpiresAt != nil {
+			t := time.Time(*token.ExpiresAt)
+			expiresAt = &t
+		}
+
+		tokenInfo := map[string]*llx.RawData{
+			"id":          llx.IntData(token.ID),
+			"name":        llx.StringData(token.Name),
+			"revoked":     llx.BoolData(token.Revoked),
+			"active":      llx.BoolData(token.Active),
+			"scopes":      llx.ArrayData(convert.SliceAnyToInterface(token.Scopes), types.String),
+			"createdAt":   llx.TimeDataPtr(token.CreatedAt),
+			"expiresAt":   llx.TimeDataPtr(expiresAt),
+			"lastUsedAt":  llx.TimeDataPtr(token.LastUsedAt),
+			"accessLevel": llx.IntData(int64(token.AccessLevel)),
+		}
+
+		mqlToken, err := CreateResource(g.MqlRuntime, "gitlab.group.accessToken", tokenInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlTokens = append(mqlTokens, mqlToken)
+	}
+
+	return mqlTokens, nil
+}
+
+// id function for gitlab.group.deployToken
+func (t *mqlGitlabGroupDeployToken) id() (string, error) {
+	return "gitlab.group.deployToken/" + strconv.FormatInt(t.Id.Data, 10), nil
+}
+
+// deployTokens fetches the list of deploy tokens for the group
+func (g *mqlGitlabGroup) deployTokens() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	groupID := int(g.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allTokens []*gitlab.DeployToken
+
+	for {
+		tokens, resp, err := conn.Client().DeployTokens.ListGroupDeployTokens(groupID, &gitlab.ListGroupDeployTokensOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allTokens = append(allTokens, tokens...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlTokens []any
+	for _, token := range allTokens {
+		tokenInfo := map[string]*llx.RawData{
+			"id":        llx.IntData(token.ID),
+			"name":      llx.StringData(token.Name),
+			"username":  llx.StringData(token.Username),
+			"expiresAt": llx.TimeDataPtr(token.ExpiresAt),
+			"revoked":   llx.BoolData(token.Revoked),
+			"expired":   llx.BoolData(token.Expired),
+			"scopes":    llx.ArrayData(convert.SliceAnyToInterface(token.Scopes), types.String),
+		}
+
+		mqlToken, err := CreateResource(g.MqlRuntime, "gitlab.group.deployToken", tokenInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlTokens = append(mqlTokens, mqlToken)
+	}
+
+	return mqlTokens, nil
+}
+
+// id function for gitlab.group.protectedBranch
+func (b *mqlGitlabGroupProtectedBranch) id() (string, error) {
+	return "gitlab.group.protectedBranch/" + strconv.FormatInt(b.Id.Data, 10), nil
+}
+
+// protectedBranches fetches the list of protected branches for the group
+func (g *mqlGitlabGroup) protectedBranches() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	groupID := int(g.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allBranches []*gitlab.GroupProtectedBranch
+
+	for {
+		branches, resp, err := conn.Client().GroupProtectedBranches.ListProtectedBranches(groupID, &gitlab.ListGroupProtectedBranchesOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allBranches = append(allBranches, branches...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlBranches []any
+	for _, branch := range allBranches {
+		branchInfo := map[string]*llx.RawData{
+			"id":                        llx.IntData(branch.ID),
+			"name":                      llx.StringData(branch.Name),
+			"allowForcePush":            llx.BoolData(branch.AllowForcePush),
+			"codeOwnerApprovalRequired": llx.BoolData(branch.CodeOwnerApprovalRequired),
+		}
+
+		mqlBranch, err := CreateResource(g.MqlRuntime, "gitlab.group.protectedBranch", branchInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlBranches = append(mqlBranches, mqlBranch)
+	}
+
+	return mqlBranches, nil
 }
