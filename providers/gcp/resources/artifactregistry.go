@@ -336,6 +336,14 @@ func newCleanupPolicies(runtime *plugin.Runtime, repoPath string, policies map[s
 		p := policies[policyId]
 		cpId := repoPath + "/cleanupPolicy/" + policyId
 
+		// Determine policy type from the oneof field
+		var policyType string
+		if p.GetCondition() != nil {
+			policyType = "condition"
+		} else if p.GetMostRecentVersions() != nil {
+			policyType = "mostRecentVersions"
+		}
+
 		// Build condition sub-resource
 		condRes, err := newCleanupPolicyCondition(runtime, cpId, p.GetCondition())
 		if err != nil {
@@ -351,6 +359,7 @@ func newCleanupPolicies(runtime *plugin.Runtime, repoPath string, policies map[s
 		res, err := CreateResource(runtime, "gcp.project.artifactRegistryService.repository.cleanupPolicy", map[string]*llx.RawData{
 			"id":                 llx.StringData(cpId),
 			"action":             llx.StringData(p.Action.String()),
+			"policyType":         llx.StringData(policyType),
 			"condition":          llx.ResourceData(condRes, "gcp.project.artifactRegistryService.repository.cleanupPolicy.condition"),
 			"mostRecentVersions": llx.ResourceData(mrvRes, "gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions"),
 		})
@@ -440,6 +449,7 @@ func newFormatConfig(runtime *plugin.Runtime, repoPath string, r *artifactregist
 
 	res, err := CreateResource(runtime, "gcp.project.artifactRegistryService.repository.formatConfig", map[string]*llx.RawData{
 		"id":                      llx.StringData(id),
+		"format":                  llx.StringData(r.Format.String()),
 		"immutableTags":           llx.BoolData(immutableTags),
 		"allowSnapshotOverwrites": llx.BoolData(allowSnapshotOverwrites),
 		"mavenVersionPolicy":      llx.StringData(mavenVersionPolicy),

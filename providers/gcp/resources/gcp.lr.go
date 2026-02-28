@@ -6124,6 +6124,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.artifactRegistryService.repository.cleanupPolicy.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).GetAction()).ToDataRes(types.String)
 	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).GetPolicyType()).ToDataRes(types.String)
+	},
 	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).GetCondition()).ToDataRes(types.Resource("gcp.project.artifactRegistryService.repository.cleanupPolicy.condition"))
 	},
@@ -6162,6 +6165,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.artifactRegistryService.repository.formatConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).GetFormat()).ToDataRes(types.String)
 	},
 	"gcp.project.artifactRegistryService.repository.formatConfig.immutableTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).GetImmutableTags()).ToDataRes(types.Bool)
@@ -13733,6 +13739,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).Condition, ok = plugin.RawToTValue[*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition](v.Value, v.Error)
 		return
@@ -13795,6 +13805,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.artifactRegistryService.repository.formatConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.artifactRegistryService.repository.formatConfig.immutableTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31662,6 +31676,7 @@ type mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy struct {
 	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyInternal it will be used here
 	Id                 plugin.TValue[string]
 	Action             plugin.TValue[string]
+	PolicyType         plugin.TValue[string]
 	Condition          plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition]
 	MostRecentVersions plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions]
 }
@@ -31709,6 +31724,10 @@ func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) GetId() *p
 
 func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) GetAction() *plugin.TValue[string] {
 	return &c.Action
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
 }
 
 func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) GetCondition() *plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition] {
@@ -31863,6 +31882,7 @@ type mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig struct {
 	__id       string
 	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfigInternal it will be used here
 	Id                      plugin.TValue[string]
+	Format                  plugin.TValue[string]
 	ImmutableTags           plugin.TValue[bool]
 	AllowSnapshotOverwrites plugin.TValue[bool]
 	MavenVersionPolicy      plugin.TValue[string]
@@ -31907,6 +31927,10 @@ func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) MqlID() str
 
 func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) GetFormat() *plugin.TValue[string] {
+	return &c.Format
 }
 
 func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) GetImmutableTags() *plugin.TValue[bool] {

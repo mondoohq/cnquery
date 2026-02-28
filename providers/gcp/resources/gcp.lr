@@ -4162,14 +4162,16 @@ private gcp.project.artifactRegistryService.repository.vulnScanConfig {
 }
 
 // Google Cloud (GCP) Artifact Registry repository cleanup policy
-private gcp.project.artifactRegistryService.repository.cleanupPolicy @defaults("id action") {
+private gcp.project.artifactRegistryService.repository.cleanupPolicy @defaults("id action policyType") {
   // Internal ID
   id string
   // Policy action (DELETE or KEEP)
   action string
-  // Condition for matching artifacts
+  // Policy type: "condition" or "mostRecentVersions"
+  policyType string
+  // Condition for matching artifacts (only set when policyType == "condition")
   condition gcp.project.artifactRegistryService.repository.cleanupPolicy.condition
-  // Keep the most recent N versions (alternative to condition)
+  // Keep the most recent N versions (only set when policyType == "mostRecentVersions")
   mostRecentVersions gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions
 }
 
@@ -4205,6 +4207,8 @@ private gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentV
 private gcp.project.artifactRegistryService.repository.formatConfig {
   // Internal ID
   id string
+  // Repository format (e.g., DOCKER, MAVEN, NPM, PYTHON, APT, YUM, GO, KFP)
+  format string
   // Whether Docker image tags are immutable (Docker repos only)
   immutableTags bool
   // Whether Maven snapshot overwrites are allowed (Maven repos only)
