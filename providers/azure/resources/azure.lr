@@ -188,7 +188,7 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   computerName string
   // VM admin username
   adminUsername string
-  // VM license type (e.g. "Windows_Server" for Azure Hybrid Benefit)
+  // Azure Hybrid Benefit license type. Null if using standard Azure licensing. Possible values: "Windows_Client", "Windows_Server", "RHEL_BYOS", "SLES_BYOS"
   licenseType string
 }
 

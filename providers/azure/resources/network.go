@@ -232,7 +232,33 @@ func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]any, error) {
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceInterface) vm() (*mqlAzureSubscriptionComputeServiceVm, error) {
-	return nil, errors.New("not implemented")
+	props := a.Properties.Data
+	if props == nil {
+		return nil, nil
+	}
+	propsMap, ok := props.(map[string]any)
+	if !ok {
+		return nil, nil
+	}
+	vmRef, ok := propsMap["virtualMachine"]
+	if !ok || vmRef == nil {
+		return nil, nil
+	}
+	vmMap, ok := vmRef.(map[string]any)
+	if !ok {
+		return nil, nil
+	}
+	vmID, ok := vmMap["id"].(string)
+	if !ok || vmID == "" {
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.vm", map[string]*llx.RawData{
+		"id": llx.StringData(vmID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceVm), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
