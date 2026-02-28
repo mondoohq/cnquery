@@ -166,12 +166,14 @@ gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions 
 gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions.id 11.6.1
 gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions.keepCount 11.6.1
 gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions.packageNamePrefixes 11.6.1
+gcp.project.artifactRegistryService.repository.cleanupPolicy.policyType 11.6.2
 gcp.project.artifactRegistryService.repository.cleanupPolicyDryRun 11.6.1
 gcp.project.artifactRegistryService.repository.createTime 11.6.1
 gcp.project.artifactRegistryService.repository.description 11.6.1
 gcp.project.artifactRegistryService.repository.format 11.6.1
 gcp.project.artifactRegistryService.repository.formatConfig 11.6.1
 gcp.project.artifactRegistryService.repository.formatConfig.allowSnapshotOverwrites 11.6.1
+gcp.project.artifactRegistryService.repository.formatConfig.format 11.6.2
 gcp.project.artifactRegistryService.repository.formatConfig.id 11.6.1
 gcp.project.artifactRegistryService.repository.formatConfig.immutableTags 11.6.1
 gcp.project.artifactRegistryService.repository.formatConfig.mavenVersionPolicy 11.6.1
