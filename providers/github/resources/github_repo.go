@@ -2422,9 +2422,15 @@ func (g *mqlGithubRepository) rulesets() ([]any, error) {
 	return res, nil
 }
 
-type mqlGithubRepositoryActionsSettingsInternal struct{}
+type mqlGithubRepositoryActionsSettingsInternal struct {
+	ownerLogin string
+	repoName   string
+}
 
 func (g *mqlGithubRepositoryActionsSettings) id() (string, error) {
+	if g.ownerLogin != "" && g.repoName != "" {
+		return "github.repositoryActionsSettings/" + g.ownerLogin + "/" + g.repoName, nil
+	}
 	if g.AllowedActions.Error != nil {
 		return "", g.AllowedActions.Error
 	}
@@ -2483,5 +2489,8 @@ func (g *mqlGithubRepository) actionsSettings() (*mqlGithubRepositoryActionsSett
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGithubRepositoryActionsSettings), nil
+	settings := res.(*mqlGithubRepositoryActionsSettings)
+	settings.ownerLogin = ownerLogin
+	settings.repoName = repoName
+	return settings, nil
 }

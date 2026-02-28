@@ -62,7 +62,7 @@ func (g *mqlGithubPackageVersion) id() (string, error) {
 func (g *mqlGithubPackage) versions() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	// Package versions are only available for organization-scoped connections.
-	orgId, err := conn.Organization()
+	org, err := conn.Organization()
 	if err != nil {
 		log.Debug().Err(err).Msg("cannot fetch package versions: organization not available")
 		return nil, nil
@@ -88,7 +88,7 @@ func (g *mqlGithubPackage) versions() ([]any, error) {
 	}
 	var allVersions []*github.PackageVersion
 	for {
-		versions, resp, err := conn.Client().Organizations.PackageGetAllVersions(conn.Context(), orgId.Name, pkgType, pkgName, listOpts)
+		versions, resp, err := conn.Client().Organizations.PackageGetAllVersions(conn.Context(), org.Name, pkgType, pkgName, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
