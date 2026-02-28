@@ -5118,7 +5118,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   cpuThreadsPerCore int
   // Whether the instance is enabled for hibernation
   hibernationConfigured bool
-  // Auto recovery behavior: default or disabled
+  // Auto recovery behavior: undefined, default, or disabled
   maintenanceAutoRecovery string
   // Current boot mode of the instance: undefined, legacy-bios, uefi, or uefi-preferred
   currentInstanceBootMode string
