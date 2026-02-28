@@ -144,13 +144,40 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 				return nil, err
 			}
 
+			var publicAccess string
+			var hasImmutabilityPolicy, hasLegalHold bool
+			var defaultEncryptionScope string
+			var denyEncryptionScopeOverride bool
+			if container.Properties != nil {
+				if container.Properties.PublicAccess != nil {
+					publicAccess = string(*container.Properties.PublicAccess)
+				}
+				if container.Properties.HasImmutabilityPolicy != nil {
+					hasImmutabilityPolicy = *container.Properties.HasImmutabilityPolicy
+				}
+				if container.Properties.HasLegalHold != nil {
+					hasLegalHold = *container.Properties.HasLegalHold
+				}
+				if container.Properties.DefaultEncryptionScope != nil {
+					defaultEncryptionScope = *container.Properties.DefaultEncryptionScope
+				}
+				if container.Properties.DenyEncryptionScopeOverride != nil {
+					denyEncryptionScopeOverride = *container.Properties.DenyEncryptionScopeOverride
+				}
+			}
+
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.container",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(container.ID),
-					"name":       llx.StringDataPtr(container.Name),
-					"etag":       llx.StringDataPtr(container.Etag),
-					"type":       llx.StringDataPtr(container.Type),
-					"properties": llx.DictData(properties),
+					"id":                          llx.StringDataPtr(container.ID),
+					"name":                        llx.StringDataPtr(container.Name),
+					"etag":                        llx.StringDataPtr(container.Etag),
+					"type":                        llx.StringDataPtr(container.Type),
+					"properties":                  llx.DictData(properties),
+					"publicAccess":                llx.StringData(publicAccess),
+					"hasImmutabilityPolicy":       llx.BoolData(hasImmutabilityPolicy),
+					"hasLegalHold":                llx.BoolData(hasLegalHold),
+					"defaultEncryptionScope":      llx.StringData(defaultEncryptionScope),
+					"denyEncryptionScopeOverride": llx.BoolData(denyEncryptionScopeOverride),
 				})
 			if err != nil {
 				return nil, err
