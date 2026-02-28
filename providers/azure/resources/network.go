@@ -2156,7 +2156,9 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
 	var ipAllocationMethod, ipVersion string
+	var ipAddr *string
 	if ip.Properties != nil {
+		ipAddr = ip.Properties.IPAddress
 		if ip.Properties.PublicIPAllocationMethod != nil {
 			ipAllocationMethod = string(*ip.Properties.PublicIPAllocationMethod)
 		}
@@ -2171,7 +2173,7 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 			"location":           llx.StringDataPtr(ip.Location),
 			"tags":               llx.MapData(convert.PtrMapStrToInterface(ip.Tags), types.String),
 			"type":               llx.StringDataPtr(ip.Type),
-			"ipAddress":          llx.StringDataPtr(ip.Properties.IPAddress),
+			"ipAddress":          llx.StringDataPtr(ipAddr),
 			"ipAllocationMethod": llx.StringData(ipAllocationMethod),
 			"ipVersion":          llx.StringData(ipVersion),
 		})

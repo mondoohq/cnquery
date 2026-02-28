@@ -315,7 +315,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 						}
 						args["keyOps"] = llx.ArrayData(keyOps, types.String)
 
-						// Derive key size from RSA modulus length
+						// Derive key size: RSA from modulus length, EC from curve name
 						if keyResp.Key.N != nil {
 							bits := len(keyResp.Key.N) * 8
 							// RSA modulus can have a leading zero byte
@@ -323,6 +323,16 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 								bits -= 8
 							}
 							args["keySize"] = llx.IntData(int64(bits))
+						} else if keyResp.Key.Crv != nil {
+							// For EC keys, derive key size from curve name
+							switch string(*keyResp.Key.Crv) {
+							case "P-256":
+								args["keySize"] = llx.IntData(256)
+							case "P-384":
+								args["keySize"] = llx.IntData(384)
+							case "P-521":
+								args["keySize"] = llx.IntData(521)
+							}
 						}
 					}
 				}

@@ -514,26 +514,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 				if err != nil {
 					return nil, err
 				}
-				var ipAllocationMethod, ipVersion string
-				if ipAddress.Properties != nil {
-					if ipAddress.Properties.PublicIPAllocationMethod != nil {
-						ipAllocationMethod = string(*ipAddress.Properties.PublicIPAllocationMethod)
-					}
-					if ipAddress.Properties.PublicIPAddressVersion != nil {
-						ipVersion = string(*ipAddress.Properties.PublicIPAddressVersion)
-					}
-				}
-				mqlIpAddress, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.ipAddress",
-					map[string]*llx.RawData{
-						"id":                 llx.StringDataPtr(ipAddress.ID),
-						"name":               llx.StringDataPtr(ipAddress.Name),
-						"location":           llx.StringDataPtr(ipAddress.Location),
-						"tags":               llx.MapData(convert.PtrMapStrToInterface(ipAddress.Tags), types.String),
-						"ipAddress":          llx.StringDataPtr(ipAddress.Properties.IPAddress),
-						"type":               llx.StringDataPtr(ipAddress.Type),
-						"ipAllocationMethod": llx.StringData(ipAllocationMethod),
-						"ipVersion":          llx.StringData(ipVersion),
-					})
+				mqlIpAddress, err := azureIpToMql(a.MqlRuntime, ipAddress.PublicIPAddress)
 				if err != nil {
 					return nil, err
 				}
