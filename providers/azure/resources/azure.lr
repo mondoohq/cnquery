@@ -2994,7 +2994,7 @@ private azure.subscription.cloudDefenderService.defenderForContainers @defaults(
   // Whether Azure Policy for Kubernetes is enabled
   azurePolicyForKubernetes bool
   // Extensions configured for Defender for Containers
-  extensions []azure.subscription.cloudDefenderService.defenderForContainers.extension
+  extensions() []azure.subscription.cloudDefenderService.defenderForContainers.extension
 }
 
 // Microsoft Defender for Containers extension

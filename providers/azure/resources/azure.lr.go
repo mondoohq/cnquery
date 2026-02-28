@@ -25473,7 +25473,19 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetAzure
 }
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) GetExtensions() *plugin.TValue[[]any] {
-	return &c.Extensions
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService.defenderForContainers", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension for the azure.subscription.cloudDefenderService.defenderForContainers.extension resource
