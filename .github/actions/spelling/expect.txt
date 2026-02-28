@@ -53,6 +53,7 @@ eip
 ekm
 ekus
 elbv
+ERPCLOUD
 exo
 failback
 fargate
@@ -72,6 +73,7 @@ gotestsum
 gpu
 groupname
 gvnic
+HCMCLOUD
 headerorder
 Hns
 hostkeys
@@ -123,6 +125,7 @@ nodepool
 nokeys
 notebookinstancedetails
 nproc
+nsg
 nsrecord
 nullgroup
 nullstring
@@ -198,6 +201,7 @@ vdcs
 virtualmachine
 vlans
 vnet
+vpus
 vrf
 vtpm
 vulnerabilityassessmentsettings
