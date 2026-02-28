@@ -4670,7 +4670,12 @@ func createGitlabProjectPushRule(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.pushRule", res.__id)
@@ -4784,7 +4789,12 @@ func createGitlabGroupPushRule(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.group.pushRule", res.__id)
@@ -4892,7 +4902,12 @@ func createGitlabProjectAccessToken(runtime *plugin.Runtime, args map[string]*ll
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.accessToken", res.__id)
@@ -4976,7 +4991,12 @@ func createGitlabGroupAccessToken(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.group.accessToken", res.__id)
@@ -5059,7 +5079,12 @@ func createGitlabProjectDeployKey(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.deployKey", res.__id)
@@ -5137,7 +5162,12 @@ func createGitlabProjectDeployToken(runtime *plugin.Runtime, args map[string]*ll
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.deployToken", res.__id)
@@ -5211,7 +5241,12 @@ func createGitlabGroupDeployToken(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.group.deployToken", res.__id)
@@ -5282,7 +5317,12 @@ func createGitlabGroupProtectedBranch(runtime *plugin.Runtime, args map[string]*
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.group.protectedBranch", res.__id)

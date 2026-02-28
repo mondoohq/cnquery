@@ -1194,7 +1194,7 @@ func (p *mqlGitlabProject) securitySettings() (*mqlGitlabProjectSecuritySetting,
 	}
 
 	settingInfo := map[string]*llx.RawData{
-		"__id": llx.StringData("gitlab.project.securitySetting/" + strconv.Itoa(projectID)),
+		"__id":                                llx.StringData("gitlab.project.securitySetting/" + strconv.Itoa(projectID)),
 		"autoFixContainerScanning":            llx.BoolData(settings.AutoFixContainerScanning),
 		"autoFixDAST":                         llx.BoolData(settings.AutoFixDAST),
 		"autoFixDependencyScanning":           llx.BoolData(settings.AutoFixDependencyScanning),
