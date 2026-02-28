@@ -28,78 +28,75 @@ func (a *mqlAwsRoute53) hostedZones() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Route53("")
-	res := []interface{}{}
 
-	// Route 53 is a global service
+	// Collect all hosted zones first
+	var allZones []route53types.HostedZone
 	paginator := route53.NewListHostedZonesPaginator(svc, &route53.ListHostedZonesInput{})
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
 				log.Warn().Msg("error accessing Route 53 API")
-				return res, nil
+				return []interface{}{}, nil
 			}
 			return nil, err
 		}
+		allZones = append(allZones, page.HostedZones...)
+	}
 
-		for _, hz := range page.HostedZones {
-			// Get tags for the hosted zone
-			tagsResp, err := svc.ListTagsForResource(ctx, &route53.ListTagsForResourceInput{
-				ResourceType: route53types.TagResourceTypeHostedzone,
-				ResourceId:   hz.Id,
-			})
-			tags := make(map[string]interface{})
-			if err == nil && tagsResp.ResourceTagSet != nil {
-				for _, tag := range tagsResp.ResourceTagSet.Tags {
-					tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-				}
-			}
+	// Batch-fetch tags (up to 10 per API call)
+	tagsByID := batchFetchTags(ctx, svc, route53types.TagResourceTypeHostedzone, allZones, func(hz route53types.HostedZone) string {
+		return convert.ToValue(hz.Id)
+	})
 
-			// Filter by tags
-			if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
-				log.Debug().Interface("hostedZone", hz.Id).Msg("skipping Route 53 hosted zone due to filters")
-				continue
-			}
+	res := []interface{}{}
+	for _, hz := range allZones {
+		tags := tagsByID[convert.ToValue(hz.Id)]
 
-			zoneType := "PUBLIC"
-			isPrivate := false
-			comment := ""
-			config := make(map[string]interface{})
-
-			if hz.Config != nil {
-				if hz.Config.PrivateZone {
-					zoneType = "PRIVATE"
-					isPrivate = true
-				}
-				comment = convert.ToValue(hz.Config.Comment)
-				config["comment"] = comment
-				config["privateZone"] = isPrivate
-			}
-
-			resourceRecordSetCount := int64(0)
-			if hz.ResourceRecordSetCount != nil {
-				resourceRecordSetCount = *hz.ResourceRecordSetCount
-			}
-
-			mqlHz, err := CreateResource(a.MqlRuntime, "aws.route53.hostedZone",
-				map[string]*llx.RawData{
-					"__id":                   llx.StringData(convert.ToValue(hz.Id)),
-					"id":                     llx.StringData(convert.ToValue(hz.Id)),
-					"name":                   llx.StringData(convert.ToValue(hz.Name)),
-					"arn":                    llx.StringData(hostedZoneIdToArn(hz.Id)),
-					"resourceRecordSetCount": llx.IntData(resourceRecordSetCount),
-					"type":                   llx.StringData(zoneType),
-					"isPrivate":              llx.BoolData(isPrivate),
-					"comment":                llx.StringData(comment),
-					"tags":                   llx.MapData(tags, types.String),
-					"config":                 llx.DictData(config),
-				})
-			if err != nil {
-				return nil, err
-			}
-
-			res = append(res, mqlHz)
+		// Filter by tags
+		if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+			log.Debug().Interface("hostedZone", hz.Id).Msg("skipping Route 53 hosted zone due to filters")
+			continue
 		}
+
+		zoneType := "PUBLIC"
+		isPrivate := false
+		comment := ""
+		config := make(map[string]interface{})
+
+		if hz.Config != nil {
+			if hz.Config.PrivateZone {
+				zoneType = "PRIVATE"
+				isPrivate = true
+			}
+			comment = convert.ToValue(hz.Config.Comment)
+			config["comment"] = comment
+			config["privateZone"] = isPrivate
+		}
+
+		resourceRecordSetCount := int64(0)
+		if hz.ResourceRecordSetCount != nil {
+			resourceRecordSetCount = *hz.ResourceRecordSetCount
+		}
+
+		mqlHz, err := CreateResource(a.MqlRuntime, "aws.route53.hostedZone",
+			map[string]*llx.RawData{
+				"__id":                   llx.StringData(convert.ToValue(hz.Id)),
+				"id":                     llx.StringData(convert.ToValue(hz.Id)),
+				"name":                   llx.StringData(convert.ToValue(hz.Name)),
+				"arn":                    llx.StringData(hostedZoneIdToArn(hz.Id)),
+				"resourceRecordSetCount": llx.IntData(resourceRecordSetCount),
+				"type":                   llx.StringData(zoneType),
+				"isPrivate":              llx.BoolData(isPrivate),
+				"comment":                llx.StringData(comment),
+				"tags":                   llx.MapData(tags, types.String),
+				"config":                 llx.DictData(config),
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, mqlHz)
 	}
 
 	return res, nil
@@ -109,42 +106,40 @@ func (a *mqlAwsRoute53) healthChecks() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Route53("")
-	res := []interface{}{}
 
+	// Collect all health checks first
+	var allChecks []route53types.HealthCheck
 	paginator := route53.NewListHealthChecksPaginator(svc, &route53.ListHealthChecksInput{})
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
 				log.Warn().Msg("error accessing Route 53 health checks")
-				return res, nil
+				return []interface{}{}, nil
 			}
 			return nil, err
 		}
+		allChecks = append(allChecks, page.HealthChecks...)
+	}
 
-		for _, hc := range page.HealthChecks {
-			// Get tags
-			tagsResp, err := svc.ListTagsForResource(ctx, &route53.ListTagsForResourceInput{
-				ResourceType: route53types.TagResourceTypeHealthcheck,
-				ResourceId:   hc.Id,
-			})
-			tags := make(map[string]interface{})
-			if err == nil && tagsResp.ResourceTagSet != nil {
-				for _, tag := range tagsResp.ResourceTagSet.Tags {
-					tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-				}
-			}
+	// Batch-fetch tags (up to 10 per API call)
+	tagsByID := batchFetchTags(ctx, svc, route53types.TagResourceTypeHealthcheck, allChecks, func(hc route53types.HealthCheck) string {
+		return convert.ToValue(hc.Id)
+	})
 
-			if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
-				continue
-			}
+	res := []interface{}{}
+	for _, hc := range allChecks {
+		tags := tagsByID[convert.ToValue(hc.Id)]
 
-			mqlHc, err := newMqlAwsRoute53HealthCheck(a.MqlRuntime, hc, tags)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlHc)
+		if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+			continue
 		}
+
+		mqlHc, err := newMqlAwsRoute53HealthCheck(a.MqlRuntime, hc, tags)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlHc)
 	}
 
 	return res, nil
@@ -226,6 +221,8 @@ func initAwsRoute53HostedZone(runtime *plugin.Runtime, args map[string]*llx.RawD
 type mqlAwsRoute53HostedZoneInternal struct {
 	getHostedZoneResp *route53.GetHostedZoneOutput
 	getHostedZoneDone bool
+	getDNSSECResp     *route53.GetDNSSECOutput
+	getDNSSECDone     bool
 }
 
 func (a *mqlAwsRoute53HostedZone) id() (string, error) {
@@ -255,6 +252,32 @@ func (a *mqlAwsRoute53HostedZone) getHostedZone() (*route53.GetHostedZoneOutput,
 
 	a.getHostedZoneResp = resp
 	a.getHostedZoneDone = true
+	return resp, nil
+}
+
+// getDNSSEC fetches and caches the GetDNSSEC response so that dnssecStatus()
+// and keySigningKeys() don't each make a separate API call for the same data.
+func (a *mqlAwsRoute53HostedZone) getDNSSEC() (*route53.GetDNSSECOutput, error) {
+	if a.getDNSSECDone {
+		return a.getDNSSECResp, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ctx := context.Background()
+	svc := conn.Route53("")
+	hostedZoneId := a.Id.Data
+
+	resp, err := svc.GetDNSSEC(ctx, &route53.GetDNSSECInput{HostedZoneId: &hostedZoneId})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.getDNSSECDone = true
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	a.getDNSSECResp = resp
+	a.getDNSSECDone = true
 	return resp, nil
 }
 
@@ -365,16 +388,8 @@ func (a *mqlAwsRoute53HostedZone) dnssecStatus() (interface{}, error) {
 		return map[string]interface{}{"serveSignature": "NOT_SIGNING", "statusMessage": "DNSSEC is not supported for private hosted zones"}, nil
 	}
 
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	ctx := context.Background()
-	svc := conn.Route53("")
-	hostedZoneId := a.Id.Data
-
-	resp, err := svc.GetDNSSEC(ctx, &route53.GetDNSSECInput{HostedZoneId: &hostedZoneId})
+	resp, err := a.getDNSSEC()
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return nil, nil
-		}
 		return nil, err
 	}
 	if resp == nil {
@@ -395,21 +410,15 @@ func (a *mqlAwsRoute53HostedZone) keySigningKeys() ([]interface{}, error) {
 		return []interface{}{}, nil
 	}
 
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	ctx := context.Background()
-	svc := conn.Route53("")
-	hostedZoneId := a.Id.Data
-
-	resp, err := svc.GetDNSSEC(ctx, &route53.GetDNSSECInput{HostedZoneId: &hostedZoneId})
+	resp, err := a.getDNSSEC()
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return nil, nil
-		}
 		return nil, err
 	}
 	if resp == nil {
 		return nil, nil
 	}
+
+	hostedZoneId := a.Id.Data
 
 	res := []interface{}{}
 	for _, ksk := range resp.KeySigningKeys {
@@ -494,25 +503,42 @@ func (a *mqlAwsRoute53Record) healthCheck() (*mqlAwsRoute53HealthCheck, error) {
 		return nil, nil
 	}
 
-	route53Obj, err := CreateResource(a.MqlRuntime, "aws.route53", map[string]*llx.RawData{})
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ctx := context.Background()
+	svc := conn.Route53("")
+
+	resp, err := svc.GetHealthCheck(ctx, &route53.GetHealthCheckInput{
+		HealthCheckId: &healthCheckId,
+	})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
-	r53 := route53Obj.(*mqlAwsRoute53)
-
-	healthChecksRaw := r53.GetHealthChecks()
-	if healthChecksRaw.Error != nil {
-		return nil, healthChecksRaw.Error
+	if resp == nil || resp.HealthCheck == nil {
+		return nil, nil
 	}
 
-	for _, hcRaw := range healthChecksRaw.Data {
-		hc := hcRaw.(*mqlAwsRoute53HealthCheck)
-		if hc.Id.Data == healthCheckId {
-			return hc, nil
+	hc := *resp.HealthCheck
+
+	// Fetch tags for this health check
+	tagsResp, err := svc.ListTagsForResource(ctx, &route53.ListTagsForResourceInput{
+		ResourceType: route53types.TagResourceTypeHealthcheck,
+		ResourceId:   &healthCheckId,
+	})
+	tags := make(map[string]interface{})
+	if err == nil && tagsResp.ResourceTagSet != nil {
+		for _, tag := range tagsResp.ResourceTagSet.Tags {
+			tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 		}
 	}
 
-	return nil, nil
+	mqlHc, err := newMqlAwsRoute53HealthCheck(a.MqlRuntime, hc, tags)
+	if err != nil {
+		return nil, err
+	}
+	return mqlHc, nil
 }
 
 // aws.route53.healthCheck
@@ -816,6 +842,49 @@ func newMqlAwsRoute53HealthCheck(runtime *plugin.Runtime, hc route53types.Health
 	}
 
 	return mqlHc, nil
+}
+
+// batchFetchTags fetches tags for Route 53 resources in batches of up to 10
+// using the ListTagsForResources (plural) API, returning a map of resource ID
+// to tags. This reduces API calls by ~10x compared to per-resource fetching.
+func batchFetchTags[T any](ctx context.Context, svc *route53.Client, resourceType route53types.TagResourceType, items []T, getID func(T) string) map[string]map[string]interface{} {
+	tagsByID := make(map[string]map[string]interface{}, len(items))
+	for _, item := range items {
+		tagsByID[getID(item)] = make(map[string]interface{})
+	}
+
+	// Collect all IDs and batch in groups of 10
+	ids := make([]string, 0, len(items))
+	for _, item := range items {
+		ids = append(ids, getID(item))
+	}
+
+	for i := 0; i < len(ids); i += 10 {
+		end := i + 10
+		if end > len(ids) {
+			end = len(ids)
+		}
+		batch := ids[i:end]
+
+		resp, err := svc.ListTagsForResources(ctx, &route53.ListTagsForResourcesInput{
+			ResourceType: resourceType,
+			ResourceIds:  batch,
+		})
+		if err != nil {
+			log.Warn().Err(err).Msg("error batch-fetching Route 53 tags")
+			continue
+		}
+
+		for _, rts := range resp.ResourceTagSets {
+			id := convert.ToValue(rts.ResourceId)
+			tags := tagsByID[id]
+			for _, tag := range rts.Tags {
+				tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
+			}
+		}
+	}
+
+	return tagsByID
 }
 
 func hostedZoneIdToArn(hostedZoneId *string) string {
