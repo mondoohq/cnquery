@@ -157,12 +157,12 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
 				map[string]*llx.RawData{
 					"id":                  llx.StringDataPtr(dbServer.ID),
-					"name":               llx.StringDataPtr(dbServer.Name),
-					"location":           llx.StringDataPtr(dbServer.Location),
-					"tags":               llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":               llx.StringDataPtr(dbServer.Type),
-					"properties":         llx.DictData(properties),
-					"version":            llx.StringData(version),
+					"name":                llx.StringDataPtr(dbServer.Name),
+					"location":            llx.StringDataPtr(dbServer.Location),
+					"tags":                llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
+					"type":                llx.StringDataPtr(dbServer.Type),
+					"properties":          llx.DictData(properties),
+					"version":             llx.StringData(version),
 					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
 				})
 			if err != nil {
