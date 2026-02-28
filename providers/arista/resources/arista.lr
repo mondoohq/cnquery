@@ -32,6 +32,12 @@ arista.eos {
   routes() []arista.eos.route
   // Layer 2 switchport configurations
   switchports() []arista.eos.switchport
+  // BGP configuration and peers
+  bgp() arista.eos.bgp
+  // MLAG high-availability configuration
+  mlag() arista.eos.mlag
+  // Standard IP access control lists
+  acls() []arista.eos.acl
 }
 
 // Arista EOS system's operating configuration
@@ -64,6 +70,8 @@ arista.eos.user @defaults("name privilege") {
   secret string
   // User's sshkey
   sshkey string
+  // Whether the account is locked
+  locked() bool
 }
 
 // Arista EOS role resource
@@ -126,6 +134,12 @@ private arista.eos.interface @defaults("name") {
   physicalAddress string
   // Interface link status, vlan, duplex, speed, and type
   status() dict
+  // Whether the interface is enabled administratively
+  enabled() bool
+  // Duplex setting (full, half, auto)
+  duplex() string
+  // Auto-negotiation enabled
+  autoNegotiate() bool
 }
 
 // Arista EOS IP interface
@@ -205,6 +219,10 @@ arista.eos.vlan @defaults("id name") {
   state string
   // Trunk groups associated with the VLAN
   trunkGroups []string
+  // Whether this is a dynamic VLAN
+  dynamic bool
+  // Interfaces assigned to this VLAN
+  interfaces() []string
 }
 
 // Arista EOS IP route entry
@@ -227,6 +245,8 @@ arista.eos.route @defaults("destination") {
   routeAction string
   // Next-hop information (interface, nexthop address)
   nextHops []dict
+  // Whether the route is active
+  active() bool
 }
 
 // Arista EOS Layer 2 switchport configuration
@@ -243,4 +263,102 @@ arista.eos.switchport @defaults("name mode") {
   trunkAllowedVlans string
   // Trunk groups
   trunkGroups []string
+}
+
+// Arista EOS BGP configuration
+arista.eos.bgp {
+  // Whether BGP is enabled on this device
+  enabled bool
+  // BGP Autonomous System Number
+  asNumber string
+  // BGP Router ID
+  routerId string
+  // BGP VRFs
+  vrfs() []arista.eos.bgp.vrf
+}
+
+// Arista EOS BGP VRF
+private arista.eos.bgp.vrf @defaults("name") {
+  // VRF name
+  name string
+  // BGP Router ID for this VRF
+  routerId string
+  // BGP Autonomous System Number for this VRF
+  asNumber string
+  // BGP peers in this VRF
+  peers []arista.eos.bgp.peer
+}
+
+// Arista EOS BGP peer
+private arista.eos.bgp.peer @defaults("peerAddress") {
+  // VRF name
+  vrfName string
+  // Peer IP address
+  peerAddress string
+  // Remote Autonomous System Number
+  remoteAs string
+  // Peer state (Established, Idle, Active, etc.)
+  state string
+  // Uptime in seconds
+  uptime int
+  // Number of prefixes received from peer
+  prefixesReceived int
+  // Number of prefixes accepted from peer (after inbound filtering)
+  prefixesAccepted int
+  // Inbound route map
+  inboundRouteMap string
+  // Outbound route map
+  outboundRouteMap string
+  // Peer description
+  description string
+}
+
+// Arista EOS MLAG (Multi-Chassis Link Aggregation) configuration
+arista.eos.mlag {
+  // MLAG domain ID
+  domainId string
+  // Local interface used for MLAG communication (typically a VLAN interface)
+  localInterface string
+  // IP address of the MLAG peer switch
+  peerAddress string
+  // Interface used as the peer-link (typically a Port-Channel)
+  peerLink string
+  // Whether MLAG is administratively shutdown
+  shutdown bool
+  // Port-Channel interfaces configured with MLAG IDs
+  interfaces() []arista.eos.mlag.interface
+}
+
+// Arista EOS MLAG interface (Port-Channel with MLAG ID)
+private arista.eos.mlag.interface @defaults("name mlagId") {
+  // Port-Channel interface name (e.g., "Port-Channel1")
+  name string
+  // MLAG ID assigned to this Port-Channel
+  mlagId string
+}
+
+// Arista EOS standard IP access control list
+arista.eos.acl @defaults("name") {
+  // ACL name
+  name string
+  // ACL type (currently only "standard" supported by SDK)
+  type string
+  // ACL entries (rules)
+  entries() []arista.eos.acl.entry
+}
+
+// Arista EOS ACL entry (rule)
+private arista.eos.acl.entry @defaults("sequenceNumber action") {
+  // ACL name this entry belongs to
+  aclName string
+  // Sequence number (determines evaluation order)
+  sequenceNumber int
+  // Action: "permit" or "deny"
+  action string
+  // Source IP address
+  srcAddress string
+  // Source prefix length (CIDR notation, e.g., 24 for /24)
+  srcPrefixLen int
+  // Whether logging is enabled for this rule
+  log bool
 }
