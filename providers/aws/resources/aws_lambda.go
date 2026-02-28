@@ -785,7 +785,7 @@ func (a *mqlAwsLambdaFunction) codeSigningConfig() (*mqlAwsLambdaCodeSigningConf
 		return nil, err
 	}
 
-	if cscResp == nil || cscResp.CodeSigningConfigArn == nil || *cscResp.CodeSigningConfigArn == "" {
+	if cscResp.CodeSigningConfigArn == nil || *cscResp.CodeSigningConfigArn == "" {
 		a.CodeSigningConfig.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
@@ -794,6 +794,11 @@ func (a *mqlAwsLambdaFunction) codeSigningConfig() (*mqlAwsLambdaCodeSigningConf
 	configResp, err := svc.GetCodeSigningConfig(ctx,
 		&lambda.GetCodeSigningConfigInput{CodeSigningConfigArn: cscResp.CodeSigningConfigArn})
 	if err != nil {
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+			a.CodeSigningConfig.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, errors.Wrap(err, "could not get code signing config")
 	}
 
