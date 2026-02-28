@@ -484,7 +484,7 @@ func newFormatConfig(runtime *plugin.Runtime, repoPath string, r *artifactregist
 func newModeConfig(runtime *plugin.Runtime, repoPath string, r *artifactregistrypb.Repository) (*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig, error) {
 	id := repoPath + "/modeConfig"
 
-	var upstreamPolicies []any
+	upstreamPolicies := []any{}
 	var remoteDescription string
 	var disableUpstreamValidation bool
 
