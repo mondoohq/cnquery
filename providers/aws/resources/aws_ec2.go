@@ -38,6 +38,13 @@ func imdsSupport(v ec2types.ImdsSupportValues) string {
 	return string(v)
 }
 
+func bootMode(v string) string {
+	if v == "" {
+		return "undefined"
+	}
+	return v
+}
+
 func (e *mqlAwsEc2) id() (string, error) {
 	return ResourceAwsEc2, nil
 }
@@ -856,27 +863,48 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 							deprecatedAt = &t
 						}
 					}
+					// Parse last launched time
+					var lastLaunchedAt *time.Time
+					if image.LastLaunchedTime != nil {
+						t, err := time.Parse(time.RFC3339, *image.LastLaunchedTime)
+						if err != nil {
+							log.Warn().Str("imageId", convert.ToValue(image.ImageId)).Err(err).
+								Str("bad_value", *image.LastLaunchedTime).Msg("failed to parse image LastLaunchedTime")
+						} else {
+							lastLaunchedAt = &t
+						}
+					}
 					mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Image,
 						map[string]*llx.RawData{
-							"arn":                 llx.StringData(imageArn),
-							"id":                  llx.StringDataPtr(image.ImageId),
-							"name":                llx.StringDataPtr(image.Name),
-							"architecture":        llx.StringData(string(image.Architecture)),
-							"ownerId":             llx.StringDataPtr(image.OwnerId),
-							"ownerAlias":          llx.StringDataPtr(image.ImageOwnerAlias),
-							"createdAt":           llx.TimeDataPtr(createdAt),
-							"deprecatedAt":        llx.TimeDataPtr(deprecatedAt),
-							"enaSupport":          llx.BoolDataPtr(image.EnaSupport),
-							"tpmSupport":          llx.StringData(string(image.TpmSupport)),
-							"imdsSupport":         llx.StringData(imdsSupport(image.ImdsSupport)),
-							"state":               llx.StringData(string(image.State)),
-							"public":              llx.BoolDataPtr(image.Public),
-							"rootDeviceType":      llx.StringData(string(image.RootDeviceType)),
-							"virtualizationType":  llx.StringData(string(image.VirtualizationType)),
-							"blockDeviceMappings": llx.ArrayData(blockDeviceMappings, types.Resource(ResourceAwsEc2ImageBlockDeviceMapping)),
-							"tags":                llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String),
-							"region":              llx.StringData(region),
-							"description":         llx.StringDataPtr(image.Description),
+							"arn":                      llx.StringData(imageArn),
+							"id":                       llx.StringDataPtr(image.ImageId),
+							"name":                     llx.StringDataPtr(image.Name),
+							"architecture":             llx.StringData(string(image.Architecture)),
+							"ownerId":                  llx.StringDataPtr(image.OwnerId),
+							"ownerAlias":               llx.StringDataPtr(image.ImageOwnerAlias),
+							"createdAt":                llx.TimeDataPtr(createdAt),
+							"deprecatedAt":             llx.TimeDataPtr(deprecatedAt),
+							"enaSupport":               llx.BoolDataPtr(image.EnaSupport),
+							"tpmSupport":               llx.StringData(string(image.TpmSupport)),
+							"imdsSupport":              llx.StringData(imdsSupport(image.ImdsSupport)),
+							"state":                    llx.StringData(string(image.State)),
+							"public":                   llx.BoolDataPtr(image.Public),
+							"rootDeviceType":           llx.StringData(string(image.RootDeviceType)),
+							"virtualizationType":       llx.StringData(string(image.VirtualizationType)),
+							"blockDeviceMappings":      llx.ArrayData(blockDeviceMappings, types.Resource(ResourceAwsEc2ImageBlockDeviceMapping)),
+							"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String),
+							"region":                   llx.StringData(region),
+							"description":              llx.StringDataPtr(image.Description),
+							"imageType":                llx.StringData(string(image.ImageType)),
+							"freeTierEligible":         llx.BoolDataPtr(image.FreeTierEligible),
+							"imageAllowed":             llx.BoolDataPtr(image.ImageAllowed),
+							"deregistrationProtection": llx.StringDataPtr(image.DeregistrationProtection),
+							"lastLaunchedAt":           llx.TimeDataPtr(lastLaunchedAt),
+							"platformDetails":          llx.StringDataPtr(image.PlatformDetails),
+							"bootMode":                 llx.StringData(bootMode(string(image.BootMode))),
+							"rootDeviceName":           llx.StringDataPtr(image.RootDeviceName),
+							"sourceImageId":            llx.StringDataPtr(image.SourceImageId),
+							"sourceImageRegion":        llx.StringDataPtr(image.SourceImageRegion),
 						})
 					if err != nil {
 						return nil, err
@@ -1112,7 +1140,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			"stateTransitionTime":   llx.TimeData(stateTransitionTime),
 			"tags":                  llx.MapData(toInterfaceMap(ec2TagsToMap(instance.Tags)), types.String),
 			"tpmSupport":            llx.StringDataPtr(instance.TpmSupport),
-			"bootMode":              llx.StringData(string(instance.BootMode)),
+			"bootMode":              llx.StringData(bootMode(string(instance.BootMode))),
 			"sourceDestCheck":       llx.BoolDataPtr(instance.SourceDestCheck),
 			"ipv6Address":           llx.StringDataPtr(instance.Ipv6Address),
 		}
@@ -1122,6 +1150,56 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			enclaveEnabled = convert.ToValue(instance.EnclaveOptions.Enabled)
 		}
 		args["enclaveEnabled"] = llx.BoolData(enclaveEnabled)
+
+		// CPU options
+		if instance.CpuOptions != nil {
+			args["cpuCoreCount"] = llx.IntDataPtr(instance.CpuOptions.CoreCount)
+			args["cpuThreadsPerCore"] = llx.IntDataPtr(instance.CpuOptions.ThreadsPerCore)
+		} else {
+			args["cpuCoreCount"] = llx.NilData
+			args["cpuThreadsPerCore"] = llx.NilData
+		}
+
+		// Hibernation
+		var hibernationConfigured *bool
+		if instance.HibernationOptions != nil {
+			hibernationConfigured = instance.HibernationOptions.Configured
+		}
+		args["hibernationConfigured"] = llx.BoolDataPtr(hibernationConfigured)
+
+		// Maintenance options
+		if instance.MaintenanceOptions != nil {
+			args["maintenanceAutoRecovery"] = llx.StringData(string(instance.MaintenanceOptions.AutoRecovery))
+		} else {
+			args["maintenanceAutoRecovery"] = llx.NilData
+		}
+
+		args["currentInstanceBootMode"] = llx.StringData(bootMode(string(instance.CurrentInstanceBootMode)))
+		args["spotInstanceRequestId"] = llx.StringDataPtr(instance.SpotInstanceRequestId)
+		args["virtualizationType"] = llx.StringData(string(instance.VirtualizationType))
+
+		// Placement
+		if instance.Placement != nil {
+			p := instance.Placement
+			mqlPlacement, err := CreateResource(a.MqlRuntime, ResourceAwsEc2InstancePlacement,
+				map[string]*llx.RawData{
+					"availabilityZone":     llx.StringDataPtr(p.AvailabilityZone),
+					"availabilityZoneId":   llx.StringDataPtr(p.AvailabilityZoneId),
+					"tenancy":              llx.StringData(string(p.Tenancy)),
+					"groupName":            llx.StringDataPtr(p.GroupName),
+					"groupId":              llx.StringDataPtr(p.GroupId),
+					"hostId":               llx.StringDataPtr(p.HostId),
+					"hostResourceGroupArn": llx.StringDataPtr(p.HostResourceGroupArn),
+					"partitionNumber":      llx.IntDataPtr(p.PartitionNumber),
+					"affinity":             llx.StringDataPtr(p.Affinity),
+				})
+			if err != nil {
+				return nil, err
+			}
+			args["placement"] = llx.ResourceData(mqlPlacement, ResourceAwsEc2InstancePlacement)
+		} else {
+			args["placement"] = llx.NilData
+		}
 
 		if instance.MetadataOptions != nil {
 			args["httpEndpoint"] = llx.StringData(string(instance.MetadataOptions.HttpEndpoint))
@@ -1394,6 +1472,16 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["tags"] = llx.NilData
 		args["region"] = llx.StringData(arn.Region)
 		args["description"] = llx.NilData
+		args["imageType"] = llx.NilData
+		args["freeTierEligible"] = llx.NilData
+		args["imageAllowed"] = llx.NilData
+		args["deregistrationProtection"] = llx.NilData
+		args["lastLaunchedAt"] = llx.NilData
+		args["platformDetails"] = llx.NilData
+		args["bootMode"] = llx.NilData
+		args["rootDeviceName"] = llx.NilData
+		args["sourceImageId"] = llx.NilData
+		args["sourceImageRegion"] = llx.NilData
 		return args, nil, nil
 	}
 
@@ -1423,6 +1511,15 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String)
 		args["region"] = llx.StringData(arn.Region)
 		args["description"] = llx.StringDataPtr(image.Description)
+		args["imageType"] = llx.StringData(string(image.ImageType))
+		args["freeTierEligible"] = llx.BoolDataPtr(image.FreeTierEligible)
+		args["imageAllowed"] = llx.BoolDataPtr(image.ImageAllowed)
+		args["deregistrationProtection"] = llx.StringDataPtr(image.DeregistrationProtection)
+		args["platformDetails"] = llx.StringDataPtr(image.PlatformDetails)
+		args["bootMode"] = llx.StringData(bootMode(string(image.BootMode)))
+		args["rootDeviceName"] = llx.StringDataPtr(image.RootDeviceName)
+		args["sourceImageId"] = llx.StringDataPtr(image.SourceImageId)
+		args["sourceImageRegion"] = llx.StringDataPtr(image.SourceImageRegion)
 		if image.CreationDate == nil {
 			args["createdAt"] = llx.NilData
 		} else {
@@ -1440,6 +1537,15 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 				return nil, nil, err
 			}
 			args["deprecatedAt"] = llx.TimeData(deprecateTime)
+		}
+		if image.LastLaunchedTime == nil {
+			args["lastLaunchedAt"] = llx.NilData
+		} else {
+			lastLaunchedAt, err := time.Parse(time.RFC3339, *image.LastLaunchedTime)
+			if err != nil {
+				return nil, nil, err
+			}
+			args["lastLaunchedAt"] = llx.TimeData(lastLaunchedAt)
 		}
 		return args, nil, nil
 	}

@@ -5106,12 +5106,28 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   networkInterfaces() []aws.ec2.networkinterface
   // Whether API termination protection is enabled for the instance
   disableApiTermination() bool
-  // Boot mode of the instance (legacy-bios, uefi, uefi-preferred)
+  // Boot mode of the instance (undefined, legacy-bios, uefi, uefi-preferred)
   bootMode string
   // Whether source/destination checking is enabled
   sourceDestCheck bool
   // IPv6 address assigned to the instance
   ipv6Address string
+  // Number of CPU cores for the instance
+  cpuCoreCount int
+  // Number of threads per CPU core
+  cpuThreadsPerCore int
+  // Whether the instance is enabled for hibernation
+  hibernationConfigured bool
+  // Auto recovery behavior: default or disabled
+  maintenanceAutoRecovery string
+  // Current boot mode of the instance: undefined, legacy-bios, uefi, or uefi-preferred
+  currentInstanceBootMode string
+  // Spot Instance request ID, if applicable
+  spotInstanceRequestId string
+  // Placement information (availability zone, tenancy, host, partition, group)
+  placement aws.ec2.instance.placement
+  // Virtualization type: hvm or paravirtual
+  virtualizationType string
 }
 
 // AWS EC2 network interface
@@ -5206,6 +5222,26 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   launchPermissions() []aws.ec2.image.launchPermission
   // Description of the AMI
   description string
+  // Type of image: machine, kernel, or ramdisk
+  imageType string
+  // Whether the image is eligible for the AWS Free Tier
+  freeTierEligible bool
+  // Whether the image is allowed by the Allowed AMIs setting
+  imageAllowed bool
+  // Whether deregistration protection is enabled (disabled, enabled, enabled-with-cooldown)
+  deregistrationProtection string
+  // Last time the image was used to launch an instance
+  lastLaunchedAt time
+  // Detailed platform information (e.g., "Red Hat Enterprise Linux 9 (HVM)")
+  platformDetails string
+  // Boot mode of the image: undefined, legacy-bios, uefi, or uefi-preferred
+  bootMode string
+  // Root device name (e.g., /dev/sda1)
+  rootDeviceName string
+  // Source image ID if this AMI was copied from another image
+  sourceImageId string
+  // Source image region if this AMI was copied from another region
+  sourceImageRegion string
 }
 
 // Amazon EC2 image launch permission
@@ -5262,6 +5298,28 @@ private aws.ec2.instance.device @defaults("deviceName volumeId status") {
   volumeId string
   // Name for the device
   deviceName string
+}
+
+// Amazon EC2 instance placement information
+private aws.ec2.instance.placement @defaults("availabilityZone tenancy groupName") {
+  // Availability Zone of the instance
+  availabilityZone string
+  // ID of the Availability Zone
+  availabilityZoneId string
+  // Tenancy of the instance: default, dedicated, or host
+  tenancy string
+  // Name of the placement group
+  groupName string
+  // ID of the placement group
+  groupId string
+  // ID of the Dedicated Host
+  hostId string
+  // ARN of the host resource group
+  hostResourceGroupArn string
+  // Partition number (valid only for partition placement groups)
+  partitionNumber int
+  // Affinity setting for the instance on the Dedicated Host
+  affinity string
 }
 
 // Amazon EC2 security group
