@@ -1112,9 +1112,10 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 				stateTransitionTime = llx.NeverPastTime
 			}
 		}
+		instanceArn := fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.InstanceId))
 		args := map[string]*llx.RawData{
 			"architecture":       llx.StringData(string(instance.Architecture)),
-			"arn":                llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.InstanceId))),
+			"arn":                llx.StringData(instanceArn),
 			"detailedMonitoring": llx.StringData(string(instance.Monitoring.State)),
 			"deviceMappings":     llx.ArrayData(mqlDevices, types.Type(ResourceAwsEc2InstanceDevice)),
 			"ebsOptimized":       llx.BoolDataPtr(instance.EbsOptimized),
@@ -1169,7 +1170,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 
 		// Maintenance options
 		if instance.MaintenanceOptions != nil {
-			args["maintenanceAutoRecovery"] = llx.StringData(string(instance.MaintenanceOptions.AutoRecovery))
+			args["maintenanceAutoRecovery"] = llx.StringData(bootMode(string(instance.MaintenanceOptions.AutoRecovery)))
 		} else {
 			args["maintenanceAutoRecovery"] = llx.NilData
 		}
@@ -1181,7 +1182,6 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 		// Placement
 		if instance.Placement != nil {
 			p := instance.Placement
-			instanceArn := fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.InstanceId))
 			mqlPlacement, err := CreateResource(a.MqlRuntime, ResourceAwsEc2InstancePlacement,
 				map[string]*llx.RawData{
 					"__id":                 llx.StringData(instanceArn + "/placement"),
