@@ -219,6 +219,12 @@ const (
 	ResourceAwsRedshift                                                         string = "aws.redshift"
 	ResourceAwsRedshiftCluster                                                  string = "aws.redshift.cluster"
 	ResourceAwsRedshiftSnapshot                                                 string = "aws.redshift.snapshot"
+	ResourceAwsRoute53                                                          string = "aws.route53"
+	ResourceAwsRoute53HostedZone                                                string = "aws.route53.hostedZone"
+	ResourceAwsRoute53Record                                                    string = "aws.route53.record"
+	ResourceAwsRoute53HealthCheck                                               string = "aws.route53.healthCheck"
+	ResourceAwsRoute53QueryLoggingConfig                                        string = "aws.route53.queryLoggingConfig"
+	ResourceAwsRoute53KeySigningKey                                             string = "aws.route53.keySigningKey"
 	ResourceAwsEcr                                                              string = "aws.ecr"
 	ResourceAwsEcrRepository                                                    string = "aws.ecr.repository"
 	ResourceAwsEcrLifecyclePolicy                                               string = "aws.ecr.lifecyclePolicy"
@@ -1105,6 +1111,30 @@ func init() {
 		"aws.redshift.snapshot": {
 			// to override args, implement: initAwsRedshiftSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRedshiftSnapshot,
+		},
+		"aws.route53": {
+			// to override args, implement: initAwsRoute53(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53,
+		},
+		"aws.route53.hostedZone": {
+			Init:   initAwsRoute53HostedZone,
+			Create: createAwsRoute53HostedZone,
+		},
+		"aws.route53.record": {
+			// to override args, implement: initAwsRoute53Record(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53Record,
+		},
+		"aws.route53.healthCheck": {
+			// to override args, implement: initAwsRoute53HealthCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53HealthCheck,
+		},
+		"aws.route53.queryLoggingConfig": {
+			// to override args, implement: initAwsRoute53QueryLoggingConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53QueryLoggingConfig,
+		},
+		"aws.route53.keySigningKey": {
+			// to override args, implement: initAwsRoute53KeySigningKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53KeySigningKey,
 		},
 		"aws.ecr": {
 			// to override args, implement: initAwsEcr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6400,6 +6430,258 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.redshift.snapshot.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftSnapshot).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.route53.hostedZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53).GetHostedZones()).ToDataRes(types.Array(types.Resource("aws.route53.hostedZone")))
+	},
+	"aws.route53.healthChecks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53).GetHealthChecks()).ToDataRes(types.Array(types.Resource("aws.route53.healthCheck")))
+	},
+	"aws.route53.queryLoggingConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53).GetQueryLoggingConfigs()).ToDataRes(types.Array(types.Resource("aws.route53.queryLoggingConfig")))
+	},
+	"aws.route53.hostedZone.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.hostedZone.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.hostedZone.resourceRecordSetCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetResourceRecordSetCount()).ToDataRes(types.Int)
+	},
+	"aws.route53.hostedZone.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetType()).ToDataRes(types.String)
+	},
+	"aws.route53.hostedZone.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetConfig()).ToDataRes(types.Dict)
+	},
+	"aws.route53.hostedZone.isPrivate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetIsPrivate()).ToDataRes(types.Bool)
+	},
+	"aws.route53.hostedZone.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetComment()).ToDataRes(types.String)
+	},
+	"aws.route53.hostedZone.vpcs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetVpcs()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.route53.hostedZone.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetArn()).ToDataRes(types.String)
+	},
+	"aws.route53.hostedZone.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.route53.hostedZone.records": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetRecords()).ToDataRes(types.Array(types.Resource("aws.route53.record")))
+	},
+	"aws.route53.hostedZone.nameServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetNameServers()).ToDataRes(types.Array(types.String))
+	},
+	"aws.route53.hostedZone.queryLoggingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetQueryLoggingConfig()).ToDataRes(types.Resource("aws.route53.queryLoggingConfig"))
+	},
+	"aws.route53.hostedZone.dnssecStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetDnssecStatus()).ToDataRes(types.Dict)
+	},
+	"aws.route53.hostedZone.keySigningKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetKeySigningKeys()).ToDataRes(types.Array(types.Resource("aws.route53.keySigningKey")))
+	},
+	"aws.route53.record.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetHostedZoneId()).ToDataRes(types.String)
+	},
+	"aws.route53.record.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.record.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetType()).ToDataRes(types.String)
+	},
+	"aws.route53.record.ttl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetTtl()).ToDataRes(types.Int)
+	},
+	"aws.route53.record.resourceRecords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetResourceRecords()).ToDataRes(types.Array(types.String))
+	},
+	"aws.route53.record.aliasTarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetAliasTarget()).ToDataRes(types.Dict)
+	},
+	"aws.route53.record.isAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetIsAlias()).ToDataRes(types.Bool)
+	},
+	"aws.route53.record.aliasTargetDnsName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetAliasTargetDnsName()).ToDataRes(types.String)
+	},
+	"aws.route53.record.aliasTargetHostedZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetAliasTargetHostedZoneId()).ToDataRes(types.String)
+	},
+	"aws.route53.record.aliasEvaluateTargetHealth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetAliasEvaluateTargetHealth()).ToDataRes(types.Bool)
+	},
+	"aws.route53.record.setIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetSetIdentifier()).ToDataRes(types.String)
+	},
+	"aws.route53.record.weight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetWeight()).ToDataRes(types.Int)
+	},
+	"aws.route53.record.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.route53.record.failover": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetFailover()).ToDataRes(types.String)
+	},
+	"aws.route53.record.geoLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetGeoLocation()).ToDataRes(types.Dict)
+	},
+	"aws.route53.record.geoProximityLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetGeoProximityLocation()).ToDataRes(types.Dict)
+	},
+	"aws.route53.record.multiValueAnswer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetMultiValueAnswer()).ToDataRes(types.Bool)
+	},
+	"aws.route53.record.healthCheckId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetHealthCheckId()).ToDataRes(types.String)
+	},
+	"aws.route53.record.healthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetHealthCheck()).ToDataRes(types.Resource("aws.route53.healthCheck"))
+	},
+	"aws.route53.record.cidrRoutingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetCidrRoutingConfig()).ToDataRes(types.Dict)
+	},
+	"aws.route53.record.trafficPolicyInstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetTrafficPolicyInstanceId()).ToDataRes(types.String)
+	},
+	"aws.route53.healthCheck.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.healthCheck.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetArn()).ToDataRes(types.String)
+	},
+	"aws.route53.healthCheck.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.route53.healthCheck.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetType()).ToDataRes(types.String)
+	},
+	"aws.route53.healthCheck.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.route53.healthCheck.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetIpAddress()).ToDataRes(types.String)
+	},
+	"aws.route53.healthCheck.fullyQualifiedDomainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetFullyQualifiedDomainName()).ToDataRes(types.String)
+	},
+	"aws.route53.healthCheck.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.route53.healthCheck.resourcePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetResourcePath()).ToDataRes(types.String)
+	},
+	"aws.route53.healthCheck.searchString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetSearchString()).ToDataRes(types.String)
+	},
+	"aws.route53.healthCheck.requestInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetRequestInterval()).ToDataRes(types.Int)
+	},
+	"aws.route53.healthCheck.failureThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetFailureThreshold()).ToDataRes(types.Int)
+	},
+	"aws.route53.healthCheck.measureLatency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetMeasureLatency()).ToDataRes(types.Bool)
+	},
+	"aws.route53.healthCheck.enableSNI": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetEnableSNI()).ToDataRes(types.Bool)
+	},
+	"aws.route53.healthCheck.regions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetRegions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.route53.healthCheck.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.healthCheck.childHealthChecks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetChildHealthChecks()).ToDataRes(types.Array(types.String))
+	},
+	"aws.route53.healthCheck.healthThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetHealthThreshold()).ToDataRes(types.Int)
+	},
+	"aws.route53.healthCheck.cloudWatchAlarmConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetCloudWatchAlarmConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.route53.healthCheck.inverted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetInverted()).ToDataRes(types.Bool)
+	},
+	"aws.route53.healthCheck.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"aws.route53.healthCheck.callerReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HealthCheck).GetCallerReference()).ToDataRes(types.String)
+	},
+	"aws.route53.queryLoggingConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53QueryLoggingConfig).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.queryLoggingConfig.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53QueryLoggingConfig).GetHostedZoneId()).ToDataRes(types.String)
+	},
+	"aws.route53.queryLoggingConfig.cloudWatchLogsLogGroupArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53QueryLoggingConfig).GetCloudWatchLogsLogGroupArn()).ToDataRes(types.String)
+	},
+	"aws.route53.queryLoggingConfig.hostedZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53QueryLoggingConfig).GetHostedZone()).ToDataRes(types.Resource("aws.route53.hostedZone"))
+	},
+	"aws.route53.keySigningKey.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.kmsArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetKmsArn()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetHostedZoneId()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.flag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetFlag()).ToDataRes(types.Int)
+	},
+	"aws.route53.keySigningKey.signingAlgorithmMnemonic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetSigningAlgorithmMnemonic()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.signingAlgorithmType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetSigningAlgorithmType()).ToDataRes(types.Int)
+	},
+	"aws.route53.keySigningKey.digestAlgorithmMnemonic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetDigestAlgorithmMnemonic()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.digestAlgorithmType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetDigestAlgorithmType()).ToDataRes(types.Int)
+	},
+	"aws.route53.keySigningKey.keyTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetKeyTag()).ToDataRes(types.Int)
+	},
+	"aws.route53.keySigningKey.digestValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetDigestValue()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.publicKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetPublicKey()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.dsRecord": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetDsRecord()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.dnskeyRecord": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetDnskeyRecord()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.route53.keySigningKey.createdDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetCreatedDate()).ToDataRes(types.Time)
+	},
+	"aws.route53.keySigningKey.lastModifiedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetLastModifiedDate()).ToDataRes(types.Time)
+	},
+	"aws.route53.keySigningKey.hostedZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetHostedZone()).ToDataRes(types.Resource("aws.route53.hostedZone"))
+	},
+	"aws.route53.keySigningKey.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53KeySigningKey).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.ecr.privateRepositories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcr).GetPrivateRepositories()).ToDataRes(types.Array(types.Resource("aws.ecr.repository")))
@@ -15892,6 +16174,366 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.redshift.snapshot.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftSnapshot).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.route53.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.hostedZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53).HostedZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthChecks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53).HealthChecks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.queryLoggingConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53).QueryLoggingConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.hostedZone.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.resourceRecordSetCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).ResourceRecordSetCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.isPrivate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).IsPrivate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.vpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).Vpcs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.records": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).Records, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.nameServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).NameServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.queryLoggingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).QueryLoggingConfig, ok = plugin.RawToTValue[*mqlAwsRoute53QueryLoggingConfig](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.dnssecStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).DnssecStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.keySigningKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).KeySigningKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.record.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).HostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.resourceRecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).ResourceRecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.aliasTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).AliasTarget, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.isAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).IsAlias, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.aliasTargetDnsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).AliasTargetDnsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.aliasTargetHostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).AliasTargetHostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.aliasEvaluateTargetHealth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).AliasEvaluateTargetHealth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.setIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).SetIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.weight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).Weight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.failover": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).Failover, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.geoLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).GeoLocation, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.geoProximityLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).GeoProximityLocation, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.multiValueAnswer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).MultiValueAnswer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.healthCheckId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).HealthCheckId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.healthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).HealthCheck, ok = plugin.RawToTValue[*mqlAwsRoute53HealthCheck](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.cidrRoutingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).CidrRoutingConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.trafficPolicyInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).TrafficPolicyInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.healthCheck.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.fullyQualifiedDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).FullyQualifiedDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.searchString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).SearchString, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.requestInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).RequestInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.failureThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).FailureThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.measureLatency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).MeasureLatency, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.enableSNI": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).EnableSNI, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.regions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).Regions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.childHealthChecks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).ChildHealthChecks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.healthThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).HealthThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.cloudWatchAlarmConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).CloudWatchAlarmConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.inverted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).Inverted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.healthCheck.callerReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HealthCheck).CallerReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.queryLoggingConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53QueryLoggingConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.queryLoggingConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53QueryLoggingConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.queryLoggingConfig.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53QueryLoggingConfig).HostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.queryLoggingConfig.cloudWatchLogsLogGroupArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53QueryLoggingConfig).CloudWatchLogsLogGroupArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.queryLoggingConfig.hostedZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53QueryLoggingConfig).HostedZone, ok = plugin.RawToTValue[*mqlAwsRoute53HostedZone](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.keySigningKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.kmsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).KmsArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).HostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.flag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).Flag, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.signingAlgorithmMnemonic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).SigningAlgorithmMnemonic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.signingAlgorithmType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).SigningAlgorithmType, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.digestAlgorithmMnemonic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).DigestAlgorithmMnemonic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.digestAlgorithmType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).DigestAlgorithmType, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.keyTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).KeyTag, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.digestValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).DigestValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.publicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).PublicKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.dsRecord": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).DsRecord, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.dnskeyRecord": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).DnskeyRecord, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).CreatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.lastModifiedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).LastModifiedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.hostedZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).HostedZone, ok = plugin.RawToTValue[*mqlAwsRoute53HostedZone](v.Value, v.Error)
+		return
+	},
+	"aws.route53.keySigningKey.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53KeySigningKey).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38586,6 +39228,834 @@ func (c *mqlAwsRedshiftSnapshot) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.snapshot", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+// mqlAwsRoute53 for the aws.route53 resource
+type mqlAwsRoute53 struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53Internal it will be used here
+	HostedZones         plugin.TValue[[]any]
+	HealthChecks        plugin.TValue[[]any]
+	QueryLoggingConfigs plugin.TValue[[]any]
+}
+
+// createAwsRoute53 creates a new instance of this resource
+func createAwsRoute53(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53) MqlName() string {
+	return "aws.route53"
+}
+
+func (c *mqlAwsRoute53) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53) GetHostedZones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostedZones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53", c.__id, "hostedZones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hostedZones()
+	})
+}
+
+func (c *mqlAwsRoute53) GetHealthChecks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HealthChecks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53", c.__id, "healthChecks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.healthChecks()
+	})
+}
+
+func (c *mqlAwsRoute53) GetQueryLoggingConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.QueryLoggingConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53", c.__id, "queryLoggingConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.queryLoggingConfigs()
+	})
+}
+
+// mqlAwsRoute53HostedZone for the aws.route53.hostedZone resource
+type mqlAwsRoute53HostedZone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53HostedZoneInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	ResourceRecordSetCount plugin.TValue[int64]
+	Type                   plugin.TValue[string]
+	Config                 plugin.TValue[any]
+	IsPrivate              plugin.TValue[bool]
+	Comment                plugin.TValue[string]
+	Vpcs                   plugin.TValue[[]any]
+	Arn                    plugin.TValue[string]
+	Tags                   plugin.TValue[map[string]any]
+	Records                plugin.TValue[[]any]
+	NameServers            plugin.TValue[[]any]
+	QueryLoggingConfig     plugin.TValue[*mqlAwsRoute53QueryLoggingConfig]
+	DnssecStatus           plugin.TValue[any]
+	KeySigningKeys         plugin.TValue[[]any]
+}
+
+// createAwsRoute53HostedZone creates a new instance of this resource
+func createAwsRoute53HostedZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53HostedZone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.hostedZone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53HostedZone) MqlName() string {
+	return "aws.route53.hostedZone"
+}
+
+func (c *mqlAwsRoute53HostedZone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53HostedZone) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53HostedZone) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53HostedZone) GetResourceRecordSetCount() *plugin.TValue[int64] {
+	return &c.ResourceRecordSetCount
+}
+
+func (c *mqlAwsRoute53HostedZone) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsRoute53HostedZone) GetConfig() *plugin.TValue[any] {
+	return &c.Config
+}
+
+func (c *mqlAwsRoute53HostedZone) GetIsPrivate() *plugin.TValue[bool] {
+	return &c.IsPrivate
+}
+
+func (c *mqlAwsRoute53HostedZone) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsRoute53HostedZone) GetVpcs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vpcs, func() ([]any, error) {
+		return c.vpcs()
+	})
+}
+
+func (c *mqlAwsRoute53HostedZone) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRoute53HostedZone) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsRoute53HostedZone) GetRecords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Records, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.hostedZone", c.__id, "records")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.records()
+	})
+}
+
+func (c *mqlAwsRoute53HostedZone) GetNameServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NameServers, func() ([]any, error) {
+		return c.nameServers()
+	})
+}
+
+func (c *mqlAwsRoute53HostedZone) GetQueryLoggingConfig() *plugin.TValue[*mqlAwsRoute53QueryLoggingConfig] {
+	return plugin.GetOrCompute[*mqlAwsRoute53QueryLoggingConfig](&c.QueryLoggingConfig, func() (*mqlAwsRoute53QueryLoggingConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.hostedZone", c.__id, "queryLoggingConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53QueryLoggingConfig), nil
+			}
+		}
+
+		return c.queryLoggingConfig()
+	})
+}
+
+func (c *mqlAwsRoute53HostedZone) GetDnssecStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DnssecStatus, func() (any, error) {
+		return c.dnssecStatus()
+	})
+}
+
+func (c *mqlAwsRoute53HostedZone) GetKeySigningKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KeySigningKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.hostedZone", c.__id, "keySigningKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keySigningKeys()
+	})
+}
+
+// mqlAwsRoute53Record for the aws.route53.record resource
+type mqlAwsRoute53Record struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53RecordInternal
+	HostedZoneId              plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Type                      plugin.TValue[string]
+	Ttl                       plugin.TValue[int64]
+	ResourceRecords           plugin.TValue[[]any]
+	AliasTarget               plugin.TValue[any]
+	IsAlias                   plugin.TValue[bool]
+	AliasTargetDnsName        plugin.TValue[string]
+	AliasTargetHostedZoneId   plugin.TValue[string]
+	AliasEvaluateTargetHealth plugin.TValue[bool]
+	SetIdentifier             plugin.TValue[string]
+	Weight                    plugin.TValue[int64]
+	Region                    plugin.TValue[string]
+	Failover                  plugin.TValue[string]
+	GeoLocation               plugin.TValue[any]
+	GeoProximityLocation      plugin.TValue[any]
+	MultiValueAnswer          plugin.TValue[bool]
+	HealthCheckId             plugin.TValue[string]
+	HealthCheck               plugin.TValue[*mqlAwsRoute53HealthCheck]
+	CidrRoutingConfig         plugin.TValue[any]
+	TrafficPolicyInstanceId   plugin.TValue[string]
+}
+
+// createAwsRoute53Record creates a new instance of this resource
+func createAwsRoute53Record(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53Record{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.record", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53Record) MqlName() string {
+	return "aws.route53.record"
+}
+
+func (c *mqlAwsRoute53Record) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53Record) GetHostedZoneId() *plugin.TValue[string] {
+	return &c.HostedZoneId
+}
+
+func (c *mqlAwsRoute53Record) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53Record) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsRoute53Record) GetTtl() *plugin.TValue[int64] {
+	return &c.Ttl
+}
+
+func (c *mqlAwsRoute53Record) GetResourceRecords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceRecords, func() ([]any, error) {
+		return c.resourceRecords()
+	})
+}
+
+func (c *mqlAwsRoute53Record) GetAliasTarget() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.AliasTarget, func() (any, error) {
+		return c.aliasTarget()
+	})
+}
+
+func (c *mqlAwsRoute53Record) GetIsAlias() *plugin.TValue[bool] {
+	return &c.IsAlias
+}
+
+func (c *mqlAwsRoute53Record) GetAliasTargetDnsName() *plugin.TValue[string] {
+	return &c.AliasTargetDnsName
+}
+
+func (c *mqlAwsRoute53Record) GetAliasTargetHostedZoneId() *plugin.TValue[string] {
+	return &c.AliasTargetHostedZoneId
+}
+
+func (c *mqlAwsRoute53Record) GetAliasEvaluateTargetHealth() *plugin.TValue[bool] {
+	return &c.AliasEvaluateTargetHealth
+}
+
+func (c *mqlAwsRoute53Record) GetSetIdentifier() *plugin.TValue[string] {
+	return &c.SetIdentifier
+}
+
+func (c *mqlAwsRoute53Record) GetWeight() *plugin.TValue[int64] {
+	return &c.Weight
+}
+
+func (c *mqlAwsRoute53Record) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRoute53Record) GetFailover() *plugin.TValue[string] {
+	return &c.Failover
+}
+
+func (c *mqlAwsRoute53Record) GetGeoLocation() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.GeoLocation, func() (any, error) {
+		return c.geoLocation()
+	})
+}
+
+func (c *mqlAwsRoute53Record) GetGeoProximityLocation() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.GeoProximityLocation, func() (any, error) {
+		return c.geoProximityLocation()
+	})
+}
+
+func (c *mqlAwsRoute53Record) GetMultiValueAnswer() *plugin.TValue[bool] {
+	return &c.MultiValueAnswer
+}
+
+func (c *mqlAwsRoute53Record) GetHealthCheckId() *plugin.TValue[string] {
+	return &c.HealthCheckId
+}
+
+func (c *mqlAwsRoute53Record) GetHealthCheck() *plugin.TValue[*mqlAwsRoute53HealthCheck] {
+	return plugin.GetOrCompute[*mqlAwsRoute53HealthCheck](&c.HealthCheck, func() (*mqlAwsRoute53HealthCheck, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.record", c.__id, "healthCheck")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53HealthCheck), nil
+			}
+		}
+
+		return c.healthCheck()
+	})
+}
+
+func (c *mqlAwsRoute53Record) GetCidrRoutingConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.CidrRoutingConfig, func() (any, error) {
+		return c.cidrRoutingConfig()
+	})
+}
+
+func (c *mqlAwsRoute53Record) GetTrafficPolicyInstanceId() *plugin.TValue[string] {
+	return &c.TrafficPolicyInstanceId
+}
+
+// mqlAwsRoute53HealthCheck for the aws.route53.healthCheck resource
+type mqlAwsRoute53HealthCheck struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53HealthCheckInternal
+	Id                           plugin.TValue[string]
+	Arn                          plugin.TValue[string]
+	Tags                         plugin.TValue[map[string]any]
+	Type                         plugin.TValue[string]
+	Protocol                     plugin.TValue[string]
+	IpAddress                    plugin.TValue[string]
+	FullyQualifiedDomainName     plugin.TValue[string]
+	Port                         plugin.TValue[int64]
+	ResourcePath                 plugin.TValue[string]
+	SearchString                 plugin.TValue[string]
+	RequestInterval              plugin.TValue[int64]
+	FailureThreshold             plugin.TValue[int64]
+	MeasureLatency               plugin.TValue[bool]
+	EnableSNI                    plugin.TValue[bool]
+	Regions                      plugin.TValue[[]any]
+	Status                       plugin.TValue[string]
+	ChildHealthChecks            plugin.TValue[[]any]
+	HealthThreshold              plugin.TValue[int64]
+	CloudWatchAlarmConfiguration plugin.TValue[any]
+	Inverted                     plugin.TValue[bool]
+	Disabled                     plugin.TValue[bool]
+	CallerReference              plugin.TValue[string]
+}
+
+// createAwsRoute53HealthCheck creates a new instance of this resource
+func createAwsRoute53HealthCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53HealthCheck{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.healthCheck", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53HealthCheck) MqlName() string {
+	return "aws.route53.healthCheck"
+}
+
+func (c *mqlAwsRoute53HealthCheck) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetFullyQualifiedDomainName() *plugin.TValue[string] {
+	return &c.FullyQualifiedDomainName
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetResourcePath() *plugin.TValue[string] {
+	return &c.ResourcePath
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetSearchString() *plugin.TValue[string] {
+	return &c.SearchString
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetRequestInterval() *plugin.TValue[int64] {
+	return &c.RequestInterval
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetFailureThreshold() *plugin.TValue[int64] {
+	return &c.FailureThreshold
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetMeasureLatency() *plugin.TValue[bool] {
+	return &c.MeasureLatency
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetEnableSNI() *plugin.TValue[bool] {
+	return &c.EnableSNI
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetRegions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Regions, func() ([]any, error) {
+		return c.regions()
+	})
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetChildHealthChecks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ChildHealthChecks, func() ([]any, error) {
+		return c.childHealthChecks()
+	})
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetHealthThreshold() *plugin.TValue[int64] {
+	return &c.HealthThreshold
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetCloudWatchAlarmConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.CloudWatchAlarmConfiguration, func() (any, error) {
+		return c.cloudWatchAlarmConfiguration()
+	})
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetInverted() *plugin.TValue[bool] {
+	return &c.Inverted
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlAwsRoute53HealthCheck) GetCallerReference() *plugin.TValue[string] {
+	return &c.CallerReference
+}
+
+// mqlAwsRoute53QueryLoggingConfig for the aws.route53.queryLoggingConfig resource
+type mqlAwsRoute53QueryLoggingConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53QueryLoggingConfigInternal it will be used here
+	Id                        plugin.TValue[string]
+	HostedZoneId              plugin.TValue[string]
+	CloudWatchLogsLogGroupArn plugin.TValue[string]
+	HostedZone                plugin.TValue[*mqlAwsRoute53HostedZone]
+}
+
+// createAwsRoute53QueryLoggingConfig creates a new instance of this resource
+func createAwsRoute53QueryLoggingConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53QueryLoggingConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.queryLoggingConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53QueryLoggingConfig) MqlName() string {
+	return "aws.route53.queryLoggingConfig"
+}
+
+func (c *mqlAwsRoute53QueryLoggingConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53QueryLoggingConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53QueryLoggingConfig) GetHostedZoneId() *plugin.TValue[string] {
+	return &c.HostedZoneId
+}
+
+func (c *mqlAwsRoute53QueryLoggingConfig) GetCloudWatchLogsLogGroupArn() *plugin.TValue[string] {
+	return &c.CloudWatchLogsLogGroupArn
+}
+
+func (c *mqlAwsRoute53QueryLoggingConfig) GetHostedZone() *plugin.TValue[*mqlAwsRoute53HostedZone] {
+	return plugin.GetOrCompute[*mqlAwsRoute53HostedZone](&c.HostedZone, func() (*mqlAwsRoute53HostedZone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.queryLoggingConfig", c.__id, "hostedZone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53HostedZone), nil
+			}
+		}
+
+		return c.hostedZone()
+	})
+}
+
+// mqlAwsRoute53KeySigningKey for the aws.route53.keySigningKey resource
+type mqlAwsRoute53KeySigningKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53KeySigningKeyInternal it will be used here
+	Name                     plugin.TValue[string]
+	KmsArn                   plugin.TValue[string]
+	HostedZoneId             plugin.TValue[string]
+	Flag                     plugin.TValue[int64]
+	SigningAlgorithmMnemonic plugin.TValue[string]
+	SigningAlgorithmType     plugin.TValue[int64]
+	DigestAlgorithmMnemonic  plugin.TValue[string]
+	DigestAlgorithmType      plugin.TValue[int64]
+	KeyTag                   plugin.TValue[int64]
+	DigestValue              plugin.TValue[string]
+	PublicKey                plugin.TValue[string]
+	DsRecord                 plugin.TValue[string]
+	DnskeyRecord             plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	StatusMessage            plugin.TValue[string]
+	CreatedDate              plugin.TValue[*time.Time]
+	LastModifiedDate         plugin.TValue[*time.Time]
+	HostedZone               plugin.TValue[*mqlAwsRoute53HostedZone]
+	KmsKey                   plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsRoute53KeySigningKey creates a new instance of this resource
+func createAwsRoute53KeySigningKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53KeySigningKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.keySigningKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53KeySigningKey) MqlName() string {
+	return "aws.route53.keySigningKey"
+}
+
+func (c *mqlAwsRoute53KeySigningKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetKmsArn() *plugin.TValue[string] {
+	return &c.KmsArn
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetHostedZoneId() *plugin.TValue[string] {
+	return &c.HostedZoneId
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetFlag() *plugin.TValue[int64] {
+	return &c.Flag
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetSigningAlgorithmMnemonic() *plugin.TValue[string] {
+	return &c.SigningAlgorithmMnemonic
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetSigningAlgorithmType() *plugin.TValue[int64] {
+	return &c.SigningAlgorithmType
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetDigestAlgorithmMnemonic() *plugin.TValue[string] {
+	return &c.DigestAlgorithmMnemonic
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetDigestAlgorithmType() *plugin.TValue[int64] {
+	return &c.DigestAlgorithmType
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetKeyTag() *plugin.TValue[int64] {
+	return &c.KeyTag
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetDigestValue() *plugin.TValue[string] {
+	return &c.DigestValue
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetPublicKey() *plugin.TValue[string] {
+	return &c.PublicKey
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetDsRecord() *plugin.TValue[string] {
+	return &c.DsRecord
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetDnskeyRecord() *plugin.TValue[string] {
+	return &c.DnskeyRecord
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetCreatedDate() *plugin.TValue[*time.Time] {
+	return &c.CreatedDate
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetLastModifiedDate() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDate
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetHostedZone() *plugin.TValue[*mqlAwsRoute53HostedZone] {
+	return plugin.GetOrCompute[*mqlAwsRoute53HostedZone](&c.HostedZone, func() (*mqlAwsRoute53HostedZone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.keySigningKey", c.__id, "hostedZone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53HostedZone), nil
+			}
+		}
+
+		return c.hostedZone()
+	})
+}
+
+func (c *mqlAwsRoute53KeySigningKey) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.keySigningKey", c.__id, "kmsKey")
 			if err != nil {
 				return nil, err
 			}
