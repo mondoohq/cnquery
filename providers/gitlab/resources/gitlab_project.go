@@ -966,8 +966,11 @@ func (p *mqlGitlabProject) pushRules() (*mqlGitlabProjectPushRule, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
-	rules, _, err := conn.Client().Projects.GetProjectPushRules(projectID)
+	rules, resp, err := conn.Client().Projects.GetProjectPushRules(projectID)
 	if err != nil {
+		if resp != nil && resp.StatusCode == 404 {
+			return nil, nil // no push rules configured
+		}
 		return nil, err
 	}
 
@@ -1182,12 +1185,16 @@ func (p *mqlGitlabProject) securitySettings() (*mqlGitlabProjectSecuritySetting,
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
-	settings, _, err := conn.Client().ProjectSecuritySettings.ListProjectSecuritySettings(projectID)
+	settings, resp, err := conn.Client().ProjectSecuritySettings.ListProjectSecuritySettings(projectID)
 	if err != nil {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			return nil, nil // not available on this GitLab tier
+		}
 		return nil, err
 	}
 
 	settingInfo := map[string]*llx.RawData{
+		"__id": llx.StringData("gitlab.project.securitySetting/" + strconv.Itoa(projectID)),
 		"autoFixContainerScanning":            llx.BoolData(settings.AutoFixContainerScanning),
 		"autoFixDAST":                         llx.BoolData(settings.AutoFixDAST),
 		"autoFixDependencyScanning":           llx.BoolData(settings.AutoFixDependencyScanning),

@@ -308,8 +308,11 @@ func (g *mqlGitlabGroup) pushRules() (*mqlGitlabGroupPushRule, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	groupID := int(g.Id.Data)
-	rules, _, err := conn.Client().Groups.GetGroupPushRules(groupID)
+	rules, resp, err := conn.Client().Groups.GetGroupPushRules(groupID)
 	if err != nil {
+		if resp != nil && resp.StatusCode == 404 {
+			return nil, nil // no push rules configured
+		}
 		return nil, err
 	}
 
