@@ -21569,7 +21569,7 @@ func (c *mqlAzureSubscriptionKeyVaultServiceKeyAutorotation) GetEnabled() *plugi
 type mqlAzureSubscriptionKeyVaultServiceKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionKeyVaultServiceKeyInternal it will be used here
+	mqlAzureSubscriptionKeyVaultServiceKeyInternal
 	Kid            plugin.TValue[string]
 	Tags           plugin.TValue[map[string]any]
 	Managed        plugin.TValue[bool]

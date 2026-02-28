@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -743,34 +744,45 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) version() (string, error) {
 	return kvid.Version, nil
 }
 
-// fetchKeyDetails fetches the full key from Azure Key Vault and populates
-// keyType, keySize, curveName, and keyOps fields. This is called lazily
-// when any of those fields are first accessed, avoiding N+1 API calls
-// when listing keys.
+type mqlAzureSubscriptionKeyVaultServiceKeyInternal struct {
+	fetchOnce sync.Once
+	fetchResp *azkeys.GetKeyResponse
+	fetchErr  error
+}
+
+// fetchKeyDetails fetches the full key from Azure Key Vault. The result is
+// cached with sync.Once so that keyType, keySize, curveName, and keyOps can
+// all share a single API call per key.
 func (a *mqlAzureSubscriptionKeyVaultServiceKey) fetchKeyDetails() (*azkeys.GetKeyResponse, error) {
-	id := a.Kid.Data
-	kvid, err := parseKeyVaultId(id)
-	if err != nil {
-		log.Warn().Err(err).Str("kid", id).Msg("failed to parse key vault key ID")
-		return nil, err
-	}
+	a.fetchOnce.Do(func() {
+		id := a.Kid.Data
+		kvid, err := parseKeyVaultId(id)
+		if err != nil {
+			log.Warn().Err(err).Str("kid", id).Msg("failed to parse key vault key ID")
+			a.fetchErr = err
+			return
+		}
 
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	client, err := azkeys.NewClient(kvid.BaseUrl, conn.Token(), &azkeys.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
+		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		client, err := azkeys.NewClient(kvid.BaseUrl, conn.Token(), &azkeys.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			a.fetchErr = err
+			return
+		}
+
+		ctx := context.Background()
+		keyResp, err := client.GetKey(ctx, kvid.Name, kvid.Version, nil)
+		if err != nil {
+			log.Warn().Err(err).Str("kid", id).Msg("failed to fetch key vault key details")
+			a.fetchErr = err
+			return
+		}
+
+		a.fetchResp = &keyResp
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	keyResp, err := client.GetKey(ctx, kvid.Name, kvid.Version, nil)
-	if err != nil {
-		log.Warn().Err(err).Str("kid", id).Msg("failed to fetch key vault key details")
-		return nil, err
-	}
-
-	return &keyResp, nil
+	return a.fetchResp, a.fetchErr
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceKey) keyType() (string, error) {
