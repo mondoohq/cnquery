@@ -955,3 +955,252 @@ func (p *mqlGitlabProject) runners() ([]any, error) {
 
 	return mqlRunners, nil
 }
+
+// id function for gitlab.project.pushRule
+func (r *mqlGitlabProjectPushRule) id() (string, error) {
+	return "gitlab.project.pushRule/" + strconv.FormatInt(r.Id.Data, 10), nil
+}
+
+// pushRules fetches push rules for the project
+func (p *mqlGitlabProject) pushRules() (*mqlGitlabProjectPushRule, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	rules, _, err := conn.Client().Projects.GetProjectPushRules(projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	ruleInfo := map[string]*llx.RawData{
+		"id":                         llx.IntData(rules.ID),
+		"commitMessageRegex":         llx.StringData(rules.CommitMessageRegex),
+		"commitMessageNegativeRegex": llx.StringData(rules.CommitMessageNegativeRegex),
+		"branchNameRegex":            llx.StringData(rules.BranchNameRegex),
+		"denyDeleteTag":              llx.BoolData(rules.DenyDeleteTag),
+		"memberCheck":                llx.BoolData(rules.MemberCheck),
+		"preventSecrets":             llx.BoolData(rules.PreventSecrets),
+		"authorEmailRegex":           llx.StringData(rules.AuthorEmailRegex),
+		"fileNameRegex":              llx.StringData(rules.FileNameRegex),
+		"maxFileSize":                llx.IntData(rules.MaxFileSize),
+		"commitCommitterCheck":       llx.BoolData(rules.CommitCommitterCheck),
+		"commitCommitterNameCheck":   llx.BoolData(rules.CommitCommitterNameCheck),
+		"rejectUnsignedCommits":      llx.BoolData(rules.RejectUnsignedCommits),
+		"rejectNonDCOCommits":        llx.BoolData(rules.RejectNonDCOCommits),
+		"createdAt":                  llx.TimeDataPtr(rules.CreatedAt),
+	}
+
+	mqlRule, err := CreateResource(p.MqlRuntime, "gitlab.project.pushRule", ruleInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlRule.(*mqlGitlabProjectPushRule), nil
+}
+
+// id function for gitlab.project.accessToken
+func (t *mqlGitlabProjectAccessToken) id() (string, error) {
+	return "gitlab.project.accessToken/" + strconv.FormatInt(t.Id.Data, 10), nil
+}
+
+// accessTokens fetches the list of access tokens for the project
+func (p *mqlGitlabProject) accessTokens() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allTokens []*gitlab.ProjectAccessToken
+
+	for {
+		tokens, resp, err := conn.Client().ProjectAccessTokens.ListProjectAccessTokens(projectID, &gitlab.ListProjectAccessTokensOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allTokens = append(allTokens, tokens...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlTokens []any
+	for _, token := range allTokens {
+		var expiresAt *time.Time
+		if token.ExpiresAt != nil {
+			t := time.Time(*token.ExpiresAt)
+			expiresAt = &t
+		}
+
+		tokenInfo := map[string]*llx.RawData{
+			"id":          llx.IntData(token.ID),
+			"name":        llx.StringData(token.Name),
+			"revoked":     llx.BoolData(token.Revoked),
+			"active":      llx.BoolData(token.Active),
+			"scopes":      llx.ArrayData(convert.SliceAnyToInterface(token.Scopes), types.String),
+			"createdAt":   llx.TimeDataPtr(token.CreatedAt),
+			"expiresAt":   llx.TimeDataPtr(expiresAt),
+			"lastUsedAt":  llx.TimeDataPtr(token.LastUsedAt),
+			"accessLevel": llx.IntData(int64(token.AccessLevel)),
+		}
+
+		mqlToken, err := CreateResource(p.MqlRuntime, "gitlab.project.accessToken", tokenInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlTokens = append(mqlTokens, mqlToken)
+	}
+
+	return mqlTokens, nil
+}
+
+// id function for gitlab.project.deployKey
+func (k *mqlGitlabProjectDeployKey) id() (string, error) {
+	return "gitlab.project.deployKey/" + strconv.FormatInt(k.Id.Data, 10), nil
+}
+
+// deployKeys fetches the list of deploy keys for the project
+func (p *mqlGitlabProject) deployKeys() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allKeys []*gitlab.ProjectDeployKey
+
+	for {
+		keys, resp, err := conn.Client().DeployKeys.ListProjectDeployKeys(projectID, &gitlab.ListProjectDeployKeysOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allKeys = append(allKeys, keys...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlKeys []any
+	for _, key := range allKeys {
+		keyInfo := map[string]*llx.RawData{
+			"id":                llx.IntData(key.ID),
+			"title":             llx.StringData(key.Title),
+			"key":               llx.StringData(key.Key),
+			"fingerprint":       llx.StringData(key.Fingerprint),
+			"fingerprintSHA256": llx.StringData(key.FingerprintSHA256),
+			"createdAt":         llx.TimeDataPtr(key.CreatedAt),
+			"expiresAt":         llx.TimeDataPtr(key.ExpiresAt),
+			"canPush":           llx.BoolData(key.CanPush),
+		}
+
+		mqlKey, err := CreateResource(p.MqlRuntime, "gitlab.project.deployKey", keyInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlKeys = append(mqlKeys, mqlKey)
+	}
+
+	return mqlKeys, nil
+}
+
+// id function for gitlab.project.deployToken
+func (t *mqlGitlabProjectDeployToken) id() (string, error) {
+	return "gitlab.project.deployToken/" + strconv.FormatInt(t.Id.Data, 10), nil
+}
+
+// deployTokens fetches the list of deploy tokens for the project
+func (p *mqlGitlabProject) deployTokens() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allTokens []*gitlab.DeployToken
+
+	for {
+		tokens, resp, err := conn.Client().DeployTokens.ListProjectDeployTokens(projectID, &gitlab.ListProjectDeployTokensOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allTokens = append(allTokens, tokens...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlTokens []any
+	for _, token := range allTokens {
+		tokenInfo := map[string]*llx.RawData{
+			"id":        llx.IntData(token.ID),
+			"name":      llx.StringData(token.Name),
+			"username":  llx.StringData(token.Username),
+			"expiresAt": llx.TimeDataPtr(token.ExpiresAt),
+			"revoked":   llx.BoolData(token.Revoked),
+			"expired":   llx.BoolData(token.Expired),
+			"scopes":    llx.ArrayData(convert.SliceAnyToInterface(token.Scopes), types.String),
+		}
+
+		mqlToken, err := CreateResource(p.MqlRuntime, "gitlab.project.deployToken", tokenInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlTokens = append(mqlTokens, mqlToken)
+	}
+
+	return mqlTokens, nil
+}
+
+// securitySettings fetches security settings for the project
+func (p *mqlGitlabProject) securitySettings() (*mqlGitlabProjectSecuritySetting, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+	settings, _, err := conn.Client().ProjectSecuritySettings.ListProjectSecuritySettings(projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	settingInfo := map[string]*llx.RawData{
+		"autoFixContainerScanning":            llx.BoolData(settings.AutoFixContainerScanning),
+		"autoFixDAST":                         llx.BoolData(settings.AutoFixDAST),
+		"autoFixDependencyScanning":           llx.BoolData(settings.AutoFixDependencyScanning),
+		"autoFixSAST":                         llx.BoolData(settings.AutoFixSAST),
+		"continuousVulnerabilityScansEnabled": llx.BoolData(settings.ContinuousVulnerabilityScansEnabled),
+		"containerScanningForRegistryEnabled": llx.BoolData(settings.ContainerScanningForRegistryEnabled),
+		"secretPushProtectionEnabled":         llx.BoolData(settings.SecretPushProtectionEnabled),
+	}
+
+	mqlSetting, err := CreateResource(p.MqlRuntime, "gitlab.project.securitySetting", settingInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlSetting.(*mqlGitlabProjectSecuritySetting), nil
+}
