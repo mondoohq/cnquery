@@ -249,3 +249,81 @@ func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance n
 	}
 	return resource.(*mqlAwsNeptuneInstance), nil
 }
+
+func (a *mqlAwsNeptuneSnapshot) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsNeptuneCluster) snapshots() ([]any, error) {
+	clusterIdentifier := a.ClusterIdentifier.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Neptune(region)
+	ctx := context.Background()
+	res := []any{}
+
+	paginator := neptune.NewDescribeDBClusterSnapshotsPaginator(svc, &neptune.DescribeDBClusterSnapshotsInput{
+		DBClusterIdentifier: &clusterIdentifier,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, snapshot := range page.DBClusterSnapshots {
+			mqlSnapshot, err := newMqlAwsNeptuneSnapshot(a.MqlRuntime, region, snapshot)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSnapshot)
+		}
+	}
+	return res, nil
+}
+
+func newMqlAwsNeptuneSnapshot(runtime *plugin.Runtime, region string, snapshot neptune_types.DBClusterSnapshot) (*mqlAwsNeptuneSnapshot, error) {
+	resource, err := CreateResource(runtime, ResourceAwsNeptuneSnapshot,
+		map[string]*llx.RawData{
+			"__id":              llx.StringDataPtr(snapshot.DBClusterSnapshotArn),
+			"arn":               llx.StringDataPtr(snapshot.DBClusterSnapshotArn),
+			"id":                llx.StringDataPtr(snapshot.DBClusterSnapshotIdentifier),
+			"clusterIdentifier": llx.StringDataPtr(snapshot.DBClusterIdentifier),
+			"engine":            llx.StringDataPtr(snapshot.Engine),
+			"engineVersion":     llx.StringDataPtr(snapshot.EngineVersion),
+			"status":            llx.StringDataPtr(snapshot.Status),
+			"snapshotType":      llx.StringDataPtr(snapshot.SnapshotType),
+			"port":              llx.IntDataPtr(snapshot.Port),
+			"allocatedStorage":  llx.IntDataPtr(snapshot.AllocatedStorage),
+			"storageEncrypted":  llx.BoolDataPtr(snapshot.StorageEncrypted),
+			"storageType":       llx.StringDataPtr(snapshot.StorageType),
+			"availabilityZones": llx.ArrayData(convert.SliceAnyToInterface(snapshot.AvailabilityZones), types.String),
+			"createdAt":         llx.TimeDataPtr(snapshot.SnapshotCreateTime),
+			"clusterCreatedAt":  llx.TimeDataPtr(snapshot.ClusterCreateTime),
+			"region":            llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlSnapshot := resource.(*mqlAwsNeptuneSnapshot)
+	mqlSnapshot.cacheKmsKeyId = snapshot.KmsKeyId
+	return mqlSnapshot, nil
+}
+
+type mqlAwsNeptuneSnapshotInternal struct {
+	cacheKmsKeyId *string
+}
+
+func (a *mqlAwsNeptuneSnapshot) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}

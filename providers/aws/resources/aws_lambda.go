@@ -134,6 +134,10 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 							"codeSha256":           llx.StringDataPtr(function.CodeSha256),
 							"description":          llx.StringDataPtr(function.Description),
 							"lastModifiedAt":       llx.TimeDataPtr(lastModifiedAt),
+							"state":                llx.StringData(string(function.State)),
+							"codeSize":             llx.IntData(function.CodeSize),
+							"stateReason":          llx.StringDataPtr(function.StateReason),
+							"lastUpdateStatus":     llx.StringData(string(function.LastUpdateStatus)),
 						})
 					if err != nil {
 						return nil, err

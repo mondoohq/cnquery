@@ -234,6 +234,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 						"securityGroups":    llx.ArrayData(sgs, types.Resource(ResourceAwsEc2Securitygroup)),
 						"vpcId":             llx.StringDataPtr(lb.VpcId),
 						"elbType":           llx.StringData(string(lb.Type)),
+						"ipAddressType":     llx.StringData(string(lb.IpAddressType)),
 						"region":            llx.StringData(region),
 						"vpc":               llx.NilData, // set vpc to nil as default, if vpc is not set
 					}
@@ -385,6 +386,65 @@ func (a *mqlAwsElbLoadbalancer) attributes() ([]any, error) {
 	return convert.JsonToDictSlice(attributes.Attributes)
 }
 
+func (a *mqlAwsElbListener) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := a.Arn.Data
+
+	if isV1LoadBalancerArn(arnVal) {
+		return []any{}, nil
+	}
+
+	region, err := GetRegionFromArn(arnVal)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	svc := conn.Elbv2(region)
+
+	res := []any{}
+	params := &elasticloadbalancingv2.DescribeListenersInput{LoadBalancerArn: &arnVal}
+	paginator := elasticloadbalancingv2.NewDescribeListenersPaginator(svc, params)
+	for paginator.HasMorePages() {
+		listenersResp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, l := range listenersResp.Listeners {
+			defaultActions, err := convert.JsonToDictSlice(l.DefaultActions)
+			if err != nil {
+				return nil, err
+			}
+			certificates, err := convert.JsonToDictSlice(l.Certificates)
+			if err != nil {
+				return nil, err
+			}
+
+			args := map[string]*llx.RawData{
+				"__id":            llx.StringDataPtr(l.ListenerArn),
+				"arn":             llx.StringDataPtr(l.ListenerArn),
+				"loadBalancerArn": llx.StringDataPtr(l.LoadBalancerArn),
+				"port":            llx.IntDataPtr(l.Port),
+				"protocol":        llx.StringData(string(l.Protocol)),
+				"sslPolicy":       llx.StringDataPtr(l.SslPolicy),
+				"defaultActions":  llx.ArrayData(defaultActions, types.Dict),
+				"certificates":    llx.ArrayData(certificates, types.Dict),
+				"alpnPolicy":      llx.ArrayData(llx.TArr2Raw(l.AlpnPolicy), types.String),
+			}
+
+			mqlListener, err := CreateResource(a.MqlRuntime, "aws.elb.listener", args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlListener)
+		}
+	}
+	return res, nil
+}
+
 func isV1LoadBalancerArn(a string) bool {
 	arnVal, err := arn.Parse(a)
 	if err != nil {
@@ -494,6 +554,7 @@ func (a *mqlAwsElbLoadbalancer) targetGroups() ([]any, error) {
 				"healthCheckTimeoutSeconds":  llx.IntDataPtr(tg.HealthCheckTimeoutSeconds),
 				"targetType":                 llx.StringData(string(tg.TargetType)),
 				"unhealthyThresholdCount":    llx.IntDataPtr(tg.UnhealthyThresholdCount),
+				"healthyThresholdCount":      llx.IntDataPtr(tg.HealthyThresholdCount),
 			}
 
 			mqlLb, err := CreateResource(a.MqlRuntime, ResourceAwsElbTargetgroup, args)
@@ -527,6 +588,184 @@ func (a *mqlAwsElbTargetgroup) vpc() (*mqlAwsVpc, error) {
 		return nil, err
 	}
 	return mqlVpc.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsElbTargetgroup) attributes() (*mqlAwsElbTargetgroupAttributes, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	tgArn := a.Arn.Data
+
+	region := a.region
+	svc := conn.Elbv2(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeTargetGroupAttributes(ctx, &elasticloadbalancingv2.DescribeTargetGroupAttributesInput{
+		TargetGroupArn: &tgArn,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Build a lookup map from the key/value attributes
+	attrMap := make(map[string]string)
+	for _, attr := range resp.Attributes {
+		if attr.Key != nil && attr.Value != nil {
+			attrMap[*attr.Key] = *attr.Value
+		}
+	}
+
+	args := map[string]*llx.RawData{
+		"__id":                                         llx.StringData(tgArn + "/attributes"),
+		"targetGroupArn":                               llx.StringData(tgArn),
+		"deregistrationDelayTimeoutSeconds":            llx.IntData(attrMapInt(attrMap, "deregistration_delay.timeout_seconds")),
+		"stickinessEnabled":                            llx.BoolData(attrMapBool(attrMap, "stickiness.enabled")),
+		"stickinessType":                               llx.StringData(attrMap["stickiness.type"]),
+		"loadBalancingAlgorithmType":                   llx.StringData(attrMap["load_balancing.algorithm.type"]),
+		"loadBalancingAlgorithmAnomalyMitigation":      llx.StringData(attrMap["load_balancing.algorithm.anomaly_mitigation"]),
+		"slowStartDurationSeconds":                     llx.IntData(attrMapInt(attrMap, "slow_start.duration_seconds")),
+		"crossZoneEnabled":                             llx.StringData(attrMap["load_balancing.cross_zone.enabled"]),
+		"proxyProtocolV2Enabled":                       llx.BoolData(attrMapBool(attrMap, "proxy_protocol_v2.enabled")),
+		"preserveClientIpEnabled":                      llx.BoolData(attrMapBool(attrMap, "preserve_client_ip.enabled")),
+		"connectionTerminationOnDeregistrationEnabled": llx.BoolData(attrMapBool(attrMap, "deregistration_delay.connection_termination.enabled")),
+		"connectionTerminationOnUnhealthyEnabled":      llx.BoolData(attrMapBool(attrMap, "target_health_state.unhealthy.connection_termination.enabled")),
+		"lambdaMultiValueHeadersEnabled":               llx.BoolData(attrMapBool(attrMap, "lambda.multi_value_headers.enabled")),
+		"targetFailoverOnDeregistration":               llx.StringData(attrMap["target_failover.on_deregistration"]),
+		"targetFailoverOnUnhealthy":                    llx.StringData(attrMap["target_failover.on_unhealthy"]),
+	}
+
+	res, err := CreateResource(a.MqlRuntime, ResourceAwsElbTargetgroupAttributes, args)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsElbTargetgroupAttributes), nil
+}
+
+func (a *mqlAwsElbTargetgroupAttributes) id() (string, error) {
+	return a.TargetGroupArn.Data + "/attributes", nil
+}
+
+// attrMapBool parses a string value from the attribute map as a boolean.
+func attrMapBool(m map[string]string, key string) bool {
+	return m[key] == "true"
+}
+
+// attrMapInt parses a string value from the attribute map as an integer.
+// Returns 0 if the key is missing or the value is not a valid integer.
+func attrMapInt(m map[string]string, key string) int64 {
+	v, ok := m[key]
+	if !ok {
+		return 0
+	}
+	var i int64
+	if _, err := fmt.Sscanf(v, "%d", &i); err != nil {
+		return 0
+	}
+	return i
+}
+
+func (a *mqlAwsElbLoadbalancerAttribute) id() (string, error) {
+	return a.LoadBalancerArn.Data + "/attributes", nil
+}
+
+func (a *mqlAwsElbLoadbalancer) attribute() (*mqlAwsElbLoadbalancerAttribute, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := a.Arn.Data
+
+	if isV1LoadBalancerArn(arnVal) {
+		a.Attribute.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	region, err := GetRegionFromArn(arnVal)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	svc := conn.Elbv2(region)
+
+	resp, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{
+		LoadBalancerArn: &arnVal,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	attrMap := make(map[string]string)
+	for _, attr := range resp.Attributes {
+		if attr.Key != nil && attr.Value != nil {
+			attrMap[*attr.Key] = *attr.Value
+		}
+	}
+
+	args := map[string]*llx.RawData{
+		"__id":                      llx.StringData(arnVal + "/attributes"),
+		"loadBalancerArn":           llx.StringData(arnVal),
+		"deletionProtectionEnabled": llx.BoolData(attrMapBool(attrMap, "deletion_protection.enabled")),
+		"crossZoneEnabled":          llx.StringData(attrMap["load_balancing.cross_zone.enabled"]),
+		"accessLogsEnabled":         llx.BoolData(attrMapBool(attrMap, "access_logs.s3.enabled")),
+		"accessLogsBucket":          llx.StringData(attrMap["access_logs.s3.bucket"]),
+		"accessLogsPrefix":          llx.StringData(attrMap["access_logs.s3.prefix"]),
+		"idleTimeoutSeconds":        llx.IntData(attrMapInt(attrMap, "idle_timeout.timeout_seconds")),
+		"desyncMitigationMode":      llx.StringData(attrMap["routing.http.desync_mitigation_mode"]),
+		"dropInvalidHeaderFields":   llx.BoolData(attrMapBool(attrMap, "routing.http.drop_invalid_header_fields.enabled")),
+		"preserveHostHeader":        llx.BoolData(attrMapBool(attrMap, "routing.http.preserve_host_header.enabled")),
+		"http2Enabled":              llx.BoolData(attrMapBool(attrMap, "routing.http2.enabled")),
+		"wafFailOpenEnabled":        llx.BoolData(attrMapBool(attrMap, "waf.fail_open.enabled")),
+		"zonalShiftEnabled":         llx.BoolData(attrMapBool(attrMap, "zonal_shift.config.enabled")),
+		"connectionLogsEnabled":     llx.BoolData(attrMapBool(attrMap, "connection_logs.s3.enabled")),
+		"connectionLogsBucket":      llx.StringData(attrMap["connection_logs.s3.bucket"]),
+	}
+
+	resource, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer.attribute", args)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsElbLoadbalancerAttribute), nil
+}
+
+func (a *mqlAwsElbLoadbalancer) instances() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := a.Arn.Data
+
+	if !isV1LoadBalancerArn(arnVal) {
+		// ALB/NLB/GLB don't have direct instances; use target groups instead
+		return []any{}, nil
+	}
+
+	region, err := GetRegionFromArn(arnVal)
+	if err != nil {
+		return nil, err
+	}
+
+	name := a.Name.Data
+	svc := conn.Elb(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeLoadBalancers(ctx, &elasticloadbalancing.DescribeLoadBalancersInput{
+		LoadBalancerNames: []string{name},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	if len(resp.LoadBalancerDescriptions) == 0 {
+		return res, nil
+	}
+
+	for _, inst := range resp.LoadBalancerDescriptions[0].Instances {
+		if inst.InstanceId == nil {
+			continue
+		}
+		mqlInst, err := NewResource(a.MqlRuntime, ResourceAwsEc2Instance,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, region, conn.AccountId(), *inst.InstanceId)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInst)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsElbTargetgroup) ec2Targets() ([]any, error) {

@@ -110,6 +110,11 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 							"region":                           llx.StringData(region),
 							"tags":                             llx.MapData(redshiftTagsToMap(cluster.Tags), types.String),
 							"vpcId":                            llx.StringDataPtr(cluster.VpcId),
+							"clusterAvailabilityStatus":        llx.StringDataPtr(cluster.ClusterAvailabilityStatus),
+							"totalStorageCapacityInMegaBytes":  llx.IntDataDefault(cluster.TotalStorageCapacityInMegaBytes, 0),
+							"multiAZ":                          llx.BoolData(convert.ToValue(cluster.MultiAZ) == "enabled"),
+							"manualSnapshotRetentionPeriod":    llx.IntDataDefault(cluster.ManualSnapshotRetentionPeriod, 0),
+							"ipAddressType":                    llx.StringDataPtr(cluster.IpAddressType),
 						})
 					if err != nil {
 						return nil, err
@@ -206,4 +211,87 @@ func (a *mqlAwsRedshiftCluster) logging() (any, error) {
 		return nil, err
 	}
 	return convert.JsonToDict(params)
+}
+
+func (a *mqlAwsRedshiftSnapshot) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsRedshiftCluster) snapshots() ([]any, error) {
+	clusterName := a.Name.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Redshift(region)
+	ctx := context.Background()
+	res := []any{}
+
+	paginator := redshift.NewDescribeClusterSnapshotsPaginator(svc, &redshift.DescribeClusterSnapshotsInput{ClusterIdentifier: &clusterName})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, snapshot := range page.Snapshots {
+			mqlSnapshot, err := newMqlAwsRedshiftSnapshot(a.MqlRuntime, region, snapshot)
+			if err != nil {
+				return nil, err
+			}
+			mqlSnapshot.cacheKmsKeyId = snapshot.KmsKeyId
+			res = append(res, mqlSnapshot)
+		}
+	}
+	return res, nil
+}
+
+func newMqlAwsRedshiftSnapshot(runtime *plugin.Runtime, region string, snapshot redshifttypes.Snapshot) (*mqlAwsRedshiftSnapshot, error) {
+	resource, err := CreateResource(runtime, ResourceAwsRedshiftSnapshot,
+		map[string]*llx.RawData{
+			"__id":                          llx.StringDataPtr(snapshot.SnapshotArn),
+			"arn":                           llx.StringDataPtr(snapshot.SnapshotArn),
+			"id":                            llx.StringDataPtr(snapshot.SnapshotIdentifier),
+			"clusterIdentifier":             llx.StringDataPtr(snapshot.ClusterIdentifier),
+			"region":                        llx.StringData(region),
+			"snapshotType":                  llx.StringDataPtr(snapshot.SnapshotType),
+			"status":                        llx.StringDataPtr(snapshot.Status),
+			"encrypted":                     llx.BoolDataPtr(snapshot.Encrypted),
+			"encryptedWithHSM":              llx.BoolDataPtr(snapshot.EncryptedWithHSM),
+			"port":                          llx.IntDataDefault(snapshot.Port, 0),
+			"nodeType":                      llx.StringDataPtr(snapshot.NodeType),
+			"numberOfNodes":                 llx.IntDataDefault(snapshot.NumberOfNodes, 0),
+			"masterUsername":                llx.StringDataPtr(snapshot.MasterUsername),
+			"dbName":                        llx.StringDataPtr(snapshot.DBName),
+			"availabilityZone":              llx.StringDataPtr(snapshot.AvailabilityZone),
+			"clusterVersion":                llx.StringDataPtr(snapshot.ClusterVersion),
+			"engineFullVersion":             llx.StringDataPtr(snapshot.EngineFullVersion),
+			"enhancedVpcRouting":            llx.BoolDataPtr(snapshot.EnhancedVpcRouting),
+			"manualSnapshotRetentionPeriod": llx.IntDataDefault(snapshot.ManualSnapshotRetentionPeriod, 0),
+			"totalBackupSizeInMegaBytes":    llx.FloatData(convert.ToValue(snapshot.TotalBackupSizeInMegaBytes)),
+			"createdAt":                     llx.TimeDataPtr(snapshot.SnapshotCreateTime),
+			"clusterCreatedAt":              llx.TimeDataPtr(snapshot.ClusterCreateTime),
+			"tags":                          llx.MapData(redshiftTagsToMap(snapshot.Tags), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsRedshiftSnapshot), nil
+}
+
+type mqlAwsRedshiftSnapshotInternal struct {
+	cacheKmsKeyId *string
+}
+
+func (a *mqlAwsRedshiftSnapshot) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }

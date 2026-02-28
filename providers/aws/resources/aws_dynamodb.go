@@ -501,6 +501,7 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 						"status":                    llx.StringData(string(table.Table.TableStatus)),
 						"items":                     llx.IntDataPtr(table.Table.ItemCount),
 						"latestStreamArn":           llx.StringDataPtr(table.Table.LatestStreamArn),
+						"latestStreamLabel":         llx.StringDataPtr(table.Table.LatestStreamLabel),
 					})
 				if err != nil {
 					return nil, err

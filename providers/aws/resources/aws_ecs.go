@@ -738,6 +738,9 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 			"ephemeralStorage":     llx.ResourceData(ephemeralStorageResource, "aws.ecs.taskDefinition.ephemeralStorage"),
 			"tags":                 llx.MapData(tags, types.String),
 			"region":               llx.StringData(region),
+			"cpu":                  llx.StringDataPtr(td.Cpu),
+			"memory":               llx.StringDataPtr(td.Memory),
+			"registeredAt":         llx.TimeDataPtr(td.RegisteredAt),
 		})
 }
 
@@ -1506,6 +1509,12 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["tags"] = llx.MapData(ecsTagsToMap(s.Tags), types.String)
 	args["createdAt"] = llx.TimeDataPtr(s.CreatedAt)
 	args["createdBy"] = llx.StringData(createdBy)
+	args["enableExecuteCommand"] = llx.BoolData(s.EnableExecuteCommand)
+	args["enableEcsManagedTags"] = llx.BoolData(s.EnableECSManagedTags)
+	args["schedulingStrategy"] = llx.StringData(string(s.SchedulingStrategy))
+	args["platformFamily"] = llx.StringDataPtr(s.PlatformFamily)
+	args["platformVersion"] = llx.StringDataPtr(s.PlatformVersion)
+	args["healthCheckGracePeriodSeconds"] = llx.IntDataDefault(s.HealthCheckGracePeriodSeconds, 0)
 
 	return args, nil, nil
 }

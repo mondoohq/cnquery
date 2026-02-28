@@ -640,6 +640,7 @@ func (a *mqlAwsVpc) routeTables() ([]any, error) {
 			}
 			res = append(res, mqlRouteTable)
 			mqlRouteTable.(*mqlAwsVpcRoutetable).cacheAssociations = routeTable.Associations
+			mqlRouteTable.(*mqlAwsVpcRoutetable).cacheRoutes = routeTable.Routes
 		}
 	}
 	return res, nil
@@ -647,6 +648,61 @@ func (a *mqlAwsVpc) routeTables() ([]any, error) {
 
 type mqlAwsVpcRoutetableInternal struct {
 	cacheAssociations []vpctypes.RouteTableAssociation
+	cacheRoutes       []vpctypes.Route
+}
+
+func (a *mqlAwsVpcRoutetableRoute) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsVpcRoutetable) routeEntries() ([]any, error) {
+	routeTableId := a.Id.Data
+	res := []any{}
+	for _, route := range a.cacheRoutes {
+		destCidr := convert.ToValue(route.DestinationCidrBlock)
+		destIpv6 := convert.ToValue(route.DestinationIpv6CidrBlock)
+		destPrefix := convert.ToValue(route.DestinationPrefixListId)
+
+		// Build a unique ID from route table + destination
+		dest := destCidr
+		if dest == "" {
+			dest = destIpv6
+		}
+		if dest == "" {
+			dest = destPrefix
+		}
+		if dest == "" {
+			dest = "unknown"
+		}
+		routeId := routeTableId + "/" + dest
+
+		args := map[string]*llx.RawData{
+			"id":                          llx.StringData(routeId),
+			"destinationCidrBlock":        llx.StringData(destCidr),
+			"destinationIpv6CidrBlock":    llx.StringData(destIpv6),
+			"destinationPrefixListId":     llx.StringData(destPrefix),
+			"gatewayId":                   llx.StringData(convert.ToValue(route.GatewayId)),
+			"instanceId":                  llx.StringData(convert.ToValue(route.InstanceId)),
+			"instanceOwnerId":             llx.StringData(convert.ToValue(route.InstanceOwnerId)),
+			"networkInterfaceId":          llx.StringData(convert.ToValue(route.NetworkInterfaceId)),
+			"natGatewayId":                llx.StringData(convert.ToValue(route.NatGatewayId)),
+			"transitGatewayId":            llx.StringData(convert.ToValue(route.TransitGatewayId)),
+			"vpcPeeringConnectionId":      llx.StringData(convert.ToValue(route.VpcPeeringConnectionId)),
+			"egressOnlyInternetGatewayId": llx.StringData(convert.ToValue(route.EgressOnlyInternetGatewayId)),
+			"localGatewayId":              llx.StringData(convert.ToValue(route.LocalGatewayId)),
+			"carrierGatewayId":            llx.StringData(convert.ToValue(route.CarrierGatewayId)),
+			"coreNetworkArn":              llx.StringData(convert.ToValue(route.CoreNetworkArn)),
+			"origin":                      llx.StringData(string(route.Origin)),
+			"state":                       llx.StringData(string(route.State)),
+		}
+
+		mqlRoute, err := CreateResource(a.MqlRuntime, "aws.vpc.routetable.route", args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRoute)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsVpcRoutetable) associations() ([]any, error) {
@@ -786,6 +842,7 @@ func (a *mqlAwsVpcSubnet) routeTable() (*mqlAwsVpcRoutetable, error) {
 		return nil, err
 	}
 	mqlRouteTable.(*mqlAwsVpcRoutetable).cacheAssociations = routeTableToReturn.Associations
+	mqlRouteTable.(*mqlAwsVpcRoutetable).cacheRoutes = routeTableToReturn.Routes
 	return mqlRouteTable.(*mqlAwsVpcRoutetable), nil
 }
 

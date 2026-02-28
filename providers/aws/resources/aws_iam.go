@@ -332,6 +332,7 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 			"createdAt":        llx.TimeDataPtr(usr.CreateDate),
 			"passwordLastUsed": llx.TimeDataPtr(usr.PasswordLastUsed),
 			"tags":             llx.MapData(iamTagsToMap(usr.Tags), types.String),
+			"path":             llx.StringDataPtr(usr.Path),
 		},
 	)
 }
@@ -523,6 +524,7 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 					"lastUsedRegion":           llx.StringData(lastUsedRegion),
 					"maxSessionDuration":       llx.IntDataDefault(role.MaxSessionDuration, 3600),
 					"permissionsBoundaryArn":   llx.StringData(permBoundaryArn),
+					"path":                     llx.StringDataPtr(role.Path),
 				})
 			if err != nil {
 				return nil, err
@@ -803,6 +805,7 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 			args["createdAt"] = llx.TimeDataPtr(usr.CreateDate)
 			args["passwordLastUsed"] = llx.TimeDataPtr(usr.PasswordLastUsed)
 			args["tags"] = llx.MapData(iamTagsToMap(usr.Tags), types.String)
+			args["path"] = llx.StringDataPtr(usr.Path)
 
 			return args, nil, nil
 		}
@@ -1301,6 +1304,7 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		}
 		args["maxSessionDuration"] = llx.IntDataDefault(role.MaxSessionDuration, 3600)
 		args["permissionsBoundaryArn"] = llx.StringData(permBoundaryArn)
+		args["path"] = llx.StringDataPtr(role.Path)
 		return args, nil, nil
 	}
 
@@ -1349,6 +1353,7 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["name"] = llx.StringDataPtr(grp.GroupName)
 		args["createdAt"] = llx.TimeDataPtr(grp.CreateDate)
 		args["usernames"] = llx.ArrayData(usernames, types.String)
+		args["path"] = llx.StringDataPtr(grp.Path)
 		return args, nil, nil
 	}
 

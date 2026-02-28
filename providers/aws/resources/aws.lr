@@ -139,10 +139,50 @@ private aws.vpc.routetable @defaults("id routes.length") {
   id string
   // Region where the route table exists
   region string
-  // A list of route descriptions
+  // Deprecated: Use `routeEntries` instead
   routes []dict
+  // List of routes in the route table
+  routeEntries() []aws.vpc.routetable.route
   // Tags on the route table
   tags map[string]string
+}
+
+// Amazon Virtual Private Cloud (VPC) route table route entry
+private aws.vpc.routetable.route @defaults("destinationCidrBlock state") {
+  // Unique ID for this route (route table ID + destination)
+  id string
+  // IPv4 CIDR block used for the destination match
+  destinationCidrBlock string
+  // IPv6 CIDR block used for the destination match
+  destinationIpv6CidrBlock string
+  // Prefix list ID for the destination match
+  destinationPrefixListId string
+  // ID of a gateway attached to the VPC
+  gatewayId string
+  // ID of a NAT instance in the VPC
+  instanceId string
+  // ID of the Amazon Web Services account that owns the instance
+  instanceOwnerId string
+  // ID of the network interface
+  networkInterfaceId string
+  // ID of a NAT gateway
+  natGatewayId string
+  // ID of a transit gateway
+  transitGatewayId string
+  // ID of a VPC peering connection
+  vpcPeeringConnectionId string
+  // ID of the egress-only internet gateway
+  egressOnlyInternetGatewayId string
+  // ID of the local gateway
+  localGatewayId string
+  // ID of the carrier gateway
+  carrierGatewayId string
+  // ARN of the core network
+  coreNetworkArn string
+  // How the route was created (CreateRouteTable, CreateRoute, EnableVgwRoutePropagation)
+  origin string
+  // State of the route (active, blackhole)
+  state string
 }
 
 // Amazon Virtual Private Cloud (VPC) route table association
@@ -811,6 +851,8 @@ aws.fsx @defaults("fileSystems") {
   caches() []aws.fsx.cache
   // A list of FSx backups
   backups() []aws.fsx.backup
+  // A list of FSx volumes (ONTAP and OpenZFS)
+  volumes() []aws.fsx.volume
 }
 
 // AWS FSx file system
@@ -861,8 +903,8 @@ private aws.fsx.cache @defaults("id lifecycle") {
   lustreConfiguration dict
   // S3 data repository associations
   dataRepositoryAssociations []dict
-  // Resource tags
-  tags map[string]string
+  // Region where the cache exists
+  region string
 }
 
 // AWS FSx backup
@@ -883,8 +925,64 @@ private aws.fsx.backup @defaults("backupId type lifecycle") {
   kmsKeyId string
   // Creation timestamp
   createdAt time
+  // Region where the backup exists
+  region string
   // Resource tags
   tags map[string]string
+}
+
+// AWS FSx volume (ONTAP or OpenZFS)
+private aws.fsx.volume @defaults("id name lifecycle region") {
+  // Volume ID
+  id string
+  // Volume ARN
+  arn string
+  // Volume name
+  name string
+  // Associated file system ID
+  fileSystemId string
+  // Volume type (ONTAP or OPENZFS)
+  volumeType string
+  // Lifecycle status (AVAILABLE, CREATING, DELETING, FAILED, MISCONFIGURED, PENDING)
+  lifecycle string
+  // Storage virtual machine ID (ONTAP only)
+  storageVirtualMachineId string
+  // Creation timestamp
+  createdAt time
+  // Resource tags
+  tags map[string]string
+  // Region where the volume exists
+  region string
+  // ONTAP volume size in megabytes
+  ontapSizeInMegabytes int
+  // ONTAP junction path for NAS mount
+  ontapJunctionPath string
+  // ONTAP security style (UNIX, NTFS, MIXED)
+  ontapSecurityStyle string
+  // Whether ONTAP storage efficiency is enabled
+  ontapStorageEfficiency bool
+  // ONTAP snapshot policy
+  ontapSnapshotPolicy string
+  // Whether ONTAP copies tags to backups
+  ontapCopyTagsToBackups bool
+  // ONTAP volume style (FLEXVOL or FLEXGROUP)
+  ontapVolumeStyle string
+  // OpenZFS volume path
+  openzfsVolumePath string
+  // OpenZFS parent volume ID
+  openzfsParentVolumeId string
+  // Whether OpenZFS volume is read-only
+  openzfsReadOnly bool
+  // OpenZFS record size in KiB
+  openzfsRecordSizeKiB int
+  // OpenZFS storage capacity quota in GiB
+  openzfsStorageCapacityQuotaGiB int
+  // OpenZFS storage capacity reservation in GiB
+  openzfsStorageCapacityReservationGiB int
+  // OpenZFS data compression type (NONE, ZSTD, LZ4)
+  openzfsDataCompressionType string
+  // Whether OpenZFS copies tags to snapshots
+  openzfsCopyTagsToSnapshots bool
 }
 
 // AWS Key Management Service (KMS)
@@ -1054,10 +1152,12 @@ private aws.iam.user @defaults("arn name createdAt") {
   accessKeys() []dict
   // Login profile for the user
   loginProfile() aws.iam.loginProfile
+  // Path to the user
+  path string
 }
 
 // AWS IAM instance profile
-private aws.iam.instanceProfile @defaults("arn instanceProfileId") {
+private aws.iam.instanceProfile @defaults("instanceProfileId instanceProfileName") {
   // ARN of the instance profile
   arn string
   // Time when the instance profile was created
@@ -1149,6 +1249,8 @@ private aws.iam.role @defaults("arn name") {
   maxSessionDuration int
   // ARN of the permissions boundary policy attached to the role (empty string if none)
   permissionsBoundaryArn string
+  // Path to the role
+  path string
 }
 
 // AWS IAM group
@@ -1165,6 +1267,8 @@ private aws.iam.group @defaults("arn name") {
   usernames []string
   // List of inline policy names attached to the group
   inlinePolicies() []string
+  // Path to the group
+  path string
 }
 
 // AWS IAM virtual MFA device
@@ -1296,7 +1400,13 @@ private aws.sagemaker.notebookinstancedetails @defaults("arn") {
   // KMS key used to encrypt data
   kmsKey() aws.kms.key
   // Whether SageMaker provides internet access to the instance
-  directInternetAccess string
+  directInternetAccess bool
+  // Whether root access is enabled for users of the notebook instance
+  rootAccess bool
+  // Minimum IMDS version the notebook instance supports (1 or 2)
+  minimumInstanceMetadataServiceVersion string
+  // VPC subnet the notebook instance is deployed in
+  subnet() aws.vpc.subnet
 }
 
 // AWS SageMaker endpoint
@@ -1333,6 +1443,8 @@ private aws.sns.topic @defaults("arn") {
   tags() map[string]string
   // Signature version used for Amazon SNS message signing (1 or 2)
   signatureVersion() string
+  // KMS master key used for server-side encryption
+  kmsMasterKey() aws.kms.key
 }
 
 // AWS Simple Notification Service (SNS) subscription
@@ -1505,6 +1617,10 @@ private aws.acm.certificate @defaults("domainName issuer createdAt notAfter") {
   issuedAt time
   // Date and time when the certificate was imported (exists only when the certificate source is IMPORTED)
   importedAt time
+  // Whether the certificate is eligible for renewal
+  renewalEligible bool
+  // Algorithm used to sign the certificate
+  signatureAlgorithm string
 }
 
 // AWS Auto Scaling
@@ -1619,12 +1735,50 @@ private aws.elb.targetgroup @defaults("name port ec2Targets lambdaTargets") {
   targetType string
   // Unhealthy threshold count for the load balancer target group
   unhealthyThresholdCount int
+  // Healthy threshold count for the load balancer target group
+  healthyThresholdCount int
+  // Attributes for the load balancer target group
+  attributes() aws.elb.targetgroup.attributes
   // VPC for the load balancer target group
   vpc() aws.vpc
   // EC2 targets for the load balancer target group
   ec2Targets() []aws.ec2.instance
   // Lambda targets for the load balancer target group
   lambdaTargets() []aws.lambda.function
+}
+
+// AWS ELB target group attributes
+private aws.elb.targetgroup.attributes {
+  // Target group ARN this attributes resource belongs to
+  targetGroupArn string
+  // Deregistration delay timeout in seconds
+  deregistrationDelayTimeoutSeconds int
+  // Whether stickiness is enabled
+  stickinessEnabled bool
+  // Stickiness type (lb_cookie, app_cookie, source_ip, source_ip_dest_ip, source_ip_dest_ip_proto)
+  stickinessType string
+  // Load balancing algorithm type (round_robin, least_outstanding_requests, weighted_random)
+  loadBalancingAlgorithmType string
+  // Whether anomaly mitigation is enabled (on, off). Only for weighted_random algorithm
+  loadBalancingAlgorithmAnomalyMitigation string
+  // Slow start duration in seconds (0 = disabled). ALB with instance/IP targets only
+  slowStartDurationSeconds int
+  // Whether cross-zone load balancing is enabled (true, false, use_load_balancer_configuration)
+  crossZoneEnabled string
+  // Whether Proxy Protocol v2 is enabled. NLB only
+  proxyProtocolV2Enabled bool
+  // Whether client IP preservation is enabled. NLB only
+  preserveClientIpEnabled bool
+  // Whether connection termination on deregistration is enabled. NLB only
+  connectionTerminationOnDeregistrationEnabled bool
+  // Whether connection termination on unhealthy targets is enabled. NLB only
+  connectionTerminationOnUnhealthyEnabled bool
+  // Whether Lambda multi-value headers are enabled. ALB with Lambda targets only
+  lambdaMultiValueHeadersEnabled bool
+  // Target failover behavior on deregistration (rebalance, no_rebalance). GLB only
+  targetFailoverOnDeregistration string
+  // Target failover behavior on unhealthy (rebalance, no_rebalance). GLB only
+  targetFailoverOnUnhealthy string
 }
 
 // AWS Elastic Load Balancing load balancer
@@ -1657,12 +1811,74 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   region string
   // Type of ELB. Possible values are `network`, `application`, `gateway`, or `classic`
   elbType string
+  // IP address type for the load balancer (ipv4, dualstack, dualstack-without-public-ipv4)
+  ipAddressType string
   // VPC where the load balancer is located
   vpc aws.vpc
   // Tags on the load balancer
   tags() map[string]string
   // List of target groups for the load balancer
   targetGroups() []aws.elb.targetgroup
+  // List of EC2 instances registered with the load balancer (classic ELB only)
+  instances() []aws.ec2.instance
+  // List of listeners for ALB/NLB load balancers (typed)
+  listeners() []aws.elb.listener
+  // Typed attributes for ALB/NLB load balancers
+  attribute() aws.elb.loadbalancer.attribute
+}
+
+// AWS ELB listener
+private aws.elb.listener @defaults("arn port protocol") {
+  // ARN for the listener
+  arn string
+  // ARN of the load balancer this listener belongs to
+  loadBalancerArn string
+  // Port on which the listener listens
+  port int
+  // Protocol for connections from clients to the load balancer (HTTP, HTTPS, TCP, TLS, UDP, TCP_UDP)
+  protocol string
+  // SSL policy for HTTPS/TLS listeners
+  sslPolicy string
+  // Default actions for the listener
+  defaultActions []dict
+  // Server certificates for the listener
+  certificates []dict
+  // ALPN policy for TLS listeners
+  alpnPolicy []string
+}
+
+// AWS ELB load balancer attributes
+private aws.elb.loadbalancer.attribute {
+  // Load balancer ARN this attributes resource belongs to
+  loadBalancerArn string
+  // Whether deletion protection is enabled
+  deletionProtectionEnabled bool
+  // Whether cross-zone load balancing is enabled
+  crossZoneEnabled string
+  // Whether access logs are enabled
+  accessLogsEnabled bool
+  // S3 bucket for access logs
+  accessLogsBucket string
+  // S3 prefix for access logs
+  accessLogsPrefix string
+  // Idle timeout in seconds (ALB only)
+  idleTimeoutSeconds int
+  // HTTP desync mitigation mode (monitor, defensive, strictest). ALB only
+  desyncMitigationMode string
+  // Whether invalid header fields are dropped. ALB only
+  dropInvalidHeaderFields bool
+  // Whether Host header is preserved. ALB only
+  preserveHostHeader bool
+  // Whether HTTP/2 is enabled. ALB only
+  http2Enabled bool
+  // Whether WAF fail-open is enabled. ALB only
+  wafFailOpenEnabled bool
+  // Whether zonal shift is enabled
+  zonalShiftEnabled bool
+  // Whether connection logs are enabled. ALB only
+  connectionLogsEnabled bool
+  // S3 bucket for connection logs. ALB only
+  connectionLogsBucket string
 }
 
 // AWS CodeBuild for building and testing code
@@ -1687,6 +1903,22 @@ private aws.codebuild.project @defaults("arn name") {
   source dict
   // Tags for the project
   tags map[string]string
+  // Date the project was created
+  createdAt time
+  // Date the project was last modified
+  modifiedAt time
+  // Whether the build environment has Docker privileged mode enabled
+  privilegedMode bool
+  // Visibility of the project's builds (PUBLIC_READ or PRIVATE)
+  projectVisibility string
+  // Build timeout in minutes
+  timeoutInMinutes int
+  // KMS key used to encrypt build output artifacts
+  encryptionKey() aws.kms.key
+  // IAM service role ARN used by the build project
+  serviceRole string
+  // Minutes a build is allowed to be queued before it times out
+  queuedTimeoutInMinutes int
 }
 
 // Amazon GuardDuty for threat detection
@@ -2081,6 +2313,12 @@ private aws.ecs.taskDefinition @defaults("arn family revision") {
   tags map[string]string
   // Region where the task definition is located
   region string
+  // Total CPU units for the task (e.g., "256", "1024")
+  cpu string
+  // Total memory in MiB for the task (e.g., "512", "2048")
+  memory string
+  // When the task definition was registered
+  registeredAt time
 }
 
 // Amazon ECS Service
@@ -2113,6 +2351,18 @@ private aws.ecs.service @defaults("arn name clusterArn status") {
   createdBy string
   // Task sets associated with the service (for services using EXTERNAL or CODE_DEPLOY deployment controllers)
   taskSets() []aws.ecs.taskSet
+  // Whether execute command functionality is enabled for the service
+  enableExecuteCommand bool
+  // Whether Amazon ECS managed tags are enabled for the service
+  enableEcsManagedTags bool
+  // Scheduling strategy for the service (REPLICA or DAEMON)
+  schedulingStrategy string
+  // Operating system family for the tasks in the service
+  platformFamily string
+  // Platform version for Fargate tasks
+  platformVersion string
+  // Grace period in seconds after a new task starts before health check failures count
+  healthCheckGracePeriodSeconds int
 }
 
 // Amazon ECS Task Set
@@ -2391,6 +2641,8 @@ private aws.cloudwatch.metricsalarm @defaults("arn") {
   okActions []aws.sns.topic
   // Name of the alarm
   name string
+  // Whether actions are enabled for the alarm
+  actionsEnabled bool
 }
 
 // Amazon CloudWatch metric
@@ -2466,6 +2718,10 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   retentionInDays int
   // Tags for the log group
   tags map[string]string
+  // Data protection policy status (ACTIVATED, DELETED, ARCHIVED, DISABLED)
+  dataProtectionStatus string
+  // Whether deletion protection is enabled for the log group
+  deletionProtectionEnabled bool
 }
 
 // Amazon CloudWatch log group metrics filter
@@ -2522,6 +2778,8 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   geoRestrictionType string
   // When the distribution was last modified
   lastModifiedAt time
+  // User-provided comment or description for the distribution
+  comment string
 }
 
 // Amazon CloudFront distribution origin
@@ -2653,6 +2911,10 @@ private aws.s3.bucket @defaults("name location public") {
   replication() dict
   // Bucket encryption configuration
   encryption() dict
+  // Typed encryption rules for the bucket
+  encryptionRules() []aws.s3.bucket.encryptionRule
+  // Typed replication rules for the bucket
+  replicationRules() []aws.s3.bucket.replicationRule
   // Public access block configuration for the bucket
   publicAccessBlock() dict
   // Whether Object Lock is enabled on the bucket (prevents deletion/overwrite for ransomware protection)
@@ -2691,6 +2953,40 @@ private aws.s3.bucket.corsrule @defaults("name") {
   exposeHeaders []string
   // Time in seconds that the browser caches preflight response
   maxAgeSeconds int
+}
+
+// Amazon S3 bucket server-side encryption rule
+private aws.s3.bucket.encryptionRule @defaults("sseAlgorithm bucketKeyEnabled") {
+  // Unique ID for this rule (bucket ARN + index)
+  id string
+  // Server-side encryption algorithm (AES256, aws:kms, aws:kms:dsse)
+  sseAlgorithm string
+  // KMS master key ID for SSE-KMS encryption
+  kmsMasterKeyId string
+  // Whether an S3 Bucket Key is used for SSE-KMS
+  bucketKeyEnabled bool
+}
+
+// Amazon S3 bucket replication rule
+private aws.s3.bucket.replicationRule @defaults("id status") {
+  // Unique internal identifier for this resource
+  resourceId string
+  // Rule ID
+  id string
+  // Status of the rule (Enabled, Disabled)
+  status string
+  // Priority of the rule
+  priority int
+  // Destination bucket ARN
+  destinationBucket string
+  // Destination account ID
+  destinationAccount string
+  // Destination storage class
+  destinationStorageClass string
+  // Whether delete marker replication is enabled
+  deleteMarkerReplicationEnabled bool
+  // Prefix filter (deprecated, but still used)
+  prefix string
 }
 
 // Amazon S3 bucket policy
@@ -2945,6 +3241,8 @@ private aws.drs.launchConfiguration @defaults("sourceServerID") {
 aws.backup @defaults("vaults") {
   // List of vaults for the service
   vaults() []aws.backup.vault
+  // List of backup plans
+  plans() []aws.backup.plan
 }
 
 // AWS Backup vault
@@ -2993,6 +3291,92 @@ private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate sta
   encryptionKeyArn string
   // Whether the recovery point is encrypted
   isEncrypted bool
+}
+
+// AWS Backup lifecycle settings
+private aws.backup.lifecycle @defaults("deleteAfterDays moveToColdStorageAfterDays") {
+  // Unique identifier
+  id string
+  // Number of days after creation that a recovery point is deleted
+  deleteAfterDays int
+  // Number of days after creation that a recovery point is moved to cold storage
+  moveToColdStorageAfterDays int
+  // Whether to opt in to archive for supported resources
+  optInToArchiveForSupportedResources bool
+}
+
+// AWS Backup plan
+private aws.backup.plan @defaults("name region") {
+  // Plan ARN
+  arn string
+  // Plan ID
+  id string
+  // Plan name
+  name string
+  // Plan version ID
+  versionId string
+  // Region of the plan
+  region string
+  // Date the plan was created
+  createdAt time
+  // Date the plan was last executed
+  lastExecutionDate time
+  // Date the plan was deleted (if applicable)
+  deletionDate time
+  // Rules for the backup plan
+  rules() []aws.backup.plan.rule
+  // Advanced backup settings for the plan
+  advancedBackupSettings []aws.backup.plan.advancedBackupSetting
+}
+
+// AWS Backup plan advanced backup setting
+private aws.backup.plan.advancedBackupSetting @defaults("resourceType") {
+  // Unique identifier
+  id string
+  // Resource type (e.g., EC2)
+  resourceType string
+  // Backup options (e.g., WindowsVSS, S3BackupACLs)
+  backupOptions map[string]string
+}
+
+// AWS Backup plan rule
+private aws.backup.plan.rule @defaults("ruleName targetBackupVaultName") {
+  // Rule ID
+  id string
+  // Display name of the rule
+  ruleName string
+  // Name of the target backup vault
+  targetBackupVaultName string
+  // CRON expression for the backup schedule
+  scheduleExpression string
+  // Timezone for the schedule expression
+  scheduleExpressionTimezone string
+  // Number of minutes before a backup job must be started
+  startWindowMinutes int
+  // Number of minutes after a backup job starts before it must be completed
+  completionWindowMinutes int
+  // Whether continuous backups are enabled
+  enableContinuousBackup bool
+  // Lifecycle settings for the recovery point (transition to cold storage, deletion)
+  lifecycle aws.backup.lifecycle
+  // Copy actions for cross-region or cross-account backup copies
+  copyActions []aws.backup.plan.rule.copyAction
+  // Tags assigned to recovery points created by this rule
+  recoveryPointTags map[string]string
+}
+
+// AWS Backup plan rule copy action
+private aws.backup.plan.rule.copyAction @defaults("destinationBackupVaultArn") {
+  // Unique identifier
+  id string
+  // ARN of the destination backup vault
+  destinationBackupVaultArn string
+  // Number of days after creation that a recovery point is deleted
+  deleteAfterDays int
+  // Number of days after creation that a recovery point is moved to cold storage
+  moveToColdStorageAfterDays int
+  // Whether to opt in to archive for supported resources
+  optInToArchiveForSupportedResources bool
 }
 
 // Amazon DynamoDB
@@ -3099,6 +3483,8 @@ private aws.dynamodb.table @defaults("name region") {
   latestStreamArn string
   // Current state of the table: CREATING, UPDATING, DELETING, ACTIVE, INACCESSIBLE_ENCRYPTION_CREDENTIALS, ARCHIVING, ARCHIVED, or REPLICATION_NOT_AUTHORIZED
   status string
+  // Label of the latest DynamoDB stream
+  latestStreamLabel string
 }
 
 // Amazon Simple Queue Service (SQS)
@@ -3139,6 +3525,10 @@ private aws.sqs.queue {
   url string
   // Visibility timeout for the queue
   visibilityTimeoutSeconds() int
+  // Deduplication scope for FIFO queues (queue or messageGroup)
+  deduplicationScope() string
+  // FIFO throughput limit (perQueue or perMessageGroupId)
+  fifoThroughputLimit() string
 }
 
 // Amazon Relational Database Service (RDS)
@@ -3271,6 +3661,10 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   kmsKey() aws.kms.key
   // Whether Performance Insights is enabled for the DB cluster
   performanceInsightsEnabled bool
+  // DB engine mode (provisioned, serverless, parallelquery, global)
+  engineMode string
+  // Earliest point-in-time restore timestamp
+  earliestRestorableTime time
 }
 
 // Amazon RDS snapshot
@@ -3405,6 +3799,18 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   copyTagsToSnapshot bool
   // KMS key used to encrypt Performance Insights data
   performanceInsightsKmsKey() aws.kms.key
+  // License model for the DB instance
+  licenseModel string
+  // Upper limit to which Amazon RDS can automatically scale the storage of the DB instance
+  maxAllocatedStorage int
+  // Whether a dedicated log volume is enabled
+  dedicatedLogVolume bool
+  // Region-unique immutable identifier for the DB instance
+  dbiResourceId string
+  // Cluster identifier if the instance belongs to a DB cluster
+  dbClusterIdentifier string
+  // Storage throughput in MiBps for gp3 volumes
+  storageThroughput int
 }
 
 // Amazon RDS pending maintenance action
@@ -3548,6 +3954,10 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   transitEncryptionEnabled bool
   // Whether migrating clients to use in-transit encryption (with no downtime) is allowed
   transitEncryptionMode string
+  // Specifies the weekly time range during which maintenance on the cluster is performed
+  preferredMaintenanceWindow string
+  // Whether log delivery is enabled for the replication group
+  replicationGroupLogDeliveryEnabled bool
 }
 
 // Amazon ElastiCache serverless cache
@@ -3578,6 +3988,8 @@ private aws.elasticache.serverlessCache @defaults("name description status engin
   region string
   // Time when the serverless cache was created
   createdAt time
+  // Subnets associated with the serverless cache
+  subnets() []aws.vpc.subnet
 }
 
 // Amazon Redshift
@@ -3638,6 +4050,68 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   tags map[string]string
   // ID of the VPC where the cluster is running
   vpcId string
+  // Availability status (Available, Unavailable, Maintenance, Modifying)
+  clusterAvailabilityStatus string
+  // Total storage capacity in megabytes
+  totalStorageCapacityInMegaBytes int
+  // Whether the cluster is a Multi-AZ deployment
+  multiAZ bool
+  // Number of days manual snapshots are retained (-1 means indefinite)
+  manualSnapshotRetentionPeriod int
+  // IP address type for the cluster (ipv4 or dualstack)
+  ipAddressType string
+  // Snapshots for this cluster
+  snapshots() []aws.redshift.snapshot
+}
+
+// Amazon Redshift cluster snapshot
+private aws.redshift.snapshot @defaults("arn clusterIdentifier status createdAt") {
+  // Snapshot ARN
+  arn string
+  // Snapshot identifier
+  id string
+  // Cluster identifier
+  clusterIdentifier string
+  // Region where the snapshot exists
+  region string
+  // Snapshot type (manual or automated)
+  snapshotType string
+  // Snapshot status
+  status string
+  // Whether the snapshot data is encrypted
+  encrypted bool
+  // Whether the snapshot data is encrypted using a hardware security module
+  encryptedWithHSM bool
+  // Port the cluster was listening on at the time of the snapshot
+  port int
+  // Node type of the nodes in the cluster
+  nodeType string
+  // Number of nodes in the cluster
+  numberOfNodes int
+  // Master user name for the cluster
+  masterUsername string
+  // Name of the database
+  dbName string
+  // Availability zone of the cluster
+  availabilityZone string
+  // Version of the cluster engine at time of snapshot
+  clusterVersion string
+  // Full engine version of the cluster
+  engineFullVersion string
+  // Whether enhanced VPC routing was enabled
+  enhancedVpcRouting bool
+  // Number of days manual snapshots are retained (-1 means indefinite)
+  manualSnapshotRetentionPeriod int
+  // Total size of the data in the snapshot in megabytes
+  totalBackupSizeInMegaBytes float
+  // Time the snapshot was taken
+  createdAt time
+  // Time the source cluster was created
+  clusterCreatedAt time
+  // Tags for the snapshot
+  tags map[string]string
+  // KMS key used for the encrypted snapshot
+  kmsKey() aws.kms.key
 }
 
 // AWS Elastic Container Registry (ECR)
@@ -3676,6 +4150,42 @@ private aws.ecr.repository @defaults("uri region") {
   createdAt time
   // Scanning frequency for the repository: SCAN_ON_PUSH, CONTINUOUS_SCAN, or MANUAL
   scanningFrequency() string
+  // Lifecycle policy for the repository
+  lifecyclePolicy() aws.ecr.lifecyclePolicy
+}
+
+// AWS ECR repository lifecycle policy
+private aws.ecr.lifecyclePolicy @defaults("rules") {
+  // Unique identifier for this lifecycle policy
+  id string
+  // Time the lifecycle policy was last evaluated
+  lastEvaluatedAt time
+  // Rules in the lifecycle policy
+  rules []aws.ecr.lifecyclePolicy.rule
+}
+
+// AWS ECR lifecycle policy rule
+private aws.ecr.lifecyclePolicy.rule @defaults("rulePriority description") {
+  // Unique identifier for this rule
+  id string
+  // Priority of the rule (lower numbers are evaluated first)
+  rulePriority int
+  // Description of the rule
+  description string
+  // Tag status filter: tagged, untagged, or any
+  tagStatus string
+  // Tag pattern list for filtering images (glob patterns)
+  tagPatternList []string
+  // Tag prefix list for filtering images
+  tagPrefixList []string
+  // Count type: imageCountMoreThan, sinceImagePushed, sinceImagePulled, or sinceImageTransitioned
+  countType string
+  // Count unit for time-based rules (days)
+  countUnit string
+  // Count number threshold
+  countNumber int
+  // Action type: expire or transition
+  actionType string
 }
 
 // AWS Elastic Container Registry image
@@ -3836,6 +4346,14 @@ private aws.lambda.function @defaults("arn") {
   lastModifiedAt time
   // Function URL configuration (null if no URL is configured)
   urlConfig() aws.lambda.function.urlConfig
+  // Current state of the function (Active, Inactive, Pending, Failed)
+  state string
+  // Size of the function deployment package in bytes
+  codeSize int
+  // Reason for the function's current state
+  stateReason string
+  // Status of the last function update (Successful, Failed, InProgress)
+  lastUpdateStatus string
 }
 
 // AWS Lambda function URL configuration
@@ -3917,6 +4435,12 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
   arn string
   // Tags for the SSM instance
   tags() map[string]string
+  // Version of the SSM Agent running on the instance
+  agentVersion string
+  // Last time the agent pinged the SSM service
+  lastPingedAt time
+  // Fully qualified hostname of the managed node
+  computerName string
 }
 
 // Amazon EC2
@@ -3943,6 +4467,8 @@ aws.ec2 {
   eips() []aws.ec2.eip
   // List of AMI images owned by the account
   images() []aws.ec2.image
+  // List of transit gateways
+  transitGateways() []aws.ec2.transitgateway
 }
 
 // Amazon Elastic IP (EIP)
@@ -4150,6 +4676,46 @@ private aws.ec2.internetgateway @defaults("arn") {
   attachments []dict
   // Tags on the internet gateway
   tags map[string]string
+}
+
+// Amazon EC2 transit gateway
+private aws.ec2.transitgateway @defaults("arn id state") {
+  // Transit gateway ARN
+  arn string
+  // Transit gateway ID
+  id string
+  // AWS account ID of the transit gateway owner
+  ownerId string
+  // State of the transit gateway (available, deleting, deleted, pending, modifying, etc.)
+  state string
+  // Description of the transit gateway
+  description string
+  // Region where the transit gateway exists
+  region string
+  // Creation timestamp
+  createdAt time
+  // Tags on the transit gateway
+  tags map[string]string
+  // Private Autonomous System Number (ASN) for the Amazon side of a BGP session
+  amazonSideAsn int
+  // Whether attachment requests are automatically accepted
+  autoAcceptSharedAttachments bool
+  // Whether resource attachments are automatically associated with the default route table
+  defaultRouteTableAssociation bool
+  // Whether resource attachments automatically propagate routes to the default route table
+  defaultRouteTablePropagation bool
+  // Whether DNS support is enabled
+  dnsSupport bool
+  // Whether multicast is enabled
+  multicastSupport bool
+  // Whether Equal Cost Multipath Protocol support is enabled
+  vpnEcmpSupport bool
+  // Transit gateway CIDR blocks
+  transitGatewayCidrBlocks []string
+  // ID of the default association route table
+  associationDefaultRouteTableId string
+  // ID of the default propagation route table
+  propagationDefaultRouteTableId string
 }
 
 // Amazon EC2 (EBS) snapshot
@@ -4368,6 +4934,12 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   networkInterfaces() []aws.ec2.networkinterface
   // Whether API termination protection is enabled for the instance
   disableApiTermination() bool
+  // Boot mode of the instance (legacy-bios, uefi, uefi-preferred)
+  bootMode string
+  // Whether source/destination checking is enabled
+  sourceDestCheck bool
+  // IPv6 address assigned to the instance
+  ipv6Address string
 }
 
 // AWS EC2 network interface
@@ -4460,6 +5032,8 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   region string
   // Launch permissions for the image (user IDs and groups that can launch instances from this AMI)
   launchPermissions() []aws.ec2.image.launchPermission
+  // Description of the AMI
+  description string
 }
 
 // Amazon EC2 image launch permission
@@ -4750,6 +5324,8 @@ private aws.neptune.cluster @defaults("arn name status") {
   arn string
   // Name of the cluster
   name string
+  // Snapshots for this cluster
+  snapshots() []aws.neptune.snapshot
   // User-supplied DB cluster identifier
   clusterIdentifier string
   // User-supplied global database cluster identifier
@@ -4870,6 +5446,42 @@ private aws.neptune.instance @defaults("arn name status"){
   storageType string
   // Key store with which the instance is associated for TDE encryption
   tdeCredentialArn string
+}
+
+// Amazon Neptune DB cluster snapshot
+private aws.neptune.snapshot @defaults("arn status createdAt") {
+  // Snapshot ARN
+  arn string
+  // Snapshot identifier
+  id string
+  // DB cluster identifier
+  clusterIdentifier string
+  // Database engine name
+  engine string
+  // Database engine version
+  engineVersion string
+  // Snapshot status
+  status string
+  // Snapshot type (manual or automated)
+  snapshotType string
+  // Port the database engine was listening on at the time of the snapshot
+  port int
+  // Allocated storage size in gibibytes
+  allocatedStorage int
+  // Whether the snapshot is encrypted
+  storageEncrypted bool
+  // Storage type
+  storageType string
+  // KMS key used for the encrypted snapshot
+  kmsKey() aws.kms.key
+  // Availability zones for the snapshot
+  availabilityZones []string
+  // Time the snapshot was taken
+  createdAt time
+  // Time the DB cluster was created
+  clusterCreatedAt time
+  // Region where the snapshot exists
+  region string
 }
 
 // Amazon Timestream for LiveAnalytics

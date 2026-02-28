@@ -876,6 +876,7 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 							"blockDeviceMappings": llx.ArrayData(blockDeviceMappings, types.Resource(ResourceAwsEc2ImageBlockDeviceMapping)),
 							"tags":                llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String),
 							"region":              llx.StringData(region),
+							"description":         llx.StringDataPtr(image.Description),
 						})
 					if err != nil {
 						return nil, err
@@ -1111,6 +1112,9 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			"stateTransitionTime":   llx.TimeData(stateTransitionTime),
 			"tags":                  llx.MapData(toInterfaceMap(ec2TagsToMap(instance.Tags)), types.String),
 			"tpmSupport":            llx.StringDataPtr(instance.TpmSupport),
+			"bootMode":              llx.StringData(string(instance.BootMode)),
+			"sourceDestCheck":       llx.BoolDataPtr(instance.SourceDestCheck),
+			"ipv6Address":           llx.StringDataPtr(instance.Ipv6Address),
 		}
 
 		var enclaveEnabled bool
@@ -1389,6 +1393,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["blockDeviceMappings"] = llx.NilData
 		args["tags"] = llx.NilData
 		args["region"] = llx.StringData(arn.Region)
+		args["description"] = llx.NilData
 		return args, nil, nil
 	}
 
@@ -1417,6 +1422,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["blockDeviceMappings"] = llx.ArrayData(blockDeviceMappings, types.Resource(ResourceAwsEc2ImageBlockDeviceMapping))
 		args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(image.Tags)), types.String)
 		args["region"] = llx.StringData(arn.Region)
+		args["description"] = llx.StringDataPtr(image.Description)
 		if image.CreationDate == nil {
 			args["createdAt"] = llx.NilData
 		} else {
@@ -2162,6 +2168,115 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 
 func (a *mqlAwsEc2Internetgateway) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsEc2Transitgateway) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsEc2) transitGateways() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getTransitGateways(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEc2) getTransitGateways(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Ec2(region)
+			ctx := context.Background()
+			res := []any{}
+			paginator := ec2.NewDescribeTransitGatewaysPaginator(svc, &ec2.DescribeTransitGatewaysInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, tgw := range page.TransitGateways {
+					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(tgw.Tags)) {
+						log.Debug().Interface("tgw", tgw.TransitGatewayId).Msg("excluding transit gateway due to filters")
+						continue
+					}
+
+					tgwArn := convert.ToValue(tgw.TransitGatewayArn)
+					if tgwArn == "" {
+						tgwArn = fmt.Sprintf(transitGatewayArnPattern, region, convert.ToValue(tgw.OwnerId), convert.ToValue(tgw.TransitGatewayId))
+					}
+
+					// Flatten Options
+					var amazonSideAsn int64
+					var autoAcceptSharedAttachments, defaultRouteTableAssociation, defaultRouteTablePropagation bool
+					var dnsSupport, multicastSupport, vpnEcmpSupport bool
+					var transitGatewayCidrBlocks []string
+					var associationDefaultRouteTableId, propagationDefaultRouteTableId string
+					if opts := tgw.Options; opts != nil {
+						if opts.AmazonSideAsn != nil {
+							amazonSideAsn = *opts.AmazonSideAsn
+						}
+						autoAcceptSharedAttachments = string(opts.AutoAcceptSharedAttachments) == "enable"
+						defaultRouteTableAssociation = string(opts.DefaultRouteTableAssociation) == "enable"
+						defaultRouteTablePropagation = string(opts.DefaultRouteTablePropagation) == "enable"
+						dnsSupport = string(opts.DnsSupport) == "enable"
+						multicastSupport = string(opts.MulticastSupport) == "enable"
+						vpnEcmpSupport = string(opts.VpnEcmpSupport) == "enable"
+						transitGatewayCidrBlocks = opts.TransitGatewayCidrBlocks
+						associationDefaultRouteTableId = convert.ToValue(opts.AssociationDefaultRouteTableId)
+						propagationDefaultRouteTableId = convert.ToValue(opts.PropagationDefaultRouteTableId)
+					}
+
+					mqlTgw, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Transitgateway,
+						map[string]*llx.RawData{
+							"__id":                           llx.StringData(tgwArn),
+							"arn":                            llx.StringData(tgwArn),
+							"id":                             llx.StringData(convert.ToValue(tgw.TransitGatewayId)),
+							"ownerId":                        llx.StringData(convert.ToValue(tgw.OwnerId)),
+							"state":                          llx.StringData(string(tgw.State)),
+							"description":                    llx.StringData(convert.ToValue(tgw.Description)),
+							"region":                         llx.StringData(region),
+							"createdAt":                      llx.TimeDataPtr(tgw.CreationTime),
+							"tags":                           llx.MapData(toInterfaceMap(ec2TagsToMap(tgw.Tags)), types.String),
+							"amazonSideAsn":                  llx.IntData(amazonSideAsn),
+							"autoAcceptSharedAttachments":    llx.BoolData(autoAcceptSharedAttachments),
+							"defaultRouteTableAssociation":   llx.BoolData(defaultRouteTableAssociation),
+							"defaultRouteTablePropagation":   llx.BoolData(defaultRouteTablePropagation),
+							"dnsSupport":                     llx.BoolData(dnsSupport),
+							"multicastSupport":               llx.BoolData(multicastSupport),
+							"vpnEcmpSupport":                 llx.BoolData(vpnEcmpSupport),
+							"transitGatewayCidrBlocks":       llx.ArrayData(convert.SliceAnyToInterface(transitGatewayCidrBlocks), types.String),
+							"associationDefaultRouteTableId": llx.StringData(associationDefaultRouteTableId),
+							"propagationDefaultRouteTableId": llx.StringData(propagationDefaultRouteTableId),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlTgw)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
 }
 
 func (a *mqlAwsEc2Vpnconnection) id() (string, error) {

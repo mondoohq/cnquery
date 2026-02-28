@@ -463,6 +463,12 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 			"preferredBackupWindow":         llx.StringDataPtr(dbInstance.PreferredBackupWindow),
 			"performanceInsightsEnabled":    llx.BoolDataPtr(dbInstance.PerformanceInsightsEnabled),
 			"copyTagsToSnapshot":            llx.BoolDataPtr(dbInstance.CopyTagsToSnapshot),
+			"licenseModel":                  llx.StringDataPtr(dbInstance.LicenseModel),
+			"maxAllocatedStorage":           llx.IntDataDefault(dbInstance.MaxAllocatedStorage, 0),
+			"dedicatedLogVolume":            llx.BoolDataPtr(dbInstance.DedicatedLogVolume),
+			"dbiResourceId":                 llx.StringDataPtr(dbInstance.DbiResourceId),
+			"dbClusterIdentifier":           llx.StringDataPtr(dbInstance.DBClusterIdentifier),
+			"storageThroughput":             llx.IntDataDefault(dbInstance.StorageThroughput, 0),
 		})
 	if err != nil {
 		return nil, err
@@ -845,6 +851,8 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 			"storageType":                llx.StringDataPtr(cluster.StorageType),
 			"tags":                       llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
 			"performanceInsightsEnabled": llx.BoolDataPtr(cluster.PerformanceInsightsEnabled),
+			"engineMode":                 llx.StringDataPtr(cluster.EngineMode),
+			"earliestRestorableTime":     llx.TimeDataPtr(cluster.EarliestRestorableTime),
 		})
 	if err != nil {
 		return nil, err

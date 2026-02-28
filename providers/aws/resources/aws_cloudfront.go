@@ -111,6 +111,7 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 				"webAclId":               llx.StringDataPtr(distribution.WebACLId),
 				"geoRestrictionType":     llx.StringData(geoRestrictionType),
 				"lastModifiedAt":         llx.TimeDataPtr(distribution.LastModifiedTime),
+				"comment":                llx.StringDataPtr(distribution.Comment),
 			}
 
 			mqlAwsCloudfrontDist, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution", args)

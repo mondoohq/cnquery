@@ -46,6 +46,7 @@ const (
 	rdsInstanceArnPattern       = "arn:aws:rds:%s:%s:db:%s"
 	apiArnPattern               = "arn:aws:apigateway:%s:%s::/apis/%s"
 	apiStageArnPattern          = "arn:aws:apigateway:%s:%s::/apis/%s/stages/%s"
+	transitGatewayArnPattern    = "arn:aws:ec2:%s:%s:transit-gateway/%s"
 )
 
 func NewSecurityGroupArn(region, accountID, sgID string) string {
