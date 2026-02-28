@@ -10,9 +10,27 @@ import (
 	"go.mondoo.com/mql/v13/checksums"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
-const defaultRsyslogConf = "/etc/rsyslog.conf"
+// rsyslogConfPaths maps platform names to their rsyslog.conf location.
+// BSD variants install rsyslog via package managers to non-default prefixes.
+var rsyslogConfPaths = map[string]string{
+	"freebsd":      "/usr/local/etc/rsyslog.conf",
+	"dragonflybsd": "/usr/local/etc/rsyslog.conf",
+	"openbsd":      "/usr/local/etc/rsyslog.conf",
+	"netbsd":       "/usr/pkg/etc/rsyslog.conf",
+}
+
+func rsyslogConfPath(conn shared.Connection) string {
+	asset := conn.Asset()
+	if asset != nil && asset.Platform != nil {
+		if p, ok := rsyslogConfPaths[asset.Platform.Name]; ok {
+			return p
+		}
+	}
+	return "/etc/rsyslog.conf"
+}
 
 func (s *mqlRsyslogConf) id() (string, error) {
 	files := s.GetFiles()
@@ -30,7 +48,8 @@ func (s *mqlRsyslogConf) id() (string, error) {
 }
 
 func (s *mqlRsyslogConf) path() (string, error) {
-	return defaultRsyslogConf, nil
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	return rsyslogConfPath(conn), nil
 }
 
 func (s *mqlRsyslogConf) files(path string) ([]any, error) {
