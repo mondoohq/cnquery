@@ -420,6 +420,72 @@ github.repository @defaults("fullName") {
   environments() []github.environment
   // Deployments for the repository
   deployments() []github.deployment
+  // Software Bill of Materials (SPDX format) for the repository
+  spdxSbom() github.repository.sbom
+}
+
+// SPDX SBOM for a GitHub repository
+private github.repository.sbom @defaults("name spdxVersion") {
+  // SPDX identifier for the document
+  spdxId string
+  // Version of the SPDX specification (e.g., "SPDX-2.3")
+  spdxVersion string
+  // Name of the SPDX document (e.g., "owner/repo")
+  name string
+  // License under which the SPDX document is released
+  dataLicense string
+  // Namespace URI for the document
+  documentNamespace string
+  // Optional comment about the document
+  comment string
+  // Time when the SBOM was generated
+  createdAt time
+  // List of creators of the SBOM
+  creators []string
+  // List of packages described in the SBOM
+  packages []github.repository.sbom.package
+  // Dependency relationships between packages
+  relationships []github.repository.sbom.relationship
+}
+
+// A package entry in a GitHub repository SBOM
+private github.repository.sbom.package @defaults("name versionInfo") {
+  // Unique SPDX identifier for this package
+  spdxId string
+  // Package name
+  name string
+  // Package version or version range
+  versionInfo string
+  // Download location
+  downloadLocation string
+  // Whether file contents were analyzed
+  filesAnalyzed bool
+  // Concluded license
+  licenseConcluded string
+  // License declared by the package author
+  licenseDeclared string
+  // External references (e.g., purl)
+  externalRefs []github.repository.sbom.externalRef
+}
+
+// An external reference for a package in a GitHub repository SBOM
+private github.repository.sbom.package.externalRef {
+  // The category of reference to an external resource this reference refers to. E.g. `PACKAGE-MANAGER`.
+  referenceCategory string
+  // A locator for the particular external resource this reference refers to. E.g. `pkg:gem/rails@6.0.1`.
+  referenceLocator string
+  // The category of reference to an external resource this reference refers to. E.g. `purl`.
+  referenceType string
+}
+
+// A relationship entry between two SPDX elements
+private github.repository.sbom.relationship {
+  // Type of relationship (e.g., "DEPENDS_ON")
+  relationshipType string
+  // SPDX identifier of the source element
+  spdxElementId string
+  // SPDX identifier of the target element
+  relatedSpdxElement string
 }
 
 // GitHub license
