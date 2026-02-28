@@ -240,6 +240,9 @@ func (a *mqlAwsRoute53HostedZone) vpcs() ([]interface{}, error) {
 		}
 		return nil, err
 	}
+	if resp == nil {
+		return nil, nil
+	}
 
 	vpcs := []interface{}{}
 	for _, vpc := range resp.VPCs {
@@ -263,6 +266,9 @@ func (a *mqlAwsRoute53HostedZone) nameServers() ([]interface{}, error) {
 			return nil, nil
 		}
 		return nil, err
+	}
+	if resp == nil {
+		return nil, nil
 	}
 
 	nameServers := []interface{}{}
@@ -315,7 +321,6 @@ func (a *mqlAwsRoute53HostedZone) queryLoggingConfig() (*mqlAwsRoute53QueryLoggi
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			a.QueryLoggingConfig.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
 		return nil, err
@@ -336,7 +341,6 @@ func (a *mqlAwsRoute53HostedZone) queryLoggingConfig() (*mqlAwsRoute53QueryLoggi
 		return mqlQlc.(*mqlAwsRoute53QueryLoggingConfig), nil
 	}
 
-	a.QueryLoggingConfig.State = plugin.StateIsNull | plugin.StateIsSet
 	return nil, nil
 }
 
@@ -357,6 +361,9 @@ func (a *mqlAwsRoute53HostedZone) dnssecStatus() (interface{}, error) {
 			return nil, nil
 		}
 		return nil, err
+	}
+	if resp == nil {
+		return nil, nil
 	}
 
 	result := map[string]interface{}{}
@@ -384,6 +391,9 @@ func (a *mqlAwsRoute53HostedZone) keySigningKeys() ([]interface{}, error) {
 			return nil, nil
 		}
 		return nil, err
+	}
+	if resp == nil {
+		return nil, nil
 	}
 
 	res := []interface{}{}
