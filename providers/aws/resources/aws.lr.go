@@ -6903,7 +6903,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsLambdaFunctionAlias).GetRevisionId()).ToDataRes(types.String)
 	},
 	"aws.lambda.function.alias.routingConfigWeights": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsLambdaFunctionAlias).GetRoutingConfigWeights()).ToDataRes(types.Dict)
+		return (r.(*mqlAwsLambdaFunctionAlias).GetRoutingConfigWeights()).ToDataRes(types.Map(types.String, types.Float))
 	},
 	"aws.lambda.function.provisionedConcurrencyConfig.functionArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunctionProvisionedConcurrencyConfig).GetFunctionArn()).ToDataRes(types.String)
@@ -16631,7 +16631,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.lambda.function.alias.routingConfigWeights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsLambdaFunctionAlias).RoutingConfigWeights, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAwsLambdaFunctionAlias).RoutingConfigWeights, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.provisionedConcurrencyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40322,7 +40322,7 @@ type mqlAwsLambdaFunctionAlias struct {
 	FunctionVersion      plugin.TValue[string]
 	Description          plugin.TValue[string]
 	RevisionId           plugin.TValue[string]
-	RoutingConfigWeights plugin.TValue[any]
+	RoutingConfigWeights plugin.TValue[map[string]any]
 }
 
 // createAwsLambdaFunctionAlias creates a new instance of this resource
@@ -40382,7 +40382,7 @@ func (c *mqlAwsLambdaFunctionAlias) GetRevisionId() *plugin.TValue[string] {
 	return &c.RevisionId
 }
 
-func (c *mqlAwsLambdaFunctionAlias) GetRoutingConfigWeights() *plugin.TValue[any] {
+func (c *mqlAwsLambdaFunctionAlias) GetRoutingConfigWeights() *plugin.TValue[map[string]any] {
 	return &c.RoutingConfigWeights
 }
 

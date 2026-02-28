@@ -4514,8 +4514,8 @@ private aws.lambda.function.alias @defaults("arn name") {
   description string
   // Unique identifier that changes when the alias is updated
   revisionId string
-  // Traffic-shifting configuration weights (version to weight percentage)
-  routingConfigWeights dict
+  // Traffic-shifting configuration weights (version to weight percentage, e.g. "2": 0.5)
+  routingConfigWeights map[string]float
 }
 
 // AWS Lambda function provisioned concurrency configuration
