@@ -161,7 +161,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					for _, layer := range function.Layers {
 						mqlLayer, err := CreateResource(a.MqlRuntime, "aws.lambda.function.layer",
 							map[string]*llx.RawData{
-								"__id":                     llx.StringData(funcArn + "/layer/" + convert.ToValue(layer.Arn)),
+								"__id":                     llx.StringDataPtr(layer.Arn),
 								"arn":                      llx.StringDataPtr(layer.Arn),
 								"codeSize":                 llx.IntData(layer.CodeSize),
 								"signingJobArn":            llx.StringDataPtr(layer.SigningJobArn),
@@ -325,12 +325,11 @@ func (a *mqlAwsLambdaFunction) policy() (any, error) {
 
 	// no pagination required
 	functionPolicy, err := svc.GetPolicy(ctx, &lambda.GetPolicyInput{FunctionName: &funcArn})
-	var respErr *http.ResponseError
-	if err != nil && errors.As(err, &respErr) {
-		if respErr.HTTPStatusCode() == 404 {
+	if err != nil {
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
 			return nil, nil
 		}
-	} else if err != nil {
 		return nil, err
 	}
 	if functionPolicy != nil {
@@ -354,13 +353,12 @@ func (a *mqlAwsLambdaFunction) urlConfig() (*mqlAwsLambdaFunctionUrlConfig, erro
 	ctx := context.Background()
 
 	resp, err := svc.GetFunctionUrlConfig(ctx, &lambda.GetFunctionUrlConfigInput{FunctionName: &funcName})
-	var respErr *http.ResponseError
-	if err != nil && errors.As(err, &respErr) {
-		if respErr.HTTPStatusCode() == 404 {
+	if err != nil {
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
 			a.UrlConfig.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
-	} else if err != nil {
 		return nil, err
 	}
 
@@ -420,7 +418,7 @@ func (a *mqlAwsLambdaFunction) role() (*mqlAwsIamRole, error) {
 }
 
 func (a *mqlAwsLambdaFunctionLoggingConfig) id() (string, error) {
-	return a.LogGroup.Data, nil
+	return a.__id, nil
 }
 
 func (a *mqlAwsLambdaFunctionLayer) id() (string, error) {
@@ -743,7 +741,7 @@ func (a *mqlAwsLambdaFunction) provisionedConcurrencyConfigs() ([]any, error) {
 		for _, pcc := range resp.ProvisionedConcurrencyConfigs {
 			mqlPcc, err := CreateResource(a.MqlRuntime, "aws.lambda.function.provisionedConcurrencyConfig",
 				map[string]*llx.RawData{
-					"__id":                          llx.StringData(a.Arn.Data + "/provisionedConcurrency/" + convert.ToValue(pcc.FunctionArn)),
+					"__id":                          llx.StringDataPtr(pcc.FunctionArn),
 					"functionArn":                   llx.StringDataPtr(pcc.FunctionArn),
 					"requestedConcurrentExecutions": llx.IntDataDefault(pcc.RequestedProvisionedConcurrentExecutions, 0),
 					"allocatedConcurrentExecutions": llx.IntDataDefault(pcc.AllocatedProvisionedConcurrentExecutions, 0),
@@ -778,13 +776,12 @@ func (a *mqlAwsLambdaFunction) codeSigningConfig() (*mqlAwsLambdaCodeSigningConf
 	// Step 1: Get the code signing config ARN for this function
 	cscResp, err := svc.GetFunctionCodeSigningConfig(ctx,
 		&lambda.GetFunctionCodeSigningConfigInput{FunctionName: &funcName})
-	var respErr *http.ResponseError
-	if err != nil && errors.As(err, &respErr) {
-		if respErr.HTTPStatusCode() == 404 {
+	if err != nil {
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
 			a.CodeSigningConfig.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
-	} else if err != nil {
 		return nil, err
 	}
 
