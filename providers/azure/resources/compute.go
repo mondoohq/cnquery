@@ -94,6 +94,15 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 				}
 			}
 
+			var computerName, adminUsername, licenseType *string
+			if vm.Properties != nil {
+				licenseType = vm.Properties.LicenseType
+				if vm.Properties.OSProfile != nil {
+					computerName = vm.Properties.OSProfile.ComputerName
+					adminUsername = vm.Properties.OSProfile.AdminUsername
+				}
+			}
+
 			mqlAzureVm, err := CreateResource(a.MqlRuntime, "azure.subscription.computeService.vm",
 				map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(vm.ID),
@@ -108,6 +117,9 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 					"secureBootEnabled": llx.BoolDataPtr(secureBootEnabled),
 					"vtpmEnabled":       llx.BoolDataPtr(vtpmEnabled),
 					"proxyAgentEnabled": llx.BoolDataPtr(proxyAgentEnabled),
+					"computerName":      llx.StringDataPtr(computerName),
+					"adminUsername":     llx.StringDataPtr(adminUsername),
+					"licenseType":       llx.StringDataPtr(licenseType),
 				})
 			if err != nil {
 				return nil, err
@@ -294,6 +306,15 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		}
 		if disk.Properties.PublicNetworkAccess != nil {
 			args["publicNetworkAccess"] = llx.StringData(string(*disk.Properties.PublicNetworkAccess))
+		}
+		if disk.Properties.Encryption != nil && disk.Properties.Encryption.Type != nil {
+			args["encryptionType"] = llx.StringData(string(*disk.Properties.Encryption.Type))
+		}
+		if disk.Properties.Encryption != nil {
+			args["diskEncryptionSetId"] = llx.StringDataPtr(disk.Properties.Encryption.DiskEncryptionSetID)
+		}
+		if disk.Properties.DataAccessAuthMode != nil {
+			args["dataAccessAuthMode"] = llx.StringData(string(*disk.Properties.DataAccessAuthMode))
 		}
 	}
 
@@ -493,14 +514,25 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 				if err != nil {
 					return nil, err
 				}
+				var ipAllocationMethod, ipVersion string
+				if ipAddress.Properties != nil {
+					if ipAddress.Properties.PublicIPAllocationMethod != nil {
+						ipAllocationMethod = string(*ipAddress.Properties.PublicIPAllocationMethod)
+					}
+					if ipAddress.Properties.PublicIPAddressVersion != nil {
+						ipVersion = string(*ipAddress.Properties.PublicIPAddressVersion)
+					}
+				}
 				mqlIpAddress, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.ipAddress",
 					map[string]*llx.RawData{
-						"id":        llx.StringDataPtr(ipAddress.ID),
-						"name":      llx.StringDataPtr(ipAddress.Name),
-						"location":  llx.StringDataPtr(ipAddress.Location),
-						"tags":      llx.MapData(convert.PtrMapStrToInterface(ipAddress.Tags), types.String),
-						"ipAddress": llx.StringDataPtr(ipAddress.Properties.IPAddress),
-						"type":      llx.StringDataPtr(ipAddress.Type),
+						"id":                 llx.StringDataPtr(ipAddress.ID),
+						"name":               llx.StringDataPtr(ipAddress.Name),
+						"location":           llx.StringDataPtr(ipAddress.Location),
+						"tags":               llx.MapData(convert.PtrMapStrToInterface(ipAddress.Tags), types.String),
+						"ipAddress":          llx.StringDataPtr(ipAddress.Properties.IPAddress),
+						"type":               llx.StringDataPtr(ipAddress.Type),
+						"ipAllocationMethod": llx.StringData(ipAllocationMethod),
+						"ipVersion":          llx.StringData(ipVersion),
 					})
 				if err != nil {
 					return nil, err

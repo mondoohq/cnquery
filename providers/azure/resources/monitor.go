@@ -156,15 +156,42 @@ func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]any, error
 				return nil, err
 			}
 
+			var disableIpMasking bool
+			var publicNetworkAccessForIngestion, publicNetworkAccessForQuery string
+			var retentionInDays int64
+			var workspaceResourceId string
+			if entry.Properties != nil {
+				if entry.Properties.DisableIPMasking != nil {
+					disableIpMasking = *entry.Properties.DisableIPMasking
+				}
+				if entry.Properties.PublicNetworkAccessForIngestion != nil {
+					publicNetworkAccessForIngestion = string(*entry.Properties.PublicNetworkAccessForIngestion)
+				}
+				if entry.Properties.PublicNetworkAccessForQuery != nil {
+					publicNetworkAccessForQuery = string(*entry.Properties.PublicNetworkAccessForQuery)
+				}
+				if entry.Properties.RetentionInDays != nil {
+					retentionInDays = int64(*entry.Properties.RetentionInDays)
+				}
+				if entry.Properties.WorkspaceResourceID != nil {
+					workspaceResourceId = *entry.Properties.WorkspaceResourceID
+				}
+			}
+
 			mqlAppInsight, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.applicationInsight",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(entry.ID),
-					"name":       llx.StringDataPtr(entry.Name),
-					"properties": llx.DictData(properties),
-					"location":   llx.StringDataPtr(entry.Location),
-					"type":       llx.StringDataPtr(entry.Type),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"kind":       llx.StringDataPtr(entry.Kind),
+					"id":                              llx.StringDataPtr(entry.ID),
+					"name":                            llx.StringDataPtr(entry.Name),
+					"properties":                      llx.DictData(properties),
+					"location":                        llx.StringDataPtr(entry.Location),
+					"type":                            llx.StringDataPtr(entry.Type),
+					"tags":                            llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+					"kind":                            llx.StringDataPtr(entry.Kind),
+					"disableIpMasking":                llx.BoolData(disableIpMasking),
+					"publicNetworkAccessForIngestion": llx.StringData(publicNetworkAccessForIngestion),
+					"publicNetworkAccessForQuery":     llx.StringData(publicNetworkAccessForQuery),
+					"retentionInDays":                 llx.IntData(retentionInDays),
+					"workspaceResourceId":             llx.StringData(workspaceResourceId),
 				})
 			if err != nil {
 				return nil, err

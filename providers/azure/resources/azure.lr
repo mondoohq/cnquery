@@ -184,6 +184,12 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   vtpmEnabled bool
   // Whether ProxyAgent is enabled on the VM
   proxyAgentEnabled bool
+  // VM computer name (OS hostname)
+  computerName string
+  // VM admin username
+  adminUsername string
+  // VM license type (e.g. "Windows_Server" for Azure Hybrid Benefit)
+  licenseType string
 }
 
 // Azure compute disk resource
@@ -212,6 +218,12 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   networkAccessPolicy string
   // Whether public network access is enabled for the disk
   publicNetworkAccess string
+  // Disk encryption type (EncryptionAtRestWithPlatformKey, EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys)
+  encryptionType string
+  // ID of the disk encryption set used for customer-managed key encryption
+  diskEncryptionSetId string
+  // Data access authentication mode (AzureActiveDirectory, None)
+  dataAccessAuthMode string
 }
 
 // Azure Batch
@@ -862,6 +874,8 @@ azure.subscription.networkService.interface @defaults("name location properties.
   enableAcceleratedNetworking bool
   // Whether this is a primary network interface on a VM
   primary bool
+  // Network security group associated with this interface
+  networkSecurityGroupId string
   // Network interface compute vm
   vm() azure.subscription.computeService.vm
 }
@@ -880,6 +894,10 @@ private azure.subscription.networkService.ipAddress @defaults("name location ipA
   ipAddress string
   // IP address type
   type string
+  // IP address allocation method (Static, Dynamic)
+  ipAllocationMethod string
+  // IP address version (IPv4, IPv6)
+  ipVersion string
 }
 
 // Azure Network Bastion host
@@ -1340,6 +1358,16 @@ private azure.subscription.storageService.account.container @defaults("id name")
   etag string
   // Storage container properties
   properties dict
+  // Public access level for the container (None, Blob, Container)
+  publicAccess string
+  // Whether the container has an immutability policy
+  hasImmutabilityPolicy bool
+  // Whether the container has a legal hold
+  hasLegalHold bool
+  // Default encryption scope for the container
+  defaultEncryptionScope string
+  // Whether encryption scope override is denied
+  denyEncryptionScopeOverride bool
 }
 
 // Azure Web
@@ -1762,6 +1790,8 @@ private azure.subscription.sqlService.server @defaults("name location properties
   connectionPolicy() dict
   // SQL Database server auditing policy
   auditingPolicy() dict
+  // SQL Database server administrator login
+  administratorLogin string
   // SQL Database server security alert policy
   securityAlertPolicy() dict
   // SQL Database server encryption protector
@@ -2147,6 +2177,10 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   properties dict
   // MySQL flexible server engine version
   version string
+  // Whether SSL enforcement is enabled
+  sslEnforcement bool
+  // Whether public network access is allowed
+  publicNetworkAccess string
   // MySQL flexible server configuration
   configuration() []azure.subscription.sqlService.configuration
   // MySQL flexible server databases
@@ -2361,6 +2395,14 @@ private azure.subscription.keyVaultService.key @defaults("kid keyName") {
   updated time
   // Key recovery level
   recoveryLevel string
+  // Key type (RSA, EC, oct, RSA-HSM, EC-HSM, oct-HSM)
+  keyType string
+  // Key size in bits (e.g. 2048, 3072, 4096 for RSA)
+  keySize int
+  // Elliptic curve name for EC keys (P-256, P-384, P-521)
+  curveName string
+  // Permitted key operations (sign, verify, encrypt, decrypt, wrapKey, unwrapKey)
+  keyOps []string
   // Key name
   keyName() string
   // Key version
@@ -2523,6 +2565,16 @@ private azure.subscription.monitorService.applicationInsight @defaults("name loc
   kind string
   // Application insight type
   type string
+  // Whether IP masking is disabled
+  disableIpMasking bool
+  // Public network access for ingestion (Enabled, Disabled)
+  publicNetworkAccessForIngestion string
+  // Public network access for query (Enabled, Disabled)
+  publicNetworkAccessForQuery string
+  // Data retention period in days
+  retentionInDays int
+  // Log Analytics workspace resource ID
+  workspaceResourceId string
 }
 
 // Azure Monitor activity log alert

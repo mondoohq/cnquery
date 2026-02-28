@@ -283,18 +283,47 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 		}
 
 		for _, entry := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
-				map[string]*llx.RawData{
-					"kid":           llx.StringDataPtr((*string)(entry.KID)),
-					"managed":       llx.BoolDataPtr(entry.Managed),
-					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
-					"created":       llx.TimeDataPtr(entry.Attributes.Created),
-					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
-					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
-					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
-				})
+			args := map[string]*llx.RawData{
+				"kid":           llx.StringDataPtr((*string)(entry.KID)),
+				"managed":       llx.BoolDataPtr(entry.Managed),
+				"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+				"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
+				"created":       llx.TimeDataPtr(entry.Attributes.Created),
+				"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
+				"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
+				"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
+				"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
+			}
+
+			// Fetch full key details to get key type, size, curve, and operations
+			if entry.KID != nil {
+				kvid, err := parseKeyVaultId(string(*entry.KID))
+				if err == nil {
+					keyResp, err := client.GetKey(ctx, kvid.Name, kvid.Version, nil)
+					if err == nil && keyResp.Key != nil {
+						if keyResp.Key.Kty != nil {
+							args["keyType"] = llx.StringData(string(*keyResp.Key.Kty))
+						}
+						if keyResp.Key.Crv != nil {
+							args["curveName"] = llx.StringData(string(*keyResp.Key.Crv))
+						}
+						keyOps := []any{}
+						for _, op := range keyResp.Key.KeyOps {
+							if op != nil {
+								keyOps = append(keyOps, string(*op))
+							}
+						}
+						args["keyOps"] = llx.ArrayData(keyOps, types.String)
+
+						// Derive key size from RSA modulus length
+						if keyResp.Key.N != nil {
+							args["keySize"] = llx.IntData(int64(len(keyResp.Key.N) * 8))
+						}
+					}
+				}
+			}
+
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key", args)
 			if err != nil {
 				return nil, err
 			}

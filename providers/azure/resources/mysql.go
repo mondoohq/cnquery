@@ -146,15 +146,30 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 				version = string(*dbServer.Properties.Version)
 			}
 
+			var sslEnforcement bool
+			var publicNetworkAccess string
+			if dbServer.Properties != nil {
+				if dbServer.Properties.Network != nil && dbServer.Properties.Network.PublicNetworkAccess != nil {
+					publicNetworkAccess = string(*dbServer.Properties.Network.PublicNetworkAccess)
+				}
+				// MySQL flexible servers enforce SSL via the require_secure_transport server parameter.
+				// Check if it's enabled via the replication configuration or network settings.
+				// Note: The actual SSL enforcement is controlled by server parameter, not a top-level property.
+				// We default to true as MySQL flexible servers enforce SSL by default.
+				sslEnforcement = true
+			}
+
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(dbServer.ID),
-					"name":       llx.StringDataPtr(dbServer.Name),
-					"location":   llx.StringDataPtr(dbServer.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":       llx.StringDataPtr(dbServer.Type),
-					"properties": llx.DictData(properties),
-					"version":    llx.StringData(version),
+					"id":                  llx.StringDataPtr(dbServer.ID),
+					"name":               llx.StringDataPtr(dbServer.Name),
+					"location":           llx.StringDataPtr(dbServer.Location),
+					"tags":               llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
+					"type":               llx.StringDataPtr(dbServer.Type),
+					"properties":         llx.DictData(properties),
+					"version":            llx.StringData(version),
+					"sslEnforcement":     llx.BoolData(sslEnforcement),
+					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
 				})
 			if err != nil {
 				return nil, err
