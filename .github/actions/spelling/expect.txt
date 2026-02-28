@@ -1,11 +1,11 @@
 aad
 ACCOUNTADMIN
-Adddays
 advancedthreatprotection
 alloydb
 alpn
 antispam
 appslot
+artifactregistry
 atlassian
 auditlog
 Auths
@@ -91,6 +91,7 @@ ipsetreferencestatement
 istio
 jira
 jsonbody
+KFP
 kqueue
 labelmatchstatement
 lfs
@@ -145,6 +146,8 @@ posix
 postgre
 psc
 pushconfig
+Pzi
+Pzs
 querypack
 ratebasedstatement
 recaptcha

@@ -17,177 +17,186 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceGcpOrganization                                                           string = "gcp.organization"
-	ResourceGcpFolders                                                                string = "gcp.folders"
-	ResourceGcpProjectRedisService                                                    string = "gcp.project.redisService"
-	ResourceGcpProjectRedisServiceInstance                                            string = "gcp.project.redisService.instance"
-	ResourceGcpProjectRedisServiceInstanceNodeInfo                                    string = "gcp.project.redisService.instance.nodeInfo"
-	ResourceGcpProjectRedisServiceInstanceServerCaCert                                string = "gcp.project.redisService.instance.serverCaCert"
-	ResourceGcpProjectRedisServiceCluster                                             string = "gcp.project.redisService.cluster"
-	ResourceGcpProjectRedisServiceClusterPscConfig                                    string = "gcp.project.redisService.cluster.pscConfig"
-	ResourceGcpProjectRedisServiceClusterDiscoveryEndpoint                            string = "gcp.project.redisService.cluster.discoveryEndpoint"
-	ResourceGcpProjectRedisServiceClusterPscConnection                                string = "gcp.project.redisService.cluster.pscConnection"
-	ResourceGcpProjectRedisServiceClusterBackup                                       string = "gcp.project.redisService.cluster.backup"
-	ResourceGcpProjectRedisServiceClusterClusterEndpoint                              string = "gcp.project.redisService.cluster.clusterEndpoint"
-	ResourceGcpProjectRedisServiceClusterConnectionDetail                             string = "gcp.project.redisService.cluster.connectionDetail"
-	ResourceGcpFolder                                                                 string = "gcp.folder"
-	ResourceGcpProjects                                                               string = "gcp.projects"
-	ResourceGcpProject                                                                string = "gcp.project"
-	ResourceGcpService                                                                string = "gcp.service"
-	ResourceGcpRecommendation                                                         string = "gcp.recommendation"
-	ResourceGcpResourcemanagerBinding                                                 string = "gcp.resourcemanager.binding"
-	ResourceGcpProjectComputeService                                                  string = "gcp.project.computeService"
-	ResourceGcpProjectComputeServiceAddress                                           string = "gcp.project.computeService.address"
-	ResourceGcpProjectComputeServiceForwardingRule                                    string = "gcp.project.computeService.forwardingRule"
-	ResourceGcpProjectComputeServiceRegion                                            string = "gcp.project.computeService.region"
-	ResourceGcpProjectComputeServiceZone                                              string = "gcp.project.computeService.zone"
-	ResourceGcpProjectComputeServiceMachineType                                       string = "gcp.project.computeService.machineType"
-	ResourceGcpProjectComputeServiceInstance                                          string = "gcp.project.computeService.instance"
-	ResourceGcpProjectComputeServiceServiceaccount                                    string = "gcp.project.computeService.serviceaccount"
-	ResourceGcpProjectComputeServiceDisk                                              string = "gcp.project.computeService.disk"
-	ResourceGcpProjectComputeServiceAttachedDisk                                      string = "gcp.project.computeService.attachedDisk"
-	ResourceGcpProjectComputeServiceSnapshot                                          string = "gcp.project.computeService.snapshot"
-	ResourceGcpProjectComputeServiceImage                                             string = "gcp.project.computeService.image"
-	ResourceGcpProjectComputeServiceFirewall                                          string = "gcp.project.computeService.firewall"
-	ResourceGcpProjectComputeServiceNetwork                                           string = "gcp.project.computeService.network"
-	ResourceGcpProjectComputeServiceSubnetwork                                        string = "gcp.project.computeService.subnetwork"
-	ResourceGcpProjectComputeServiceSubnetworkLogConfig                               string = "gcp.project.computeService.subnetwork.logConfig"
-	ResourceGcpProjectComputeServiceRouter                                            string = "gcp.project.computeService.router"
-	ResourceGcpProjectComputeServiceBackendService                                    string = "gcp.project.computeService.backendService"
-	ResourceGcpProjectComputeServiceBackendServiceBackend                             string = "gcp.project.computeService.backendService.backend"
-	ResourceGcpProjectComputeServiceBackendServiceCdnPolicy                           string = "gcp.project.computeService.backendService.cdnPolicy"
-	ResourceGcpProjectStorageService                                                  string = "gcp.project.storageService"
-	ResourceGcpProjectStorageServiceBucket                                            string = "gcp.project.storageService.bucket"
-	ResourceGcpProjectStorageServiceBucketLifecycleRule                               string = "gcp.project.storageService.bucket.lifecycleRule"
-	ResourceGcpProjectStorageServiceBucketLifecycleRuleAction                         string = "gcp.project.storageService.bucket.lifecycleRuleAction"
-	ResourceGcpProjectStorageServiceBucketLifecycleRuleCondition                      string = "gcp.project.storageService.bucket.lifecycleRuleCondition"
-	ResourceGcpProjectSqlService                                                      string = "gcp.project.sqlService"
-	ResourceGcpProjectSqlServiceInstance                                              string = "gcp.project.sqlService.instance"
-	ResourceGcpProjectSqlServiceInstanceDatabase                                      string = "gcp.project.sqlService.instance.database"
-	ResourceGcpProjectSqlServiceInstanceIpMapping                                     string = "gcp.project.sqlService.instance.ipMapping"
-	ResourceGcpProjectSqlServiceInstanceSettings                                      string = "gcp.project.sqlService.instance.settings"
-	ResourceGcpProjectSqlServiceInstanceSettingsBackupconfiguration                   string = "gcp.project.sqlService.instance.settings.backupconfiguration"
-	ResourceGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod                 string = "gcp.project.sqlService.instance.settings.denyMaintenancePeriod"
-	ResourceGcpProjectSqlServiceInstanceSettingsIpConfiguration                       string = "gcp.project.sqlService.instance.settings.ipConfiguration"
-	ResourceGcpProjectSqlServiceInstanceSettingsMaintenanceWindow                     string = "gcp.project.sqlService.instance.settings.maintenanceWindow"
-	ResourceGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy              string = "gcp.project.sqlService.instance.settings.passwordValidationPolicy"
-	ResourceGcpProjectBigqueryService                                                 string = "gcp.project.bigqueryService"
-	ResourceGcpProjectBigqueryServiceDataset                                          string = "gcp.project.bigqueryService.dataset"
-	ResourceGcpProjectBigqueryServiceDatasetAccessEntry                               string = "gcp.project.bigqueryService.dataset.accessEntry"
-	ResourceGcpProjectBigqueryServiceTable                                            string = "gcp.project.bigqueryService.table"
-	ResourceGcpProjectBigqueryServiceModel                                            string = "gcp.project.bigqueryService.model"
-	ResourceGcpProjectBigqueryServiceRoutine                                          string = "gcp.project.bigqueryService.routine"
-	ResourceGcpProjectDnsService                                                      string = "gcp.project.dnsService"
-	ResourceGcpProjectDnsServiceManagedzone                                           string = "gcp.project.dnsService.managedzone"
-	ResourceGcpProjectDnsServiceRecordset                                             string = "gcp.project.dnsService.recordset"
-	ResourceGcpProjectDnsServicePolicy                                                string = "gcp.project.dnsService.policy"
-	ResourceGcpProjectGkeService                                                      string = "gcp.project.gkeService"
-	ResourceGcpProjectGkeServiceCluster                                               string = "gcp.project.gkeService.cluster"
-	ResourceGcpProjectGkeServiceClusterAddonsConfig                                   string = "gcp.project.gkeService.cluster.addonsConfig"
-	ResourceGcpProjectGkeServiceClusterIpAllocationPolicy                             string = "gcp.project.gkeService.cluster.ipAllocationPolicy"
-	ResourceGcpProjectGkeServiceClusterNetworkConfig                                  string = "gcp.project.gkeService.cluster.networkConfig"
-	ResourceGcpProjectGkeServiceClusterNodepool                                       string = "gcp.project.gkeService.cluster.nodepool"
-	ResourceGcpProjectGkeServiceClusterNodepoolAutoscaling                            string = "gcp.project.gkeService.cluster.nodepool.autoscaling"
-	ResourceGcpProjectGkeServiceClusterNodepoolNetworkConfig                          string = "gcp.project.gkeService.cluster.nodepool.networkConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig         string = "gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfig                                 string = "gcp.project.gkeService.cluster.nodepool.config"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigAccelerator                      string = "gcp.project.gkeService.cluster.nodepool.config.accelerator"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig      string = "gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigNodeTaint                        string = "gcp.project.gkeService.cluster.nodepool.config.nodeTaint"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig                    string = "gcp.project.gkeService.cluster.nodepool.config.sandboxConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig           string = "gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig                  string = "gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig                    string = "gcp.project.gkeService.cluster.nodepool.config.kubeletConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig                       string = "gcp.project.gkeService.cluster.nodepool.config.gcfsConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures          string = "gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig                      string = "gcp.project.gkeService.cluster.nodepool.config.gvnicConfig"
-	ResourceGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes                string = "gcp.project.gkeService.cluster.nodepool.config.confidentialNodes"
-	ResourceGcpProjectPubsubService                                                   string = "gcp.project.pubsubService"
-	ResourceGcpProjectPubsubServiceTopic                                              string = "gcp.project.pubsubService.topic"
-	ResourceGcpProjectPubsubServiceTopicConfig                                        string = "gcp.project.pubsubService.topic.config"
-	ResourceGcpProjectPubsubServiceTopicConfigMessagestoragepolicy                    string = "gcp.project.pubsubService.topic.config.messagestoragepolicy"
-	ResourceGcpProjectPubsubServiceSubscription                                       string = "gcp.project.pubsubService.subscription"
-	ResourceGcpProjectPubsubServiceSubscriptionConfig                                 string = "gcp.project.pubsubService.subscription.config"
-	ResourceGcpProjectPubsubServiceSubscriptionConfigPushconfig                       string = "gcp.project.pubsubService.subscription.config.pushconfig"
-	ResourceGcpProjectPubsubServiceSnapshot                                           string = "gcp.project.pubsubService.snapshot"
-	ResourceGcpProjectKmsService                                                      string = "gcp.project.kmsService"
-	ResourceGcpProjectKmsServiceKeyring                                               string = "gcp.project.kmsService.keyring"
-	ResourceGcpProjectKmsServiceKeyringCryptokey                                      string = "gcp.project.kmsService.keyring.cryptokey"
-	ResourceGcpProjectKmsServiceKeyringCryptokeyVersion                               string = "gcp.project.kmsService.keyring.cryptokey.version"
-	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestation                    string = "gcp.project.kmsService.keyring.cryptokey.version.attestation"
-	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains   string = "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains"
-	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions string = "gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions"
-	ResourceGcpEssentialContact                                                       string = "gcp.essentialContact"
-	ResourceGcpProjectApiKey                                                          string = "gcp.project.apiKey"
-	ResourceGcpProjectApiKeyRestrictions                                              string = "gcp.project.apiKey.restrictions"
-	ResourceGcpProjectLoggingservice                                                  string = "gcp.project.loggingservice"
-	ResourceGcpProjectLoggingserviceBucket                                            string = "gcp.project.loggingservice.bucket"
-	ResourceGcpProjectLoggingserviceBucketIndexConfig                                 string = "gcp.project.loggingservice.bucket.indexConfig"
-	ResourceGcpProjectLoggingserviceMetric                                            string = "gcp.project.loggingservice.metric"
-	ResourceGcpProjectLoggingserviceSink                                              string = "gcp.project.loggingservice.sink"
-	ResourceGcpProjectIamService                                                      string = "gcp.project.iamService"
-	ResourceGcpProjectIamServiceServiceAccount                                        string = "gcp.project.iamService.serviceAccount"
-	ResourceGcpProjectIamServiceServiceAccountKey                                     string = "gcp.project.iamService.serviceAccount.key"
-	ResourceGcpProjectCloudFunction                                                   string = "gcp.project.cloudFunction"
-	ResourceGcpProjectDataprocService                                                 string = "gcp.project.dataprocService"
-	ResourceGcpProjectDataprocServiceCluster                                          string = "gcp.project.dataprocService.cluster"
-	ResourceGcpProjectDataprocServiceClusterConfig                                    string = "gcp.project.dataprocService.cluster.config"
-	ResourceGcpProjectDataprocServiceClusterConfigGceCluster                          string = "gcp.project.dataprocService.cluster.config.gceCluster"
-	ResourceGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity       string = "gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity"
-	ResourceGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig    string = "gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig"
-	ResourceGcpProjectDataprocServiceClusterConfigGkeCluster                          string = "gcp.project.dataprocService.cluster.config.gkeCluster"
-	ResourceGcpProjectDataprocServiceClusterConfigLifecycle                           string = "gcp.project.dataprocService.cluster.config.lifecycle"
-	ResourceGcpProjectDataprocServiceClusterConfigInstance                            string = "gcp.project.dataprocService.cluster.config.instance"
-	ResourceGcpProjectDataprocServiceClusterConfigInstanceDiskConfig                  string = "gcp.project.dataprocService.cluster.config.instance.diskConfig"
-	ResourceGcpProjectDataprocServiceClusterStatus                                    string = "gcp.project.dataprocService.cluster.status"
-	ResourceGcpProjectDataprocServiceClusterVirtualClusterConfig                      string = "gcp.project.dataprocService.cluster.virtualClusterConfig"
-	ResourceGcpProjectCloudRunService                                                 string = "gcp.project.cloudRunService"
-	ResourceGcpProjectCloudRunServiceOperation                                        string = "gcp.project.cloudRunService.operation"
-	ResourceGcpProjectCloudRunServiceService                                          string = "gcp.project.cloudRunService.service"
-	ResourceGcpProjectCloudRunServiceServiceRevisionTemplate                          string = "gcp.project.cloudRunService.service.revisionTemplate"
-	ResourceGcpProjectCloudRunServiceContainer                                        string = "gcp.project.cloudRunService.container"
-	ResourceGcpProjectCloudRunServiceContainerProbe                                   string = "gcp.project.cloudRunService.container.probe"
-	ResourceGcpProjectCloudRunServiceCondition                                        string = "gcp.project.cloudRunService.condition"
-	ResourceGcpProjectCloudRunServiceJob                                              string = "gcp.project.cloudRunService.job"
-	ResourceGcpProjectCloudRunServiceJobExecutionTemplate                             string = "gcp.project.cloudRunService.job.executionTemplate"
-	ResourceGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate                 string = "gcp.project.cloudRunService.job.executionTemplate.taskTemplate"
-	ResourceGcpAccessApprovalSettings                                                 string = "gcp.accessApprovalSettings"
-	ResourceGcpProjectMonitoringService                                               string = "gcp.project.monitoringService"
-	ResourceGcpProjectMonitoringServiceAlertPolicy                                    string = "gcp.project.monitoringService.alertPolicy"
-	ResourceGcpProjectBinaryAuthorizationControl                                      string = "gcp.project.binaryAuthorizationControl"
-	ResourceGcpProjectBinaryAuthorizationControlPolicy                                string = "gcp.project.binaryAuthorizationControl.policy"
-	ResourceGcpProjectBinaryAuthorizationControlAdmissionRule                         string = "gcp.project.binaryAuthorizationControl.admissionRule"
-	ResourceGcpProjectSecretmanagerService                                            string = "gcp.project.secretmanagerService"
-	ResourceGcpProjectSecretmanagerServiceSecret                                      string = "gcp.project.secretmanagerService.secret"
-	ResourceGcpProjectSecretmanagerServiceSecretVersion                               string = "gcp.project.secretmanagerService.secret.version"
-	ResourceGcpProjectFirestoreService                                                string = "gcp.project.firestoreService"
-	ResourceGcpProjectFirestoreServiceDatabase                                        string = "gcp.project.firestoreService.database"
-	ResourceGcpProjectSpannerService                                                  string = "gcp.project.spannerService"
-	ResourceGcpProjectSpannerServiceInstance                                          string = "gcp.project.spannerService.instance"
-	ResourceGcpProjectSpannerServiceInstanceDatabase                                  string = "gcp.project.spannerService.instance.database"
-	ResourceGcpProjectSpannerServiceInstanceBackup                                    string = "gcp.project.spannerService.instance.backup"
-	ResourceGcpProjectBigtableService                                                 string = "gcp.project.bigtableService"
-	ResourceGcpProjectBigtableServiceInstance                                         string = "gcp.project.bigtableService.instance"
-	ResourceGcpProjectBigtableServiceCluster                                          string = "gcp.project.bigtableService.cluster"
-	ResourceGcpProjectBigtableServiceTable                                            string = "gcp.project.bigtableService.table"
-	ResourceGcpProjectBigtableServiceAppProfile                                       string = "gcp.project.bigtableService.appProfile"
-	ResourceGcpProjectBigtableServiceBackup                                           string = "gcp.project.bigtableService.backup"
-	ResourceGcpProjectAlloydbService                                                  string = "gcp.project.alloydbService"
-	ResourceGcpProjectAlloydbServiceCluster                                           string = "gcp.project.alloydbService.cluster"
-	ResourceGcpProjectAlloydbServiceInstance                                          string = "gcp.project.alloydbService.instance"
-	ResourceGcpProjectAlloydbServiceBackup                                            string = "gcp.project.alloydbService.backup"
-	ResourceGcpProjectComputeServiceSecurityPolicy                                    string = "gcp.project.computeService.securityPolicy"
-	ResourceGcpProjectComputeServiceSecurityPolicyRule                                string = "gcp.project.computeService.securityPolicy.rule"
-	ResourceGcpProjectComputeServiceSslPolicy                                         string = "gcp.project.computeService.sslPolicy"
-	ResourceGcpProjectComputeServiceSslCertificate                                    string = "gcp.project.computeService.sslCertificate"
-	ResourceGcpProjectComputeServiceRouterNat                                         string = "gcp.project.computeService.router.nat"
-	ResourceGcpProjectCertificateAuthorityService                                     string = "gcp.project.certificateAuthorityService"
-	ResourceGcpProjectCertificateAuthorityServiceCaPool                               string = "gcp.project.certificateAuthorityService.caPool"
-	ResourceGcpProjectCertificateAuthorityServiceCertificateAuthority                 string = "gcp.project.certificateAuthorityService.certificateAuthority"
-	ResourceGcpProjectCertificateAuthorityServiceCertificate                          string = "gcp.project.certificateAuthorityService.certificate"
-	ResourceGcpResourcemanagerAuditConfig                                             string = "gcp.resourcemanager.auditConfig"
-	ResourceGcpResourcemanagerAuditConfigLogConfig                                    string = "gcp.resourcemanager.auditConfig.logConfig"
-	ResourceGcpOrgPolicy                                                              string = "gcp.orgPolicy"
+	ResourceGcpOrganization                                                            string = "gcp.organization"
+	ResourceGcpFolders                                                                 string = "gcp.folders"
+	ResourceGcpProjectRedisService                                                     string = "gcp.project.redisService"
+	ResourceGcpProjectRedisServiceInstance                                             string = "gcp.project.redisService.instance"
+	ResourceGcpProjectRedisServiceInstanceNodeInfo                                     string = "gcp.project.redisService.instance.nodeInfo"
+	ResourceGcpProjectRedisServiceInstanceServerCaCert                                 string = "gcp.project.redisService.instance.serverCaCert"
+	ResourceGcpProjectRedisServiceCluster                                              string = "gcp.project.redisService.cluster"
+	ResourceGcpProjectRedisServiceClusterPscConfig                                     string = "gcp.project.redisService.cluster.pscConfig"
+	ResourceGcpProjectRedisServiceClusterDiscoveryEndpoint                             string = "gcp.project.redisService.cluster.discoveryEndpoint"
+	ResourceGcpProjectRedisServiceClusterPscConnection                                 string = "gcp.project.redisService.cluster.pscConnection"
+	ResourceGcpProjectRedisServiceClusterBackup                                        string = "gcp.project.redisService.cluster.backup"
+	ResourceGcpProjectRedisServiceClusterClusterEndpoint                               string = "gcp.project.redisService.cluster.clusterEndpoint"
+	ResourceGcpProjectRedisServiceClusterConnectionDetail                              string = "gcp.project.redisService.cluster.connectionDetail"
+	ResourceGcpFolder                                                                  string = "gcp.folder"
+	ResourceGcpProjects                                                                string = "gcp.projects"
+	ResourceGcpProject                                                                 string = "gcp.project"
+	ResourceGcpService                                                                 string = "gcp.service"
+	ResourceGcpRecommendation                                                          string = "gcp.recommendation"
+	ResourceGcpResourcemanagerBinding                                                  string = "gcp.resourcemanager.binding"
+	ResourceGcpProjectComputeService                                                   string = "gcp.project.computeService"
+	ResourceGcpProjectComputeServiceAddress                                            string = "gcp.project.computeService.address"
+	ResourceGcpProjectComputeServiceForwardingRule                                     string = "gcp.project.computeService.forwardingRule"
+	ResourceGcpProjectComputeServiceRegion                                             string = "gcp.project.computeService.region"
+	ResourceGcpProjectComputeServiceZone                                               string = "gcp.project.computeService.zone"
+	ResourceGcpProjectComputeServiceMachineType                                        string = "gcp.project.computeService.machineType"
+	ResourceGcpProjectComputeServiceInstance                                           string = "gcp.project.computeService.instance"
+	ResourceGcpProjectComputeServiceServiceaccount                                     string = "gcp.project.computeService.serviceaccount"
+	ResourceGcpProjectComputeServiceDisk                                               string = "gcp.project.computeService.disk"
+	ResourceGcpProjectComputeServiceAttachedDisk                                       string = "gcp.project.computeService.attachedDisk"
+	ResourceGcpProjectComputeServiceSnapshot                                           string = "gcp.project.computeService.snapshot"
+	ResourceGcpProjectComputeServiceImage                                              string = "gcp.project.computeService.image"
+	ResourceGcpProjectComputeServiceFirewall                                           string = "gcp.project.computeService.firewall"
+	ResourceGcpProjectComputeServiceNetwork                                            string = "gcp.project.computeService.network"
+	ResourceGcpProjectComputeServiceSubnetwork                                         string = "gcp.project.computeService.subnetwork"
+	ResourceGcpProjectComputeServiceSubnetworkLogConfig                                string = "gcp.project.computeService.subnetwork.logConfig"
+	ResourceGcpProjectComputeServiceRouter                                             string = "gcp.project.computeService.router"
+	ResourceGcpProjectComputeServiceBackendService                                     string = "gcp.project.computeService.backendService"
+	ResourceGcpProjectComputeServiceBackendServiceBackend                              string = "gcp.project.computeService.backendService.backend"
+	ResourceGcpProjectComputeServiceBackendServiceCdnPolicy                            string = "gcp.project.computeService.backendService.cdnPolicy"
+	ResourceGcpProjectStorageService                                                   string = "gcp.project.storageService"
+	ResourceGcpProjectStorageServiceBucket                                             string = "gcp.project.storageService.bucket"
+	ResourceGcpProjectStorageServiceBucketLifecycleRule                                string = "gcp.project.storageService.bucket.lifecycleRule"
+	ResourceGcpProjectStorageServiceBucketLifecycleRuleAction                          string = "gcp.project.storageService.bucket.lifecycleRuleAction"
+	ResourceGcpProjectStorageServiceBucketLifecycleRuleCondition                       string = "gcp.project.storageService.bucket.lifecycleRuleCondition"
+	ResourceGcpProjectSqlService                                                       string = "gcp.project.sqlService"
+	ResourceGcpProjectSqlServiceInstance                                               string = "gcp.project.sqlService.instance"
+	ResourceGcpProjectSqlServiceInstanceDatabase                                       string = "gcp.project.sqlService.instance.database"
+	ResourceGcpProjectSqlServiceInstanceIpMapping                                      string = "gcp.project.sqlService.instance.ipMapping"
+	ResourceGcpProjectSqlServiceInstanceSettings                                       string = "gcp.project.sqlService.instance.settings"
+	ResourceGcpProjectSqlServiceInstanceSettingsBackupconfiguration                    string = "gcp.project.sqlService.instance.settings.backupconfiguration"
+	ResourceGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod                  string = "gcp.project.sqlService.instance.settings.denyMaintenancePeriod"
+	ResourceGcpProjectSqlServiceInstanceSettingsIpConfiguration                        string = "gcp.project.sqlService.instance.settings.ipConfiguration"
+	ResourceGcpProjectSqlServiceInstanceSettingsMaintenanceWindow                      string = "gcp.project.sqlService.instance.settings.maintenanceWindow"
+	ResourceGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy               string = "gcp.project.sqlService.instance.settings.passwordValidationPolicy"
+	ResourceGcpProjectBigqueryService                                                  string = "gcp.project.bigqueryService"
+	ResourceGcpProjectBigqueryServiceDataset                                           string = "gcp.project.bigqueryService.dataset"
+	ResourceGcpProjectBigqueryServiceDatasetAccessEntry                                string = "gcp.project.bigqueryService.dataset.accessEntry"
+	ResourceGcpProjectBigqueryServiceTable                                             string = "gcp.project.bigqueryService.table"
+	ResourceGcpProjectBigqueryServiceModel                                             string = "gcp.project.bigqueryService.model"
+	ResourceGcpProjectBigqueryServiceRoutine                                           string = "gcp.project.bigqueryService.routine"
+	ResourceGcpProjectDnsService                                                       string = "gcp.project.dnsService"
+	ResourceGcpProjectDnsServiceManagedzone                                            string = "gcp.project.dnsService.managedzone"
+	ResourceGcpProjectDnsServiceRecordset                                              string = "gcp.project.dnsService.recordset"
+	ResourceGcpProjectDnsServicePolicy                                                 string = "gcp.project.dnsService.policy"
+	ResourceGcpProjectGkeService                                                       string = "gcp.project.gkeService"
+	ResourceGcpProjectGkeServiceCluster                                                string = "gcp.project.gkeService.cluster"
+	ResourceGcpProjectGkeServiceClusterAddonsConfig                                    string = "gcp.project.gkeService.cluster.addonsConfig"
+	ResourceGcpProjectGkeServiceClusterIpAllocationPolicy                              string = "gcp.project.gkeService.cluster.ipAllocationPolicy"
+	ResourceGcpProjectGkeServiceClusterNetworkConfig                                   string = "gcp.project.gkeService.cluster.networkConfig"
+	ResourceGcpProjectGkeServiceClusterNodepool                                        string = "gcp.project.gkeService.cluster.nodepool"
+	ResourceGcpProjectGkeServiceClusterNodepoolAutoscaling                             string = "gcp.project.gkeService.cluster.nodepool.autoscaling"
+	ResourceGcpProjectGkeServiceClusterNodepoolNetworkConfig                           string = "gcp.project.gkeService.cluster.nodepool.networkConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig          string = "gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfig                                  string = "gcp.project.gkeService.cluster.nodepool.config"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigAccelerator                       string = "gcp.project.gkeService.cluster.nodepool.config.accelerator"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig       string = "gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigNodeTaint                         string = "gcp.project.gkeService.cluster.nodepool.config.nodeTaint"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig                     string = "gcp.project.gkeService.cluster.nodepool.config.sandboxConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig            string = "gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig                   string = "gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig                     string = "gcp.project.gkeService.cluster.nodepool.config.kubeletConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig                        string = "gcp.project.gkeService.cluster.nodepool.config.gcfsConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures           string = "gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig                       string = "gcp.project.gkeService.cluster.nodepool.config.gvnicConfig"
+	ResourceGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes                 string = "gcp.project.gkeService.cluster.nodepool.config.confidentialNodes"
+	ResourceGcpProjectPubsubService                                                    string = "gcp.project.pubsubService"
+	ResourceGcpProjectPubsubServiceTopic                                               string = "gcp.project.pubsubService.topic"
+	ResourceGcpProjectPubsubServiceTopicConfig                                         string = "gcp.project.pubsubService.topic.config"
+	ResourceGcpProjectPubsubServiceTopicConfigMessagestoragepolicy                     string = "gcp.project.pubsubService.topic.config.messagestoragepolicy"
+	ResourceGcpProjectPubsubServiceSubscription                                        string = "gcp.project.pubsubService.subscription"
+	ResourceGcpProjectPubsubServiceSubscriptionConfig                                  string = "gcp.project.pubsubService.subscription.config"
+	ResourceGcpProjectPubsubServiceSubscriptionConfigPushconfig                        string = "gcp.project.pubsubService.subscription.config.pushconfig"
+	ResourceGcpProjectPubsubServiceSnapshot                                            string = "gcp.project.pubsubService.snapshot"
+	ResourceGcpProjectKmsService                                                       string = "gcp.project.kmsService"
+	ResourceGcpProjectKmsServiceKeyring                                                string = "gcp.project.kmsService.keyring"
+	ResourceGcpProjectKmsServiceKeyringCryptokey                                       string = "gcp.project.kmsService.keyring.cryptokey"
+	ResourceGcpProjectKmsServiceKeyringCryptokeyVersion                                string = "gcp.project.kmsService.keyring.cryptokey.version"
+	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestation                     string = "gcp.project.kmsService.keyring.cryptokey.version.attestation"
+	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains    string = "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains"
+	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions  string = "gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions"
+	ResourceGcpEssentialContact                                                        string = "gcp.essentialContact"
+	ResourceGcpProjectApiKey                                                           string = "gcp.project.apiKey"
+	ResourceGcpProjectApiKeyRestrictions                                               string = "gcp.project.apiKey.restrictions"
+	ResourceGcpProjectLoggingservice                                                   string = "gcp.project.loggingservice"
+	ResourceGcpProjectLoggingserviceBucket                                             string = "gcp.project.loggingservice.bucket"
+	ResourceGcpProjectLoggingserviceBucketIndexConfig                                  string = "gcp.project.loggingservice.bucket.indexConfig"
+	ResourceGcpProjectLoggingserviceMetric                                             string = "gcp.project.loggingservice.metric"
+	ResourceGcpProjectLoggingserviceSink                                               string = "gcp.project.loggingservice.sink"
+	ResourceGcpProjectIamService                                                       string = "gcp.project.iamService"
+	ResourceGcpProjectIamServiceServiceAccount                                         string = "gcp.project.iamService.serviceAccount"
+	ResourceGcpProjectIamServiceServiceAccountKey                                      string = "gcp.project.iamService.serviceAccount.key"
+	ResourceGcpProjectCloudFunction                                                    string = "gcp.project.cloudFunction"
+	ResourceGcpProjectDataprocService                                                  string = "gcp.project.dataprocService"
+	ResourceGcpProjectDataprocServiceCluster                                           string = "gcp.project.dataprocService.cluster"
+	ResourceGcpProjectDataprocServiceClusterConfig                                     string = "gcp.project.dataprocService.cluster.config"
+	ResourceGcpProjectDataprocServiceClusterConfigGceCluster                           string = "gcp.project.dataprocService.cluster.config.gceCluster"
+	ResourceGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity        string = "gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity"
+	ResourceGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig     string = "gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig"
+	ResourceGcpProjectDataprocServiceClusterConfigGkeCluster                           string = "gcp.project.dataprocService.cluster.config.gkeCluster"
+	ResourceGcpProjectDataprocServiceClusterConfigLifecycle                            string = "gcp.project.dataprocService.cluster.config.lifecycle"
+	ResourceGcpProjectDataprocServiceClusterConfigInstance                             string = "gcp.project.dataprocService.cluster.config.instance"
+	ResourceGcpProjectDataprocServiceClusterConfigInstanceDiskConfig                   string = "gcp.project.dataprocService.cluster.config.instance.diskConfig"
+	ResourceGcpProjectDataprocServiceClusterStatus                                     string = "gcp.project.dataprocService.cluster.status"
+	ResourceGcpProjectDataprocServiceClusterVirtualClusterConfig                       string = "gcp.project.dataprocService.cluster.virtualClusterConfig"
+	ResourceGcpProjectCloudRunService                                                  string = "gcp.project.cloudRunService"
+	ResourceGcpProjectCloudRunServiceOperation                                         string = "gcp.project.cloudRunService.operation"
+	ResourceGcpProjectCloudRunServiceService                                           string = "gcp.project.cloudRunService.service"
+	ResourceGcpProjectCloudRunServiceServiceRevisionTemplate                           string = "gcp.project.cloudRunService.service.revisionTemplate"
+	ResourceGcpProjectCloudRunServiceContainer                                         string = "gcp.project.cloudRunService.container"
+	ResourceGcpProjectCloudRunServiceContainerProbe                                    string = "gcp.project.cloudRunService.container.probe"
+	ResourceGcpProjectCloudRunServiceCondition                                         string = "gcp.project.cloudRunService.condition"
+	ResourceGcpProjectCloudRunServiceJob                                               string = "gcp.project.cloudRunService.job"
+	ResourceGcpProjectCloudRunServiceJobExecutionTemplate                              string = "gcp.project.cloudRunService.job.executionTemplate"
+	ResourceGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate                  string = "gcp.project.cloudRunService.job.executionTemplate.taskTemplate"
+	ResourceGcpAccessApprovalSettings                                                  string = "gcp.accessApprovalSettings"
+	ResourceGcpProjectMonitoringService                                                string = "gcp.project.monitoringService"
+	ResourceGcpProjectMonitoringServiceAlertPolicy                                     string = "gcp.project.monitoringService.alertPolicy"
+	ResourceGcpProjectBinaryAuthorizationControl                                       string = "gcp.project.binaryAuthorizationControl"
+	ResourceGcpProjectBinaryAuthorizationControlPolicy                                 string = "gcp.project.binaryAuthorizationControl.policy"
+	ResourceGcpProjectBinaryAuthorizationControlAdmissionRule                          string = "gcp.project.binaryAuthorizationControl.admissionRule"
+	ResourceGcpProjectSecretmanagerService                                             string = "gcp.project.secretmanagerService"
+	ResourceGcpProjectSecretmanagerServiceSecret                                       string = "gcp.project.secretmanagerService.secret"
+	ResourceGcpProjectSecretmanagerServiceSecretVersion                                string = "gcp.project.secretmanagerService.secret.version"
+	ResourceGcpProjectFirestoreService                                                 string = "gcp.project.firestoreService"
+	ResourceGcpProjectFirestoreServiceDatabase                                         string = "gcp.project.firestoreService.database"
+	ResourceGcpProjectSpannerService                                                   string = "gcp.project.spannerService"
+	ResourceGcpProjectSpannerServiceInstance                                           string = "gcp.project.spannerService.instance"
+	ResourceGcpProjectSpannerServiceInstanceDatabase                                   string = "gcp.project.spannerService.instance.database"
+	ResourceGcpProjectSpannerServiceInstanceBackup                                     string = "gcp.project.spannerService.instance.backup"
+	ResourceGcpProjectBigtableService                                                  string = "gcp.project.bigtableService"
+	ResourceGcpProjectBigtableServiceInstance                                          string = "gcp.project.bigtableService.instance"
+	ResourceGcpProjectBigtableServiceCluster                                           string = "gcp.project.bigtableService.cluster"
+	ResourceGcpProjectBigtableServiceTable                                             string = "gcp.project.bigtableService.table"
+	ResourceGcpProjectBigtableServiceAppProfile                                        string = "gcp.project.bigtableService.appProfile"
+	ResourceGcpProjectBigtableServiceBackup                                            string = "gcp.project.bigtableService.backup"
+	ResourceGcpProjectAlloydbService                                                   string = "gcp.project.alloydbService"
+	ResourceGcpProjectAlloydbServiceCluster                                            string = "gcp.project.alloydbService.cluster"
+	ResourceGcpProjectAlloydbServiceInstance                                           string = "gcp.project.alloydbService.instance"
+	ResourceGcpProjectAlloydbServiceBackup                                             string = "gcp.project.alloydbService.backup"
+	ResourceGcpProjectComputeServiceSecurityPolicy                                     string = "gcp.project.computeService.securityPolicy"
+	ResourceGcpProjectComputeServiceSecurityPolicyRule                                 string = "gcp.project.computeService.securityPolicy.rule"
+	ResourceGcpProjectComputeServiceSslPolicy                                          string = "gcp.project.computeService.sslPolicy"
+	ResourceGcpProjectComputeServiceSslCertificate                                     string = "gcp.project.computeService.sslCertificate"
+	ResourceGcpProjectComputeServiceRouterNat                                          string = "gcp.project.computeService.router.nat"
+	ResourceGcpProjectCertificateAuthorityService                                      string = "gcp.project.certificateAuthorityService"
+	ResourceGcpProjectCertificateAuthorityServiceCaPool                                string = "gcp.project.certificateAuthorityService.caPool"
+	ResourceGcpProjectCertificateAuthorityServiceCertificateAuthority                  string = "gcp.project.certificateAuthorityService.certificateAuthority"
+	ResourceGcpProjectCertificateAuthorityServiceCertificate                           string = "gcp.project.certificateAuthorityService.certificate"
+	ResourceGcpResourcemanagerAuditConfig                                              string = "gcp.resourcemanager.auditConfig"
+	ResourceGcpResourcemanagerAuditConfigLogConfig                                     string = "gcp.resourcemanager.auditConfig.logConfig"
+	ResourceGcpOrgPolicy                                                               string = "gcp.orgPolicy"
+	ResourceGcpProjectArtifactRegistryService                                          string = "gcp.project.artifactRegistryService"
+	ResourceGcpProjectArtifactRegistryServiceRepository                                string = "gcp.project.artifactRegistryService.repository"
+	ResourceGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig                  string = "gcp.project.artifactRegistryService.repository.vulnScanConfig"
+	ResourceGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy                   string = "gcp.project.artifactRegistryService.repository.cleanupPolicy"
+	ResourceGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition          string = "gcp.project.artifactRegistryService.repository.cleanupPolicy.condition"
+	ResourceGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions string = "gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions"
+	ResourceGcpProjectArtifactRegistryServiceRepositoryFormatConfig                    string = "gcp.project.artifactRegistryService.repository.formatConfig"
+	ResourceGcpProjectArtifactRegistryServiceRepositoryModeConfig                      string = "gcp.project.artifactRegistryService.repository.modeConfig"
+	ResourceGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy                  string = "gcp.project.artifactRegistryService.repository.upstreamPolicy"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -878,6 +887,42 @@ func init() {
 			// to override args, implement: initGcpOrgPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpOrgPolicy,
 		},
+		"gcp.project.artifactRegistryService": {
+			Init:   initGcpProjectArtifactRegistryService,
+			Create: createGcpProjectArtifactRegistryService,
+		},
+		"gcp.project.artifactRegistryService.repository": {
+			Init:   initGcpProjectArtifactRegistryServiceRepository,
+			Create: createGcpProjectArtifactRegistryServiceRepository,
+		},
+		"gcp.project.artifactRegistryService.repository.vulnScanConfig": {
+			// to override args, implement: initGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig,
+		},
+		"gcp.project.artifactRegistryService.repository.cleanupPolicy": {
+			// to override args, implement: initGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy,
+		},
+		"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition": {
+			// to override args, implement: initGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition,
+		},
+		"gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions": {
+			// to override args, implement: initGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions,
+		},
+		"gcp.project.artifactRegistryService.repository.formatConfig": {
+			// to override args, implement: initGcpProjectArtifactRegistryServiceRepositoryFormatConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectArtifactRegistryServiceRepositoryFormatConfig,
+		},
+		"gcp.project.artifactRegistryService.repository.modeConfig": {
+			// to override args, implement: initGcpProjectArtifactRegistryServiceRepositoryModeConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectArtifactRegistryServiceRepositoryModeConfig,
+		},
+		"gcp.project.artifactRegistryService.repository.upstreamPolicy": {
+			// to override args, implement: initGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy,
+		},
 	}
 }
 
@@ -1518,6 +1563,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetCertificateAuthority()).ToDataRes(types.Resource("gcp.project.certificateAuthorityService"))
+	},
+	"gcp.project.artifactRegistry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetArtifactRegistry()).ToDataRes(types.Resource("gcp.project.artifactRegistryService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -5986,6 +6034,171 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.orgPolicy.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrgPolicy).GetUpdatedAt()).ToDataRes(types.Time)
 	},
+	"gcp.project.artifactRegistryService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryService).GetRepositories()).ToDataRes(types.Array(types.Resource("gcp.project.artifactRegistryService.repository")))
+	},
+	"gcp.project.artifactRegistryService.repository.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.resourcePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetResourcePath()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetFormat()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetMode()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.artifactRegistryService.repository.kmsKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetKmsKeyName()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.artifactRegistryService.repository.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.artifactRegistryService.repository.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"gcp.project.artifactRegistryService.repository.registryUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetRegistryUri()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetSatisfiesPzs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.artifactRegistryService.repository.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetSatisfiesPzi()).ToDataRes(types.Bool)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicyDryRun": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetCleanupPolicyDryRun()).ToDataRes(types.Bool)
+	},
+	"gcp.project.artifactRegistryService.repository.vulnerabilityScanningConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetVulnerabilityScanningConfig()).ToDataRes(types.Resource("gcp.project.artifactRegistryService.repository.vulnScanConfig"))
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetCleanupPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.artifactRegistryService.repository.cleanupPolicy")))
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetFormatConfig()).ToDataRes(types.Resource("gcp.project.artifactRegistryService.repository.formatConfig"))
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetModeConfig()).ToDataRes(types.Resource("gcp.project.artifactRegistryService.repository.modeConfig"))
+	},
+	"gcp.project.artifactRegistryService.repository.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.enablementConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).GetEnablementConfig()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.enablementState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).GetEnablementState()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.enablementStateReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).GetEnablementStateReason()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.lastEnableTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).GetLastEnableTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).GetAction()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).GetPolicyType()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).GetCondition()).ToDataRes(types.Resource("gcp.project.artifactRegistryService.repository.cleanupPolicy.condition"))
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).GetMostRecentVersions()).ToDataRes(types.Resource("gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions"))
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.tagState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).GetTagState()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.tagPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).GetTagPrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.versionNamePrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).GetVersionNamePrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.packageNamePrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).GetPackageNamePrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.olderThan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).GetOlderThan()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.newerThan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).GetNewerThan()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions.keepCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions).GetKeepCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions.packageNamePrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions).GetPackageNamePrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).GetFormat()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.immutableTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).GetImmutableTags()).ToDataRes(types.Bool)
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.allowSnapshotOverwrites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).GetAllowSnapshotOverwrites()).ToDataRes(types.Bool)
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.mavenVersionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).GetMavenVersionPolicy()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig.upstreamPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig).GetUpstreamPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.artifactRegistryService.repository.upstreamPolicy")))
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig.remoteRepositoryDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig).GetRemoteRepositoryDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig.disableUpstreamValidation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig).GetDisableUpstreamValidation()).ToDataRes(types.Bool)
+	},
+	"gcp.project.artifactRegistryService.repository.upstreamPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.upstreamPolicy.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy).GetRepository()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.upstreamPolicy.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy).GetPriority()).ToDataRes(types.Int)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -6808,6 +7021,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).CertificateAuthority, ok = plugin.RawToTValue[*mqlGcpProjectCertificateAuthorityService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).ArtifactRegistry, ok = plugin.RawToTValue[*mqlGcpProjectArtifactRegistryService](v.Value, v.Error)
 		return
 	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13386,6 +13603,262 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpOrgPolicy).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.artifactRegistryService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryService).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.kmsKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).KmsKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.registryUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).RegistryUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.satisfiesPzi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicyDryRun": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).CleanupPolicyDryRun, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.vulnerabilityScanningConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).VulnerabilityScanningConfig, ok = plugin.RawToTValue[*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).CleanupPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).FormatConfig, ok = plugin.RawToTValue[*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).ModeConfig, ok = plugin.RawToTValue[*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.enablementConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).EnablementConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.enablementState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).EnablementState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.enablementStateReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).EnablementStateReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.vulnScanConfig.lastEnableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).LastEnableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).Condition, ok = plugin.RawToTValue[*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy).MostRecentVersions, ok = plugin.RawToTValue[*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.tagState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).TagState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.tagPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).TagPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.versionNamePrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).VersionNamePrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.packageNamePrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).PackageNamePrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.olderThan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).OlderThan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.condition.newerThan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition).NewerThan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions.keepCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions).KeepCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions.packageNamePrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions).PackageNamePrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.immutableTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).ImmutableTags, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.allowSnapshotOverwrites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).AllowSnapshotOverwrites, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.formatConfig.mavenVersionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig).MavenVersionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig.upstreamPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig).UpstreamPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig.remoteRepositoryDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig).RemoteRepositoryDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.modeConfig.disableUpstreamValidation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig).DisableUpstreamValidation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.upstreamPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.upstreamPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.upstreamPolicy.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.upstreamPolicy.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -15040,6 +15513,7 @@ type mqlGcpProject struct {
 	Bigtable               plugin.TValue[*mqlGcpProjectBigtableService]
 	Alloydb                plugin.TValue[*mqlGcpProjectAlloydbService]
 	CertificateAuthority   plugin.TValue[*mqlGcpProjectCertificateAuthorityService]
+	ArtifactRegistry       plugin.TValue[*mqlGcpProjectArtifactRegistryService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -15608,6 +16082,22 @@ func (c *mqlGcpProject) GetCertificateAuthority() *plugin.TValue[*mqlGcpProjectC
 		}
 
 		return c.certificateAuthority()
+	})
+}
+
+func (c *mqlGcpProject) GetArtifactRegistry() *plugin.TValue[*mqlGcpProjectArtifactRegistryService] {
+	return plugin.GetOrCompute[*mqlGcpProjectArtifactRegistryService](&c.ArtifactRegistry, func() (*mqlGcpProjectArtifactRegistryService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "artifactRegistry")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectArtifactRegistryService), nil
+			}
+		}
+
+		return c.artifactRegistry()
 	})
 }
 
@@ -30881,4 +31371,699 @@ func (c *mqlGcpOrgPolicy) GetEtag() *plugin.TValue[string] {
 
 func (c *mqlGcpOrgPolicy) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlGcpProjectArtifactRegistryService for the gcp.project.artifactRegistryService resource
+type mqlGcpProjectArtifactRegistryService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceInternal it will be used here
+	ProjectId    plugin.TValue[string]
+	Repositories plugin.TValue[[]any]
+}
+
+// createGcpProjectArtifactRegistryService creates a new instance of this resource
+func createGcpProjectArtifactRegistryService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryService) MqlName() string {
+	return "gcp.project.artifactRegistryService"
+}
+
+func (c *mqlGcpProjectArtifactRegistryService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectArtifactRegistryService) GetRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repositories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.artifactRegistryService", c.__id, "repositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repositories()
+	})
+}
+
+// mqlGcpProjectArtifactRegistryServiceRepository for the gcp.project.artifactRegistryService.repository resource
+type mqlGcpProjectArtifactRegistryServiceRepository struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryInternal it will be used here
+	ProjectId                   plugin.TValue[string]
+	ResourcePath                plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Location                    plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	Format                      plugin.TValue[string]
+	Mode                        plugin.TValue[string]
+	Labels                      plugin.TValue[map[string]any]
+	KmsKeyName                  plugin.TValue[string]
+	CreateTime                  plugin.TValue[*time.Time]
+	UpdateTime                  plugin.TValue[*time.Time]
+	SizeBytes                   plugin.TValue[int64]
+	RegistryUri                 plugin.TValue[string]
+	SatisfiesPzs                plugin.TValue[bool]
+	SatisfiesPzi                plugin.TValue[bool]
+	CleanupPolicyDryRun         plugin.TValue[bool]
+	VulnerabilityScanningConfig plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig]
+	CleanupPolicies             plugin.TValue[[]any]
+	FormatConfig                plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig]
+	ModeConfig                  plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig]
+	IamPolicy                   plugin.TValue[[]any]
+}
+
+// createGcpProjectArtifactRegistryServiceRepository creates a new instance of this resource
+func createGcpProjectArtifactRegistryServiceRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryServiceRepository{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService.repository", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) MqlName() string {
+	return "gcp.project.artifactRegistryService.repository"
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetResourcePath() *plugin.TValue[string] {
+	return &c.ResourcePath
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetKmsKeyName() *plugin.TValue[string] {
+	return &c.KmsKeyName
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetRegistryUri() *plugin.TValue[string] {
+	return &c.RegistryUri
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetSatisfiesPzs() *plugin.TValue[bool] {
+	return &c.SatisfiesPzs
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetSatisfiesPzi() *plugin.TValue[bool] {
+	return &c.SatisfiesPzi
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetCleanupPolicyDryRun() *plugin.TValue[bool] {
+	return &c.CleanupPolicyDryRun
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetVulnerabilityScanningConfig() *plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig] {
+	return &c.VulnerabilityScanningConfig
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetCleanupPolicies() *plugin.TValue[[]any] {
+	return &c.CleanupPolicies
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetFormatConfig() *plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig] {
+	return &c.FormatConfig
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetModeConfig() *plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig] {
+	return &c.ModeConfig
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.artifactRegistryService.repository", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
+// mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig for the gcp.project.artifactRegistryService.repository.vulnScanConfig resource
+type mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfigInternal it will be used here
+	Id                    plugin.TValue[string]
+	EnablementConfig      plugin.TValue[string]
+	EnablementState       plugin.TValue[string]
+	EnablementStateReason plugin.TValue[string]
+	LastEnableTime        plugin.TValue[*time.Time]
+}
+
+// createGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig creates a new instance of this resource
+func createGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService.repository.vulnScanConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig) MqlName() string {
+	return "gcp.project.artifactRegistryService.repository.vulnScanConfig"
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig) GetEnablementConfig() *plugin.TValue[string] {
+	return &c.EnablementConfig
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig) GetEnablementState() *plugin.TValue[string] {
+	return &c.EnablementState
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig) GetEnablementStateReason() *plugin.TValue[string] {
+	return &c.EnablementStateReason
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig) GetLastEnableTime() *plugin.TValue[*time.Time] {
+	return &c.LastEnableTime
+}
+
+// mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy for the gcp.project.artifactRegistryService.repository.cleanupPolicy resource
+type mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyInternal it will be used here
+	Id                 plugin.TValue[string]
+	Action             plugin.TValue[string]
+	PolicyType         plugin.TValue[string]
+	Condition          plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition]
+	MostRecentVersions plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions]
+}
+
+// createGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy creates a new instance of this resource
+func createGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService.repository.cleanupPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) MqlName() string {
+	return "gcp.project.artifactRegistryService.repository.cleanupPolicy"
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) GetCondition() *plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition] {
+	return &c.Condition
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy) GetMostRecentVersions() *plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions] {
+	return &c.MostRecentVersions
+}
+
+// mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition for the gcp.project.artifactRegistryService.repository.cleanupPolicy.condition resource
+type mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyConditionInternal it will be used here
+	Id                  plugin.TValue[string]
+	TagState            plugin.TValue[string]
+	TagPrefixes         plugin.TValue[[]any]
+	VersionNamePrefixes plugin.TValue[[]any]
+	PackageNamePrefixes plugin.TValue[[]any]
+	OlderThan           plugin.TValue[string]
+	NewerThan           plugin.TValue[string]
+}
+
+// createGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition creates a new instance of this resource
+func createGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService.repository.cleanupPolicy.condition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition) MqlName() string {
+	return "gcp.project.artifactRegistryService.repository.cleanupPolicy.condition"
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition) GetTagState() *plugin.TValue[string] {
+	return &c.TagState
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition) GetTagPrefixes() *plugin.TValue[[]any] {
+	return &c.TagPrefixes
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition) GetVersionNamePrefixes() *plugin.TValue[[]any] {
+	return &c.VersionNamePrefixes
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition) GetPackageNamePrefixes() *plugin.TValue[[]any] {
+	return &c.PackageNamePrefixes
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition) GetOlderThan() *plugin.TValue[string] {
+	return &c.OlderThan
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition) GetNewerThan() *plugin.TValue[string] {
+	return &c.NewerThan
+}
+
+// mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions for the gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions resource
+type mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersionsInternal it will be used here
+	Id                  plugin.TValue[string]
+	KeepCount           plugin.TValue[int64]
+	PackageNamePrefixes plugin.TValue[[]any]
+}
+
+// createGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions creates a new instance of this resource
+func createGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions) MqlName() string {
+	return "gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions"
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions) GetKeepCount() *plugin.TValue[int64] {
+	return &c.KeepCount
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyMostRecentVersions) GetPackageNamePrefixes() *plugin.TValue[[]any] {
+	return &c.PackageNamePrefixes
+}
+
+// mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig for the gcp.project.artifactRegistryService.repository.formatConfig resource
+type mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfigInternal it will be used here
+	Id                      plugin.TValue[string]
+	Format                  plugin.TValue[string]
+	ImmutableTags           plugin.TValue[bool]
+	AllowSnapshotOverwrites plugin.TValue[bool]
+	MavenVersionPolicy      plugin.TValue[string]
+}
+
+// createGcpProjectArtifactRegistryServiceRepositoryFormatConfig creates a new instance of this resource
+func createGcpProjectArtifactRegistryServiceRepositoryFormatConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService.repository.formatConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) MqlName() string {
+	return "gcp.project.artifactRegistryService.repository.formatConfig"
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) GetImmutableTags() *plugin.TValue[bool] {
+	return &c.ImmutableTags
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) GetAllowSnapshotOverwrites() *plugin.TValue[bool] {
+	return &c.AllowSnapshotOverwrites
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig) GetMavenVersionPolicy() *plugin.TValue[string] {
+	return &c.MavenVersionPolicy
+}
+
+// mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig for the gcp.project.artifactRegistryService.repository.modeConfig resource
+type mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryModeConfigInternal it will be used here
+	Id                          plugin.TValue[string]
+	UpstreamPolicies            plugin.TValue[[]any]
+	RemoteRepositoryDescription plugin.TValue[string]
+	DisableUpstreamValidation   plugin.TValue[bool]
+}
+
+// createGcpProjectArtifactRegistryServiceRepositoryModeConfig creates a new instance of this resource
+func createGcpProjectArtifactRegistryServiceRepositoryModeConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService.repository.modeConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig) MqlName() string {
+	return "gcp.project.artifactRegistryService.repository.modeConfig"
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig) GetUpstreamPolicies() *plugin.TValue[[]any] {
+	return &c.UpstreamPolicies
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig) GetRemoteRepositoryDescription() *plugin.TValue[string] {
+	return &c.RemoteRepositoryDescription
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig) GetDisableUpstreamValidation() *plugin.TValue[bool] {
+	return &c.DisableUpstreamValidation
+}
+
+// mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy for the gcp.project.artifactRegistryService.repository.upstreamPolicy resource
+type mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicyInternal it will be used here
+	Id         plugin.TValue[string]
+	Repository plugin.TValue[string]
+	Priority   plugin.TValue[int64]
+}
+
+// createGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy creates a new instance of this resource
+func createGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService.repository.upstreamPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy) MqlName() string {
+	return "gcp.project.artifactRegistryService.repository.upstreamPolicy"
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy) GetRepository() *plugin.TValue[string] {
+	return &c.Repository
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryUpstreamPolicy) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
 }

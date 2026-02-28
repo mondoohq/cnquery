@@ -23,6 +23,7 @@ alias gcp.firestore = gcp.project.firestoreService
 alias gcp.spanner = gcp.project.spannerService
 alias gcp.bigtable = gcp.project.bigtableService
 alias gcp.alloydb = gcp.project.alloydbService
+alias gcp.artifactregistry = gcp.project.artifactRegistryService
 
 // Google Cloud (GCP) organization
 gcp.organization @defaults("name") {
@@ -461,6 +462,8 @@ gcp.project @defaults("name") {
   alloydb() gcp.project.alloydbService
   // GCP Certificate Authority Service resources
   certificateAuthority() gcp.project.certificateAuthorityService
+  // GCP Artifact Registry resources
+  artifactRegistry() gcp.project.artifactRegistryService
 }
 
 // Google Cloud (GCP) service
@@ -4088,4 +4091,150 @@ private gcp.orgPolicy @defaults("constraintName") {
   etag string
   // Time last updated
   updatedAt time
+}
+
+// Google Cloud (GCP) Artifact Registry resources
+private gcp.project.artifactRegistryService {
+  // Project ID
+  projectId string
+  // List of Artifact Registry repositories in the project
+  repositories() []gcp.project.artifactRegistryService.repository
+}
+
+// Google Cloud (GCP) Artifact Registry repository
+private gcp.project.artifactRegistryService.repository @defaults("name format location") {
+  // Project ID
+  projectId string
+  // Full resource path
+  resourcePath string
+  // Repository name
+  name string
+  // Repository location
+  location string
+  // Repository description
+  description string
+  // Package format (DOCKER, MAVEN, NPM, PYTHON, APT, YUM, GO, GENERIC, etc.)
+  format string
+  // Repository mode (STANDARD_REPOSITORY, VIRTUAL_REPOSITORY, REMOTE_REPOSITORY)
+  mode string
+  // User-assigned labels
+  labels map[string]string
+  // Cloud KMS encryption key name (empty means Google-managed encryption)
+  kmsKeyName string
+  // Creation time
+  createTime time
+  // Last update time
+  updateTime time
+  // Total storage size in bytes
+  sizeBytes int
+  // Registry endpoint URI (e.g., us-docker.pkg.dev/project/repo)
+  registryUri string
+  // Whether the repository satisfies Physical Zone Separation
+  satisfiesPzs bool
+  // Whether the repository satisfies Physical Zone Isolation
+  satisfiesPzi bool
+  // Whether cleanup policy dry-run mode is enabled
+  cleanupPolicyDryRun bool
+  // Vulnerability scanning configuration
+  vulnerabilityScanningConfig gcp.project.artifactRegistryService.repository.vulnScanConfig
+  // Cleanup policies for artifact retention
+  cleanupPolicies []gcp.project.artifactRegistryService.repository.cleanupPolicy
+  // Format-specific configuration (Docker immutable tags, Maven version policy)
+  formatConfig gcp.project.artifactRegistryService.repository.formatConfig
+  // Mode-specific configuration (virtual upstream policies, remote repo config)
+  modeConfig gcp.project.artifactRegistryService.repository.modeConfig
+  // IAM policy bindings for this repository
+  iamPolicy() []gcp.resourcemanager.binding
+}
+
+// Google Cloud (GCP) Artifact Registry repository vulnerability scanning configuration
+private gcp.project.artifactRegistryService.repository.vulnScanConfig {
+  // Internal ID
+  id string
+  // Scanning enablement config (INHERITED, DISABLED, ENABLEMENT_CONFIG_UNSPECIFIED)
+  enablementConfig string
+  // Current scanning state (SCANNING_ACTIVE, SCANNING_DISABLED, SCANNING_UNSUPPORTED)
+  enablementState string
+  // Explanation of the current scanning state
+  enablementStateReason string
+  // Time scanning was last enabled
+  lastEnableTime time
+}
+
+// Google Cloud (GCP) Artifact Registry repository cleanup policy
+private gcp.project.artifactRegistryService.repository.cleanupPolicy @defaults("id action policyType") {
+  // Internal ID
+  id string
+  // Policy action (DELETE or KEEP)
+  action string
+  // Policy type: "condition" or "mostRecentVersions"
+  policyType string
+  // Condition filter details; fields are non-empty only when policyType == "condition"
+  condition gcp.project.artifactRegistryService.repository.cleanupPolicy.condition
+  // Most-recent-version details; fields are non-empty only when policyType == "mostRecentVersions"
+  mostRecentVersions gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions
+}
+
+// Google Cloud (GCP) Artifact Registry cleanup policy condition
+private gcp.project.artifactRegistryService.repository.cleanupPolicy.condition {
+  // Internal ID
+  id string
+  // Tag state filter (TAGGED, UNTAGGED, ANY)
+  tagState string
+  // Tag prefix filters
+  tagPrefixes []string
+  // Version name prefix filters
+  versionNamePrefixes []string
+  // Package name prefix filters
+  packageNamePrefixes []string
+  // Match versions older than this duration (e.g., "2592000s" for 30 days)
+  olderThan string
+  // Match versions newer than this duration
+  newerThan string
+}
+
+// Google Cloud (GCP) Artifact Registry cleanup policy most recent versions config
+private gcp.project.artifactRegistryService.repository.cleanupPolicy.mostRecentVersions {
+  // Internal ID
+  id string
+  // Number of recent versions to keep
+  keepCount int
+  // Package name prefix filters
+  packageNamePrefixes []string
+}
+
+// Google Cloud (GCP) Artifact Registry repository format-specific configuration
+private gcp.project.artifactRegistryService.repository.formatConfig {
+  // Internal ID
+  id string
+  // Repository format (e.g., DOCKER, MAVEN, NPM, PYTHON, APT, YUM, GO, KFP)
+  format string
+  // Whether Docker image tags are immutable (Docker repos only)
+  immutableTags bool
+  // Whether Maven snapshot overwrites are allowed (Maven repos only)
+  allowSnapshotOverwrites bool
+  // Maven version policy: RELEASE, SNAPSHOT, or VERSION_POLICY_UNSPECIFIED (Maven repos only)
+  mavenVersionPolicy string
+}
+
+// Google Cloud (GCP) Artifact Registry repository mode-specific configuration
+private gcp.project.artifactRegistryService.repository.modeConfig {
+  // Internal ID
+  id string
+  // Upstream policies for virtual repositories (ordered by priority)
+  upstreamPolicies []gcp.project.artifactRegistryService.repository.upstreamPolicy
+  // Remote repository description
+  remoteRepositoryDescription string
+  // Whether upstream validation is disabled (remote repos)
+  disableUpstreamValidation bool
+}
+
+// Google Cloud (GCP) Artifact Registry virtual repository upstream policy
+private gcp.project.artifactRegistryService.repository.upstreamPolicy @defaults("id priority") {
+  // Internal ID
+  id string
+  // Full resource name of the upstream repository
+  repository string
+  // Priority (lower value = higher priority)
+  priority int
 }
