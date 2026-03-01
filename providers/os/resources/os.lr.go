@@ -1804,6 +1804,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"service.masked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlService).GetMasked()).ToDataRes(types.Bool)
 	},
+	"service.static": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlService).GetStatic()).ToDataRes(types.Bool)
+	},
 	"services.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlServices).GetList()).ToDataRes(types.Array(types.Resource("service")))
 	},
@@ -4943,6 +4946,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"service.masked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlService).Masked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"service.static": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlService).Static, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"services.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12787,6 +12794,7 @@ type mqlService struct {
 	Enabled     plugin.TValue[bool]
 	Type        plugin.TValue[string]
 	Masked      plugin.TValue[bool]
+	Static      plugin.TValue[bool]
 }
 
 // createService creates a new instance of this resource
@@ -12852,6 +12860,10 @@ func (c *mqlService) GetType() *plugin.TValue[string] {
 
 func (c *mqlService) GetMasked() *plugin.TValue[bool] {
 	return &c.Masked
+}
+
+func (c *mqlService) GetStatic() *plugin.TValue[bool] {
+	return &c.Static
 }
 
 // mqlServices for the services resource

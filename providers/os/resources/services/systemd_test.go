@@ -75,6 +75,17 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 	// check for masked element
 	assert.Equal(t, "cryptdisks", m[30].Name, "service name detected")
 	assert.Equal(t, true, m[30].Masked, "service is masked")
+	assert.Equal(t, false, m[30].Static, "masked service is not static")
+
+	// check for static element (alsa-restore is the third service, index 2)
+	assert.Equal(t, "alsa-restore", m[2].Name, "service name detected")
+	assert.Equal(t, true, m[2].Static, "service is static")
+	assert.Equal(t, false, m[2].Enabled, "static service is not enabled")
+	assert.Equal(t, false, m[2].Masked, "static service is not masked")
+
+	// check that enabled service is not static
+	assert.Equal(t, "accounts-daemon", m[0].Name, "service name detected")
+	assert.Equal(t, false, m[0].Static, "enabled service is not static")
 }
 
 func TestParseServiceSystemDUnitFilesPhoton(t *testing.T) {
@@ -133,6 +144,7 @@ func TestSystemdFS(t *testing.T) {
 		State:       ServiceUnknown,
 		Installed:   true,
 		Enabled:     true,
+		Static:      true,
 	}, servicesMap["aliased"])
 	assert.Contains(t, servicesMap, "aliased-wants")
 	assert.Contains(t, servicesMap, "aliased-requires")
@@ -163,6 +175,7 @@ func TestSystemdFS(t *testing.T) {
 		State:       ServiceUnknown,
 		Installed:   true,
 		Enabled:     true,
+		Static:      true,
 	}, servicesMap["implicit-socket"])
 	assert.Contains(t, servicesMap, "explicit-socket-service")
 	assert.Equal(t, &Service{
@@ -172,6 +185,7 @@ func TestSystemdFS(t *testing.T) {
 		State:       ServiceUnknown,
 		Installed:   true,
 		Enabled:     true,
+		Static:      true,
 	}, servicesMap["explicit-socket-service"])
 
 	// Relative path symlink

@@ -69,6 +69,7 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 			Name:    name,
 			Enabled: fields[1] == "enabled",
 			Masked:  fields[1] == "masked",
+			Static:  fields[1] == "static",
 			Type:    "systemd",
 		}
 
@@ -173,6 +174,8 @@ type unitInfo struct {
 	// isDep is true of this unit is found in the dependency tree starting
 	// from the default.target
 	isDep bool
+	// hasInstall is true if the unit file has an [Install] section
+	hasInstall bool
 	// service is only set for socket units. It contains an optional name.target.
 	// If not provided, socketname.service is activated for the socket
 	service string
@@ -221,6 +224,7 @@ func (s *SystemdFSServiceManager) List() ([]*Service, error) {
 			Installed:   !v.missing,
 			Enabled:     !v.missing && v.isDep,
 			Masked:      v.masked,
+			Static:      !v.missing && !v.masked && !v.hasInstall,
 		})
 	}
 	return services, nil
@@ -415,6 +419,8 @@ func (s *SystemdFSServiceManager) readUnit(unitPath string, uInfo *unitInfo) err
 			}
 		} else if o.Section == "Socket" && o.Name == "Service" {
 			uInfo.service = o.Value
+		} else if o.Section == "Install" {
+			uInfo.hasInstall = true
 		}
 	}
 
