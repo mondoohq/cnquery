@@ -94,6 +94,7 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]any, error) {
 			var version *string
 			var state *string
 			var fullyQualifiedDomainName *string
+			var administratorLogin *string
 			if dbServer.Properties != nil {
 				minimalTlsVersion = dbServer.Properties.MinimalTLSVersion
 				publicNetworkAccess = (*string)(dbServer.Properties.PublicNetworkAccess)
@@ -101,6 +102,7 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]any, error) {
 				version = dbServer.Properties.Version
 				state = dbServer.Properties.State
 				fullyQualifiedDomainName = dbServer.Properties.FullyQualifiedDomainName
+				administratorLogin = dbServer.Properties.AdministratorLogin
 			}
 
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server",
@@ -117,6 +119,7 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]any, error) {
 					"version":                       llx.StringDataPtr(version),
 					"state":                         llx.StringDataPtr(state),
 					"fullyQualifiedDomainName":      llx.StringDataPtr(fullyQualifiedDomainName),
+					"administratorLogin":            llx.StringDataPtr(administratorLogin),
 				})
 			if err != nil {
 				return nil, err

@@ -19,6 +19,7 @@ backupshorttermretentionpolicy
 bigquery
 bigtable
 blackhole
+BYOS
 bytematchstatement
 cavium
 cdn

@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"go.mondoo.com/mql/v13/llx"
@@ -146,15 +147,23 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 				version = string(*dbServer.Properties.Version)
 			}
 
+			var publicNetworkAccess string
+			if dbServer.Properties != nil {
+				if dbServer.Properties.Network != nil && dbServer.Properties.Network.PublicNetworkAccess != nil {
+					publicNetworkAccess = string(*dbServer.Properties.Network.PublicNetworkAccess)
+				}
+			}
+
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(dbServer.ID),
-					"name":       llx.StringDataPtr(dbServer.Name),
-					"location":   llx.StringDataPtr(dbServer.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":       llx.StringDataPtr(dbServer.Type),
-					"properties": llx.DictData(properties),
-					"version":    llx.StringData(version),
+					"id":                  llx.StringDataPtr(dbServer.ID),
+					"name":                llx.StringDataPtr(dbServer.Name),
+					"location":            llx.StringDataPtr(dbServer.Location),
+					"tags":                llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
+					"type":                llx.StringDataPtr(dbServer.Type),
+					"properties":          llx.DictData(properties),
+					"version":             llx.StringData(version),
+					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
 				})
 			if err != nil {
 				return nil, err
@@ -163,6 +172,41 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) sslEnforcement() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return false, err
+	}
+
+	server, err := resourceID.Component("flexibleServers")
+	if err != nil {
+		return false, err
+	}
+
+	dbConfClient, err := flexible.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	resp, err := dbConfClient.Get(ctx, resourceID.ResourceGroup, server, "require_secure_transport", nil)
+	if err != nil {
+		// Default to true as MySQL flexible servers enforce SSL by default
+		return true, nil
+	}
+
+	if resp.Properties != nil && resp.Properties.Value != nil {
+		return strings.EqualFold(*resp.Properties.Value, "ON"), nil
+	}
+
+	return true, nil
 }
 
 func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]any, error) {

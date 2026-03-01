@@ -232,7 +232,33 @@ func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]any, error) {
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceInterface) vm() (*mqlAzureSubscriptionComputeServiceVm, error) {
-	return nil, errors.New("not implemented")
+	props := a.Properties.Data
+	if props == nil {
+		return nil, nil
+	}
+	propsMap, ok := props.(map[string]any)
+	if !ok {
+		return nil, nil
+	}
+	vmRef, ok := propsMap["virtualMachine"]
+	if !ok || vmRef == nil {
+		return nil, nil
+	}
+	vmMap, ok := vmRef.(map[string]any)
+	if !ok {
+		return nil, nil
+	}
+	vmID, ok := vmMap["id"].(string)
+	if !ok || vmID == "" {
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.vm", map[string]*llx.RawData{
+		"id": llx.StringData(vmID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceVm), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
@@ -2155,14 +2181,27 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 }
 
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+	var ipAllocationMethod, ipVersion string
+	var ipAddr *string
+	if ip.Properties != nil {
+		ipAddr = ip.Properties.IPAddress
+		if ip.Properties.PublicIPAllocationMethod != nil {
+			ipAllocationMethod = string(*ip.Properties.PublicIPAllocationMethod)
+		}
+		if ip.Properties.PublicIPAddressVersion != nil {
+			ipVersion = string(*ip.Properties.PublicIPAddressVersion)
+		}
+	}
 	mqlAzure, err := CreateResource(runtime, "azure.subscription.networkService.ipAddress",
 		map[string]*llx.RawData{
-			"id":        llx.StringDataPtr(ip.ID),
-			"name":      llx.StringDataPtr(ip.Name),
-			"location":  llx.StringDataPtr(ip.Location),
-			"tags":      llx.MapData(convert.PtrMapStrToInterface(ip.Tags), types.String),
-			"type":      llx.StringDataPtr(ip.Type),
-			"ipAddress": llx.StringDataPtr(ip.Properties.IPAddress),
+			"id":                 llx.StringDataPtr(ip.ID),
+			"name":               llx.StringDataPtr(ip.Name),
+			"location":           llx.StringDataPtr(ip.Location),
+			"tags":               llx.MapData(convert.PtrMapStrToInterface(ip.Tags), types.String),
+			"type":               llx.StringDataPtr(ip.Type),
+			"ipAddress":          llx.StringDataPtr(ipAddr),
+			"ipAllocationMethod": llx.StringData(ipAllocationMethod),
+			"ipVersion":          llx.StringData(ipVersion),
 		})
 	if err != nil {
 		return nil, err
@@ -2246,10 +2285,14 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 	}
 
 	var enableIPForwarding, enableAcceleratedNetworking, primary *llx.RawData
+	var networkSecurityGroupId string
 	if iface.Properties != nil {
 		enableIPForwarding = llx.BoolDataPtr(iface.Properties.EnableIPForwarding)
 		enableAcceleratedNetworking = llx.BoolDataPtr(iface.Properties.EnableAcceleratedNetworking)
 		primary = llx.BoolDataPtr(iface.Properties.Primary)
+		if iface.Properties.NetworkSecurityGroup != nil && iface.Properties.NetworkSecurityGroup.ID != nil {
+			networkSecurityGroupId = *iface.Properties.NetworkSecurityGroup.ID
+		}
 	} else {
 		enableIPForwarding = llx.BoolData(false)
 		enableAcceleratedNetworking = llx.BoolData(false)
@@ -2268,6 +2311,7 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 			"enableIPForwarding":          enableIPForwarding,
 			"enableAcceleratedNetworking": enableAcceleratedNetworking,
 			"primary":                     primary,
+			"networkSecurityGroupId":      llx.StringData(networkSecurityGroupId),
 		})
 	if err != nil {
 		return nil, err
