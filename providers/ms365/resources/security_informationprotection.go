@@ -37,10 +37,13 @@ func (r *mqlMicrosoftSecurityInformationProtection) sensitivityLabels() ([]any, 
 		return nil, transformError(err)
 	}
 
+	labels, err := iterate[security.SensitivityLabelable](ctx, resp, betaClient.GetAdapter(), security.CreateSensitivityLabelCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
+
 	var res []any
-	labels := resp.GetValue()
-	for i := range labels {
-		label := labels[i]
+	for _, label := range labels {
 		if label == nil {
 			continue
 		}
