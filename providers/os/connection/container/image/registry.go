@@ -4,6 +4,9 @@
 package image
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -23,6 +26,9 @@ func LoadImageFromRegistry(ref name.Reference, opts ...remote.Option) (v1.Image,
 	}
 	img, err := remote.Image(ref, opts...)
 	if err != nil {
+		if errors.Is(err, remote.ErrSchema1) {
+			return nil, fmt.Errorf("the container image %q uses Docker schema1 manifests which are no longer supported, try upgrading the image to a newer version", ref.Name())
+		}
 		return nil, err
 	}
 	return img, nil
